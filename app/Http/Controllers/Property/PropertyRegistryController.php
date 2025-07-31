@@ -93,7 +93,7 @@ class PropertyRegistryController extends Controller
             'PropertyType' => 'required|exists:t_PropertyType,Id',
             'Category' => 'required|exists:t_CategoryMaster,Id',
             'TownCity' => 'required|exists:t_Localities,Id',
-            'PropertyDescription' => 'required|string|max:100',
+            'PropertyDescription' => 'nullable|string|max:100',
 
         ]);
 
@@ -107,7 +107,7 @@ class PropertyRegistryController extends Controller
                 'Category' => $validated['Category'],
                 'PropertyType' => $validated['PropertyType'],
                 'TownCity' => $validated['TownCity'],
-                'PropertyDescription' => $validated['PropertyDescription'],
+                'PropertyDescription' => $validated['PropertyDescription'] ?? '',
                 'ModifiedBy' => Auth::Id(),
             ]);
 

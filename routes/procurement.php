@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
@@ -45,12 +46,18 @@ use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Procurement\ReportsController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
+use App\Http\Controllers\Procurement\RFQCommitteeController;
 use App\Http\Controllers\Procurement\RFQController;
+use App\Http\Controllers\Procurement\RFQCriteriaController;
 use App\Http\Controllers\Procurement\RFQEvaluationController;
 use App\Http\Controllers\Procurement\RFQLinesController;
 use App\Http\Controllers\Procurement\RFQResponseController;
+use App\Http\Controllers\Procurement\RFQSectionController;
+use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
+use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
+use App\Http\Controllers\Procurement\RFQSettingController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\Procurement\SupplierListingController;
@@ -69,7 +76,6 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
-use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Procurement')->prefix('procurement')->group(function () {
@@ -175,7 +181,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     // RFQ Evaluation routes
     Route::get('/rfq-evaluations', [RFQEvaluationController::class, 'index'])->name('evaluations.index');
     Route::get('/rfq-evaluations/create', [RFQEvaluationController::class, 'create'])->name('evaluations.create');
-    Route::post('/rfq-evaluations', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
+    Route::post('/procurement/rfq-evaluations/store', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
     Route::get('/rfq-suppliers/{rfqId}', [RFQResponseController::class, 'getSuppliers']);
 
     //GoodsReceipts
@@ -196,10 +202,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post('/tenderRejection', [TenderController::class, 'rejectTender'])->name('tender.reject');
     Route::resource('initiateapprove', TenderInitiationApproveController::class);
     Route::resource('tenderresponse', TenderResponseController::class);
-    Route::resource('tenderclarification', TenderclarificationController::class);
-    Route::resource('tendersubmission', TenderSubmissionController::class);
+
     Route::resource('tenderopening', TenderOpeningController::class);
-    Route::resource('tendersubmission', TenderSubmissionController::class);
     Route::resource('tenderdecrypt', TenderDecryptController::class);
     Route::resource('tendercommittee', TenderCommitteeController::class);
     Route::post('/store-tender-committee', [TenderCommitteeController::class, 'membersAdd'])->name('tendercommittee.save');
@@ -215,8 +219,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('procurementreports', ProcurementReportsController::class);
 
     //Tender Creteria setup
-    Route::resource('sections',SectionController::class);
-    Route::resource('criterias',CriteriaController::class);
+    Route::resource('sections', SectionController::class)->except(['update', 'destroy']);
+    Route::resource('criterias', CriteriaController::class)->except(['update', 'destroy']);
     Route::resource('tenderevaluations',TenderEvaluationsController::class);
     Route::post("/store-tender-sections",[TenderEvaluationsController::class,'tenderSections'])->name('store-tender-sections');
     Route::get('/tender-criteria/{tenderId}', [TenderEvaluationsController::class, 'getTenderCriteria'])->name('tender-criteria');
@@ -238,7 +242,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
 
     //Procurementplan
-    Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
+
 
     //Procurement plan Approval
     Route::resource('approvals/department-need', DepartmentNeedApprovalController::class)->only([
@@ -282,7 +286,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Procurement Plan, Plan Consolidation
     // Route::resource('procurementplandetails', ProcurementPlanDetailController::class);
-    Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
+
     Route::resource('procurementplanapproval', ProcurementApprovalController::class);
     Route::resource('consolidated', ConsolidatedDashboardController::class);
     Route::resource('procurementitemsdashboard', ConsolidatedDashboardController::class);
@@ -304,6 +308,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
     // Route::resource('tenderclarification', TenderclarificationController::class)
+    //Route::resource('tenderclarification', TenderclarificationController::class);
     Route::get('/tenderclarification', [TenderclarificationController::class, 'index'])->name('tenderclarification.index');
     //Route::get('/tenderclarification/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
     Route::patch('/tenderclarification/update', [TenderclarificationController::class, 'update'])->name('tenderclarification.update');
@@ -311,17 +316,21 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
 
     //Bid Submission
-    Route::get('/bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index');
+    //Route::resource('tendersubmission', TenderSubmissionController::class);
+    //Route::resource('tendersubmission', TenderSubmissionController::class);
+    Route::get('bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index');//
+    Route::post('bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
     Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
     Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
     Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
-    Route::post('/bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
 
     //procurement Consolidation
     Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
     Route::get('/dashboard/show/{needId}', [ConsolidatedDashboardController::class, 'show'])->name('dashboard.show');
     Route::get('/procurement/dashboard/export', [ConsolidatedDashboardController::class, 'exportExcel'])->name('dashboard.export');
 
+    //Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class);
+    Route::resource('procurementplanmaintain', ProcurementPlanMaintainController::class)->except(['show', 'store']);
     Route::post('/procurement-plans', [ProcurementPlanMaintainController::class, 'store'])->name('procurementplanmaintain.store');
     Route::get('/planning/edit-draft/{plan_id}', [ProcurementPlanMaintainController::class, 'editDraft'])
         ->name('planning.editDraft');
@@ -354,21 +363,22 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/planning/assign-methods', [MapToBudgetController::class, 'index'])->name('planning.assign.methods');
     Route::post('/planning/assign-methods', [MapToBudgetController::class, 'store'])->name('planning.assign.methods.store');
 //Plan Approval
-Route::prefix('planning')->name('planning.')->group(function () {
-    Route::get('/approval', [ProcurementApprovalController::class, 'index'])->name('approval.index');
-    Route::get('/approval/plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])->name('getPlanDetails');
-    Route::post('/approval/submit-decision', [ProcurementApprovalController::class, 'submitDecision'])->name('submitDecision');
-});
+    Route::prefix('planning')->name('planning.')->group(function () {
+        Route::get('/approval', [ProcurementApprovalController::class, 'index'])->name('approval.index');
+        Route::get('/approval/plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])->name('getPlanDetails');
+        Route::post('/approval/submit-decision', [ProcurementApprovalController::class, 'submitDecision'])->name('submitDecision');
+    });
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('procurement-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'procurement-reports.index',
         'show' => 'procurement-reports.show'
     ]);
-   // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
-   // ->name('planning.getPlanDetails');
+    // Route::get('/planning/get-plan-details', [ProcurementApprovalController::class, 'getPlanDetails'])
+    // ->name('planning.getPlanDetails');
 
 });
+
 
 
 //Route::resource('preqrounds', PrequalificationRoundsController::class);
@@ -393,15 +403,17 @@ Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupControl
 
 
 Route::resource('supplierslist', SupplierListingController::class);
+
  Route::resource('preqapplications', PrequalificationApplicationsController::class);
  Route::resource('preqevaluation', PrequalificationEvaluationController::class);
  Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
  Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
-Route::resource('bidresponsiveness', TenderBidResponsivenessController::class);
+
+Route::resource('bidresponsiveness', TenderBidResponsivenessController::class)->except(['create']);
 Route::get('bidresponsiveness/create/{tenderSupplier}', [TenderBidResponsivenessController::class, 'create'])->name('bidresponsiveness.create');
 
-Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])->name('awards.view');
-Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.view');
+Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender']);//->name('awards.view');
+Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq']);//->name('awards.view');
 
 Route::resource('procawards', AwardsController::class);
 
@@ -433,4 +445,77 @@ Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::cl
 
 Route::resource('deliverynotes', DeliveryController::class);
 Route::resource('goodsinspection', InspectionController::class);
+
+Route::post('/rfqcommittee', [RFQCommitteeController::class, 'store'])->name('rfqcommittee.store');
+
+//RFQ Criteria Setup
+Route::prefix('procurement/rfq')->group(function () {
+    //Route::resource('sections', RFQSettingSectionController::class)->names('rfqsettingsections');
+    Route::resource('criterias', RFQSettingCriteriaController::class)->except(['show', 'store'])->names('rfqsettingcriterias');
+
+    Route::get('/procurement/rfqcriteriasetup/evaluations', [RFQSectionController::class, 'evaluationSetup'])->name('rfqcriteriasetup.evaluations');
+
+});
+Route::post('/procurement/rfqcriteriasetup/evaluations/save', [RFQSectionController::class, 'saveEvaluation'])->name('rfqcriteriasetup.evaluations.save');
+Route::get('/sections/info', [RFQSettingSectionController::class,'index'])->name('rfqsettingsections.index');
+Route::get('/procurement/rfq/criterias/section/{id}', [RFQSettingCriteriaController::class, 'show'])->name('rfqsettingcriterias.show');
+Route::post('/sectionsetting', [RFQSettingSectionController::class, 'store'])->name('rfqsettingsections.store');
+Route::post('/criteria', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
+Route::get('/sections/{id}', [RFQSettingSectionController::class, 'show'])->name('rfqsettingsections.show');
+
+
+Route::prefix('procurement/rfq')->group(function () {
+    Route::resource('procurement/rfq/criterias', RFQCriteriaController::class)->only(['store', 'show', 'destroy']);
+    Route::resource('procurement/rfq/sections', RFQSectionController::class);
+    Route::resource('procurement/rfq/criterias', RFQCriteriaController::class)->except(['store', 'show'])->names('rfqcriterias');
+    Route::resource('procurement/rfq/sections', RFQSectionController::class)->names('rfqsections');
+});
+Route::get('procurement/rfq/criterias/setup/{rfqId}', [RFQCriteriaController::class, 'show'])->name('rfqcriterias.show');
+Route::post('procurement/rfq/criterias', [RFQCriteriaController::class, 'store'])->name('rfqcriterias.store');
+Route::get('/procurement/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
+Route::get('procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
+
+//// RFQ Criteria Setup
+//Route::prefix('procurement/rfq')->group(function () {
+//    // Routes for RFQSettingSectionController
+//    Route::get('/sections/info', [RFQSettingSectionController::class, 'index'])->name('rfqsettingsections.index');
+//    Route::post('/sections', [RFQSettingSectionController::class, 'store'])->name('rfqsettingsections.store');
+//    Route::get('/sections/{id}/edit', [RFQSettingSectionController::class, 'edit'])->name('rfqsettingsections.edit');
+//    Route::put('/sections/{id}', [RFQSettingSectionController::class, 'update'])->name('rfqsettingsections.update');
+//    Route::delete('/sections/{id}', [RFQSettingSectionController::class, 'destroy'])->name('rfqsettingsections.destroy');
+//
+//    // Routes for RFQSettingCriteriaController
+//    Route::get('/criterias/section/{id}', [RFQSettingCriteriaController::class, 'show'])->name('rfqsettingcriterias.show');
+//    Route::post('/procurement/criterias', [RFQSettingCriteriaController::class, 'store'])->name('rfqsettingcriterias.store');
+//    Route::get('/criterias/{id}/edit', [RFQSettingCriteriaController::class, 'edit'])->name('rfqsettingcriterias.edit');
+//    Route::put('/procurement/criterias/{id}', [RFQSettingCriteriaController::class, 'update'])->name('rfqsettingcriterias.update');
+//    Route::delete('/criterias/{id}', [RFQSettingCriteriaController::class, 'destroy'])->name('rfqsettingcriterias.destroy');
+//
+//    // Routes for RFQSectionController
+//    Route::get('/rfqcriteriasetup/evaluations', [RFQSectionController::class, 'evaluationSetup'])->name('rfqcriteriasetup.evaluations');
+//    Route::post('/rfqcriteriasetup/evaluations/save', [RFQSectionController::class, 'saveEvaluation'])->name('rfqcriteriasetup.evaluations.save');
+//    Route::get('/sections/{id}/edit', [RFQSectionController::class, 'edit'])->name('rfqsections.edit');
+//    Route::put('/sections/{id}', [RFQSectionController::class, 'update'])->name('rfqsections.update');
+//    Route::delete('/sections/{id}', [RFQSectionController::class, 'destroy'])->name('rfqsections.destroy');
+//});
+//
+//Route::prefix('procurement/rfq')->group(function () {
+//    // Routes for RFQCriteriaController
+//    Route::get('/criterias/setup/{rfqId}', [RFQCriteriaController::class, 'show'])->name('rfqcriterias.show');
+//    Route::post('/criterias', [RFQCriteriaController::class, 'store'])->name('rfqcriterias.store');
+//    Route::get('/criterias/{id}/edit', [RFQCriteriaController::class, 'edit'])->name('rfqcriterias.edit');
+//    Route::put('/criterias/{id}', [RFQCriteriaController::class, 'update'])->name('rfqcriterias.update');
+//    Route::delete('/criterias/{id}', [RFQCriteriaController::class, 'destroy'])->name('rfqcriterias.destroy');
+//
+//    // Routes for RFQSectionController (already defined above, no duplicates needed)
+//});
+//
+//// Additional procurement routes
+//Route::get('/procurement/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
+//Route::get('/procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+//Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
+
+
+
 

@@ -2,13 +2,12 @@ FROM php:8.3-apache-bullseye
 
 # Install system dependencies including imap
 RUN apt-get update && apt-get install -y \
-    unzip poppler-utils ghostscript zip curl git gnupg2 \
+    unzip cron poppler-utils ghostscript zip curl git gnupg2 \
     apt-transport-https unixodbc unixodbc-dev imagemagick \
-    libgssapi-krb5-2 lsb-release libwebp-dev \
+    supervisor lsb-release libwebp-dev libzip-dev \
     libpng-dev libjpeg-dev libfreetype6-dev \
-    libxml2-dev libonig-dev libzip-dev \
+    libxml2-dev libonig-dev nodejs wget ca-certificates\
     libssl-dev software-properties-common \
-    apt-transport-https unixodbc unixodbc-dev \
     libc-client-dev libkrb5-dev libgssapi-krb5-2  \
     tesseract-ocr tesseract-ocr-eng libtesseract-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -24,6 +23,17 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /et
     pecl install pdo_sqlsrv && \
     docker-php-ext-enable pdo_sqlsrv
 
+# Install Node.js 20 (needed for Puppeteer)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest
+
+# Install Chromium for headless browser testing
+RUN apt-get update && apt-get install -y \
+    chromium chromium-driver \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
@@ -37,8 +47,8 @@ WORKDIR /var/www
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Copy composer and install dependencies only if composer.lock changes
-COPY composer.json composer.lock ./
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+#COPY composer.json composer.lock ./
+
 
 # Copy Laravel source code
 COPY . .
@@ -47,9 +57,6 @@ COPY . .
 RUN chown -R www-data:www-data /var/www && \
     chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# Expose HTTP port
-EXPOSE 80
-
 # ✅ Fix Laravel directory permissions
 RUN chown -R www-data:www-data /var/www && \
     find /var/www/storage -type d -exec chmod 775 {} \; && \
@@ -57,5 +64,27 @@ RUN chown -R www-data:www-data /var/www && \
     find /var/www/bootstrap/cache -type d -exec chmod 775 {} \; && \
     find /var/www/bootstrap/cache -type f -exec chmod 664 {} \;
 
+
+# Install PHP dependencies using Composer
+RUN cd /var/www && composer install --no-interaction --optimize-autoloader --no-dev
+
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+# Install Node.js dependencies
+RUN npm install --prefix /var/www
+
+#RUN php /var/www/artisan optimize
+
+# Expose HTTP port
+EXPOSE 80
+
+# Copy Supervisor config
+COPY docker/erp-worker.config /etc/supervisor/conf.d/erp-worker.conf
+
+# Add Laravel scheduler cron job
+RUN echo "* * * * * php /var/www/artisan schedule:run >> /var/www/storage/logs/scheduler.log 2>&1" > /etc/cron.d/erp-scheduler \
+    && chmod 0644 /etc/cron.d/erp-scheduler \
+    && crontab /etc/cron.d/erp-scheduler
+
 # Start Apache
-CMD ["apache2-foreground"]
+#CMD ["apache2-foreground"]
+CMD service cron start && supervisord -c /etc/supervisor/supervisord.conf && apache2-foreground

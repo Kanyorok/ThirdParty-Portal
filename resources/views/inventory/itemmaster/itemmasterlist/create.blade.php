@@ -23,7 +23,8 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="BarCode" class="form-label">Bar Code</label>
-                <input type="text" name="BarCode" id="BarCode" class="form-control" value="{{ old('BarCode') }}" required>
+                <input type="text" name="BarCode" id="BarCode" class="form-control" value="{{ old('BarCode') }}" required pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                <div class="invalid-feedback">Please enter only numeric characters.</div>
             </div>
             <div class="col-md-4">
                 <label for="ItemName" class="form-label">Item Name</label>

@@ -100,16 +100,16 @@
                     <!-- 🔗 Product Type Mapping -->
                     <div class="mb-3" id="productTypeSection"
                          style="display: {{ $budgetLine->IsProductDriven ? 'block' : 'none' }};">
-                        <h6>🔗 Product Types (Multiple)</h6>
-                        <label class="form-label">Select Product Types</label>
+                        <h6>🔗 Product (Multiple)</h6>
+                        <label class="form-label">Select Product</label>
                         <select multiple class="form-select" name="ProductTypes[]"
                                 id="ProductTypesSelect" {{ $budgetLine->IsProductDriven ? '' : 'disabled' }}>
                             @foreach($productTypes as $type)
                                 <option
-                                    value="{{ $type->Id }}" {{ isset($selectedProductTypes) && in_array($type->Id, $selectedProductTypes) ? 'selected' : '' }}>{{ $type->Name }}</option>
+                                    value="{{ $type->Id }}" {{ isset($selectedProductTypes) && in_array($type->Id, $selectedProductTypes) ? 'selected' : '' }}>{{ $type->Description }}</option>
                             @endforeach
                         </select>
-                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple Product Types.</div>
+                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple Product.</div>
                     </div>
 
                     {{-- <div class="form-check mb-3">

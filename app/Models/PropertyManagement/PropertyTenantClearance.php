@@ -4,13 +4,14 @@ namespace App\Models\PropertyManagement;
 
 use App\Enums\Property\TenantClearanceEnum;
 use App\Models\Core\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyTenantClearance extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
     protected $table = 't_TenantClearance';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -18,7 +19,7 @@ class PropertyTenantClearance extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Tenant',
+        'LeaseId',
         'ExitDate',
         'FinalInspection',
         'AllDuesPaid',
@@ -41,9 +42,9 @@ class PropertyTenantClearance extends Model
         'Status' => TenantClearanceEnum::class,
     ];
 
-    public function tenant()
+    public function lease()
     {
-        return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');
+        return $this->belongsTo(PropertyNewLease::class, 'LeaseId', 'Id');
     }
 
     public function code()

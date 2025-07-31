@@ -110,13 +110,7 @@ class UserService
                 return '
                     <a href="' . route('users.show', [$user->UserID]) . '" class="btn btn-info btn-sm me-1">
                         <i class="fas fa-eye"></i> Details
-                    </a>
-                    <button type="button"
-                            data-click_url="' . route('roles.edit', [$user->UserID]) . '"
-                            data-summary_title="' . $user->Name . ': Branches"
-                            class="btn btn-primary btn-sm click-summary-data">
-                        <i class="fas fa-edit"></i>
-                    </button>';
+                    </a>';
             })->editColumn('pivot', function (User $user) use ($extra) {
                 if (!in_array('pivot_date', $extra, true)) {
                     return '';

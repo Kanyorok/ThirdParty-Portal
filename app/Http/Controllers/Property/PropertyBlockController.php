@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Property;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Property\PropertyRegistry\PropertyBlockRequest;
-use App\Models\PropertyManagement\PropertyBlock;
-use App\Models\PropertyManagement\PropertyRegistry;
-use App\Services\Property\PropertyRegistry\PropertyBlockService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Property\PropertyRegistry\PropertyBlockRequest;
+use App\Services\Property\PropertyRegistry\PropertyBlockService;
+use App\Models\PropertyManagement\PropertyBlock;
+use App\Models\PropertyManagement\PropertyRegistry;
 
 
 class PropertyBlockController extends Controller
@@ -35,8 +35,8 @@ class PropertyBlockController extends Controller
 
         $propertyblock = PropertyBlockService::create(
             $propertyregistry,
-            $validated['BlockName'] ?? '--',
-            $validated['Description'] ?? '--',
+            $validated['BlockName'],
+            $validated['Description'] ?? '',
             auth()->user()
         );
 
@@ -59,7 +59,7 @@ class PropertyBlockController extends Controller
         $validated = $request->validate([
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockName' => 'required|string|max:50',
-            'Description' => 'required|string|max:100',
+            'Description' => 'nullable|string|max:100',
 
         ]);
 
@@ -71,7 +71,7 @@ class PropertyBlockController extends Controller
             $block->update([
                 'PropertyID' => $validated['PropertyID'],
                 'BlockName' => $validated['BlockName'],
-                'Description' => $validated['Description'],
+                'Description' => $validated['Description'] ?? '',
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);

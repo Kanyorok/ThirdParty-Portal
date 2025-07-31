@@ -2,11 +2,14 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Core\CodeDetail;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyReceipt extends Model
 {
-    //
+    use SoftDeletes, UserActorTrait;
     protected $table = 't_RentReceipt';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';
@@ -18,13 +21,14 @@ class PropertyReceipt extends Model
         'BillingMonth',
         'InvoiceDate',
         'RentAmount',
-        'ServiceCharge',
+        'ServicesCharge',
+        'ParkingFee',
         'OtherCharges',
         'TotalDue',
-        'AmountPaid',
+        'AmountPaidSoFar',
         'Balance',
         'PaymentDate',
-        'Amount',
+        'AmountPaidNow',
         'PaymentMethod',
         'ReferenceNo',
         'Remarks',
@@ -42,4 +46,17 @@ class PropertyReceipt extends Model
     {
         return $this->belongsTo(PropertyInvoice::class, 'InvoiceID', 'Id');
     }
+    public function paymentmethod()
+    {
+        return $this->belongsTo(CodeDetail::class, 'PaymentMethod', 'ID');
+    }
+    public static function getAmountPaidSoFar(int $invoiceId): float
+    {
+        return static::where('InvoiceID', $invoiceId)->sum('AmountPaidNow');
+    }
+    public function code()
+    {
+        return $this->belongsTo(CodeDetail::class, 'PaymentMethod', 'ID');
+    }
+
 }

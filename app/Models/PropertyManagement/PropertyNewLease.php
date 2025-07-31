@@ -2,14 +2,16 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Models\Core\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyNewLease extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     protected $table = 't_LeaseCreation';
     public const CREATED_AT = 'CreatedOn';
@@ -29,8 +31,12 @@ class PropertyNewLease extends Model
         'PaymentFrequency',
         'MonthlyRent',
         'Deposit',
+        'ServiceCharge',
+        'ParkingFee',
+        'OtherCharges',
         'DueDay',
         'SpecialTerms',
+        'Status',
         'IsActive',
         'CreatedBy',
         'ModifiedBy',
@@ -41,17 +47,9 @@ class PropertyNewLease extends Model
     {
         return 'LeaseId';
     }
-
-    public function getPropertyByTenant()
-    {
-        return $this->hasMany(PropertyNewLease::class, 'Id', 'Tenant');
-    }
-
-    public function getLeaseByProperty()
-    {
-        return $this->hasMany(PropertyNewLease::class, 'Id', 'PropertyID');
-    }
-
+    protected $casts = [
+        'Status' => PropertyNewLeaseEnum::class,
+    ];
     public function tenant()
     {
         return $this->belongsTo(PropertyNewTenant::class, 'Tenant', 'Id');

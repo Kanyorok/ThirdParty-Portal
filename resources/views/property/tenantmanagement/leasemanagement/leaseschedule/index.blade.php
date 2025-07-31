@@ -17,10 +17,6 @@
                 <th>Payment Frequency</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Base Rent</th>
-                <th>Service Charge</th>
-                <th>Parking Fee</th>
-                <th>Other Charges</th>
                 <th>Action</th>
             </tr>
             </thead>
@@ -28,35 +24,26 @@
             @foreach($leaseschedules as $leaseschedule)
                 <tr>
                     <td>{{ $loop->iteration ?? '-' }}</td>
-                    <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>
-                    <td>{{ $leaseschedule->tenant->TenantName ?? '-' }}</td>
-                    <td>{{ $leaseschedule->property->PropertyName ?? '-' }}</td>
+                    <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>       
+                    <td>{{ $leaseschedule->lease->tenant->TenantName ?? '-' }}</td>
+                    <td>{{ $leaseschedule->lease->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
-                    <td>{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d m Y') : '-' }}</td>
-                    <td>{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d m Y') : '-' }}</td>
-                    <td>{{ $leaseschedule->BaseRent ?? '-' }}</td>
-                    <td>{{ $leaseschedule->ServiceCharge ?? '-' }}</td>
-                    <td>{{ $leaseschedule->ParkingFee ?? '-' }}</td>
-                    <td>{{ $leaseschedule->OtherCharges ?? '-' }}</td>
+                    <td>{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $leaseschedule->EndDate ? \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') : '-' }}</td>
                     <td>
-                        <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}" class="btn btn-sm btn-info">👁
-                            View</a>
-                        <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}" method="POST"
-                              class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Are you sure you want to delete this lease schedule?');">
-                                Delete
-                            </button>
-                        </form>
+            <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}" class="btn btn-sm btn-info">View</a>
+            <a href="{{ route('schedulelease.print', $leaseschedule->Id) }}" target="_blank" class="btn btn-sm btn-secondary">Print</a>
+            <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+            <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete</button>
+            </form>
                     </td>
                 </tr>
             @endforeach
             </tbody>
         </table>
-        <button class="btn btn-outline-primary" onclick="window.print()">🖨️ Print Schedule</button>
     @else
         <p>No lease renewals registered yet.</p>
         @endif

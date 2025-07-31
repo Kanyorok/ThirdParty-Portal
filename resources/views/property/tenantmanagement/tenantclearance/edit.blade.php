@@ -11,17 +11,16 @@
             <a href="{{ route('tenantclearance.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
         </div>
 
-        <form method="POST" action="{{ route('tenantclearance.update', $clearancetenant->Id) }}">
+        <form method="POST" action="{{ route('tenantclearance.update', $clearancetenant->Id) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label">Tenant
-                            Name: {{ $clearancetenant->tenant->TenantName ?? 'N/A' }}</label>
-                        <input type="hidden" name="Tenant" value="{{ $clearancetenant->Tenant }}">
-                    </div>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <div class="mb-3">
+                <label class="form-label">Tenant Name: {{ $clearancetenant->lease->tenant->TenantName ?? 'N/A' }}</label>
+                <input type="hidden" name="LeaseId" value="{{ $clearancetenant->LeaseId }}">
+            </div>
 
                     <input type="text" id="exit-date" name="ExitDate" class="form-control"
                            value="{{ old('ExitDate', Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y')) }}"
@@ -100,13 +99,13 @@
                     </div>
                 </div>
 
-                <div class="card-footer bg-light d-flex justify-content-between">
-                    <button type="submit" class="btn btn-success">💾 Save Changes</button>
-                    <a href="{{ route('tenantclearance.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                </div>
-            </div>
-        </form>
+        <div class="card-footer bg-light d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">Save Changes</button>
+            <a href="{{ route('tenantclearance.index') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
     </div>
+</form>
+</div>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

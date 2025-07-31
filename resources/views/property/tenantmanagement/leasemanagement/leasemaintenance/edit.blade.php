@@ -89,9 +89,9 @@
                             <label class="form-label">Start Date</label>
                             <input type="text" id="startDateDisplay"
                                    class="form-control flatpickr @error('StartDate') is-invalid @enderror"
-                                   value="{{ old('StartDate', Carbon::parse($newlease->StartDate)->format('d/m/Y')) }}">
+                                   value="{{ old('StartDate', \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y')) }}">
                             <input type="hidden" name="StartDate" id="startDate"
-                                   value="{{ old('StartDate', Carbon::parse($newlease->StartDate)->format('Y-m-d')) }}">
+                                   value="{{ old('StartDate', \Carbon\Carbon::parse($newlease->StartDate)->format('Y-m-d')) }}">
                             @error('StartDate')
                             <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -100,9 +100,9 @@
                             <label class="form-label">End Date</label>
                             <input type="text" id="endDateDisplay"
                                    class="form-control flatpickr @error('EndDate') is-invalid @enderror"
-                                   value="{{ old('EndDate', Carbon::parse($newlease->EndDate)->format('d/m/Y')) }}">
+                                   value="{{ old('EndDate', \Carbon\Carbon::parse($newlease->EndDate)->format('d/m/Y')) }}">
                             <input type="hidden" name="EndDate" id="endDate"
-                                   value="{{ old('EndDate', Carbon::parse($newlease->EndDate)->format('Y-m-d')) }}">
+                                   value="{{ old('EndDate', \Carbon\Carbon::parse($newlease->EndDate)->format('Y-m-d')) }}">
                             @error('EndDate')
                             <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
@@ -124,19 +124,29 @@
                         <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- Rent & Deposit --}}
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Monthly Rent (KES)</label>
-                            <input type="number" name="MonthlyRent" step="0.01" class="form-control"
-                                   value="{{ old('MonthlyRent', $newlease->MonthlyRent) }}">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Deposit (KES)</label>
-                            <input type="number" name="Deposit" step="0.01" class="form-control"
-                                   value="{{ old('Deposit', $newlease->Deposit) }}">
-                        </div>
+                {{-- Rent & Deposit --}}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Monthly Rent (KES)</label>
+                        <input type="number" name="MonthlyRent" step="0.01" class="form-control" value="{{ old('MonthlyRent', $newlease->MonthlyRent) }}">
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Deposit (KES)</label>
+                        <input type="number" name="Deposit" step="0.01" class="form-control" value="{{ old('Deposit', $newlease->Deposit) }}">
+                    </div>
+                                        <div class="col-md-6 mb-3">
+                        <label class="form-label">Service Charge (KES)</label>
+                        <input type="number" name="ServiceCharge" step="0.01" class="form-control" value="{{ old('ServiceCharge', $newlease->ServiceCharge) }}">
+                    </div>
+                                        <div class="col-md-6 mb-3">
+                        <label class="form-label">Parking Fee (KES)</label>
+                        <input type="number" name="ParkingFee" step="0.01" class="form-control" value="{{ old('ParkingFee', $newlease->ParkingFee) }}">
+                    </div>
+                                        <div class="col-md-6 mb-3">
+                        <label class="form-label">Other Charges (KES)</label>
+                        <input type="number" name="OtherCharges" step="0.01" class="form-control" value="{{ old('OtherCharges', $newlease->OtherCharges) }}">
+                    </div>
+                </div>
 
                     {{-- Due Day --}}
                     <div class="mb-3">
@@ -151,6 +161,13 @@
                         <textarea name="SpecialTerms" class="form-control"
                                   rows="3">{{ old('SpecialTerms', $newlease->SpecialTerms) }}</textarea>
                     </div>
+                </div>
+
+                <!-- Document Upload -->
+                <div class="mb-3">
+                    <label class="form-label">Upload Lease Document</label>
+                    <input type="file" name="Document" class="form-control" multiple>
+                    <small class="text-muted">e.g. upload Lease Document</small>
                 </div>
 
                 <div class="card-footer bg-light d-flex justify-content-between">
