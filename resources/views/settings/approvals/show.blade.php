@@ -3,13 +3,23 @@
 
 @section('styles')
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.6.2/dist/select2-bootstrap4.min.css"
-    rel="stylesheet" />
+  <style>
+    .select2-container--bootstrap4 .select2-selection--single {
+      border: 1px solid #ced4da;
+      border-radius: 0.375rem;
+      height: calc(2.375rem + 2px);
+      padding: 0.375rem 0.75rem;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+      line-height: 1.5;
+    }
+  </style>
 @endsection
 
 @section('content')
   <div class="card shadow p-4 rounded-4">
-    <h4 class="mb-4">👁️ View Approval Workflow</h4>
+    <h4 class="mb-4">View Approval Workflow</h4>
 
     <dl class="row">
       <dt class="col-sm-3">Name</dt>
@@ -106,7 +116,7 @@
 
         <div class="mt-4">
           <button type="submit" class="btn btn-primary">💾 Save Stage</button>
-          <a href="{{ route('settings.approval_stages.show', $approval->Id) }}" class="btn btn-secondary">← Back</a>
+          <a href="{{ route('settings.workflows.show', $approval->Id) }}" class="btn btn-secondary">← Back</a>
         </div>
       </form>
     </div>

@@ -21,12 +21,14 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
-        Route::get('approval-stages', 'ApprovalStagesController@index')->name('settings.approval_stages');
-        Route::post('approval-stages/create', 'ApprovalStagesController@store')->name('settings.approval_stages.store');
+        Route::get('workflows', 'WorkFlowController@index')->name('settings.workflows.index');
+        Route::post('workflows/create', 'WorkFlowController@store')->name('settings.workflows.store');
+        Route::get('workflows/delete/{id}', 'WorkFlowController@destroy')->name('settings.workflows.delete');
+        Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
+
         Route::get('workflow-limits', 'WorflowLimitsController@index')->name('settings.workflow_limits');
         Route::post('workflow-limits', 'WorflowLimitsController@store')->name('settings.approval_workflow_limit.store');
-        
-        Route::get('approval-stages/{id}', 'ApprovalStagesController@show')->name('settings.approval_stages.show');
+
         Route::get('integrations', 'SettingsController@integrations')->name('settings.integrations');
         Route::post('integrations', 'IntegrationController');
         Route::namespace('Codes')->group(function () {

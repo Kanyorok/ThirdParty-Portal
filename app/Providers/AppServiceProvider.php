@@ -160,7 +160,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
-use App\Models\Settings\ApprovalStage;
+use App\Models\Settings\WorkFlow;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\TaxJurisdiction;
@@ -189,7 +189,7 @@ class AppServiceProvider extends ServiceProvider
             APICredential::getPrimaryKey() => APICredential::class,
             Comment::getPrimaryKey() => Comment::class,
             Report::getPrimaryKey() => Report::class,
-            ApprovalStage::getPrimaryKey() => ApprovalStage::class,
+            WorkFlow::getPrimaryKey() => WorkFlow::class,
 
             //CRM
             Account::getPrimaryKey() => Account::class,

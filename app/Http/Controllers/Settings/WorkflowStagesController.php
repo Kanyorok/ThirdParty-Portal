@@ -10,42 +10,13 @@ use App\Http\Requests\Settings\ApprovalSetupRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class ApprovalStagesController extends Controller
+class WorkflowStagesController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $morphMap = Relation::morphMap();
-
-        $approvalGroups = ApprovalStage::all();
-
-        $sourceOptions = array_flip($morphMap);
-
-        return view('settings.approvals.sections', compact('approvalGroups', 'sourceOptions'));
-    }
-
-    public function show($id)
-    {
-        $approval = ApprovalStage::findOrFail($id);
-        $sourceOptions = array_flip(Relation::morphMap());
-        $approvalTypes = DB::table('t_WorkFlowTypes')->get(); 
-        $permissions = DB::table('t_Permissions')->get();
-        $workflowLimits = DB::table('t_WorkflowLimits')
-            ->select('Id', 'Source')
-            ->get();
-        $stages = DB::table('t_WorkflowStages')
-            ->where('WorkflowID', $id)
-            ->get();
-
-        return view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'));
-    }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(ApprovalSetupRequest $request)
+    public function store(Request $request)
     {
         $validated = $request->validated();
         /** @var \App\Models\Auth\User $user */
