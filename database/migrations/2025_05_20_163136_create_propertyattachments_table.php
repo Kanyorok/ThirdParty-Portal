@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id('Id');
             $table->foreignId('PropertyID')->constrained('t_PropertyRegistry', 'Id');
             $table->string('DocumentTitle');
-            $table->string('DocumentType');
+            $table->foreignId('DocumentType')->constrained('t_CodeDetails', 'ID');
             $table->text('Description');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

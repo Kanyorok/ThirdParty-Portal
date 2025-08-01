@@ -27,7 +27,7 @@ class PropertyLeaseTerminationService
         PropertyNewLease $LeaseID,
         string     $TerminationDate,
         CodeDetail $TerminationReason,
-        string $Remarks,
+        string $Remarks = null,
         User $user,
         UploadedFile $document = null
     ): self {

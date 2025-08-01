@@ -14,7 +14,7 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\ModeTimeline;
-use App\Models\Procurement\PlanLineItems;
+use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\Procurement\Tender;
@@ -51,95 +51,101 @@ class TenderController extends Controller
     }
 
     public function create()
-    {
-        //Check if the user has permission to create tenders using the enum set
-        $this->authorize(PermissionEnum::TenderWrite, Tender::class);
-        $procurementModes = ProcurementMode::all();
-        $currencies = Currency::all();
-        $tenderTypes = TenderTypeEnum::cases();
-        $statuses = TenderStatusEnum::cases();
-        $suppliers = collect();
-        $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
-        $AllItemsCategories = ItemCategories::select('Id', 'Name')->whereNull('ParentId')->get();
-        $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')->get();
-        $procurementPlan = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')->where('Status', ProcurementPlanStatusEnum::Approved)
-            ->get();
+{
+    $this->authorize(PermissionEnum::TenderWrite, Tender::class);
+    $procurementModes = ProcurementMode::all();
+    $currencies = Currency::all();
+    $tenderTypes = TenderTypeEnum::cases();
+    $statuses = TenderStatusEnum::cases();
+    $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
+    $allItemsCategories = ItemCategories::select('Id', 'Name')->whereNull('ParentId')->get();
+    $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
+    $procurementPlan = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
+        ->where('Status', ProcurementPlanStatusEnum::Approved)
+        ->get();
 
-        $allCurrency = Currency::select('Id', 'Name', 'Code', 'Symbol')->get();
-
-        //return$allItemsWithCategoryIds = Item::select('Id', 'ItemName', 'Category')->get()->groupBy('Category');
-
-        // Fetch procurement plans
-        $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')->where('Status', ProcurementPlanStatusEnum::Approved)
-            ->get()
-            ->keyBy('PlanID');
-
-        // Fetch plan line items with related item details
-        $itemsCategories = PlanLineItems::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty')
-            ->with(['item' => function ($query) {
-                $query->select('Id', 'ItemName');
-            }])
-            ->get();
-
-        // Initialize the output arrays
-        $procurementPlansOutput = [];
-        $planItemData = [];
-
-        // Group line items by PlanID and build output
-        foreach ($itemsCategories as $lineItem) {
-            $planId = $lineItem->PlanID;
-            $item = $lineItem->item;
-
-            // Skip if item is null
-            if (!$item) {
-                continue;
-            }
-
-            // Add to procurementPlansOutput
-            $procurementPlansOutput[$planId][] = [
-                'id' => $planId,
-                'itemId' => $item->Id,
-                'name' => $item->ItemName,
-                'plannedQty' => $lineItem->MergedQty,
-            ];
-
-            // Add to planItemData
-            $planItemData[$planId][] = [
-                'itemId' => $item->Id,
-                'name' => $item->ItemName,
-                'plannedQty' => $lineItem->MergedQty,
-            ];
+    // Fetch all item categories (including subcategories) to map to top-level parents
+    $allCategories = ItemCategories::select('Id', 'ParentId')->get()->keyBy('Id');
+    $categoryToTopLevel = [];
+    foreach ($allCategories as $category) {
+        $current = $category;
+        while ($current->ParentId !== null && isset($allCategories[$current->ParentId])) {
+            $current = $allCategories[$current->ParentId];
         }
-
-        //Getting List of All Suppliers
-        $suppliers = Supplier::select('Id', 'SupplierName', 'CategoryId')->get();
-
-        // Log activity for creating tender
-        activity()
-            ->performedOn(new Tender())
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('View tender creation');
-        //return $procurementPlansOutput;
-        //return $planItemData;
-        return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
-            'procurementModes',
-            'currencies',
-            'tenderTypes',
-            'tenderCategories',
-            'statuses',
-            'itemsCategories',
-            'procurementPlan',
-            'AllItemsCategories',
-            'procurementPlansOutput',
-            'procurementPlans',
-            'planItemData',
-            'suppliers',
-            'allItemsWithCategoryIds',
-            'allCurrency'
-
-        ));
+        $categoryToTopLevel[$category->Id] = $current->Id; // Map each category to its top-level parent
     }
+
+    // Fetch items and map their Category to the top-level category
+    $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')->get()->map(function ($item) use ($categoryToTopLevel) {
+        return [
+            'Id' => $item->Id,
+            'ItemName' => $item->ItemName,
+            'Category' => $categoryToTopLevel[$item->Category] ?? $item->Category, // Use top-level category
+        ];
+    });
+
+    Log::info('All Items With Category IDs count: ' . $allItemsWithCategoryIds->count());
+    if ($allItemsWithCategoryIds->count() > 0) {
+        Log::info('Sample Item: ' . json_encode($allItemsWithCategoryIds->first()));
+    }
+
+    $procurementPlans = ConsolidatedProcurementPlan::select('PlanID', 'ReferenceNumber', 'Title')
+        ->where('Status', ProcurementPlanStatusEnum::Approved)
+        ->get()
+        ->keyBy('PlanID');
+
+    $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty')
+        ->with(['item' => function ($query) {
+            $query->select('Id', 'ItemName');
+        }])
+        ->get();
+
+    $procurementPlansOutput = [];
+    $planItemData = [];
+    foreach ($itemsCategories as $lineItem) {
+        $planId = $lineItem->PlanID;
+        $item = $lineItem->item;
+        if (!$item) {
+            continue;
+        }
+        $procurementPlansOutput[$planId][] = [
+            'id' => $planId,
+            'itemId' => $item->Id,
+            'name' => $item->ItemName,
+            'plannedQty' => $lineItem->MergedQty,
+        ];
+        $planItemData[$planId][] = [
+            'itemId' => $item->Id,
+            'name' => $item->ItemName,
+            'plannedQty' => $lineItem->MergedQty,
+        ];
+    }
+
+    $suppliers = Supplier::select('Id', 'SupplierName', 'CategoryId')->get();
+
+    activity()
+        ->performedOn(new Tender())
+        ->causedBy(Auth::user())
+        ->withProperties(['action' => 'create'])
+        ->log('View tender creation');
+
+    return view('procurement.tendering.tendersetup.tenderinitiation.create', compact(
+        'procurementModes',
+        'currencies',
+        'tenderTypes',
+        'tenderCategories',
+        'statuses',
+        'itemsCategories',
+        'procurementPlan',
+        'allItemsCategories',
+        'procurementPlansOutput',
+        'procurementPlans',
+        'planItemData',
+        'suppliers',
+        'allItemsWithCategoryIds',
+        'allCurrency'
+    ));
+}
 
     public function store(Request $request)
     {
@@ -204,7 +210,7 @@ class TenderController extends Controller
             $tender->CreatedOn = now();
             $tender->ModifiedBy = Auth::id();
             $tender->ModifiedOn = now();
-            $tender->RelatedPRID = '1'; // rm error fo nulable after later migration
+           // $tender->RelatedPRID = '1'; // rm error fo nulable after later migration
             $tender->CurrencyId = $request->currency_id; // rm error fo nulable after later migration
             $tender->save();
 

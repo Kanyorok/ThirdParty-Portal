@@ -26,7 +26,7 @@ class PropertyLeaseRenewalService
     float $ServiceCharge,
     float $ParkingFee,
     float $OtherCharges,
-    string $Remarks,
+    string $Remarks = null,
     User $user
 ): PropertyLeaseRenewal {
     DB::beginTransaction();

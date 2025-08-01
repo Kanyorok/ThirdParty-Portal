@@ -95,7 +95,7 @@ class PropertyNewLeaseController extends Controller
             $parkingFee = $data['ParkingFee'],
             $otherCharges = $data['OtherCharges'],
             $dueDay = $data['DueDay'],
-            $specialTerms = $data['SpecialTerms'],
+            $specialTerms = $data['SpecialTerms'] ?? '',
             $request->user(),
             $document
         );

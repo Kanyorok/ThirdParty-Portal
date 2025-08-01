@@ -16,9 +16,9 @@ enum PostingEnum: string
 
     case Draft = 'd';
 
-    case Pending = 'pe';
+    case Pending = 'P';
 
-    case Completed = 'co';
+    case Completed = 'C';
 
     public function label(): string
     {
