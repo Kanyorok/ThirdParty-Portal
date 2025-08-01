@@ -2,8 +2,8 @@
 @section('title', 'Add Budget Line Entry')
 @section('content')
 
-    <div class="card mt-4">
-        <div class="card-header bg-dark text-white">➕ Add Budget Line Entry</div>
+    <div class="card mt-2">
+{{--        <div class="card-header bg-dark text-white">➕ Add Budget Line Entry</div>--}}
         <div class="card-body">
             <form action="{{ route('entrybyglline.store') }}" method="POST">
                 @csrf
@@ -21,7 +21,7 @@
                             <option selected disabled>-- Select Budget --</option>
                             @foreach ($budgets as $item)
                                 <option value="{{ $item->Id }}">{{ $item->Name }}
-                                    - {{ $item->From.' '.$item->To }}</option>
+                                    - ({{ $item->From.' |to| '.$item->To }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -71,7 +71,7 @@
                             <div class="col-md-3 mb-2">
                                 <label>Month {{ $key }}</label>
                                 <input type="number" value="0.00" min="0" name="monthly_allocations[{{ $key }}]"
-                                       class="form-control" placeholder="0.00">
+                                       class="form-control" placeholder="0.00" step="0.01" required>
                             </div>
                         @endforeach
                     </div>

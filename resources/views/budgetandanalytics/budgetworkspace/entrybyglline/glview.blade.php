@@ -2,7 +2,7 @@
 @section('title', 'Budget Lines, Branches & Amounts')
 @section('content')
     <div class="card mt-4">
-        <div class="card-header bg-dark text-white">📑 Budget Lines, Branches & Amounts
+        <div class="card-header bg-light text-black">📑 Budget Lines, Branches & Amounts
             <a href="{{ route('entrybyglline.index') }}" class="btn btn-secondary btn-sm float-end">← Back to
                 Entries</a>
         </div>
