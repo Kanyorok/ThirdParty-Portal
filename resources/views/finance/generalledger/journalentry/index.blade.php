@@ -1,11 +1,11 @@
 @extends('layouts.app')
-
+@section('title', 'Journal Entry')
 @section('content')
     <div class="container my-3">
         <!-- Card for Journal Entries -->
         <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
             <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 text-primary">📒 Journal Entries</h5>
+{{--                <h5 class="mb-0 text-primary">📒 Journal Entries</h5>--}}
                 <a href="{{ route('journalentry.create') }}" class="btn btn-primary btn-sm p-2">
                     <i class="fas fa-plus me-1"></i> New Journal Entry
                 </a>
@@ -16,8 +16,8 @@
                     <table class="table table-hover table-sm align-middle">
                         <thead class="table-light">
                         <tr>
-                            <th scope="col">Date</th>
                             <th scope="col">Reference</th>
+                            <th scope="col">Date</th>
                             <th scope="col">Description</th>
                             <th scope="col">Total Debit</th>
                             <th scope="col">Total Credit</th>
@@ -27,14 +27,14 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td>2025-06-01</td>
                             <td>JV20240601</td>
+                            <td>2025-06-01</td>
                             <td>Salary Payment - May</td>
                             <td>100,000.00</td>
                             <td>100,000.00</td>
                             <td><span class="badge bg-success">Posted</span></td>
                             <td class="text-center">
-                                <a href="#" class="btn btn-sm btn-outline-info me-1" title="View">
+                                <a href="#" class="btn btn-sm btn-outline-info me-1" title="View Journal Entry">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="#" class="btn btn-sm btn-outline-primary" title="Edit">

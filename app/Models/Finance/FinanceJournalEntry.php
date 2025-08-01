@@ -69,4 +69,11 @@ class FinanceJournalEntry extends Model
             }
         });
     }
+
+    //Relationships
+    public function journalLines()
+    {
+        return $this->hasMany(FinanceJournalLines::class, 'JournalEntryId', 'Id');
+    }
+
 }

@@ -21,7 +21,9 @@ class JournalEntryController extends Controller
     //
     public function index()
     {
-        return view('finance.generalledger.journalentry.index');
+        $journalEntries = FinanceJournalEntry::with('journalLines:Id,JournalEntryId,Debit,Credit,Amount,IsDebit,Narration')
+            ->select('Id','RefNo','Date','Description','ApprovalStatus','Type')->get();
+        return view('finance.generalledger.journalentry.index',compact('journalEntries'));
     }
 
     public function create()

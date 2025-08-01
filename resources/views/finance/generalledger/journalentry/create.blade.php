@@ -2,7 +2,7 @@
 @section('title', 'Journal Entry')
 
 @section('content')
-    <div class="container mt-1">
+    <div class="container mt-0">
         <div class="card shadow rounded-4">
             <div class="card-header bg-light py-1 px-3">
                 <h6 class="mb-0 text-muted"><i class="fab fa-wpforms text-info"></i></h6>
