@@ -83,36 +83,33 @@ public function store(Request $request)
 
     return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
 }
+
 public function index(Request $request)
 {
-    $query = DB::table('t_BancassurancePolicies as p')
-        ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-        ->leftJoin('t_InsuranceProducts as pr', 'p.ProductID', '=', 'pr.Id')
-        ->leftJoin('t_InsuranceProviders as i', 'p.InsurerID', '=', 'i.Id')
-        ->select(
-            'p.*',
-            DB::raw("CONCAT(c.FullName, ' (', c.NationalID, ')') as CustomerName"),
-            'pr.Name as ProductName',
-            'i.Name as InsurerName'
-        );
+    $query = BancassurancePolicy::with(['customer', 'product', 'insurer']);
 
-    // ✅ Apply filters
+    // Filter by status
     if ($request->filled('status')) {
-        $query->where('p.Status', $request->status);
+        $query->where('Status', $request->status);
     }
 
+    // Filter by policy date range
     if ($request->filled('from') && $request->filled('to')) {
-        $query->whereBetween('p.PolicyStartDate', [$request->from, $request->to]);
+        $query->whereBetween('PolicyStartDate', [$request->from, $request->to]);
     }
 
+    // Filter by customer name
     if ($request->filled('customer')) {
-        $query->where('c.FullName', 'like', '%' . $request->customer . '%');
+        $query->whereHas('customer', function ($q) use ($request) {
+            $q->where('FullName', 'like', '%' . $request->customer . '%');
+        });
     }
 
-    $policies = $query->orderByDesc('p.Id')->get();
+    $policies = $query->orderByDesc('Id')->get();
 
     return view('bancassurance.policies.index', compact('policies'));
 }
+
 
 public function submitForUnderwriting(Request $request, $id)
 {

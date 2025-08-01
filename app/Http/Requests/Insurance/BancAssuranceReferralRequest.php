@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Insurance;
 
+use App\Enums\Insurance\InsuranceReferralStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class BancAssuranceReferralRequest extends FormRequest
 {
@@ -26,12 +28,11 @@ class BancAssuranceReferralRequest extends FormRequest
         'ClientIDNumber' => 'required|String',
         'ClientPhone'   => 'required|string',
         'ClientEmail'   => 'required|email',
-        'RefferedBy'    => 'required|exists:t_Employees,Id',
-        'ReferralDate'  => 'required|date',
-        'InsuranceProdeuctId'   => 'nullable|exists:t_CodeDetails,ID',
+        'ReferredBy'    => 'nullable|exists:t_Users,Id',
+        'ReferralDate'  => 'nullable|date',
+        'InsuranceProductId'   => 'nullable|exists:t_CodeDetails,ID',
         'PreferredInsurerId' => 'required|exists:t_CodeDetails,ID',
         'Remarks' => 'nullable|string',
-        'Status' => 'required|permissionEnum::InsuranceReferralStatus',
         'AssignedTo' => 'nullable|exists:t_Employees,Id',
         ];
     }

@@ -28,10 +28,13 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
 
     Route::prefix('bancassurance/referrals')->name('bancassurance.referrals.')->group(function () {
     Route::get('create', [BancassuranceReferralController::class, 'create'])->name('create');
+    Route::get('edit/{Id}', [BancassuranceReferralController::class, 'edit'])->name('edit');
+    Route::put('update/{Id}', [BancassuranceReferralController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [BancassuranceReferralController::class, 'destroy'])->name('destroy');
     Route::post('store', [BancassuranceReferralController::class, 'store'])->name('store');
     Route::get('/', [BancassuranceReferralController::class, 'index'])->name('index');
     Route::get('assign/list', [BancassuranceReferralController::class, 'assignList'])->name('assign.list');
-    Route::post('assign/{id}', [BancassuranceReferralController::class, 'assign'])->name('assign');
+    Route::post('assign/{Id}', [BancassuranceReferralController::class, 'assign'])->name('assign');
     Route::get('performance', [BancassuranceReferralController::class, 'performanceView'])->name('performance');
 
 });

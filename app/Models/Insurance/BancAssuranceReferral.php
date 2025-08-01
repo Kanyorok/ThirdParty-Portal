@@ -2,6 +2,9 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+use App\Models\HRM\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,7 +22,7 @@ class BancAssuranceReferral extends Model
 
     protected $fillable = [
         'ClientName', 'ClientIDNumber', 'ClientPhone', 'ClientEmail', 'BranchId',
-        'RefferedBy', 'ReferralDate', 'InsuranceProdeuctId', 'PreferredInsurerId',
+        'ReferredBy', 'ReferralDate', 'InsuranceProductId', 'PreferredInsurerId',
         'Remarks', 'Status', 'AssignedTo', 'ConvertedPolicyId', 'CreatedBy',
         'ModifiedBy', 'DeletedBy'
     ];
@@ -32,4 +35,26 @@ class BancAssuranceReferral extends Model
     {
         return 'bancassuarancereferralId';
     }
+
+    public function insuranceProduct()
+    {
+        return $this->belongsTo(CodeDetail::class, 'InsuranceProductId', 'ID');
+    }
+
+    public function preferredInsurer()
+    {
+        return $this->belongsTo(CodeDetail::class, 'PreferredInsurerId', 'ID');
+    }
+
+    public function assignedToUser()
+    {
+        return $this->belongsTo(User::class, 'AssignedTo', 'Id');
+    }
+
+    public function referredByEmployee()
+    {
+        return $this->belongsTo(Employee::class, 'ReferredBy', 'Id');
+    }
+
+    
 }

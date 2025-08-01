@@ -18,13 +18,13 @@ return new class extends Migration
             $table->String('ClientPhone');
             $table->String('ClientEmail');
             $table->foreignId('BranchId')->constrained('t_Branches', 'Id');
-            $table->foreignId('RefferedBy')->constrained('t_Users', 'Id');
-            $table->date('ReferralDate');
-            $table->foreignId('InsuranceProdeuctId')->constrained('t_CodeDetails','ID');
+            $table->foreignId('ReferredBy')->constrained('t_Users', 'Id')->nullable();
+            $table->date('ReferralDate')->nullable();
+            $table->foreignId('InsuranceProductId')->constrained('t_CodeDetails','ID')->nullable();
             $table->foreignId('PreferredInsurerId')->constrained('t_CodeDetails','ID');
-            $table->String('Remarks');
+            $table->String('Remarks')->nullable();
             $table->String('Status');
-            $table->String('AssignedTo');
+            $table->String('AssignedTo')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

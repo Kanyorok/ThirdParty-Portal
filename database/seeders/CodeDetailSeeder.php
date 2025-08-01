@@ -203,6 +203,19 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
 
+            // Insurance Product 
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Life Insurance', 'Value' => 'L'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Health Insurance', 'Value' => 'H'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Property Insurance', 'Value' => 'P'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Vehicle Insurance', 'Value' => 'V'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Travel Insurance', 'Value' => 'T'],
+
+            // Insurance Provider
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'Jubilee', 'Value' => 'J'],
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'Britam', 'Value' => 'B'],
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'CIC Insurance', 'Value' => 'C'],
+
+
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Trade Shows', 'DisplayOrder' => 2],
