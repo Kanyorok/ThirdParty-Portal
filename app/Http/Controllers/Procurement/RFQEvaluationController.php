@@ -187,7 +187,7 @@ class RFQEvaluationController extends Controller
         $member = RFQCommitteeMember::with('user.employee')
             ->where('RFQID', $rfq->Id)
             ->where('UserID', $employeeId)
-            ->where('Response', 1)
+           // ->where('Response', 1)
             ->first();
 
         if (!$member) {
