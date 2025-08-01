@@ -8,6 +8,7 @@ use App\Http\Requests\Settings\WorkFlowRequest;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Settings\WorkFlow;
+use App\Models\Settings\WorkFlowStage;
 use Illuminate\Support\Facades\DB;
 
 class WorkFlowController extends Controller
@@ -43,7 +44,7 @@ class WorkFlowController extends Controller
         /** @var \App\Models\Auth\User $user */
         $user = Auth::user();
 
-        try{
+        try {
             $workFlow = WorkFlow::create([
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
@@ -72,13 +73,14 @@ class WorkFlowController extends Controller
     {
         $approval = WorkFlow::findOrFail($id);
         $sourceOptions = array_flip(Relation::morphMap());
-        $approvalTypes = DB::table('t_WorkFlowTypes')->get(); 
+        $approvalTypes = DB::table('t_WorkFlowTypes')->get();
         $permissions = DB::table('t_Permissions')->get();
         $workflowLimits = DB::table('t_WorkflowLimits')
             ->select('Id', 'Source')
             ->get();
-        $stages = DB::table('t_WorkflowStages')
-            ->where('WorkflowID', $id)
+
+        $stages = WorkFlowStage::where('WorkFlowId', $id)
+            ->with(['workflow'])
             ->get();
 
         return view('settings.approvals.show', compact('approval', 'sourceOptions', 'permissions', 'approvalTypes', 'workflowLimits', 'stages'));

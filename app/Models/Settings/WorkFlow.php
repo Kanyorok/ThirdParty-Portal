@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
 use App\Models\Settings\WorkFlowType;
+use App\Models\Settings\WorkflowStage;
 
 class WorkFlow extends Model
 {
@@ -20,8 +21,16 @@ class WorkFlow extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Name', 'Source', 'Description',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'Name',
+        'Source',
+        'Description',
+        'CreatedBy',
+        'ModifiedBy',
+        'DeletedBy',
+    ];
+
+    protected $casts = [
+        'IsFinalStage' => 'boolean',
     ];
 
     public static function getPrimaryKey(): string
@@ -29,13 +38,13 @@ class WorkFlow extends Model
         return 'WorkFlowId';
     }
 
-    public function createdByUser()
-    {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
-    }
-
     public function type_name()
     {
         return $this->belongsTo(WorkFlowType::class, 'TypeID', 'Id');
+    }
+
+    public function stages()
+    {
+        return $this->hasMany(WorkflowStage::class, 'WorkFlowId', 'Id');
     }
 }

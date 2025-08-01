@@ -43,15 +43,27 @@
     <div class="card shadow p-4 rounded-4 mt-4">
       <h4 class="mb-4">➕ Add Approval Stage</h4>
 
-      <form method="POST" action="#" id="stageForm">
+      {{-- Validation Errors --}}
+      @if ($errors->any())
+        <div class="alert alert-danger rounded-3 shadow-sm">
+          <strong>Validation failed:</strong>
+          <ul class="mb-0 mt-1">
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+
+      <form method="POST" action="{{ route('settings.workflow_stages.store') }}" id="stageForm">
         @csrf
-        <input type="hidden" name="WorkflowID" value="{{ $approval->Id }}">
+        <input type="hidden" name="WorkFlowId" value="{{ $approval->Id }}">
 
         <div class="row mb-3">
           <div class="col-md-4">
             <label for="StageName" class="form-label">Stage Name</label>
-            <input type="text" name="StageName" placeholder="e.g. Committee Stage" class="form-control" required
-              value="{{ old('StageName') }}">
+            <input type="text" name="StageName" placeholder="e.g. Committee Stage" class="form-control"
+              value="{{ old('StageName') }}" required>
           </div>
 
           <div class="col-md-4">
@@ -62,10 +74,11 @@
 
           <div class="col-md-4">
             <label for="TypeID" class="form-label">Approval Type</label>
-            <select name="TypeID" id="TypeID" class="form-select" required>
+            <select name="WorkFlowTypeId" id="TypeID" class="form-select" required>
               <option value="">-- Select Type --</option>
               @foreach ($approvalTypes as $type)
-                <option value="{{ $type->Id }}" data-code="{{ $type->TypeID }}">
+                <option value="{{ $type->Id }}" data-code="{{ $type->TypeID }}"
+                  {{ old('WorkFlowTypeId') == $type->Id ? 'selected' : '' }}>
                   {{ $type->TypeID }} - {{ $type->Name }}
                 </option>
               @endforeach
@@ -79,7 +92,9 @@
             <select name="WorkflowLimitID" id="WorkflowLimitID" class="form-control select2">
               <option value="">Select WorkFlow Limit</option>
               @foreach ($workflowLimits as $limit)
-                <option value="{{ $limit->Id }}">{{ $limit->Source }}</option>
+                <option value="{{ $limit->Id }}" {{ old('WorkflowLimitID') == $limit->Id ? 'selected' : '' }}>
+                  {{ $limit->Source }}
+                </option>
               @endforeach
             </select>
           </div>
@@ -96,17 +111,22 @@
         <div class="row mb-3">
           <div class="col-md-4">
             <label for="PermissionName" class="form-label">Permission Name</label>
-            <select name="Permission" id="PermissionSelect" class="form-control select2" required>
+            <select name="PermissionId" id="PermissionSelect" class="form-control select2" required>
               <option value="">Select Permission</option>
               @foreach ($permissions as $permission)
-                <option value="{{ $permission->id }}">{{ $permission->name }}</option>
+                <option value="{{ $permission->id }}" {{ old('PermissionId') == $permission->id ? 'selected' : '' }}>
+                  {{ $permission->name }}
+                </option>
               @endforeach
             </select>
           </div>
 
           <div class="col-md-4 d-flex align-items-end pt-2">
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" value="1" name="IsFinalStage" id="IsFinalStage">
+              {{-- Ensure checkbox preserves old value --}}
+              <input type="hidden" name="IsFinalStage" value="0">
+              <input class="form-check-input" type="checkbox" value="1" name="IsFinalStage" id="IsFinalStage"
+                {{ old('IsFinalStage') ? 'checked' : '' }}>
               <label class="form-check-label" for="IsFinalStage">
                 Mark as Final Stage
               </label>
@@ -140,10 +160,10 @@
             <tr>
               <td>{{ $index + 1 }}</td>
               <td>{{ $stage->StageName }}</td>
-              <td>{{ $stage->type_name ?? $stage->TypeID }}</td>
+              <td>{{ $stage->type_name->TypeID ?? '-' }}</td>
               <td>{{ $stage->role_name ?? '-' }}</td>
               <td>{{ $stage->MaxAmount ?? '-' }}</td>
-              <td>{{ $stage->IsFinalStage ? 'Yes' : 'No' }}</td>
+              <td>{{ $stage->workflow->IsFinalStage ? 'Yes' : 'No' }}</td>
               <td>
                 {{-- Add delete/edit buttons here if needed --}}
                 <button class="btn btn-sm btn-danger">🗑️</button>

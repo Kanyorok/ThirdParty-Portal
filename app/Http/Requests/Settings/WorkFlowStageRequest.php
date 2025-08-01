@@ -21,8 +21,16 @@ class WorkFlowStageRequest extends FormRequest
      */
     public function rules(): array
     {
+
         return [
-            //
+            'StageName' => 'required|string|max:255',
+            'EscalationLimit' => 'nullable|integer',
+            'WorkFlowId' => 'required|exists:t_WorkFlows,Id',
+            'WorkFlowTypeId' => 'nullable|exists:t_WorkFlowTypes,Id',
+            'WorkFlowLimitId' => 'nullable|exists:t_WorkFlowLimits,Id',
+            'PermissionId' => 'nullable|exists:t_Permissions,Id',
+            'Count' => 'nullable|integer',
+            'IsFinalStage' => ['nullable', 'boolean'],
         ];
     }
 }

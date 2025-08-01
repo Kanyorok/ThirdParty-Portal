@@ -25,7 +25,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
         Route::post('workflows/create', 'WorkFlowController@store')->name('settings.workflows.store');
         Route::get('workflows/delete/{id}', 'WorkFlowController@destroy')->name('settings.workflows.delete');
         Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
-
+        Route::post('workflow-stages', 'WorkflowStagesController@store')->name('settings.workflow_stages.store');
         Route::get('workflow-limits', 'WorflowLimitsController@index')->name('settings.workflow_limits');
         Route::post('workflow-limits', 'WorflowLimitsController@store')->name('settings.approval_workflow_limit.store');
 
