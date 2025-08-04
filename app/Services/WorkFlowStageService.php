@@ -43,4 +43,33 @@ class WorkFlowStageService
 
         return $stage;
     }
+
+    public function deleteStage(int $id): bool
+    {
+        $stage = WorkFlowStage::findOrFail($id);
+        $stage->delete();
+
+        activity()->performedOn($stage)
+            ->event('delete')
+            ->log('Deleted approval workflow stage: ' . $stage->StageName);
+
+        return true;
+    }
+
+    public function updateStage(int $id, array $data): WorkFlowStage
+    {
+        $stage = WorkFlowStage::findOrFail($id);
+        $stage->update($data);
+
+        activity()->performedOn($stage)
+            ->event('update')
+            ->log('Updated approval workflow stage: ' . $stage->StageName);
+
+        return $stage;
+    }
+
+    public function getStageById(int $id): WorkFlowStage
+    {
+        return WorkFlowStage::findOrFail($id);
+    }
 }

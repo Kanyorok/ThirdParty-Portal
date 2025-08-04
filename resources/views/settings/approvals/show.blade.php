@@ -165,8 +165,13 @@
               <td>{{ $stage->MaxAmount ?? '-' }}</td>
               <td>{{ $stage->workflow->IsFinalStage ? 'Yes' : 'No' }}</td>
               <td>
-                {{-- Add delete/edit buttons here if needed --}}
-                <button class="btn btn-sm btn-danger">🗑️</button>
+                <form action="{{ route('settings.workflow_stages.destroy', $stage->Id) }}" method="POST"
+                  style="display:inline;">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn btn-sm btn-danger"
+                    onclick="return confirm('Are you sure you want to delete this stage?');">🗑️</button>
+                </form>
               </td>
             </tr>
           @empty

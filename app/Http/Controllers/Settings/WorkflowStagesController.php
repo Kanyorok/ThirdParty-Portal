@@ -28,4 +28,15 @@ class WorkflowStagesController extends Controller
 
         return redirect()->back()->with('success', 'Approval workflow stage created.');
     }
+
+    public function destroy($id)
+    {
+        try {
+            $this->stageService->deleteStage($id);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to delete approval stage: ' . $e->getMessage()]);
+        }
+
+        return redirect()->back()->with('success', 'Approval workflow stage deleted.');
+    }
 }
