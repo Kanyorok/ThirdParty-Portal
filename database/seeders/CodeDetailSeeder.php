@@ -166,8 +166,11 @@ class CodeDetailSeeder extends Seeder
 
 
             // Procurement Method
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
@@ -203,6 +206,50 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
 
+            // Gender
+            ['CodeID' => 'Gender', 'Description' => 'Male','Value' => 'M'],
+            ['CodeID' => 'Gender', 'Description' => 'Female', 'Value' => 'F'],
+
+            // MaritalStatus
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Single','Value' => 'S'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Married', 'Value' => 'M'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Divorced', 'Value' => 'D'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Widowed', 'Value' => 'W'],
+            
+            // Relationships
+            ['CodeID' => 'Relationships', 'Description' => 'Spouse','Value' => 'S'],
+            ['CodeID' => 'Relationships', 'Description' => 'Child', 'Value' => 'C'],
+            ['CodeID' => 'Relationships', 'Description' => 'Parent', 'Value' => 'P'],
+            ['CodeID' => 'Relationships', 'Description' => 'Sibling', 'Value' => 'S'],    
+            ['CodeID' => 'Relationships', 'Description' => 'Relative', 'Value' => 'R'],
+            ['CodeID' => 'Relationships', 'Description' => 'Friend', 'Value' => 'F'],
+            ['CodeID' => 'Relationships', 'Description' => 'LegalGuardian', 'Value' => 'LG'],
+            
+            
+            
+            // Occupation
+            ['CodeID' => 'Occupation', 'Description' => 'Employed','Value' => 'E'],
+            ['CodeID' => 'Occupation', 'Description' => 'Not Employed', 'Value' => 'N'],
+
+            // ContactType
+            ['CodeID' => 'ContactType', 'Description' => '📞 Call','Value' => 'C'],
+            ['CodeID' => 'ContactType', 'Description' => '📧 Email', 'Value' => 'E'],
+            ['CodeID' => 'ContactType', 'Description' => '📲 SMS', 'Value' => 'S'],
+            ['CodeID' => 'ContactType', 'Description' => '🏢 Visit', 'Value' => 'V'],
+            
+            //Payment Terms
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Cash on Delivery – payment immediately on receipt', 'Value' => 'CD'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 30 days from invoice date', 'Value' => 'N3'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 60 days after invoice date', 'Value' => 'N6'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 90 days after invoice date', 'Value' => 'N9'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Cash in Advance – payment before delivery', 'Value' => 'CIA'],
+            ['CodeID' => 'PaymentTerm', 'Description' => '50% Advance, 50% on Delivery', 'Value' => '50/50'],
+            ['CodeID' => 'PaymentTerm', 'Description' => '30% Advance, 70% after installation', 'Value' => '30/70'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment upon specific project phases or delivery', 'Value' => 'MB'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 15 days after end of month', 'Value' => 'EOM'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Based on certified project work progress', 'Value' => 'PP'],
+            ['CodeID' => 'PaymentTerm', 'Description' => '90% on completion, 10% after retention period', 'Value' => 'R'],
+          
             // Insurance Product 
             ['CodeID' => 'InsuranceProduct', 'Description' => 'Life Insurance', 'Value' => 'L'],
             ['CodeID' => 'InsuranceProduct', 'Description' => 'Health Insurance', 'Value' => 'H'],

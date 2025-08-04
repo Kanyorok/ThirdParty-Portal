@@ -6,7 +6,10 @@
 @section('content')
 <div class="container mt-4">
     <h4 class="mb-3">👥 Registered Customers</h4>
-    <table id="Customerregistry" class="table table-bordered table-hover">
+    <a href="{{ route('bancassurance.customers.create',) }}" class="btn btn-success mb-3">
+        ➕  Register New Customer
+    </a>
+    <table id="customerregistry" class="table table-bordered table-striped align-middle">
         <thead>
             <tr>
                 <th>#</th>
@@ -27,11 +30,18 @@
                     <td>{{ $customer->PhoneNumber }}</td>
                     <td>{{ $customer->Email }}</td>
                     <td>{{ $customer->DateOfBirth }}</td>
-                    <td>
-                        <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" class="btn btn-sm btn-info">📄 View Portfolio</a> 
-                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}" class="btn btn-sm btn-secondary">🕓 Communication History</a>
-                        <a href="{{ route('bancassurance.customers.beneficiaries.create') }}" class="btn btn-sm btn-primary">➕ Add Beneficiary</a>
-                    </td>
+                     <td>
+                     
+                    <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
+                    <a href="{{ route('bancassurance.customers.edit', $customer->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this Customer?');">Delete
+                        </button>
+                    </form>
+                </td>
                 </tr>
             @empty
                 <tr>
@@ -46,7 +56,7 @@
 
 <script>
     $(document).ready(function () {
-        $('#Customerregistry').DataTable({
+        $('#customerregistry').DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,

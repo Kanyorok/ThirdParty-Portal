@@ -41,20 +41,29 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
 
 Route::prefix('bancassurance/customers')->name('bancassurance.customers.')->group(function () {
     Route::get('/', [CustomerController::class, 'index'])->name('index');
+    Route::get('check', [CustomerController::class, 'check'])->name('check');
     Route::get('create', [CustomerController::class, 'create'])->name('create');
     Route::post('store', [CustomerController::class, 'store'])->name('store');
+    Route::get('show/{Id}', [CustomerController::class, 'show'])->name('show');
+    Route::delete('delete/{Id}', [CustomerController::class, 'destroy'])->name('destroy');
+    Route::get('edit/{Id}', [CustomerController::class, 'edit'])->name('edit');
+    Route::put('update/{Id}', [CustomerController::class, 'update'])->name('update');
     Route::get('{customerId}/portfolio', [CustomerController::class, 'portfolio'])->name('portfolio');
 
 });
-Route::prefix('bancassurance/customers/{customerId}/beneficiaries')->name('bancassurance.customers.beneficiaries.')->group(function () {
+Route::prefix('bancassurance/customers/beneficiaries')->name('bancassurance.customers.beneficiaries.')->group(function () {
     Route::get('create', [CustomerBeneficiaryController::class, 'create'])->name('create');
     Route::post('store', [CustomerBeneficiaryController::class, 'store'])->name('store');
 });
 
-Route::prefix('bancassurance/customers/{customerId}/communication')->name('bancassurance.customers.communication.')->group(function () {
+Route::prefix('bancassurance/customers/communication')->name('bancassurance.customers.communication.')->group(function () {
     Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
     Route::get('create', [CustomerCommunicationController::class, 'create'])->name('create');
     Route::post('store', [CustomerCommunicationController::class, 'store'])->name('store');
+    Route::get('show', [CustomerCommunicationController::class, 'show'])->name('show');
+    Route::delete('delete/{Id}', [CustomerCommunicationController::class, 'destroy'])->name('destroy');
+    Route::get('edit/{Id}', [CustomerCommunicationController::class, 'edit'])->name('edit');
+    Route::put('update/{Id}', [CustomerCommunicationController::class, 'update'])->name('update');
 });
 
 Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(function () {
