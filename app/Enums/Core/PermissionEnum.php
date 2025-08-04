@@ -416,10 +416,18 @@ enum PermissionEnum: string
      * ========================================  Insurance  ========================================
      */
 
+
+    //Bancassurance Referral
     case BancassuranceReferralCreate = 'bancassurancereferralcreate';
     case BancassuranceReferralUpdate = 'bancassurancereferralupdate';
     case BancassuranceReferralDelete = 'bancassurancereferraldelete';
     case BancassuranceReferralView = 'bancassurancereferralview';
+
+
+    case BancassurancePolicyCreate = 'bancassurancepolicycreate';
+    case BancassurancePolicyView = 'bancassurancepolicyview';
+    case BancassurancePolicyUpdate = 'bancassurancepolicyupdate';
+    case BancassurancePolicyDelete = 'bancassurancepolicydelete';
     
 
     /*
@@ -574,7 +582,8 @@ enum PermissionEnum: string
 
 
             //Insurance
-            [self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete]
+            [self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete],
+            [self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete],
         ]);
     }
 
@@ -669,7 +678,8 @@ enum PermissionEnum: string
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             //Insurance
-            self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete
+            self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete,
+            self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete,
             =>ModulesEnum::Insurance,
 
 
@@ -779,6 +789,7 @@ enum PermissionEnum: string
 
             //Insurance
             self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete => 'Referral',
+            self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete => 'Insurance Policy',
 
 
 

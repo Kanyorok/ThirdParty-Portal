@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\BancassurancePolicyRequest;
+use App\Models\Insurance\BancassurancePolicy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -44,33 +46,11 @@ public function create(Request $request)
 }
 
 
-public function store(Request $request)
+public function store(BancassurancePolicyRequest $request)
 {
-    $request->validate([
-        'CustomerID' => 'required',
-        'ProductID' => 'required',
-        'SumAssured' => 'required|numeric',
-        'PremiumAmount' => 'required|numeric',
-        'PaymentFrequency' => 'required',
-        'PolicyStartDate' => 'required|date',
-        'PolicyEndDate' => 'required|date',
-    ]);
+    $validated = $request->validated();
 
-    DB::table('t_BancassurancePolicies')->insert([
-        'ReferralID' => $request->ReferralID, // new field
-        'CustomerID' => $request->CustomerID,
-        'ProductID' => $request->ProductID,
-        'InsurerID' => $request->InsurerID,
-        'PolicyNumber' => $request->PolicyNumber,
-        'SumAssured' => $request->SumAssured,
-        'PremiumAmount' => $request->PremiumAmount,
-        'PaymentFrequency' => $request->PaymentFrequency,
-        'PolicyStartDate' => $request->PolicyStartDate,
-        'PolicyEndDate' => $request->PolicyEndDate,
-        'Status' => 'Proposal',
-        'CreatedBy' => auth()->id(),
-        'CreatedAt' => now(),
-    ]);
+   $policy = Bancassurancep 
 
     // Optional: Update referral status
     if ($request->filled('ReferralID')) {
@@ -86,7 +66,7 @@ public function store(Request $request)
 
 public function index(Request $request)
 {
-    $query = BancassurancePolicy::with(['customer', 'product', 'insurer']);
+    $query = BancassurancePolicy::all();
 
     // Filter by status
     if ($request->filled('status')) {

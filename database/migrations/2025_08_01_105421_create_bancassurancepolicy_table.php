@@ -11,9 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bancassurancepolicy', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::create('t_BancassurancePolicies', function (Blueprint $table) {
+            $table->id('Id');
+            $table->foreignId('CustomerID')->Constrained('t_BancassuranceCustomers','Id');
+            $table->foreignId('ProductID')->Constrained('t_CodeDetails','ID');
+            $table->foreignId('InsurerID')->Constrained('t_CodeDetails','ID')->nullable();
+            $table->string('PolicyNumber');
+            $table->float('SumAssured',18,2);
+            $table->float('PremiumAmount',18,2);
+            $table->date('PolicyStartDate');
+            $table->date('PolicyEndDate');
+            $table->foreignId('PaymentFrequency')->Constrained('t_CodeDetails','ID');
+            $table->foreignId('ReferralID')->Constrained('t_BancassuranceReferrals','Id');
+            $table->date('IssuedDate');
+            $table->date('ExpiryDate');
+            $table->boolean('IsActive');
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');            
         });
     }
 
@@ -22,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bancassurancepolicy');
+        Schema::dropIfExists('t_BancassurancePolicies');
     }
 };

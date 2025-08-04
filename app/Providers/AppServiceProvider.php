@@ -65,6 +65,7 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
@@ -114,6 +115,7 @@ use App\Policies\CrmBranchPolicy;
 use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\RepositoryPolicy;
+use App\Policies\Insurance\BancassurancePoliciesPolicy;
 use App\Policies\Insurance\BancAssuranceReferralPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
@@ -303,6 +305,7 @@ class AppServiceProvider extends ServiceProvider
 
             //Insurance
             BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
+            BancassurancePolicy::getPrimaryKey() => BancassurancePolicy::class,
             
             
 
@@ -368,6 +371,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
         Gate::policy(BancAssuranceReferral::class, BancAssuranceReferralPolicy::class);
+        Gate::policy(BancassurancePolicy::class, BancassurancePoliciesPolicy::class);
 
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
