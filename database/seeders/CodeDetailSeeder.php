@@ -165,8 +165,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],
 
             // Procurement Method
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
@@ -201,6 +204,19 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan', 'Value' => 'A'],
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
+
+            //Payment Terms
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Cash on Delivery – payment immediately on receipt', 'Value' => 'CD'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 30 days from invoice date', 'Value' => 'N3'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 60 days after invoice date', 'Value' => 'N6'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 90 days after invoice date', 'Value' => 'N9'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Cash in Advance – payment before delivery', 'Value' => 'CIA'],
+            ['CodeID' => 'PaymentTerm', 'Description' => '50% Advance, 50% on Delivery', 'Value' => '50/50'],
+            ['CodeID' => 'PaymentTerm', 'Description' => '30% Advance, 70% after installation', 'Value' => '30/70'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment upon specific project phases or delivery', 'Value' => 'MB'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 15 days after end of month', 'Value' => 'EOM'],
+            ['CodeID' => 'PaymentTerm', 'Description' => 'Based on certified project work progress', 'Value' => 'PP'],
+            ['CodeID' => 'PaymentTerm', 'Description' => '90% on completion, 10% after retention period', 'Value' => 'R'],
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
