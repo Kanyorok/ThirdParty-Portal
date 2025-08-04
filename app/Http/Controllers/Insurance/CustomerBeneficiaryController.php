@@ -5,57 +5,53 @@ namespace App\Http\Controllers\Insurance;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Core\CodeDetail;
+use App\Models\Insurance\BancassuranceCustomers;
+use App\Models\Insurance\BancassurancePolicies;
+use App\Services\Insurance\Customers\BancassuranceCustomersBeneficiariesService;
+
+use App\Http\Requests\Insurance\Customers\BancassuranceCustomersBeneficiariesRequest;
 
 class CustomerBeneficiaryController extends Controller
 {
     /**
      * Show form to create a beneficiary for a customer.
      */
-    public function create($customerId)
+    public function create()
     {
-        $customer = DB::table('t_BancassuranceCustomers')->where('Id', $customerId)->first();
-
-        if (!$customer) {
-            return redirect()->back()->with('error', 'Customer not found.');
-        }
-
-        return view('bancassurance.customers.beneficiaries.create', compact('customer'));
+       $customers= BancassuranceCustomers::all();
+       $policys= BancassurancePolicies::all();
+       $relationships = CodeDetail::where('CodeID', 'Relationships')->get();
+       
+        return view('bancassurance.customers.beneficiaries.create', compact('customers','relationships','policys'));
     }
 
     /**
      * Store a new beneficiary for the customer.
      */
-    public function store(Request $request, $customerId)
+    public function store(BancassuranceCustomersBeneficiariesRequest $request)
     {
-        $request->validate([
-            'FullName' => 'required|string|max:255',
-            'Relationship' => 'nullable|string|max:50',
-            'IDNumber' => 'nullable|string|max:50',
-            'Phone' => 'nullable|string|max:50',
-            'Email' => 'nullable|email|max:100',
-            'PercentageShare' => 'required|numeric|min:0|max:100',
-            'IsPrimary' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
-        try {
-            DB::table('t_BancassuranceBeneficiaries')->insert([
-                'CustomerID' => $customerId,
-                'FullName' => $request->FullName,
-                'Relationship' => $request->Relationship ?? null,
-                'IDNumber' => $request->IDNumber ?? null,
-                'Phone' => $request->Phone ?? null,
-                'Email' => $request->Email ?? null,
-                'PercentageShare' => $request->PercentageShare,
-                'IsPrimary' => $request->IsPrimary ? 1 : 0,
-                'CreatedBy' => auth()->id(),
-                'CreatedAt' => now(),
-            ]);
+        $CustomerID = BancassuranceCustomers::findOrFail($validated['CustomerID']);
+        $PolicyID = BancassurancePolicies::findOrFail($validated['PolicyID']);
+       //Relationship = CodeDetail::findOrFail($validated['Relationship']);
+        $Relationship = CodeDetail::where('CodeID','Relationships')
+            ->where('Description', $validated['Relationships'])
+            ->firstOrFail();
 
-            return redirect()->route('bancassurance.customers.portfolio', $customerId)
-                ->with('success', 'Beneficiary added successfully.');
+        $customer = BancassuranceCustomersBeneficiariesService::create(
+                $CustomerID,
+                $PolicyID, 
+                $validated['FullName'],
+                $Relationship,
+                $validated['IDNumber'],
+                $validated['Phone'] ?? '',
+                $validated['Email'],
+                $validated['PercentageShare'],
+                auth()->user()
+            );
 
-        } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Failed to add beneficiary: ' . $e->getMessage());
-        }
+        return redirect()->route('bancassurance.customers.index')->with('success', 'Customer profile saved.');
     }
 }

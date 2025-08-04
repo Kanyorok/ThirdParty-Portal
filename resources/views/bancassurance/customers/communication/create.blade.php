@@ -3,11 +3,17 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">📞 Log Communication for: {{ $customer->FullName }}</h4>
-
-    <form method="POST" action="{{ route('bancassurance.customers.communication.store', $customer->Id) }}">
+    <form method="POST" action="{{ route('bancassurance.customers.communication.store',) }}">
         @csrf
-
+        <div class="col-md-4">
+            <label class="form-label">CustomerID </label>
+            <select name="CustomerID" class="form-select">
+            <option value="">-- Select CustomerID --</option>
+                @foreach($customers as $customer)
+                    <option value="{{ $customer->Id }}">{{ $customer->FullName }}</option>
+                @endforeach
+            </select>
+        </div>
         <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label">Contact Date</label>
@@ -16,15 +22,18 @@
             <div class="col-md-4">
                 <label class="form-label">Contact Type</label>
                 <select name="ContactType" class="form-select" required>
-                    <option value="Call">📞 Call</option>
-                    <option value="Email">📧 Email</option>
-                    <option value="SMS">📲 SMS</option>
-                    <option value="Visit">🏢 Visit</option>
-                </select>
+                 <option value="">--Select Contact Type--</option>
+                    @foreach ($contacttypes as $contacttype)
+                    <option value="{{ $contacttype->ID }}">
+                    {{ $contacttype->Description }}
+                 </option>
+                  @endforeach
+            </select>
             </div>
             <div class="col-md-4">
                 <label class="form-label">Handled By</label>
                 <select name="HandledBy" class="form-select">
+                <option value="">-- Select Handled By --</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->Id }}">{{ $emp->FirstName }} {{ $emp->LastName }}</option>
                     @endforeach

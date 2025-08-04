@@ -23,15 +23,15 @@ class BancassuranceCustomersRequest extends FormRequest
     {
         return [
         'ReferralID'=>'required|exists:t_BancassuranceReferrals,Id',
-        'FullName''required|string|max:100',
-        'NationalID''required|string|max:100',
-        'KRAPIN''required|string|max:100',
-        'DateOfBirth''required|date|max:100',
+        'FullName'=>'required|string|max:100',
+        'NationalID'=>'required|string|max:100',
+        'KRAPIN'=>'required|string|max:100',
+        'DateOfBirth'=>'required|date|max:100',
         'Gender'=>'required|exists:t_CodeDetails,ID',
         'MaritalStatus'=>'required|exists:t_CodeDetails,ID',
-        'PhoneNumber''required|string|max:100',
-        'Email''required|string|max:100',
-        'Address''required|string|max:100',
+        'PhoneNumber'=>'required|string|max:100',
+        'Email'=>'required|string|max:100',
+        'Address'=>'required|string|max:100',
         'Occupation'=>'required|exists:t_CodeDetails,ID',
         ];
     }

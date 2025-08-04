@@ -203,6 +203,37 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
 
+            // Gender
+            ['CodeID' => 'Gender', 'Description' => 'Male','Value' => 'M'],
+            ['CodeID' => 'Gender', 'Description' => 'Female', 'Value' => 'F'],
+
+            // MaritalStatus
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Single','Value' => 'S'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Married', 'Value' => 'M'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Divorced', 'Value' => 'D'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Widowed', 'Value' => 'W'],
+            
+            // Relationships
+            ['CodeID' => 'Relationships', 'Description' => 'Spouse','Value' => 'S'],
+            ['CodeID' => 'Relationships', 'Description' => 'Child', 'Value' => 'C'],
+            ['CodeID' => 'Relationships', 'Description' => 'Parent', 'Value' => 'P'],
+            ['CodeID' => 'Relationships', 'Description' => 'Sibling', 'Value' => 'S'],    
+            ['CodeID' => 'Relationships', 'Description' => 'Relative', 'Value' => 'R'],
+            ['CodeID' => 'Relationships', 'Description' => 'Friend', 'Value' => 'F'],
+            ['CodeID' => 'Relationships', 'Description' => 'LegalGuardian', 'Value' => 'LG'],
+            
+            
+            
+            // Occupation
+            ['CodeID' => 'Occupation', 'Description' => 'Employed','Value' => 'E'],
+            ['CodeID' => 'Occupation', 'Description' => 'Not Employed', 'Value' => 'N'],
+
+            // ContactType
+            ['CodeID' => 'ContactType', 'Description' => '📞 Call','Value' => 'C'],
+            ['CodeID' => 'ContactType', 'Description' => '📧 Email', 'Value' => 'E'],
+            ['CodeID' => 'ContactType', 'Description' => '📲 SMS', 'Value' => 'S'],
+            ['CodeID' => 'ContactType', 'Description' => '🏢 Visit', 'Value' => 'V'],
+            
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Trade Shows', 'DisplayOrder' => 2],
