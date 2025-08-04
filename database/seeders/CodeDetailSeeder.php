@@ -166,8 +166,11 @@ class CodeDetailSeeder extends Seeder
 
 
             // Procurement Method
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ'],
-            ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Tender', 'Value' => 'T'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Prequalification', 'Value' => 'P'],
+            ['CodeID' => 'ProcurementMethod', 'Description' => 'Framework Agreement', 'Value' => 'F'],
 
             //Property Payment Method
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],

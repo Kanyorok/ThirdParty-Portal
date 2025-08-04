@@ -112,6 +112,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
+    Route::get('/purchase-order/rfq-items/{rfqId}', [PurchaseOrderController::class, 'getRFQItems'])->name('purchase-order.rfq-items');
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');

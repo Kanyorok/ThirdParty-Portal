@@ -59,6 +59,7 @@
         <button type="button" class="btn btn-info" id="printOrderModal"><i class="fa fa-print"></i> Print</button>
     </div>
     <form>
+        
         <!-- Supplier & Details -->
         <div class="row mb-4">
             <div class="col-md-6">
@@ -89,9 +90,11 @@
                 </select>
             </div>
             <div class="col-md-4 mt-2">
-                <label>Payment Terms</label>
-                <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%" value="{{ $orderInfo->Terms ?? 'N/A' }}" readonly/>
-            </div>
+            <label>Payment Terms</label>
+            <input type="text" class="form-control" value="{{ $orderInfo->terms_description ?? 'N/A' }}" readonly/>
+            @if(!$orderInfo->terms_description && $orderInfo->terms_id)
+                <small class="text-danger">Warning: Payment term ID {{ $orderInfo->terms_id }} not found in t_CodeDetails.</small>
+            @endif
         </div>
         <!-- Line Items Table -->
         <div class="table-responsive mb-4">
