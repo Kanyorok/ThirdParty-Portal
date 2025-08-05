@@ -2,7 +2,11 @@
 
 namespace App\Services\Insurance;
 
+use App\Models\Core\CodeDetail;
+use App\Models\Insurance\BancassuranceCustomers;
 use App\Models\Insurance\BancassurancePolicy;
+use App\Models\Insurance\BancAssuranceReferral;
+use Date;
 
 class BancassurancePolicyService
 {
@@ -15,31 +19,31 @@ class BancassurancePolicyService
     }
     
     public static function create(
-        int $CustomerID,
-        int $ProductID,
-        ?int $InsurerID,
+        BancassuranceCustomers $CustomerID,
+        CodeDetail $ProductID,
+        ?CodeDetail $InsurerID,
         string $PolicyNumber,
         float $SumAssured,
         float $PremiumAmount,
-        string $PolicyStartDate,
-        string $PolicyEndDate,
-        int $PaymentFrequency,
-        ?int $ReferralID = null,
-        ?string $IssuedDate = null,
-        ?string $ExpiryDate = null,
+        Date $PolicyStartDate,
+        Date $PolicyEndDate,
+        CodeDetail $PaymentFrequency,
+        ?BancAssuranceReferral $ReferralID = null,
+        ?Date $IssuedDate = null,
+        ?Date $ExpiryDate = null,
         bool $IsActive = true
     ): self {
         $policy = BancassurancePolicy::create([
-            'CustomerID' => $CustomerID,
-            'ProductID' => $ProductID,
-            'InsurerID' => $InsurerID,
+            'CustomerID' => $CustomerID -> Id,
+            'ProductID' => $ProductID -> ID,
+            'InsurerID' => $InsurerID -> ID ?? null,
             'PolicyNumber' => $PolicyNumber,
             'SumAssured' => $SumAssured,
             'PremiumAmount' => $PremiumAmount,
             'PolicyStartDate' => $PolicyStartDate,
             'PolicyEndDate' => $PolicyEndDate,
             'PaymentFrequency' => $PaymentFrequency,
-            'ReferralID' => $ReferralID,
+            'ReferralID' => $ReferralID -> Id ?? null,
             'IssuedDate' => $IssuedDate,
             'ExpiryDate' => $ExpiryDate,
             'IsActive' => $IsActive

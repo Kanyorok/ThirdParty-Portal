@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassurancePolicyRequest;
+use App\Models\Core\CodeDetail;
+use App\Models\Insurance\BancassuranceCustomers;
 use App\Models\Insurance\BancassurancePolicy;
+use App\Models\Insurance\BancAssuranceReferral;
+use App\Services\Insurance\BancassurancePolicyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -50,7 +54,28 @@ public function store(BancassurancePolicyRequest $request)
 {
     $validated = $request->validated();
 
-   $policy = Bancassurancep 
+    $CustomerId = BancassuranceCustomers::findOrFail($validated['CustomerID']);
+    $referralId = BancAssuranceReferral::findOrFail($validated['ReferralID'] ?? null);
+    $ProductId = CodeDetail::findOrFail($validated['ProductID'] ?? null);
+    $InsurerId = CodeDetail::findOrFail($validated['InsurerID'] ?? null);
+    $Paymentfrquency = CodeDetail::findOrFail($validated['PaymentFrequency'] ?? null);
+
+
+   $policy = BancassurancePolicyService::create(
+        $CustomerId,
+        $ProductId,
+        $InsurerId,
+        $validated['PolicyNumber'],
+        $validated['SumAssured'],
+        $validated['PremiumAmount'],
+        $validated['PolicyStartDate'],
+        $validated['PolicyEndDate'],
+        $Paymentfrquency,
+        $referralId,
+        $validated['IssuedDate'] ?? null,
+        $validated['ExpiryDate'] ?? null,
+        true // IsActive
+    );
 
     // Optional: Update referral status
     if ($request->filled('ReferralID')) {
