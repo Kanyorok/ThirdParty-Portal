@@ -5,6 +5,8 @@ namespace App\Models\Insurance;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
+use App\Models\Core\CodeDetail;
+use App\Models\Insurance\BancassurancePolicies;
 
 class BancassuranceBeneficiaries extends Model
 {
@@ -34,11 +36,13 @@ class BancassuranceBeneficiaries extends Model
     {
         return 'BancassuranceBeneficiariesId';
     }
-        public function relationships()
+
+    public function relationships()
     {
         return $this->belongsTo(CodeDetail::class, 'Relationship', 'ID');
     }
-           public function policys()
+
+    public function policys()
     {
         return $this->belongsTo(BancassurancePolicies::class, 'PolicyID', 'ID');
     }

@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomers;
 use App\Models\Insurance\BancassurancePolicies;
 use App\Services\Insurance\Customers\BancassuranceCustomersBeneficiariesService;
-
 use App\Http\Requests\Insurance\Customers\BancassuranceCustomersBeneficiariesRequest;
 
 class CustomerBeneficiaryController extends Controller
@@ -35,23 +32,25 @@ class CustomerBeneficiaryController extends Controller
 
         $CustomerID = BancassuranceCustomers::findOrFail($validated['CustomerID']);
         $PolicyID = BancassurancePolicies::findOrFail($validated['PolicyID']);
-       //Relationship = CodeDetail::findOrFail($validated['Relationship']);
-        $Relationship = CodeDetail::where('CodeID','Relationships')
-            ->where('Description', $validated['Relationships'])
-            ->firstOrFail();
+        $Relationship = CodeDetail::findOrFail($validated['Relationship']);
+        // $Relationship = CodeDetail::where('CodeID','Relationships')
+        //     ->where('Description', $validated['Relationships'])
+        //     ->firstOrFail();
 
         $customer = BancassuranceCustomersBeneficiariesService::create(
                 $CustomerID,
-                $PolicyID, 
+                $PolicyID ?? '', 
                 $validated['FullName'],
                 $Relationship,
                 $validated['IDNumber'],
                 $validated['Phone'] ?? '',
                 $validated['Email'],
                 $validated['PercentageShare'],
+                $validated['IsPrimary'],
                 auth()->user()
             );
 
-        return redirect()->route('bancassurance.customers.index')->with('success', 'Customer profile saved.');
+            return redirect()->route('bancassurance.customers.beneficiaries.create')->with('success', 'ADD BENEFICIARY saved.');
     }
+
 }
