@@ -126,6 +126,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => StaticListsService::CustomerType, 'Description' => 'Taxi Driver', 'DisplayOrder' => 3],
             ['CodeID' => StaticListsService::Industries, 'Description' => 'Agriculture', 'DisplayOrder' => 1],
             ['CodeID' => StaticListsService::Industries, 'Description' => 'Tourism', 'DisplayOrder' => 2],
+
+            // Stock Consumption
+            ['CodeID' => 'IssuedToType', 'Description' => 'Employee', 'Value' => 'E'],
+            ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
+
+           
         ];
 
         foreach ($static as $index => $item) {

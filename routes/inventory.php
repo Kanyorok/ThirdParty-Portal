@@ -16,6 +16,7 @@ use App\Http\Controllers\Inventory\ReportsController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockIssueController;
 use App\Http\Controllers\Inventory\StockTakeController;
+use App\Http\Controllers\Inventory\StockConsumptionController;
 use App\Http\Controllers\Inventory\StockValuationHistoryController;
 use App\Http\Controllers\Inventory\StoreController;
 use App\Http\Controllers\Inventory\TransactionAdjustmentController;
@@ -112,6 +113,18 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
     Route::get('/stock-items/{branchId}/{storeId}', [StockTakeController::class, 'getStockItems'])->name('stocktake.items');
 
+    //Route::resource('stockconsumption', StockConsumptionController::class);
+    Route::get('/stockconsumption', [StockConsumptionController::class, 'index'])->name('stockconsumption.index');
+    Route::get('/stockconsumption/create', [StockConsumptionController::class, 'create'])->name('stockconsumption.create');
+    Route::get('/stockconsumption/get-issued-to-options', [StockConsumptionController::class, 'getIssuedToOptions'])->name('stockconsumption.getIssuedToOptions');
+    Route::get('/stockconsumption/get-stores', [StockConsumptionController::class, 'getStores'])->name('stockconsumption.getStores');
+    Route::get('/stockconsumption/get-uom', [StockConsumptionController::class, 'getUOM'])->name('stockconsumption.getUOM');
+
+    Route::post('/stockconsumption', [StockConsumptionController::class, 'store'])->name('stockconsumption.store');
+    Route::get('/stockconsumption/{Id}', [StockConsumptionController::class, 'show'])->name('stockconsumption.show');
+    Route::get('/stockconsumption/{Id}/edit', [StockConsumptionController::class, 'edit'])->name('stockconsumption.edit');
+    Route::put('/stockconsumption/{Id}', [StockConsumptionController::class, 'update'])->name('stockconsumption.update');
+    Route::delete('/stockconsumption/{Id}', [StockConsumptionController::class, 'destroy'])->name('stockconsumption.destroy');
 
     Route::resource('uomconversion', UOMConversionController::class);
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
