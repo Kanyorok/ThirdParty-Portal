@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+
 use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Http\Controllers\Controller;

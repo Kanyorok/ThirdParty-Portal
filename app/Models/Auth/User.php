@@ -10,7 +10,7 @@ use App\Models\Core\Task;
 use App\Models\CRM\DebtRecovery\LoanAssignment;
 use App\Models\CRM\Ticket;
 use App\Models\HRM\Employee;
-use App\Models\Settings\ApprovalStages;
+use App\Models\Settings\ApprovalStage;
 use App\Services\HRM\UserService;
 use App\Traits\Controller\HasBranchRoles;
 use App\Traits\Model\ImageTrait;
@@ -167,7 +167,7 @@ class User extends Authenticatable
 
     public function ApprovalStages(): HasMany
     {
-        return $this->hasMany(ApprovalStages::class, 'CreatedBy', 'Id');
+        return $this->hasMany(ApprovalStage::class, 'CreatedBy', 'Id');
     }
 
     public function role(): ?Role

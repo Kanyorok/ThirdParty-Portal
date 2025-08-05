@@ -28,7 +28,7 @@
         <label class="form-label">Description</label>
           <textarea class="form-control" rows="2" placeholder="Optional description..." name="Description"></textarea>
       </div>
-        <button class="btn btn-success">💾 Save Frequency</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Save Frequency</button>
     </form>
 </div>
   </div>

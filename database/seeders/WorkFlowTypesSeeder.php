@@ -2,20 +2,18 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
-class WorkFlowTypesSeeder extends Seeder
+class WorkflowTypesSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        //
-
-        $now = now();
+        $now = Carbon::now();
 
         $workflowTypes = [
             [
@@ -52,7 +50,20 @@ class WorkFlowTypesSeeder extends Seeder
             ],
         ];
 
-        // Insert data
-        DB::table('t_WorkFlowTypes')->insert($workflowTypes);
+        foreach ($workflowTypes as $type) {
+            $existing = DB::table('t_WorkFlowTypes')->where('TypeID', $type['TypeID'])->first();
+
+            if ($existing) {
+                DB::table('t_WorkFlowTypes')
+                    ->where('TypeID', $type['TypeID'])
+                    ->update([
+                        'Name' => $type['Name'],
+                        'ModifiedBy' => $type['ModifiedBy'],
+                        'ModifiedOn' => $type['ModifiedOn'],
+                    ]);
+            } else {
+                DB::table('t_WorkFlowTypes')->insert($type);
+            }
+        }
     }
 }

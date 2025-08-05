@@ -91,7 +91,6 @@ enum PermissionEnum: string
     case DebtCollectionAssignment = 'debt-collection-assignment';
     case DebtCollectionAdmin = 'debt-collection-admin';
 
-
     //Socials
     case SocialRead = 'social-read';
     case SocialWrite = 'social-create';
@@ -106,13 +105,10 @@ enum PermissionEnum: string
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
     case UsersSessions = 'users-nonExpiringSessions';
-
-
     case MeetingRooms = 'meeting-locations';
 
     case BoardManage = 'board-members-manage';
     case BoardMeeting = 'board-members-meetings';
-
 
     case TaskCreate = 'tasks-create';
     case TaskDelegate = 'tasks-delegate';
@@ -319,13 +315,11 @@ enum PermissionEnum: string
     case PropertyTypeDelete = 'propertytype-delete';
     case PropertyTypeView = 'propertytype-view';
 
-
     //Property Registry
     case PropertyRegistryCreate = 'propertyregistry-create';
     case PropertyRegistryUpdate = 'propertyregistry-update';
     case PropertyRegistryDelete = 'propertyregistry-delete';
     case PropertyRegistryView = 'propertyregistry-view';
-
 
     //Property Block
     case PropertyStructuralCreate = 'propertystructural-create';
@@ -333,7 +327,12 @@ enum PermissionEnum: string
     case PropertyStructuralDelete = 'propertystructural-delete';
     case PropertyStructuralView = 'propertystructural-view';
 
-
+    //Property Attachments
+    case PropertyAttachmentsCreate = 'propertyattachments-create';
+    case PropertyAttachmentsUpdate = 'propertyattachments-update';
+    case PropertyAttachmentsDelete = 'propertyattachments-delete';
+    case PropertyAttachmentsView = 'propertyattachments-view';
+    
     //Tenant Mentenance
     case TenantMentenanceCreate = 'tenantmentenance-create';
     case TenantMentenanceUpdate = 'tenantmentenance-update';
@@ -346,7 +345,6 @@ enum PermissionEnum: string
     case TenantClearanceDelete = 'tenantclearance-delete';
     case TenantClearanceView = 'tenantclearance-view';
 
-
     //Property New Lease
     case PropertyNewLeaseCreate = 'propertynewlease-create';
     case PropertyNewLeaseUpdate = 'propertynewlease-update';
@@ -356,6 +354,7 @@ enum PermissionEnum: string
     //Property lease schedule
     case PropertyLeaseScheduleCreate = 'propertyleaseschedule-create';
     case PropertyLeaseScheduleUpdate = 'propertyleaseschedule-update';
+
     case PropertyLeaseScheduleDelete = 'propertyleaseschedule-delete';
     case PropertyLeaseScheduleView = 'propertyleaseschedule-view';
 
@@ -384,6 +383,23 @@ enum PermissionEnum: string
     case PropertyReceiptDelete = 'propertyreceipt-delete';
     case PropertyReceiptView = 'propertyreceipt-view';
 
+    //Property Maintenance Request
+    case PropertyMaintenanceRequestCreate = 'propertymaintenancerequest-create';
+    case PropertyMaintenanceRequestUpdate = 'propertymaintenancerequest-update';
+    case PropertyMaintenanceRequestDelete = 'propertymaintenancerequest-delete';
+    case PropertyMaintenanceRequestView = 'propertymaintenancerequest-view';
+
+     //Property Maintenance Assign
+    case PropertyMaintenanceAssignCreate = 'propertymaintenanceassign-create';
+    case PropertyMaintenanceAssignUpdate = 'propertymaintenanceassign-update';
+    case PropertyMaintenanceAssignDelete = 'propertymaintenanceassign-delete';
+    case PropertyMaintenanceAssignView = 'propertymaintenanceassign-view';
+
+     //Property Maintenance Work Completion
+    case PropertyMaintenanceWorkCompletionCreate = 'propertymaintenanceworkcompletion-create';
+    case PropertyMaintenanceWorkCompletionUpdate = 'propertymaintenanceworkcompletion-update';
+    case PropertyMaintenanceWorkCompletionDelete = 'propertymaintenanceworkcompletion-delete';
+    case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
 
     /*
      *
@@ -394,7 +410,6 @@ enum PermissionEnum: string
     case EmployeesCreate = 'employee-create';
     case EmployeesUpdate = 'employee-update';
     case EmployeesDelete = 'employee-delete';
-
 
     /*
  *
@@ -439,7 +454,18 @@ enum PermissionEnum: string
     case FinanceTaxSettingCreate = 'financeTaxSetting-create';
     case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
+    
+    /*
+     *
+     * ========================================  Main Settings  ========================================
+     */
 
+    case WorkflowlimitManagerialLevel = 'workflowlimit-managerlevel';
+    case WorkflowlimitOperationalLevel = 'workflowlimit-operationslevel';
+    case WorkflowlimitView = 'workflowlimit-view';
+    case WorkflowlimitCreate = 'workflowlimit-create';
+    case WorkflowlimitUpdate = 'workflowlimit-update';
+    case WorkflowlimitDelete = 'workflowlimit-delete';
 
     public static function display(): Collection
     {
@@ -523,6 +549,7 @@ enum PermissionEnum: string
             [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
             [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
             [self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete],
+            [self::PropertyAttachmentsView,self::PropertyAttachmentsCreate,self::PropertyAttachmentsUpdate,self::PropertyAttachmentsDelete],
             [self::TenantMentenanceCreate,self::TenantMentenanceUpdate,self::TenantMentenanceDelete,self::TenantMentenanceView],
             [self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView],
             [self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView],
@@ -531,6 +558,12 @@ enum PermissionEnum: string
             [self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView],
             [self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView],
             [self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView],
+            [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
+            [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
+            [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
+            
+            ///////////////////////  Settings  /////////////////////////////////////
+            [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
         ]);
     }
 
@@ -565,7 +598,8 @@ enum PermissionEnum: string
 
 
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
-            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
+            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate,
+            self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete
             => ModulesEnum::Settings,
 
             //Procurement
@@ -609,6 +643,7 @@ enum PermissionEnum: string
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,
             self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete,
             self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete,
+            self::PropertyAttachmentsView,self::PropertyAttachmentsCreate,self::PropertyAttachmentsUpdate,self::PropertyAttachmentsDelete,
             self::TenantMentenanceCreate,self::TenantMentenanceUpdate,self::TenantMentenanceDelete,self::TenantMentenanceView,
             self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView,
             self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView,
@@ -616,7 +651,10 @@ enum PermissionEnum: string
             self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView,
             self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView,
             self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView,
-            self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView
+            self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView,
+            self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView,
+            self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView,
+            self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView
             => ModulesEnum::Property,
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
@@ -709,6 +747,7 @@ enum PermissionEnum: string
             self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete => 'Property Type',
             self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete => 'Property Registry',
             self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete => 'Property Structural Mapping',
+            self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete => 'Property Attachments ',      
             self::TenantMentenanceCreate,self::TenantMentenanceUpdate,self::TenantMentenanceDelete,self::TenantMentenanceView => 'Tenant Maintenance',
             self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView=> 'Tenant Clearance',
             self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView => 'Property New Lease',
@@ -716,7 +755,10 @@ enum PermissionEnum: string
             self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView => 'Property Lease Schedule',
             self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView => 'Property Lease Renewal', 
             self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView => 'Property Invoice',
-            self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView => 'Property Receipt',           
+            self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView => 'Property Receipt',
+            self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
+            self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
+            self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             ///////////////////////  Finance   /////////////////////////
@@ -725,6 +767,8 @@ enum PermissionEnum: string
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
+
+            self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete => 'Workflow Limits',
         };
     }
 }

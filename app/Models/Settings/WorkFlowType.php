@@ -2,12 +2,12 @@
 
 namespace App\Models\Settings;
 
-use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Auth\User;
+use App\Models\Settings\ApprovalStage;
 
-class ApprovalStage extends Model
+class WorkFlowType extends Model
 {
     use SoftDeletes, UserActorTrait;
 
@@ -15,21 +15,20 @@ class ApprovalStage extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_WorkFlows';
+    protected $table = 't_WorkFlowTypes';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Name', 'Source', 'Description',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'Name', 'TypeID', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
     {
-        return 'ApprovalStageId';
+        return 'WorkFlowTypeId';
     }
 
-    public function createdByUser()
+    public function approvalStages()
     {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+        return $this->hasMany(ApprovalStage::class, 'TypeID', 'Id');
     }
 }

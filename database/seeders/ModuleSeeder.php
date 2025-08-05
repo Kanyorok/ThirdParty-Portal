@@ -172,8 +172,8 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
-            ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
-            ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
+           // ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
+           // ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
     //            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
@@ -699,7 +699,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 98004000, 'Name' => 'Code Details', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.lists'],
             ['ModuleID' => 98005000, 'Name' => 'Integrations', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.integrations'],
             ['ModuleID' => 98006000, 'Name' => 'GlobalWorkFlow', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => null],
-            ['ModuleID' => 98006100, 'Name' => 'DocFlowSetup', 'Icon' => null, 'Description' => '', 'ParentID' => 98006000, 'Route' => 'settings.approval_stages'],
+            ['ModuleID' => 98006100, 'Name' => 'DocFlowSetup', 'Icon' => null, 'Description' => '', 'ParentID' => 98006000, 'Route' => 'settings.workflows.index'],
+            ['ModuleID' => 98006200, 'Name' => 'WorkFlowLimitSetup', 'Icon' => null, 'Description' => '', 'ParentID' => 98006000, 'Route' => 'settings.workflow_limits'],
         ]);
         if ($fresh) {
             $data = $values;

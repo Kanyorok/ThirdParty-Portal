@@ -26,13 +26,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($approvalGroups as $group)
+                        @foreach($workFlowGroups as $group)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $group->Name }}</td>
                             <td>{{ $group->Description }}</td>
                             <td>
-                                <a href="{{ route('settings.approval_stages.show', $group->Id) }}" class="btn btn-sm btn-outline-success">
+                                <a href="{{ route('settings.workflows.show', $group->Id) }}" class="btn btn-sm btn-outline-success">
                                     👁️ View
                                 </a>
                                 <button class="btn btn-sm btn-outline-primary btn-edit"
@@ -42,7 +42,7 @@
                                     data-doc="{{ $group->DocType }}">
                                     ✏️ Edit
                                 </button>
-                                <form method="POST" action="{{ route('approval-setup.destroy', $group->Id) }}" class="d-inline">
+                                <form method="POST" action="{{ route('settings.workflows.delete', $group->Id) }}" class="d-inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger"
@@ -53,7 +53,7 @@
                             </td>
                         </tr>
                         @endforeach
-                        @if($approvalGroups->isEmpty())
+                        @if($workFlowGroups->isEmpty())
                         <tr>
                             <td colspan="4" class="text-center text-muted">No approval workflows configured yet.</td>
                         </tr>
@@ -130,7 +130,7 @@
 
         // Create
         $('.modal-create-approval').on('click', function() {
-            $form.attr('action', "{{ route('settings.approval_stages.store') }}");
+            $form.attr('action', "{{ route('settings.workflows.store') }}");
             $('#formMethod').val('POST');
             $('.modal-title').text('New Approval WorkFlow');
             $form[0].reset();

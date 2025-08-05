@@ -2,12 +2,11 @@
 
 namespace App\Models\Settings;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Auth\User;
 
-class WorkflowStage extends Model
+class WorkFlowLimit extends Model
 {
     use SoftDeletes, UserActorTrait;
 
@@ -15,21 +14,15 @@ class WorkflowStage extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_WorkFlows';
+    protected $table = 't_WorkFlowLimits';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'Name', 'Source', 'Description',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'Source', 'PermissionId', 'MaxAmount', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     public static function getPrimaryKey(): string
     {
-        return 'WorkflowStageId';
-    }
-
-    public function createdByUser()
-    {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+        return 'WorkFlowLimitId';
     }
 }
