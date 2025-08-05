@@ -37,7 +37,7 @@
 
             <div class="col-md-6">
                 <label for="StoreID" class="form-label">Store</label>
-                <select class="form-select @error('StoreID') is-invalid @enderror" name="StoreID" id="StoreID" required>
+                <select class="form-select @error('StoreID') is-invalid @enderror" name="StoreID" id="StoreID">
                     <option value="">Select Store</option>
                 </select>
                 @error('StoreID')
