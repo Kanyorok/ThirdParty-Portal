@@ -20,11 +20,11 @@
       <div class="card-body">
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label for="PropertyTypeName" class="form-label">Type Name</label>
+            <label for="PropertyTypeName" class="form-label">Type Name<span class="text-danger">*</span></label>
             <input type="text" name="PropertyTypeName" class="form-control" required>
           </div>
           <div class="col-md-6">
-            <label for="PropertyCategoryId" class="form-label">Category</label>
+            <label for="PropertyCategoryId" class="form-label">Category<span class="text-danger">*</span></label>
             <select name="PropertyCategoryId" class="form-select" required>
                 <option value="">-- Select Category --</option>
                 @foreach ($categories as $category)

@@ -26,7 +26,7 @@ class PropertyFloorRequest extends FormRequest
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
             'FloorLabel' => 'required|string|max:50',
-            'FloorNotes' => 'required|string|max:100',
+            'FloorNotes' => 'nullable|string|max:100',
         ];
     }
 }

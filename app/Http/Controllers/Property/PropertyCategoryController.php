@@ -29,12 +29,13 @@ class PropertyCategoryController extends Controller
 
     public function store(PropertyCategoryRequest $request)
     {
+        $validated = $request->validated();
         //Type and Code have been hardcoded
         $propertyCategory = PropertyCategoryService::create(
-            $request->validated('Name'),
-            $request->validated('Description'),
-            $request->validated('Type', 'PropertyCategory'),
-            $request->validated('Code', '500000'),
+            $validated['Name'],
+            $validated['Description'],
+            'PropertyCategory',
+            '500000',
             auth()->user()
         );
 
@@ -55,7 +56,7 @@ class PropertyCategoryController extends Controller
         $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
         $validated = $request->validate([
             'Name' => 'required|string|max:50',
-            'Description' => 'required|string|max:100',
+            'Description' => 'nullable|string|max:100',
 
         ]);
 
@@ -66,7 +67,7 @@ class PropertyCategoryController extends Controller
 
             $category->update([
                 'Name' => $validated['Name'],
-                'Description' => $validated['Description'],
+                'Description' => $validated['Description'] ?? '',
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);

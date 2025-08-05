@@ -11,20 +11,17 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_AssignRequest', function (Blueprint $table) {
-            $table->id();
-            $table->string('Property');
-            $table->string('Block');
-            $table->string('Floor');
-            $table->string('Unit');
-            $table->string('IssueDescription');
+            $table->id('Id');
+            $table->foreignId('RequestNumber')->constrained('t_MaintenanceRequest', 'Id');
             $table->date('AssignmentDate');
-            $table->string('AssignmentType');
-            $table->string('InternalTechnician');
-            $table->string('PrequalifiedVendor');
+            $table->foreignId('AssignmentType')->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('InternalTechnician')->nullable()->constrained('t_Employees', 'Id');
+            $table->foreignId('PrequalifiedVendor')->nullable()->constrained('t_Suppliers', 'Id');
             $table->date('ExpectedStartDate');
             $table->date('ExpectedCompletion');
-            $table->string('PriorityLevel');
-            $table->string('InstructionNotes');
+            $table->string('Status',1);
+            $table->foreignId('PriorityLevel')->constrained('t_CodeDetails', 'ID');
+            $table->string('InstructionNotes')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

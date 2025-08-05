@@ -53,6 +53,7 @@ class PropertyNewTenantController extends Controller
         $data = $request->validated();
 
         $tenantTypeModel = CodeDetail::findOrFail($data['TenantType']);
+        $document = $request->file('Document');
 
         $this->service::create(
             $tenantTypeModel,
@@ -62,9 +63,10 @@ class PropertyNewTenantController extends Controller
             $data['EmailAddress'],
             $data['Nationality'],
             $data['PostalAddress'],
-            $data['Remarks'],
+            $data['Remarks'] ?? '',
             $data['IsActive'],
-            $request->user()
+            $request->user(),
+            $document
         );
 
         return redirect()->route('addtenant.index')->with('success', 'Tenant created successfully');
@@ -89,7 +91,7 @@ class PropertyNewTenantController extends Controller
             $data['EmailAddress'],
             $data['Nationality'],
             $data['PostalAddress'],
-            $data['Remarks'],
+            $data['Remarks'] ?? '',
             $data['IsActive'],
             $request->user()
         );

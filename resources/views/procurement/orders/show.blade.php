@@ -7,45 +7,56 @@
         .select2-container {
             width: 100% !important;
         }
-
-        /*!* Improved table layout *!*/
-        /*.table-responsive {*/
-        /*    overflow-x: auto;*/
-        /*}*/
-        /*.table {*/
-        /*    min-width: 100%;*/
-        /*    table-layout: fixed;*/
-        /*}*/
-        /*.table th, .table td {*/
-        /*    padding: 8px 12px;*/
-        /*    vertical-align: middle;*/
-        /*    white-space: normal;*/
-        /*    word-wrap: break-word;*/
-        /*}*/
-        /*!* Fixed column widths *!*/
-        /*.col-3 { width: 3%; min-width: 40px; }*/
-        /*.col-10 { width: 10%; min-width: 120px; }*/
-        /*.col-15 { width: 15%; min-width: 180px; }*/
-        /*.col-20 { width: 20%; min-width: 240px; }*/
-        /*.col-5 { width: 5%; min-width: 80px; }*/
-
-        /*!* Form spacing *!*/
-        /*.form-section {*/
-        /*    margin-bottom: 1.5rem;*/
-        /*}*/
-
-        /*!* Textarea fix *!*/
-        /*textarea.form-control {*/
-        /*    min-height: 38px;*/
-        /*    resize: vertical;*/
-        /*}*/
-
-        /*!* Totals section *!*/
-        /*.totals-section {*/
-        /*    background-color: #f8f9fa;*/
-        /*    padding: 15px;*/
-        /*    border-radius: 4px;*/
-        /*}*/
+        /* Print styles */
+        @media print {
+            body {
+                background: #fff !important;
+            }
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .card, .card-body, .table-responsive {
+                box-shadow: none !important;
+                border: none !important;
+                background: #fff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .btn, .d-flex, .mb-3, .mb-4, [type="button"], [type="submit"], #printOrder {
+                display: none !important;
+            }
+            table {
+                font-size: 11px !important;
+                width: 100% !important;
+                table-layout: auto !important;
+            }
+            th, td {
+                padding: 4px 6px !important;
+                word-break: break-word !important;
+            }
+            label {
+                font-size: 11px !important;
+            }
+            input, textarea, select {
+                border: 1px solid #ccc !important;
+                background: #fff !important;
+                font-size: 11px !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                color: #000 !important;
+            }
+            .row, .col-md-4, .col-md-6, .offset-md-8 {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* Hide navigation, footer, and other non-essential elements if present */
+            nav, footer, .navbar, .sidebar, .alert, .pagination {
+                display: none !important;
+            }
+        }
     </style>
 @endsection
 @section('content')
@@ -59,11 +70,8 @@
         <!-- Top Buttons -->
         <div class="d-flex justify-content-between mb-3">
             <div>
-                <button class="btn btn-primary">New LPO</button>
-                <button class="btn btn-secondary">Open</button>
-                <button class="btn btn-info">Print</button>
+                <button type="button" class="btn btn-info" id="printOrder">Print</button>
             </div>
-            <button class="btn btn-success">Place Order</button>
         </div>
         <form action="{{ route('purchaseOrder.store') }}" method="post" id="purchaseOrdersForm">
             @csrf
@@ -71,7 +79,7 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <label>Supplier</label>
-                    <select class="form-control supplier" id="supplier" name="supplier">
+                    <select class="form-control supplier" id="supplier" name="supplier" disabled>
                         <option selected>{{$orderInfo->SupplierName ?? 'N/A'}}</option>
                     </select>
                 </div>
@@ -91,31 +99,26 @@
                 <div class="col-md-4">
                     <label>Date</label>
                     <input type="date" class="form-control poDate" name="pODate"
-                           value="{{ isset($orderInfo->OrderDate) ? Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}"/>
+                           value="{{ isset($orderInfo->OrderDate) ? Carbon::parse($orderInfo->OrderDate)->format('Y-m-d') : '' }}" readonly/>
                 </div>
                 <div class="col-md-4">
                     <label>Reference Number</label>
                     <input type="text" class="form-control refNo" name="refNo" placeholder="RFQ Number"
-                           value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}"/>
+                           value="{{$orderInfo->ExtOrdNum ?? 'N/A'}}" readonly/>
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Priority</label>
-                    <select class="form-control priority" name="priority">
+                    <select class="form-control priority" name="priority" disabled>
                         <option selected>{{$orderInfo->Priority ?? 'N/A'}}</option>
                     </select>
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%"
-                           value="{{$orderInfo->Terms ?? 'N/A'}}"/>
+                    <input type="text" name="terms" class="form-control terms" value="{{ $orderInfo->terms_description ?? 'N/A' }}" readonly />
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end mb-3">
-                <button type="button" class="btn btn-outline-primary" id="add-row">
-                    + Add Item
-                </button>
-            </div>
+            <!-- Hide Add Item button on show page -->
 
 
             <!-- Line Items Table -->
@@ -136,47 +139,42 @@
                     </thead>
                     <tbody id="po-items">
 
-                    @foreach($lineInfo as $line)
-
-                        <tr>
-                            <td class="line-no">1.</td>
-                            <td class="text-start">
-                                <select class="form-select form-select-sm type" name="type[]" id="Type">
-                                    <option selected>{{$line ->ItemType}}</option>
-
-                                </select>
-                            </td>
-                            <td class="text-start">
-                                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item">
-                                    <option selected>{{$line ->ItemName}}</option>
-                                </select>
-                            </td>
-                            {{--                    <td><input type="text" class="form-control" name="itemCode[]"></td> --}}
-                            <td class="text-start">
-                                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                                          id="Description"
-                                          readonly
-                                          style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
-                                {{--                            <input type="text" class="form-control form-control-sm itemDescription" --}}
-                                {{--                                name="itemDescription[]" id="Description" readonly> --}}
-                            </td>
-                            <td class="text-start"><input type="number"
-                                                          class="form-control form-control-sm qty quantity"
-                                                          name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}">
-                            </td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
-                                                          name="unitPrice[]" id="Price"
-                                                          value="{{$line ->fUnitPriceExcl}}"></td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm tax"
-                                                          name="tax[]" id="Tax" value="{{$line ->fTaxRate}}"></td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm discount"
-                                                          name="discount[]" id="Discount"
-                                                          value="{{$line ->fLineDiscount}}"></td>
-                            <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
-                                                          name="lineTotal[]" id="lineTotal" step=""
-                                                          value="{{$line ->LineTotal}}"></td>
-                        </tr>
-                    @endforeach
+@foreach($lineInfo as $line)
+    <tr>
+        <td class="line-no">1.</td>
+        <td class="text-start">
+            <select class="form-select form-select-sm type" name="type[]" id="Type" disabled>
+                <option selected>{{$line ->ItemType}}</option>
+            </select>
+        </td>
+        <td class="text-start">
+            <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item" disabled>
+                <option selected>{{$line ->ItemName}}</option>
+            </select>
+        </td>
+        <td class="text-start">
+            <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
+                      id="Description"
+                      readonly
+                      style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;">{{$line ->Description}}</textarea>
+        </td>
+        <td class="text-start"><input type="number"
+                                      class="form-control form-control-sm qty quantity"
+                                      name="quantity[]" id="Quantity" value="{{$line ->fQuantity}}" readonly>
+        </td>
+        <td class="text-start"><input type="number" class="form-control form-control-sm unit-price "
+                                      name="unitPrice[]" id="Price"
+                                      value="{{$line ->fUnitPriceExcl}}" readonly></td>
+        <td class="text-start"><input type="number" class="form-control form-control-sm tax"
+                                      name="tax[]" id="Tax" value="{{$line ->fTaxRate}}" readonly></td>
+        <td class="text-start"><input type="number" class="form-control form-control-sm discount"
+                                      name="discount[]" id="Discount"
+                                      value="{{$line ->fLineDiscount}}" readonly></td>
+        <td class="text-start"><input type="number" class="form-control form-control-sm line-total"
+                                      name="lineTotal[]" id="lineTotal" step=""
+                                      value="{{$line ->LineTotal}}" readonly></td>
+    </tr>
+@endforeach
                     </tbody>
                 </table>
 
@@ -185,7 +183,7 @@
             <!-- Optional Note -->
             <div class="mb-4">
                 <label>Line Note</label>
-                <textarea class="form-control" rows="3" placeholder="Optional message to supplier"></textarea>
+                <textarea class="form-control" rows="3" placeholder="Optional message to supplier" readonly></textarea>
             </div>
 
             <!-- Totals -->
@@ -207,16 +205,23 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="d-flex justify-content-end">
-                <button class="btn btn-primary me-2" id="saveOrder">Save</button>
-                {{--            <button class="btn btn-warning me-2">Edit</button> --}}
-                {{--            <button class="btn btn-danger">Delete</button> --}}
-            </div>
+            <!-- Hide all action buttons at the bottom on show page -->
         </form>
     </div>
 
 @endsection
 @section('scripts')
+    <script>
+        // Activate print button
+        document.addEventListener('DOMContentLoaded', function() {
+            const printBtn = document.getElementById('printOrder');
+            if (printBtn) {
+                printBtn.addEventListener('click', function() {
+                    window.print();
+                });
+            }
+        });
+    </script>
     <script>
         function fetchSuppliers() {
             const supplierUrl = "{{ route('purchaseOrder.getSuppliers') }}"
