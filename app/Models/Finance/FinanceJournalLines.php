@@ -34,6 +34,7 @@ class FinanceJournalLines extends Model
         'Amount',
         'IsDebit',
         'Narration',
+        'SystemDescription',
 
         'CreatedBy',
         'CreatedOn',
@@ -56,7 +57,8 @@ class FinanceJournalLines extends Model
 
     public function glAccount()
     {
-        return $this->belongsTo(FinanceGLAccount::class, 'GLAccountID');
+        return $this->belongsTo(FinanceGLAccounts::class, 'GLAccountID')
+            ->select('Id','GLAccountTypeID','GLTypeGroupID','GLSubAccountTypeID','GLName','GLTypeGroupID');
     }
 
     public function branch()

@@ -11,17 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_FinanceJournalLines', function (Blueprint $table) {
+        Schema::create('t_FinanceReverseJournalEntries', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('JournalEntryId')->constrained('t_FinanceJournalEntries', 'Id');
-            $table->foreignId('GLAccountID')->constrained('t_FinanceGLAccounts');
-            $table->foreignId('BranchID')->nullable()->constrained('t_Branches');
-            $table->foreignId('DepartmentID')->nullable()->constrained('t_Departments');
-            $table->decimal('Debit', 15, 2)->default(0);
-            $table->decimal('Credit', 15, 2)->default(0);
-            $table->decimal('Amount', 15, 2)->default(0);
-            $table->boolean('IsDebit'); //To help track if trx is a debit or credit
-            $table->text('Narration')->nullable();
+            $table->foreignId('OriginalJournalEntryID')->constrained('t_FinanceJournalEntries', 'Id');
+            $table->string('OriginalReferenceNumber');
+            $table->date('ReversalDate');
+            $table->string('Reason', 255)->nullable();
             $table->string('SystemDescription', 255)->nullable();
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
@@ -38,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_FinanceJournalLines');
+        Schema::dropIfExists('t_FinanceReverseJournalEntries');
     }
 };

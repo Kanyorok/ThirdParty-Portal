@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('Type', ['normal', 'recurring', 'reversing'])->default('normal');
             $table->enum('ApprovalStatus', ['draft', 'posted'])->default('draft');
             $table->text('Description')->nullable();
+            $table->string('SystemDescription', 255)->nullable();
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

@@ -21,13 +21,15 @@ class JournalEntryController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
         $journalEntries = FinanceJournalEntry::with('journalLines:Id,JournalEntryId,Debit,Credit,Amount,IsDebit,Narration')
-            ->select('Id','RefNo','Date','Description','ApprovalStatus','Type')->get();
+            ->select('Id','RefNo','Date','Description','ApprovalStatus','Type')->where('Type','normal')->get();
         return view('finance.generalledger.journalentry.index',compact('journalEntries'));
     }
 
     public function create()
     {
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
         $gls = FinanceGLAccounts::select('Id', 'GLName')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
@@ -102,6 +104,11 @@ class JournalEntryController extends Controller
                     'ModifiedBy'=> Auth::Id(),
                 ]);
             }
+            activity('Journal Entry Creation')
+                ->performedOn(new FinanceJournalEntry())
+                ->causedBy(Auth::id())
+                ->withProperties(['Create' =>$journalEntry])
+                ->log('Created Journal Entry');
             DB::commit();
             return back()->with('success', 'Journal Entry created successfully.');
             //return redirect()->route('journalentry.index')->with('success', 'Journal Entry created successfully.');
@@ -112,5 +119,31 @@ class JournalEntryController extends Controller
             return back()->with('error', 'Failed to create Journal Entry');
         }
     }
+
+
+    public function show($id)
+    {
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
+        $journalEntry = FinanceJournalEntry::with('journalLines.glAccount','createdBy:Id,Name')->findOrFail($id);
+        return view('finance.generalledger.journalentry.show', compact('journalEntry'));
+    }
+
+    public function action(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+            'action_type' => 'required|in:approve,reject',
+        ]);
+
+        $journalEntry = FinanceJournalEntry::findOrFail($id);
+        $journalEntry->ApprovalStatus = $request->action_type === 'approve' ? 'Posted' : 'Rejected';
+        $journalEntry->save();
+
+        // Optional: log the reason somewhere if needed
+        // JournalApproval::create([...])
+
+        return redirect()->route('journalentry.index')->with('status', 'Journal entry ' . $request->action_type . 'd successfully.');
+    }
+
 
 }

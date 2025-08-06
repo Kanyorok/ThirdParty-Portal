@@ -1,36 +1,56 @@
 @extends('layouts.app')
-@section('title', 'Recurring Journal Setup')
-
+@section('title',' Recurring Journal')
 @section('content')
     <div class="container mt-4">
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="card shadow rounded-4">
             <div class="card-header bg-light">
-                <h5 class="mb-0">🔁 Recurring Journal Setup</h5>
+                <h5 class="mb-0">
+                    <i class="fas fa-sync-alt text-info me-2"></i>
+                    Recurring Journal
+                </h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="#" id="recurringJournalForm">
+                <form method="POST" action="{{route('recurrentjournal.store')}}" id="recurringJournalForm">
                     @csrf
+                    @method('POST')
 
                     {{-- Header --}}
                     <div class="row mb-4">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Start Date</label>
                             <input type="date" name="StartDate" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Reference Name</label>
-                            <input type="text" name="ReferenceName" class="form-control" placeholder="e.g., Monthly Rent" required>
+                        <div class="col-md-4">
+                            <label class="form-label">Cut-off Date</label>
+                            <input type="date" name="CuttOffDate" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Frequency</label>
                             <select name="Frequency" class="form-select" required>
                                 <option value="">-- Select --</option>
-                                <option value="Monthly">Monthly</option>
-                                <option value="Quarterly">Quarterly</option>
-                                <option value="Annually">Annually</option>
+                                @forelse($paymentFrequency as $pf)
+                                    <option value="{{$pf->Value}}">{{$pf->Description}}</option>
+                                @empty
+                                    <option disabled selected>No records found</option>
+                                @endforelse
+
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4 mt-3">
+                            <label class="form-label">Reference Name</label>
+                            <input type="text" name="ReferenceName" class="form-control" placeholder="e.g., Monthly Rent" required>
+                        </div>
+                        <div class="col-md-8 mt-3">
                             <label class="form-label">Description</label>
                             <input type="text" name="Description" class="form-control" placeholder="Optional">
                         </div>
@@ -58,31 +78,29 @@
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
                                     <td>
-                                        <select name="GLAccount[]" class="form-select" required>
-                                            <option value="">Select</option>
-                                            <option value="1000">1000 - Cash & Bank</option>
-                                            <option value="1100">1100 - Cash - HQ</option>
-                                            <option value="2000">2000 - Accounts Payable</option>
-                                            <option value="3000">3000 - Revenue</option>
-                                            <option value="4000">4000 - Salary Expenses</option>
+                                        <select name="GLAccount[]" class="form-select form-control" required>
+                                            <option value="" selected disabled>Select GL</option>
+                                            @foreach($gls as $gl)
+                                                <option value="{{$gl->Id}}">{{$gl->GLName}}</option>
+                                            @endforeach
                                         </select>
                                     </td>
                                     <td>
                                         <select name="Branch[]" class="form-select" required>
-                                            <option value="001">001 - HQ</option>
-                                            <option value="002">002 - Nairobi</option>
-                                            <option value="003">003 - Mombasa</option>
+                                            @foreach($branches as $branch)
+                                                <option value="{{$branch->Id}}">{{$branch->Name}}</option>
+                                            @endforeach
                                         </select>
                                     </td>
                                     <td>
                                         <select name="Department[]" class="form-select" required>
-                                            <option value="100">100 - Finance</option>
-                                            <option value="200">200 - HR</option>
-                                            <option value="300">300 - Operations</option>
+                                            @foreach($departments as $department)
+                                                <option value="{{$department->Id}}">{{$department->Name}}</option>
+                                            @endforeach
                                         </select>
                                     </td>
                                     <td>
-                                        <select name="DRCR[]" class="form-select drcr-select" required>
+                                        <select name="DRCR[]" class="form-select drcr-select" style="width: 1500%;max-width: max-content" required>
                                             <option value="DR">DR</option>
                                             <option value="CR">CR</option>
                                         </select>
@@ -115,8 +133,8 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="#" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-success" id="saveBtn" disabled>Save Recurring Journal</button>
+                        <a href="{{route('recurrentjournal.index')}}" class="btn btn-secondary">Back</a>
+                        <button class="btn btn-success" id="saveBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">Save Recurring Journal</button>
                     </div>
                 </form>
             </div>
@@ -160,6 +178,12 @@
             }
         }
 
+        function updateRowNumbers() {
+            [...recurringBody.rows].forEach((row, index) => {
+                row.cells[0].textContent = index + 1;
+            });
+        }
+
         document.addEventListener('input', calculateRecurringTotals);
         document.addEventListener('change', calculateRecurringTotals);
 
@@ -173,16 +197,20 @@
             });
 
             recurringBody.appendChild(clone);
+            updateRowNumbers();
             calculateRecurringTotals();
         });
 
         recurringBody.addEventListener('click', function (e) {
             if (e.target.closest('.remove-line') && recurringBody.rows.length > 1) {
                 e.target.closest('tr').remove();
+                updateRowNumbers();
                 calculateRecurringTotals();
             }
         });
 
+        updateRowNumbers(); // Ensure numbers are correct initially
         calculateRecurringTotals(); // Initial run
     </script>
+
 @endsection

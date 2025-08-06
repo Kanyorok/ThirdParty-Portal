@@ -2,8 +2,10 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +33,7 @@ class FinanceJournalEntry extends Model
         'Type',
         'ApprovalStatus',
         'Description',
+        'SystemDescription',
 
         'CreatedBy',
         'CreatedOn',
@@ -74,6 +77,19 @@ class FinanceJournalEntry extends Model
     public function journalLines()
     {
         return $this->hasMany(FinanceJournalLines::class, 'JournalEntryId', 'Id');
+    }
+
+    public function recurringJournals(){
+        return $this->hasMany(RecurrentJournal::class,'JournalEntryId','Id');
+    }
+
+    public function reverseJournals(){
+        return $this->hasMany(ReverseJournalEntry::class,'JournalEntryId','Id');
+    }
+
+    public function createdBy():BelongsTo
+    {
+        return $this->belongsTo(User::class,'CreatedBy','Id');
     }
 
 }

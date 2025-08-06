@@ -2,6 +2,16 @@
 @section('title', 'Journal Entry')
 
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="container mt-0">
         <div class="card shadow rounded-4">
             <div class="card-header bg-light py-1 px-3">
@@ -68,7 +78,7 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <select name="DRCR[]" class="form-select drcr-select" required>
+                                        <select name="DRCR[]" class="form-select drcr-select" style="width: 1500%;max-width: max-content" required>
                                             <option value="DR">DR</option>
                                             <option value="CR">CR</option>
                                         </select>
