@@ -113,8 +113,8 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="{{route('journalentry.index')}}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-success" id="postBtn" disabled>Post Journal</button>
+                        <a href="{{route('journalentry.index')}}" class="btn btn-secondary">Back</a>
+                        <button class="btn btn-success" id="postBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">Save Journal</button>
                     </div>
                 </form>
             </div>
