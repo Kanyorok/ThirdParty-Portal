@@ -155,5 +155,18 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');
     // Route for getting GRNS
     Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
+    // Route for viewingPOModal
+    Route::get('/finance/viewpo/{selectedPO}', [InvoiceEntryController::class, 'viewPOModal'])->name('finance.viewPOModal');
+    // Route for sAVING INVOICE
+    Route::post('/finance/invoice/save', [InvoiceEntryController::class, 'saveInvoice'])->name('invoiceentry.save');
+    //Route for gettng suppliers from invoices
+    Route::get('/finance/supplier/{selectedInvoice}', [PaymentVoucherController::class, 'getSuppliers'])->name('finance.getSuppliers');
+    //Route for getting Transaction Types
+    Route::get('/finance/transactions/{selectedModule}', [GLMappingController::class, 'fetchTransactionTypes'])->name('glpostingmap.fetchTransactionTypes');
+    //Route for getting GLAccounts 
+    Route::get('/glaccounts/list', [GLMappingController::class, 'list'])->name('glpostingmap.list');
+
+    Route::post('/paymentvoucher/{id}/approve', [PaymentVoucherController::class, 'approve'])->name('paymentvoucher.approve');
+    Route::post('/paymentvoucher/{id}/reject', [PaymentVoucherController::class, 'reject'])->name('paymentvoucher.reject');
 
 });
