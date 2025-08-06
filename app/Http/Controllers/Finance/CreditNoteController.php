@@ -48,12 +48,12 @@ class CreditNoteController extends Controller
 
             DB::beginTransaction();
             try {
-                $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
+                // $cdNumber = str_pad(rand(0,999999), 6, '0', STR_PAD_LEFT);
 
                 if ($request->NoteType =='Credit') {
                     $notes = FinanceCDNotes::create([
                         'NoteType'=> 'credit',
-                        'CDNumber'=>$cdNumber,
+                        // 'CDNumber'=>$cdNumber,
                         'InvoiceRefNo'=> $validated['InvoiceRefNo'],
                         'NoteDate'=> $validated['NoteDate'],
                         'NoteAmount'=> $validated['NoteAmount'],
@@ -64,7 +64,7 @@ class CreditNoteController extends Controller
                 } else {
                     $notes = FinanceCDNotes::create([
                         'NoteType'=> 'debit',
-                        'CDNumber'=>$cdNumber,
+                        // 'CDNumber'=>$cdNumber,
                         'InvoiceRefNo'=> $validated['InvoiceRefNo'],
                         'NoteDate'=> $validated['NoteDate'],
                         'NoteAmount'=> $validated['NoteAmount'],

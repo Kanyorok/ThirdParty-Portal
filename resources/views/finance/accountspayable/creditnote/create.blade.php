@@ -44,7 +44,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="amount" class="form-label">Amount (Ksh)</label>
+                        <label for="amount" class="form-label">Amount</label>
                         <input type="number" min="0.00" class="form-control" id="amount" name="NoteAmount" placeholder="e.g. 10,000" required>
                     </div>
                 </div>

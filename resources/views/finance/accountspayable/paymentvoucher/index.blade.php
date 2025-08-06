@@ -37,11 +37,19 @@
                         <td>{{ $item->invoice->InvoiceNumber  ?? '-'}}</td>
                         <td class="text-centre">{{ $item->PaymentMethod ?? '-'}}</td>
                         <td class="text-end">{{ number_format($item->TotAmnt, 2)  ?? '-'}}</td>
-                        <td>{{ $item->Status ?? '-'}}</td>
+                        <td>
+                            @if($item->Status == 'Approved')
+                                <span class="badge bg-success">Approved</span>
+                            @elseif($item->Status == 'Rejected')
+                                <span class="badge bg-danger">Rejected</span>
+                            @else
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            @endif
+                        </td>
                         <td>{{ $item->PaymentType ?? '-'}}</td>
                         <td title="{{ $item->Description ?? '-'}}" style="white-space: nowrap;">{{ $item->Description ?? '-'}}</td>
                         <td>
-                            <a href="#" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
+                            <a href="{{route('paymentvoucher.show', $item->Id)}}" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>
                             <a href="#" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
                             <button type="button"
                                 class="btn btn-sm btn-danger custom-delete-btn"
@@ -56,7 +64,7 @@
                     @endforeach
                     @else
                     <tr>
-                        <td colspan="7" class="text-center">
+                        <td colspan="9" class="text-center">
                             <div class="text-center">
                                 No Invoice Entries found
                             </div>

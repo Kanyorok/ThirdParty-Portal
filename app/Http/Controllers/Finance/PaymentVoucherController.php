@@ -8,6 +8,7 @@ use App\Models\Core\Currency;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceVoucher;
 use App\Models\ThirdParies\Supplier;
+use FacebookAds\Object\FinanceObject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,9 +31,12 @@ class PaymentVoucherController extends Controller
 
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceVoucher::class);
 
+        $year = now()->year;
+        $lastId = FinanceVoucher::max('Id') + 1;
+        $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6,'0', STR_PAD_LEFT); 
         $invoices = FinanceInvoiceEntry::select('Id', 'InvoiceNumber','SupplierID','CurrencyID', 'InvoiceAmount')
             ->get();
-        return view('finance.accountspayable.paymentvoucher.create', compact('invoices'));
+        return view('finance.accountspayable.paymentvoucher.create', compact('invoices', 'VoucherNo'));
     }
 
     public function store(Request $request){
@@ -44,38 +48,30 @@ class PaymentVoucherController extends Controller
             'TotAmnt'=>'required|numeric|min:0.00',
             'PaymentMethod'=>'required|string',
             'PaymentType'=> 'required|string',
-            'PartialAmnt'=>'nullable|numeric',
             'StartDate'=> 'nullable|date',
             'Frequency'=> 'nullable|string',
-            'AmntPerInst'=> 'nullable|numeric',
             'Description'=>'required|string',
         ]);
 
         DB::beginTransaction();
 
-        $partial = $request->input('PartialAmnt');
+        // $partial = $request->input('PartialAmnt');
         $startdate = $request->input('StartDate');
         $frequency = $request->input('Frequency');
-        $api = $request->input('AmntPerInst');
+        // $api = $request->input('AmntPerInst');
 
         try {
 
             if($validated['PaymentType'] == 'Full'){
                 $startdate = null;
                 $frequency = null;
-                $api = null;
-                $partial = null;
             }elseif($validated['PaymentType'] == 'Partial'){
                 $startdate = null;
                 $frequency = null;
-                $api = null;
-                $partial = $request->input('PartialAmnt');
             }else{
 
                 $startdate = $request->input('StartDate');
                 $frequency = $request->input('Frequency');
-                $api = $request->input('AmntPerInst');
-                $partial = null;
             }
 
             $voucher = FinanceVoucher::create([
@@ -84,10 +80,8 @@ class PaymentVoucherController extends Controller
                 'TotAmnt'=> $validated['TotAmnt'],
                 'PaymentMethod'=> $validated['PaymentMethod'],
                 'PaymentType'=> $validated['PaymentType'],
-                'PartialAmnt'=> $partial,
                 'StartDate'=> $startdate,
                 'Frequency'=> $frequency,
-                'AmntPerInst'=> $api,
                 'Description'=>$validated['Description'],
                 'CreatedBy'  =>Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
@@ -107,5 +101,36 @@ class PaymentVoucherController extends Controller
             Log::error($th->getMessage());
             return back()->with('error', $th->getMessage());    
         }
+    }
+
+    public function show($id)
+    {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+
+        $voucher = FinanceVoucher::findOrFail($id);
+
+        return view('finance.accountspayable.paymentvoucher.show', compact('voucher'));
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $voucher = FinanceVoucher::findOrFail($id);
+        $voucher->Status = 'Approved';
+        // Optionally log reason: $request->input('reason')
+        $voucher->Reasons = $request->Reasons;
+        $voucher->save();
+
+        return redirect()->route('paymentvoucher.index')->with('success', 'Voucher Approved.');
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $voucher = FinanceVoucher::findOrFail($id);
+        $voucher->Status = 'Rejected';
+        // Optionally log reason: $request->input('reason')
+        $voucher->Reasons = $request->Reasons;
+        $voucher->save();
+
+        return redirect()->route('paymentvoucher.index')->with('error', 'Voucher Rejected.');
     }
 }

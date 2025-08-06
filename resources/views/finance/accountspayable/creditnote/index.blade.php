@@ -27,7 +27,7 @@
                             <th>Note Number</th>
                             <th>Date</th>
                             <th>Reference Invoice</th>
-                            <th>Amount (Ksh)</th>
+                            <th>Amount </th>
                             <th>Reason</th>
                             <th>Actions</th>
                         </tr>
@@ -38,8 +38,10 @@
                             <tr class="note-row" data-note-type="{{ $note->NoteType }}">
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $note->NoteType ?? '-' }}</td>
-                                <td>{{ $note->CDNumber ?? '-'}}</td>
-                                <td>{{ \Carbon\Carbon::parse($note->NoteDate)->format('d M Y') }}</td>
+                                <td>
+                                    {{ strtolower($note->NoteType) === 'credit' ? 'CN-' : 'DN-' }}{{ $note->CDNumber ?? '-' }}
+                                </td>
+                                <td>{{ \Carbon\Carbon::parse($note->NoteDate)->format('d-m-Y') }}</td>
                                 <td>{{ $note->invoice ? $note->invoice->InvoiceNumber : 'N/A' }}</td>
                                 <td class="text-end">{{ number_format($note->NoteAmount, 2) ?? '-'}}</td>
                                 <td>{{ $note->Description ?? '-'}}</td>

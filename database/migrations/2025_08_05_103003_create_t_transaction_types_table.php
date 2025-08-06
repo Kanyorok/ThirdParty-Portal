@@ -11,18 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_FinanceVoucher', function (Blueprint $table) {
+        Schema::create('t_TransactionTypes', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('VoucherNo')->unique();
-            $table->foreignId('InvoiceNo')->constrained('t_FinanceInvoiceEntry','Id');
-            $table->decimal('TotAmnt', 10, 2);
-            $table->string('PaymentMethod');
-            $table->string('PaymentType')->default('Full');
-            $table->date('StartDate')->nullable();
-            $table->string('Frequency')->nullable();
-            $table->string('Status')->default('Pending');
-            $table->text('Description');
-            $table->text('Reasons')->nullable();
+            $table->string('Code', 100);
+            $table->string('Name', 150);
+            $table->string('Description', 255)->nullable();
+            $table->boolean('IsActive')->default(1);
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -38,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_FinanceVoucher');
+        Schema::dropIfExists('t_TransactionTypes');
     }
 };

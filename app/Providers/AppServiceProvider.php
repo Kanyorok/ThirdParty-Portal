@@ -64,6 +64,7 @@ use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\Finance\FinanceCDNotes;
+use App\Models\Finance\FinanceGLMapping;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\DepartmentNeed;
@@ -153,7 +154,9 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 use App\Models\Finance\FinanceInvoiceEntry;
+use App\Models\Finance\FinanceModuleTransactions;
 use App\Models\Finance\FinanceTaxType;
+use App\Models\Finance\FinanceTransactionTypes;
 use App\Models\Finance\TaxJurisdiction;
 
 
@@ -321,6 +324,9 @@ class AppServiceProvider extends ServiceProvider
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
             FinanceCDNotes::getPrimaryKey() => FinanceCDNotes::class,
+            FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
+            FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
+            FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);

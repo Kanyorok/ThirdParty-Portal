@@ -19,11 +19,11 @@
                 @csrf
 
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label" for="vouchernumber">Voucher Number</label>
-                        <input type="text" id="VoucherNo" name="VoucherNo" class="form-control" readonly>
+                        <input type="text" id="VoucherNo" name="VoucherNo" class="form-control" value="{{$VoucherNo}}" readonly>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label" for="invoiceref">Invoice Ref</label>
                         <select name="InvoiceNo" id="InvoiceNo" class="form-select" onchange="fillInvoiceAmount()">
                             <option value="">-- Select Invoice --</option>
@@ -34,13 +34,13 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="totalamount">Total Invoice Amount</label>
+                        <input type="number" class="form-control mt-2" id="TotAmnt" placeholder="Based on the selected invoce" readonly>
+                    </div>
                 </div>
         
                 <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label" for="totalamount">Total Invoice Amount</label>
-                        <input type="number" class="form-control mt-2" id="TotAmnt" name="TotAmnt" placeholder="Based on the selected invoce" readonly>
-                    </div>
                     <div class="col-md-4">
                         <label class="form-label" for="paymentmethood">Payment Method</label>
                         <select class="form-control" name="PaymentMethod">
@@ -51,19 +51,18 @@
                     <div class="col-md-4">
                         <label class="form-label" for="paymenttype">Payment Type</label>
                         <select class="form-control" name="PaymentType" id="paymentType" onchange="toggleSchedule()">
+                            <option disabled selected value="">--Select Payment Type--</option>
                             <option value="Full">Full</option>
                             <option value="Partial">Partial</option>
                             <option value="Scheduled">Scheduled</option>
                         </select>
                     </div>
-                </div>
-        
-                <div id="partialOptions" style="display: none;">
-                    <div class="row mb-3">
-                        <label class="form-label" for="partialpay">Partial Amount Paid</label>
-                        <input class="form-control" type="number" name="PartialAmnt" min="0.00" step="0.01" placeholder="e.g. 1000.00">
+                    <div class="col-md-4">
+                        <label class="form-label" for="amntpaid">Amount</label>
+                        <input type="number" class="form-control mt-2" name="TotAmnt" placeholder="e.g. 1000.00" required>
                     </div>
                 </div>
+        
                 <div id="scheduleOptions" style="display: none;">
                     <div class="row mb-3">
                         <div class="col-md-4">
@@ -78,10 +77,6 @@
                                 <option value="Weekly">Weekly</option>
                                 <option value="Custom">Custom</option>
                             </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="amntperinst">Amount per Installment</label>
-                            <input type="number" class="form-control" min="0.00" step="0.01" name="AmntPerInst" placeholder="e.g. 1000.00">
                         </div>
                     </div>
                 </div>
@@ -104,22 +99,17 @@
   function toggleSchedule() {
     const type = document.getElementById('paymentType').value;
 
-    if (type === 'Partial') {
-        document.getElementById('partialOptions').style.display = 'block';
-        document.getElementById('scheduleOptions').style.display = 'none';
-    } else if(type === 'Scheduled') {
-        document.getElementById('partialOptions').style.display = 'none';
+    if(type === 'Scheduled') {
         document.getElementById('scheduleOptions').style.display = 'block';
     }else{
-        document.getElementById('partialOptions').style.display = 'none';
         document.getElementById('scheduleOptions').style.display = 'none';
     }
 }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const rand = Math.floor(Math.random() * 90000)+ 10000;
-        document.getElementById('VoucherNo').value = 'VCH-2025-' + rand;
-    });
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     const rand = Math.floor(Math.random() * 90000)+ 10000;
+    //     document.getElementById('VoucherNo').value = 'VCH-2025-' + rand;
+    // });
 
     function fillInvoiceAmount() {
         const selectedOption = document.querySelector('#InvoiceNo option:checked');

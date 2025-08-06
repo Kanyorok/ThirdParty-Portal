@@ -11,19 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_FinanceVoucher', function (Blueprint $table) {
+        Schema::create('t_FinanceGlMapping', function (Blueprint $table) {
             $table->id('Id');
-            $table->string('VoucherNo')->unique();
-            $table->foreignId('InvoiceNo')->constrained('t_FinanceInvoiceEntry','Id');
-            $table->decimal('TotAmnt', 10, 2);
-            $table->string('PaymentMethod');
-            $table->string('PaymentType')->default('Full');
-            $table->date('StartDate')->nullable();
-            $table->string('Frequency')->nullable();
-            $table->string('Status')->default('Pending');
-            $table->text('Description');
-            $table->text('Reasons')->nullable();
+            $table->foreignId('ModuleID')->constrained('t_Modules','ModuleID');
+            $table->foreignId('TransactionType', 100)->constrained('t_TransactionTypes','Id');
+            // $table->foreignId('SubType')->constrained('t_FinanceGLSubAccountTypes', 'Id');
+            $table->unsignedInteger('DebitGLAccountID')->constrained('t_FinanceGLAccounts','Id');
+            $table->unsignedInteger('CreditGLAccountID')->constrained('t_FinanceGLAccounts','Id');
+            $table->boolean('IsActive')->default(1);
 
+            // User tracking
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -38,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_FinanceVoucher');
+        Schema::dropIfExists('t_FinanceGlMapping');
     }
 };

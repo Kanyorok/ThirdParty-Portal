@@ -1,13 +1,17 @@
 @extends('layouts.app')
 @section('title', 'Invoice Entry - Accounts Payable')
 @section('content')
-<div class="container mt-3">
-    <div class="mb-2">
-        <a href="{{ route('invoiceentry.create') }}" class="btn btn-primary">➕Add Invoice</a>
-    </div>
+<div class="container mt-1">
+    
         <div class="card">
+            <div class="card-header bg-light py-1 px-3">
+                <h6 class="mb-0 text-muted"id="noteTypeTitle"><i class="fab fa-wpforms text-info"></i>Invoice Entries List</h6>
+            </div>
             <div class="card-body">
-                <p class="text-muted mt-0">Below is the list of all saved invoices with their details.</p>
+                <div class="mt-0">
+                    <a href="{{ route('invoiceentry.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i>Add Invoice</a>
+                </div>
+                <p class="text-muted mt-2">Below is the list of all saved invoices with their details.</p>
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead class="table-light">
@@ -34,7 +38,7 @@
                                 {{-- <td>{{ $item-> ?? '-'}}</td>
                                 <td>{{ $item-> ?? '-'}}</td> --}}
                                 <td style="white-space: nowrap;">
-                                    <a href="{{ route('taxruleconfig.edit', $item->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
                                     <button type="button"
                                         class="btn btn-sm btn-danger custom-delete-btn"
                                         {{-- data-bs-toggle="modal"
