@@ -31,13 +31,11 @@
     <div class="row">
         <div class="col-md-6">
             <p><strong>Receipt No:</strong> {{ $payment->Id }}</p>
-            <p><strong>Policy Number:</strong> {{ $payment->PolicyNumber }}</p>
-            <p><strong>Customer Name:</strong> {{ $payment->CustomerName }}</p>
+            <p><strong>Policy Number:</strong> {{ $payment->policies->PolicyNumber }}</p>
         </div>
         <div class="col-md-6">
             <p><strong>Payment Date:</strong> {{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d M Y') }}</p>
-            <p><strong>Received By:</strong> {{ $payment->ReceivedByName }}</p>
-            <p><strong>Payment Mode:</strong> {{ $payment->PaymentMode }}</p>
+            <p><strong>Payment Mode:</strong> {{ $payment->paymentmodes->Description }}</p>
         </div>
     </div>
 

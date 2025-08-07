@@ -48,7 +48,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
             $validated['PartsUsed'],
             $validated['Cost'],
             $finalstatus,
-            auth()->user(),
+             Auth::user(),
             $document
         );
         
@@ -82,7 +82,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
                 $validated['PartsUsed'],
                 $validated['Cost'],
                 $finalstatus,
-                auth()->user(),
+                 Auth::user(),
                 $document
             );
 

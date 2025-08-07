@@ -32,12 +32,15 @@
 
         <div class="mb-3">
             <label class="form-label">Payment Mode</label>
-            <select name="PaymentMode" class="form-select" required>
-                <option value="Cash">Cash</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Mobile Money">Mobile Money</option>
+            <select name="PaymentMode" class="form-select">         
+            <option value="">--Select PaymentMode--</option>
+              @foreach ($paymentModes as $paymentMode)
+                <option value="{{ $paymentMode->ID }}">
+                  {{ $paymentMode->Description }}
+                </option>
+              @endforeach
             </select>
-        </div>
+            </div>
 
         <div class="mb-3">
             <label class="form-label">Reference Number</label>

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Services\Insurance\BancassuranceCustomersService;
 use App\Http\Requests\Insurance\Customers\BancassuranceCustomersRequest;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +19,7 @@ class CustomerController extends Controller
         //
     public function create()
     {
+        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomers::class);
         $referrals = BancAssuranceReferral::all();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
@@ -30,7 +31,7 @@ class CustomerController extends Controller
 
     public function store(BancassuranceCustomersRequest $request)
     {
-        
+        $this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomers::class);
         $validated = $request->validated();
 
         $ReferralID = BancAssuranceReferral::findOrFail($validated['ReferralID']);
@@ -51,13 +52,15 @@ class CustomerController extends Controller
                 $validated['Email'],
                 $validated['Address'],
                 $Occupation,
-                auth()->user()
+                Auth::user(),
             );
 
         return redirect()->route('bancassurance.customers.index')->with('success', 'Customer profile saved.');
     }
     public function show($Id)
     {
+        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomers::class);
+        
         $customer = BancassuranceCustomers::findOrFail($Id); 
 
         return view('bancassurance.customers.show', compact('customer'));
@@ -76,27 +79,27 @@ class CustomerController extends Controller
         return view('bancassurance.customers.check', compact('customers'));
     }
     
-public function portfolio($customerId)
-{
-    $customer = DB::table('t_BancassuranceCustomers')->where('Id', $customerId)->first();
+// public function portfolio($customerId)
+// {
+//     $customer = DB::table('t_BancassuranceCustomers')->where('Id', $customerId)->first();
 
-    $policies = DB::table('t_BancassurancePolicies as p')
-        ->join('t_InsuranceProducts as prod', 'p.ProductID', '=', 'prod.Id')
-        ->join('t_InsuranceProviders as ins', 'p.InsurerID', '=', 'ins.Id')
-        ->where('p.CustomerID', $customerId)
-        ->select(
-            'p.*',
-            'prod.Name as ProductName',
-            'ins.Name as InsurerName'
-        )
-        ->orderByDesc('p.PolicyStartDate')
-        ->get();
+//     $policies = DB::table('t_BancassurancePolicies as p')
+//         ->join('t_InsuranceProducts as prod', 'p.ProductID', '=', 'prod.Id')
+//         ->join('t_InsuranceProviders as ins', 'p.InsurerID', '=', 'ins.Id')
+//         ->where('p.CustomerID', $customerId)
+//         ->select(
+//             'p.*',
+//             'prod.Name as ProductName',
+//             'ins.Name as InsurerName'
+//         )
+//         ->orderByDesc('p.PolicyStartDate')
+//         ->get();
 
-    return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
-}
+//     return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
+// }
 public function edit($id)
     {
-        // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomers::class);
         $customer = BancassuranceCustomers::findOrFail($id);  
         $referrals = BancAssuranceReferral::all();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
@@ -109,7 +112,7 @@ public function edit($id)
 
     public function update(BancassuranceCustomersRequest $request, $id)
     {
-        // $this->authorize(PermissionEnum::PropertyTypeUpdate , PropertyType::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersUpdate, BancassuranceCustomers::class);
         $validated = $request->validated();
 
         DB::beginTransaction();
@@ -124,7 +127,6 @@ public function edit($id)
                 'KRAPIN' => $validated['KRAPIN'],
                 'DateOfBirth' => $validated['DateOfBirth'],
                 'Gender' => $validated['Gender'] ?? '',
-                'PhoneNumber' => $validated['PhoneNumber'],
                 'MaritalStatus' => $validated['MaritalStatus'], 
                 'PhoneNumber' => $validated['PhoneNumber'],           
                 'Email' => $validated['Email'],
@@ -151,8 +153,7 @@ public function edit($id)
 
     public function destroy($id)
     {
-        //Check if user has permission to delete property categories
-        //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersDelete, BancassuranceCustomers::class);
         try {
             $customer = BancassuranceCustomers::findOrFail($id);
             $customer->delete();

@@ -64,7 +64,6 @@ class PropertyInvoiceService
         }
 
         activity()->causedBy($user->Id)->performedOn($invoice)->event('create')->log("Added Property Invoice {$invoice->Id}.");
-
         return new self($invoice);
     }
 

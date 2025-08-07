@@ -17,7 +17,7 @@
             <label class="form-label">PolicyID </label>
             <select name="PolicyID" class="form-select">
             <option value="">-- Select PolicyID --</option>
-                @foreach($policys as $policy)
+                @foreach($policies as $policy)
                     <option value="{{ $policy->Id }}">{{ $policy->PolicyNumber }}</option>
                 @endforeach
             </select>

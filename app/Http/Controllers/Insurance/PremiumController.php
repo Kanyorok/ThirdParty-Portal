@@ -3,83 +3,134 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\Insurance\PremiumManagement\BancassurancePremiumPaymentsRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Models\Insurance\BancassurancePolicies;
+use App\Services\Insurance\PremiumManagement\BancassurancePremiumPaymentsService;
+use App\Models\Core\CodeDetail;
+use App\Enums\Core\PermissionEnum;
+use App\Models\Insurance\BancassurancePremiumPayments;
 
 class PremiumController extends Controller
 {
     //
 public function create()
 {
-    // Fetch all active policies with customer names
-    $policies = DB::table('t_BancassurancePolicies as p')
-        ->join('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-        ->select('p.Id', 'p.PolicyNumber', 'c.FullName as CustomerName')
-        ->where('p.Status', 'ApprovedForIssuance')
-        ->orderBy('p.PolicyNumber')
-        ->get();
+    $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
+    $payment = BancassurancePremiumPayments::all();
+    $policies= BancassurancePolicies::all();
+    $paymentModes = CodeDetail::where('CodeID', 'PaymentModes',)->get();
 
-    return view('bancassurance.premiums.create', compact('policies'));
+    return view('bancassurance.premiums.create', compact('policies','paymentModes','payment'));
 }
 
-public function store(Request $request)
+public function store(BancassurancePremiumPaymentsRequest $request)
 {
-    $request->validate([
-        'PolicyID' => 'required|exists:t_BancassurancePolicies,Id',
-        'PaymentDate' => 'required|date',
-        'Amount' => 'required|numeric|min:1',
-        'PaymentMode' => 'required|string|max:50',
-        'ReferenceNumber' => 'nullable|string|max:100',
-        'Notes' => 'nullable|string|max:255',
-    ]);
+    $this->authorize(PermissionEnum::BancassurancePremiumPaymentsCreate, BancassurancePremiumPayments::class);
+     $validated = $request->validated();
 
-    DB::table('t_BancassurancePremiumPayments')->insert([
-        'PolicyID' => $request->PolicyID,
-        'PaymentDate' => $request->PaymentDate,
-        'Amount' => $request->Amount,
-        'PaymentMode' => $request->PaymentMode,
-        'ReferenceNumber' => $request->ReferenceNumber,
-        'Notes' => $request->Notes,
-        'CreatedBy' => auth()->id(),
-        'CreatedAt' => now(),
-    ]);
+        $PolicyID = BancassurancePolicies::findOrFail($validated['PolicyID']);
+        $PaymentMode = CodeDetail::findOrFail($validated['PaymentMode']);
+        $PaymentDate = new \DateTime($validated['PaymentDate']);
 
-    return redirect()->route('bancassurance.premiums.index')
-        ->with('success', 'Premium payment recorded successfully.');
-}
-
+        $customer = BancassurancePremiumPaymentsService::create(
+                $PolicyID,
+                $PaymentDate,
+                $validated['Amount'],
+                $PaymentMode,
+                $validated['ReferenceNumber'],
+                $validated['Notes'],
+                Auth::user(),
+            );
+           return redirect()->route('bancassurance.premiums.index')->with('success', 'Premium payment recorded successfully.');
+        }
 
 public function index()
 {
-    $payments = DB::table('t_BancassurancePremiumPayments as pay')
-        ->join('t_BancassurancePolicies as pol', 'pay.PolicyID', '=', 'pol.Id')
-        ->join('t_BancassuranceCustomers as cust', 'pol.CustomerID', '=', 'cust.Id')
-        ->select(
-            'pay.*',
-            'pol.PolicyNumber',
-            'cust.FullName as CustomerName'
-        )
-        ->orderByDesc('pay.PaymentDate')
-        ->get();
+    $payments = BancassurancePremiumPayments::all();
 
     return view('bancassurance.premiums.index', compact('payments'));
 }
 
 public function printReceipt($id)
 {
-    $payment = DB::table('t_BancassurancePremiumPayments as p')
-        ->leftJoin('t_BancassurancePolicies as pol', 'p.PolicyID', '=', 'pol.Id')
-        ->leftJoin('t_BancassuranceCustomers as c', 'pol.CustomerID', '=', 'c.Id')
-        ->leftJoin('t_Employees as e', 'p.ReceivedBy', '=', 'e.Id')
-        ->select(
-            'p.*',
-            'pol.PolicyNumber',
-            'c.FullName as CustomerName',
-            DB::raw("CONCAT(e.FirstName, ' ', e.LastName) as ReceivedByName")
-        )
-        ->where('p.Id', $id)
-        ->first();
+    $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
+    $payment = BancassurancePremiumPayments::findOrFail($id);
 
     return view('bancassurance.premiums.receipt', compact('payment'));
 }
+public function edit($Id)
+    {
+        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);        $payment = BancassurancePremiumPayments::findOrFail($Id);
+        $policies= BancassurancePolicies::all();
+        $paymentModes = CodeDetail::where('CodeID', 'PaymentModes','payment')->get();
+
+        return view('bancassurance.premiums.edit', compact( 'policies', 'paymentModes','payment'));
+    }
+
+    public function update(BancassurancePremiumPaymentsRequest $request, $id)
+    {
+        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsUpdate, BancassurancePremiumPayments::class);
+        $validated = $request->validated();
+
+        DB::beginTransaction();
+
+        try {
+                $validated['PaymentDate'] = \Carbon\Carbon::parse($validated['PaymentDate'])->format('Y-m-d');
+            } catch (\Exception $e) {
+                return back()->withErrors(['PaymentDate' => 'Invalid date format.'])->withInput();
+            }
+
+        try {
+            $payment = BancassurancePremiumPayments::findOrFail($id);
+
+            $payment->update([
+                'CustomerID' => $validated['PolicyID'],
+                'PaymentDate' => $validated['PaymentDate'],
+                'Amount' => $validated['Amount'],
+                'PaymentMode' => $validated['PaymentMode'],
+                'ReferenceNumber' => $validated['ReferenceNumber'],
+                'Notes' => $validated['Notes'],
+                'ModifiedBy' => Auth::Id(),
+            ]);
+
+            DB::commit();
+            activity()
+                ->performedOn($payment)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated Premium Payments');
+
+            return redirect()->route('bancassurance.premiums.index')->with('success', 'Premium Payments updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update Premium Payments:' . $th->getMessage());
+
+            return back()->withErrors(['error' => 'Failed to update Premium Payments'])->withInput();
+        }
+    }
+
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsDelete, BancassurancePremiumPayments::class);
+        try {
+            $payment = BancassurancePremiumPayments::findOrFail($id);
+            $payment->delete();
+
+            return redirect()->route('bancassurance.premiums.index')
+                ->with('success', 'Premium Payments Deleted Successfully!');
+        } catch (\Throwable $th) {
+            // Log the error for debugging
+            Log::error('Error deleting Premium Payments contacts: ' . $th->getMessage());
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete Premium Payments Contacts. Please try again.'])
+                ->withInput();
+        }
+    }
+
+
 }
+
+
