@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Insurance\InsurancePolicyStatus;
+use App\Enums\Insurance\InsuranceReferralStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassurancePolicyRequest;
 use App\Models\Core\CodeDetail;
@@ -9,6 +11,7 @@ use App\Models\Insurance\BancassuranceCustomers;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Services\Insurance\BancassurancePolicyService;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -18,35 +21,14 @@ class PolicyController extends Controller
     //
 public function create(Request $request)
 {
-    $referral = null;
-    $prefilled = [];
-
-    // 1. Auto-prefill from referral_id in URL (if present)
-    if ($request->filled('referral_id')) {
-        $referral = DB::table('t_BancassuranceReferrals')->where('Id', $request->referral_id)->first();
-
-        if ($referral) {
-            $prefilled = [
-                'CustomerID' => $referral->CustomerID,
-                'ProductID' => $referral->ProductID,
-                'InsurerID' => $referral->PreferredInsurerID
-            ];
-        }
-    }
-
-    // 2. Load data for form dropdowns
-    $customers = DB::table('t_BancassuranceCustomers')->get();
-    $products = DB::table('t_InsuranceProducts')->get();
-    $insurers = DB::table('t_InsuranceProviders')->get();
-
-    // 3. OPTIONAL: Allow manual selection of referrals
-    $referrals = DB::table('t_BancassuranceReferrals')
-        ->where('Status', '!=', 'Converted')
-        ->get();
+    $referrals = BancAssuranceReferral::all();
+    $customers = BancassuranceCustomers::all();
+    $products = CodeDetail::where('CodeID', 'InsuranceProduct')->get();
+    $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
+    $paymentfrequencys = CodeDetail::where('CodeID','PaymentFrequency')->get();
 
     return view('bancassurance.policies.create', compact(
-        'customers', 'products', 'insurers', 'referral', 'prefilled', 'referrals'
-    ));
+        'customers', 'products', 'insurers', 'paymentfrequencys', 'referrals'));
 }
 
 
@@ -59,28 +41,33 @@ public function store(BancassurancePolicyRequest $request)
     $ProductId = CodeDetail::findOrFail($validated['ProductID'] ?? null);
     $InsurerId = CodeDetail::findOrFail($validated['InsurerID'] ?? null);
     $Paymentfrquency = CodeDetail::findOrFail($validated['PaymentFrequency'] ?? null);
+    $Status = InsurancePolicyStatus::from($validated['Status']);
 
 
    $policy = BancassurancePolicyService::create(
         $CustomerId,
         $ProductId,
         $InsurerId,
-        $validated['PolicyNumber'],
         $validated['SumAssured'],
         $validated['PremiumAmount'],
-        $validated['PolicyStartDate'],
-        $validated['PolicyEndDate'],
+        Carbon::parse($validated['PolicyStartDate']),
+        Carbon::parse($validated['PolicyEndDate']),
         $Paymentfrquency,
         $referralId,
-        $validated['IssuedDate'] ?? null,
-        $validated['ExpiryDate'] ?? null,
-        true // IsActive
+        isset($validated['IssuedDate']) ? Carbon::parse($validated['IssuedDate']) : null,
+        isset($validated['ExpiryDate']) ? Carbon::parse($validated['ExpiryDate']) : null,
+        true,
+        $Status,
+        $request->user(),
     );
 
     // Optional: Update referral status
-    if ($request->filled('ReferralID')) {
+    if (
+        $request->filled('ReferralID') &&
+        in_array($Status, [InsurancePolicyStatus::Issued])
+    ) {
         DB::table('t_BancassuranceReferrals')->where('Id', $request->ReferralID)->update([
-            'Status' => 'Converted',
+            'Status' => InsuranceReferralStatus::Converted->value,
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now()
         ]);
@@ -91,29 +78,22 @@ public function store(BancassurancePolicyRequest $request)
 
 public function index(Request $request)
 {
-    $query = BancassurancePolicy::all();
+    $statuses = InsurancePolicyStatus::cases();
 
-    // Filter by status
-    if ($request->filled('status')) {
-        $query->where('Status', $request->status);
-    }
+    $query = BancassurancePolicy::with(['customer', 'product', 'insurer'])
+        ->when($request->status, fn($q) => $q->where('Status', $request->status))
+        ->when($request->from, fn($q) => $q->whereDate('PolicyStartDate', '>=', $request->from))
+        ->when($request->to, fn($q) => $q->whereDate('PolicyEndDate', '<=', $request->to))
+        ->when($request->customer, function ($q) use ($request) {
+            $q->whereHas('customer', fn($q2) =>
+                $q2->where('FullName', 'like', '%' . $request->customer . '%'));
+        })
+        ->orderByDesc('Id')
+        ->get();
 
-    // Filter by policy date range
-    if ($request->filled('from') && $request->filled('to')) {
-        $query->whereBetween('PolicyStartDate', [$request->from, $request->to]);
-    }
-
-    // Filter by customer name
-    if ($request->filled('customer')) {
-        $query->whereHas('customer', function ($q) use ($request) {
-            $q->where('FullName', 'like', '%' . $request->customer . '%');
-        });
-    }
-
-    $policies = $query->orderByDesc('Id')->get();
-
-    return view('bancassurance.policies.index', compact('policies'));
+    return view('bancassurance.policies.index', compact('query', 'statuses'))->with(['policies' => $query]);
 }
+
 
 
 public function submitForUnderwriting(Request $request, $id)
@@ -169,36 +149,15 @@ public function submitForUnderwriting(Request $request, $id)
 
 public function reviewIndex()
 {
-    $proposals = DB::table('t_BancassurancePolicies as p')
-        ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-        ->leftJoin('t_InsuranceProducts as prod', 'p.ProductID', '=', 'prod.Id')
-        ->select(
-            'p.Id',
-            'p.PolicyNumber',
-            'c.FullName as CustomerName',
-            'prod.Name as ProductName',
-            'p.SumAssured',
-            'p.Status',
-            'p.CreatedAt'
-        )
-        ->whereIn('p.Status', ['Proposal', 'SubmittedForUnderwriting'])
-        ->orderByDesc('p.Id')
-        ->get();
+    $proposals = BancassurancePolicy::with(['customer', 'product'])
+        ->whereIn('Status', [InsurancePolicyStatus::Proposal,InsurancePolicyStatus::SubmittedForUnderwriting])->get();
 
     return view('bancassurance.policies.review_index', compact('proposals'));
 }
+
 public function review($id)
 {
-    $policy = DB::table('t_BancassurancePolicies as p')
-        ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-        ->leftJoin('t_InsuranceProducts as prod', 'p.ProductID', '=', 'prod.Id')
-        ->select(
-            'p.*',
-            'c.FullName as CustomerName',
-            'prod.Name as ProductName'
-        )
-        ->where('p.Id', $id)
-        ->first();
+    $policy = BancassurancePolicy::with(['customer','product'])->find($id);
 
     if (!$policy) {
         return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
@@ -206,6 +165,7 @@ public function review($id)
 
     return view('bancassurance.policies.review', compact('policy'));
 }
+
 
 // Show the feedback form
 public function feedbackForm($id)

@@ -26,6 +26,7 @@ return new class extends Migration
             $table->date('IssuedDate');
             $table->date('ExpiryDate');
             $table->boolean('IsActive');
+            $table->string('Status');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Insurance;
 
+use App\Enums\Insurance\InsurancePolicyStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class BancassurancePolicyRequest extends FormRequest
 {
@@ -25,7 +27,6 @@ class BancassurancePolicyRequest extends FormRequest
             'CustomerID' => 'required|exists:t_BancassuranceCustomers,Id',
             'ProductID' => 'required|exists:t_CodeDetails,ID',
             'InsurerID' => 'nullable|exists:t_CodeDetails,ID',
-            'PolicyNumber' => 'required|string|max:255',
             'SumAssured' => 'required|numeric|min:0',
             'PremiumAmount' => 'required|numeric|min:0',
             'PolicyStartDate' => 'required|date',
@@ -35,6 +36,7 @@ class BancassurancePolicyRequest extends FormRequest
             'IssuedDate' => 'nullable|date',
             'ExpiryDate' => 'nullable|date|after_or_equal:IssuedDate',
             'IsActive' => 'boolean',
+            'Status'    => ['required', new Enum(InsurancePolicyStatus::class)]
         ];
     }
 }
