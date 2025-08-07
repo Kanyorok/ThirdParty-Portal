@@ -21,7 +21,7 @@
                     <option value="">--Select a referral--</option>
                     @foreach ($referrals as $referral)
                         <option value="{{ $referral->Id }}" {{ $customer->ReferralID == $referral->Id ? 'selected' : '' }}>
-                            {{ $referral->RefferedBy }}
+                            {{ $referral->ClientName }}
                         </option>
                     @endforeach
                 </select>

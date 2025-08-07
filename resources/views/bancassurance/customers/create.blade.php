@@ -19,7 +19,7 @@
                 <option value="">--Select a status--</option>
               @foreach ($referrals as $referral)
                 <option value="{{ $referral->Id }}">
-                  {{ $referral->RefferedBy }}
+                  {{ $referral->ClientName }}
                 </option>
               @endforeach
             </select>

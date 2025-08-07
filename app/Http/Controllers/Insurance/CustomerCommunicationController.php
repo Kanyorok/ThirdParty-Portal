@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\HRM\Employee;
 use App\Models\Core\CodeDetail;
-use App\Models\Insurance\BancassuranceBeneficiaries;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Insurance\BancassuranceCustomers;
 use App\Models\Insurance\BancassuranceCustomersContacts;
 use App\Services\Insurance\Customers\BancassuranceCustomersContactsService;
@@ -20,6 +19,7 @@ class CustomerCommunicationController extends Controller
     //
 public function create()
 {
+    $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomersContacts::class);
     $customers= BancassuranceCustomers::all();
     $employees = Employee::all();
     $contacttypes = CodeDetail::where('CodeID', 'ContactType')->get();
@@ -28,9 +28,8 @@ public function create()
 
 public function store(BancassuranceCustomersContactsRequest $request)
 {
+    $this->authorize(PermissionEnum::BancassuranceCustomersContactsCreate, BancassuranceCustomersContacts::class);
     $validated = $request->validated();
-
-
         $CustomerID = BancassuranceCustomers::findOrFail($validated['CustomerID']);
         $ContactDate = new \DateTime($validated['ContactDate']);
         $ContactType = CodeDetail::findOrFail($validated['ContactType']);
@@ -43,7 +42,7 @@ public function store(BancassuranceCustomersContactsRequest $request)
                 $validated['Summary'],
                 $validated['Notes'],
                 $HandledBy,               
-                auth()->user()
+                Auth::user(),
             );
 
          return redirect()->route('bancassurance.customers.communication.index')->with('success', 'Customer Contacts saved.');
@@ -58,7 +57,7 @@ public function index()
 }
 public function edit($id)
     {
-        // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomersContacts::class);
         $log = BancassuranceCustomersContacts::findOrFail($id);
         $customers = BancassuranceCustomers::all();   
         $employees = Employee::all();
@@ -68,7 +67,7 @@ public function edit($id)
 
     public function update(BancassuranceCustomersContactsRequest $request, $id)
     {
-        // $this->authorize(PermissionEnum::PropertyTypeUpdate , PropertyType::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersContactsUpdate, BancassuranceCustomersContacts::class);
         $validated = $request->validated();
 
         DB::beginTransaction();
@@ -110,7 +109,7 @@ public function edit($id)
 
     public function destroy($id)
     {
-        //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersContactsDelete, BancassuranceCustomersContacts::class);
         try {
             $log = BancassuranceCustomersContacts::findOrFail($id);
             $log->delete();

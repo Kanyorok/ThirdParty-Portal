@@ -14,11 +14,9 @@ class BancassuranceCustomersService
     /**
      * Create a new class instance.
      */
-    public function __construct()
+    public function __construct(public BancassuranceCustomers $customer)
     {
-        //
     }
-    
     public static function create(
         BancAssuranceReferral $ReferralID,
         string $FullName,

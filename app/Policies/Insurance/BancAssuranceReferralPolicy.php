@@ -11,7 +11,6 @@ class BancAssuranceReferralPolicy
     /**
      * Create a new policy instance.
      */
-
     public function viewAny(User $user): bool
     {
         return $user->can(PermissionEnum::BancassuranceReferralView->value);

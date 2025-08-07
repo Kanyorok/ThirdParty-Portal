@@ -14,6 +14,9 @@ class BancassuranceCustomersBeneficiariesService
     /**
      * Create a new class instance.
      */
+    public function __construct(public BancassuranceBeneficiaries $customer)
+    {
+    }
     public static function create(
         BancassuranceCustomers $CustomerID,
         BancassurancePolicies  $PolicyID ,     

@@ -13,7 +13,7 @@
                 <dd class="col-sm-8">{{ $customer->FullName ?? '-' }}</dd>
 
                 <dt class="col-sm-4">Referred By</dt>
-                <dd class="col-sm-8">{{ $customer->referrals->RefferedBy ?? '-' }}</dd>
+                <dd class="col-sm-8">{{ $customer->referrals->ClientName ?? '-' }}</dd>
 
                 <dt class="col-sm-4">National ID</dt>
                 <dd class="col-sm-8">{{ $customer->NationalID ?? '-' }}</dd>

@@ -14,6 +14,9 @@ class BancassuranceCustomersContactsService
     /**
      * Create a new class instance.
      */
+    public function __construct(public BancassuranceCustomersContacts $log)
+    {
+    }
     public static function create(
         BancassuranceCustomers $CustomerID,
         DateTime $ContactDate,

@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomers;
 use App\Models\Insurance\BancassurancePolicies;
+use App\Enums\Core\PermissionEnum;
+use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Services\Insurance\Customers\BancassuranceCustomersBeneficiariesService;
 use App\Http\Requests\Insurance\Customers\BancassuranceCustomersBeneficiariesRequest;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerBeneficiaryController extends Controller
 {
@@ -16,11 +19,12 @@ class CustomerBeneficiaryController extends Controller
      */
     public function create()
     {
+       $this->authorize(PermissionEnum::BancassuranceCustomersBeneficiariesView, BancassuranceBeneficiaries::class);
        $customers= BancassuranceCustomers::all();
-       $policys= BancassurancePolicies::all();
+       $policies= BancassurancePolicies::all();
        $relationships = CodeDetail::where('CodeID', 'Relationships')->get();
        
-        return view('bancassurance.customers.beneficiaries.create', compact('customers','relationships','policys'));
+        return view('bancassurance.customers.beneficiaries.create', compact('customers','relationships','policies'));
     }
 
     /**
@@ -28,6 +32,7 @@ class CustomerBeneficiaryController extends Controller
      */
     public function store(BancassuranceCustomersBeneficiariesRequest $request)
     {
+        $this->authorize(PermissionEnum::BancassuranceCustomersBeneficiariesCreate, BancassuranceBeneficiaries::class);
         $validated = $request->validated();
 
         $CustomerID = BancassuranceCustomers::findOrFail($validated['CustomerID']);
@@ -47,7 +52,7 @@ class CustomerBeneficiaryController extends Controller
                 $validated['Email'],
                 $validated['PercentageShare'],
                 $validated['IsPrimary'],
-                auth()->user()
+                Auth::user(),
             );
 
             return redirect()->route('bancassurance.customers.beneficiaries.create')->with('success', 'ADD BENEFICIARY saved.');
