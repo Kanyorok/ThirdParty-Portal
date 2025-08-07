@@ -27,7 +27,7 @@ class ReversingJournalController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
-        $journalEntries=FinanceJournalEntry::select('Id','RefNo','Description')->get();
+        $journalEntries=FinanceJournalEntry::select('Id','RefNo','Description')->where('ApprovalStatus','posted')->get();
         return view('finance.generalledger.reversingjournal.create',compact('journalEntries'));
     }
 

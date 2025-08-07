@@ -45,6 +45,9 @@ use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
+use App\Models\Finance\FinanceTransaction;
+use App\Models\Finance\RecurrentJournal;
+use App\Models\Finance\ReverseJournalEntry;
 use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
@@ -323,6 +326,9 @@ class AppServiceProvider extends ServiceProvider
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
             FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
             FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
+            RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
+            ReverseJournalEntry::getPrimaryKey() => ReverseJournalEntry::class,
+            FinanceTransaction::getPrimaryKey() => FinanceTransaction::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);

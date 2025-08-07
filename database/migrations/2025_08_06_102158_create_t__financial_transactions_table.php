@@ -39,13 +39,20 @@ return new class extends Migration
             $table->string('Narration', 255)->nullable();
             $table->string('BatchNumber', 50)->nullable();
 
+            //Taxable flags
+            $table->boolean('IsTaxable')->default(false);// if its a posting for tax
+
             // Reversal
             $table->boolean('IsReversal')->default(0);
             $table->unsignedBigInteger('ReversedTransactionID')->nullable();
+            $table->foreign('ReversedTransactionID')->references('Id')->on('t_FinancialTransactions');
 
             // Control Flags
             $table->boolean('IsPosted')->default(1);
             $table->string('Status', 20)->default('POSTED');
+
+            //System Description
+            $table->string('SystemDescription', 150)->nullable();
 
             // Audit
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
@@ -54,10 +61,6 @@ return new class extends Migration
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-
-            // Optional: add foreign key constraints if needed
-            $table->foreign('GLAccountID')->references('Id')->on('t_GLAccounts');
-            $table->foreign('ReversedTransactionID')->references('TransactionID')->on('t_FinancialTransactions');
 
             // indexing
             $table->index('ReferenceNumber');

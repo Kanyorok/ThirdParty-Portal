@@ -32,6 +32,7 @@ class FinanceJournalEntry extends Model
         'RefNo',
         'Type',
         'ApprovalStatus',
+        'ApprovalReason',
         'Description',
         'SystemDescription',
 

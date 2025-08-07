@@ -157,6 +157,9 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
 
     //Approval Routes For simulations
-    Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
+    //Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
+
+    //Posting Routes
+    Route::post('/journalApproval/{id}',[\App\Http\Controllers\Finance\PostingController::class,'journalApproval'])->name('journalApproval');
 
 });

@@ -49,8 +49,16 @@
 
                                 {{-- Status --}}
                                 <td>
-                                    <span class="badge {{ $reversal->ApprovalStatus == 'posted' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                        {{ $reversal->ApprovalStatus ?? 'Pending' }}
+                                    @php
+                                        $statusClass = match($reversal->ApprovalStatus) {
+                                            'posted' => 'bg-success',
+                                            'rejected' => 'bg-danger',
+                                            'draft' => 'bg-secondary',
+                                            default => 'bg-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $statusClass }}">
+                                        {{ ucfirst($reversal->ApprovalStatus) ?? 'Pending' }}
                                     </span>
                                 </td>
 

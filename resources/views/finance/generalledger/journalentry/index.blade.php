@@ -46,9 +46,17 @@
                                     }), 2) }}
                                 </td>
                                 <td>
-                                        <span class="badge {{ $journalEntry->ApprovalStatus == 'Posted' ? 'bg-success' : 'bg-secondary' }}">
-                                            {{ $journalEntry->ApprovalStatus ?? 'pending' }}
-                                        </span>
+                                    @php
+                                        $statusClass = match($journalEntry->ApprovalStatus) {
+                                            'posted' => 'bg-success',
+                                            'rejected' => 'bg-danger',
+                                            'draft' => 'bg-secondary',
+                                            default => 'bg-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $statusClass }}">
+                                        {{ ucfirst($journalEntry->ApprovalStatus) ?? 'Pending' }}
+                                    </span>
                                 </td>
                                 <td class="text-center">
                                     <a href="{{ route('journalentry.show', $journalEntry->Id) }}" class="btn btn-sm btn-outline-info me-1" title="View Journal Entry">

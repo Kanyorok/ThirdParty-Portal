@@ -8,7 +8,7 @@
         <div class="card shadow-sm rounded-3">
             <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
                 <h6 class="mb-0 text-muted">
-                    <i class="fas fa-sync-alt text-info me-2"></i> Recurring Journals
+                    <i class="fas fa-sync-alt text-info me-2"></i> Recurring Journals data
                 </h6>
                 <a href="{{ route('recurrentjournal.create') }}" class="btn btn-info btn-sm p-2">
                     <i class="fas fa-plus-circle me-1"></i> New Recurring Journal
@@ -17,7 +17,7 @@
 
             <div class="card-body p-3">
                 <div class="table-responsive">
-                    <table class="table table-hover table-sm align-middle table-striped1"
+                    <table class="table table-hover table-sm align-middle table-striped1 text-center"
                            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
                         <thead class="table-light">
                         <tr>
@@ -71,8 +71,16 @@
 
                                 {{-- Approval Status --}}
                                 <td>
-                                    <span class="badge {{ $recurring->ApprovalStatus === 'approved' ? 'bg-success' : 'bg-secondary' }}">
-                                        {{ $recurring->ApprovalStatus }}
+                                    @php
+                                        $statusClass = match($recurring->ApprovalStatus) {
+                                            'posted' => 'bg-success',
+                                            'rejected' => 'bg-danger',
+                                            'draft' => 'bg-secondary',
+                                            default => 'bg-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $statusClass }}">
+                                        {{ ucfirst($recurring->ApprovalStatus) ?? 'Pending' }}
                                     </span>
                                 </td>
 

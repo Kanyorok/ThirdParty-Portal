@@ -16,7 +16,8 @@ return new class extends Migration
             $table->date('Date');
             $table->string('RefNo')->unique();
             $table->enum('Type', ['normal', 'recurring', 'reversing'])->default('normal');
-            $table->enum('ApprovalStatus', ['draft', 'posted'])->default('draft');
+            $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
+            $table->text('ApprovalReason')->nullable();
             $table->text('Description')->nullable();
             $table->string('SystemDescription', 255)->nullable();
 
