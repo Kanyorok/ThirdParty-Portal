@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Settings\WorkFlow;
 use App\Models\Settings\WorkFlowStage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 class WorkFlowController extends Controller
 {
@@ -41,6 +43,7 @@ class WorkFlowController extends Controller
     public function store(WorkFlowRequest $request)
     {
         $validated = $request->validated();
+        //dd($request->all());
         /** @var \App\Models\Auth\User $user */
         $user = Auth::user();
 
@@ -59,7 +62,19 @@ class WorkFlowController extends Controller
                 ->performedOn($workFlow)
                 ->event('create')
                 ->log('Created approval workflow stage: ' . $validated['Name']);
+
+                        // Log success
+        Log::info('Workflow created successfully.', [
+            'workflow_id' => $workFlow->id,
+            'created_by' => Auth::id(),
+        ]);
         } catch (\Exception $e) {
+
+                    // Log the error
+        Log::error('Failed to create workflow.', [
+            'error_message' => $e->getMessage(),
+            'user_id' => Auth::id(),
+        ]);
             return redirect()->back()->withErrors(['error' => 'Failed to create approval stage: ' . $e->getMessage()]);
         }
 
