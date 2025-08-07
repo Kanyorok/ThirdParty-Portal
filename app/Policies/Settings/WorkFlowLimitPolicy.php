@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Policies\Settings;
+
+use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
+
+class WorkFlowLimitPolicy
+{
+    /**
+     * Create a new policy instance.
+     */
+    public function managerial_limit(User $user): bool
+    {
+        return $user->can(PermissionEnum::WorkflowlimitManagerialLevel->value);
+    }
+
+    public function operational_limit(User $user): bool
+    {
+        return $user->can(PermissionEnum::WorkflowlimitOperationalLevel->value);
+    }
+    
+    /**
+     * Determine whether the user can view any models.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->can(PermissionEnum::WorkflowlimitView->value);
+    }
+
+    /**
+     * Determine whether the user can view the model.
+     */
+    public function view(User $user): bool
+    {
+        return $user->can(PermissionEnum::WorkflowlimitView->value);
+    }
+
+    /**
+     * Determine whether the user can create models.
+     */
+    public function create(User $user): bool
+    {
+        return $user->can(PermissionEnum::WorkflowlimitCreate->value);
+    }
+
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user): bool
+    {
+        return $user->can(PermissionEnum::WorkflowlimitUpdate->value);
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user): bool
+    {
+        return $user->can(PermissionEnum::WorkflowlimitDelete->value);
+    }
+}

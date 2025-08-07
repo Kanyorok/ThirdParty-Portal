@@ -21,6 +21,14 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
+        Route::get('workflows', 'WorkFlowController@index')->name('settings.workflows.index');
+        Route::post('workflows/create', 'WorkFlowController@store')->name('settings.workflows.store');
+        Route::get('workflows/delete/{id}', 'WorkFlowController@destroy')->name('settings.workflows.delete');
+        Route::get('workflows/{id}', 'WorkFlowController@show')->name('settings.workflows.show');
+        Route::post('workflow-stages', 'WorkflowStagesController@store')->name('settings.workflow_stages.store');
+        Route::delete('workflow-stages/{id}', 'WorkflowStagesController@destroy')->name('settings.workflow_stages.destroy');
+        Route::get('workflow-limits', 'WorflowLimitsController@index')->name('settings.workflow_limits');
+        Route::post('workflow-limits', 'WorflowLimitsController@store')->name('settings.approval_workflow_limit.store');
 
         Route::get('integrations', 'SettingsController@integrations')->name('settings.integrations');
         Route::post('integrations', 'IntegrationController');
@@ -43,8 +51,8 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
         Route::resource('branches', 'CrmBranchController')->parameters(['branches' => 'crm_branch'])->except(['edit', 'create', 'show']);
 
-Route::resource('roles', 'RoleController'); // remove ->except(['show'])
-Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
+        Route::resource('roles', 'RoleController'); // remove ->except(['show'])
+        Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
 
 
         Route::namespace('Users')->group(function () {
