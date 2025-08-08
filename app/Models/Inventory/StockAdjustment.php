@@ -70,6 +70,12 @@ class StockAdjustment extends Model
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
     }
+
+    // public static function getPrimaryKey(): string
+    // {
+    //     return 'Id';
+    // }
+
     public function reason()
     {
         return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');

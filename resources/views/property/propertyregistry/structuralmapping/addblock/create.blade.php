@@ -10,7 +10,7 @@
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-6">
-          <label class="form-label">Select Property</label>
+          <label class="form-label">Select Property<span class="text-danger">*</span></label>
             <select name="PropertyID" class="form-select" required>
                 <option value="#">--Select a property--</option>
               @foreach ($properties as $property)
@@ -19,7 +19,7 @@
             </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Block Name / Label</label>
+          <label class="form-label">Block Name<span class="text-danger">*</span></label>
           <input type="text" class="form-control" name="BlockName" placeholder="e.g. Block A, Tower 1">
         </div>
       </div>
@@ -28,7 +28,7 @@
         <label class="form-label">Block Description</label>
         <textarea class="form-control" rows="2" name="Description" placeholder="Optional description"></textarea>
       </div>
-        <button class="btn btn-success">💾 Save Block</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Save Block</button>
         <a href="{{ route('addblock.index') }}" class="btn btn-secondary">Cancel</a>
 </form>
       </div>

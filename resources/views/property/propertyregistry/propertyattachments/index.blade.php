@@ -24,14 +24,18 @@
     @foreach($propertyattachments as $propertyattachment)
       <tr>
           <td>{{ $propertyattachment->Id }}</td>
-          <td>{{ $propertyattachment->PropertyID }}</td>
+          <td>{{ $propertyattachment->property->PropertyName}}</td>
           <td>{{ $propertyattachment->DocumentTitle }}</td>
-          <td>{{ $propertyattachment->DocumentType }}</td>
+          <td>{{ $propertyattachment->documenttype->Description }}</td>
           <td>{{ $propertyattachment->Description}}</td>
           <td>
-          <a href="#" class="btn btn-sm btn-outline-primary">⬇ Download</a>
-          <button class="btn btn-sm btn-outline-danger">🗑 Delete</button>
-        </td>
+          <a href="{{ route('attachments.edit', $propertyattachment->Id) }}" class="btn btn-info btn-sm">Edit</a>
+          <form class="d-inline" action="{{ route('attachments.destroy', $propertyattachment->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this property attachment?');">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+      </td>
       </tr>
     @endforeach
     </tbody>

@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_MeetingUsers', static function (Blueprint $table) {
+        Schema::create('t_MeetingUserhs', static function (Blueprint $table) {
             $table->id();
             $table->foreignId('UserID')->constrained('t_Users', 'Id');
             $table->foreignId('MeetingId')->constrained('t_Meetings', 'MeetingID');

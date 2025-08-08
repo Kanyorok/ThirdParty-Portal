@@ -19,7 +19,7 @@
             <div class="card-body">
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Select Property</label>
+                        <label class="form-label">Select Property<span class="text-danger">*</span></label>
                         <select name="PropertyID" id="property-select" class="form-select" required>
                             <option value="">-- Select Property --</option>
                             @foreach ($lineentries as $property)
@@ -30,15 +30,15 @@
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Select Block</label>
+                        <label class="form-label">Select Block<span class="text-danger">*</span></label>
                         <select name="BlockID" id="block-select" class="form-select" required>
                             <option value="">-- Select Block --</option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Floor Label</label>
+                        <label class="form-label">Floor Label<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" placeholder="e.g. Ground Floor, 1st Floor"
-                               name="FloorLabel">
+                               name="FloorLabel" required>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -46,7 +46,7 @@
                     <textarea class="form-control" rows="2" placeholder="Optional floor notes"
                               name="FloorNotes"></textarea>
                 </div>
-                <button class="btn btn-success">💾 Save Floor</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Save Floor</button>
                 <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>

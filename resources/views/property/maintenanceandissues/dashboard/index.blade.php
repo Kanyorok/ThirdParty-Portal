@@ -10,15 +10,7 @@
       <div class="card text-white bg-primary shadow">
         <div class="card-body">
           <h6>Total Requests</h6>
-          <h3>42</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-white bg-info shadow">
-        <div class="card-body">
-          <h6>Open</h6>
-          <h3>12</h3>
+          <h3>{{ $totalRequests }}</h3>
         </div>
       </div>
     </div>
@@ -26,7 +18,7 @@
       <div class="card text-white bg-warning shadow">
         <div class="card-body">
           <h6>In Progress</h6>
-          <h3>18</h3>
+          <h3>{{ $inProgress }}</h3>
         </div>
       </div>
     </div>
@@ -34,40 +26,31 @@
       <div class="card text-white bg-success shadow">
         <div class="card-body">
           <h6>Completed</h6>
-          <h3>12</h3>
+          <h3>{{ $completed }}</h3>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Filters -->
+  <!-- Filters (To be implemented dynamically later) -->
   <div class="row g-3 mb-3">
     <div class="col-md-3">
-      <select class="form-select">
+      <select class="form-select" disabled>
         <option selected>All Properties</option>
-        <option>Sunset Plaza</option>
-        <option>Mountain View</option>
       </select>
     </div>
     <div class="col-md-3">
-      <select class="form-select">
+      <select class="form-select" disabled>
         <option selected>All Priorities</option>
-        <option>Low</option>
-        <option>Medium</option>
-        <option>High</option>
-        <option>Emergency</option>
       </select>
     </div>
     <div class="col-md-3">
-      <select class="form-select">
+      <select class="form-select" disabled>
         <option selected>All Statuses</option>
-        <option>Open</option>
-        <option>In Progress</option>
-        <option>Completed</option>
       </select>
     </div>
     <div class="col-md-3">
-      <button class="btn btn-outline-primary w-100">🔍 Refresh</button>
+      <button class="btn btn-outline-primary w-100" disabled>🔍 Refresh</button>
     </div>
   </div>
 
@@ -87,17 +70,35 @@
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>1</td>
-        <td>REQ-2025-001</td>
-        <td>Unit 101</td>
-        <td>Plumbing</td>
-        <td><span class="badge bg-danger">High</span></td>
-        <td><span class="badge bg-warning text-dark">In Progress</span></td>
-        <td>Mary N.</td>
-        <td>2025-05-03</td>
-        <td><button class="btn btn-sm btn-outline-primary">👁</button></td>
-      </tr>
+      @forelse($requests as $index => $assign)
+        <tr>
+          <td>{{ $index + 1 }}</td>
+          <td>{{ $assign->request->RequestNumber ?? '-' }}</td>
+          <td>{{ $assign->request->unit->UnitCode ?? '-' }}</td>
+          <td>{{ $assign->request->issueType->Description ?? '-' }}</td>
+          <td>
+            <span class="badge bg-{{ $assign->request->priority->Description == 'High' ? 'danger' : 'secondary' }}">
+              {{ $assign->request->priority->Description ?? '-' }}
+            </span>
+          </td>
+          <td>
+            <span class="badge bg-warning text-dark">
+              {{ $assign->Status->Label() }}
+            </span>
+          </td>
+          <td>
+            {{ $assign->internalTechnician->FullName ?? $assign->prequalifiedVendor->TradingName ?? '-' }}
+          </td>
+          <td>{{ \Carbon\Carbon::parse($assign->AssignmentDate)->format('d/m/Y') }}</td>
+          <td>
+            <a href="{{ route('workcompletion.show', $assign->Id) }}" class="btn btn-sm btn-outline-primary">View</a>
+          </td>
+        </tr>
+      @empty
+        <tr>
+          <td colspan="9" class="text-center">No maintenance records found.</td>
+        </tr>
+      @endforelse
     </tbody>
   </table>
 </div>

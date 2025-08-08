@@ -156,8 +156,7 @@ class ModuleSeeder extends Seeder
             // Evaluation
             ['ModuleID' => 305400, 'Name' => 'Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             //['ModuleID' => 305410, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'tendercommittee.index'],
-            ['ModuleID' => 305420, 'Name' => 'Member Response', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'memberresponse.index'],
-            ['ModuleID' => 305430, 'Name' => 'Assign Roles', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'assignrole.index'],
+            //['ModuleID' => 305430, 'Name' => 'Assign Roles', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'assignrole.index'],
             ['ModuleID' => 305440, 'Name' => 'Evaluators Dashboard', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'evaluationdashboard.index'],
             ['ModuleID' => 305450, 'Name' => 'Consolidated Scores', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'bidscores.index'],
 
@@ -172,8 +171,8 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
-            ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
-            ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
+           // ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
+           // ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
     //            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
@@ -186,6 +185,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 398200, 'Name' => 'Methods Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'procurement-modes.index'],
             ['ModuleID' => 398300, 'Name' => 'Approval Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'approval-setup.index'],
             ['ModuleID' => 398500, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'tendercommittee.index'],
+            ['ModuleID' => 398600, 'Name' => 'Member Response', 'Icon' => null, 'Description' => '', 'ParentID' => 398000, 'Route' => 'memberresponse.index'],
             ['ModuleID' => 399000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 300000, 'Route' => 'procurement-reports.index'],
 
         ]);

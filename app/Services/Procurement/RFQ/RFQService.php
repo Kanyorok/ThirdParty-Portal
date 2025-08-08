@@ -18,14 +18,14 @@ class RFQService
     {
 
         return DB::table(DB::raw('t_RFQResponse WITH (NOLOCK)'))
-//            ->leftJoin(DB::raw('t_ResponseItems WITH (NOLOCK)'), 't_RFQResponse.Id', '=', 't_ResponseItems.RfqResponseId')
-//            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_RFQResponse.SupplierId', '=', 't_Suppliers.Id')
             ->select(DB::raw('
                 t_RFQResponse.RFQNumber,
                 t_RFQResponse.RFQResponseNumber,
                 t_RFQResponse.RFQId,
-                t_Suppliers.SupplierName
+                t_Suppliers.SupplierName,
+                t_Suppliers.Id as SupplierId,
+                t_Suppliers.Address
             '))->get();
 
     }
