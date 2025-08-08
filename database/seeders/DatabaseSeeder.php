@@ -64,9 +64,9 @@ class DatabaseSeeder extends Seeder
         $this->call(PropertyBlockSeeder::class);
         $this->call(PropertyFloorSeeder::class);
         $this->call(PropertyUnitSeeder::class);
-        $this->call(TenantRegistrySeeder::class);
+        // $this->call(TenantRegistrySeeder::class);
 
-        $this->call(PropertyNewLeaseSeeder::class);
+        // $this->call(PropertyNewLeaseSeeder::class);
         $this->call(FinanceGLTypeGroupSeeder::class);
         $this->call(FinanceGLSubAccountTypeSeeder::class);
         $this->call(FinanceGLAccountsSeeder::class);
@@ -74,6 +74,8 @@ class DatabaseSeeder extends Seeder
         $this->call(OrderLinesSeeder::class);
         $this->call(OrderSeeder::class);
         $this->call(GoodsReceiptsSeeder::class);
+        $this->call(FinanceTransactionTypesSeeder::class);
+        $this->call(FinanceModuleTransactionSeeder::class);
 
     }
 }
