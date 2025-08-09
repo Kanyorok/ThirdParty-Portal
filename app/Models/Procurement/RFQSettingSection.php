@@ -43,13 +43,8 @@ class RFQSettingSection extends Model
         return 'id';
     }
 
-//    public function criterias()
-//    {
-//        return $this->hasMany(RFQSettingCriteria::class, 'SectionID');
-//    }
     public function criteriaSettings()
     {
         return $this->hasMany(RFQSettingCriteria::class, 'SectionID', 'id');
     }
-
 }
