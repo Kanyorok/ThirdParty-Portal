@@ -2,18 +2,156 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Core\Branch;
+use App\Models\Core\CodeDetail;
+use App\Models\Finance\FinanceGLAccounts;
+use App\Models\Finance\FinanceJournalEntry;
+use App\Models\Finance\FinanceJournalLines;
+use App\Models\Finance\RecurrentJournal;
+use App\Models\Finance\ReverseJournalEntry;
+use App\Models\HRM\Department;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RecurrentJournalController extends Controller
 {
     //
     public function index()
     {
-        return view('finance.generalledger.recurrentjournal.index');
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
+        $recurringJournals = FinanceJournalEntry::with( 'recurringJournals:Id,JournalEntryId,StartDate,CuttOffDate,Frequency,ReferenceName,Description,NextRunDate')
+            ->where('Type','recurring')->get();
+
+        $frequencies =CodeDetail::where('CodeID', 'JournalPaymentFrequency')
+            ->pluck('Description', 'Value') // ['w' => 'Weekly', 'd' => 'Daily', ...]
+            ->toArray();
+
+        return view('finance.generalledger.recurrentjournal.index', compact('recurringJournals','frequencies'));
     }
 
     public function create()
     {
-        return view('finance.generalledger.recurrentjournal.create');
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
+        try {
+            $gls = FinanceGLAccounts::select('Id', 'GLName')->get();
+            $branches = Branch::select('Id', 'Name')->get();
+            $departments = Department::select('Id', 'Name')->get();
+            $paymentFrequency = CodeDetail::select('CodeID', 'Description', 'Value')->where('CodeID', 'JournalPaymentFrequency')->get();
+            return view('finance.generalledger.recurrentjournal.create', compact('gls', 'branches', 'departments', 'paymentFrequency'));
+        } catch (\Throwable) {
+            Log::error('Error in Recurrent Journal Create');
+            return back()->with('error', 'Error in Recurrent Journal Create');
+        }
     }
+
+    public function store(Request $request)
+    {
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
+        // Normalize entries
+        $entries = [];
+        foreach ($request->GLAccount as $index => $gl) {
+            $entries[] = [
+                'gl_id' => $gl,
+                'branch_id' => $request->Branch[$index],
+                'department_id' => $request->Department[$index],
+                'debit' => $request->DRCR[$index] === 'DR' ? $request->Amount[$index] : 0,
+                'credit' => $request->DRCR[$index] === 'CR' ? $request->Amount[$index] : 0,
+                'is_debit' => $request->DRCR[$index] === 'DR',
+                'amount' => $request->Amount[$index],
+                'narration' => $request->Narration[$index] ?? null,
+            ];
+        }
+
+        $request->merge(['entries' => $entries]);
+
+        // Validate input
+        $validated = $request->validate([
+            'StartDate' => 'required|date',
+            'CuttOffDate' => 'required|date|after_or_equal:StartDate',
+            'Frequency' => 'required|in:d,w,m,q,y',
+            'ReferenceName' => 'required|string|max:255',
+            'Description' => 'nullable|string|max:1000',
+            'entries' => 'required|array|min:2',
+            'entries.*.gl_id' => 'required|exists:t_FinanceGLAccounts,Id',
+            'entries.*.branch_id' => 'required|exists:t_Branches,Id',
+            'entries.*.department_id' => 'required|exists:t_Departments,Id',
+            'entries.*.debit' => 'required|numeric|min:0',
+            'entries.*.credit' => 'required|numeric|min:0',
+        ]);
+
+        // Check if DR equals CR
+        $totalDebit = collect($validated['entries'])->sum('debit');
+        $totalCredit = collect($validated['entries'])->sum('credit');
+
+        if ($totalDebit !== $totalCredit) {
+            return back()->withErrors(['Amount mismatch' => 'Total Debit must equal Total Credit'])->withInput();
+        }
+
+        DB::beginTransaction();
+        try {
+            // Save the master entry in the JournalEntry Table
+            $journalEntry = FinanceJournalEntry::create([
+                'Date' => $validated['StartDate'],
+                'Description'    => $validated['Description'],
+                'Type'=> 'recurring',
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy'=> Auth::Id(),
+            ]);
+            //Saveto the Recurrent Journal Table
+            $store=RecurrentJournal::create([
+                'JournalEntryId'=> $journalEntry->Id,
+                'StartDate'      => $validated['StartDate'],
+                'CuttOffDate'    => $validated['CuttOffDate'],
+                'Frequency'      => $validated['Frequency'],
+                'ReferenceName'  => $validated['ReferenceName'],
+                'Description'    => $validated['Description'],
+                'CreatedBy'      => Auth::id(),
+                'ModifiedBy'     => Auth::id(),
+            ]);
+            // SAVE to the JournalLines table
+            foreach ($request->entries as $entry) {
+                FinanceJournalLines::create([
+                    'JournalEntryId' => $journalEntry->Id,
+                    'GLAccountID'    => $entry['gl_id'],
+                    'BranchID'       => $entry['branch_id'],
+                    'DepartmentID'   => $entry['department_id'],
+                    'IsDebit'        => $entry['is_debit'],
+                    'Amount'         => $entry['amount'],
+                    'Debit'          => $entry['debit'] ?? 0,
+                    'Credit'         => $entry['credit'] ?? 0,
+                    'Narration'      => $entry['narration'] ?? null,
+                    'CreatedBy' => Auth::id(),
+                    'ModifiedBy'=> Auth::Id(),
+                ]);
+            }
+            activity('Recurring Journal Entry')
+                ->performedOn(new FinanceJournalEntry())
+                ->causedBy(Auth::id())
+                ->withProperties(['Create' =>$store])
+                ->log('Created Recurring Journal Entry');
+            DB::commit();
+            return back()->with('success', 'Recurrent Journal created successfully.');
+        }catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Error in Recurrent Journal Store');
+            return back()->with('error', 'Error in Storing Recurrent Journal.');
+        }
+    }
+
+    public function show($id){
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerView, ReverseJournalEntry::class);
+        $journalEntry = FinanceJournalEntry::with(
+            'recurringJournals',
+            'journalLines.glAccount',
+            'createdBy:Id,Name'
+        )->findOrFail($id);
+        $frequencies =CodeDetail::where('CodeID', 'JournalPaymentFrequency')->pluck('Description', 'Value')->toArray();
+
+        return view('finance.generalledger.recurrentjournal.show', compact('journalEntry','frequencies'));
+    }
+
 }
