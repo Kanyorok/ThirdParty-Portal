@@ -16,167 +16,49 @@ class FinanceModuleTransactionSeeder extends Seeder
     {
         $now = Carbon::now();
 
-        DB::table('t_ModuleTransactions')->insert([
-            [
-                'ModuleID' => 300000, // replace with actual ModuleID
-                'TransactionTypeID' => 1, // match with TransactionTypes ID// replace with valid GL Account ID
+        // Mapping: TransactionTypeID => ModuleID
+        $mappings = [
+            1 => 300000,
+            2 => 300000,
+            3 => 300000,
+            4 => 300000,
+            5 => 400000,
+            6 => 400000,
+            7 => 500000,
+            8 => 500000,
+            9 => 600000,
+            10 => 600000,
+            11 => 800000,
+            12 => 800000,
+            13 => 900000,
+            14 => 900000,
+
+            //Finance
+            15 => 1100000,
+            16 => 1100000,
+            17 => 1100000,
+            18 => 1100000,
+            19 => 1100000,
+            20 => 1100000,
+            21 => 1100000,
+        ];
+
+        // Build the insert array
+        $insertData = [];
+        foreach ($mappings as $transactionTypeId => $moduleId) {
+            $insertData[] = [
+                'ModuleID' => $moduleId,
+                'TransactionTypeID' => $transactionTypeId,
                 'CreatedBy' => 1,
                 'CreatedOn' => $now,
                 'ModifiedBy' => 1,
                 'ModifiedOn' => $now,
                 'DeletedBy' => null,
                 'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 300000,
-                'TransactionTypeID' => 2,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 300000,
-                'TransactionTypeID' => 3,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 300000,
-                'TransactionTypeID' => 4,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 400000,
-                'TransactionTypeID' => 5,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 400000,
-                'TransactionTypeID' => 6,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 500000,
-                'TransactionTypeID' => 7,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 500000,
-                'TransactionTypeID' => 8,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 600000,
-                'TransactionTypeID' => 9,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 600000,
-                'TransactionTypeID' => 10,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 800000,
-                'TransactionTypeID' => 11,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 800000,
-                'TransactionTypeID' => 12,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 900000,
-                'TransactionTypeID' => 13,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 900000,
-                'TransactionTypeID' => 14,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 1100000,
-                'TransactionTypeID' => 15,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ],
-            [
-                'ModuleID' => 1100000,
-                'TransactionTypeID' => 16,
-                'CreatedBy' => 1,
-                'CreatedOn' => $now,
-                'ModifiedBy' => 1,
-                'ModifiedOn' => $now,
-                'DeletedBy' => null,
-                'DeletedOn' => null,
-            ]
-        ]);
+            ];
+        }
+
+        // Insert into the table
+        DB::table('t_FinanceModuleTransactions')->insert($insertData);
     }
 }

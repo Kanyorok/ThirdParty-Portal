@@ -11,10 +11,10 @@
          */
         public function up(): void
         {
-            Schema::create('t_ModuleTransactions', function (Blueprint $table) {
+            Schema::create('t_FinanceModuleTransactions', function (Blueprint $table) {
                 $table->id('Id');
                 $table->foreignId('ModuleID')->constrained('t_Modules','ModuleID');
-                $table->foreignId('TransactionTypeID')->constrained('t_TransactionTypes','Id');
+                $table->foreignId('TransactionTypeID')->constrained('t_FinanceTransactionTypes','Id');
                 // $table->integer('SubType')->constrained('t_FinanceGLSubAccountTypes', 'Id');
                 // // $table->unsignedInteger('DebitGLAccountID')->constrained('t_FinanceGLAccounts','Id');
                 // // $table->unsignedInteger('CreditGLAccountID')->constrained('t_FinanceGLAccounts','Id');
@@ -34,6 +34,6 @@
          */
         public function down(): void
         {
-            Schema::dropIfExists('t_ModuleTransactions');
+            Schema::dropIfExists('t_FinanceModuleTransactions');
         }
     };

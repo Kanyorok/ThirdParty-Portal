@@ -62,7 +62,7 @@ class InvoiceEntryController extends Controller
         ]);
 
 
-        
+
         //gets the selected PO and GRN from the request
         $poId = $validated['POReference'];
         $grnId = $validated['GRNReference'];
@@ -71,8 +71,8 @@ class InvoiceEntryController extends Controller
         //     ->where('iOrderID', $poId)
         //     ->pluck('Id') //represents the unique Orderline Ids based on
         //     ->toArray();
-        
-        try{ 
+
+        try{
 
         $grnItems = FacadesDB::table('t_GoodsReceipts')
             ->where('GRNID', $grnId)
@@ -118,7 +118,7 @@ class InvoiceEntryController extends Controller
             'ModifiedBy'         => Auth::Id(),
         ]);
 
-        
+
          activity()
             ->performedOn($invoice)
             ->causedBy(Auth::user())
@@ -146,6 +146,7 @@ return $th->getMessage();
 
     public function getGRNs($selectedPO)
     {
+        return $selectedPO;
         $grns = FacadesDB::table('t_GoodsReceipts')
             ->select(FacadesDB::raw('MIN(id) as id'), 'GRNID')
             ->where('POID', $selectedPO)
@@ -154,7 +155,7 @@ return $th->getMessage();
             return response()->json($grns);
     }
 
-    
+
     public function viewPOModal($selectedPO)
         {
             // Get PO details
@@ -216,7 +217,7 @@ return $th->getMessage();
             $poItemqty = FacadesDB::table('t_OrderLines')
                 ->where('iOrderID', $poId)
                 ->where('iStockCodeID', $itemID)
-                ->value('fQuantity'); 
+                ->value('fQuantity');
             if($grnItemQty !== $poItemqty) {
                 return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
             }
@@ -235,7 +236,7 @@ return $th->getMessage();
         }
         }catch (\Throwable $th) {
             FacadesDB::rollback();
-            
+
             return  'Failed to validate GRN and PO';
         }
         //Currency Exchange Rates Details

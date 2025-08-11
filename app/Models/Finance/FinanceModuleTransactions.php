@@ -11,7 +11,7 @@ class FinanceModuleTransactions extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    protected $table = 't_ModuleTransactions';
+    protected $table = 't_FinanceModuleTransactions';
     protected $primaryKey = 'Id';
 
     const CREATED_AT = 'CreatedOn';
@@ -37,7 +37,7 @@ class FinanceModuleTransactions extends Model
     }
     public function transactions()
     {
-        return $this->belongsTo(FinanceTransactionTypes::class, 'TransactionTypeID', 'Id');  
+        return $this->belongsTo(FinanceTransactionTypes::class, 'TransactionTypeID', 'Id');
     }
 
     public function debitAccount()

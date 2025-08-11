@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_FinanceGlMapping', function (Blueprint $table) {
+        Schema::create('t_FinanceGlTransactionsMapping', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('ModuleID')->constrained('t_Modules','ModuleID');
-            $table->foreignId('TransactionType', 100)->constrained('t_TransactionTypes','Id');
-            // $table->foreignId('SubType')->constrained('t_FinanceGLSubAccountTypes', 'Id');
+            $table->foreignId('TransactionTypeID', 100)->constrained('t_FinanceTransactionTypes','Id');
             $table->unsignedInteger('DebitGLAccountID')->constrained('t_FinanceGLAccounts','Id');
             $table->unsignedInteger('CreditGLAccountID')->constrained('t_FinanceGLAccounts','Id');
             $table->boolean('IsActive')->default(1);
@@ -35,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_FinanceGlMapping');
+        Schema::dropIfExists('t_FinanceGlTransactionsMapping');
     }
 };
