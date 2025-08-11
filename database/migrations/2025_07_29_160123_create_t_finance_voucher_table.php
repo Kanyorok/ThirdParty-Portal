@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id('Id');
             $table->string('VoucherNo')->unique();
             $table->foreignId('InvoiceNo')->constrained('t_FinanceInvoiceEntry','Id');
-            $table->decimal('TotAmnt', 10, 2);
+            $table->decimal('TotalAmount', 10, 2);
             $table->string('PaymentMethod');
             $table->string('PaymentType')->default('Full');
             $table->date('StartDate')->nullable();
             $table->string('Frequency')->nullable();
-            $table->string('Status')->default('Pending');
+            $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
+            $table->text('ApprovalReason')->nullable();
             $table->text('Description');
             $table->text('Reasons')->nullable();
 

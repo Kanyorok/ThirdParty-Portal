@@ -2,6 +2,8 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Core\Currency;
+use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
@@ -45,5 +47,24 @@ class FinanceInvoiceEntry extends Model
     public function suppliers()
     {
         return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
+    }
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
+    }
+
+    public function currency(){
+        return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'POReference', 'Id');
+    }
+
+    // 🔹 GRN (One-to-One)
+    public function grn()
+    {
+        return $this->belongsTo(GoodsReceipt::class, 'GRNReference', 'id');
     }
 }

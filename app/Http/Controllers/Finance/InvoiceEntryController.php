@@ -48,13 +48,13 @@ class InvoiceEntryController extends Controller
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
-        // dd($request->all());
+        //return$request->all();
         $validated = $request->validate([
             'InvoiceNumber'=> 'required|string',
             'SupplierID'=> 'required|exists:t_Suppliers,Id',
             'CurrencyID'=> 'required|exists:t_Currencies,Id',
             'ExchangeRate'=> 'required|numeric|min:0',
-            'POReference'=> 'required|exists:t_Orders,Id',
+            'POReference'=> 'required|exists:t_Orders,OrderNo',
             'GRNReference'=> 'required|exists:t_GoodsReceipts,GRNID',
             'InvoiceDate'=> 'required|date',
             'InvoiceAmount'=> 'required|numeric',
@@ -62,17 +62,18 @@ class InvoiceEntryController extends Controller
         ]);
 
 
-        
+
         //gets the selected PO and GRN from the request
-        $poId = $validated['POReference'];
+        $poOrderNo = $validated['POReference'];
+        $poId = Order::where('OrderNo', $poOrderNo)->value('Id');
         $grnId = $validated['GRNReference'];
 
         // $poItemsID = FacadesDB::table('t_OrderLines')
         //     ->where('iOrderID', $poId)
         //     ->pluck('Id') //represents the unique Orderline Ids based on
         //     ->toArray();
-        
-        try{ 
+
+        try{
 
         $grnItems = FacadesDB::table('t_GoodsReceipts')
             ->where('GRNID', $grnId)
@@ -109,7 +110,7 @@ class InvoiceEntryController extends Controller
             'SupplierID'=> $validated['SupplierID'],
             'CurrencyID'=> $validated['CurrencyID'],
             'ExchangeRate'=> $validated['ExchangeRate'],
-            'POReference'=> $validated['POReference'],
+            'POReference'=> $poId,
             'GRNReference'=> $GRN_ID,
             'InvoiceDate'=> $validated['InvoiceDate'],
             'InvoiceAmount'=> $validated['InvoiceAmount'],
@@ -118,7 +119,7 @@ class InvoiceEntryController extends Controller
             'ModifiedBy'         => Auth::Id(),
         ]);
 
-        
+
          activity()
             ->performedOn($invoice)
             ->causedBy(Auth::user())
@@ -130,7 +131,7 @@ class InvoiceEntryController extends Controller
             return redirect()->route('invoiceentry.index')->with('Success','Invoice created successfully');
     }catch(\Throwable $th){
             FacadesDB::rollback();
-return $th->getMessage();
+            return $th->getMessage();
             Log::error('Failed to Create Invoice'. $th->getMessage());
 
             return back()->withError('Error','Failed to create Invoice:' .$th->getMessage());
@@ -146,19 +147,22 @@ return $th->getMessage();
 
     public function getGRNs($selectedPO)
     {
+       // return $selectedPO;
         $grns = FacadesDB::table('t_GoodsReceipts')
             ->select(FacadesDB::raw('MIN(id) as id'), 'GRNID')
             ->where('POID', $selectedPO)
+            ->where('InspectionStatus','p') // Pick ones that are posted or approved
             ->groupBy('GRNID')
             ->get();
             return response()->json($grns);
     }
 
-    
+
     public function viewPOModal($selectedPO)
         {
             // Get PO details
-            $po = FacadesDB::table('t_Orders')->where('Id', $selectedPO)->first();
+            $po = FacadesDB::table('t_Orders')->where('OrderNo', $selectedPO)->first();
+            $orderID=$po->Id;
             if (!$po) {
                 return response()->json(['error' => 'PO not found'], 404);
             }
@@ -169,7 +173,7 @@ return $th->getMessage();
             // Get PO line items with ItemName from t_Items
             $items = FacadesDB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
-                ->where('ol.iOrderID', $selectedPO)
+                ->where('ol.iOrderID', $orderID)
                 ->get()
                 ->map(function ($item) {
                     return [
@@ -216,7 +220,7 @@ return $th->getMessage();
             $poItemqty = FacadesDB::table('t_OrderLines')
                 ->where('iOrderID', $poId)
                 ->where('iStockCodeID', $itemID)
-                ->value('fQuantity'); 
+                ->value('fQuantity');
             if($grnItemQty !== $poItemqty) {
                 return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
             }
@@ -235,9 +239,36 @@ return $th->getMessage();
         }
         }catch (\Throwable $th) {
             FacadesDB::rollback();
-            
+
             return  'Failed to validate GRN and PO';
         }
         //Currency Exchange Rates Details
     }
+
+    public function show($id)
+    {
+        $invoice = FinanceInvoiceEntry::with([
+            'supplier:Id,SupplierName',
+            'currency:Id,Name,Code,Symbol',
+            'order:Id,OrderNo,Description,OrdTotExcl',
+            'grn:id,GRNID,SupplierId',
+        ])->findOrFail($id);
+
+        $poItems = [];
+        if ($invoice->order) {
+            $poItems = \DB::table('t_OrderLines as ol')
+                ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
+                ->where('ol.iOrderID', $invoice->order->Id)
+                ->select(
+                    'i.ItemName',
+                    'i.ItemDescription as Description',
+                    'ol.fQuantity as Quantity',
+                    'ol.fUnitPriceExcl as UnitCost'
+                )
+                ->get();
+        }
+
+        return view('finance.accountspayable.invoiceentry.show', compact('invoice', 'poItems'));
+    }
+
 }

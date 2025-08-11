@@ -21,14 +21,16 @@ class FinanceCDNotes extends Model
         'InvoiceRefNo',
         'NoteDate',
         'NoteAmount',
+        'ApprovalStatus',
+        'ApprovalReason',
         'Description',
         'CreatedBy',
         'ModifiedBy',
     ];
 
-    public static function getPrimaryKey() : string 
+    public static function getPrimaryKey() : string
     {
-        return 'FinanceCDNotesId'; 
+        return 'FinanceCDNotesId';
     }
 
     public function invoice()
