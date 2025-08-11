@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FleetManagement\FleetMake; 
 use App\Http\Requests\FleetManagement\FleetMakeRequest;
 use App\Http\Requests\FleetManagement\FleetModelRequest;
+use App\Policies\FleetManagement\FleetMakePolicy;
 use App\Services\FleetManagement\FleetMakeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -24,18 +25,21 @@ class FleetMakeController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', FleetMake::class);
         $fleetMakes = FleetMake::all();
         return view('fleetmanagement.fleetmake.index', compact('fleetMakes'));
     }
 
     public function create()
     {
+        $this->authorize('create', FleetMake::class);
         return view('fleetmanagement.fleetmake.create');
     }
   
    
  public function store(FleetMakeRequest $request)
 {
+    $this->authorize('create', FleetMake::class);
     $validated = $request->validated();
 
     try {
@@ -56,12 +60,14 @@ class FleetMakeController extends Controller
 
     public function show($id)
         {
+            $this->authorize('view', FleetMake::class);
             $fleetMake = FleetMake::findOrFail($id);
             return view('fleetmanagement.fleetmake.show', compact('fleetMake'));
         }
 
     public function update(FleetMakeRequest $request, $id)
         {
+            $this->authorize('update', FleetMake::class);
             $fleetMake = FleetMake::findOrFail($id);
             $fleetMake->update($request->validated());
 
@@ -72,12 +78,14 @@ class FleetMakeController extends Controller
 
         public function edit($id)
         {
+            $this->authorize('edit', FleetMake::class);
             $fleetMake = FleetMake::findOrFail($id);
             return view('fleetmanagement.fleetmake.edit', compact('fleetMake'));
         } 
 
        public function destroy($id)
         {
+            $this->authorize('destroy', FleetMake::class);
             $fleetMake = FleetMake::findOrFail($id);
             $this->service->delete($fleetMake); 
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\FleetManagement;
 use App\Http\Controllers\Controller;
 use App\Models\FleetManagement\FleetMake; 
 use App\Models\FleetManagement\FleetModel;
+use App\Policies\FleetManagement\FleetModelPolicy;
 use App\Http\Requests\FleetManagement\FleetModelRequest;
 use App\Services\FleetManagement\FleetModelService;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class FleetModelController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', FleetModel::class);
         $fleetModels = FleetModel::all();
         $brands = FleetMake::all();
         return view('fleetmanagement.fleetmodel.index', compact('fleetModels', 'brands'));
@@ -31,6 +33,8 @@ class FleetModelController extends Controller
 
     public function create()
     {
+        $this->authorize('create', FleetModel::class);
+        
         $brands = FleetMake::all();
 
         return view('fleetmanagement.fleetmodel.create', compact('brands'));
@@ -39,6 +43,7 @@ class FleetModelController extends Controller
 
     public function store(FleetModelRequest $request)
     {
+        $this->authorize('create', FleetModel::class);
         $validated = $request->validated();
 
         try {
@@ -59,6 +64,7 @@ class FleetModelController extends Controller
 
     public function show($id)
         {
+            $this->authorize('view', FleetModel::class);
             $fleetModel = FleetModel::findOrFail($id);
             $brands = FleetMake::all();
             return view('fleetmanagement.fleetmodel.show', compact('fleetModel', 'brands'));
@@ -66,6 +72,7 @@ class FleetModelController extends Controller
 
     public function update(FleetModelRequest $request, $id)
         {
+            $this->authorize('update', FleetModel::class);
             $fleetModel = FleetModel::findOrFail($id);
             $brands = FleetMake::all();
             $fleetModel->update($request->validated());
@@ -78,6 +85,7 @@ class FleetModelController extends Controller
 
         public function edit($id)
         {
+            $this->authorize('edit', FleetModel::class);
             $brands = FleetMake::all();
             $fleetModel = FleetModel::findOrFail($id);
             return view('fleetmanagement.fleetmodel.edit', compact('fleetModel', 'brands'));
@@ -85,6 +93,7 @@ class FleetModelController extends Controller
 
       public function destroy(string $Id)
         {
+            $this->authorize('destroy', FleetModel::class);
             $model = FleetModel::findOrFail($Id);
 
             $this->service->delete($model);

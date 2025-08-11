@@ -5,6 +5,7 @@ namespace App\Http\Controllers\FleetManagement;
 use App\Http\Controllers\Controller;
 use App\Services\FleetManagement\DriverManagementService;
 use App\Models\FleetManagement\DriverManagement;
+use App\Policies\FleetManagement\DriverManagementPolicy;
 use App\Http\Requests\FleetManagement\DriverManagementRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -21,12 +22,14 @@ class DriverManagementController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', DriverManagement::class);
         $drivers = DriverManagement::all();
         return view("fleetmanagement.drivermanagement.index", compact('drivers'));
     }
 
    public function create()
 {
+    $this->authorize('create', DriverManagement::class);
     $employmentStatus = CodeDetail::where('CodeID', 'EmploymentStatus')
         ->orderBy('Value')
         ->get();
@@ -35,6 +38,7 @@ class DriverManagementController extends Controller
 }
     public function store(DriverManagementRequest $request)
 {
+    $this->authorize('create', DriverManagement::class);
     if (DriverManagement::where('LicenseNumber', $request->LicenseNumber)->exists()) {
         return back()
             ->withErrors(['LicenseNumber' => "The driver's license already exists."])
@@ -52,12 +56,14 @@ class DriverManagementController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view', DriverManagement::class);
         $driver = DriverManagement::findOrFail($id);
         return view("fleetmanagement.drivermanagement.show", compact('driver'));
     }
 
    public function edit($Id)
     {
+        $this->authorize('update', DriverManagement::class);
         $driver = DriverManagement::findOrFail($Id);
 
         $employmentStatus = CodeDetail::where('CodeID', 'EmploymentStatus')
@@ -70,7 +76,8 @@ class DriverManagementController extends Controller
 
       public function update(DriverManagementRequest $request, $Id)
     {
-        
+        $this->authorize('update', DriverManagement::class);
+
         $validated = $request->validated();
         $driver = DriverManagement::findOrFail($Id);
         $this->service->updateDriver($driver, $validated);
@@ -83,6 +90,7 @@ class DriverManagementController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('destroy', DriverManagement::class);
         $driver = DriverManagement::findOrFail($id);
         $this->service->deleteDriver($driver);
 

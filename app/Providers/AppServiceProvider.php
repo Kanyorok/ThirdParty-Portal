@@ -155,6 +155,18 @@ use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
+use App\Models\FleetManagement\FleetMake;
+use App\Models\FleetManagement\FleetModel;
+use App\Models\FleetManagement\VehicleRegistry;
+use App\Models\FleetManagement\DriverManagement;
+use App\Policies\FleetManagement\DriverManagementPolicy;
+use App\Policies\FleetManagement\FleetMakePolicy;
+use App\Policies\FleetManagement\FleetModelPolicy;
+use App\Policies\FleetManagement\VehicleRegistryPolicy; 
+use App\Policies\FleetManagement\DriverPolicy;
+
+
+
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -299,8 +311,13 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
-            
-            
+
+              //Fleet Management
+            FleetMake::getPrimaryKey() => FleetMake::class,
+            FleetModel::getPrimaryKey() => FleetModel::class,
+            VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
+            DriverManagement::getPrimaryKey() => DriverManagement::class,
+
 
 
 
@@ -363,6 +380,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
+        Gate::policy(FleetMake::class, FleetMakePolicy::class);
+        Gate::policy(FleetModel::class, FleetModelPolicy::class);
+        Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
+        Gate::policy(DriverManagement::class, DriverManagementPolicy::class);
 
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);

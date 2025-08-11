@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FleetManagement\FleetMake; 
 use App\Models\FleetManagement\FleetModel;
 use App\Models\FleetManagement\VehicleRegistry;
+use App\Policies\FleetManagement\VehicleRegistryPolicy;
 use App\Models\Core\CodeDetail;
 use App\Http\Requests\FleetManagement\VehicleRegistryRequest;
 use App\Services\FleetManagement\VehicleRegistryService;
@@ -26,7 +27,7 @@ class VehicleManagementController extends Controller
 
     public function index()
     {
-        
+        $this->authorize('viewAny', VehicleRegistry::class);
         $fleetModels = FleetModel::all();
         $brands = FleetMake::all();
         $vehicleTypes = CodeDetail::all();
@@ -36,6 +37,7 @@ class VehicleManagementController extends Controller
 
     public function create()
     {
+        $this->authorize('create', VehicleRegistry::class);
         $brands = FleetMake::all();
         $fleetModels = FleetModel::all();
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
@@ -47,19 +49,21 @@ class VehicleManagementController extends Controller
 
     public function store(VehicleRegistryRequest $request)
     {
-    $validated = $request->validated();
-    $vehicle = $this->service->create($validated);
-    $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
-        ->orderBy('Value')
-        ->get();
-    return redirect()
-        ->route("vehicle-registry.index")
-        ->with('success', 'Vehicle created successfully.');
-    }
+        $this->authorize('create', VehicleRegistry::class);
+        $validated = $request->validated();
+        $vehicle = $this->service->create($validated);
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
+            ->orderBy('Value')
+            ->get();
+        return redirect()
+            ->route("vehicle-registry.index")
+            ->with('success', 'Vehicle created successfully.');
+        }
 
 
     public function show($id)
         {
+            $this->authorize('view', VehicleRegistry::class);
             $vehicle = VehicleRegistry::findOrFail($id);
             $fleetModel=FleetModel::all();
             $brands = FleetMake::all();
@@ -71,6 +75,7 @@ class VehicleManagementController extends Controller
 
     public function edit($id)
         {
+            $this->authorize('update', VehicleRegistry::class);
             $brands = FleetMake::all();
             $fleetModel = FleetModel::all();
             $vehicle=VehicleRegistry::findOrFail($id);
@@ -82,6 +87,7 @@ class VehicleManagementController extends Controller
 
    public function update(VehicleRegistryRequest $request, $id)
 {
+    $this->authorize('update', VehicleRegistry::class);
     $vehicle = VehicleRegistry::findOrFail($id);
 
     $this->service->update($vehicle, $request->validated());
@@ -94,7 +100,8 @@ class VehicleManagementController extends Controller
 
     public function destroy(string $Id)
     {
-            $vehicle = VehicleRegistry::findOrFail($Id);
+        $this->authorize('destroy', VehicleRegistry::class);
+        $vehicle = VehicleRegistry::findOrFail($Id);
 
             $this->service->delete($vehicle);
 
