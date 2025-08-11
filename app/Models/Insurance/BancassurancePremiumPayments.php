@@ -5,6 +5,7 @@ namespace App\Models\Insurance;
 use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Insurance\BancassurancePolicy;
 use App\Traits\Model\UserActorTrait;
 
 class BancassurancePremiumPayments extends Model
@@ -19,7 +20,10 @@ class BancassurancePremiumPayments extends Model
 
     protected $fillable = [
         'PolicyID',
+        'CustomerID',
+        'PaymentFrequency',
         'PaymentDate',
+        'NextPaymentDate',
         'Amount',
         'PaymentMode',
         'ReferenceNumber',
@@ -34,10 +38,14 @@ class BancassurancePremiumPayments extends Model
     }
     public function policies()
     {
-        return $this->belongsTo(BancassurancePolicies::class, 'PolicyID', 'ID');
+        return $this->belongsTo(BancassurancePolicy::class, 'PolicyID', 'ID');
     }
     public function paymentModes()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentMode', 'ID');
+    }
+        public function customer()
+    {
+        return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
     }
 }

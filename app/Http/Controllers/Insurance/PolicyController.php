@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassurancePolicyRequest;
 use App\Http\Requests\Insurance\BancassuranceUnderwritingRequest;
 use App\Models\Core\CodeDetail;
-use App\Models\Insurance\BancassuranceCustomers;
+use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\BancassuranceUnderwriting;
@@ -24,7 +24,7 @@ class PolicyController extends Controller
 public function create(Request $request)
 {
     $referrals = BancAssuranceReferral::all();
-    $customers = BancassuranceCustomers::all();
+    $customers = BancassuranceCustomer::all();
     $products = CodeDetail::where('CodeID', 'InsuranceProduct')->get();
     $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
     $paymentfrequencys = CodeDetail::where('CodeID','PaymentFrequency')->get();
@@ -38,7 +38,7 @@ public function store(BancassurancePolicyRequest $request)
 {
     $validated = $request->validated();
 
-    $CustomerId = BancassuranceCustomers::findOrFail($validated['CustomerID']);
+    $CustomerId = BancassuranceCustomer::findOrFail($validated['CustomerID']);
     $referralId = BancAssuranceReferral::findOrFail($validated['ReferralID'] ?? null);
     $ProductId = CodeDetail::findOrFail($validated['ProductID'] ?? null);
     $InsurerId = CodeDetail::findOrFail($validated['InsurerID'] ?? null);

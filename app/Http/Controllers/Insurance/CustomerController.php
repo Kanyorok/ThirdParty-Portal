@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancAssuranceReferral;
-use App\Models\Insurance\BancassuranceCustomers;
+use App\Models\Insurance\BancassuranceCustomer;
 
 
 class CustomerController extends Controller
@@ -19,7 +19,7 @@ class CustomerController extends Controller
         //
     public function create()
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomers::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
         $referrals = BancAssuranceReferral::all();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
@@ -31,7 +31,7 @@ class CustomerController extends Controller
 
     public function store(BancassuranceCustomersRequest $request)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomers::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
         $validated = $request->validated();
 
         $ReferralID = BancAssuranceReferral::findOrFail($validated['ReferralID']);
@@ -59,22 +59,22 @@ class CustomerController extends Controller
     }
     public function show($Id)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomers::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
         
-        $customer = BancassuranceCustomers::findOrFail($Id); 
+        $customer = BancassuranceCustomer::findOrFail($Id); 
 
         return view('bancassurance.customers.show', compact('customer'));
     }
     public function index()
     {
-       $customers = BancassuranceCustomers::all();
+       $customers = BancassuranceCustomer::all();
 
         return view('bancassurance.customers.index', compact('customers'));
     }
 
     public function check()
     {
-       $customers = BancassuranceCustomers::all();
+       $customers = BancassuranceCustomer::all();
 
         return view('bancassurance.customers.check', compact('customers'));
     }
@@ -99,8 +99,8 @@ class CustomerController extends Controller
 // }
 public function edit($id)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomers::class);
-        $customer = BancassuranceCustomers::findOrFail($id);  
+        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
+        $customer = BancassuranceCustomer::findOrFail($id);  
         $referrals = BancAssuranceReferral::all();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
@@ -112,13 +112,13 @@ public function edit($id)
 
     public function update(BancassuranceCustomersRequest $request, $id)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersUpdate, BancassuranceCustomers::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersUpdate, BancassuranceCustomer::class);
         $validated = $request->validated();
 
         DB::beginTransaction();
 
         try {
-            $customer = BancassuranceCustomers::findOrFail($id);
+            $customer = BancassuranceCustomer::findOrFail($id);
 
             $customer->update([
                 'ReferralID' => $validated['ReferralID'],
@@ -153,9 +153,9 @@ public function edit($id)
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersDelete, BancassuranceCustomers::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersDelete, BancassuranceCustomer::class);
         try {
-            $customer = BancassuranceCustomers::findOrFail($id);
+            $customer = BancassuranceCustomer::findOrFail($id);
             $customer->delete();
 
             return redirect()->route('bancassurance.customers.check')

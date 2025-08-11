@@ -103,6 +103,7 @@ Route::prefix('bancassurance/premiums')->name('bancassurance.premiums.')->group(
     Route::get('/', [PremiumController::class, 'index'])->name('index');
     Route::get('create', [PremiumController::class, 'create'])->name('create');
     Route::post('store', [PremiumController::class, 'store'])->name('store');
+    Route::get('show/{Id}', [PremiumController::class, 'show'])->name('show');
     Route::delete('delete/{Id}', [PremiumController::class, 'destroy'])->name('destroy');
     Route::get('edit/{Id}', [PremiumController::class, 'edit'])->name('edit');
     Route::get('premiums/{id}/receipt', [PremiumController::class, 'printReceipt'])->name('printReceipt');

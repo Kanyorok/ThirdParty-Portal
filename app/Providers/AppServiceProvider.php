@@ -67,8 +67,8 @@ use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
-use App\Models\Insurance\BancassuranceCustomers;
-use App\Models\Insurance\BancassuranceCustomersContacts;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassurancePremiumPayments;
 use App\Models\Insurance\BancassuranceUnderwriting;
@@ -316,8 +316,8 @@ class AppServiceProvider extends ServiceProvider
             //Insurance
             BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
             BancassurancePolicy::getPrimaryKey() => BancassurancePolicy::class,
-            BancassuranceCustomers::getPrimaryKey() => BancassuranceCustomers::class,
-            BancassuranceCustomersContacts::getPrimaryKey() => BancassuranceCustomersContacts::class,
+            BancassuranceCustomer::getPrimaryKey() => BancassuranceCustomer::class,
+            BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
             BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
             BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
             BancassuranceUnderwriting::getPrimarykey() => BancassuranceUnderwriting::class,
@@ -385,8 +385,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
         Gate::policy(BancAssuranceReferral::class, BancAssuranceReferralPolicy::class);
         Gate::policy(BancassurancePolicy::class, BancassurancePoliciesPolicy::class);
-        Gate::policy(BancassuranceCustomers::class, BancassuranceCustomersPolicy::class);
-        Gate::policy(BancassuranceCustomersContacts::class, BancassuranceCustomersContactsPolicy::class);
+        Gate::policy(BancassuranceCustomer::class, BancassuranceCustomersPolicy::class);
+        Gate::policy(BancassuranceCustomerContact::class, BancassuranceCustomersContactsPolicy::class);
         Gate::policy(BancassuranceBeneficiaries::class, BancassuranceCustomersBeneficiariesPolicy::class);
         Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
         Gate::policy(BancassuranceUnderwriting::class,BancassuranceUnderwritingPolicy::class);

@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('t_BancassurancePremiumPayments ', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('PolicyID')->Constrained('t_BancassurancePolicies','Id');
+            $table->string('CustomerID');
+            $table->string('PaymentFrequency');
             $table->date('PaymentDate');
+            $table->date('NextPaymentDate');
             $table->float('Amount');
             $table->foreignId('PaymentMode')->constrained('t_CodeDetails','ID');
             $table->string('ReferenceNumber');

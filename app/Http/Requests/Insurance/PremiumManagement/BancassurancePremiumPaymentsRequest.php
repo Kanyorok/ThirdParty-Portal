@@ -23,7 +23,10 @@ class BancassurancePremiumPaymentsRequest extends FormRequest
     {
         return [
         'PolicyID' => 'required|exists:t_BancassurancePolicies,Id',
+        'CustomerID' => 'required|string|max:100',
+        'PaymentFrequency' => 'required|string|max:50',
         'PaymentDate' => 'required|date',
+        'NextPaymentDate' => 'required|date',
         'Amount' => 'required|numeric|min:1',
         'PaymentMode' => 'required|exists:t_CodeDetails,ID',
         'ReferenceNumber' => 'nullable|string|max:100',

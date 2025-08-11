@@ -32,6 +32,8 @@
         <div class="col-md-6">
             <p><strong>Receipt No:</strong> {{ $payment->Id }}</p>
             <p><strong>Policy Number:</strong> {{ $payment->policies->PolicyNumber }}</p>
+            <p><strong>CustomerId:</strong> {{ $payment->customer->FullName }}</p>
+            
         </div>
         <div class="col-md-6">
             <p><strong>Payment Date:</strong> {{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d M Y') }}</p>
