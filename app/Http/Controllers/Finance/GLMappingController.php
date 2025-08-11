@@ -18,7 +18,7 @@ class GLMappingController extends Controller
     public function index()
     {
         $mappings = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName', 'creditAccount:Id,GLName')
-            ->get();
+            ->orderBy('Id','desc')->get();
 
         return view('finance.integration.glmapping.index', compact('mappings'));
     }
@@ -26,7 +26,10 @@ class GLMappingController extends Controller
     public function create()
     {
         $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
-        $modules = Module::where('ParentID', null)->get();
+        $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
+        $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+            ->where('ParentID', null)
+            ->orderBy('Name', 'asc')->get();
         $transactionTypes = FinanceModuleTransactions::all();
         return view('finance.integration.glmapping.create', compact('transactionTypes', 'modules', 'glaccounts'));
     }
@@ -35,7 +38,7 @@ class GLMappingController extends Controller
     {
         $validated = $request->validate([
             'ModuleID' => 'required|string|exists:t_Modules,ModuleID',
-            'TransactionType' => 'required|string|exists:t_TransactionTypes,Id',
+            'TransactionType' => 'required|string|exists:t_FinanceTransactionTypes,Id',
             'DebitGLAccountID' => 'required|string|exists:t_FinanceGLAccounts,Id',
             'CreditGLAccountID' => 'required|string|exists:t_FinanceGLAccounts,Id',
             'IsActive' => 'nullable|boolean',
@@ -43,7 +46,7 @@ class GLMappingController extends Controller
 
         $glmaps = FinanceGLMapping::create([
             'ModuleID' => $validated['ModuleID'],
-            'TransactionType' => $validated['TransactionType'],
+            'TransactionTypeID' => $validated['TransactionType'],
             'DebitGLAccountID' => $validated['DebitGLAccountID'],
             'CreditGLAccountID' => $validated['CreditGLAccountID'],
             'IsActive' => $request->has('IsActive') ? 1 : 0,
