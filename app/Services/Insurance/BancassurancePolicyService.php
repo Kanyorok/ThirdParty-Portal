@@ -8,6 +8,7 @@ use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomers;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 
 class BancassurancePolicyService
@@ -69,4 +70,19 @@ class BancassurancePolicyService
         return new self($policy);
     }
     
+
+
+    public static function uploadpolicy(
+        BancassurancePolicy $PolicyId,
+        User   $user,
+        UploadedFile $document = null
+    ): self {
+        
+        $docpolicy = BancassurancePolicy::create([
+            'ModifiedBy' => $user->Id,
+        ]);
+
+        activity()->causedBy(auth()->user()->Id)->performedOn($docpolicy)->event('update')->log("Document Uploaded on Policy{$docpolicy->Id}.");
+        return new self($docpolicy);
+    }
 }

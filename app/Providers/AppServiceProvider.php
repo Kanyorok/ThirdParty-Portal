@@ -71,6 +71,7 @@ use App\Models\Insurance\BancassuranceCustomers;
 use App\Models\Insurance\BancassuranceCustomersContacts;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassurancePremiumPayments;
+use App\Models\Insurance\BancassuranceUnderwriting;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -120,11 +121,12 @@ use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Insurance\BancassurancePoliciesPolicy;
+use App\Policies\Insurance\BancassurancePremiumPaymentsPolicy;
 use App\Policies\Insurance\BancAssuranceReferralPolicy;
 use App\Policies\Insurance\BancassuranceCustomersPolicy;
 use App\Policies\Insurance\BancassuranceCustomersContactsPolicy;
 use App\Policies\Insurance\BancassuranceCustomersBeneficiariesPolicy;
-use App\Models\Insurance\BancassurancePremiumPaymentsPolicy;
+use App\Policies\Insurance\BancassuranceUnderwritingPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
@@ -157,7 +159,7 @@ use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
 use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
-Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
+Use App\Policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
@@ -318,6 +320,7 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceCustomersContacts::getPrimaryKey() => BancassuranceCustomersContacts::class,
             BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
             BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
+            BancassuranceUnderwriting::getPrimarykey() => BancassuranceUnderwriting::class,
             
             
 
@@ -385,7 +388,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BancassuranceCustomers::class, BancassuranceCustomersPolicy::class);
         Gate::policy(BancassuranceCustomersContacts::class, BancassuranceCustomersContactsPolicy::class);
         Gate::policy(BancassuranceBeneficiaries::class, BancassuranceCustomersBeneficiariesPolicy::class);
-        Gate::policy(BancassurancePremiumPayments::class, \App\Policies\Insurance\BancassurancePremiumPaymentsPolicy::class);
+        Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
+        Gate::policy(BancassuranceUnderwriting::class,BancassuranceUnderwritingPolicy::class);
 
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);

@@ -273,6 +273,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'InsuranceProvider', 'Description' => 'Britam', 'Value' => 'B'],
             ['CodeID' => 'InsuranceProvider', 'Description' => 'CIC Insurance', 'Value' => 'C'],
 
+            //Insurance Decision
+            ['CodeID' => 'Decision','Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'Decision','Description' => 'Decline', 'Value' => 'D'],
+            ['CodeID' => 'Decision','Description' => 'More Information Needed', 'Value' => 'M'],
+
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],

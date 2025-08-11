@@ -423,7 +423,7 @@ enum PermissionEnum: string
     case BancassuranceReferralDelete = 'bancassurancereferraldelete';
     case BancassuranceReferralView = 'bancassurancereferralview';
 
-
+    //Bancassurance Policy
     case BancassurancePolicyCreate = 'bancassurancepolicycreate';
     case BancassurancePolicyView = 'bancassurancepolicyview';
     case BancassurancePolicyUpdate = 'bancassurancepolicyupdate';
@@ -454,6 +454,13 @@ enum PermissionEnum: string
     case BancassurancePremiumPaymentsCreate = 'bancassurancepremiumpaymentscreate';
     case BancassurancePremiumPaymentsUpdate = 'bancassurancepremiumpaymentsupdate';
     case BancassurancePremiumPaymentsDelete = 'bancassurancepremiumpaymentsdelete';
+
+    //Bancasurance Underwriting
+
+    case BancassuranceUnderwritingView = 'bancassuranceunderwritingview';
+    case BancassuranceUnderwritingCreate = 'bancassuranceunderwritingcreate';
+    case BancassuranceUnderwritingUpdate = 'bancassuranceunderwritingupdate';
+    case BancassuranceUnderwritingDelete = 'bancassuranceunderwritingDelete';
 
     /*
      *
@@ -613,6 +620,7 @@ enum PermissionEnum: string
             [self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete],
             [self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete],
             [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
+            [self::BancassuranceUnderwritingView,self::BancassuranceUnderwritingCreate,self::BancassuranceUnderwritingUpdate,self::BancassuranceUnderwritingDelete]
         ]);
     }
 
@@ -712,7 +720,8 @@ enum PermissionEnum: string
             self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete,
             self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete,
             self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete,
-            self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete
+            self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete,
+            self::BancassuranceUnderwritingView,self::BancassuranceUnderwritingCreate,self::BancassuranceUnderwritingUpdate,self::BancassuranceUnderwritingDelete
             =>ModulesEnum::Insurance,
 
 
@@ -827,7 +836,7 @@ enum PermissionEnum: string
             self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete => 'Insurance Customers Contacts',
             self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete => 'Insurance Customers Beneficiaries',
             self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete => 'Insurance Premium Payments',
-
+            self::BancassuranceUnderwritingView,self::BancassuranceUnderwritingCreate,self::BancassuranceUnderwritingUpdate,self::BancassuranceUnderwritingDelete => 'Insurance ',
 
 
             ///////////////////////  Finance   /////////////////////////

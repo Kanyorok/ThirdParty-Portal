@@ -81,8 +81,8 @@
                 <tbody>
                     @forelse($installments as $i => $row)
                         <tr>
-                            <td>{{ $i + 1 }}</td>
-                            <td>{{ \Carbon\Carbon::parse($row->PaymentDate)->format('d M Y') }}</td>
+                            <td>{{$loop->iteration}}</td>
+                            <td>{{ \Carbon\Carbon::parse($row->PaymentDate)->format('d/m/Y') }}</td>
                             <td>KES {{ number_format($row->Amount, 2) }}</td>
                             <td>{{ $row->PaymentMode }}</td>
                             <td>{{ $row->Reference }}</td>

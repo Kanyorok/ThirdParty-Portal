@@ -36,7 +36,8 @@ class BancassurancePolicyRequest extends FormRequest
             'IssuedDate' => 'nullable|date',
             'ExpiryDate' => 'nullable|date|after_or_equal:IssuedDate',
             'IsActive' => 'boolean',
-            'Status'    => ['required', new Enum(InsurancePolicyStatus::class)]
+            'Status'    => ['required', new Enum(InsurancePolicyStatus::class)],
+            'Document' => 'nullable|file|max:2048'
         ];
     }
 }
