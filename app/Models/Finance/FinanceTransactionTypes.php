@@ -11,7 +11,7 @@ class FinanceTransactionTypes extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    protected $table = 't_TransactionTypes';
+    protected $table = 't_FinanceTransactionTypes';
     protected $primaryKey = 'Id';
 
     const CREATED_AT = 'CreatedOn';

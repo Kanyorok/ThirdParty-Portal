@@ -79,6 +79,7 @@
                                     <div class="text-center p-4 border rounded-3 bg-light">
                                         <p class="mb-3 text-muted fs-5">
                                             <i class="fas fa-info-circle me-2 text-info"></i>
+
                                             <i>No invoice entries found.</i>
                                         </p>
                                         <a href="{{ route('invoiceentry.create') }}" class="btn btn-info px-4 py-2">
@@ -87,6 +88,7 @@
                                     </div>
                                 </td>
                             </tr>
+
                         @endforelse
                         </tbody>
                     </table>

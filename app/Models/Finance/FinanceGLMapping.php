@@ -11,7 +11,7 @@ class FinanceGLMapping extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    protected $table = 't_FinanceGlMapping';
+    protected $table = 't_FinanceGlTransactionsMapping';
     protected $primaryKey = 'Id';
 
     const CREATED_AT = 'CreatedOn';
@@ -20,7 +20,7 @@ class FinanceGLMapping extends Model
 
     protected $fillable = [
         'ModuleID',
-        'TransactionType',
+        'TransactionTypeID',
         'DebitGLAccountID',
         'CreditGLAccountID',
         'IsActive',
@@ -35,7 +35,7 @@ class FinanceGLMapping extends Model
 
     public function transactions()
     {
-        return $this->belongsTo(FinanceTransactionTypes::class, 'TransactionType','Id');    
+        return $this->belongsTo(FinanceTransactionTypes::class, 'TransactionTypeID','Id');
     }
 
     public function modules()

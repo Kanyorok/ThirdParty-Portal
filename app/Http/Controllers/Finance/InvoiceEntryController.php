@@ -147,6 +147,7 @@ class InvoiceEntryController extends Controller
 
     public function getGRNs($selectedPO)
     {
+
        // return $selectedPO;
         $grns = FacadesDB::table('t_GoodsReceipts')
             ->select(FacadesDB::raw('MIN(id) as id'), 'GRNID')
