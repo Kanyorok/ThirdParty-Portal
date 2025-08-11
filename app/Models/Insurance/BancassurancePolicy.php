@@ -36,7 +36,7 @@ class BancassurancePolicy extends Model
     ];
     public function customer()
     {
-        return $this->belongsTo(BancassuranceCustomers::class, 'CustomerID', 'Id');
+        return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
     }
 
     Public function product()

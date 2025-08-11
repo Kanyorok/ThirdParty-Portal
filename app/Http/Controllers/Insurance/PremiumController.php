@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Insurance\PremiumManagement\BancassurancePremiumPaymentsRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Insurance\BancassurancePolicies;
+use App\Models\Insurance\BancassurancePolicy;
 use App\Services\Insurance\PremiumManagement\BancassurancePremiumPaymentsService;
 use App\Models\Core\CodeDetail;
 use App\Enums\Core\PermissionEnum;
@@ -20,7 +20,7 @@ public function create()
 {
     $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
     $payment = BancassurancePremiumPayments::all();
-    $policies= BancassurancePolicies::all();
+    $policies= BancassurancePolicy::all();
     $paymentModes = CodeDetail::where('CodeID', 'PaymentModes',)->get();
 
     return view('bancassurance.premiums.create', compact('policies','paymentModes','payment'));
@@ -31,13 +31,17 @@ public function store(BancassurancePremiumPaymentsRequest $request)
     $this->authorize(PermissionEnum::BancassurancePremiumPaymentsCreate, BancassurancePremiumPayments::class);
      $validated = $request->validated();
 
-        $PolicyID = BancassurancePolicies::findOrFail($validated['PolicyID']);
+        $PolicyID = BancassurancePolicy::findOrFail($validated['PolicyID']);
         $PaymentMode = CodeDetail::findOrFail($validated['PaymentMode']);
         $PaymentDate = new \DateTime($validated['PaymentDate']);
+        $NextPaymentDate = new \DateTime($validated['NextPaymentDate']);
 
         $customer = BancassurancePremiumPaymentsService::create(
                 $PolicyID,
+                $validated['CustomerID'],
+                $validated['PaymentFrequency'],
                 $PaymentDate,
+                $NextPaymentDate,
                 $validated['Amount'],
                 $PaymentMode,
                 $validated['ReferenceNumber'],
@@ -53,6 +57,12 @@ public function index()
 
     return view('bancassurance.premiums.index', compact('payments'));
 }
+public function show($id)
+{
+    $payment = BancassurancePremiumPayments::find($id);
+
+    return view('bancassurance.premiums.show', compact('payment'));
+}
 
 public function printReceipt($id)
 {
@@ -64,7 +74,7 @@ public function printReceipt($id)
 public function edit($Id)
     {
         $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);        $payment = BancassurancePremiumPayments::findOrFail($Id);
-        $policies= BancassurancePolicies::all();
+        $policies= BancassurancePolicy::all();
         $paymentModes = CodeDetail::where('CodeID', 'PaymentModes','payment')->get();
 
         return view('bancassurance.premiums.edit', compact( 'policies', 'paymentModes','payment'));
@@ -87,8 +97,11 @@ public function edit($Id)
             $payment = BancassurancePremiumPayments::findOrFail($id);
 
             $payment->update([
-                'CustomerID' => $validated['PolicyID'],
+                'PolicyID' => $validated['PolicyID'],
+                'CustomerID' => $validated['CustomerID'],
+                'PaymentFrequency' => $validated['PaymentFrequency'],
                 'PaymentDate' => $validated['PaymentDate'],
+                'NextPaymentDate' => $validated['NextPaymentDate'],
                 'Amount' => $validated['Amount'],
                 'PaymentMode' => $validated['PaymentMode'],
                 'ReferenceNumber' => $validated['ReferenceNumber'],

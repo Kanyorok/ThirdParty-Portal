@@ -5,7 +5,7 @@ namespace App\Services\Insurance;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
-use App\Models\Insurance\BancassuranceCustomers;
+use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
 use Illuminate\Support\Carbon;
@@ -21,7 +21,7 @@ class BancassurancePolicyService
     }
     
     public static function create(
-        BancassuranceCustomers $CustomerID,
+        BancassuranceCustomer $CustomerID,
         CodeDetail $ProductID,
         ?CodeDetail $InsurerID,
         float $SumAssured,
@@ -65,7 +65,7 @@ class BancassurancePolicyService
 
         
 
-        activity()->causedBy(auth()->user()->Id)->performedOn($policy)->event('create')->log("Added Policy {$policy->Id}.");
+        activity()->causedBy($user->Id)->performedOn($policy)->event('create')->log("Added Policy {$policy->Id}.");
         return new self($policy);
     }
     

@@ -4,8 +4,8 @@ namespace App\Services\Insurance\Customers;
 
 use App\Models\Auth\User;
 use App\Models\Insurance\BancassuranceBeneficiaries;
-use App\Models\Insurance\BancassuranceCustomers;
-use App\Models\Insurance\BancassurancePolicies;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Core\CodeDetail;
 
 
@@ -18,8 +18,8 @@ class BancassuranceCustomersBeneficiariesService
     {
     }
     public static function create(
-        BancassuranceCustomers $CustomerID,
-        BancassurancePolicies  $PolicyID ,     
+        BancassuranceCustomer $CustomerID,
+        BancassurancePolicy  $PolicyID ,     
         string $FullName,
         CodeDetail $Relationship,
         string $IDNumber,

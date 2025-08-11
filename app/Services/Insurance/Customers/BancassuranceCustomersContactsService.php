@@ -3,8 +3,8 @@
 namespace App\Services\Insurance\Customers;
 
 use App\Models\Auth\User;
-use App\Models\Insurance\BancassuranceCustomersContacts;
-use App\Models\Insurance\BancassuranceCustomers;
+use App\Models\Insurance\BancassuranceCustomerContact;
+use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Core\CodeDetail;
 use App\Models\HRM\Employee;
 use DateTime;
@@ -14,11 +14,11 @@ class BancassuranceCustomersContactsService
     /**
      * Create a new class instance.
      */
-    public function __construct(public BancassuranceCustomersContacts $log)
+    public function __construct(public BancassuranceCustomerContact $log)
     {
     }
     public static function create(
-        BancassuranceCustomers $CustomerID,
+        BancassuranceCustomer $CustomerID,
         DateTime $ContactDate,
         CodeDetail $ContactType,
         string $Summary,
@@ -27,7 +27,7 @@ class BancassuranceCustomersContactsService
         User   $user
     ): self
     {
-        $log = BancassuranceCustomersContacts::create([
+        $log = BancassuranceCustomerContact::create([
         'CustomerID' => $CustomerID->Id,
         'ContactDate' => $ContactDate,
         'ContactType' => $ContactType->ID,

@@ -19,11 +19,10 @@
             <tr>
                 <th>#</th>
                 <th>Policy Number</th>
+                <th>Customer ID</th>
+                <th>Payment Frequency</th>
                 <th>Payment Date</th>
                 <th>Amount</th>
-                <th>Mode</th>
-                <th>Reference</th>
-                <th>Notes</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -32,12 +31,12 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $payment->policies->PolicyNumber }}</td>
+                <td>{{ $payment->customer->FullName }}</td>
+                <td>{{ $payment->PaymentFrequency }}</td>
                 <td>{{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d M Y') }}</td>
                 <td>{{ number_format($payment->Amount, 2) }}</td>
-                <td>{{ $payment->paymentmodes->Description }}</td>
-                <td>{{ $payment->ReferenceNumber }}</td>
-                <td>{{ $payment->Notes }}</td>
                 <td>
+          <a href="{{ route('bancassurance.premiums.show', $payment->Id) }}" class="btn btn-sm btn-info">👁 View</a>
                     <a href="{{ route('bancassurance.premiums.printReceipt', $payment->Id) }}" class="btn btn-sm btn-secondary">🖨️ Print Receipt</a>
                     <a href="{{ route('bancassurance.premiums.edit', $payment->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                     <form action="{{ route('bancassurance.premiums.destroy', $payment->Id) }}" method="POST" class="d-inline">

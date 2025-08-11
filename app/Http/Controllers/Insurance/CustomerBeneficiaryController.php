@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use App\Models\Core\CodeDetail;
-use App\Models\Insurance\BancassuranceCustomers;
-use App\Models\Insurance\BancassurancePolicies;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\Insurance\BancassurancePolicy;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Services\Insurance\Customers\BancassuranceCustomersBeneficiariesService;
@@ -20,8 +20,8 @@ class CustomerBeneficiaryController extends Controller
     public function create()
     {
        $this->authorize(PermissionEnum::BancassuranceCustomersBeneficiariesView, BancassuranceBeneficiaries::class);
-       $customers= BancassuranceCustomers::all();
-       $policies= BancassurancePolicies::all();
+       $customers= BancassuranceCustomer::all();
+       $policies= BancassurancePolicy::all();
        $relationships = CodeDetail::where('CodeID', 'Relationships')->get();
        
         return view('bancassurance.customers.beneficiaries.create', compact('customers','relationships','policies'));
@@ -35,8 +35,8 @@ class CustomerBeneficiaryController extends Controller
         $this->authorize(PermissionEnum::BancassuranceCustomersBeneficiariesCreate, BancassuranceBeneficiaries::class);
         $validated = $request->validated();
 
-        $CustomerID = BancassuranceCustomers::findOrFail($validated['CustomerID']);
-        $PolicyID = BancassurancePolicies::findOrFail($validated['PolicyID']);
+        $CustomerID = BancassuranceCustomer::findOrFail($validated['CustomerID']);
+        $PolicyID = BancassurancePolicy::findOrFail($validated['PolicyID']);
         $Relationship = CodeDetail::findOrFail($validated['Relationship']);
         // $Relationship = CodeDetail::where('CodeID','Relationships')
         //     ->where('Description', $validated['Relationships'])

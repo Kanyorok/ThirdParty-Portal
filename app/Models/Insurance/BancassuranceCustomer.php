@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 
-class BancassuranceCustomers extends Model
+class BancassuranceCustomer extends Model
 {
     use SoftDeletes, UserActorTrait;
     //

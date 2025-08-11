@@ -6,7 +6,7 @@ namespace App\Services\Insurance;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancAssuranceReferral;
-use App\Models\Insurance\BancassuranceCustomers;
+use App\Models\Insurance\BancassuranceCustomer;
 use DateTime;
 
 class BancassuranceCustomersService
@@ -14,7 +14,7 @@ class BancassuranceCustomersService
     /**
      * Create a new class instance.
      */
-    public function __construct(public BancassuranceCustomers $customer)
+    public function __construct(public BancassuranceCustomer $customer)
     {
     }
     public static function create(
@@ -32,7 +32,7 @@ class BancassuranceCustomersService
         User   $user
     ): self
     {
-        $customer = BancassuranceCustomers::create([
+        $customer = BancassuranceCustomer::create([
         'ReferralID' => $ReferralID->Id,
         'FullName' => $FullName,
         'NationalID' => $NationalID,

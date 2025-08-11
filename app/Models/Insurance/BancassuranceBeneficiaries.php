@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use App\Models\Core\CodeDetail;
-use App\Models\Insurance\BancassurancePolicies;
+use App\Models\Insurance\BancassurancePolicy;
 
 class BancassuranceBeneficiaries extends Model
 {
@@ -44,7 +44,7 @@ class BancassuranceBeneficiaries extends Model
 
     public function policies()
     {
-        return $this->belongsTo(BancassurancePolicies::class, 'PolicyID', 'ID');
+        return $this->belongsTo(BancassurancePolicy::class, 'PolicyID', 'ID');
     }
 }
 

@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\HRM\Employee;
 use App\Models\Core\CodeDetail;
 use App\Enums\Core\PermissionEnum;
-use App\Models\Insurance\BancassuranceCustomers;
-use App\Models\Insurance\BancassuranceCustomersContacts;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Services\Insurance\Customers\BancassuranceCustomersContactsService;
 use App\Http\Requests\Insurance\Customers\BancassuranceCustomersContactsRequest;
 
@@ -19,8 +19,8 @@ class CustomerCommunicationController extends Controller
     //
 public function create()
 {
-    $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomersContacts::class);
-    $customers= BancassuranceCustomers::all();
+    $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomerContact::class);
+    $customers= BancassuranceCustomer::all();
     $employees = Employee::all();
     $contacttypes = CodeDetail::where('CodeID', 'ContactType')->get();
     return view('bancassurance.customers.communication.create', compact('customers', 'employees','contacttypes'));
@@ -28,9 +28,9 @@ public function create()
 
 public function store(BancassuranceCustomersContactsRequest $request)
 {
-    $this->authorize(PermissionEnum::BancassuranceCustomersContactsCreate, BancassuranceCustomersContacts::class);
+    $this->authorize(PermissionEnum::BancassuranceCustomersContactsCreate, BancassuranceCustomerContact::class);
     $validated = $request->validated();
-        $CustomerID = BancassuranceCustomers::findOrFail($validated['CustomerID']);
+        $CustomerID = BancassuranceCustomer::findOrFail($validated['CustomerID']);
         $ContactDate = new \DateTime($validated['ContactDate']);
         $ContactType = CodeDetail::findOrFail($validated['ContactType']);
         $HandledBy = Employee::findOrFail($validated['HandledBy']);
@@ -50,16 +50,16 @@ public function store(BancassuranceCustomersContactsRequest $request)
 }
 public function index()
 {
-   $customer = BancassuranceCustomers::all();
-   $logs = BancassuranceCustomersContacts::all();
+   $customer = BancassuranceCustomer::all();
+   $logs = BancassuranceCustomerContact::all();
 
     return view('bancassurance.customers.communication.index', compact('customer','logs'));
 }
 public function edit($id)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomersContacts::class);
-        $log = BancassuranceCustomersContacts::findOrFail($id);
-        $customers = BancassuranceCustomers::all();   
+        $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomerContact::class);
+        $log = BancassuranceCustomerContact::findOrFail($id);
+        $customers = BancassuranceCustomer::all();   
         $employees = Employee::all();
         $contacttypes = CodeDetail::where('CodeID', 'ContactType')->get();
         return view('bancassurance.customers.communication.edit', compact('log', 'customers','employees','contacttypes' ));
@@ -67,7 +67,7 @@ public function edit($id)
 
     public function update(BancassuranceCustomersContactsRequest $request, $id)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersContactsUpdate, BancassuranceCustomersContacts::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersContactsUpdate, BancassuranceCustomerContact::class);
         $validated = $request->validated();
 
         DB::beginTransaction();
@@ -79,7 +79,7 @@ public function edit($id)
             }
 
         try {
-            $log = BancassuranceCustomersContacts::findOrFail($id);
+            $log = BancassuranceCustomerContact::findOrFail($id);
 
             $log->update([
                 'CustomerID' => $validated['CustomerID'],
@@ -109,9 +109,9 @@ public function edit($id)
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersContactsDelete, BancassuranceCustomersContacts::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersContactsDelete, BancassuranceCustomerContact::class);
         try {
-            $log = BancassuranceCustomersContacts::findOrFail($id);
+            $log = BancassuranceCustomerContact::findOrFail($id);
             $log->delete();
 
             return redirect()->route('bancassurance.customers.communication.index')

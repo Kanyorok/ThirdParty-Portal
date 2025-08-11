@@ -4,12 +4,12 @@ namespace App\Models\Insurance;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Insurance\BancassuranceCustomers;
+use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Core\CodeDetail;
 use App\Models\HRM\Employee;
 use App\Traits\Model\UserActorTrait;
 
-class BancassuranceCustomersContacts extends Model
+class BancassuranceCustomerContact extends Model
 {
     use SoftDeletes, UserActorTrait;
     //
@@ -44,6 +44,6 @@ class BancassuranceCustomersContacts extends Model
     }
     public function customers()
     {
-        return $this->belongsTo(BancassuranceCustomers::class, 'CustomerID', 'Id');
+        return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
     }
 }
