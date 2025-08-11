@@ -248,9 +248,14 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TR'],
             ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
 
+            //Inventory Categories Status
+            ['CodeID' => 'CategoryStatus', 'Description' => 'Active', 'Value' => 'Ac'],
+            ['CodeID' => 'CategoryStatus', 'Description' => 'Inactive', 'Value' => 'In'],
 
+            //Inventory Item Status
+            ['CodeID' => 'ItemStatus', 'Description' => 'Active', 'Value' => 'AC'],
+            ['CodeID' => 'ItemStatus', 'Description' => 'Inactive', 'Value' => 'IN'],
 
-           
 
            
         ];
