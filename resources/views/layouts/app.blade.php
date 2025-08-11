@@ -990,15 +990,12 @@
                         <div class="page-header-title"><h3 class="mb-0">@yield('title')</h3></div>
                     </div>
                     <div class="col-12 col-sm-6">
-                        @hasSection('title')
-                            <ul class="breadcrumb float-end">
-                                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                                @yield('breadcrumbs')
-                                <li class="breadcrumb-item" aria-current="page">@yield('title')</li>
-                            </ul>
-                        @endif
+                        <ul class="breadcrumb float-end">
+                            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                            @yield('breadcrumbs')
+                            <li class="breadcrumb-item" aria-current="page">@yield('title')</li>
+                        </ul>
                     </div>
-
 
                 </div>
             </div>
