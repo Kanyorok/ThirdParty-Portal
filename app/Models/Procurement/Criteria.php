@@ -34,6 +34,11 @@ class Criteria extends Model
         return (new self())->getRouteKeyName();
     }
 
+    public function rfqSection()
+    {
+        return $this->belongsTo(RFQSection::class, 'SectionID', 'SectionID');
+    }
+
     public function getRouteKeyName(): string
     {
         return 'CriteriaID';
