@@ -74,8 +74,11 @@ class DatabaseSeeder extends Seeder
         $this->call(OrderLinesSeeder::class);
         $this->call(OrderSeeder::class);
         $this->call(GoodsReceiptsSeeder::class);
+
         $this->call(FinanceTransactionTypesSeeder::class);
         $this->call(FinanceModuleTransactionSeeder::class);
+
+        $this->call(LegalDocumentSeeder::class);
 
     }
 }

@@ -11,8 +11,8 @@ class LegalIntellectualPropertyController extends Controller
 {
     public function index()
     {
-        $records = LegalIntellectualProperty::where('IsActive', 1)->orderByDesc('CreatedOn')->get();
-        return view('legal.intellectual.index', compact('records'));
+        // $records = LegalIntellectualProperty::where('IsActive', 1)->orderByDesc('CreatedOn')->get();
+        return view('legal.intellectual.index');
     }
 
     public function create()

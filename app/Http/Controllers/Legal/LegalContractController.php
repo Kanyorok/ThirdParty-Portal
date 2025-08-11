@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Legal;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Legal\LegalDocument;
+use Illuminate\Support\Facades\Auth;
 
 class LegalContractController extends Controller
 {
@@ -17,7 +18,7 @@ class LegalContractController extends Controller
             ->orderByDesc('CreatedOn')
             ->get();
 
-        return view('legal.contracts.index', compact('contracts'));
+        return view('legal.maintenance.index', compact('contracts'));
     }
 
     /**
@@ -26,13 +27,13 @@ class LegalContractController extends Controller
     public function show($id)
     {
         $contract = LegalDocument::findOrFail($id);
-        return view('legal.contracts.show', compact('contract'));
+        return view('legal.maintenance.show', compact('contract'));
     }
 
     public function review($id)
 {
     $contract = LegalDocument::findOrFail($id);
-    return view('legal.contracts.review', compact('contract'));
+    return view('legal.maintenance.review', compact('contract'));
 }
 
 public function submitReview(Request $request, $id)
@@ -44,12 +45,12 @@ public function submitReview(Request $request, $id)
 
     $contract = LegalDocument::findOrFail($id);
     $contract->ReviewStatus = $request->ReviewStatus;
-    $contract->ReviewedBy = auth()->id();
+    $contract->ReviewedBy = Auth::Id();
     $contract->ReviewedOn = now();
     $contract->Remarks = $request->Remarks;
     $contract->save();
 
-    return redirect()->route('legal.contracts.index')->with('success', 'Review submitted.');
+    return redirect()->route('legal.maintenance.index')->with('success', 'Review submitted.');
 }
 
 }

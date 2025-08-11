@@ -11,8 +11,8 @@ class LegalClauseController extends Controller
 {
     public function index()
     {
-        $clauses = LegalClause::where('IsActive', 1)->orderByDesc('CreatedOn')->get();
-        return view('legal.clauses.index', compact('clauses'));
+        // $clauses = LegalClause::where('IsActive', 1)->orderByDesc('CreatedOn')->get();
+        return view('legal.clauses.index');
     }
 
     public function create()

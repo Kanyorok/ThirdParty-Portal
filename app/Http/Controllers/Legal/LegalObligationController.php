@@ -12,8 +12,8 @@ class LegalObligationController extends Controller
 {
     public function index()
     {
-        $obligations = LegalObligation::where('IsActive', 1)->orderByDesc('DueDate')->get();
-        return view('legal.obligations.index', compact('obligations'));
+        // $obligations = LegalObligation::where('IsActive', 1)->orderByDesc('DueDate')->get();
+        return view('legal.obligations.index');
     }
 
     public function create()

@@ -11,13 +11,13 @@ class LegalSearchRequestController extends Controller
 {
     public function index()
     {
-        $requests = LegalSearchRequest::orderByDesc('RequestDate')->get();
-        return view('legal.search_requests.index', compact('requests'));
+        // $requests = LegalSearchRequest::orderByDesc('RequestDate')->get();
+        return view('legal.search_requests.index');
     }
 
     public function create()
     {
-        return view('legal.search_requests.create');
+        return view('legal.search_requests.index');
     }
 
     public function store(Request $request)

@@ -172,7 +172,7 @@ use App\Models\Finance\FinanceModuleTransactions;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\FinanceTransactionTypes;
 use App\Models\Finance\TaxJurisdiction;
-
+use App\Models\Legal\LegalDocument;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -357,6 +357,9 @@ class AppServiceProvider extends ServiceProvider
             FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
             FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
+            
+            //////////////  Legal  ////////////////
+            LegalDocument::getPrimaryKey() => LegalDocument::class,
 
         ]);
 

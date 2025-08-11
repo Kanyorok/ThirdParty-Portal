@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Legal\LegalDocument;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LegalDocumentController extends Controller
 {
     public function index()
     {
-        $documents = LegalDocument::where('IsActive', 1)->latest('CreatedOn')->get();
-        return view('legal.documents.index', compact('documents'));
+        // $documents = LegalDocument::where('IsActive', 1)->latest('CreatedOn')->get();
+        return view('legal.documents.index');
     }
 
     public function create()
