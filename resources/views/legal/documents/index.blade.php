@@ -6,6 +6,9 @@
     <div class="card-header bg-light px-3 py-1 d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-2">📁 Legal Documents Registry</h6>
     </div>
+    <div class="card-body">
+        <p class="text-muted"></p>
+        <a href="{{ route('legal.documents.create') }}" class="btn btn-primary mb-3 btn-text-end">➕ Add New Document</a>
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -96,5 +99,6 @@
             @endforelse --}}
         </tbody>
     </table>
+    </div>
 </div>
 @endsection
