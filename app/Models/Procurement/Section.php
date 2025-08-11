@@ -40,6 +40,11 @@ class Section extends Model
         return 'id';
     }
 
+    public function rfqSections()
+    {
+        return $this->hasMany(RFQSection::class, 'SectionID', 'id');
+    }
+
     public function criteria()
     {
         return $this->hasMany(Criteria::class, 'SectionID', 'id');
