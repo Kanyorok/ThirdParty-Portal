@@ -123,13 +123,6 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I','DisplayOrder'=>0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E','DisplayOrder'=>0],
 
-            // Recurrent Journal Payment Frequency
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Daily', 'Value' => 'd','DisplayOrder'=>0],
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Weekly', 'Value' => 'w','DisplayOrder'=>0],
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Monthly', 'Value' => 'm','DisplayOrder'=>0],
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Quarterly', 'Value' => 'q','DisplayOrder'=>0],
-            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Yearly', 'Value' => 'y','DisplayOrder'=>0],
-
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
             ['CodeID' => 'TenantType', 'Description' => 'Corporate', 'Value' => 'C'],

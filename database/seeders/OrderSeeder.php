@@ -15,7 +15,7 @@ class OrderSeeder extends Seeder
         DB::table('t_Orders')->insert([
             [
                 'OrderNo' => 'PO-0001',
-                'AccountID' => 1,
+                'AccountID' => 1001,
                 'Description' => 'Order for office supplies',
                 'OrdTotExcl' => 15200.00,
                 'CreatedBy' => 1,
@@ -25,7 +25,7 @@ class OrderSeeder extends Seeder
             ],
             [
                 'OrderNo' => 'PO-0002',
-                'AccountID' => 2,
+                'AccountID' => 1002,
                 'Description' => 'Order for IT equipment',
                 'OrdTotExcl' => 89000.00,
                 'CreatedBy' => 1,
@@ -35,7 +35,7 @@ class OrderSeeder extends Seeder
             ],
             [
                 'OrderNo' => 'PO-0003',
-                'AccountID' => 3,
+                'AccountID' => 1003,
                 'Description' => 'Order for field tools',
                 'OrdTotExcl' => 45250.00,
                 'CreatedBy' => 1,

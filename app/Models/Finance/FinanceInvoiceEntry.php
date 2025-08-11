@@ -3,7 +3,6 @@
 namespace App\Models\Finance;
 
 use App\Models\Procurement\Order;
-use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -40,10 +39,5 @@ class FinanceInvoiceEntry extends Model
     public function orders()
     {
         return $this->belongsTo(Order::class, 'SupplierID', 'Id');
-    }
-
-    public function suppliers()
-    {
-        return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
     }
 }
