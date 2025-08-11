@@ -77,5 +77,7 @@ class DatabaseSeeder extends Seeder
         $this->call(FinanceTransactionTypesSeeder::class);
         $this->call(FinanceModuleTransactionSeeder::class);
 
+        $this->call(LegalDocumentSeeder::class);
+
     }
 }

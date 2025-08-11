@@ -33,7 +33,8 @@
                     </td>
                 
                     <td>
-                        <a href="{{ route('legal.documents.show', $contract->ID) }}" class="btn btn-sm btn-info">👁️ View</a>
+                        {{-- <a href="{{ route('legal.documents.show', $contract->ID) }}" class="btn btn-sm btn-info">👁️ View</a> --}}
+                        <a href="#" class="btn btn-sm btn-info">👁️ View</a>
                         {{-- Legal review button will be added next --}}
                     </td>
                 </tr>
