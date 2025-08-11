@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Create Payables Invoice')
- 
+
 @section('content')
 <div class="card shadow p-4 rounded-4">
     <h4 class="mb-3">🧾 Create Payables Invoice</h4>
@@ -11,7 +11,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
     @endif
- 
+
     <form action="{{route('invoiceentry.store')}}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="row mb-3">
@@ -27,8 +27,8 @@
                         <option value="{{ $item->Id }}">{{ $item->SupplierName }}</option>
                     @endforeach
                 </select>
-            </div>      
-        
+            </div>
+
             <div class="col-md-6 mb-3">
                 <label class="form-label">Currency<span class="text-danger">*</span></label>
                 <select name="CurrencyID" class="form-control" required>
@@ -76,16 +76,16 @@
                 <input min="0.00" type="number" step="0.01" name="InvoiceAmount" class="form-control" placeholder="e.g. 1000.00" required>
             </div>
 
-            
+
             <div class="mb-3">
                 <label class="form-label">Invoice Description</label>
-                <textarea name="Description" class="form-control" rows="3" placeholder="Enter invoice description"></textarea>                
+                <textarea name="Description" class="form-control" rows="3" placeholder="Enter invoice description"></textarea>
             </div>
         </div>
-        
-        {{--  
+
+        {{--
                 <hr>
-        
+
                 <h5 class="mb-3">📦 Line Items</h5>
                 <table class="table table-bordered" id="lineItemsTable">
                     <thead class="table-light">
@@ -122,19 +122,19 @@
                         </tr>
                     </tbody>
                 </table> --}}
-        
+
                 {{-- <div class="mb-3">
                     <button type="button" class="btn btn-sm btn-secondary" onclick="addRow()">➕ Add Line</button>
                 </div>
         --}}
         <hr>
- 
+
         <h5 class="mb-3">📤 Upload EDI File (Optional)</h5>
         <div class="mb-3">
             <input type="file" name="edi_file" class="form-control">
             <small class="form-text text-muted">Supports CSV/Excel import. Parse and map lines in controller.</small>
         </div>
- 
+
         <div class="mt-4 d-flex justify-content-end gap-2">
             <a href="{{route('invoiceentry.index')}}" class="btn btn-secondary">Back</a>
             <button type="submit" class="btn btn-success" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='💾Saving...'; this.form.submit();}">💾 Save Invoice</button>
@@ -162,86 +162,95 @@
         </div>
     </form>
 </div>
- 
+
 @endsection
- 
 @section('scripts')
-<script>
-    const vendor = document.getElementById('VendorSelect');
-    const pos = document.getElementById('POReference');
-    const grns = document.getElementById('GRNReference');
-    const viewPOButton = document.getElementById('ViewPOButton');
-    const viewPOModal = document.getElementById('viewPO');
+    <script>
+        const vendor = document.getElementById('VendorSelect');
+        const pos = document.getElementById('POReference');
+        const grns = document.getElementById('GRNReference');
+        const viewPOButton = document.getElementById('ViewPOButton');
+        const viewPOModal = document.getElementById('viewPO');
 
-    //disable PO and GRN selects initially
-    pos.disabled = true;
-    
-    vendor.addEventListener('change', function(){
-        const selectedVendor = vendor.options[vendor.selectedIndex].value;
-        pos.disabled = !selectedVendor;
+        // Disable PO and GRN selects initially
+        pos.disabled = true;
+        grns.disabled = true;
+        viewPOButton.disabled = true;
 
-        pos.innerHTML = '<option selected disabled value="">Loading...</option>'; // Clear PO options
+        // Handle vendor change
+        vendor.addEventListener('change', function(){
+            const selectedVendor = vendor.options[vendor.selectedIndex].value;
+            pos.disabled = !selectedVendor;
 
-        if (selectedVendor){
-            fetch(`/finance/finance/pos/${selectedVendor}`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data);
-                
-                    pos.innerHTML = '<option selected disabled value="">-- Select PO --</option>';
-                    data.forEach(function(po){
-                        console.log("Data1",po.Id);
-                        
-                        pos.innerHTML += `<option value="${po.Id}">${po.OrderNo}</option>`;
-                    });
-                    pos.disabled = false; // Enable PO select if vendor is selected
-                });    
-        }
-    });
+            pos.innerHTML = '<option selected disabled value="">Loading...</option>';
 
-    // Disable View PO button initially
-    viewPOButton.disabled = true;
-    grns.disabled = true;
-     
-    pos.addEventListener('change', function(){
-        const selectedPO = pos.options[pos.selectedIndex].value;
-        viewPOButton.disabled = !selectedPO;
+            if (selectedVendor){
+                fetch(`/finance/finance/pos/${selectedVendor}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        //console.log('PO Data',data);
 
-        grns.innerHTML = '<option selected disabled value="">Loading GRN...</option>'; // Clear GRN options
+                        if (data.length === 0) {
+                            pos.innerHTML = '<option selected disabled>No PO found</option>';
+                            pos.disabled = true;
+                            return;
+                        }
 
-        if (selectedPO){
-            fetch(`/finance/finance/grns/${selectedPO}`)
-                .then(response => response.json())
-                .then(data =>{
-                        console.log("GRNDATA",data);
-                    grns.innerHTML = '<option selected disabled value="">-- Select GRN --</option>';
-                    data.forEach(function(grn){
-                        
-                        grns.innerHTML += `<option value="${grn.GRNID}">${grn.GRNID}</option>`;
+                        pos.innerHTML = '<option selected disabled value="">-- Select PO --</option>';
+                        data.forEach(function(po){
+                            pos.innerHTML += `<option value="${po.OrderNo}">${po.OrderNo}</option>`;
                         });
-                    viewPOButton.disabled = false; // Enable button if PO is selected
-                    grns.disabled = false; // Enable GRN select if PO is selected
-                })
-                }
-            });
+                        pos.disabled = false;
+                    });
+            }
+        });
 
-    // View PO details in modal
-    viewPOButton.addEventListener('click', function() {
-        const selectedPO = pos.options[pos.selectedIndex].value;
-        if (selectedPO) {
-            fetch(`/finance/finance/viewpo/${selectedPO}`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log("PO Details", data);
-                    const poDetailsContent = document.getElementById('poDetailsContent');
-                    poDetailsContent.innerHTML = ''; // Clear previous content
+        // Handle PO change
+        pos.addEventListener('change', function(){
+            const selectedPO = pos.options[pos.selectedIndex].value;
+            viewPOButton.disabled = !selectedPO;
 
-                    // Populate modal with PO details
-                    poDetailsContent.innerHTML = `
+            grns.innerHTML = '<option selected disabled value="">Loading GRN...</option>';
+
+            if (selectedPO){
+                fetch(`/finance/finance/grns/${selectedPO}`)
+                    .then(response => response.json())
+                    .then(data =>{
+                        //console.log("GRNDATA", data);
+
+                        if (data.length === 0) {
+                            grns.innerHTML = '<option selected disabled>No GRN found</option>';
+                            grns.disabled = true;
+                            return;
+                        }
+
+                        grns.innerHTML = '<option selected disabled value="">-- Select GRN --</option>';
+                        data.forEach(function(grn){
+                            grns.innerHTML += `<option value="${grn.GRNID}">${grn.GRNID}</option>`;
+                        });
+                        viewPOButton.disabled = false;
+                        grns.disabled = false;
+                    })
+            }
+        });
+
+        // View PO details in modal
+        viewPOButton.addEventListener('click', function() {
+            const selectedPO = pos.options[pos.selectedIndex].value;
+            if (selectedPO) {
+                fetch(`/finance/finance/viewpo/${selectedPO}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        //console.log("PO Details", data);
+                        const poDetailsContent = document.getElementById('poDetailsContent');
+                        poDetailsContent.innerHTML = '';
+
+                        // Populate modal with PO details
+                        poDetailsContent.innerHTML = `
                         <h5>PO Number: ${data.OrderNo}</h5>
                         <p><strong>Vendor:</strong> ${data.SupplierName}</p>
-                        <p><strong>Date:</strong> ${data.OrderDate}</p> 
-                        <h6>Items:</h6>
+<!--                        <p><strong>Date:</strong> ${data.OrderDate}</p>-->
+<!--                        <h6>Items:</h6>-->
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead>
@@ -260,12 +269,13 @@
                                         </tr>`).join('')}
                                 </tbody>
                             </table>
+                        </div>
                     `;
 
-                    // Show the modal
-                    new bootstrap.Modal(viewPOModal).show();
-                });
-        }
-    });
-</script>
+                        // Show the modal
+                        new bootstrap.Modal(viewPOModal).show();
+                    });
+            }
+        });
+    </script>
 @endsection

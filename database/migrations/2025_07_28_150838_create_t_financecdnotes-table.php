@@ -18,8 +18,10 @@ return new class extends Migration
             $table->foreignId('InvoiceRefNo')->constrained('t_FinanceInvoiceEntry','Id');
             $table->date('NoteDate');
             $table->decimal('NoteAmount');
-            $table->text('Description');            
-            
+            $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
+            $table->text('ApprovalReason')->nullable();
+            $table->text('Description');
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

@@ -96,7 +96,7 @@
     </div>
 
 
-    @if($journalEntry->ApprovalStatus=='draft')
+    @if($journalEntry->ApprovalStatus==='draft')
         {{-- Approve Modal --}}
         <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
             <div class="modal-dialog">

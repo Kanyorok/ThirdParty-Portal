@@ -22,8 +22,9 @@ class SupplierService
                 't_Suppliers.ContactPhone as Phone',
                 't_Suppliers.Address as Address',
                 't_Suppliers.CategoryId as CategoryId'
-            ) ->where('t_Suppliers.Id',$SupplierId)
-            ->get();
+            )
+            ->where('t_Suppliers.Id', $SupplierId)
+            ->first(); // Return a single object, not a collection
     }
     public static function getSuppliers(){
         return DB::table(DB::raw('t_Suppliers WITH (NOLOCK)'))

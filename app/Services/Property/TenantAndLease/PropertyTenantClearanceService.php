@@ -30,7 +30,7 @@ class PropertyTenantClearanceService
         bool $AllDuesPaid,
         bool $KeysReturned,
         CodeDetail $DepositRefunded,
-        string $AdditionalNotes,
+        string $AdditionalNotes = null,
         TenantClearanceEnum $Status,
         User $user,
         UploadedFile $document = null
