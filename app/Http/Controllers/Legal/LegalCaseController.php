@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Legal;
 use App\Http\Controllers\Controller;
 use App\Models\Legal\LegalCase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LegalCaseController extends Controller
 {
     public function index()
     {
-        $cases = LegalCase::whereNull('DeletedOn')->orderByDesc('CreatedOn')->get();
-        return view('legal.disputes.index', compact('cases'));
+        // $cases = LegalCase::whereNull('DeletedOn')->orderByDesc('CreatedOn')->get();
+        return view('legal.disputes.index');
     }
 
     public function create()
@@ -33,7 +34,7 @@ class LegalCaseController extends Controller
             'AssignedCounselID' => $request->AssignedCounselID,
             'DMSDocID' => $request->DMSDocID,
             'IsActive' => 1,
-            'CreatedBy' => auth()->id(),
+            'CreatedBy' => Auth::Id(),
             'CreatedOn' => now(),
         ]);
 
@@ -60,7 +61,7 @@ class LegalCaseController extends Controller
             'Summary' => $request->Summary,
             'AssignedCounselID' => $request->AssignedCounselID,
             'DMSDocID' => $request->DMSDocID,
-            'ModifiedBy' => auth()->id(),
+            'ModifiedBy' => Auth::Id(),
             'ModifiedOn' => now(),
         ]);
 

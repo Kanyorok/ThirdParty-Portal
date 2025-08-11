@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Legal;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Legal\LegalTemplate;
+use Illuminate\Support\Facades\Auth;
 
 class LegalTemplateController extends Controller
 {
     public function index()
     {
-        $templates = LegalTemplate::where('IsActive', 1)->get();
-        return view('legal.templates.index', compact('templates'));
+        // $templates = LegalTemplate::where('IsActive', 1)->get();
+        return view('legal.templates.index');
     }
 
     public function create()
@@ -35,7 +36,7 @@ class LegalTemplateController extends Controller
                 'Version' => $request->Version,
                 'Description' => $request->Description,
                 'Content' => $request->Content,
-                'CreatedBy' => Auth::id(),
+                'CreatedBy' => Auth::Id(),
                 'CreatedOn' => now(),
                 'IsActive' => 1,
             ]);

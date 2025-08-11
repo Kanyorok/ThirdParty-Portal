@@ -11,8 +11,8 @@ class LoanSecurityController extends Controller
 {
     public function index()
     {
-        $securities = LoanSecurity::whereNull('DeletedOn')->get();
-        return view('legal/securities/index', compact('securities'));
+        // $securities = LoanSecurity::whereNull('DeletedOn')->get();
+        return view('legal/securities/index');
     }
 
     public function create()
