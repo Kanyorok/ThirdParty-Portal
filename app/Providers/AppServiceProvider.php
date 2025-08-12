@@ -78,6 +78,7 @@ use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\UOMConversion;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\DepartmentNeeds;
@@ -126,6 +127,7 @@ use App\Policies\Inventory\StockItemPolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\TransactionReceiptPolicy;
 use App\Policies\Inventory\TransactionTransferPolicy;
+use App\Policies\Inventory\UOMConversionPolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
@@ -259,6 +261,7 @@ class AppServiceProvider extends ServiceProvider
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             ModelRole::getPrimaryKey() => ModelRole::class,
+            UOMConversion::getPrimaryKey() => UOMConversion::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -384,7 +387,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(FleetModel::class, FleetModelPolicy::class);
         Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
         Gate::policy(DriverManagement::class, DriverManagementPolicy::class);
-
+        Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
