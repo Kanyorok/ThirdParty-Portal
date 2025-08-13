@@ -43,6 +43,7 @@ class ItemCategories extends Model
         'Name'  => 'string',
         'Description'   => 'string',
         'ParentId'      => 'integer',
+        'Status'        => 'integer',
         'CreatedBy'     => 'integer',
         'ModifiedBy'    => 'integer',
         'DeletedBy'     => 'integer',

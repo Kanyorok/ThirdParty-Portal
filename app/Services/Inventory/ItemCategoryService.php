@@ -27,7 +27,7 @@ class ItemCategoryService
     // If no status is selected, default to the first "Active" ID
     if (empty($data['Status'])) {
         $data['Status'] = CodeDetail::where('CodeID', 'CategoryStatus')
-            ->where('Value', 'Active')
+            ->where('Description', 'Active')
             ->value('ID');
     }
 
