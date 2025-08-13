@@ -399,26 +399,59 @@ class ModuleSeeder extends Seeder
         return $data;
     }
 
+
     protected function _fleetManagement(bool $fresh): Collection
     {
         $values = collect([
             ['ModuleID' => 600000, 'Name' => ModulesEnum::Fleet->description(), 'Icon' => '<i data-feather="truck"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 601000, 'Name' => 'Driver Management', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'drivermanagement.index'],
-            ['ModuleID' => 602000, 'Name' => 'Vehicle Registry', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'vehicle-registry.index'],
-            ['ModuleID' => 603000, 'Name' => 'Trip Management', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'tripmanagement.index'],
-            ['ModuleID' => 604000, 'Name' => 'Fuel Management', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'fuelmanagement.index'],
-            ['ModuleID' => 605000, 'Name' => 'Compliance', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'complianceanddocumentation.index'],
-            ['ModuleID' => 606000, 'Name' => 'Fleet Disposal', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'fleetprocurementanddisposal.index'],
-            ['ModuleID' => 607000, 'Name' => 'Inventory Of Spare Parts', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'inventoryofspareparts.index'],
-            ['ModuleID' => 608000, 'Name' => 'Utilization & Costing', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'utilization.index'],
-            ['ModuleID' => 609000, 'Name' => 'Service Tracking', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'servicetracking.index'],
-            ['ModuleID' => 610000, 'Name' => 'GPS Integration', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'gps.index'],
+            //Fleet Management
+            ['ModuleID' => 601000, 'Name' => 'Vehicle Management', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 601100, 'Name' => 'Vehicle Master', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => 'fleet.vehicles.index'],
+            ['ModuleID' => 601200, 'Name' => 'Compliance', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => 'fleet.vehicles.index'],
+            ['ModuleID' => 601210, 'Name' => 'Insurance Tracker', 'Icon' => 'Track insurance policies, premiums, providers, and renewal dates', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.insurance_tracker.index'],
+            ['ModuleID' => 601220, 'Name' => 'License Tracker & Inspection Schedule', 'Icon' => 'Track vehicle inspection types, dates, and compliance status', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.inspection_schedule.index'],
 
-            ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'reports.index'],
+            //Driver Management
+            ['ModuleID' => 602000, 'Name' => 'Driver Management', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 602100, 'Name' => 'Driver Master', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 602000, 'Route' => 'fleet.drivers.index'],
+            ['ModuleID' => 602200, 'Name' => 'Manage Contract Drivers', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 602000, 'Route' => 'fleet.contracted_drivers.index'],
 
+            //Trip Management
+            ['ModuleID' => 603000, 'Name' => 'Trip Management', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 603100, 'Name' => 'Trip Logs', 'Icon' => '', 'Description' => 'Trip and Usage Logs for Drivers and Vehicles', 'ParentID' => 603000, 'Route' => 'fleet.trip_logs.index'],
+            ['ModuleID' => 603200, 'Name' => 'Route Planner & Optimizer', 'Icon' => '', 'Description' => 'Plan optimal routes with waypoints and map previews', 'ParentID' => 603000, 'Route' => 'fleet.route_planner.index'],
+            ['ModuleID' => 603300, 'Name' => 'Vehicle Requests', 'Icon' => '', 'Description' => 'Staff requests for vehicles and approval flow', 'ParentID' => 603000, 'Route' => 'fleet.vehicle_requests.index'],
+            ['ModuleID' => 603400, 'Name' => 'Trip Logs', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 603000, 'Route' => 'fleet.trip_logs.index'],
+
+            //Maintenance
+            ['ModuleID' => 604000, 'Name' => 'Maintenance', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 604100, 'Name' => 'Maintenance Schedule', 'Icon' => '', 'Description' => 'Schedule upcoming maintenance or inspections', 'ParentID' => 604000, 'Route' => 'fleet.maintenance_schedule.index'],
+            ['ModuleID' => 604200, 'Name' => 'Repair Logs', 'Icon' => '', 'Description' => 'Capture vehicle maintenance and repair records (normal/emergency)', 'ParentID' => 604000, 'Route' => 'fleet.repair_logs.index'],
+            ['ModuleID' => 604300, 'Name' => 'Service Alerts & Reminders', 'Icon' => '', 'Description' => 'View and acknowledge fleet maintenance alerts', 'ParentID' => 604000, 'Route' => 'fleet.alerts.index'],
+
+            //Fuel Management
+            ['ModuleID' => 605000, 'Name' => 'Fuel & Cost Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 605100, 'Name' => 'Fuel Logs', 'Icon' => '', 'Description' => '', 'ParentID' => 605000, 'Route' => 'fleet.fuel_logs.index'],
+            ['ModuleID' => 605200, 'Name' => 'Running Cost Entry', 'Icon' => '', 'Description' => 'Log recurring vehicle costs like tyres, insurance, oil, etc.', 'ParentID' => 605000, 'Route' => 'fleet.running_costs.index'],
+
+            //GPS Tracking
+            ['ModuleID' => 606000, 'Name' => 'GPS Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 606100, 'Name' => 'Live GPS Dashboard', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.live_dashboard'],
+            ['ModuleID' => 606200, 'Name' => 'Movement History', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.movement_history'],
+            ['ModuleID' => 606300, 'Name' => 'GPS Integration', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.telematics.index'],
+
+            //Fleet Settings
             ['ModuleID' => 680000, 'Name' => 'Fleet Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 681000, 'Name' => 'Fleet Make', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmake.index'],
             ['ModuleID' => 682000, 'Name' => 'Fleet Model', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmodel.index'],
+            ['ModuleID' => 683000, 'Name' => 'Fuel Type', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fueltypes.index'],
+
+            //Configuration
+            ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
+           
+            //Reports
+            ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'reports.index'],
         ]);
 
         if ($fresh) {

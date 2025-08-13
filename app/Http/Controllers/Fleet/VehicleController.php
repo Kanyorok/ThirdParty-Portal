@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\VehicleType;
 use App\Models\Fleet\FuelType;
+use App\Models\Core\CodeDetail;
+use App\Models\FleetManagement\FleetMake;
+use App\Models\FleetManagement\FleetModel;
 use App\Models\Fleet\Branch;
 use App\Models\Fleet\FleetVehicleAssignment;
 use Illuminate\Support\Facades\Auth;
@@ -25,11 +28,18 @@ public function index()
 
     public function create()
     {
-        $vehicleTypes = VehicleType::where('IsActive', 1)->get();
-        $fuelTypes = FuelType::where('IsActive', 1)->get();
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
+        ->orderBy('Value')
+        ->get();
+        $fuelTypes = FuelType::all();
         $branches = Branch::where('CreatedBy', 1)->get();
+        $brands = FleetMake::all();
+        $fleetModels = FleetModel::all();
+        $vehicleStatuses = CodeDetail::where('CodeID', 'VehicleStatus')
+        ->orderBy('Value')
+        ->get();
 
-        return view('fleet.vehicles.create', compact('vehicleTypes', 'fuelTypes', 'branches'));
+        return view('fleet.vehicles.create', compact('vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 'vehicleStatuses'));
     }
 
 public function store(Request $request)
@@ -78,8 +88,12 @@ public function store(Request $request)
     {
         $vehicle = FleetVehicle::findOrFail($id);
 
-        $vehicleTypes = VehicleType::where('IsActive', 1)->get();
-        $fuelTypes = FuelType::where('IsActive', 1)->get();
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
+        ->orderBy('Value')
+        ->get();
+        $fuelTypes = CodeDetail::where('CodeID', 'FuelType')
+        ->orderBy('Value')
+        ->get();
         $branches = Branch::where('CreatedBy', Auth::id())->get();
 
         return view('fleet.vehicles.edit', compact('vehicle', 'vehicleTypes', 'fuelTypes', 'branches'));

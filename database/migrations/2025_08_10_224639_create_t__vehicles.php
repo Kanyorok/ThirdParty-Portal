@@ -11,17 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_Vehicles', function (Blueprint $table) {
+        Schema::create('t_FleetVehicles', function (Blueprint $table) {
 
             $table->id('Id');
             $table->string('RegistrationNo')->unique();
             $table->foreignId('Make')->constrained('t_FleetBrands', 'Id');
             $table->foreignId('Model')->constrained('t_FleetModels', 'Id');
-            $table->integer('Year')->nullable();
-            $table->string('Color')->nullable();
+            $table->foreignId('VehicleType')->constrained('t_CodeDetails', 'ID');        
+            $table->integer('YearOfManufacture')->nullable();
             $table->string('ChassisNo')->unique();
             $table->string('EngineNo')->nullable();
-            $table->foreignId('Type')->constrained('t_CodeDetails', 'ID');         
+            $table->foreignId('FuelType')->constrained('t_CodeDetails', 'ID');
+            $table->string('Capacity')->nullable();
+            $table->decimal('OdometerReading', 10, 2)->default(0);
+            $table->foreignId('AssignedBranch')->nullable()->constrained('t_Branches', 'Id');
+            $table->foreignId('AssignedToUser')->nullable()->constrained('t_Users', 'Id');
+            $table->foreignId('Status')->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('IsActive')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
@@ -29,6 +35,7 @@ return new class extends Migration
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
         });
+
     }
 
     /**
@@ -36,6 +43,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_Vehicles');
+        Schema::dropIfExists('t_FleetVehicles');
     }
 };

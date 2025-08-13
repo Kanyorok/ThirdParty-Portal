@@ -19,29 +19,43 @@
                 <select class="form-select" name="VehicleTypeID" required>
                     <option value="">Select Type</option>
                     @foreach ($vehicleTypes as $type)
-                        <option value="{{ $type->ID }}">{{ $type->Name }}</option>
+                        <option value="{{ $type->ID }}">{{ $type->Description }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="col-md-4">
                 <label for="FuelTypeID" class="form-label">Fuel Type</label>
-                <select class="form-select" name="FuelTypeID" required>
+                <select class="form-select" name="FuelTypeID" >
                     <option value="">Select Fuel</option>
                     @foreach ($fuelTypes as $fuel)
-                        <option value="{{ $fuel->ID }}">{{ $fuel->Name }}</option>
+                        <option value="{{ $fuel->ID }}">{{ $fuel->Description }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="col-md-4">
-                <label for="Make" class="form-label">Make</label>
-                <input type="text" class="form-control" name="Make">
+                <label for="make">Vehicle Make</label>
+                        <select class="form-control" id="make" name="Make" required>
+                            <option value="">-- Select Make --</option>
+                            @foreach($brands as $brand)
+                                <option value="{{ $brand->Id }}" {{ old('Make') == $brand->Id ? 'selected' : '' }}>
+                                    {{ $brand->BrandName }}
+                                </option>
+                            @endforeach
+                        </select>
             </div>
 
             <div class="col-md-4">
-                <label for="Model" class="form-label">Model</label>
-                <input type="text" class="form-control" name="Model">
+                <label for="model">Vehicle Model</label>
+                        <select class="form-control" id="model" name="Model" required>
+                            <option value="">-- Select Model --</option>
+                            @foreach($fleetModels as $model)
+                                <option value="{{ $model->Id }}" {{ old('Model') == $model->Id ? 'selected' : '' }}>
+                                    {{ $model->ModelName }}
+                                </option>
+                            @endforeach
+                        </select>
             </div>
 
             <div class="col-md-4">

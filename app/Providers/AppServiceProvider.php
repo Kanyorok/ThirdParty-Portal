@@ -346,6 +346,10 @@ class AppServiceProvider extends ServiceProvider
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+
+            //Fleet Management
+            FleetMake::getPrimaryKey() => FleetMake::class,
+            FleetModel::getPrimaryKey() => FleetModel::class,
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -402,6 +406,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
         Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
         Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
+        Gate::policy(FleetMake::class, FleetMakePolicy::class);
+        Gate::policy(FleetModel::class, FleetModelPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

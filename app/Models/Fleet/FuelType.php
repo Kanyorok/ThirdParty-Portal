@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FuelType extends Model
 {
     protected $table = 't_FuelTypes';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'Id';
     public $timestamps = false;
-    protected $fillable = ['Name', 'IsActive'];
+    protected $fillable = ['FuelName', 'IsActive', 'FuelTypeCode', 'Description', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'];
 }

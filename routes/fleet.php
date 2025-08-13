@@ -38,6 +38,8 @@ use App\Http\Controllers\Fleet\FleetGpsController;
 use App\Http\Controllers\Fleet\FleetTelematicsDeviceController;
 use App\Http\Controllers\Fleet\FleetInsuranceTrackerController;
 use App\Http\Controllers\Fleet\FleetInspectionScheduleController;
+use App\Http\Controllers\FleetManagement\FuelTypeController;
+
 
 
 Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
@@ -84,6 +86,17 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::delete('/vehicle-registry/{Id}', [VehicleManagementController::class, 'destroy'])->name('vehicle-registry.destroy');
 
 
+    //Route::resource('fueltypes', FuelTypeController::class);
+
+    Route::get('/fueltypes', [FuelTypeController::class, 'index'])->name('fueltypes.index');
+    Route::get('/fueltypes/create', [FuelTypeController::class, 'create'])->name('fueltypes.create');
+    Route::post('/fueltypes', [FuelTypeController::class, 'store'])->name('fueltypes.store');
+    Route::get('/fueltypes/{Id}', [FuelTypeController::class, 'show'])->name('fueltypes.show');
+    Route::get('/fueltypes/{Id}/edit', [FuelTypeController::class, 'edit'])->name('fueltypes.edit');
+    Route::put('/fueltypes/{Id}', [FuelTypeController::class, 'update'])->name('fueltypes.update');
+    Route::delete('/fueltypes/{Id}', [FuelTypeController::class, 'destroy'])->name('fueltypes.destroy');
+
+
     Route::resource('complianceanddocumentation', ComplianceAndDocumentationController::class);
     Route::resource('fleetprocurementanddisposal', FleetProcurementAndDisposalController::class);
     Route::resource('inventoryofspareparts', InventoryOfSparePartsController::class);
@@ -91,180 +104,134 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::resource('reports', ReportsController::class);
     
 
-});
-Route::prefix('fleet/vehicles')->name('fleet.vehicles.')->middleware(['auth'])->group(function () {
-    Route::get('/', [VehicleController::class, 'index'])->name('index');              // List all vehicles
-    Route::get('/create', [VehicleController::class, 'create'])->name('create');      // Show registration form
-    Route::post('/store', [VehicleController::class, 'store'])->name('store');        // Save new vehicle
-    Route::get('/edit/{id}', [VehicleController::class, 'edit'])->name('edit');       // Show edit form
-    Route::put('/update/{id}', [VehicleController::class, 'update'])->name('update'); // Update vehicle
-    Route::delete('/{id}/deactivate', [VehicleController::class, 'deactivate'])->name('deactivate'); // Soft delete
+        });
+        // ==================== Fleet Vehicles ====================
+        Route::get('/fleet/vehicles', [VehicleController::class, 'index'])->name('fleet.vehicles.index')->middleware('auth');
+        Route::get('/fleet/vehicles/create', [VehicleController::class, 'create'])->name('fleet.vehicles.create')->middleware('auth');
+        Route::post('/fleet/vehicles', [VehicleController::class, 'store'])->name('fleet.vehicles.store')->middleware('auth');
+        Route::get('/fleet/vehicles/{Id}/edit', [VehicleController::class, 'edit'])->name('fleet.vehicles.edit')->middleware('auth');
+        Route::put('/fleet/vehicles/{Id}', [VehicleController::class, 'update'])->name('fleet.vehicles.update')->middleware('auth');
+        Route::delete('/fleet/vehicles/{Id}/deactivate', [VehicleController::class, 'deactivate'])->name('fleet.vehicles.deactivate')->middleware('auth');
 
+        // ==================== Fleet Vehicle Assignments ====================
+        Route::get('/fleet/assignments', [FleetVehicleAssignmentController::class, 'index'])->name('fleet.assignments.index')->middleware('auth');
+        Route::get('/fleet/assignments/create', [FleetVehicleAssignmentController::class, 'create'])->name('fleet.assignments.create')->middleware('auth');
+        Route::post('/fleet/assignments', [FleetVehicleAssignmentController::class, 'store'])->name('fleet.assignments.store')->middleware('auth');
 
-});
+        // ==================== Fleet Vehicle Documents ====================
+        Route::get('/fleet/documents', [VehicleDocumentController::class, 'index'])->name('fleet.documents.index')->middleware('auth');
+        Route::get('/fleet/documents/create', [VehicleDocumentController::class, 'create'])->name('fleet.documents.create')->middleware('auth');
+        Route::post('/fleet/documents', [VehicleDocumentController::class, 'store'])->name('fleet.documents.store')->middleware('auth');
 
-Route::prefix('fleet/assignments')->name('fleet.assignments.')->middleware('auth')->group(function () {
-    Route::get('/', [FleetVehicleAssignmentController::class, 'index'])->name('index');
-    Route::get('/create', [FleetVehicleAssignmentController::class, 'create'])->name('create');
-    Route::post('/store', [FleetVehicleAssignmentController::class, 'store'])->name('store');
-});
+        // ==================== Fleet Drivers ====================
+        Route::get('/fleet/drivers', [FleetDriverController::class, 'index'])->name('fleet.drivers.index');
+        Route::get('/fleet/drivers/create', [FleetDriverController::class, 'create'])->name('fleet.drivers.create');
+        Route::post('/fleet/drivers', [FleetDriverController::class, 'store'])->name('fleet.drivers.store');
+        Route::get('/fleet/drivers/{Id}/edit', [FleetDriverController::class, 'edit'])->name('fleet.drivers.edit');
+        Route::get('/fleet/drivers/{Id}', [FleetDriverController::class, 'show'])->name('fleet.drivers.show');
+        Route::put('/fleet/drivers/{Id}', [FleetDriverController::class, 'update'])->name('fleet.drivers.update');
+        Route::put('/fleet/drivers/{Id}/deactivate', [FleetDriverController::class, 'deactivate'])->name('fleet.drivers.deactivate');
 
-Route::prefix('fleet/documents')->name('fleet.documents.')->middleware(['auth'])->group(function () {
-    Route::get('/', [VehicleDocumentController::class, 'index'])->name('index');
-    Route::get('/create', [VehicleDocumentController::class, 'create'])->name('create');
-    Route::post('/store', [VehicleDocumentController::class, 'store'])->name('store');
-});
+        // ==================== Fleet Driver Assignments ====================
+        Route::get('/fleet/driver-assignments', [FleetDriverAssignmentController::class, 'index'])->name('fleet.driver_assignments.index');
+        Route::get('/fleet/driver-assignments/create', [FleetDriverAssignmentController::class, 'create'])->name('fleet.driver_assignments.create');
+        Route::post('/fleet/driver-assignments', [FleetDriverAssignmentController::class, 'store'])->name('fleet.driver_assignments.store');
 
+        // ==================== Fleet Driver License Tracking ====================
+        Route::get('/fleet/drivers/{driver}/licenses', [FleetDriverLicenseTrackingController::class, 'index'])->name('fleet.licenses.index');
+        Route::get('/fleet/drivers/{driver}/licenses/create', [FleetDriverLicenseTrackingController::class, 'create'])->name('fleet.licenses.create');
+        Route::post('/fleet/licenses', [FleetDriverLicenseTrackingController::class, 'store'])->name('fleet.licenses.store');
 
-Route::prefix('fleet')->name('fleet.')->group(function () {
-    // Driver CRUD
-    Route::get('drivers', [FleetDriverController::class, 'index'])->name('drivers.index');
-    Route::get('drivers/create', [FleetDriverController::class, 'create'])->name('drivers.create');
-    Route::post('drivers', [FleetDriverController::class, 'store'])->name('drivers.store');
-    Route::get('drivers/{id}/edit', [FleetDriverController::class, 'edit'])->name('drivers.edit');
-    Route::get('drivers/{id}', [FleetDriverController::class, 'show'])->name('drivers.show');
-    Route::put('drivers/{id}', [FleetDriverController::class, 'update'])->name('drivers.update');
-    Route::put('drivers/{id}/deactivate', [FleetDriverController::class, 'deactivate'])->name('drivers.deactivate');
-});
+        // ==================== Contracted Drivers ====================
+        Route::get('/fleet/contracted-drivers', [ContractedDriverController::class, 'index'])->name('fleet.contracted_drivers.index');
+        Route::get('/fleet/contracted-drivers/create', [ContractedDriverController::class, 'create'])->name('fleet.contracted_drivers.create');
+        Route::post('/fleet/contracted-drivers', [ContractedDriverController::class, 'store'])->name('fleet.contracted_drivers.store');
+        Route::get('/fleet/contracted-drivers/{Id}/edit', [ContractedDriverController::class, 'edit'])->name('fleet.contracted_drivers.edit');
+        Route::get('/fleet/contracted-drivers/{Id}', [ContractedDriverController::class, 'show'])->name('fleet.contracted_drivers.show');
+        Route::put('/fleet/contracted-drivers/{Id}', [ContractedDriverController::class, 'update'])->name('fleet.contracted_drivers.update');
+        Route::put('/fleet/contracted-drivers/{Id}/deactivate', [ContractedDriverController::class, 'deactivate'])->name('fleet.contracted_drivers.deactivate');
 
-Route::prefix('fleet')->name('fleet.')->group(function () {
-    Route::get('driver-assignments', [FleetDriverAssignmentController::class, 'index'])->name('driver_assignments.index');
-    Route::get('driver-assignments/create', [FleetDriverAssignmentController::class, 'create'])->name('driver_assignments.create');
-    Route::post('driver-assignments/store', [FleetDriverAssignmentController::class, 'store'])->name('driver_assignments.store');
-});
+        // ==================== Contracted Driver Licenses ====================
+        Route::get('/fleet/contracted-drivers/{driverId}/licenses', [FleetContractedDriverLicenseTrackingController::class, 'index'])->name('fleet.contracted_driver_licenses.index');
+        Route::get('/fleet/contracted-drivers/{driverId}/licenses/create', [FleetContractedDriverLicenseTrackingController::class, 'create'])->name('fleet.contracted_driver_licenses.create');
+        Route::post('/fleet/contracted-drivers/{driverId}/licenses', [FleetContractedDriverLicenseTrackingController::class, 'store'])->name('fleet.contracted_driver_licenses.store');
 
-Route::prefix('fleet')->name('fleet.')->group(function () {
-    // License tracking
-    Route::get('drivers/{driver}/licenses', [FleetDriverLicenseTrackingController::class, 'index'])->name('licenses.index');
-    Route::get('drivers/{driver}/licenses/create', [FleetDriverLicenseTrackingController::class, 'create'])->name('licenses.create');
-    Route::post('licenses/store', [FleetDriverLicenseTrackingController::class, 'store'])->name('licenses.store');
-});
+        // ==================== Contracted Driver Assignments ====================
+        Route::get('/fleet/contracted-drivers/{driverId}/assignments', [FleetContractedDriverAssignmentController::class, 'index'])->name('fleet.contracted_driver_assignments.index');
+        Route::get('/fleet/contracted-drivers/{driverId}/assignments/create', [FleetContractedDriverAssignmentController::class, 'create'])->name('fleet.contracted_driver_assignments.create');
+        Route::post('/fleet/contracted-drivers/{driverId}/assignments', [FleetContractedDriverAssignmentController::class, 'store'])->name('fleet.contracted_driver_assignments.store');
 
+        // ==================== Trip Logs ====================
+        Route::get('/fleet/trip-logs', [FleetTripLogController::class, 'index'])->name('fleet.trip_logs.index');
+        Route::get('/fleet/trip-logs/create', [FleetTripLogController::class, 'create'])->name('fleet.trip_logs.create');
+        Route::post('/fleet/trip-logs', [FleetTripLogController::class, 'store'])->name('fleet.trip_logs.store');
 
+        // ==================== Route Planner ====================
+        Route::get('/fleet/route-planner', [FleetRoutePlannerController::class, 'index'])->name('fleet.route_planner.index');
+        Route::get('/fleet/route-planner/create', [FleetRoutePlannerController::class, 'create'])->name('fleet.route_planner.create');
+        Route::post('/fleet/route-planner', [FleetRoutePlannerController::class, 'store'])->name('fleet.route_planner.store');
 
-Route::prefix('fleet')->name('fleet.')->group(function () {
-    // Contracted Drivers
-    Route::get('contracted-drivers', [ContractedDriverController::class, 'index'])->name('contracted_drivers.index');
-    Route::get('contracted-drivers/create', [ContractedDriverController::class, 'create'])->name('contracted_drivers.create');
-    Route::post('contracted-drivers/store', [ContractedDriverController::class, 'store'])->name('contracted_drivers.store');
-    Route::get('contracted-drivers/{id}/edit', [ContractedDriverController::class, 'edit'])->name('contracted_drivers.edit');
-    Route::get('contracted-drivers/{id}', [ContractedDriverController::class, 'show'])->name('contracted_drivers.show');
-    Route::put('contracted-drivers/{id}/update', [ContractedDriverController::class, 'update'])->name('contracted_drivers.update');
-    Route::put('contracted-drivers/{id}/deactivate', [ContractedDriverController::class, 'deactivate'])->name('contracted_drivers.deactivate');
-});
+        // ==================== Fuel Logs ====================
+        Route::get('/fleet/fuel-logs', [FleetFuelLogController::class, 'index'])->name('fleet.fuel_logs.index');
+        Route::get('/fleet/fuel-logs/create', [FleetFuelLogController::class, 'create'])->name('fleet.fuel_logs.create');
+        Route::post('/fleet/fuel-logs', [FleetFuelLogController::class, 'store'])->name('fleet.fuel_logs.store');
 
+        // ==================== Vehicle Requests ====================
+        Route::get('/fleet/vehicle-requests', [FleetVehicleRequestController::class, 'index'])->name('fleet.vehicle_requests.index');
+        Route::get('/fleet/vehicle-requests/create', [FleetVehicleRequestController::class, 'create'])->name('fleet.vehicle_requests.create');
+        Route::post('/fleet/vehicle-requests', [FleetVehicleRequestController::class, 'store'])->name('fleet.vehicle_requests.store');
+        Route::get('/fleet/vehicle-requests/{Id}/approve', [FleetVehicleRequestController::class, 'approveForm'])->name('fleet.vehicle_requests.approve.form');
+        Route::post('/fleet/vehicle-requests/{Id}/approve', [FleetVehicleRequestController::class, 'approve'])->name('fleet.vehicle_requests.approve');
+        Route::put('/fleet/vehicle-requests/{Id}/cancel', [FleetVehicleRequestController::class, 'cancel'])->name('fleet.vehicle_requests.cancel');
 
-Route::prefix('fleet/contracted-drivers/{driverId}/licenses')->name('fleet.contracted_driver_licenses.')->group(function () {
-    Route::get('/', [FleetContractedDriverLicenseTrackingController::class, 'index'])->name('index');
-    Route::get('create', [FleetContractedDriverLicenseTrackingController::class, 'create'])->name('create');
-    Route::post('/', [FleetContractedDriverLicenseTrackingController::class, 'store'])->name('store');
-});
+        // ==================== Maintenance Schedule ====================
+        Route::get('/fleet/maintenance-schedule', [FleetMaintenanceScheduleController::class, 'index'])->name('fleet.maintenance_schedule.index');
+        Route::get('/fleet/maintenance-schedule/create', [FleetMaintenanceScheduleController::class, 'create'])->name('fleet.maintenance_schedule.create');
+        Route::post('/fleet/maintenance-schedule', [FleetMaintenanceScheduleController::class, 'store'])->name('fleet.maintenance_schedule.store');
+        Route::get('/fleet/maintenance-schedule/{Id}/edit', [FleetMaintenanceScheduleController::class, 'edit'])->name('fleet.maintenance_schedule.edit');
+        Route::put('/fleet/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'update'])->name('fleet.maintenance_schedule.update');
+        Route::put('/fleet/maintenance-schedule/{Id}/cancel', [FleetMaintenanceScheduleController::class, 'cancel'])->name('fleet.maintenance_schedule.cancel');
 
-Route::prefix('fleet/contracted-drivers/{driverId}/assignments')
-    ->name('fleet.contracted_driver_assignments.')
-    ->group(function () {
-        Route::get('/', [FleetContractedDriverAssignmentController::class, 'index'])->name('index');
-        Route::get('create', [FleetContractedDriverAssignmentController::class, 'create'])->name('create');
-        Route::post('/', [FleetContractedDriverAssignmentController::class, 'store'])->name('store');
-    });
+        // ==================== Repair Logs ====================
+        Route::get('/fleet/repair-logs', [FleetRepairLogController::class, 'index'])->name('fleet.repair_logs.index');
+        Route::get('/fleet/repair-logs/create', [FleetRepairLogController::class, 'create'])->name('fleet.repair_logs.create');
+        Route::post('/fleet/repair-logs', [FleetRepairLogController::class, 'store'])->name('fleet.repair_logs.store');
+        Route::get('/fleet/repair-logs/{Id}/edit', [FleetRepairLogController::class, 'edit'])->name('fleet.repair_logs.edit');
+        Route::put('/fleet/repair-logs/{Id}', [FleetRepairLogController::class, 'update'])->name('fleet.repair_logs.update');
+        Route::get('/fleet/repair-logs/{Id}/show', [FleetRepairLogController::class, 'show'])->name('fleet.repair_logs.show');
 
-    Route::prefix('fleet')->name('fleet.')->group(function () {
-    Route::get('trip-logs', [FleetTripLogController::class, 'index'])->name('trip_logs.index');
-    Route::get('trip-logs/create', [FleetTripLogController::class, 'create'])->name('trip_logs.create');
-    Route::post('trip-logs/store', [FleetTripLogController::class, 'store'])->name('trip_logs.store');
-});
+        // ==================== Service Alerts ====================
+        Route::get('/fleet/service-alerts', [FleetServiceAlertController::class, 'index'])->name('fleet.alerts.index');
+        Route::put('/fleet/service-alerts/{Id}/acknowledge', [FleetServiceAlertController::class, 'acknowledge'])->name('fleet.alerts.acknowledge');
 
-Route::prefix('fleet')->name('fleet.')->group(function () {
-    Route::get('route-planner', [FleetRoutePlannerController::class, 'index'])->name('route_planner.index');
-    Route::get('route-planner/create', [FleetRoutePlannerController::class, 'create'])->name('route_planner.create');
-    Route::post('route-planner/store', [FleetRoutePlannerController::class, 'store'])->name('route_planner.store');
-});
+        // ==================== Alert Rules ====================
+        Route::get('/fleet/alert-rules', [FleetAlertRuleController::class, 'index'])->name('fleet.alert_rules.index');
+        Route::get('/fleet/alert-rules/create', [FleetAlertRuleController::class, 'create'])->name('fleet.alert_rules.create');
+        Route::post('/fleet/alert-rules', [FleetAlertRuleController::class, 'store'])->name('fleet.alert_rules.store');
+        Route::get('/fleet/alert-rules/{Id}/edit', [FleetAlertRuleController::class, 'edit'])->name('fleet.alert_rules.edit');
+        Route::put('/fleet/alert-rules/{Id}', [FleetAlertRuleController::class, 'update'])->name('fleet.alert_rules.update');
+        Route::put('/fleet/alert-rules/{Id}/toggle', [FleetAlertRuleController::class, 'toggle'])->name('fleet.alert_rules.toggle');
 
-Route::prefix('fleet')->name('fleet.')->group(function () {
-    Route::prefix('fuel-logs')->name('fuel_logs.')->group(function () {
-        Route::get('/', [FleetFuelLogController::class, 'index'])->name('index');
-        Route::get('/create', [FleetFuelLogController::class, 'create'])->name('create');
-        Route::post('/store', [FleetFuelLogController::class, 'store'])->name('store');
-    });
-});
+        // ==================== Running Costs ====================
+        Route::get('/fleet/running-costs', [FleetRunningCostController::class, 'index'])->name('fleet.running_costs.index');
+        Route::get('/fleet/running-costs/create', [FleetRunningCostController::class, 'create'])->name('fleet.running_costs.create');
+        Route::post('/fleet/running-costs', [FleetRunningCostController::class, 'store'])->name('fleet.running_costs.store');
 
-Route::prefix('fleet')->name('fleet.')->group(function () {
-    Route::prefix('vehicle-requests')->name('vehicle_requests.')->group(function () {
-        Route::get('/', [FleetVehicleRequestController::class, 'index'])->name('index');
-        Route::get('/create', [FleetVehicleRequestController::class, 'create'])->name('create');
-        Route::post('/store', [FleetVehicleRequestController::class, 'store'])->name('store');
+        // ==================== GPS ====================
+        Route::get('/fleet/gps/live', [FleetGpsController::class, 'liveDashboard'])->name('fleet.gps.live_dashboard')->middleware('auth');
+        Route::get('/fleet/gps/movement-history', [FleetGpsController::class, 'movementHistory'])->name('fleet.gps.movement_history')->middleware('auth');
 
-        Route::get('/{id}/approve', [FleetVehicleRequestController::class, 'approveForm'])->name('approve.form');
-        Route::post('/{id}/approve', [FleetVehicleRequestController::class, 'approve'])->name('approve');
-        Route::put('/{id}/cancel', [FleetVehicleRequestController::class, 'cancel'])->name('cancel');
-    });
-});
+        // ==================== Telematics ====================
+        Route::get('/fleet/telematics', [FleetTelematicsDeviceController::class, 'index'])->name('fleet.telematics.index')->middleware('auth');
+        Route::get('/fleet/telematics/create', [FleetTelematicsDeviceController::class, 'create'])->name('fleet.telematics.create')->middleware('auth');
+        Route::post('/fleet/telematics', [FleetTelematicsDeviceController::class, 'store'])->name('fleet.telematics.store')->middleware('auth');
 
-Route::prefix('fleet')->name('fleet.')->group(function () {
-    // Maintenance Schedule
-    Route::prefix('maintenance-schedule')->name('maintenance_schedule.')->group(function () {
-        Route::get('/', [FleetMaintenanceScheduleController::class, 'index'])->name('index');
-        Route::get('/create', [FleetMaintenanceScheduleController::class, 'create'])->name('create');
-        Route::post('/store', [FleetMaintenanceScheduleController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [FleetMaintenanceScheduleController::class, 'edit'])->name('edit');
-        Route::put('/{id}/update', [FleetMaintenanceScheduleController::class, 'update'])->name('update');
-        Route::put('/{id}/cancel', [FleetMaintenanceScheduleController::class, 'cancel'])->name('cancel');
-    });
-});
+        // ==================== Insurance Tracker ====================
+        Route::get('/fleet/insurance-tracker', [FleetInsuranceTrackerController::class, 'index'])->name('fleet.insurance_tracker.index')->middleware('auth');
+        Route::get('/fleet/insurance-tracker/create', [FleetInsuranceTrackerController::class, 'create'])->name('fleet.insurance_tracker.create')->middleware('auth');
+        Route::post('/fleet/insurance-tracker', [FleetInsuranceTrackerController::class, 'store'])->name('fleet.insurance_tracker.store')->middleware('auth');
 
-Route::prefix('fleet/repair-logs')->name('fleet.repair_logs.')->group(function () {
-    Route::get('/', [FleetRepairLogController::class, 'index'])->name('index');
-    Route::get('create', [FleetRepairLogController::class, 'create'])->name('create');
-    Route::post('store', [FleetRepairLogController::class, 'store'])->name('store');
-    Route::get('{id}/edit', [FleetRepairLogController::class, 'edit'])->name('edit');
-    Route::put('{id}/update', [FleetRepairLogController::class, 'update'])->name('update');
-    Route::get('{id}/show', [FleetRepairLogController::class, 'show'])->name('show');
-});
-
-Route::prefix('fleet/service-alerts')->name('fleet.alerts.')->group(function () {
-    Route::get('/', [FleetServiceAlertController::class, 'index'])->name('index');
-    Route::put('{id}/acknowledge', [FleetServiceAlertController::class, 'acknowledge'])->name('acknowledge');
-});
-
-Route::prefix('fleet/alert-rules')->name('fleet.alert_rules.')->group(function () {
-    Route::get('/', [FleetAlertRuleController::class, 'index'])->name('index');
-    Route::get('create', [FleetAlertRuleController::class, 'create'])->name('create');
-    Route::post('store', [FleetAlertRuleController::class, 'store'])->name('store');
-    Route::get('{id}/edit', [FleetAlertRuleController::class, 'edit'])->name('edit');
-    Route::put('{id}/update', [FleetAlertRuleController::class, 'update'])->name('update');
-    Route::put('{id}/toggle', [FleetAlertRuleController::class, 'toggle'])->name('toggle');
-});
-
-Route::prefix('fleet/running-costs')->name('fleet.running_costs.')->group(function () {
-    Route::get('/', [FleetRunningCostController::class, 'index'])->name('index');
-    Route::get('/create', [FleetRunningCostController::class, 'create'])->name('create');
-    Route::post('/store', [FleetRunningCostController::class, 'store'])->name('store');
-});
-
-
-Route::prefix('fleet/gps')->name('fleet.gps.')->middleware(['auth'])->group(function () {
-    Route::get('live', [FleetGpsController::class, 'liveDashboard'])->name('live_dashboard');
-    Route::get('movement-history', [FleetGpsController::class, 'movementHistory'])
-        ->name('movement_history');
-});
-
-
-Route::prefix('fleet/telematics')->name('fleet.telematics.')->middleware(['auth'])->group(function () {
-    Route::get('/', [FleetTelematicsDeviceController::class, 'index'])->name('index');          // List all devices
-    Route::get('/create', [FleetTelematicsDeviceController::class, 'create'])->name('create');  // Show add form
-    Route::post('/store', [FleetTelematicsDeviceController::class, 'store'])->name('store');    // Save new device
-});
-
-
-Route::prefix('fleet/insurance-tracker')->name('fleet.insurance_tracker.')->middleware(['auth'])->group(function () {
-    Route::get('/', [FleetInsuranceTrackerController::class, 'index'])->name('index');
-    Route::get('/create', [FleetInsuranceTrackerController::class, 'create'])->name('create');
-    Route::post('/store', [FleetInsuranceTrackerController::class, 'store'])->name('store');
-});
-
-
-Route::prefix('fleet/compliance')->name('fleet.inspection_schedule.')->group(function () {
-    Route::get('inspection-schedule', [FleetInspectionScheduleController::class, 'index'])->name('index');
-    Route::get('inspection-schedule/create', [FleetInspectionScheduleController::class, 'create'])->name('create');
-    Route::post('inspection-schedule', [FleetInspectionScheduleController::class, 'store'])->name('store');
-});
+        // ==================== Inspection Schedule ====================
+        Route::get('/fleet/compliance/inspection-schedule', [FleetInspectionScheduleController::class, 'index'])->name('fleet.inspection_schedule.index');
+        Route::get('/fleet/compliance/inspection-schedule/create', [FleetInspectionScheduleController::class, 'create'])->name('fleet.inspection_schedule.create');
+        Route::post('/fleet/compliance/inspection-schedule', [FleetInspectionScheduleController::class, 'store'])->name('fleet.inspection_schedule.store');
