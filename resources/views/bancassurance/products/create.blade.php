@@ -11,31 +11,33 @@
         <div class="mb-3">
             <label class="form-label">Insurance Provider</label>
             <select name="InsuranceProviderID" class="form-select" required>
-                <option value="">-- Select Provider --</option>
-                @foreach($providers as $id => $name)
-                    <option value="{{ $id }}">{{ $name }}</option>
-                @endforeach
+            <option value="">--Select a status--</option>
+              @foreach ($providers as $provider)
+                <option value="{{ $provider->Id }}">
+                  {{ $provider->InsuranceProviderNO }}
+                </option>
+              @endforeach
             </select>
+          </div>   
+          
+      <div class="mb-3">
+            <label class="form-label"> Name</label>
+            <input type="text" name="Name" class="form-control" required maxlength="150">
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Policy Type</label>
-            <select name="PolicyTypeID" class="form-select" required>
-                <option value="">-- Select Type --</option>
-                @foreach($policyTypes as $id => $desc)
-                    <option value="{{ $id }}">{{ $desc }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Product Name</label>
-            <input type="text" name="ProductName" class="form-control" required maxlength="150">
+          <div class="mb-3">
+            <label class="form-label">Type </label>
+            <input type="text" name="Type" class="form-control" required maxlength="150">
         </div>
 
         <div class="mb-3">
             <label class="form-label">Description</label>
             <textarea name="Description" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
+            <label class="form-check-label" for="primaryCheck">IsActive </label>
         </div>
 
         <button type="submit" class="btn btn-primary">💾 Save Product</button>

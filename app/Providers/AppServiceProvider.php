@@ -71,6 +71,8 @@ use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassurancePremiumPayments;
+use App\Models\Insurance\InsuranceProvider;
+use App\Models\Insurance\InsuranceProduct;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -125,6 +127,8 @@ use App\Policies\Insurance\BancassuranceCustomersPolicy;
 use App\Policies\Insurance\BancassuranceCustomersContactsPolicy;
 use App\Policies\Insurance\BancassuranceCustomersBeneficiariesPolicy;
 use App\Policies\Insurance\BancassurancePremiumPaymentsPolicy;
+use App\Policies\Insurance\InsuranceProviderPolicy;
+use App\Policies\Insurance\InsuranceProductPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
@@ -174,7 +178,6 @@ use Spatie\Permission\Models\Role;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\TaxJurisdiction;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -318,10 +321,9 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
             BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
             BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
+            InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
+            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,            
             
-            
-
-
             //Third Parties
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
@@ -386,7 +388,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BancassuranceCustomerContact::class, BancassuranceCustomersContactsPolicy::class);
         Gate::policy(BancassuranceBeneficiaries::class, BancassuranceCustomersBeneficiariesPolicy::class);
         Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
-
+        Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
+        Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

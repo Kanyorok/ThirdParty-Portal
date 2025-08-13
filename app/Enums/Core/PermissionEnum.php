@@ -455,6 +455,20 @@ enum PermissionEnum: string
     case BancassurancePremiumPaymentsUpdate = 'bancassurancepremiumpaymentsupdate';
     case BancassurancePremiumPaymentsDelete = 'bancassurancepremiumpaymentsdelete';
 
+
+// Insurance Provider
+    case InsuranceProviderView = 'insuranceproviderview';
+    case InsuranceProviderCreate = 'insuranceprovidercreate';
+    case InsuranceProviderUpdate = 'insuranceproviderupdate';
+    case InsuranceProviderDelete = 'insuranceproviderdelete';
+
+    // Insurance Product
+    case InsuranceProductView = 'insuranceproductview';
+    case InsuranceProductCreate = 'insuranceproductcreate';
+    case InsuranceProductUpdate = 'insuranceproductupdate';
+    case InsuranceProductDelete = 'insuranceproductdelete';
+
+
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -613,6 +627,9 @@ enum PermissionEnum: string
             [self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete],
             [self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete],
             [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
+            [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
+            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
+            
         ]);
     }
 
@@ -712,7 +729,10 @@ enum PermissionEnum: string
             self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete,
             self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete,
             self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete,
-            self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete
+            self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete,
+            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete,
+            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete,
+            
             =>ModulesEnum::Insurance,
 
 
@@ -827,9 +847,10 @@ enum PermissionEnum: string
             self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete => 'Insurance Customers Contacts',
             self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete => 'Insurance Customers Beneficiaries',
             self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete => 'Insurance Premium Payments',
-
-
-
+            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete => 'Insurance Provider ',
+            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete => 'Insurance Product ',
+            
+            
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',

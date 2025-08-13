@@ -167,16 +167,13 @@ Route::prefix('bancassurance/commissions')->name('bancassurance.commissions.')->
 });
 
 Route::prefix('bancassurance/insurers')->name('bancassurance.insurers.')->group(function () {
+    Route::get('/', [InsuranceProviderController::class, 'index'])->name('index');
     Route::get('create', [InsuranceProviderController::class, 'create'])->name('create');
     Route::post('store', [InsuranceProviderController::class, 'store'])->name('store');
-    Route::get('/', [InsuranceProviderController::class, 'index'])->name('index');
-    Route::get('{id}/edit', [InsuranceProviderController::class, 'edit'])->name('edit');
-    Route::put('{id}/update', [InsuranceProviderController::class, 'update'])->name('update');
-    Route::get('{id}/products', [InsuranceProviderController::class, 'viewProducts'])->name('products');
-
-            // View products for a provider
-    Route::get('{id}/products', [InsuranceProviderController::class, 'viewProducts'])->name('products');
-    // Detach product from provider (soft delete)
+    Route::get('{Id}/edit', [InsuranceProviderController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [InsuranceProviderController::class, 'update'])->name('update');
+    Route::get('{Id}/products', [InsuranceProviderController::class, 'viewProducts'])->name('products');
+    Route::delete('delete/{Id}', [InsuranceProviderController::class, 'destroy'])->name('destroy');
     Route::post('{providerId}/products/{productId}/detach', [InsuranceProviderController::class, 'detachProduct'])->name('products.detach');
 });
 
@@ -187,11 +184,11 @@ Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(
     Route::get('/', [InsuranceProductController::class, 'index'])->name('index');
     Route::get('create', [InsuranceProductController::class, 'create'])->name('create');
     Route::post('store', [InsuranceProductController::class, 'store'])->name('store');
-    Route::get('{id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
-    Route::put('{id}/update', [InsuranceProductController::class, 'update'])->name('update');
-    // Product Mapping to Insurers
-    Route::get('{id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
-    Route::post('{id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
+    Route::get('{Id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [InsuranceProductController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [InsuranceProductController::class, 'destroy'])->name('destroy');
+    // Route::get('{Id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
+    // Route::post('{Id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
 
 
 });
