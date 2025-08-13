@@ -57,7 +57,6 @@
                     @endforeach
                 </select>
             </div>
-
             <div class="col-md-6 mb-3">
                 <label class="form-label">Invoice Date</label>
                 <input type="date" name="InvoiceDate" class="form-control" required>
@@ -119,19 +118,57 @@
                 </div>
         --}}
         <hr>
- 
         <h5 class="mb-3">📤 Upload EDI File (Optional)</h5>
         <div class="mb-3">
             <input type="file" name="edi_file" class="form-control">
             <small class="form-text text-muted">Supports CSV/Excel import. Parse and map lines in controller.</small>
         </div>
- 
         <div class="mt-4">
             <button type="submit" class="btn btn-success">💾 Save Invoice</button>
         </div>
     </form>
 </div>
- 
+
+@endsection
+
+@section('scripts')
+<script>
+let lineIndex = 1;
+
+function addRow() {
+    const table = document.querySelector("#lineItemsTable tbody");
+    const row = `
+        <tr>
+            <td><input name="lines[${lineIndex}][Description]" class="form-control"></td>
+            <td><input name="lines[${lineIndex}][Quantity]" type="number" step="0.01" class="form-control" value="1"></td>
+            <td><input name="lines[${lineIndex}][UnitCost]" type="number" step="0.01" class="form-control"></td>
+            <td>
+                <select name="lines[${lineIndex}][TaxID]" class="form-control">
+                    <option value="">-- None --</option>
+                    <option value="1">VAT 16%</option>
+                    <option value="2">WHT 5%</option>
+                </select>
+            </td>
+            <td>
+                <select name="lines[${lineIndex}][GLAccountID]" class="form-control">
+                    <option value="5001">5001 - Office Supplies</option>
+                    <option value="5002">5002 - Admin Expenses</option>
+                </select>
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">🗑️</button>
+            </td>
+        </tr>
+    `;
+    table.insertAdjacentHTML("beforeend", row);
+    lineIndex++;
+}
+
+function removeRow(button) {
+    button.closest("tr").remove();
+}
+</script>
+
 @endsection
  
 @section('scripts')

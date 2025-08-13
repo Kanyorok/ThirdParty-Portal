@@ -1,58 +1,50 @@
 @extends('layouts.app')
-@section('title', 'Payment Voucher - Accounts Payable')
-@section('content')
-<div class="container mt-5">
-    <h2 class="mb-4">Payment Vouchers</h2>
-    <a href="{{ route('paymentvoucher.create') }}" class="btn btn-success mb-3">Create New Voucher</a>
+@section('title', 'Payment Vouchers')
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
+@section('content')
+<div class="card shadow p-4 rounded-4">
+    <h4 class="mb-4">📋 Payment Vouchers List</h4>
+   <div class="mb-2 d-flex justify-content-between">
+   <a href="{{ route('paymentvoucher.create') }}" class="btn btn-success">➕ Add Voucher</a>
+   </div>
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
             <tr>
                 <th>Voucher No</th>
-                <th>Date</th>
-                <th>Payee</th>
+                <th>Supplier</th>
+                <th>Invoice Ref</th>
                 <th>Amount</th>
-                <th>Payment Mode</th>
-                <th>Remarks</th>
-                <th>Actions</th>
+                <th>Status</th>
+                <th>Scheduled</th>
+                <th>Created On</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
-            <!-- Static rows -->
             <tr>
-                <td>PV001</td>
-                <td>2025-05-01</td>
+                <td>VCH-2025-0001</td>
                 <td>ABC Suppliers Ltd</td>
-                <td>10,000.00</td>
-                <td>Bank Transfer</td>
-                <td>Office supplies</td>
+                <td>INV-2025-0145</td>
+                <td>KES 100,000.00</td>
+                <td><span class="badge bg-warning">Pending</span></td>
+                <td><span class="badge bg-info">No</span></td>
+                <td>2025-07-28</td>
                 <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <button class="btn btn-sm btn-danger" onclick="alert('Static data - delete action disabled')">Delete</button>
+                    <a href="#" class="btn btn-sm btn-primary">View</a>
+                    <a href="#" class="btn btn-sm btn-success">Process Payment</a>
                 </td>
             </tr>
             <tr>
-                <td>PV002</td>
-                <td>2025-05-03</td>
-                <td>XYZ Transport</td>
-                <td>2,500.00</td>
-                <td>Cheque</td>
-                <td>Logistics payment</td>
+                <td>VCH-2025-0002</td>
+                <td>XYZ Traders</td>
+                <td>INV-2025-0148</td>
+                <td>KES 75,000.00</td>
+                <td><span class="badge bg-success">Approved</span></td>
+                <td><span class="badge bg-info">Yes</span></td>
+                <td>2025-07-27</td>
                 <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <button class="btn btn-sm btn-danger" onclick="alert('Static data - delete action disabled')">Delete</button>
-                </td>
-            </tr>
-            <tr>
-                <td>PV003</td>
-                <td>2025-05-06</td>
-                <td>Jane Wanjiru</td>
-                <td>800.00</td>
-                <td>Mobile Money</td>
-                <td>Reimbursement</td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <button class="btn btn-sm btn-danger" onclick="alert('Static data - delete action disabled')">Delete</button>
+                    <a href="#" class="btn btn-sm btn-primary">View</a>
+                    <a href="#" class="btn btn-sm btn-success">Process Payment</a>
                 </td>
             </tr>
         </tbody>

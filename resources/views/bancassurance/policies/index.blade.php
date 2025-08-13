@@ -1,0 +1,84 @@
+@extends('layouts.app')
+@section('title', 'Policy Proposals')
+
+@section('content')
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>📄 Policy Proposals</h4>
+        <a href="{{ route('bancassurance.policies.create') }}" class="btn btn-primary">
+            ➕ New Proposal
+        </a>
+    </div>
+
+    <!-- 🔍 Filter Section -->
+    <form method="GET" class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="">-- All --</option>
+                <option value="Proposal" {{ request('status') == 'Proposal' ? 'selected' : '' }}>Proposal</option>
+                <option value="Issued" {{ request('status') == 'Issued' ? 'selected' : '' }}>Issued</option>
+                <option value="Cancelled" {{ request('status') == 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">From (Start Date)</label>
+            <input type="date" name="from" value="{{ request('from') }}" class="form-control">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">To (Start Date)</label>
+            <input type="date" name="to" value="{{ request('to') }}" class="form-control">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Customer</label>
+            <input type="text" name="customer" value="{{ request('customer') }}" class="form-control" placeholder="e.g. John Doe">
+        </div>
+
+        <div class="col-12 text-end">
+            <button class="btn btn-secondary">🔍 Filter</button>
+            <a href="{{ route('bancassurance.policies.index') }}" class="btn btn-outline-dark">♻️ Reset</a>
+        </div>
+    </form>
+
+    <!-- 📋 Policy Table -->
+    <table class="table table-striped table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Insurer</th>
+                <th>Sum Assured</th>
+                <th>Premium</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($policies as $index => $policy)
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $policy->CustomerName }}</td>
+                    <td>{{ $policy->ProductName }}</td>
+                    <td>{{ $policy->InsurerName ?? '—' }}</td>
+                    <td>{{ number_format($policy->SumAssured, 2) }}</td>
+                    <td>{{ number_format($policy->PremiumAmount, 2) }}</td>
+                    <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d-M-Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d-M-Y') }}</td>
+                    <td><span class="badge bg-info text-dark">{{ $policy->Status }}</span></td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="9" class="text-center text-muted">No policy proposals found.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+</div>
+@endsection
