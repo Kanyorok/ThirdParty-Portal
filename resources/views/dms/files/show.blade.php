@@ -168,7 +168,9 @@
         </div>
         <div class="col-md-8 col-xxl-9">
             <div class="card ">
-                @if($checkedOut)
+                @if($legalHold)
+                    <div class="ribbon ribbon-top-left ribbon-danger"><span>Legal Hold</span></div>
+                @elseif($checkedOut)
                     <div class="ribbon ribbon-top-left ribbon-info"><span>Checked Out</span></div>
                 @endif
                 <div class="card-body" style="min-height: 100px" id="FilePreviewPage">

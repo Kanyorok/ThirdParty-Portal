@@ -58,6 +58,7 @@ use App\Models\DMS\DocumentRelation;
 use App\Models\DMS\DocumentTags;
 use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
+use App\Models\DMS\LegalHold;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
@@ -102,6 +103,7 @@ use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
 use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
+use App\Policies\DMS\LegalHoldPolicy;
 use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
@@ -164,6 +166,8 @@ class AppServiceProvider extends ServiceProvider
 
             //Core
             SpecialPermission::getPrimaryKey() => SpecialPermission::class,
+            ModelRole::getPrimaryKey() => ModelRole::class,
+            'RoleId' => Role::class,
             APICredential::getPrimaryKey() => APICredential::class,
             Comment::getPrimaryKey() => Comment::class,
             Report::getPrimaryKey() => Report::class,
@@ -225,7 +229,7 @@ class AppServiceProvider extends ServiceProvider
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
-            ModelRole::getPrimaryKey() => ModelRole::class,
+
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -301,6 +305,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Repository::class, RepositoryPolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(DMSTags::class, DMSTagPolicy::class);
+        Gate::policy(LegalHold::class, LegalHoldPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);

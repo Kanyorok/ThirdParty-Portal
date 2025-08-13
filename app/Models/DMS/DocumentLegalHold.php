@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DocumentTags extends Pivot
+class DocumentLegalHold extends Pivot
 {
     use SoftDeletes, UserActorTrait;
 
@@ -15,27 +15,26 @@ class DocumentTags extends Pivot
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_DocumentTags';
+    protected $table = 't_DocumentLegalHolds';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'DocId', 'TagId',
-        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        'DocId', 'LegalHoldId',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
-
 
     public static function getPrimaryKey(): string
     {
-        return 'DocumentTag';
-    }
-
-    public function tag(): BelongsTo
-    {
-        return $this->belongsTo(DMSTags::class, 'TagId', 'Id');
+        return 'DocumentLegalHoldId';
     }
 
     public function document(): BelongsTo
     {
         return $this->belongsTo(Document::class, 'DocId');
+    }
+
+    public function hold(): BelongsTo
+    {
+        return $this->belongsTo(LegalHold::class, 'LegalHoldId');
     }
 }

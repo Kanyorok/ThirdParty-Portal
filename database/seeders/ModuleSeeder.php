@@ -27,7 +27,7 @@ class ModuleSeeder extends Seeder
         $this->_seed($this->_inventory($fresh));
         $this->_seed($this->_propertyManagement($fresh));
         $this->_seed($this->_fleetManagement($fresh));
-        $this->_seed($this->_documentManagement($fresh));
+        $this->_seed($this->_dms($fresh));
         $this->_seed($this->_legal($fresh));
         $this->_seed($this->_insurance($fresh));
         $this->_seed($this->_hrm($fresh));
@@ -427,7 +427,7 @@ class ModuleSeeder extends Seeder
         return $data;
     }
 
-    protected function _documentManagement(bool $fresh): Collection
+    protected function _dms(bool $fresh): Collection
     {
         $values = collect([
             ['ModuleID' => 700000, 'Name' => ModulesEnum::DMS->description(), 'Icon' => '<i data-feather="file-text"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
@@ -435,6 +435,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 702000, 'Name' => 'Repository', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.index'],
             ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'file-tags.index'],
             ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'files.upload'],
+            ['ModuleID' => 705000, 'Name' => 'Legal Hold', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'legal-hold.index'],
 
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);

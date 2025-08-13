@@ -8,6 +8,7 @@ use App\Enums\Core\RoleEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Enums\DMS\DisksEnum;
 use App\Enums\DMS\DocumentCheckOutStatusEnum;
+use App\Enums\DMS\LegalHoldStatusEnum;
 use App\Events\DMS\DocumentUploadedEvent;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
@@ -208,10 +209,13 @@ class DocumentService extends PermissionsService
      */
     public function checkout(User $actor, string $remark = ''): static
     {
+        if ($this->isHold()) {
+            throw new ErroredException('document is on legal hold !');
+        }
+
         if ($this->isCheckedOut()) {
             throw new ErroredException('document is already checked out !');
         }
-
         try {
             return DB::transaction(function () use ($actor, $remark) {
                 $date = now();
@@ -234,6 +238,17 @@ class DocumentService extends PermissionsService
         throw new ErroredException('checking out document failed');
     }
 
+    public function isHold(): bool
+    {
+        return $this->document->holds()->where('Status', LegalHoldStatusEnum::Active->value)->exists();
+    }
+
+    /**
+     * 0. Not checked out
+     * 1. checked out.
+     * 3. @param User|null $actor checked out
+     * @return int
+     */
     public function isCheckedOut(User $actor = null): int
     {
         if (!$this->type->canCheckOut()) {
@@ -243,10 +258,13 @@ class DocumentService extends PermissionsService
             return $this->document->checkouts()->where('Status', DocumentCheckOutStatusEnum::CheckOut->value)->exists() ? 1 : 0;
         }
 
-        $checkOut = $this->document->checkouts()->where('Status', DocumentCheckOutStatusEnum::CheckOut->value)->where('t_DocumentCheckOuts.CreatedBy', $actor->Id)->first();
-        if ($checkOut instanceof DocumentCheckOut) {
+        /*$checkOut =*/
+        if ($this->document->checkouts()->where('Status', DocumentCheckOutStatusEnum::CheckOut->value)->where('t_DocumentCheckOuts.CreatedBy', $actor->Id)->exists()) {
             return 2;
         }
+        /*if ($checkOut instanceof DocumentCheckOut) {
+            return 2;
+        }*/
 
         return $this->isCheckedOut();
     }
@@ -256,6 +274,9 @@ class DocumentService extends PermissionsService
      */
     public function checkin(UploadedFile $file, User $actor, string $remark = ''): static
     {
+        if ($this->isHold()) {
+            throw new ErroredException('document is on legal hold !');
+        }
         $checkOut = $this->document->checkouts()->where('Status', DocumentCheckOutStatusEnum::CheckOut->value)->where('t_DocumentCheckOuts.CreatedBy', $actor->Id)->first();
         if (!$checkOut instanceof DocumentCheckOut) {
             throw new ErroredException('you don\'t have an active checkout for this document.');
@@ -406,13 +427,13 @@ class DocumentService extends PermissionsService
 
     public function tags(User $user): BelongsToMany
     {
-        return $this->document->tags()->where(function (Builder $query) use ($user) {
+        return $this->document->tags()->user($user);/*->where(function (Builder $query) use ($user) {
             $query->where('Visibility', VisibilityEnum::Public->value)
                 ->orWhere(function (Builder $query) use ($user) {
                     $query->where('Visibility', VisibilityEnum::Private->value)
                         ->where('t_DMSTags.CreatedBy', $user->Id);
                 });
-        });
+        });*/
     }
 
     public function users(): Builder

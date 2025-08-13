@@ -74,6 +74,13 @@ class Document extends Model implements SpecialPermissionContract
             ->using(DocumentTags::class);
     }
 
+    public function holds(): BelongsToMany
+    {
+        return $this->belongsToMany(LegalHold::class, 't_DocumentLegalHolds', 'DocId', 'LegalHoldId', $this->primaryKey, 'Id')
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->whereNull('t_DocumentLegalHolds.DeletedOn')
+            ->using(DocumentLegalHold::class);
+    }
+
     public function relations(): MorphMany
     {
         return $this->morphMany(DocumentRelation::class, 'related', "Related", "RelatedID", 'Id');

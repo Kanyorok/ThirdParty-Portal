@@ -62,13 +62,20 @@ class DocumentController extends Controller
         if ($lock->get()) {
             activity()->causedBy($actor)->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
         }
-        $service = new DocumentService($document);
-        $checkedOut = $service->isCheckedOut($actor);
-        $checkIn = ($checkedOut === 2);//check user.
+        //
 
-        return view('dms.files.show', compact('checkIn'))->with('repoService', new RepositoryService($repository))
+        //checked out.
+        $service = new DocumentService($document);
+        $legalHold = $service->isHold();
+        $checkedOut = ($legalHold) ? 0 : $service->isCheckedOut($actor);
+
+
+        return view('dms.files.show')
+            ->with('repoService', new RepositoryService($repository))
             ->with('tags', $service->tags($actor)->get())
             ->with('file', $document)
+            ->with('legalHold', $legalHold)
+            ->with('checkIn', ($checkedOut === 2))
             ->with('checkedOut', ($checkedOut !== 0));
     }
 
