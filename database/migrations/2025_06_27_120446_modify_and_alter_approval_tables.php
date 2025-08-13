@@ -73,6 +73,7 @@ return new class extends Migration {
             $table->id('Id');
             $table->string("Source")->comment('PrimaryKey');
             $table->string("SourceID", 100);
+            $table->string("Stage", 200);
             $table->longText('Notes')->nullable();
             $table->foreignId('StatusId')->constrained('t_CodeDetails', 'ID');//todo add submitted default for this
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
