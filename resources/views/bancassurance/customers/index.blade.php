@@ -1,29 +1,12 @@
 @extends('layouts.app')
 @section('title', 'Customer List')
-
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
     <h4 class="mb-3">👥 Registered Customers</h4>
-
-    <!-- 🔍 Search Filter Form -->
-    <form method="GET" action="{{ route('bancassurance.customers.index') }}" class="row mb-3">
-        <div class="col-md-3">
-            <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search name, ID or phone">
-        </div>
-        <div class="col-md-2">
-            <button class="btn btn-outline-primary" type="submit">
-                🔍 Filter
-            </button>
-        </div>
-    </form>
-
-    <!-- ✅ Feedback -->
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    <!-- 📋 Customer Table -->
-    <table class="table table-bordered table-hover">
+    <table id="Customerregistry" class="table table-bordered table-hover">
         <thead>
             <tr>
                 <th>#</th>
@@ -41,15 +24,13 @@
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $customer->FullName }}</td>
                     <td>{{ $customer->NationalID }}</td>
-                    <td>{{ $customer->Phone }}</td>
+                    <td>{{ $customer->PhoneNumber }}</td>
                     <td>{{ $customer->Email }}</td>
                     <td>{{ $customer->DateOfBirth }}</td>
                     <td>
-                        <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" class="btn btn-sm btn-info">📄 View Portfolio</a>
-                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}" class="btn btn-sm btn-secondary">
-    🕓 Communication History
-</a>
-                        <a href="{{ route('bancassurance.customers.beneficiaries.create', $customer->Id) }}" class="btn btn-sm btn-primary">➕ Add Beneficiary</a>
+                        <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" class="btn btn-sm btn-info">📄 View Portfolio</a> 
+                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}" class="btn btn-sm btn-secondary">🕓 Communication History</a>
+                        <a href="{{ route('bancassurance.customers.beneficiaries.create') }}" class="btn btn-sm btn-primary">➕ Add Beneficiary</a>
                     </td>
                 </tr>
             @empty
@@ -60,4 +41,17 @@
         </tbody>
     </table>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#Customerregistry').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

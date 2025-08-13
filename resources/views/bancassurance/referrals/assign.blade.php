@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Assign Referrals')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 
 @section('content')
 <div class="container mt-4">
@@ -18,15 +21,15 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($referrals as $i => $referral)
+            @foreach($referrals as $referral)
             <tr>
                 <form method="POST" action="{{ route('bancassurance.referrals.assign', $referral->Id) }}">
                     @csrf
-                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $loop->iteration }}</td>
                     <td>{{ $referral->ClientName }}</td>
-                    <td>{{ $referral->ProductName }}</td>
-                    <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d M Y') }}</td>
-                    <td><span class="badge bg-secondary">{{ $referral->Status }}</span></td>
+                    <td>{{ $referral->insuranceProduct->Description }}</td>
+                    <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') }}</td>
+                    <td><span class="badge bg-secondary">{{ $referral->Status->Label() }}</span></td>
                     <td>
                         <select name="AssignedTo" class="form-select" required>
                             <option value="">-- Select Officer --</option>
@@ -46,4 +49,19 @@
         </tbody>
     </table>
 </div>
+
+@section('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#assignTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
+        });
+    </script>
+@endsection
 @endsection

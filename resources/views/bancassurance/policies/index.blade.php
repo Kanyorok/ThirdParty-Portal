@@ -17,9 +17,11 @@
             <label class="form-label">Status</label>
             <select name="status" class="form-select">
                 <option value="">-- All --</option>
-                <option value="Proposal" {{ request('status') == 'Proposal' ? 'selected' : '' }}>Proposal</option>
-                <option value="Issued" {{ request('status') == 'Issued' ? 'selected' : '' }}>Issued</option>
-                <option value="Cancelled" {{ request('status') == 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                @foreach ($statuses as $status)
+                    <option value="{{ $status->value }}" {{ request('status') == $status->value ? 'selected' : '' }}>
+                        {{ $status->label() }}
+                    </option>
+                @endforeach
             </select>
         </div>
 
@@ -29,7 +31,7 @@
         </div>
 
         <div class="col-md-3">
-            <label class="form-label">To (Start Date)</label>
+            <label class="form-label">To (End Date)</label>
             <input type="date" name="to" value="{{ request('to') }}" class="form-control">
         </div>
 
@@ -54,23 +56,23 @@
                 <th>Insurer</th>
                 <th>Sum Assured</th>
                 <th>Premium</th>
-                <th>Start</th>
-                <th>End</th>
+                <th>Start of Policy</th>
+                <th>End of Policy</th>
                 <th>Status</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($policies as $index => $policy)
+            @forelse($policies as $policy)
                 <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $policy->CustomerName }}</td>
-                    <td>{{ $policy->ProductName }}</td>
-                    <td>{{ $policy->InsurerName ?? '—' }}</td>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $policy->customer->FullName }}</td>
+                    <td>{{ $policy->product->Description ?? '-'}}</td>
+                    <td>{{ $policy->insurer->Description ?? '—' }}</td>
                     <td>{{ number_format($policy->SumAssured, 2) }}</td>
                     <td>{{ number_format($policy->PremiumAmount, 2) }}</td>
-                    <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d-M-Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d-M-Y') }}</td>
-                    <td><span class="badge bg-info text-dark">{{ $policy->Status }}</span></td>
+                    <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
+                    <td>{{$policy->Status->Label()}}</td>
                 </tr>
             @empty
                 <tr>

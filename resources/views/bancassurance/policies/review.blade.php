@@ -6,11 +6,15 @@
     <h4>📄 Review Proposal – Policy ID #{{ $policy->Id }}</h4>
 
     <div class="mb-4">
-        <strong>Customer:</strong> {{ $policy->CustomerName }}<br>
-        <strong>Product:</strong> {{ $policy->ProductName }}<br>
+        <strong>Customer:</strong> {{ $policy->customer->FullName }}<br>
+        <strong>Product:</strong> {{ $policy->product->Description }}<br>
         <strong>Sum Assured:</strong> {{ number_format($policy->SumAssured, 2) }}<br>
         <strong>Premium:</strong> {{ number_format($policy->PremiumAmount, 2) }}<br>
-        <strong>Status:</strong> <span class="badge bg-warning">{{ $policy->Status }}</span>
+        <td>
+            <span class="badge bg-{{ $policy->Status->badgeColor() }}">
+                {{ $policy->Status->label() }}
+            </span>
+        </td>
     </div>
 
     <form action="{{ route('bancassurance.policies.submitUnderwriting', $policy->Id) }}" method="POST" enctype="multipart/form-data">

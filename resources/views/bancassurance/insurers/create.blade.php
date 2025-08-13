@@ -1,11 +1,10 @@
 @extends('layouts.app')
 @section('title', 'Register Insurance Provider')
-
 @section('content')
 <div class="container mt-4">
     <h4>🏢 Register Insurance Provider</h4>
 
-    <form method="POST" action="{{ route('bancassurance.insurers.store') }}">
+    <form method="POST" action="{{ route('bancassurance.insurers.store') }}" enctype="multipart/form-data">
         @csrf
 
         <div class="mb-3">
@@ -33,12 +32,13 @@
             <input name="Phone" type="text" class="form-control">
         </div>
 
-        <div class="form-check mb-3">
-            <input name="IsActive" type="checkbox" class="form-check-input" checked>
-            <label class="form-check-label">Is Active</label>
+        <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
+            <label class="form-check-label" for="primaryCheck">IsActive </label>
         </div>
 
         <button type="submit" class="btn btn-primary">Save Provider</button>
     </form>
 </div>
 @endsection
+

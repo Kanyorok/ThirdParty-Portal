@@ -200,12 +200,54 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PriorityLevel', 'Description' => 'High', 'Value' => 'H'],
             ['CodeID' => 'PriorityLevel', 'Description' => 'Critical', 'Value' => 'C'],
 
+            // Payment  Modes 
+            ['CodeID' => 'PaymentModes', 'Description' => 'Cash', 'Value' => 'C'],
+            ['CodeID' => 'PaymentModes', 'Description' => 'Cheque', 'Value' => 'CH'],
+            ['CodeID' => 'PaymentModes', 'Description' => 'Bank Transfer', 'Value' => 'BT'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Standing Order', 'Value' => 'SO'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Mobile Money (M-Pesa)', 'Value' => 'MM'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Credit Card', 'Value' => 'CC'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Debit Card', 'Value' => 'DC'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Payroll Deduction', 'Value' => 'PD'],
+
+
             // Property DocumentType
             ['CodeID' => 'DocumentType', 'Description' => 'Ownership','Value' => 'S'],
             ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan', 'Value' => 'A'],
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
 
+            // Gender
+            ['CodeID' => 'Gender', 'Description' => 'Male','Value' => 'M'],
+            ['CodeID' => 'Gender', 'Description' => 'Female', 'Value' => 'F'],
+
+            // MaritalStatus
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Single','Value' => 'S'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Married', 'Value' => 'M'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Divorced', 'Value' => 'D'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Widowed', 'Value' => 'W'],
+            
+            // Relationships
+            ['CodeID' => 'Relationships', 'Description' => 'Spouse','Value' => 'S'],
+            ['CodeID' => 'Relationships', 'Description' => 'Child', 'Value' => 'C'],
+            ['CodeID' => 'Relationships', 'Description' => 'Parent', 'Value' => 'P'],
+            ['CodeID' => 'Relationships', 'Description' => 'Sibling', 'Value' => 'S'],    
+            ['CodeID' => 'Relationships', 'Description' => 'Relative', 'Value' => 'R'],
+            ['CodeID' => 'Relationships', 'Description' => 'Friend', 'Value' => 'F'],
+            ['CodeID' => 'Relationships', 'Description' => 'LegalGuardian', 'Value' => 'LG'],
+            
+            
+            
+            // Occupation
+            ['CodeID' => 'Occupation', 'Description' => 'Employed','Value' => 'E'],
+            ['CodeID' => 'Occupation', 'Description' => 'Not Employed', 'Value' => 'N'],
+
+            // ContactType
+            ['CodeID' => 'ContactType', 'Description' => '📞 Call','Value' => 'C'],
+            ['CodeID' => 'ContactType', 'Description' => '📧 Email', 'Value' => 'E'],
+            ['CodeID' => 'ContactType', 'Description' => '📲 SMS', 'Value' => 'S'],
+            ['CodeID' => 'ContactType', 'Description' => '🏢 Visit', 'Value' => 'V'],
+            
             //Payment Terms
             ['CodeID' => 'PaymentTerm', 'Description' => 'Cash on Delivery – payment immediately on receipt', 'Value' => 'CD'],
             ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 30 days from invoice date', 'Value' => 'N3'],
@@ -218,6 +260,19 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 15 days after end of month', 'Value' => 'EOM'],
             ['CodeID' => 'PaymentTerm', 'Description' => 'Based on certified project work progress', 'Value' => 'PP'],
             ['CodeID' => 'PaymentTerm', 'Description' => '90% on completion, 10% after retention period', 'Value' => 'R'],
+          
+            // Insurance Product 
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Life Insurance', 'Value' => 'L'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Health Insurance', 'Value' => 'H'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Property Insurance', 'Value' => 'P'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Vehicle Insurance', 'Value' => 'V'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Travel Insurance', 'Value' => 'T'],
+
+            // Insurance Provider
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'Jubilee', 'Value' => 'J'],
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'Britam', 'Value' => 'B'],
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'CIC Insurance', 'Value' => 'C'],
+
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],

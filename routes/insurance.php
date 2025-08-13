@@ -1,56 +1,69 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\bancassurance\BancassuranceReferralController;
-use App\Http\Controllers\bancassurance\CustomerController;
-use App\Http\Controllers\bancassurance\CustomerBeneficiaryController;
-use App\Http\Controllers\bancassurance\CustomerCommunicationController;
-use App\Http\Controllers\bancassurance\PolicyController;
-use App\Http\Controllers\bancassurance\UnderwritingController;
-use App\Http\Controllers\bancassurance\PremiumController;
-use App\Http\Controllers\bancassurance\ClaimController;
-use App\Http\Controllers\Bancassurance\ClaimPaymentController;
-use App\Http\Controllers\Bancassurance\CommissionRuleController;
-use App\Http\Controllers\Bancassurance\CommissionTierController;
-use App\Http\Controllers\Bancassurance\CommissionEarnedController;
-use App\Http\Controllers\Bancassurance\CommissionPayoutController;
-use App\Http\Controllers\Bancassurance\InsuranceProviderController;
-use App\Http\Controllers\Bancassurance\InsuranceProductController;
-use App\Http\Controllers\Bancassurance\InsuranceProviderProductController;
-use App\Http\Controllers\Bancassurance\InsuranceProductRiderController;
-use App\Http\Controllers\Bancassurance\PricingRuleController;
-use App\Http\Controllers\Bancassurance\ProductLifecycleController;
-use App\Http\Controllers\Bancassurance\SettingsController;
+use App\Http\Controllers\Insurance\BancassuranceReferralController;
+use App\Http\Controllers\Insurance\CustomerController;
+use App\Http\Controllers\Insurance\CustomerBeneficiaryController;
+use App\Http\Controllers\Insurance\CustomerCommunicationController;
+use App\Http\Controllers\Insurance\PolicyController;
+use App\Http\Controllers\Insurance\UnderwritingController;
+use App\Http\Controllers\Insurance\PremiumController;
+use App\Http\Controllers\Insurance\ClaimController;
+use App\Http\Controllers\Insurance\ClaimPaymentController;
+use App\Http\Controllers\Insurance\CommissionRuleController;
+use App\Http\Controllers\Insurance\CommissionTierController;
+use App\Http\Controllers\Insurance\CommissionEarnedController;
+use App\Http\Controllers\Insurance\CommissionPayoutController;
+use App\Http\Controllers\Insurance\InsuranceProviderController;
+use App\Http\Controllers\Insurance\InsuranceProductController;
+use App\Http\Controllers\Insurance\InsuranceProviderProductController;
+use App\Http\Controllers\Insurance\InsuranceProductRiderController;
+use App\Http\Controllers\Insurance\PricingRuleController;
+use App\Http\Controllers\Insurance\ProductLifecycleController;
+use App\Http\Controllers\Insurance\SettingsController;
+use App\Http\Controllers\Insurance\ClaimClosureController;
 
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
 
     Route::prefix('bancassurance/referrals')->name('bancassurance.referrals.')->group(function () {
     Route::get('create', [BancassuranceReferralController::class, 'create'])->name('create');
+    Route::get('edit/{Id}', [BancassuranceReferralController::class, 'edit'])->name('edit');
+    Route::put('update/{Id}', [BancassuranceReferralController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [BancassuranceReferralController::class, 'destroy'])->name('destroy');
     Route::post('store', [BancassuranceReferralController::class, 'store'])->name('store');
     Route::get('/', [BancassuranceReferralController::class, 'index'])->name('index');
     Route::get('assign/list', [BancassuranceReferralController::class, 'assignList'])->name('assign.list');
-    Route::post('assign/{id}', [BancassuranceReferralController::class, 'assign'])->name('assign');
+    Route::post('assign/{Id}', [BancassuranceReferralController::class, 'assign'])->name('assign');
     Route::get('performance', [BancassuranceReferralController::class, 'performanceView'])->name('performance');
 
 });
 
 Route::prefix('bancassurance/customers')->name('bancassurance.customers.')->group(function () {
     Route::get('/', [CustomerController::class, 'index'])->name('index');
+    Route::get('check', [CustomerController::class, 'check'])->name('check');
     Route::get('create', [CustomerController::class, 'create'])->name('create');
     Route::post('store', [CustomerController::class, 'store'])->name('store');
+    Route::get('show/{Id}', [CustomerController::class, 'show'])->name('show');
+    Route::delete('delete/{Id}', [CustomerController::class, 'destroy'])->name('destroy');
+    Route::get('edit/{Id}', [CustomerController::class, 'edit'])->name('edit');
+    Route::put('update/{Id}', [CustomerController::class, 'update'])->name('update');
     Route::get('{customerId}/portfolio', [CustomerController::class, 'portfolio'])->name('portfolio');
 
 });
-Route::prefix('bancassurance/customers/{customerId}/beneficiaries')->name('bancassurance.customers.beneficiaries.')->group(function () {
+Route::prefix('bancassurance/customers/beneficiaries')->name('bancassurance.customers.beneficiaries.')->group(function () {
     Route::get('create', [CustomerBeneficiaryController::class, 'create'])->name('create');
     Route::post('store', [CustomerBeneficiaryController::class, 'store'])->name('store');
 });
 
-Route::prefix('bancassurance/customers/{customerId}/communication')->name('bancassurance.customers.communication.')->group(function () {
+Route::prefix('bancassurance/customers/communication')->name('bancassurance.customers.communication.')->group(function () {
     Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
     Route::get('create', [CustomerCommunicationController::class, 'create'])->name('create');
     Route::post('store', [CustomerCommunicationController::class, 'store'])->name('store');
+    Route::get('show', [CustomerCommunicationController::class, 'show'])->name('show');
+    Route::delete('delete/{Id}', [CustomerCommunicationController::class, 'destroy'])->name('destroy');
+    Route::get('edit/{Id}', [CustomerCommunicationController::class, 'edit'])->name('edit');
+    Route::put('update/{Id}', [CustomerCommunicationController::class, 'update'])->name('update');
 });
 
 Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(function () {
@@ -90,8 +103,11 @@ Route::prefix('bancassurance/premiums')->name('bancassurance.premiums.')->group(
     Route::get('/', [PremiumController::class, 'index'])->name('index');
     Route::get('create', [PremiumController::class, 'create'])->name('create');
     Route::post('store', [PremiumController::class, 'store'])->name('store');
-    Route::get('premiums/{id}/receipt', [PremiumController::class, 'printReceipt'])
-    ->name('bancassurance.premiums.receipt');
+    Route::get('show/{Id}', [PremiumController::class, 'show'])->name('show');
+    Route::delete('delete/{Id}', [PremiumController::class, 'destroy'])->name('destroy');
+    Route::get('edit/{Id}', [PremiumController::class, 'edit'])->name('edit');
+    Route::get('premiums/{id}/receipt', [PremiumController::class, 'printReceipt'])->name('printReceipt');
+    Route::put('update/{Id}', [PremiumController::class, 'update'])->name('update');
 });
 
 Route::prefix('bancassurance/claims')->name('bancassurance.claims.')->group(function () {
@@ -151,16 +167,13 @@ Route::prefix('bancassurance/commissions')->name('bancassurance.commissions.')->
 });
 
 Route::prefix('bancassurance/insurers')->name('bancassurance.insurers.')->group(function () {
+    Route::get('/', [InsuranceProviderController::class, 'index'])->name('index');
     Route::get('create', [InsuranceProviderController::class, 'create'])->name('create');
     Route::post('store', [InsuranceProviderController::class, 'store'])->name('store');
-    Route::get('/', [InsuranceProviderController::class, 'index'])->name('index');
-    Route::get('{id}/edit', [InsuranceProviderController::class, 'edit'])->name('edit');
-    Route::put('{id}/update', [InsuranceProviderController::class, 'update'])->name('update');
-    Route::get('{id}/products', [InsuranceProviderController::class, 'viewProducts'])->name('products');
-
-            // View products for a provider
-    Route::get('{id}/products', [InsuranceProviderController::class, 'viewProducts'])->name('products');
-    // Detach product from provider (soft delete)
+    Route::get('{Id}/edit', [InsuranceProviderController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [InsuranceProviderController::class, 'update'])->name('update');
+    Route::get('{Id}/products', [InsuranceProviderController::class, 'viewProducts'])->name('products');
+    Route::delete('delete/{Id}', [InsuranceProviderController::class, 'destroy'])->name('destroy');
     Route::post('{providerId}/products/{productId}/detach', [InsuranceProviderController::class, 'detachProduct'])->name('products.detach');
 });
 
@@ -171,11 +184,11 @@ Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(
     Route::get('/', [InsuranceProductController::class, 'index'])->name('index');
     Route::get('create', [InsuranceProductController::class, 'create'])->name('create');
     Route::post('store', [InsuranceProductController::class, 'store'])->name('store');
-    Route::get('{id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
-    Route::put('{id}/update', [InsuranceProductController::class, 'update'])->name('update');
-    // Product Mapping to Insurers
-    Route::get('{id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
-    Route::post('{id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
+    Route::get('{Id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [InsuranceProductController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [InsuranceProductController::class, 'destroy'])->name('destroy');
+    // Route::get('{Id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
+    // Route::post('{Id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
 
 
 });
@@ -209,11 +222,12 @@ Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->grou
 });
 
 Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'create'])->name('create'); // ✅ Add this line
-    Route::get('/edit/{id}', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'edit'])->name('edit');
-    Route::post('/store', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'store'])->name('store');
-    Route::put('/update/{id}', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'update'])->name('update');
-    Route::delete('/delete/{id}', [\App\Http\Controllers\Bancassurance\SettingsController::class, 'destroy'])->name('destroy');
+    Route::get('/', [SettingsController::class, 'index'])->name('index');
+    Route::get('/create', [SettingsController::class, 'create'])->name('create'); // ✅ Add this line
+    Route::get('/edit/{id}', [SettingsController::class, 'edit'])->name('edit');
+    Route::post('/store', [SettingsController::class, 'store'])->name('store');
+    Route::put('/update/{id}', [SettingsController::class, 'update'])->name('update');
+    Route::delete('/delete/{id}', [SettingsController::class, 'destroy'])->name('destroy');
 });
+
 });
