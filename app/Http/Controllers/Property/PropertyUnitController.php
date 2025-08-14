@@ -60,7 +60,7 @@ class PropertyUnitController extends Controller
                 $validated['UnitSize'],
                 $validated['IsRentable'] ? 1 : 0,
                 $validated['CurrentStatus'] ? 1 : 0,
-                $validated['Remarks'],
+                $validated['Remarks'] ?? '',
                 auth()->user()
 
             );
@@ -75,8 +75,7 @@ class PropertyUnitController extends Controller
     public function edit($id)
     {
         $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
-        //Check if user has permission to edit tender categories
-        //$this->authorize(PermissionEnum::PropertyUpdate, PropertyFloor::class);
+        
         $unit = PropertyUnit::findOrFail($id);
         $floors = PropertyFloor::all();
         $blocks = PropertyBlock::all();
@@ -97,7 +96,7 @@ class PropertyUnitController extends Controller
             'UnitSize' => 'required|integer',
             'IsRentable' => 'required|boolean',
             'CurrentStatus' => 'required|boolean',
-            'Remarks' => 'required|string|max:50',
+            'Remarks' => 'nullable|string|max:50',
 
         ]);
 
@@ -114,7 +113,7 @@ class PropertyUnitController extends Controller
                 'UnitSize' => $validated['UnitSize'],
                 'IsRentable' => $validated['IsRentable'],
                 'CurrentStatus' => $validated['CurrentStatus'],
-                'Remarks' => $validated['Remarks'],
+                'Remarks' => $validated['Remarks'] ?? '',
                 'ModifiedBy' => Auth::Id(),
             ]);
 

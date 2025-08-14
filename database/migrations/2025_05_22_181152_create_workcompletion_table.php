@@ -11,17 +11,13 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_WorkCompletion', function (Blueprint $table) {
-            $table->id();
-            $table->string('Property');
-            $table->string('Block');
-            $table->string('Floor');
-            $table->string('Unit');
-            $table->string('IssueDescription');
+            $table->id('Id');
+            $table->foreignId('RequestNumber')->constrained('t_AssignRequest', 'Id');
             $table->date('CompletionDate');
             $table->string('WorkDoneSummary');
             $table->string('PartsUsed');
             $table->integer('Cost');
-            $table->string('FinalStatus');
+            $table->foreignId('FinalStatus')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

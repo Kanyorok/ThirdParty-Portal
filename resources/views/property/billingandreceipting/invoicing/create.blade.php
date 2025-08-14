@@ -86,7 +86,7 @@
                     name="InvoiceNotes">{{ old('InvoiceNotes') }}</textarea>
         </div>
 
-        <button class="btn btn-success">📤 Generate Invoice</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">📤 Generate Invoice</button>
 
       </div>
     </div>

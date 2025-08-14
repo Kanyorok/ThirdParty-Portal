@@ -20,7 +20,7 @@ class PropertyFloorService
         PropertyRegistry $propertyId,
         PropertyBlock    $blockId,
         string           $floorLabel,
-        string           $floorNotes,
+        string           $floorNotes = null,
         User             $user
     ): self
     {
