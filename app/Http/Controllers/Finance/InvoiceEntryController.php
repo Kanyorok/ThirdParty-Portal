@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceInvoiceEntry;
+use App\Models\Finance\FinanceTransaction;
 use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\OrderLines;
 use App\Models\ThirdParies\Supplier;
-use Illuminate\Container\Attributes\DB;
+use App\Services\Finance\TransactionService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB as FacadesDB;
@@ -59,6 +62,11 @@ class InvoiceEntryController extends Controller
             'InvoiceDate'=> 'required|date',
             'InvoiceAmount'=> 'required|numeric',
             'Description'=> 'required|string|max:255',
+            // File upload validation
+            'file' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
+        ], [
+            'file.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
+            'file.max'   => 'File size must not exceed 5 MB.',
         ]);
 
 
@@ -101,7 +109,6 @@ class InvoiceEntryController extends Controller
             }
             //Currency Exchange Rates Details
 
-// return 0;
 
         FacadesDB::beginTransaction();
 
@@ -119,6 +126,15 @@ class InvoiceEntryController extends Controller
             'ModifiedBy'         => Auth::Id(),
         ]);
 
+        //File Upload
+        if ($request->hasFile('file')) {
+            $invoice->newDocument(
+                ModulesEnum::Finance, // or ModulesEnum::INVOICE if you have it
+                $request->file('file'),
+                [PermissionEnum::FinanceAccountsPayableCreate, PermissionEnum::FinanceAccountsPayableView], // Permissions
+                Auth::user()
+            );
+        }
 
          activity()
             ->performedOn($invoice)
@@ -128,13 +144,13 @@ class InvoiceEntryController extends Controller
 
             FacadesDB::commit();
 
-            return redirect()->route('invoiceentry.index')->with('Success','Invoice created successfully');
+            return redirect()->route('invoiceentry.index')->with('success','Invoice created successfully');
     }catch(\Throwable $th){
             FacadesDB::rollback();
-            return $th->getMessage();
+            //return $th->getMessage();
             Log::error('Failed to Create Invoice'. $th->getMessage());
 
-            return back()->withError('Error','Failed to create Invoice:' .$th->getMessage());
+            return back()->withError('error','Failed to create Invoice:' .$th->getMessage());
 
         }
     }
@@ -253,9 +269,12 @@ class InvoiceEntryController extends Controller
             'currency:Id,Name,Code,Symbol',
             'order:Id,OrderNo,Description,OrdTotExcl',
             'grn:id,GRNID,SupplierId',
+            'createdBy:Id,Name',
         ])->findOrFail($id);
 
-        $poItems = [];
+        $poItems = collect();
+        $poSub = 0.0;
+
         if ($invoice->order) {
             $poItems = \DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
@@ -267,9 +286,170 @@ class InvoiceEntryController extends Controller
                     'ol.fUnitPriceExcl as UnitCost'
                 )
                 ->get();
+
+            $poSub = $poItems->sum(fn($li) => (float)$li->UnitCost * (float)$li->Quantity);
         }
 
-        return view('finance.accountspayable.invoiceentry.show', compact('invoice', 'poItems'));
+        // Prepare view data
+        $viewData = [
+            'currencyCode'   => $invoice->currency->Code ?? '',
+            'currencySymbol' => $invoice->currency->Symbol ?? '',
+            'invNo'          => $invoice->InvoiceNumber ?? '—',
+            'invDate'        => $invoice->InvoiceDate
+                ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d M Y')
+                : '—',
+            'amount'         => number_format((float)($invoice->InvoiceAmount ?? 0), 2),
+            'exRate'         => $invoice->ExchangeRate ?? 1.0,
+            'vendorName'     => $invoice->supplier->SupplierName ?? '—',
+            'poNo'           => $invoice->order->OrderNo ?? '—',
+            'grnNo'          => $invoice->grn->GRNID ?? '—',
+            'poSub'          => $poSub,
+        ];
+
+        return view('finance.accountspayable.invoiceentry.show', compact('invoice', 'poItems') + $viewData);
+    }
+
+
+    public function approve(Request $request, int $id, TransactionService $svc)
+    {
+        // $this->authorize('approve-ap-invoice', FinanceInvoiceEntry::class);
+
+        $validated = $request->validate([
+            'Reason' => 'required|string|max:255',
+        ]);
+
+        // Configure your module + transaction type mapping IDs
+        // Make sure these exist in t_Modules and t_FinanceTransactionTypes
+        $MODULE_ID          = 1100000; // Finance module
+        $TRANSACTION_TYPEID = 15;    // "AP Invoice"
+
+        try {
+            return DB::transaction(function () use ($id, $validated, $svc, $MODULE_ID, $TRANSACTION_TYPEID) {
+
+                // Load the invoice with the same relations, and lock row for update
+                $invoice = FinanceInvoiceEntry::with([
+                    'supplier:Id,SupplierName',
+                    'currency:Id,Name,Code,Symbol',
+                    'order:Id,OrderNo,Description,OrdTotExcl',
+                    'grn:id,GRNID,SupplierId',
+                    'createdBy:Id,Name',
+                ])
+                    ->lockForUpdate()
+                    ->findOrFail($id);
+
+                // Guard: already posted?
+                if (strtolower((string)$invoice->ApprovalStatus) === 'posted') {
+                    return back()->with('error', "Invoice $invoice->InvoiceNumber is already posted.");
+                }
+
+                return 12;
+                // Build payload for TransactionService (service does idempotency)
+                $payload = [
+                    'ModuleID'          => $MODULE_ID,
+                    'ThirdPartyID'=>$invoice->SupplierID,
+                    'TransactionTypeID' => $TRANSACTION_TYPEID,
+                    'TransactionType'   => 'Account Payable Invoice',
+                    'ReferenceNumber'   => $invoice->InvoiceNumber,
+                    'TransactionDate'   => $invoice->InvoiceDate ?? now()->toDateString(),
+                    'Amount'            => (float)($invoice->InvoiceAmount ?? 0),   // net (excl. tax) if that's your model
+                    'TaxAmount'         => (float)($invoice->TaxAmount ?? 0),      // 0 if not captured
+                    'BranchID'          => session('LoginBranchId', 1),
+                    'DepartmentID'      => $invoice->DepartmentID ?? null,
+                    'CurrencyID'        => $invoice->CurrencyID ?? 1,
+                    'CurrencyCode'      => optional($invoice->currency)->Code ?? 'KES',
+                    'ExchangeRate'      => (float)($invoice->ExchangeRate ?? 1),
+                    'Narration'         => trim(($invoice->Description ?? '').' '.$validated['Reason']),
+                    'SourceTable'       => 't_FinanceInvoiceEntries',
+                    'SystemDescription' => 'AP Invoice '.$invoice->InvoiceNumber,
+                    // Optional one‑off overrides if needed:
+                    // 'DebitGLAccountID'  => 5_001,
+                    // 'CreditGLAccountID' => 3_001,
+                    // 'TaxGLAccountID'    => 2_101,
+                ];
+                // Post via mapping; TransactionService handles:
+                // - mapping lookup
+                // - idempotency (no duplicates)
+                // - validation + balancing
+                // - persistence (single DB txn internally)
+                $result = $svc->postFromTypeMapping($payload);
+
+                // Update invoice approval status if posted (or keep as-is if service reported 'exists')
+                if (in_array($result['status'], ['success', 'exists'], true)) {
+                    $invoice->update([
+                        'ApprovalStatus' => 'posted',
+                        'ApprovalReason' => $validated['Reason'],
+                        'ModifiedBy'     => Auth::id(),
+                        'ModifiedOn'     => now(),
+                    ]);
+                }
+
+                // Prefer a user-friendly flash message
+                $message = $result['status'] === 'exists'
+                    ? "Invoice {$invoice->InvoiceNumber} was already posted (idempotent)."
+                    : ($result['message'] ?? "Invoice {$invoice->InvoiceNumber} posted successfully.");
+
+                $flashKey = $result['status'] === 'success' ? 'success' : 'info';
+
+                activity('Transaction Posting')
+                    ->performedOn(new FinanceTransaction())
+                    ->causedBy(Auth::id())
+                    ->withProperties(['Posting Transaction' => 'Posted from Account payable Invoice'])
+                    ->log('Posted Transaction from Accounts Payable Invoice');
+
+                return back()->with($flashKey, $message);
+            });
+        } catch (\Throwable $e) {
+            // Log if you want: Log::error('AP approve error', ['id'=>$id, 'err'=>$e->getMessage()])
+            return $e->getMessage();
+            return back()->with('error', "Approval/Post failed: ".$e->getMessage());
+        }
+    }
+
+
+    public function reject(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'Reason' => 'required|string|max:1000',
+        ]);
+        try {
+            return DB::transaction(function () use ($validated, $id) {
+                // Lock the row for update to avoid race conditions
+                $invoice = FinanceInvoiceEntry::with([
+                    'supplier:Id,SupplierName',
+                    'currency:Id,Name,Code,Symbol',
+                    'order:Id,OrderNo,Description,OrdTotExcl',
+                    'grn:id,GRNID,SupplierId',
+                    'createdBy:Id,Name',
+                ])
+                    ->lockForUpdate()
+                    ->findOrFail($id);
+
+                // If already processed, prevent duplicate rejection
+                if (in_array($invoice->ApprovalStatus, ['posted', 'rejected'], true)) {
+                    $apStatus=ucfirst($invoice->ApprovalStatus);
+                    return back()->with('error', "Invoice {$invoice->InvoiceNumber} is already {$apStatus}.");
+                }
+
+                // Update status & reason
+                $invoice->update([
+                    'ApprovalStatus' => 'rejected',
+                    'ApprovalReason' => $validated['Reason'],
+                    'ModifiedBy'     => Auth::id(),
+                    'ModifiedOn'     => now(),
+                ]);
+
+                activity('Transaction Posting')
+                    ->performedOn(new FinanceInvoiceEntry())
+                    ->causedBy(Auth::id())
+                    ->withProperties(['Posting Transaction' => 'Rejected from Account payable Invoice'])
+                    ->log('Rejected Transaction from Accounts Payable Invoice');
+
+                return back()->with('success', "Invoice {$invoice->InvoiceNumber} rejected successfully.");
+            });
+        }catch (\Throwable $e) {
+            Log::error('AP reject error', ['id'=>$id, 'err'=>$e->getMessage()]);
+            return back()->with('error', "Approval/Post failed: ".$e->getMessage());
+        }
     }
 
 }

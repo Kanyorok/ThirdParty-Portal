@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="card shadow p-4 rounded-4">
-    <h4 class="mb-3">🧾 Create Payables Invoice</h4>
+{{--    <h4 class="mb-3">🧾 Create Payables Invoice</h4>--}}
 
     @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -83,56 +83,15 @@
             </div>
         </div>
 
-        {{--
-                <hr>
-
-                <h5 class="mb-3">📦 Line Items</h5>
-                <table class="table table-bordered" id="lineItemsTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Description</th>
-                            <th>Qty</th>
-                            <th>Unit Cost</th>
-                            <th>Tax</th>
-                            <th>GL Account</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><input name="lines[0][Description]" class="form-control" value="Stationery - Pens"></td>
-                            <td><input name="lines[0][Quantity]" type="number" step="0.01" class="form-control" value="10"></td>
-                            <td><input name="lines[0][UnitCost]" type="number" step="0.01" class="form-control" value="100"></td>
-                            <td>
-                                <select name="lines[0][TaxID]" class="form-control">
-                                    <option value="">-- None --</option>
-                                    <option value="1">VAT 16%</option>
-                                    <option value="2">WHT 5%</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="lines[0][GLAccountID]" class="form-control">
-                                    <option value="5001">5001 - Office Supplies</option>
-                                    <option value="5002">5002 - Admin Expenses</option>
-                                </select>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">🗑️</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table> --}}
-
-                {{-- <div class="mb-3">
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="addRow()">➕ Add Line</button>
-                </div>
-        --}}
-        <hr>
-
         <h5 class="mb-3">📤 Upload EDI File (Optional)</h5>
         <div class="mb-3">
-            <input type="file" name="edi_file" class="form-control">
-            <small class="form-text text-muted">Supports CSV/Excel import. Parse and map lines in controller.</small>
+            <input type="file"
+                   name="file"
+                   class="form-control"
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg">
+            <small class="form-text text-muted">
+                Allowed types: PDF, Word, Excel, CSV, JPG, PNG
+            </small>
         </div>
 
         <div class="mt-4 d-flex justify-content-end gap-2">

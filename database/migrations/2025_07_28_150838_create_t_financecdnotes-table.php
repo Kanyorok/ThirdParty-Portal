@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('NoteAmount');
             $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
             $table->text('ApprovalReason')->nullable();
+            $table->string('Status')->nullable();
             $table->text('Description');
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

@@ -15,11 +15,14 @@ return new class extends Migration
             $table->id('Id');
             $table->date('Date');
             $table->string('RefNo')->unique();
+            $table->string('IdempotencyKey', 150)->nullable();
             $table->enum('Type', ['normal', 'recurring', 'reversing'])->default('normal');
             $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
             $table->text('ApprovalReason')->nullable();
             $table->text('Description')->nullable();
+            $table->string('CurrencyID', 10)->nullable();
             $table->string('SystemDescription', 255)->nullable();
+            $table->string('Status', 20)->default('draft'); //To be used in workflows
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('Reason', 255)->nullable();
             $table->string('SystemDescription', 255)->nullable();
 
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

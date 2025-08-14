@@ -22,11 +22,15 @@ class FinanceTransaction extends Model
     }
     protected $fillable = [
         'TransactionDate',
+        'ThirdPartyID',
         'PostingDate',
         'ReferenceNumber',
         'TransactionType',
         'ModuleID',
         'SourceTable',
+        'IdempotencyKey',
+        'TransactionTypeID',
+        'Status',
 
         'GLAccountID',
         'BranchID',

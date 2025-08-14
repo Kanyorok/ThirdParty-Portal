@@ -34,7 +34,8 @@
                             <th>Date</th>
                             <th>Reference Invoice</th>
                             <th class="text-end">Amount (Ksh)</th>
-                            <th>Reason</th>
+                            <th scope="col">Approval</th>
+{{--                            <th>Reason</th>--}}
                             <th style="width: 120px;">Actions</th>
                         </tr>
                         </thead>
@@ -48,10 +49,26 @@
                                     <td>{{ \Carbon\Carbon::parse($note->NoteDate)->format('d-m-Y') }}</td>
                                     <td>{{ $note->invoice->InvoiceNumber ?? 'N/A' }}</td>
                                     <td class="text-end">{{ number_format($note->NoteAmount, 2) ?? '-' }}</td>
-                                    <td>{{ $note->Description ?? '-' }}</td>
+                                    <td>
+                                        @php
+                                            $statusClass = match($note->ApprovalStatus) {
+                                                'posted' => 'bg-success',
+                                                'rejected' => 'bg-danger',
+                                                'draft' => 'bg-secondary',
+                                                default => 'bg-secondary'
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $statusClass }}">
+                                        {{ ucfirst($note->ApprovalStatus) ?? 'Pending' }}
+                                    </span>
+                                    </td>
+{{--                                    <td>{{ $note->Description ?? '-' }}</td>--}}
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#EditNotesModal">
+                                            <a href="{{ route('creditnote.show', $note->Id) }}" class="btn btn-sm btn-outline-info me-1" title="View Note">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#EditNotesModal">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-danger custom-delete-btn">

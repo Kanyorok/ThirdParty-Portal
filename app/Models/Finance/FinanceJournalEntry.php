@@ -33,6 +33,9 @@ class FinanceJournalEntry extends Model
         'Type',
         'ApprovalStatus',
         'ApprovalReason',
+        'Status',
+        'IdempotencyKey',
+        'CurrencyID',
         'Description',
         'SystemDescription',
 

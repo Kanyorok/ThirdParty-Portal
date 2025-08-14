@@ -42,7 +42,7 @@
           <td>{{ $map->debitAccount->GLName }}</td>
           <td>{{ $map->creditAccount->GLName }}</td>
           <td>
-            <button onclick="window.print()" class="btn btn-primary btn-sm no-print">Print</button>
+{{--            <button onclick="window.print()" class="btn btn-primary btn-sm no-print">Print</button>--}}
             <a href="#" class="btn btn-sm btn-warning">Edit</a>
             <button type="button"
                 class="btn btn-sm btn-danger custom-delete-btn"

@@ -163,7 +163,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::get('/finance/supplier/{selectedInvoice}', [PaymentVoucherController::class, 'getSuppliers'])->name('finance.getSuppliers');
     //Route for getting Transaction Types
     Route::get('/finance/transactions/{selectedModule}', [GLMappingController::class, 'fetchTransactionTypes'])->name('glpostingmap.fetchTransactionTypes');
-    //Route for getting GLAccounts 
+    //Route for getting GLAccounts
     Route::get('/glaccounts/list', [GLMappingController::class, 'list'])->name('glpostingmap.list');
 
     Route::post('/paymentvoucher/{id}/approve', [PaymentVoucherController::class, 'approve'])->name('paymentvoucher.approve');
@@ -174,5 +174,10 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
 
     //Posting Routes
     Route::post('/journalApproval/{id}',[\App\Http\Controllers\Finance\PostingController::class,'journalApproval'])->name('journalApproval');
+    Route::post('/finance/ap/invoices/{id}/approve', [InvoiceEntryController::class, 'approve'])->name('ap.invoice.approve');
+    Route::post('/finance/ap/invoices/{id}/reject', [InvoiceEntryController::class, 'reject'])->name('ap.invoice.reject');
+
+    Route::post('/finance/cd/note/{id}/approve', [CreditNoteController::class, 'approve'])->name('cdnote.approve');
+    Route::post('/finance/cd/note/{id}/reject', [CreditNoteController::class, 'reject'])->name('cdnote.reject');
 
 });

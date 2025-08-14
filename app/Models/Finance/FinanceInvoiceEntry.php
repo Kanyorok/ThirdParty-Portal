@@ -2,17 +2,20 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Auth\User;
 use App\Models\Core\Currency;
+use App\Models\DMS\Document;
 use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\ThirdParies\Supplier;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceInvoiceEntry extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -26,7 +29,11 @@ class FinanceInvoiceEntry extends Model
         'CurrencyID',
         'ExchangeRate',
         'POReference',
+        'Status',
+        'DocumentTypeID',
         'GRNReference',
+        'ApprovalStatus',
+        'ApprovalReason',
         'InvoiceDate',
         'InvoiceAmount',
         'Description',
@@ -66,5 +73,18 @@ class FinanceInvoiceEntry extends Model
     public function grn()
     {
         return $this->belongsTo(GoodsReceipt::class, 'GRNReference', 'id');
+    }
+
+    /**
+     * Relation to uploaded documents.
+     */
+    public function documents()
+    {
+        return $this->morphMany(Document::class, 'documentable')->latest();
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 }

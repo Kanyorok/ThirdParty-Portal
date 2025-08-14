@@ -13,12 +13,16 @@ return new class extends Migration
     {
         Schema::create('t_FinancialTransactions', function (Blueprint $table) {
             $table->id('Id');
+            $table->integer('ThirdPartyID')->nullable();
 
             // Posting details
             $table->date('TransactionDate');//The actual day the transaction happened.
             $table->dateTime('PostingDate')->default(DB::raw('GETDATE()'));// The day the transaction was posted
             $table->string('ReferenceNumber', 100);//Source reference (e.g., Voucher No, Journal No, Cheque No)
+            // Idempotency Key - to prevent duplicate postings
+            $table->string('IdempotencyKey', 100)->nullable()->index();
             $table->string('TransactionType', 50);// E.g Journal, Invoice Payable. Originating from mapping
+            $table->integer('TransactionTypeID')->nullable();// This to store the transaction mapping ID if there will be gl mapping involved
             $table->unsignedBigInteger('ModuleID')->nullable();
             $table->string('SourceTable', 100)->nullable();
 

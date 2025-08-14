@@ -114,7 +114,7 @@ class JournalEntryController extends Controller
             //return redirect()->route('journalentry.index')->with('success', 'Journal Entry created successfully.');
         }catch (\Throwable $th){
             DB::rollBack();
-            return $th->getMessage();
+            //return $th->getMessage();
             Log::error('Failed to create Journal Entry'.$th->getMessage());
             return back()->with('error', 'Failed to create Journal Entry');
         }

@@ -16,7 +16,7 @@
             @endif
             <form action="{{route('creditnote.store')}}" method="POST">
                 @csrf
-                @method('POST')                
+                @method('POST')
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <label for="notetype" class="form-label">Note Type</label>
@@ -25,14 +25,16 @@
                             <option value="Credit">Credit Note</option>
                             <option value="Debit">Debit Note</option>
                         </select>
-                    </div>           
+                    </div>
                     <div class="col-md-6">
                         <label for="referenceInvoice" class="form-label">Reference Invoice</label>
                         <select class="form-control" name="InvoiceRefNo" required>
                             <option disabled selected value="">--Select Invoice--</option>
-                                @foreach($invoices as $invoice)
-                                    <option value="{{ $invoice->Id}}">{{$invoice->InvoiceNumber}}</option>
-                                @endforeach
+                            @forelse($invoices as $invoice)
+                                <option value="{{ $invoice->Id }}">{{ $invoice->InvoiceNumber }}</option>
+                            @empty
+                                <option disabled>No invoices found</option>
+                            @endforelse
                         </select>
                     </div>
                 </div>
@@ -48,7 +50,7 @@
                         <input type="number" min="0.00" class="form-control" id="amount" name="NoteAmount" placeholder="e.g. 10,000" required>
                     </div>
                 </div>
-                
+
                 <div class="mb-3">
                     <label for="reason" class="form-label">Reason / Description</label>
                     <textarea class="form-control" name="Description" id="reason" rows="3" placeholder="Reason for issuing the note..."required></textarea>
@@ -60,5 +62,5 @@
             </form>
         </div>
     </div>
-</div> 
+</div>
 @endsection
