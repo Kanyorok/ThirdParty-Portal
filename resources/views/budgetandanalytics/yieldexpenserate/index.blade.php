@@ -29,13 +29,14 @@
     <div class="card mt-2">
 
 {{--        <div class="card-header bg-secondary text-white">📈Product Rates</div>--}}
-        <p class="text-muted">
-            This form allows you to configure and manage financial rates for products imported from the Core Banking
-            System (CBS).
-            Specify the rate type (e.g., interest, tax, discount), applicable product and source of the rate. These
-            settings will directly impact budget drivers and projections tied to each product.
-        </p>
+
         <div class="card-body">
+            <p class="text-muted">
+                This form allows you to configure and manage financial rates for products imported from the Core Banking
+                System (CBS).
+                Specify the rate type (e.g., interest, tax, discount), applicable product and source of the rate. These
+                settings will directly impact budget drivers and projections tied to each product.
+            </p>
             <table class="table table-bordered table-striped">
                 <thead class="table-light">
                 <tr>
@@ -51,23 +52,24 @@
                 @foreach ($driverRates as $item)
                     <tr>
                         <td>{{ $loop->iteration }}.</td>
-                        <td>{{ $item->productType->Description }}</td>
-                        <td>{{ $item->rateType->RateTypeName }}</td>
-                        <td>{{ $item->RateValue }}</td>
-                        <td>{{ $item->Source }}</td>
+                        <td>{{ optional($item->productType)->Description ?? '-' }}</td>
+                        <td>{{ optional($item->rateType)->RateTypeName ?? '-' }}</td>
+                        <td>{{ $item->RateValue ?? '-' }}</td>
+                        <td>{{ $item->Source ?? '-' }}</td>
                         <td>
-                            <a href="{{route('yieldexpenserate.edit', $item->Id)}}"
+                            <a href="{{ route('yieldexpenserate.edit', $item->Id) }}"
                                class="btn btn-sm btn-secondary">✏️</a>
                             <button type="button"
                                     class="btn btn-sm btn-danger custom-delete-btn"
                                     data-bs-toggle="modal"
                                     data-bs-target="#customDeleteConfirmModal"
-                                    data-name="{{ $item->productType->Name }}"
-                                    data-route="{{route('yieldexpenserate.destroy', $item->Id)}}">
+                                    data-name="{{ optional($item->productType)->Name ?? 'N/A' }}"
+                                    data-route="{{ route('yieldexpenserate.destroy', $item->Id) }}">
                                 🗑️
                             </button>
                         </td>
                     </tr>
+
                 @endforeach
                 </tbody>
             </table>
