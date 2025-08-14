@@ -72,5 +72,7 @@ class DatabaseSeeder extends Seeder
                 $this->call(ThirdPartyUserSeeder::class);
                 $this->call(ThirdPartyCategorySeeder::class);
                 $this->call(ThirdPartiesBankDetailsSeeder::class);
+
+                $this->call(ThirdPartySupplierCategorySeeder::class);
         }
 }

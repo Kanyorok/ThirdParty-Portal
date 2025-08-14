@@ -6,12 +6,10 @@ use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\BusinessTypeEnum;
-use App\Models\Inventory\ItemCategories;
 
 class ThirdParties extends Model
 {
@@ -40,7 +38,6 @@ class ThirdParties extends Model
         'ThirdPartyType',
         'IsPrequalified',
         'ApprovalStatus',
-        'CategoryId',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -76,15 +73,9 @@ class ThirdParties extends Model
         $this->attributes['IsPrequalified'] = $value;
     }
 
-    public function users(): HasOne
+    public function users(): BelongsToMany
     {
-        return $this->hasOne(ThirdPartyUser::class, 'ThirdPartyId');
-    }
-
-    public function categories(): BelongsToMany
-    {
-        return $this->belongsToMany(ItemCategories::class, 't_ItemCategories', 'ThirdPartyId', 'CategoryID', 'Id', 'Id')
-            ->withPivot('CreatedBy', 'ModifiedBy', 'DeletedBy', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
+        return $this->belongsToMany(ThirdPartyUser::class, 't_ThirdPartyUser_ThirdParty', 'third_party_id', 'third_party_user_id');
     }
 
     public function getLabelAttribute(): string
@@ -105,5 +96,10 @@ class ThirdParties extends Model
     public function bankDetails(): HasMany
     {
         return $this->hasMany(ThirdPartiesBankDetails::class, 'ThirdPartyId', 'Id');
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(SupplierCategory::class, 't_ThirdParty_SupplierCategory', 'third_party_id', 'supplier_category_id');
     }
 }

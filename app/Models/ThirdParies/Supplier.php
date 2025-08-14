@@ -2,35 +2,25 @@
 
 namespace App\Models\ThirdParies;
 
-use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementPeriod;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\Tender;
-use App\Models\Procurement\PrequalificationApplication;
+use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum; // Import the enum
+use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Models\ThirdParty\ThirdParties;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Models\Procurement\ThirdParty\SupplierCategory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Supplier extends ThirdParties
 {
     protected $table = 't_ThirdParties';
     protected $primaryKey = 'Id';
-
-    protected static function booted()
-    {
-        parent::booted();
-        static::addGlobalScope('prequalifiedAndApprovedSupplier', function ($query) {
-            $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier)
-                ->where('IsPrequalified', true)
-                ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved);
-        });
-    }
 
     protected $fillable = [
         'IsPrequalified',
@@ -39,11 +29,6 @@ class Supplier extends ThirdParties
     protected $casts = [
         'IsPrequalified' => 'boolean',
     ];
-
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(ItemCategories::class, 'CategoryId', 'Id');
-    }
 
     public function rfqEvaluations(): HasMany
     {
@@ -76,5 +61,18 @@ class Supplier extends ThirdParties
     public function prequalificationApplications(): HasMany
     {
         return $this->hasMany(PrequalificationApplication::class, 'SupplierID', 'Id');
+    }
+
+    public function scopeApprovedAndPrequalified($query)
+    {
+        return $query
+            ->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier)
+            ->where('IsPrequalified', true)
+            ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved);
+    }
+
+    public function scopeOnlySuppliers($query)
+    {
+        return $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier);
     }
 }

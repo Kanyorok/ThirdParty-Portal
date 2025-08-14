@@ -3,20 +3,19 @@
 use App\Http\Controllers\Web\ThirdParty\ThirdPartyWebController;
 use Illuminate\Support\Facades\Route;
 
-Route::resource('web/parties', ThirdPartyWebController::class)->only([
-    'index',
-    'show',
-    'edit',
-    'store',
-    'create',
-    'update',
-    'destroy'
-])->names([
-    'index' => 'web.parties.index',
-    'show' => 'web.parties.show',
-    'create' => 'web.parties.create',
-    'store' => 'web.parties.store',
-    'edit' => 'web.parties.edit',
-    'update' => 'web.parties.update',
-    'destroy' => 'web.parties.destroy',
-]);
+// use App\Http\Controllers\Procurement\ThirdParty\SupplierCategoryController;
+
+Route::prefix('thirdparty')->name('thirdparty.')->group(function () {
+    Route::resource('parties', ThirdPartyWebController::class)
+        ->only([
+            'index',
+            'show',
+            'edit',
+            'store',
+            'create',
+            'update',
+            'destroy'
+        ]);
+
+    // Route::resource('supplier-categories', SupplierCategoryController::class);
+});

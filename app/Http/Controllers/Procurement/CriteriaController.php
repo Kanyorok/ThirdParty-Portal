@@ -132,4 +132,16 @@ class CriteriaController extends Controller
 
         return redirect()->back()->with('success', 'Criteria deleted successfully.');
     }
+
+    public function fetchForSection($sectionId)
+    {
+        $criteria = \App\Models\Procurement\Criteria::where('SectionID', $sectionId)
+            ->get(['id', 'CriteriaName']);
+        return response()->json($criteria);
+    }
+
+    public function getBySection($id)
+    {
+        return response()->json(Criteria::where('SectionID', $id)->get());
+    }
 }

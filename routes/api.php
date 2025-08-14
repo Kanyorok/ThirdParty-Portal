@@ -8,6 +8,12 @@ use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
+// use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
+use App\Http\Controllers\Procurement\TenderApiController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\SupplierCategoryController;
+use App\Http\Controllers\Procurement\SupplierController;
 
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
@@ -18,6 +24,16 @@ Route::prefix('third-party-auth')->group(function () {
 
 // step 2: Register company info (associated third party)
 Route::post('third-parties/register-details', [ThirdPartyController::class, 'store']);
+
+// Tenders
+Route::get('/tenders', [TenderApiController::class, 'index']);
+Route::post('/tenders', [TenderApiController::class, 'store']);
+Route::put('/tenders/{id}', [TenderApiController::class, 'update']);
+Route::delete('/tenders/{id}', [TenderApiController::class, 'destroy']);
+Route::post('/tenders/{tenderId}/items', [TenderApiController::class, 'addItem']);
+Route::delete('/tenders/{tenderId}/items/{itemId}', [TenderApiController::class, 'deleteItem']);
+Route::post('/tenders/{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
+Route::delete('/tenders/{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/thirdpartyuser', function (Request $request) {
@@ -44,10 +60,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('{third_party}', [ThirdPartyController::class, 'show']);
         Route::put('{third_party}', [ThirdPartyController::class, 'update']);
         Route::delete('{third_party}', [ThirdPartyController::class, 'destroy']);
-        Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
-        Route::patch('{third_party}/approve', [ThirdPartyController::class, 'approve']);
-        Route::patch('{third_party}/reject', [ThirdPartyController::class, 'reject']);
-        Route::patch('{third_party}/status', [ThirdPartyController::class, 'updateStatus']);
+        // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
+        // Route::patch('{third_party}/approve', [ThirdPartyController::class, 'approve']);
+        // Route::patch('{third_party}/reject', [ThirdPartyController::class, 'reject']);
+        // Route::patch('{third_party}/status', [ThirdPartyController::class, 'updateStatus']);
     });
 
     Route::apiResource('third-parties-bank-details', ThirdPartiesBankDetailsController::class);
@@ -59,6 +75,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::prefix('v1')->group(function () {
     Route::get('currencies', [ApiCurrencyController::class, 'list']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('proc')->name('proc.api.')->group(function () {
+        Route::apiResource('supplier-cat', SupplierCategoryController::class);
+        Route::apiResource('supp', SupplierController::class);
+    });
 });
 
 Route::prefix('v1')->group(function () {
@@ -90,5 +113,41 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('inventory')->group(function () {
         Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);
+    });
+});
+
+
+// API Routes (for Supplier Portal)
+// Route::prefix('prequalification')->group(
+//     function () {
+
+Route::prefix('prequalification')->middleware(['auth:sanctum'])->name('api.procurement.')->group(
+    function () {
+        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('applications.api.index');
+        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('applications.api.show');
+        Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+    }
+);
+
+Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
+    // Admin and Public Routes for Prequalification Periods
+    // Route::controller(PrequalificationPeriodController::class)->group(function () {
+    //     Route::post('prequal-periods', 'store')->middleware('can:create,App\Models\Procurement\PrequalificationPeriod');
+    //     Route::get('prequal-periods/{period}', 'show')->middleware('can:view,period');
+    // });
+
+    // Supplier Routes
+    // Route::middleware('role:supplier')->group(function () {
+    //     Route::controller(SupplierApplicationController::class)->group(function () {
+    //         Route::post('supplier/applications', 'store');
+    //         Route::get('supplier/applications/{application}', 'show')->middleware('can:view,application');
+    //     });
+    // });
+
+    // Evaluator Routes
+    Route::middleware('role:evaluator')->group(function () {
+        Route::controller(PrequalificationEvaluationController::class)->group(function () {
+            Route::post('evaluator/evaluations', 'store');
+        });
     });
 });

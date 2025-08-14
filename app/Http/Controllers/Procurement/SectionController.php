@@ -7,16 +7,17 @@ use App\Models\Procurement\Section;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Auth\User;
+use Illuminate\View\View;
 
 class SectionController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): View
     {
         $sections = Section::all();
+        // $section = Section::with('criteria')->get();
         return view('procurement.tendering.settings.sections', compact('sections'));
     }
 

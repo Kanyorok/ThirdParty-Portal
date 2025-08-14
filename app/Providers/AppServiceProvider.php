@@ -83,7 +83,6 @@ use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItem;
-use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
@@ -146,7 +145,7 @@ use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
 use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
-Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
+use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
@@ -163,6 +162,9 @@ use Spatie\Permission\Models\Role;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\TaxJurisdiction;
+
+use App\Models\Procurement\Section;
+use Illuminate\Support\Facades\View;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -270,7 +272,7 @@ class AppServiceProvider extends ServiceProvider
             BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
             BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
             BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
-            
+
             //Property Management
             PropertyType::getPrimaryKey() => PropertyType::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
@@ -299,19 +301,16 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
-            
-            
 
 
 
 
-
-            PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+            // PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
             //////////////  Finance  ////////////////
-            FinanceGLAccounts::getPrimaryKey()=>FinanceGLAccounts::class,
-            FinanceGLSubAccountTypes::getPrimaryKey()=>FinanceGLSubAccountTypes::class,
-            FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
+            FinanceGLAccounts::getPrimaryKey() => FinanceGLAccounts::class,
+            FinanceGLSubAccountTypes::getPrimaryKey() => FinanceGLSubAccountTypes::class,
+            FinanceGLTypeGroup::getPrimaryKey() => FinanceGLTypeGroup::class,
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
@@ -348,7 +347,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);
         Gate::policy(PropertyBlock::class, PropertyStructuralPolicy::class);
-        Gate::policy(PropertyAttachments::class, PropertyAttachmentsPolicy::class);       
+        Gate::policy(PropertyAttachments::class, PropertyAttachmentsPolicy::class);
         Gate::policy(PropertyNewTenant::class, PropertyNewTenantPolicy::class);
         Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
@@ -360,7 +359,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
         Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
-        Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
+        // Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
 
@@ -402,6 +401,12 @@ class AppServiceProvider extends ServiceProvider
          Event::listen(CampaignSubmittedEvent::class);
          Event::listen(CampaignRunEvent::class);*/
 
-
+        View::composer(
+            ['procurement.suppliers.prequalification.prequalification-rounds.create', 'procurement.suppliers.prequalification.prequalification-rounds.edit'],
+            function ($view) {
+                $masterSections = Section::with('criteria')->get();
+                $view->with('masterSections', $masterSections);
+            }
+        );
     }
 }

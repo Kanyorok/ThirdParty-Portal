@@ -4,6 +4,7 @@ namespace App\Models\Procurement;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Criteria extends Model
@@ -15,6 +16,8 @@ class Criteria extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Criterias';
+    protected $primaryKey = 'id';
+
     protected $fillable = [
         'CriteriaName',
         'Description',
@@ -23,19 +26,18 @@ class Criteria extends Model
         'CreatedBy',
         'ModifiedBy',
     ];
+
     protected $casts = [
-        'CreatedOn' => 'datetime',
-        'ModifiedOn' => 'datetime',
-        'DeletedOn' => 'datetime',
+        'IsActive' => 'boolean',
     ];
+
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(Section::class, 'SectionID', 'id');
+    }
 
     public static function getPrimaryKey(): string
     {
-        return (new self())->getRouteKeyName();
-    }
-
-    public function getRouteKeyName(): string
-    {
-        return 'CriteriaID';
+        return (new static())->primaryKey;
     }
 }

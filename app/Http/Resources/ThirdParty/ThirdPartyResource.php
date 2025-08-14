@@ -30,6 +30,7 @@ class ThirdPartyResource extends JsonResource
             'modifiedOn' => optional($this->ModifiedOn)->format('Y-m-d H:i:s'),
             'createdBy' => $this->CreatedBy,
             'isActive' => (bool) $this->IsActive,
+            'categories' => SupplierCategoryResource::collection($this->whenLoaded('categories')),
         ];
     }
 }

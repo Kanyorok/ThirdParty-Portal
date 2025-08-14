@@ -13,18 +13,30 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
 
+
 class ThirdPartyUserProfileController extends Controller
 {
+    /**
+     * Display the authenticated user's profile.
+     *
+     * @return JsonResponse
+     */
     public function show(): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
-        $user->load('thirdParty');
+        $user->load('thirdParty.categories');
 
         return response()->json([
             'user_profile' => new ThirdPartyUserResource($user),
         ]);
     }
 
+    /**
+     * Update the authenticated user's profile and associated ThirdParty record.
+     *
+     * @param  ThirdPartyAuthUpdateThirdPartyUserProfileRequest $request
+     * @return JsonResponse
+     */
     public function update(ThirdPartyAuthUpdateThirdPartyUserProfileRequest $request): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
@@ -60,13 +72,19 @@ class ThirdPartyUserProfileController extends Controller
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
                 ])->save();
+
+                // Check for categories and sync them
+                if (isset($data['categories']) && is_array($data['categories'])) {
+                    $thirdParty->categories()->sync($data['categories']);
+                }
             });
         } catch (\Exception $e) {
             Log::error('Profile update failed: ' . $e->getMessage(), ['user_id' => Auth::id(), 'exception' => $e]);
             return response()->json(['message' => __('auth.profile_update_failed')], 500);
         }
 
-        $user->load('thirdParty');
+        // Load the ThirdParty profile AND its nested categories for the response
+        $user->load('thirdParty.categories');
 
         return response()->json([
             'message' => __('auth.profile_update_ok'),
@@ -74,6 +92,12 @@ class ThirdPartyUserProfileController extends Controller
         ]);
     }
 
+    /**
+     * Perform a partial update on the authenticated user's profile and associated ThirdParty record.
+     *
+     * @param  Request $request
+     * @return JsonResponse
+     */
     public function partialUpdate(Request $request): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
@@ -99,6 +123,8 @@ class ThirdPartyUserProfileController extends Controller
                 'country' => ['sometimes', 'string', 'max:255'],
                 'physicalAddress' => ['sometimes', 'string', 'max:255'],
                 'website' => ['sometimes', 'nullable', 'string', 'url', 'max:255'],
+                'categories' => ['sometimes', 'array'],
+                'categories.*' => ['integer', 'exists:t_SupplierCategories,Id'],
             ];
 
             $validatedData = $request->validate($rules);
@@ -111,24 +137,15 @@ class ThirdPartyUserProfileController extends Controller
                 $userUpdateFields = [];
                 $thirdPartyUpdateFields = [];
 
-                if (isset($validatedData['firstName'])) {
-                    $userUpdateFields['FirstName'] = $validatedData['firstName'];
-                }
-                if (isset($validatedData['lastName'])) {
-                    $userUpdateFields['LastName'] = $validatedData['lastName'];
-                }
-                if (isset($validatedData['phone'])) {
-                    $userUpdateFields['Phone'] = $validatedData['phone'];
-                }
-                if (isset($validatedData['email'])) {
-                    $userUpdateFields['Email'] = $validatedData['email'];
-                }
-                if (isset($validatedData['gender'])) {
-                    $userUpdateFields['Gender'] = $validatedData['gender'];
-                }
-                if (isset($validatedData['imageId'])) {
-                    $userUpdateFields['ImageId'] = $validatedData['imageId'];
-                }
+                // Assign user-related fields
+                $userUpdateFields = array_filter([
+                    'FirstName' => $validatedData['firstName'] ?? null,
+                    'LastName' => $validatedData['lastName'] ?? null,
+                    'Phone' => $validatedData['phone'] ?? null,
+                    'Email' => $validatedData['email'] ?? null,
+                    'Gender' => $validatedData['gender'] ?? null,
+                    'ImageId' => $validatedData['imageId'] ?? null,
+                ]);
 
                 if (!empty($userUpdateFields)) {
                     $userUpdateFields['ModifiedBy'] = Auth::id();
@@ -136,35 +153,27 @@ class ThirdPartyUserProfileController extends Controller
                     $user->fill($userUpdateFields)->save();
                 }
 
-                if (isset($validatedData['tradingName'])) {
-                    $thirdPartyUpdateFields['TradingName'] = $validatedData['tradingName'];
-                }
-                if (isset($validatedData['businessType'])) {
-                    $thirdPartyUpdateFields['BusinessType'] = $validatedData['businessType'];
-                }
-                if (isset($validatedData['registrationNumber'])) {
-                    $thirdPartyUpdateFields['RegistrationNumber'] = $validatedData['registrationNumber'];
-                }
-                if (isset($validatedData['taxPin'])) {
-                    $thirdPartyUpdateFields['TaxPIN'] = $validatedData['taxPin'];
-                }
-                if (isset($validatedData['vatNumber'])) {
-                    $thirdPartyUpdateFields['VATNumber'] = $validatedData['vatNumber'];
-                }
-                if (isset($validatedData['country'])) {
-                    $thirdPartyUpdateFields['Country'] = $validatedData['country'];
-                }
-                if (isset($validatedData['physicalAddress'])) {
-                    $thirdPartyUpdateFields['PhysicalAddress'] = $validatedData['physicalAddress'];
-                }
-                if (isset($validatedData['website'])) {
-                    $thirdPartyUpdateFields['Website'] = $validatedData['website'];
-                }
+                // Assign ThirdParty-related fields
+                $thirdPartyUpdateFields = array_filter([
+                    'TradingName' => $validatedData['tradingName'] ?? null,
+                    'BusinessType' => $validatedData['businessType'] ?? null,
+                    'RegistrationNumber' => $validatedData['registrationNumber'] ?? null,
+                    'TaxPIN' => $validatedData['taxPin'] ?? null,
+                    'VATNumber' => $validatedData['vatNumber'] ?? null,
+                    'Country' => $validatedData['country'] ?? null,
+                    'PhysicalAddress' => $validatedData['physicalAddress'] ?? null,
+                    'Website' => $validatedData['website'] ?? null,
+                ]);
 
                 if (!empty($thirdPartyUpdateFields)) {
                     $thirdPartyUpdateFields['ModifiedBy'] = Auth::id();
                     $thirdPartyUpdateFields['ModifiedOn'] = now();
                     $thirdParty->fill($thirdPartyUpdateFields)->save();
+                }
+
+                // Check for categories and sync them
+                if (isset($validatedData['categories'])) {
+                    $thirdParty->categories()->sync($validatedData['categories']);
                 }
             });
         } catch (ValidationException $e) {
@@ -177,7 +186,8 @@ class ThirdPartyUserProfileController extends Controller
             return response()->json(['message' => __('auth.profile_update_failed')], 500);
         }
 
-        $user->load('thirdParty');
+        // Load the ThirdParty profile AND its nested categories for the response
+        $user->load('thirdParty.categories');
 
         return response()->json([
             'message' => __('auth.profile_update_ok'),
@@ -185,6 +195,12 @@ class ThirdPartyUserProfileController extends Controller
         ]);
     }
 
+    /**
+     * Change the authenticated user's password.
+     *
+     * @param  Request $request
+     * @return JsonResponse
+     */
     public function changePassword(Request $request): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();
@@ -219,6 +235,12 @@ class ThirdPartyUserProfileController extends Controller
         }
     }
 
+    /**
+     * Delete the authenticated user's profile.
+     *
+     * @param  Request $request
+     * @return JsonResponse
+     */
     public function destroy(Request $request): JsonResponse
     {
         $user = Auth::guard('sanctum')->user();

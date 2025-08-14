@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Web\ThirdParty;
 
+use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
@@ -55,24 +57,26 @@ class ThirdPartyWebController extends Controller
                 ->addColumn('BusinessType', fn(ThirdParties $thirdParty) => $thirdParty->BusinessType?->label() ?? 'N/A')
                 ->addColumn('ApprovalStatus', fn(ThirdParties $thirdParty) => $thirdParty->ApprovalStatus?->label() ?? $thirdParty->ApprovalStatus?->value ?? 'N/A')
                 ->addColumn('IsPrequalified', fn(ThirdParties $thirdParty) => $thirdParty->IsPrequalified ? 'Yes' : 'No')
-                ->addColumn('actions', fn(ThirdParties $thirdParty) => '<a href="' . route('web.parties.show', ['party' => $thirdParty->Id]) . '" class="btn btn-sm btn-info">View</a>')
+                ->addColumn('actions', fn(ThirdParties $thirdParty) => '<a href="' . route('thirdparty.parties.show', ['party' => $thirdParty->Id]) . '" class="btn btn-sm btn-info">View</a>')
                 ->rawColumns(['actions'])
                 ->make(true);
         }
 
-        return view('third-parties.index');
+        return view('thirdparty.parties.index');
     }
 
     public function create(): View
     {
-        return view('third-parties.create');
+        $businessTypes = BusinessTypeEnum::cases();
+        $approvalStatuses = ThirdPartyApprovalStatusEnum::cases();
+        return view('thirdparty.parties.create', compact('businessTypes', 'approvalStatuses'));
     }
 
     public function store(StoreThirdPartyRequest $request): RedirectResponse
     {
         try {
             $party = ThirdParties::create($request->validated());
-            return redirect()->route('web.parties.show', ['party' => $party->Id])
+            return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
                 ->with('success', 'Third party created successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to create third party: ' . $e->getMessage(), ['request_data' => $request->all()]);
@@ -84,12 +88,14 @@ class ThirdPartyWebController extends Controller
 
     public function show(ThirdParties $party): View
     {
-        return view('third-parties.show', compact('party'));
+        return view('thirdparty.parties.show', compact('party'));
     }
 
     public function edit(ThirdParties $party): View
     {
-        return view('third-parties.edit', compact('party'));
+        $businessTypes = BusinessTypeEnum::cases();
+        $approvalStatuses = ThirdPartyApprovalStatusEnum::cases();
+        return view('thirdparty.parties.edit', compact('party', 'businessTypes', 'approvalStatuses'));
     }
 
     public function update(UpdateThirdPartyRequest $request, ThirdParties $party): RedirectResponse
@@ -100,11 +106,11 @@ class ThirdPartyWebController extends Controller
 
             $party->update($data);
 
-            return redirect()->route('web.parties.show', ['party' => $party->Id])
+            return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
                 ->with('success', 'Third party information updated successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to update third party: ' . $e->getMessage(), ['partyId' => $party->Id, 'request_data' => $request->all()]);
-            return redirect()->route('web.parties.show', ['party' => $party->Id])
+            return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
                 ->with('error', 'Failed to update third party information. Please try again.');
         }
     }
@@ -118,7 +124,7 @@ class ThirdPartyWebController extends Controller
             }
             $party->delete();
 
-            return redirect()->route('web.parties.index')
+            return redirect()->route('thirdparty.parties.index')
                 ->with('success', 'Third party deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to delete third party: ' . $e->getMessage(), ['partyId' => $party->Id]);

@@ -18,6 +18,8 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     require __DIR__ . '/hrms.php';
     require __DIR__ . '/budget.php';
     require __DIR__ . '/thirdparty.php';
+    require __DIR__ . '/prequalification.php';
+    require __DIR__ . '/supplier-cat.php';
 
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');

@@ -4,7 +4,10 @@ namespace App\Models\Procurement;
 
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
+use App\Models\Procurement\Criteria;
 
 class Section extends Model
 {
@@ -15,6 +18,8 @@ class Section extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Sections';
+    protected $primaryKey = 'id';
+
     protected $fillable = [
         'SectionName',
         'Description',
@@ -22,25 +27,22 @@ class Section extends Model
         'CreatedBy',
         'ModifiedBy',
     ];
+
     protected $casts = [
         'IsActive' => 'boolean',
-        'CreatedOn' => 'datetime',
-        'ModifiedOn' => 'datetime',
-        'DeletedOn' => 'datetime',
     ];
-    protected $primaryKey = 'id';
 
     public static function getPrimaryKey(): string
     {
-        return (new self())->getRouteKeyName();
+        return (new static())->primaryKey;
     }
 
     public function getRouteKeyName(): string
     {
-        return 'id';
+        return $this->primaryKey;
     }
 
-    public function criteria()
+    public function criteria(): HasMany
     {
         return $this->hasMany(Criteria::class, 'SectionID', 'id');
     }

@@ -8,12 +8,14 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
-use App\Enums\Procurement\PrequalificationPeriodEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\TicketStatusEnum;
 use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
+use App\Enums\Procurement\PrequalificationStatusEnum;
+use App\Enums\Procurement\PrequalificationRoundEnum;
+use App\Enums\Procurement\PrequalificationApplicationEnum;
 use App\Enums\BusinessTypeEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
@@ -96,20 +98,21 @@ class CodeDetailSeeder extends Seeder
                 'DisplayOrder' => $index + 1,
             ]);
         }
-        foreach (PrequalificationPeriodEnum::cases() as $index => $prequalificationperiodEnum) {
-            $entries->push([
-                'CodeID' => 'PrequalificationPeriodStatus',
-                'Value' => $prequalificationperiodEnum->value,
-                'Description' => $prequalificationperiodEnum->name,
-                'DisplayOrder' => $index + 1,
-            ]);
-        }
 
         foreach (ThirdPartyTypeEnum::cases() as $index => $thirdPartyTypeEnum) {
             $entries->push([
                 'CodeID' => 'ThirdPartyType',
                 'Value' => $thirdPartyTypeEnum->value,
                 'Description' => $thirdPartyTypeEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (PrequalificationStatusEnum::cases() as $index => $PrequalificationStatusEnum) {
+            $entries->push([
+                'CodeID' => 'PrequalificationStatus',
+                'Value' => $PrequalificationStatusEnum->value,
+                'Description' => $PrequalificationStatusEnum->name,
                 'DisplayOrder' => $index + 1,
             ]);
         }
@@ -128,6 +131,24 @@ class CodeDetailSeeder extends Seeder
                 'CodeID' => 'ThirdPartyStatus',
                 'Value' => $thirdPartyStatusEnum->value,
                 'Description' => $thirdPartyStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (PrequalificationRoundEnum::cases() as $index => $prequalificationRoundEnum) {
+            $entries->push([
+                'CodeID' => 'PrequalificationRound',
+                'Value' => $prequalificationRoundEnum->value,
+                'Description' => $prequalificationRoundEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (PrequalificationApplicationEnum::cases() as $index => $prequalificationApplicationEnum) {
+            $entries->push([
+                'CodeID' => 'PrequalificationApplication',
+                'Value' => $prequalificationApplicationEnum->value,
+                'Description' => $prequalificationApplicationEnum->name,
                 'DisplayOrder' => $index + 1,
             ]);
         }
@@ -158,10 +179,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'SubmissionMode', 'Description' => 'Courier'],
 
             // GL Account Types
-            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A','DisplayOrder'=>0],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L','DisplayOrder'=>0],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I','DisplayOrder'=>0],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E','DisplayOrder'=>0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A', 'DisplayOrder' => 0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L', 'DisplayOrder' => 0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I', 'DisplayOrder' => 0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E', 'DisplayOrder' => 0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
@@ -237,7 +258,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PriorityLevel', 'Description' => 'Critical', 'Value' => 'C'],
 
             // Property DocumentType
-            ['CodeID' => 'DocumentType', 'Description' => 'Ownership','Value' => 'S'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Ownership', 'Value' => 'S'],
             ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan', 'Value' => 'A'],
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],

@@ -16,4 +16,13 @@ enum ThirdPartyApprovalStatusEnum: string
             self::Rejected => 'Rejected',
         };
     }
+
+    public function getBadgeClass(): string
+    {
+        return match ($this) {
+            self::Pending => 'pending',
+            self::Approved => 'approved',
+            self::Rejected => 'rejected',
+        };
+    }
 }
