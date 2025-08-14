@@ -166,6 +166,11 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentFrequency', 'Description' => 'Quarterly', 'Value' => 'Q'],
             ['CodeID' => 'PaymentFrequency', 'Description' => 'Monthly', 'Value' => 'M'],
 
+            // Payment Type
+            ['CodeID' => 'PaymentType', 'Description' => 'Full', 'Value' => 'F'],
+            ['CodeID' => 'PaymentType', 'Description' => 'Partial', 'Value' => 'P'],
+            ['CodeID' => 'PaymentType', 'Description' => 'Scheduled', 'Value' => 'S'],
+
             // Termination Reason
             ['CodeID' => 'TerminationReason', 'Description' => 'Relocation', 'Value' => 'R'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],

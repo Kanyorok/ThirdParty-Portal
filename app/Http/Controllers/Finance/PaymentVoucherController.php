@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Core\CodeDetail;
 use App\Models\Core\Currency;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceVoucher;
@@ -22,7 +23,8 @@ class PaymentVoucherController extends Controller
 
 
         $vouchers = FinanceVoucher::with('invoice:Id,InvoiceNumber')
-            ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotAmnt', 'PaymentMethod', 'Status', 'PaymentType', 'Description')
+            ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
+                            'ApprovalStatus','PaymentType', 'Description')
             ->get();
         return view('finance.accountspayable.paymentvoucher.index', compact('vouchers'));
     }
@@ -33,10 +35,13 @@ class PaymentVoucherController extends Controller
 
         $year = now()->year;
         $lastId = FinanceVoucher::max('Id') + 1;
-        $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6,'0', STR_PAD_LEFT); 
-        $invoices = FinanceInvoiceEntry::select('Id', 'InvoiceNumber','SupplierID','CurrencyID', 'InvoiceAmount')
+        $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6,'0', STR_PAD_LEFT);
+        $invoices = FinanceInvoiceEntry::with('currency:Id,Code')
+                            ->select('Id', 'InvoiceNumber','SupplierID','CurrencyID', 'InvoiceAmount')
             ->get();
-        return view('finance.accountspayable.paymentvoucher.create', compact('invoices', 'VoucherNo'));
+        $paymentMethods=CodeDetail::where('CodeID', 'PaymentMethod')->get();
+        $paymentTypes=CodeDetail::where('CodeID', 'PaymentType')->get();
+        return view('finance.accountspayable.paymentvoucher.create', compact('invoices', 'VoucherNo', 'paymentMethods', 'paymentTypes'));
     }
 
     public function store(Request $request){
@@ -86,7 +91,7 @@ class PaymentVoucherController extends Controller
                 'CreatedBy'  =>Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);
-            
+
             activity()
                 ->performedOn($voucher)
                 ->causedBy(Auth::user())
@@ -99,7 +104,7 @@ class PaymentVoucherController extends Controller
         }catch (\Throwable $th) {
             DB::rollBack();
             Log::error($th->getMessage());
-            return back()->with('error', $th->getMessage());    
+            return back()->with('error', $th->getMessage());
         }
     }
 

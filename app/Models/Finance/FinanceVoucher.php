@@ -27,6 +27,7 @@ class FinanceVoucher extends Model
         'Frequency',
         'ApprovalStatus',
         'ApprovalReason',
+        'Status',
         'Description',
         'Reasons',
         'CreatedBy',
