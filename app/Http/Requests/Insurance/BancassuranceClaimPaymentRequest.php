@@ -4,7 +4,7 @@ namespace App\Http\Requests\Insurance;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class BancassuranceClaimRequest extends FormRequest
+class BancassuranceClaimPaymentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,12 +22,13 @@ class BancassuranceClaimRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'PolicyId' => 'required|exists:t_BancassurancePolicies,Id',
-            'ClaimType' => 'required|exists:t_CodeDetails,ID',
-            'ClaimReason' => 'required|string',
-            'ClaimAmount' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
-            'ClaimDate' => 'required|date',
-            'Status' => 'required|exists:t_CodeDetails,ID',
+            'ClaimId' => 'required|exists:t_BancassuranceClaims,Id',
+            'PaymentDate' => 'required|date',
+            'PaymentAmount' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
+            'PaymentReference' => 'required|string',
+            'Note' => 'required|string',
+            'PaidBy' => 'required|string',
+            'PaymentMethod' => 'required|exists:t_CodeDetails,ID'
         ];
     }
 }

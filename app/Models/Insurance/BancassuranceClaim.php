@@ -20,9 +20,13 @@ class BancassuranceClaim extends Model
 
     protected $fillable = [
         'PolicyId','ClaimType','ClaimReason','ClaimAmount','ClaimDate','Status',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy',
+        'CreatedBy','ModifiedBy','DeletedBy',
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'bancassuranceclaimId';
+    }
 
     // Relationships
     public function policy()
@@ -33,6 +37,11 @@ class BancassuranceClaim extends Model
     public function claimtype()
     {
         return $this->belongsTo(CodeDetail::class, 'ClaimType', 'ID');
+    }
+    
+    public function status()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
     }
 
 }

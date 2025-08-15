@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Enums\Insurance\InsuranceReferralStatus;
 use App\Http\Controllers\Controller;
@@ -11,7 +12,6 @@ use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
-use App\Models\Insurance\BancassuranceUnderwriting;
 use App\Services\Insurance\BancassurancePolicyService;
 use App\Services\Insurance\BancassuranceUnderwritingService;
 use Illuminate\Http\Request;
@@ -23,6 +23,7 @@ class PolicyController extends Controller
     //
 public function create(Request $request)
 {
+    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $referrals = BancAssuranceReferral::all();
     $customers = BancassuranceCustomer::all();
     $products = CodeDetail::where('CodeID', 'InsuranceProduct')->get();
@@ -36,6 +37,7 @@ public function create(Request $request)
 
 public function store(BancassurancePolicyRequest $request)
 {
+    $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
     $validated = $request->validated();
 
     $CustomerId = BancassuranceCustomer::findOrFail($validated['CustomerID']);
@@ -80,6 +82,7 @@ public function store(BancassurancePolicyRequest $request)
 
 public function index(Request $request)
 {
+    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $statuses = InsurancePolicyStatus::cases();
 
     $query = BancassurancePolicy::with(['customer', 'product', 'insurer'])
@@ -100,6 +103,7 @@ public function index(Request $request)
 
 public function submitForUnderwriting(Request $request, $id)
 {
+    $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
     $request = $request->validate([
         'Document' => 'nullable|file|max:2048'
     ]);
@@ -134,6 +138,7 @@ public function submitForUnderwriting(Request $request, $id)
 
 public function reviewIndex()
 {
+    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $proposals = BancassurancePolicy::with(['customer', 'product'])
         ->whereIn('Status', [InsurancePolicyStatus::Proposal,InsurancePolicyStatus::SubmittedForUnderwriting])->get();
 
@@ -142,6 +147,7 @@ public function reviewIndex()
 
 public function review($id)
 {
+    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $policy = BancassurancePolicy::with(['customer','product'])->find($id);
 
     if (!$policy) {
@@ -155,6 +161,7 @@ public function review($id)
 // Show the feedback form
 public function feedbackForm($id) 
 {
+    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $policy = BancassurancePolicy::with('customer')
         ->find($id);
 

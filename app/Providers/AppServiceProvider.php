@@ -65,6 +65,7 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\BancassuranceCustomer;
@@ -120,6 +121,7 @@ use App\Policies\CrmBranchPolicy;
 use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\RepositoryPolicy;
+use App\Policies\Insurance\BancassuranceClaimPolicy;
 use App\Policies\Insurance\BancassurancePoliciesPolicy;
 use App\Policies\Insurance\BancassurancePremiumPaymentsPolicy;
 use App\Policies\Insurance\BancAssuranceReferralPolicy;
@@ -321,6 +323,7 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
             BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
             BancassuranceUnderwriting::getPrimarykey() => BancassuranceUnderwriting::class,
+            BancassuranceClaim::getPrimaryKey() => BancassuranceClaim::class,
             
             
 
@@ -390,6 +393,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BancassuranceBeneficiaries::class, BancassuranceCustomersBeneficiariesPolicy::class);
         Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
         Gate::policy(BancassuranceUnderwriting::class,BancassuranceUnderwritingPolicy::class);
+        Gate::policy(BancassuranceClaim::class,BancassuranceClaimPolicy::class);
 
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);

@@ -8,18 +8,19 @@
     <form action="{{ route('bancassurance.claims.payments.store') }}" method="POST">
         @csrf
 
+        
         <div class="mb-3">
             <label class="form-label">Select Claim</label>
-            <select name="ClaimID" id="ClaimID" class="form-select" required onchange="populateClaimDetails(this)">
+            <select name="ClaimId" id="ClaimId" class="form-select" required onchange="populateClaimDetails(this)">
                 <option value="">-- Choose Unpaid Claim --</option>
                 @foreach($unpaidClaims as $claim)
                     <option 
                         value="{{ $claim->Id }}"
-                        data-amount="{{ $claim->ApprovedAmount }}"
-                        data-customer="{{ $claim->CustomerName }}"
-                        data-policy="{{ $claim->PolicyNumber }}"
+                        data-amount="{{ $claim->ClaimAmount }}"
+                        data-customer="{{ $claim->policy->customer->FullName }}"
+                        data-policy="{{ $claim->policy->PolicyNumber }}"
                     >
-                        {{ $claim->PolicyNumber }} – {{ $claim->CustomerName }} (KES {{ number_format($claim->ApprovedAmount, 2) }})
+                        {{ $claim->policy->PolicyNumber }}
                     </option>
                 @endforeach
             </select>
@@ -36,8 +37,8 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Amount to Pay (KES)</label>
-            <input type="number" name="AmountPaid" id="AmountPaid" class="form-control" step="0.01" required>
+            <label class="form-label">Amount to Pay</label>
+            <input type="number" name="PaymentAmount" id="PaymentAmount" class="form-control" step="0.01" required>
         </div>
 
         <div class="mb-3">
@@ -46,17 +47,32 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Payment Mode</label>
-            <select name="PaymentMode" class="form-select" required>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Cheque">Cheque</option>
-                <option value="MPesa">MPesa</option>
-                <option value="Cash">Cash</option>
+            <label class="form-label">Payment Method</label>
+            <select name="PaymentMethod" class="form-select" required>
+                <option value="#">-- Select Payment --</option>
+                @foreach ($payments as $payment)
+                    <option value="{{ $payment->ID }}">{{ $payment->Description }}</option>
+                @endforeach
             </select>
         </div>
 
+        <div class="mb-3">
+            <label class="form-label">Payment Reference</label>
+            <input type="text" name="PaymentReference" id="PaymentReference" class="form-control" step="0.01" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Paid by</label>
+            <input type="text" name="PaidBy" id="PaidBy" class="form-control" step="0.01" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Note</label>
+            <input type="text" name="Note" id="Note" class="form-control" step="0.01" required>
+        </div>
+
         <div class="text-end">
-            <button type="submit" class="btn btn-success">💸 Process Payment</button>
+            <button type="submit" class="btn btn-success">Process Payment</button>
         </div>
     </form>
 </div>
@@ -66,7 +82,7 @@
         const selected = select.options[select.selectedIndex];
         document.getElementById('CustomerName').value = selected.getAttribute('data-customer') || '';
         document.getElementById('PolicyNumber').value = selected.getAttribute('data-policy') || '';
-        document.getElementById('AmountPaid').value = selected.getAttribute('data-amount') || '';
+        document.getElementById('PaymentAmount').value = selected.getAttribute('data-amount') || '';
     }
 </script>
 @endsection

@@ -278,6 +278,20 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'Decision','Description' => 'Decline', 'Value' => 'D'],
             ['CodeID' => 'Decision','Description' => 'More Information Needed', 'Value' => 'M'],
 
+            //Insurance Claim type
+            ['CodeID' => 'ClaimType','Description' => 'Death', 'Value' => 'D'],
+            ['CodeID' => 'ClaimType','Description' => 'Accident', 'Value' => 'A'],
+            ['CodeID' => 'ClaimType','Description' => 'Loss', 'Value' => 'L'],
+            ['CodeID' => 'ClaimType','Description' => 'Medical', 'Value' => 'M'],
+            ['CodeID' => 'ClaimType','Description' => 'Other', 'Value' => 'O'],
+
+            //Insurance Claim Status
+            ['CodeID' => 'ClaimStatus','Description' => 'Initiated', 'Value' => 'I'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Under Assessment', 'Value' => 'U'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Rejected', 'Value' => 'R'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Paid', 'Value' => 'P'],
+
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],

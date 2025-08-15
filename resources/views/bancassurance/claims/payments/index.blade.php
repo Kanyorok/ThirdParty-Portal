@@ -15,7 +15,7 @@
                 <th>Policy</th>
                 <th>Customer</th>
                 <th>Claim Type</th>
-                <th>Paid Amount (KES)</th>
+                <th>Paid Amount</th>
                 <th>Payment Date</th>
                 <th>Reference</th>
             </tr>
@@ -24,11 +24,11 @@
             @foreach($payments as $pay)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $pay->PolicyNumber }}</td>
-                <td>{{ $pay->CustomerName }}</td>
-                <td>{{ $pay->ClaimType }}</td>
-                <td>{{ $pay->FormattedAmount }}</td>
-                <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('Y-m-d') }}</td>
+                <td>{{ $pay->claim->policy->PolicyNumber }}</td>
+                <td>{{ $pay->claim->policy->customer->FullName }}</td>
+                <td>{{ $pay->claim->claimtype->Description }}</td>
+                <td>{{ $pay->PaymentAmount }}</td>
+                <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d/m/Y') }}</td>
                 <td>{{ $pay->PaymentReference }}</td>
             </tr>
             @endforeach
