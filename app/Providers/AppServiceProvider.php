@@ -73,6 +73,9 @@ use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassurancePremiumPayments;
 use App\Models\Insurance\BancassuranceUnderwriting;
+use App\Models\Insurance\InsuranceProvider;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -129,6 +132,9 @@ use App\Policies\Insurance\BancassuranceCustomersPolicy;
 use App\Policies\Insurance\BancassuranceCustomersContactsPolicy;
 use App\Policies\Insurance\BancassuranceCustomersBeneficiariesPolicy;
 use App\Policies\Insurance\BancassuranceUnderwritingPolicy;
+use App\Policies\Insurance\InsuranceProviderPolicy;
+use App\Policies\Insurance\InsuranceProductPolicy;
+use App\Policies\Insurance\InsuranceProductRiderPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
@@ -178,7 +184,6 @@ use Spatie\Permission\Models\Role;
 use App\Models\Finance\FinanceInvoiceEntry;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\TaxJurisdiction;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -322,12 +327,13 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
             BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
             BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
-            BancassuranceUnderwriting::getPrimarykey() => BancassuranceUnderwriting::class,
+            BancassuranceUnderwriting::getPrimaryKey() => BancassuranceUnderwriting::class,
             BancassuranceClaim::getPrimaryKey() => BancassuranceClaim::class,
+            InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
+            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,    
+            InsuranceProductRider::getPrimaryKey() => InsuranceProductRider::class,    
+                    
             
-            
-
-
             //Third Parties
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
@@ -394,7 +400,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
         Gate::policy(BancassuranceUnderwriting::class,BancassuranceUnderwritingPolicy::class);
         Gate::policy(BancassuranceClaim::class,BancassuranceClaimPolicy::class);
-
+        Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
+        Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
+        Gate::policy(InsuranceProductRider::class, InsuranceProductRiderPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

@@ -4,72 +4,120 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProductRequest;
+use App\Services\Insurance\ProviderAndProducts\InsuranceProductService;
 use Illuminate\Http\Request;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProvider;
+use App\Enums\Core\PermissionEnum;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InsuranceProductController extends Controller
 {
     // Show all products
     public function index()
     {
-        $products = DB::table('t_InsuranceProducts')->orderByDesc('Id')->get();
+      $products = InsuranceProduct::all();
         return view('bancassurance.products.index', compact('products'));
     }
 
     // Show create form
     public function create()
     {
-        return view('bancassurance.products.create');
+     $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
+
+     $providers = InsuranceProvider::all();
+
+      $products = InsuranceProduct::all();
+        return view('bancassurance.products.create', compact('providers','products'));
     }
 
     // Store product
-    public function store(Request $request)
-    {
-        $request->validate([
-            'Name' => 'required|string|max:100',
-            'Type' => 'nullable|string|max:50',
-            'Description' => 'nullable|string|max:255',
-        ]);
+    public function store(InsuranceProductRequest $request)
+    { 
+      $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
 
-        DB::table('t_InsuranceProducts')->insert([
-            'Name' => $request->Name,
-            'Type' => $request->Type,
-            'Description' => $request->Description,
-            'IsActive' => 1,
-            'CreatedAt' => now()
-        ]);
+        $validated = $request->validated();
+
+        $InsuranceProviderID = InsuranceProvider::findOrFail($validated['InsuranceProviderID']);
+
+        $providers = InsuranceProductService::create(
+            $InsuranceProviderID,
+                $validated['Name'],
+                $validated['Type'],
+                $validated['Description'],
+                $validated['IsActive'],
+                Auth::user(),
+            );
 
         return redirect()->route('bancassurance.products.index')->with('success', 'Product created successfully.');
     }
 
     // Edit product
-    public function edit($id)
+    public function edit($Id)
     {
-        $product = DB::table('t_InsuranceProducts')->find($id);
+       $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
 
-        if (!$product) {
-            return redirect()->route('bancassurance.products.index')->with('error', 'Product not found.');
-        }
-
-        return view('bancassurance.products.edit', compact('product'));
+       $product = InsuranceProduct::findOrFail($Id);
+       $providers = InsuranceProvider::all();
+     
+        return view('bancassurance.products.edit', compact('product','providers'));
     }
 
     // Update product
-    public function update(Request $request, $id)
+    public function update (InsuranceProductRequest $request, $id)
     {
-        $request->validate([
-            'Name' => 'required|string|max:100',
-            'Type' => 'nullable|string|max:50',
-            'Description' => 'nullable|string|max:255',
-        ]);
+       $this->authorize(PermissionEnum::InsuranceProductUpdate, InsuranceProduct::class);
+        $validated = $request->validated();
 
-        DB::table('t_InsuranceProducts')->where('Id', $id)->update([
-            'Name' => $request->Name,
-            'Type' => $request->Type,
-            'Description' => $request->Description,
-        ]);
+        DB::beginTransaction();
 
-        return redirect()->route('bancassurance.products.index')->with('success', 'Product updated.');
+        try {
+            $product = InsuranceProduct::findOrFail($id);
+
+            $product->update([
+                'InsuranceProviderID' => $validated['InsuranceProviderID'],
+                'Name' => $validated['Name'],
+                'Type' => $validated['Type'],
+                'Description' => $validated['Description'],            
+                'IsActive' => $validated['IsActive'] ?? '',
+                'ModifiedBy' => Auth::Id(),
+            ]);
+
+            DB::commit();
+            activity()
+                ->performedOn($product)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated insurance Product');
+
+            return redirect()->route('bancassurance.products.index')->with('success', 'Insurance Product updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update Insurance Product:' . $th->getMessage());
+
+            return back()->withErrors(['error' => 'Failed to update insurance Product'])->withInput();
+        }
+    }
+
+    public function destroy($Id)
+    {
+       $this->authorize(PermissionEnum::InsuranceProductDelete, InsuranceProduct::class);
+        try {
+            $product = InsuranceProduct::findOrFail($Id);
+            $product->delete();
+
+            return redirect()->route('bancassurance.products.index')
+                ->with('success', 'Insurance Product Deleted Successfully!');
+        } catch (\Throwable $th) {
+            // Log the error for debugging
+            Log::error('Error deleting Insurance Product: ' . $th->getMessage());
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete Insurance Product. Please try again.'])
+                ->withInput();
+        }
     }
 
     public function mapForm($id)

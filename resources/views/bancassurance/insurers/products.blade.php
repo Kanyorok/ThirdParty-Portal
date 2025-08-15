@@ -18,23 +18,18 @@
                     <th>#</th>
                     <th>Product</th>
                     <th>Policy Type</th>
-                    <th>Commission Type</th>
-                    <th>Action</th>
+                    <th>Description </th>
+                    <th>Is Active </th>                 
                 </tr>
             </thead>
             <tbody>
                 @foreach($products as $product)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $product->ProductName }}</td>
-                    <td>{{ $product->PolicyType }}</td>
-                    <td>{{ $product->CommissionType }}</td>
-                    <td>
-                        <form method="POST" action="{{ route('bancassurance.insurers.products.detach', ['providerId' => $provider->Id, 'productId' => $product->MappingId]) }}" onsubmit="return confirm('Detach this product?')">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-danger">🗑 Detach</button>
-                        </form>
-                    </td>
+                    <td>{{ $product->Name }}</td>
+                    <td>{{ $product->Type }}</td>
+                    <td>{{ $product->Description }}</td>
+                    <td>{{ $product->IsActive ? 'Yes' : 'No' }}</td>              
                 </tr>
                 @endforeach
             </tbody>

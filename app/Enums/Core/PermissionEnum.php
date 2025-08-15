@@ -474,6 +474,35 @@ enum PermissionEnum: string
     case BancassurancePaymentDelete = 'bancassurancepayment-delete';
     case BancassurancePaymentUpdate = 'bancassurancepayment-update';
 
+
+// Insurance Provider
+    case InsuranceProviderView = 'insuranceprovider-view';
+    case InsuranceProviderCreate = 'insuranceprovider-create';
+    case InsuranceProviderUpdate = 'insuranceprovider-update';
+    case InsuranceProviderDelete = 'insuranceprovider-delete';
+
+    // Insurance Product
+    case InsuranceProductView = 'insuranceproduct-view';
+    case InsuranceProductCreate = 'insuranceproduct-create';
+    case InsuranceProductUpdate = 'insuranceproduct-update';
+    case InsuranceProductDelete = 'insuranceproduct-delete';
+
+
+    // Insurance Product Rider
+    case InsuranceProductRiderView = 'insuranceproductrider-view';
+    case InsuranceProductRiderCreate = 'insuranceproductrider-create';
+    case InsuranceProductRiderUpdate = 'insuranceproductrider-update';
+    case InsuranceProductRiderDelete = 'insuranceproductrider-delete';
+
+        // Insurance Pricing Rule
+    case InsurancePricingRuleView = 'insurancepricingrule-view';
+    case InsurancePricingRuleCreate = 'insurancepricingrule-create';
+    case InsurancePricingRuleUpdate = 'insurancepricingrule-update';
+    case InsurancePricingRuleDelete = 'insurancepricingrule-delete';
+
+
+
+
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -634,8 +663,12 @@ enum PermissionEnum: string
             [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
             [self::BancassuranceUnderwritingView,self::BancassuranceUnderwritingCreate,self::BancassuranceUnderwritingUpdate,self::BancassuranceUnderwritingDelete],
             [self::BancassuranceClaimView,self::BancassuranceClaimUpdate,self::BancassuranceClaimCreate,self::BancassuranceClaimDelete],
-            [self::BancassurancePaymentView,self::BancassurancePaymentCreate,self::BancassurancePaymentDelete,self::BancassurancePaymentUpdate]
-
+            [self::BancassurancePaymentView,self::BancassurancePaymentCreate,self::BancassurancePaymentDelete,self::BancassurancePaymentUpdate],
+            [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
+            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
+            [self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete],            
+            [self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete],  
+            
         ]);
     }
 
@@ -736,6 +769,10 @@ enum PermissionEnum: string
             self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete,
             self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete,
             self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete,
+            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete,
+            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete,
+            self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete,
+            self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete,
             self::BancassuranceUnderwritingView,self::BancassuranceUnderwritingCreate,self::BancassuranceUnderwritingUpdate,self::BancassuranceUnderwritingDelete,
             self::BancassuranceClaimView,self::BancassuranceClaimUpdate,self::BancassuranceClaimCreate,self::BancassuranceClaimDelete,
             self::BancassurancePaymentView,self::BancassurancePaymentCreate,self::BancassurancePaymentDelete,self::BancassurancePaymentUpdate
@@ -856,8 +893,11 @@ enum PermissionEnum: string
             self::BancassuranceUnderwritingView,self::BancassuranceUnderwritingCreate,self::BancassuranceUnderwritingUpdate,self::BancassuranceUnderwritingDelete => 'Insurance Under Writting',
             self::BancassuranceClaimView,self::BancassuranceClaimUpdate,self::BancassuranceClaimCreate,self::BancassuranceClaimDelete => 'Insurance Claim',
             self::BancassurancePaymentView,self::BancassurancePaymentCreate,self::BancassurancePaymentDelete,self::BancassurancePaymentUpdate => 'Insurance Payment',
-
-
+            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete => 'Insurance Provider ',
+            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete => 'Insurance Product ',
+            self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete => 'Insurance Product Rider  ',
+            self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete => ' Insurance Pricing Rule   ',
+            
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',

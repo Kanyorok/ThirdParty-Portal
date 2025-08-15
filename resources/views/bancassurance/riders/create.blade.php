@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('title', 'Add Rider')
-
 @section('content')
 <div class="container mt-4">
     <h4>➕ Add Rider / Add-on</h4>
@@ -9,12 +8,19 @@
         @csrf
 
         <div class="mb-3">
-            <label class="form-label">Select Provider Product</label>
-            <select name="ProviderProductID" class="form-select" required>
+            <label class="form-label">Select Provider </label>
+            <select name="InsuranceProviderId" id='Provider-select' class="form-select" required>
                 <option value="">-- Select --</option>
-                @foreach($mappedProducts as $mp)
-                    <option value="{{ $mp->Id }}">{{ $mp->MappedProduct }}</option>
+                @foreach($providers as $provider)
+                    <option value="{{ $provider->Id }}">{{ $provider->InsuranceProviderNO }}</option>
                 @endforeach
+              </select>
+        </div> 
+
+        <div class="mb-3">
+             <label class="form-label">Product</label>
+            <select name="Product" id='Product-select' class="form-select" required>
+                <option value="">-- Select --</option>
             </select>
         </div>
 
@@ -29,16 +35,18 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Additional Premium (KES)</label>
+            <label class="form-label">Additional Premium </label>
             <input type="number" name="AdditionalPremium" class="form-control" step="0.01" min="0">
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Is this rider optional?</label>
-            <select name="IsOptional" class="form-select" required>
-                <option value="1" selected>Yes</option>
-                <option value="0">No</option>
-            </select>
+        <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="IsOptional" value="1" id="primaryCheck">
+            <label class="form-check-label" for="primaryCheck">IsOptional </label>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
+            <label class="form-check-label" for="primaryCheck">IsActive </label>
         </div>
 
         <div class="text-end">
@@ -46,4 +54,36 @@
         </div>
     </form>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ProviderSelect = document.getElementById('Provider-select');
+        const ProductSelect = document.getElementById('Product-select');
+
+        ProviderSelect.addEventListener('change', function () {
+            const ProviderId = this.value;
+
+            // Reset Block dropdown
+            ProductSelect.innerHTML = '<option value="">-- Select a Product--</option>';
+
+            if (ProviderId) {
+                // Construct the URL from the named route
+                const url = `{{ route('bancassurance.riders.getProductByProvider', ':Id') }}`.replace(':Id', ProviderId);
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(products => {
+                        products.forEach(product => {
+                            const option = document.createElement('option');
+                            option.value = product.Id;
+                            option.textContent = product.Name;
+                            ProductSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error loading Product:', error));
+            }
+        });
+    });
+</script>
 @endsection
+
+

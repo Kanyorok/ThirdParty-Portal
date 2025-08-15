@@ -1,6 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Insurance Products')
-
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container mt-4">
     <h4>📦 Insurance Products</h4>
@@ -12,14 +14,11 @@
     <div class="mb-3 text-end">
         <a href="{{ route('bancassurance.products.create') }}" class="btn btn-primary">➕ New Product</a>
     </div>
-
-    @if($products->isEmpty())
-        <p class="text-muted">No insurance products found.</p>
-    @else
-        <table class="table table-bordered">
+        <table  id='InsuranceProduct' class="table table-bordered">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
+                    <th>#</th>         
+                    <th>InsuranceProviderId</th>
                     <th>Name</th>
                     <th>Type</th>
                     <th>Description</th>
@@ -31,6 +30,7 @@
                 @foreach($products as $product)
                 <tr>
                     <td>{{ $product->Id }}</td>
+                    <td>{{ $product->provider->InsuranceProviderNO }}</td>
                     <td>{{ $product->Name }}</td>
                     <td>{{ $product->Type ?? '-' }}</td>
                     <td>{{ $product->Description ?? '-' }}</td>
@@ -43,12 +43,30 @@
                     </td>
                     <td>
                         <a href="{{ route('bancassurance.products.edit', $product->Id) }}" class="btn btn-sm btn-warning">✏️ Edit</a>
-                        <a href="{{ route('bancassurance.products.map', $product->Id) }}" class="btn btn-sm btn-info">🔗 Map to Provider</a>
+                        <form action="{{ route('bancassurance.products.destroy', $product->Id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this Insurance Product?');">Delete
+                        </button>
+                    </form>
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
-    @endif
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#InsuranceProduct').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection
