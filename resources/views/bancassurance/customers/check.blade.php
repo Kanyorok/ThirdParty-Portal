@@ -29,7 +29,7 @@
                     <td>{{ $customer->NationalID }}</td>
                     <td>{{ $customer->PhoneNumber }}</td>
                     <td>{{ $customer->Email }}</td>
-                    <td>{{ $customer->DateOfBirth }}</td>
+                    <td>{{ $customer->DateOfBirth? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                      <td>
                      
                     <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
