@@ -17,7 +17,8 @@
         <table  id='InsuranceProduct' class="table table-bordered">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
+                    <th>#</th>         
+                    <th>InsuranceProviderId</th>
                     <th>Name</th>
                     <th>Type</th>
                     <th>Description</th>
@@ -29,6 +30,7 @@
                 @foreach($products as $product)
                 <tr>
                     <td>{{ $product->Id }}</td>
+                    <td>{{ $product->provider->InsuranceProviderNO }}</td>
                     <td>{{ $product->Name }}</td>
                     <td>{{ $product->Type ?? '-' }}</td>
                     <td>{{ $product->Description ?? '-' }}</td>

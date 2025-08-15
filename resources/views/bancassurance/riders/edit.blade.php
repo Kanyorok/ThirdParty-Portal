@@ -1,20 +1,19 @@
 @extends('layouts.app')
-@section('title', 'Edit Pricing Rule')
-
+@section('title', 'Edit Rider')
 @section('content')
 <div class="container mt-4">
-    <h4>✏️ Edit Pricing Rule</h4>
+    <h4>✏️ Edit Rider / Add-on</h4>
 
-    <form method="POST" action="{{ route('bancassurance.pricing.update', $rule->Id) }}">
+    <form method="POST" action="{{ route('bancassurance.riders.update', $rider->Id) }}">
         @csrf
         @method('PUT')
 
-         <div class="mb-3">
+        <div class="mb-3">
             <label class="form-label">Select Provider</label>
             <select name="InsuranceProviderId" id="Provider-select" class="form-select" required>
                 <option value="">-- Select --</option>
                 @foreach($providers as $provider)
-                    <option value="{{ $provider->Id }}" {{ $provider->Id == $rule->InsuranceProviderId ? 'selected' : '' }}>
+                    <option value="{{ $provider->Id }}" {{ $provider->Id == $rider->InsuranceProviderId ? 'selected' : '' }}>
                         {{ $provider->InsuranceProviderNO }}
                     </option>
                 @endforeach
@@ -28,60 +27,42 @@
             </select>
         </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Min Age</label>
-                <input type="number" name="MinAge" class="form-control" value="{{ $rule->AgeMin }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Max Age</label>
-                <input type="number" name="MaxAge" class="form-control" value="{{ $rule->AgeMax }}" required>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Min Coverage</label>
-                <input type="number" name="MinCoverage" class="form-control" step="0.01" value="{{ $rule->CoverageAmountMin }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Max Coverage</label>
-                <input type="number" name="MaxCoverage" class="form-control" step="0.01" value="{{ $rule->CoverageAmountMax }}" required>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Min Tenure (Years)</label>
-                <input type="number" name="MinTenure" class="form-control" value="{{ $rule->TenureMin }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Max Tenure (Years)</label>
-                <input type="number" name="MaxTenure" class="form-control" value="{{ $rule->TenureMax }}" required>
-            </div>
+        <div class="mb-3">
+            <label class="form-label">Rider Name</label>
+            <input type="text" name="RiderName" class="form-control" value="{{ $rider->RiderName }}" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Premium Rate (%)</label>
-            <input type="number" name="PremiumRate" class="form-control" step="0.01" value="{{ $rule->PremiumRate }}" required>
+            <label class="form-label">Description (optional)</label>
+            <textarea name="Description" class="form-control" rows="2">{{ $rider->Description }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Additional Premium</label>
+            <input type="number" name="AdditionalPremium" class="form-control" step="0.01" min="0" value="{{ $rider->AdditionalPremium }}">
         </div>
 
         <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="activeCheck" {{ $rule->IsActive ? 'checked' : '' }}>
+            <input class="form-check-input" type="checkbox" name="IsOptional" value="1" id="optionalCheck" {{ $rider->IsOptional ? 'checked' : '' }}>
+            <label class="form-check-label" for="optionalCheck">Is Optional</label>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="activeCheck" {{ $rider->IsActive ? 'checked' : '' }}>
             <label class="form-check-label" for="activeCheck">Is Active</label>
         </div>
 
         <div class="text-end">
-            <button type="submit" class="btn btn-success">💾 Update Rule</button>
-            <a href="{{ route('bancassurance.pricing.index') }}" class="btn btn-secondary">🔙 Cancel</a>
+            <button type="submit" class="btn btn-primary">💾 Update Rider</button>
         </div>
     </form>
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const ProviderSelect = document.getElementById('Provider-select');
         const ProductSelect = document.getElementById('Product-select');
-        const selectedProductId = "{{ $rule->Product }}";
+        const selectedProductId = "{{ $rider->Product }}";
 
         ProviderSelect.addEventListener('change', function () {
             const ProviderId = this.value;

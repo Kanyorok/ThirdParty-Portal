@@ -6,23 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class InsuranceProvider extends Model
+class InsuranceProductRider extends Model
 {
     use SoftDeletes, UserActorTrait;
     //
-    protected $table = 't_InsuranceProviders';
+    protected $table = 't_InsuranceProductRiders';
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        'InsuranceProviderNO',
-        'Name',
-        'Country',
-        'ContactPerson',
-        'Email',
-        'Phone',
+        'InsuranceProviderId',
+        'Product',
+        'RiderName',
+        'Description',
+        'AdditionalPremium',
+        'IsOptional',
         'IsActive',      
         'CreatedBy',
         'ModifiedBy',
@@ -31,10 +31,14 @@ class InsuranceProvider extends Model
     
     public static function getPrimaryKey(): string
     {
-        return 'InsuranceProvidersId';
+        return 'InsuranceProductRidersId';
     }
-        public function getProductByProvider()
+         public function provider()
     {
-        return $this->hasMany(InsuranceProduct::class, 'InsuranceproviderID', 'Id');
+        return $this->belongsTo(InsuranceProvider::class,'InsuranceProviderId','Id');
+    }
+         public function product()
+    {
+        return $this->belongsTo(InsuranceProduct::class,'Product','Id');
     }
 }

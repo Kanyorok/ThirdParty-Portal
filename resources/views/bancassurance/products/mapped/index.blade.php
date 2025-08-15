@@ -21,7 +21,7 @@
         </thead>
         <tbody>
             @foreach($mappedProducts as $item)
-            <tr>
+            <tr>     
                 <td>{{ $item->ProductName }}</td>
                 <td>{{ $item->ProviderName }}</td>
                 <td>{{ $item->PolicyTypeName }}</td>

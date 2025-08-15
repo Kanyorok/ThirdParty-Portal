@@ -205,15 +205,20 @@ Route::prefix('bancassurance/riders')->name('bancassurance.riders.')->group(func
     Route::get('/', [InsuranceProductRiderController::class, 'index'])->name('index');
     Route::get('create', [InsuranceProductRiderController::class, 'create'])->name('create');
     Route::post('store', [InsuranceProductRiderController::class, 'store'])->name('store');
+    Route::get('{Id}/edit', [InsuranceProductRiderController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [InsuranceProductRiderController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [InsuranceProductRiderController::class, 'destroy'])->name('destroy');
+    Route::get('/{ProductId}', [InsuranceProductRiderController::class, 'getProductByProvider'])->name('getProductByProvider');
 });
 
 Route::prefix('bancassurance/pricing')->name('bancassurance.pricing.')->group(function () {
     Route::get('/', [PricingRuleController::class, 'index'])->name('index');
     Route::get('create', [PricingRuleController::class, 'create'])->name('create');
     Route::post('store', [PricingRuleController::class, 'store'])->name('store');
-    Route::get('pricing/{id}/edit', [PricingRuleController::class, 'edit'])->name('pricing.edit');
-    Route::put('pricing/{id}', [PricingRuleController::class, 'update'])->name('pricing.update');
-    Route::delete('pricing/{id}', [PricingRuleController::class, 'destroy'])->name('pricing.destroy');
+    Route::get('{Id}/edit', [PricingRuleController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [PricingRuleController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [PricingRuleController::class, 'destroy'])->name('destroy');
+    Route::get('/{ProductId}', [PricingRuleController::class, 'getProductByProvider'])->name('getProductByProvider');
 });
 
 Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->group(function () {

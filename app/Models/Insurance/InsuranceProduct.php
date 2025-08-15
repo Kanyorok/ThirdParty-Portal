@@ -32,4 +32,8 @@ class InsuranceProduct extends Model
     {
         return 'InsuranceProductsId';
     }
+     public function provider()
+    {
+        return $this->belongsTo(InsuranceProvider::class,'InsuranceProviderID','Id');
+    }
 }

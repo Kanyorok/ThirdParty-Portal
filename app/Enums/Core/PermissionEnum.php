@@ -469,6 +469,21 @@ enum PermissionEnum: string
     case InsuranceProductDelete = 'insuranceproductdelete';
 
 
+    // Insurance Product Rider
+    case InsuranceProductRiderView = 'insuranceproductriderview';
+    case InsuranceProductRiderCreate = 'insuranceproductridercreate';
+    case InsuranceProductRiderUpdate = 'insuranceproductriderupdate';
+    case InsuranceProductRiderDelete = 'insuranceproductriderdelete';
+
+        // Insurance Pricing Rule
+    case InsurancePricingRuleView = 'insurancepricingruleview';
+    case InsurancePricingRuleCreate = 'insurancepricingrulecreate';
+    case InsurancePricingRuleUpdate = 'insurancepricingruleupdate';
+    case InsurancePricingRuleDelete = 'insurancepricingruledelete';
+
+
+
+
     /*
      *
      * ========================================  Human Resource management  ========================================
@@ -629,6 +644,8 @@ enum PermissionEnum: string
             [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
             [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
             [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
+            [self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete],            
+            [self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete],  
             
         ]);
     }
@@ -732,7 +749,8 @@ enum PermissionEnum: string
             self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete,
             self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete,
             self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete,
-            
+            self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete,
+            self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete,
             =>ModulesEnum::Insurance,
 
 
@@ -849,7 +867,8 @@ enum PermissionEnum: string
             self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete => 'Insurance Premium Payments',
             self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete => 'Insurance Provider ',
             self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete => 'Insurance Product ',
-            
+            self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete => 'Insurance Product Rider  ',
+                        self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete => ' Insurance Pricing Rule   ',
             
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
