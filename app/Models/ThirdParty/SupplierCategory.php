@@ -36,11 +36,21 @@ class SupplierCategory extends Model
 
     public function suppliers(): BelongsToMany
     {
-        return $this->belongsToMany(Supplier::class, 't_ThirdPartySupplierCategory', 'supplier_category_id', 'third_party_id');
+        return $this->belongsToMany(
+            Supplier::class,
+            't_ThirdPartySupplierCategory',
+            'supplier_category_id', // Foreign key on pivot table for this model (SupplierCategory)
+            'third_party_id'       // Foreign key on pivot table for the other model (Supplier/ThirdParty)
+        );
     }
 
     public function thirdParties(): BelongsToMany
     {
-        return $this->belongsToMany(ThirdParties::class, 't_ThirdParty_SupplierCategory', 'supplier_category_id', 'third_party_id');
+        return $this->belongsToMany(
+            ThirdParties::class,
+            't_ThirdPartySupplierCategory',
+            'supplier_category_id',
+            'third_party_id'
+        );
     }
 }
