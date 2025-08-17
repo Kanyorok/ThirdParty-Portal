@@ -22,7 +22,7 @@ class PaymentVoucherController extends Controller
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
 
 
-        $vouchers = FinanceVoucher::with('invoice:Id,InvoiceNumber')
+         $vouchers = FinanceVoucher::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
                             'ApprovalStatus','PaymentType', 'Description')
             ->get();
@@ -36,9 +36,27 @@ class PaymentVoucherController extends Controller
         $year = now()->year;
         $lastId = FinanceVoucher::max('Id') + 1;
         $VoucherNo = 'VCN-' . $year .'-'. str_pad($lastId, 6,'0', STR_PAD_LEFT);
-        $invoices = FinanceInvoiceEntry::with('currency:Id,Code')
-                            ->select('Id', 'InvoiceNumber','SupplierID','CurrencyID', 'InvoiceAmount')
-            ->get();
+        $invoices=[];
+        $data=FinanceInvoiceEntry::with('currency:Id,Code')
+                ->select('Id', 'InvoiceNumber','SupplierID','CurrencyID', 'InvoiceAmount')
+                ->where('ApprovalStatus', 'posted')
+                ->get();
+        foreach ($data as $value) {
+            //Get the invoice balance
+            $invoice=FinanceInvoiceEntry::find($value->Id);
+            $invoiceAmt=$invoice->InvoiceAmount;
+            $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $invoice->Id)->where('ApprovalStatus','posted')->sum('TotalAmount');
+            $balance=$invoiceAmt-$amtPaidOnInvoice;
+            $invoices[]=[
+                'Id'=>$value->Id,
+                'InvoiceNumber'=>$value->InvoiceNumber,
+                'SupplierID'=>$value->SupplierID,
+                'CurrencyID'=>$value->CurrencyID,
+                'InvoiceAmount'=>$value->InvoiceAmount,
+                'CurrencyCode'=>$value->currency->Code,
+                'Balance'=>$balance
+            ];
+        }
         $paymentMethods=CodeDetail::where('CodeID', 'PaymentMethod')->get();
         $paymentTypes=CodeDetail::where('CodeID', 'PaymentType')->get();
         return view('finance.accountspayable.paymentvoucher.create', compact('invoices', 'VoucherNo', 'paymentMethods', 'paymentTypes'));
@@ -57,6 +75,19 @@ class PaymentVoucherController extends Controller
             'Frequency'=> 'nullable|string',
             'Description'=>'required|string',
         ]);
+
+        //Check if the Voucher amt exceeds the Invoice Balance and return back with an error
+        $invoice=FinanceInvoiceEntry::find($validated['InvoiceNo']);
+        $invoiceAmt=$invoice->InvoiceAmount;
+        $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $invoice->Id)->where('ApprovalStatus','posted')->sum('TotalAmount');
+        $balance=$invoiceAmt-$amtPaidOnInvoice;
+        if($balance==0){
+            return back()->with('error', 'This Invoice is already settled. Current balance is '.$balance);
+        }
+        if ($balance<$validated['TotAmnt']) {
+            return back()->with('error', 'Invoice Balance is Exceeded. The current balance is '.$balance);
+        }
+
 
         DB::beginTransaction();
 
@@ -82,7 +113,7 @@ class PaymentVoucherController extends Controller
             $voucher = FinanceVoucher::create([
                 'VoucherNo'=> $validated['VoucherNo'],
                 'InvoiceNo'=> $validated['InvoiceNo'],
-                'TotAmnt'=> $validated['TotAmnt'],
+                'TotalAmount'=> $validated['TotAmnt'],
                 'PaymentMethod'=> $validated['PaymentMethod'],
                 'PaymentType'=> $validated['PaymentType'],
                 'StartDate'=> $startdate,
@@ -99,7 +130,7 @@ class PaymentVoucherController extends Controller
                 ->log('Created Voucher Successfully'. $voucher->id);
 
             DB::commit();
-            return redirect()->route('paymentvoucher.index')->with('Success', 'Invoice Created Successfully');
+            return redirect()->route('paymentvoucher.index')->with('success', 'Voucher Created Successfully');
 
         }catch (\Throwable $th) {
             DB::rollBack();
@@ -112,15 +143,16 @@ class PaymentVoucherController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
 
-        $voucher = FinanceVoucher::findOrFail($id);
+        $voucher = FinanceVoucher::with('invoice.supplier')->findOrFail($id);
+        $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus','posted')->sum('TotalAmount');
 
-        return view('finance.accountspayable.paymentvoucher.show', compact('voucher'));
+        return view('finance.accountspayable.paymentvoucher.show', compact('voucher', 'amtPaidOnInvoice'));
     }
 
     public function approve(Request $request, $id)
     {
         $voucher = FinanceVoucher::findOrFail($id);
-        $voucher->Status = 'Approved';
+        $voucher->ApprovalStatus = 'posted';
         // Optionally log reason: $request->input('reason')
         $voucher->Reasons = $request->Reasons;
         $voucher->save();

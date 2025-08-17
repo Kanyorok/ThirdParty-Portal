@@ -41,9 +41,9 @@
                                 <td>
                                     @php
                                         $statusClass = match($item->ApprovalStatus) {
-                                            'Approved' => 'bg-success',
-                                            'Rejected' => 'bg-danger',
-                                            'Pending' => 'bg-warning text-dark',
+                                            'posted' => 'bg-success',
+                                            'rejected' => 'bg-danger',
+                                            'draft' => 'bg-warning text-dark',
                                             default => 'bg-secondary'
                                         };
                                     @endphp

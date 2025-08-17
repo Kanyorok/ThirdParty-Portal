@@ -41,6 +41,7 @@ class FinanceVoucher extends Model
 
     public function invoice()
     {
-        return $this->belongsTo(FinanceInvoiceEntry::class, 'InvoiceNo', 'Id');
+        return $this->belongsTo(FinanceInvoiceEntry::class, 'InvoiceNo', 'Id')
+                ->where('ApprovalStatus', 'posted');
     }
 }
