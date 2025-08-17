@@ -1,6 +1,6 @@
 <div class="modal fade" id="createCriteriaModal" tabindex="-1" aria-labelledby="createCriteriaLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form action="{{ route('criteria.store') }}" method="POST">
+        <form action="{{ route('prequalification.sections.criteria.store', ['section' => $section->Id]) }}" method="POST">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -9,20 +9,19 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Criteria Name</label>
-                        <input type="text" name="name" class="form-control" required>
+                        <label for="CriteriaName" class="form-label">Criteria Name</label>
+                        <input type="text" name="CriteriaName" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label for="section_id" class="form-label">Section</label>
-                        <select name="section_id" class="form-control" required>
-                            @foreach(\App\Models\Procurement\Section::all() as $section)
-                            <option value="{{ $section->id }}">{{ $section->SectionName }}</option>
-                            @endforeach
+                        <label for="Description" class="form-label">Description</label>
+                        <textarea name="Description" class="form-control"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="IsActive" class="form-label">Status</label>
+                        <select name="IsActive" class="form-select" required>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
                         </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="desc" class="form-label">Description</label>
-                        <textarea name="desc" class="form-control"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

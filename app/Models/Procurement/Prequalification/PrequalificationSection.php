@@ -41,7 +41,7 @@ class PrequalificationSection extends Model
         return $this->belongsTo(Section::class, 'SectionId', 'id');
     }
 
-    public function criteria()
+    public function criteria(): HasMany
     {
         return $this->hasMany(PrequalificationCriteria::class, 'SectionId', 'SectionId')
             ->with('masterCriteria');

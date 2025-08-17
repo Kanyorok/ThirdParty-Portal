@@ -16,28 +16,37 @@
                 <th>Criteria Name</th>
                 <th>Description</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th class="text-end">Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach($section->criteria as $criterion)
             <tr>
-                <td>{{ $criterion->CriteriaName }}</td>
-                <td>{{ $criterion->Description ?? '-' }}</td>
-                <td>
-                    @if($criterion->IsActive)
-                    <span class="badge bg-success">Active</span>
-                    @else
-                    <span class="badge bg-secondary">Inactive</span>
-                    @endif
-                </td>
-                <td>
-                    <a href="{{ route('prequalification.sections.criteria.edit', ['section' => $section->Id, 'criteria' => $criterion->Id]) }}" class="btn btn-warning btn-sm">Edit</a>
-                    <form action="{{ route('prequalification.sections.criteria.destroy', ['section' => $section->Id, 'criteria' => $criterion->Id]) }}" method="POST" class="d-inline-block">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-danger btn-sm">Delete</button>
-                    </form>
+                <form action="{{ route('prequalification.sections.criteria.update', ['section' => $section->Id, 'criterion' => $criterion->Id]) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <td class="align-middle">
+                        <input type="text" name="CriteriaName" class="form-control form-control-sm"
+                            value="{{ old('CriteriaName', $criterion->CriteriaName) }}" required>
+                    </td>
+                    <td class="align-middle">
+                        <input type="text" name="Description" class="form-control form-control-sm"
+                            value="{{ old('Description', $criterion->Description) }}">
+                    </td>
+                    <td class="align-middle">
+                        <select name="IsActive" class="form-select form-select-sm">
+                            <option value="1" {{ old('IsActive', $criterion->IsActive) == 1 ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('IsActive', $criterion->IsActive) == 0 ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                    </td>
+                    <td class="text-end align-middle">
+                        <button type="submit" class="btn btn-warning btn-sm me-1">Update</button>
+                </form>
+                <form action="{{ route('prequalification.sections.criteria.destroy', ['section' => $section->Id, 'criterion' => $criterion->Id]) }}" method="POST" class="d-inline-block">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                </form>
                 </td>
             </tr>
             @endforeach
@@ -65,8 +74,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="IsActive" class="form-label">Status</label>
-                        <select name="IsActive" class="form-select" required>
-                            <option value="1">Active</option>
+                        <select name="IsActive" class="form-select">
+                            <option value="1" selected>Active</option>
                             <option value="0">Inactive</option>
                         </select>
                     </div>

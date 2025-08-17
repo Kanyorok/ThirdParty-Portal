@@ -6,7 +6,6 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 use App\Models\Procurement\Criteria;
 
 class Section extends Model
@@ -18,7 +17,7 @@ class Section extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Sections';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'Id';
 
     protected $fillable = [
         'SectionName',
@@ -26,11 +25,24 @@ class Section extends Model
         'IsActive',
         'CreatedBy',
         'ModifiedBy',
+        'sectionable_id',
+        'sectionable_type',
     ];
 
     protected $casts = [
         'IsActive' => 'boolean',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($x) {
+            $x->CreatedBy = auth()->id() ?? 1;
+        });
+        static::updating(function ($x) {
+            $x->ModifiedBy = auth()->id() ?? 1;
+        });
+    }
 
     public static function getPrimaryKey(): string
     {
@@ -44,6 +56,18 @@ class Section extends Model
 
     public function criteria(): HasMany
     {
-        return $this->hasMany(Criteria::class, 'SectionID', 'id');
+        return $this->hasMany(Criteria::class, 'SectionID', 'Id');
+    }
+
+    // Make this assignable to many
+    public function sectionable()
+    {
+        return $this->morphTo();
+    }
+
+    // Section::active()->get();
+    public function scopeIsActive($q)
+    {
+        return $q->where('IsActive', true);
     }
 }

@@ -4,126 +4,185 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Section;
+use App\Models\Procurement\Criteria;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class SectionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index(): View
     {
-        $sections = Section::all();
-        // $section = Section::with('criteria')->get();
+        $sections = Section::with('criteria')->get();
         return view('procurement.tendering.settings.sections', compact('sections'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function create(): View
     {
-        //
+        $masterSections = Section::with('criteria')->get();
+        $prequalificationRound = null;
+        return view(
+            'procurement.suppliers.prequalification.prequalification-rounds.create',
+            compact('masterSections', 'prequalificationRound')
+        );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+
+    public function store(Request $request, $sectionable = null): RedirectResponse
     {
-        //check if the user has permission to create a section
-        // Validate the request data
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'desc' => 'nullable|string',
+        $validated = $request->validate([
+            'SectionName' => 'required|string|max:255',
+            'Description' => 'nullable|string',
+            'IsActive' => 'required|boolean',
+            'criteria.*.CriteriaName' => 'required|string|max:255',
+            'criteria.*.Description' => 'nullable|string',
+            'criteria.*.IsActive' => 'required|boolean',
         ]);
 
         DB::beginTransaction();
         try {
-            // Create a new section
-            Section::create([
-                'SectionName' => $request->input('name'),
-                'Description' => $request->input('desc', null), // Default to null if not provided
-                'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id(),
-            ]);
-            //Log the action
+            $sectionData = [
+                'SectionName' => $validated['SectionName'],
+                'Description' => $validated['Description'] ?? null,
+                'IsActive' => $validated['IsActive'],
+            ];
+
+            // Assign polymorphic relationship if sectionable provided
+            if ($sectionable) {
+                $sectionData['sectionable_id'] = $sectionable->Id;
+                $sectionData['sectionable_type'] = get_class($sectionable);
+            }
+
+            $section = Section::create($sectionData);
+
+            if (!empty($validated['criteria'])) {
+                foreach ($validated['criteria'] as $criterion) {
+                    $section->criteria()->create([
+                        'CriteriaName' => $criterion['CriteriaName'],
+                        'Description' => $criterion['Description'] ?? null,
+                        'IsActive' => $criterion['IsActive'],
+                    ]);
+                }
+            }
+
             activity()
-                ->performedOn(new Section())
-                ->causedBy(Auth::id())
-                ->log('Created a new section: ' . $request->input('name'));
+                ->performedOn($section)
+                ->causedBy(Auth::user())
+                ->log('Created a new section with criteria: ' . $section->SectionName);
+
             DB::commit();
-            // Return a success response
-            return back()->with(
-                'success',
-                'Section created successfully: '
-            );
+            return back()->with('success', 'Section and Criteria created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            // Log the error
             activity()
                 ->performedOn(new Section())
-                ->causedBy(Auth::id())
-                ->log('Failed to create section: ' . $th->getMessage());
-            // Return an error response
-            return back()->with(
-                'error',
-                'Failed to create section: ' . $th->getMessage()
-            );
-        }
+                ->causedBy(Auth::user())
+                ->log('Failed to create section with criteria: ' . $th->getMessage());
 
-        return $request->all();
+            return back()->with('error', 'Failed to create section with criteria: ' . $th->getMessage());
+        }
     }
 
-
-    public function update(Request $request, string $id)
+    public function edit(Section $section)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'desc' => 'nullable|string',
+        $section->load('criteria');
+        return view('procurement.tendering.settings.section-edit', compact('section'));
+    }
+
+    public function show(Section $section): View
+    {
+        $section->load('criteria');
+        return view('procurement.tendering.settings.section-show', compact('section'));
+    }
+
+    public function update(Request $request, Section $section): RedirectResponse
+    {
+        $validated = $request->validate([
+            'SectionName' => 'required|string|max:255',
+            'Description' => 'nullable|string',
+            'IsActive' => 'required|boolean',
+            'criteria.*.Id' => 'nullable|exists:t_Criterias,Id',
+            'criteria.*.CriteriaName' => 'required|string|max:255',
+            'criteria.*.Description' => 'nullable|string',
+            'criteria.*.IsActive' => 'required|boolean',
+            'criteria_remove' => 'nullable|string',
         ]);
 
-        $section = Section::findOrFail($id);
-        $oldValues = $section->getOriginal();
+        DB::beginTransaction();
+        try {
+            $section->update([
+                'SectionName' => $validated['SectionName'],
+                'Description' => $validated['Description'] ?? null,
+                'IsActive' => $validated['IsActive'],
+            ]);
 
-        $section->SectionName = $request->name;
-        $section->Description = $request->desc;
-        $section->ModifiedBy = auth()->id();
-        $section->ModifiedOn = now();
-        $section->save();
+            if (!empty($validated['criteria_remove'])) {
+                $idsToRemove = explode(',', $validated['criteria_remove']);
+                Criteria::destroy($idsToRemove);
+            }
 
-        activity()
-            ->performedOn($section)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'old' => $oldValues,
-                'new' => $section->getChanges()
-            ])
-            ->log('Updated section: ' . $section->SectionName);
+            if (!empty($validated['criteria'])) {
+                foreach ($validated['criteria'] as $criterionData) {
+                    if (!empty($criterionData['Id'])) {
+                        $criteria = Criteria::find($criterionData['Id']);
+                        $criteria->update([
+                            'CriteriaName' => $criterionData['CriteriaName'],
+                            'Description' => $criterionData['Description'] ?? null,
+                            'IsActive' => $criterionData['IsActive'],
+                        ]);
+                    } else {
+                        $section->criteria()->create([
+                            'CriteriaName' => $criterionData['CriteriaName'],
+                            'Description' => $criterionData['Description'] ?? null,
+                            'IsActive' => $criterionData['IsActive'],
+                        ]);
+                    }
+                }
+            }
 
-        return redirect()->back()->with('success', 'Section updated successfully.');
+            activity()
+                ->performedOn($section)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'old' => $section->getOriginal(),
+                    'new' => $section->getChanges()
+                ])
+                ->log('Updated section and criteria: ' . $section->SectionName);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Section and Criteria updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update section and criteria: ' . $th->getMessage());
+        }
     }
 
-
-    public function destroy(string $id)
+    public function destroy(Section $section): RedirectResponse
     {
-        $section = Section::findOrFail($id);
-        $sectionName = $section->SectionName;
+        DB::beginTransaction();
+        try {
+            $sectionName = $section->SectionName;
+            $section->criteria()->delete();
+            $section->delete();
 
-        $section->DeletedBy = auth()->id();
-        $section->save();
+            activity()
+                ->performedOn($section)
+                ->causedBy(Auth::user())
+                ->withProperties(['section_name' => $sectionName])
+                ->log('Deleted section and its criteria: ' . $sectionName);
 
-        activity()
-            ->performedOn($section)
-            ->causedBy(auth()->user())
-            ->withProperties(['section_name' => $sectionName])
-            ->log('Deleted section: ' . $sectionName);
-
-        $section->delete();
-
-        return redirect()->back()->with('success', 'Section deleted successfully.');
+            DB::commit();
+            return redirect()->back()->with('success', 'Section and its criteria deleted successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to delete section: ' . $th->getMessage());
+        }
     }
 }

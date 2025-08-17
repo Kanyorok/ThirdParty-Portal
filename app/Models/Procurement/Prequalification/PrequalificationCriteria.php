@@ -43,7 +43,7 @@ class PrequalificationCriteria extends Model
 
     public function masterCriteria(): BelongsTo
     {
-        return $this->belongsTo(Criteria::class, 'CriteriaId', 'CriteriaID');
+        return $this->belongsTo(Criteria::class, 'CriteriaId', 'Id');
     }
 
     public static function getPrimaryKey(): string

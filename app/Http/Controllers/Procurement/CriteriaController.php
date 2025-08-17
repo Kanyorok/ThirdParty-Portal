@@ -4,144 +4,113 @@ namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Criteria;
+use App\Models\Procurement\Section;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class CriteriaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct()
     {
-        //
+        $this->middleware('auth');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function index(Section $section): View
     {
-        //
+        $criterias = $section->criteria;
+        return view('procurement.tendering.settings.criterias', compact('criterias', 'section'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(Request $request, Section $section): RedirectResponse
     {
-        // Validate the request data
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'desc' => 'nullable|string',
+        // CORRECTED: Validation rules now match the model's fillable field names
+        $validated = $request->validate([
+            'CriteriaName' => 'required|string|max:255',
+            'Description' => 'nullable|string',
         ]);
 
         DB::beginTransaction();
         try {
-            Criteria::create([
-                'CriteriaName' => $request->input('name'),
-                'SectionID' => $request->input('section_id'), // Ensure section_id is provided in the request
-                'Description' => $request->input('desc', null), // Default to null if not provided
-                'CreatedBy' => auth()->id(),
-                'ModifiedBy' => auth()->id(),
+            $criteria = $section->criteria()->create([
+                'CriteriaName' => $validated['CriteriaName'],
+                'Description' => $validated['Description'] ?? null,
             ]);
-            // Log the action
+
             activity()
-                ->performedOn(new Criteria())
-                ->causedBy(auth()->id())
-                ->log('Created a new criteria: ' . $request->input('name'));
+                ->performedOn($criteria)
+                ->causedBy(Auth::user())
+                ->log('Created a new criteria: ' . $validated['CriteriaName']);
+
             DB::commit();
-            return back()->with('success', 'Criteria created successfully: ');
         } catch (\Throwable $th) {
             DB::rollBack();
-            // Log the error
-            return $th->getMessage();
-            activity()
-                ->performedOn(new Criteria())
-                ->causedBy(auth()->id())
-                ->log('Error creating criteria: ' . $th->getMessage());
-            return back()->withErrors(['error' => 'Failed to create criteria: ']);
+            return back()->with('error', 'Failed to create criteria: ' . $th->getMessage());
         }
-        return back()->with('success', 'Criteria created successfully.');
+
+        return back()->with('success', 'Criteria created successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(Request $request, Section $section, Criteria $criteria): RedirectResponse
     {
-        $sectionID = $id;
-        $criterias = Criteria::where('SectionId', $id)->get();
-        return view('procurement.tendering.settings.criterias', compact('criterias', 'sectionID'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'desc' => 'nullable|string',
+        // CORRECTED: Validation rules now match the model's fillable field names
+        $validated = $request->validate([
+            'CriteriaName' => 'required|string|max:255',
+            'Description' => 'nullable|string',
         ]);
 
-        $criteria = Criteria::findOrFail($id);
-        $oldValues = $criteria->getOriginal();
-        $criteria->CriteriaName = $request->name;
-        $criteria->Description = $request->desc;
-        $criteria->ModifiedBy = auth()->id();
-        $criteria->ModifiedOn = now();
-        $criteria->save();
+        DB::beginTransaction();
+        try {
+            $oldValues = $criteria->getOriginal();
+            // CORRECTED: The assignment now uses the correct validated keys
+            $criteria->CriteriaName = $validated['CriteriaName'];
+            $criteria->Description = $validated['Description'] ?? null;
+            $criteria->save();
 
-        activity()
-            ->performedOn($criteria)
-            ->causedBy(auth()->user())
-            ->withProperties([
-                'old' => $oldValues,
-                'new' => $criteria->getChanges()
-            ])
-            ->log('Updated criteria: ' . $criteria->CriteriaName);
+            activity()
+                ->performedOn($criteria)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'old' => $oldValues,
+                    'new' => $criteria->getChanges(),
+                ])
+                ->log('Updated criteria: ' . $criteria->CriteriaName);
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update criteria: ' . $th->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Criteria updated successfully!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Section $section, Criteria $criteria): RedirectResponse
     {
-        $criteria = Criteria::findOrFail($id);
-        $criteriaName = $criteria->CriteriaName;
-        $criteria->DeletedBy = auth()->id();
+        DB::beginTransaction();
+        try {
+            $criteriaName = $criteria->CriteriaName;
+            $criteria->delete();
 
-        activity()
-            ->performedOn($criteria)
-            ->causedBy(auth()->user())
-            ->withProperties(['criteria_name' => $criteriaName])
-            ->log('Deleted criteria: ' . $criteriaName);
+            activity()
+                ->performedOn($criteria)
+                ->causedBy(Auth::user())
+                ->withProperties(['criteria_name' => $criteriaName])
+                ->log('Deleted criteria: ' . $criteriaName);
 
-        $criteria->delete();
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to delete criteria: ' . $th->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Criteria deleted successfully.');
     }
 
-    public function fetchForSection($sectionId)
+    public function fetchAll(Section $section): \Illuminate\Http\JsonResponse
     {
-        $criteria = \App\Models\Procurement\Criteria::where('SectionID', $sectionId)
-            ->get(['id', 'CriteriaName']);
-        return response()->json($criteria);
-    }
-
-    public function getBySection($id)
-    {
-        return response()->json(Criteria::where('SectionID', $id)->get());
+        return response()->json($section->criteria()->select('Id', 'CriteriaName', 'Description')->get());
     }
 }

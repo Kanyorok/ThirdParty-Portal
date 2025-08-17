@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop old PeriodId columns and their foreign keys if they exist
         Schema::table('t_PrequalificationRoundSections', function (Blueprint $table) {
             if (Schema::hasColumn('t_PrequalificationRoundSections', 'PeriodId')) {
                 $table->dropForeign(['PeriodId']);
@@ -32,29 +33,33 @@ return new class extends Migration
             }
         });
 
+        // Add new RoundId columns with proper foreign key constraints
         Schema::table('t_PrequalificationRoundSections', function (Blueprint $table) {
-            if (!Schema::hasColumn('t_PrequalificationRoundSections', 'RoundID')) {
-                $table->foreignId('RoundID')
-                    ->after('Id')
-                    ->constrained('t_PrequalificationRounds', 'RoundID')
+            if (!Schema::hasColumn('t_PrequalificationRoundSections', 'RoundId')) {
+                $table->unsignedBigInteger('RoundId')->after('Id');
+                $table->foreign('RoundId')
+                    ->references('RoundID')
+                    ->on('t_PrequalificationRounds')
                     ->onDelete('cascade');
             }
         });
 
         Schema::table('t_PrequalificationRoundCriteria', function (Blueprint $table) {
-            if (!Schema::hasColumn('t_PrequalificationRoundCriteria', 'RoundID')) {
-                $table->foreignId('RoundID')
-                    ->after('Id')
-                    ->constrained('t_PrequalificationRounds', 'RoundID')
+            if (!Schema::hasColumn('t_PrequalificationRoundCriteria', 'RoundId')) {
+                $table->unsignedBigInteger('RoundId')->after('Id');
+                $table->foreign('RoundId')
+                    ->references('RoundID')
+                    ->on('t_PrequalificationRounds')
                     ->onDelete('cascade');
             }
         });
 
         Schema::table('t_SupplierPrequalificationApplications', function (Blueprint $table) {
-            if (!Schema::hasColumn('t_SupplierPrequalificationApplications', 'RoundID')) {
-                $table->foreignId('RoundID')
-                    ->after('ApplicationID')
-                    ->constrained('t_PrequalificationRounds', 'RoundID')
+            if (!Schema::hasColumn('t_SupplierPrequalificationApplications', 'RoundId')) {
+                $table->unsignedBigInteger('RoundId')->after('ApplicationID');
+                $table->foreign('RoundId')
+                    ->references('RoundID')
+                    ->on('t_PrequalificationRounds')
                     ->onDelete('cascade');
             }
         });
@@ -65,34 +70,28 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('t_PrequalificationRoundSections', function (Blueprint $table) {
-            $table->dropForeign(['RoundID']);
-            $table->dropColumn('RoundID');
+        // Simply drop the RoundID columns and their foreign keys
+        // No need to restore Period references since we've moved away from that concept
 
-            $table->foreignId('PeriodId')
-                ->nullable()
-                ->constrained('t_PrequalificationPeriod', 'Id')
-                ->nullOnDelete();
+        Schema::table('t_PrequalificationRoundSections', function (Blueprint $table) {
+            if (Schema::hasColumn('t_PrequalificationRoundSections', 'RoundID')) {
+                $table->dropForeign(['RoundID']);
+                $table->dropColumn('RoundID');
+            }
         });
 
         Schema::table('t_PrequalificationRoundCriteria', function (Blueprint $table) {
-            $table->dropForeign(['RoundID']);
-            $table->dropColumn('RoundID');
-
-            $table->foreignId('PeriodId')
-                ->nullable()
-                ->constrained('t_PrequalificationPeriod', 'Id')
-                ->nullOnDelete();
+            if (Schema::hasColumn('t_PrequalificationRoundCriteria', 'RoundID')) {
+                $table->dropForeign(['RoundID']);
+                $table->dropColumn('RoundID');
+            }
         });
 
         Schema::table('t_SupplierPrequalificationApplications', function (Blueprint $table) {
-            $table->dropForeign(['RoundID']);
-            $table->dropColumn('RoundID');
-
-            $table->foreignId('PeriodId')
-                ->nullable()
-                ->constrained('t_PrequalificationPeriod', 'Id')
-                ->nullOnDelete();
+            if (Schema::hasColumn('t_SupplierPrequalificationApplications', 'RoundID')) {
+                $table->dropForeign(['RoundID']);
+                $table->dropColumn('RoundID');
+            }
         });
     }
 };

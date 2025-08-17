@@ -11,17 +11,20 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_Sections', function (Blueprint $table) {
-            $table->Id();
-            $table->string('SectionName', 100)->unique();       // VARCHAR(100)
-            $table->text('Description')->nullable();  // TEXT (optional)
-            $table->boolean('IsActive')->default(true); // BIT
+            $table->id('Id');
+            $table->string('SectionName', 100)->unique();
+            $table->text('Description')->nullable();
+            $table->boolean('IsActive')->default(true);
 
-            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('CreatedOn');
-            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
-            $table->dateTime('ModifiedOn');
+            $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn')->useCurrent();
+            $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn')->useCurrent()->useCurrentOnUpdate();
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
+
+            $table->index('IsActive');
+            $table->index('DeletedOn');
         });
     }
 
