@@ -3,48 +3,58 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Legal\Disputes\LegalCaseOutcome;
 use App\Models\Legal\LegalCase;
+use App\Models\Legal\LegalCaseOutcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LegalCaseOutcomeController extends Controller
 {
-    public function index()
+    public function index($caseId)
     {
+        $case = LegalCase::findOrFail($caseId);
         $outcomes = LegalCaseOutcome::with('case')->orderByDesc('JudgmentDate')->get();
-        return view('legal.disputes.outcomes.index', compact('outcomes'));
+        return view('legal.disputes.outcomes.index', compact('outcomes','case'));
     }
 
-    public function create(Request $request)
+    public function create($caseId)
     {
-        $caseId = $request->get('case_id');
         $case = LegalCase::findOrFail($caseId);
 
         return view('legal.disputes.outcomes.create', compact('case'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $caseId)
     {
-        $data = $request->validate([
+        // dd($request->all());
+        $validated = $request->validate([
             'LegalCaseID' => 'required|exists:t_LegalCases,ID',
             'Outcome' => 'required|string|max:255',
-            'JudgmentDate' => 'nullable|date',
-            'JudgeName' => 'nullable|string|max:255',
-            'CourtDecision' => 'nullable|string',
-            'PenaltyAmount' => 'nullable|numeric',
-            'Remarks' => 'nullable|string',
+            'JudgmentDate' => 'required|date|before_or_equal:today',
+            'JudgeName' => 'required|string|max:255',
+            'CourtDecision' => 'required|string',
+            'PenaltyAmount' => 'required|numeric',
+            'Remarks' => 'required|string',
         ]);
 
-        $data['CreatedBy'] = Auth::id();
-        $data['CreatedOn'] = now();
+        $outcomes = LegalCaseOutcome::create([
+            'LegalCaseID' => $caseId,
+            'Outcome' => $validated['Outcome'],
+            'JudgmentDate' => $validated['JudgmentDate'] ?? now(),
+            'JudgeName' => $validated['JudgeName'],
+            'CourtDecision' => $validated['CourtDecision'],
+            'PenaltyAmount' => $validated['PenaltyAmount'],
+            'Remarks' => $validated['Remarks'],
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
 
-        LegalCaseOutcome::create($data);
-
-        return redirect()->route('legal.cases.show', $data['LegalCaseID'])->with('success', 'Case outcome recorded successfully.');
+        return redirect()->route('legal.cases.show', $caseId)->with('success', 'Case outcome recorded successfully.');
     }
 
-    public function edit($id)
+    public function edit($caseId, $id)
     {
         $outcome = LegalCaseOutcome::findOrFail($id);
         $case = LegalCase::findOrFail($outcome->LegalCaseID);
@@ -52,17 +62,17 @@ class LegalCaseOutcomeController extends Controller
         return view('legal.disputes.outcomes.edit', compact('outcome', 'case'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $caseId, $id)
     {
         $outcome = LegalCaseOutcome::findOrFail($id);
 
         $data = $request->validate([
             'Outcome' => 'required|string|max:255',
-            'JudgmentDate' => 'nullable|date',
-            'JudgeName' => 'nullable|string|max:255',
-            'CourtDecision' => 'nullable|string',
-            'PenaltyAmount' => 'nullable|numeric',
-            'Remarks' => 'nullable|string',
+            'JudgmentDate' => 'required|date',
+            'JudgeName' => 'required|string|max:255',
+            'CourtDecision' => 'required|string',
+            'PenaltyAmount' => 'required|numeric',
+            'Remarks' => 'required|string',
         ]);
 
         $data['ModifiedBy'] = Auth::id();
@@ -70,12 +80,23 @@ class LegalCaseOutcomeController extends Controller
 
         $outcome->update($data);
 
-        return redirect()->route('legal.cases.show', $outcome->LegalCaseID)->with('success', 'Case outcome updated successfully.');
+        return redirect()->route('legal.cases.show', $caseId)->with('success', 'Case outcome updated successfully.');
     }
 
-    public function show($id)
+    public function show($caseId, $id)
     {
         $outcome = LegalCaseOutcome::with('case')->findOrFail($id);
-        return view('legal.disputes.outcomes.show', compact('outcome'));
+        $case = LegalCase::findOrFail($outcome->LegalCaseID);
+        return view('legal.disputes.outcomes.show', compact('outcome', 'case'));
+    }
+
+    public function destroy($caseId, $id)
+    {
+        $outcome = LegalCaseOutcome::findOrFail($id);
+        $outcome->DeletedBy = Auth::id();
+        $outcome->save();
+        $outcome->delete();
+
+        return redirect()->route('legal.cases.show', $caseId)->with('success', 'Case outcome deleted successfully.');
     }
 }

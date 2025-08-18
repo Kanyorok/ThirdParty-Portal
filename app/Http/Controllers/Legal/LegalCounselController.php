@@ -3,79 +3,112 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Legal\Disputes\LegalCounsel;
 use App\Models\Legal\LegalCase;
+use App\Models\Legal\LegalCaseCounsel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LegalCounselController extends Controller
 {
-    public function index()
+    public function index($caseId)
     {
-        $counsels = LegalCounsel::with('case')->orderByDesc('CreatedOn')->get();
-        return view('legal.disputes.counsels.index', compact('counsels'));
+        $case = LegalCase::findOrFail($caseId);
+        $counsels = LegalCaseCounsel::where('LegalCaseID', $caseId)->get();
+
+        return view('legal.disputes.counsels.index', compact('case', 'counsels'));
     }
 
-    public function create(Request $request)
+    public function create($caseId)
     {
-        $caseId = $request->get('case_id');
+
         $case = LegalCase::findOrFail($caseId);
 
         return view('legal.disputes.counsels.create', compact('case'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $caseId)
     {
-        $data = $request->validate([
-            'LegalCaseID' => 'required|exists:t_LegalCases,ID',
+        $validated = $request->validate([
+            'LegalCaseID' => 'required|exists:t_LegalCases,Id',
             'CounselName' => 'required|string|max:255',
-            'LawFirm' => 'nullable|string|max:255',
-            'ContactEmail' => 'nullable|email|max:255',
-            'ContactPhone' => 'nullable|string|max:50',
+            'FirmName' => 'nullable|string|max:255',
+            'Email' => 'nullable|email|max:255',
+            'Phone' => 'nullable|string|max:50',
             'Role' => 'nullable|string|max:100',
-            'Remarks' => 'nullable|string',
+            // 'Remarks' => 'nullable|string',
         ]);
 
-        $data['CreatedBy'] = Auth::id();
-        $data['CreatedOn'] = now();
-
-        LegalCounsel::create($data);
-
-        return redirect()->route('legal.cases.show', $data['LegalCaseID'])->with('success', 'Counsel assigned successfully.');
-    }
-
-    public function edit($id)
-    {
-        $counsel = LegalCounsel::findOrFail($id);
-        $case = LegalCase::findOrFail($counsel->LegalCaseID);
-
-        return view('legal.disputes.counsels.edit', compact('counsel', 'case'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $counsel = LegalCounsel::findOrFail($id);
-
-        $data = $request->validate([
-            'CounselName' => 'required|string|max:255',
-            'LawFirm' => 'nullable|string|max:255',
-            'ContactEmail' => 'nullable|email|max:255',
-            'ContactPhone' => 'nullable|string|max:50',
-            'Role' => 'nullable|string|max:100',
-            'Remarks' => 'nullable|string',
+        $counsel =  LegalCaseCounsel::create([
+            'LegalCaseID' => $caseId,
+            'CounselName' => $validated['CounselName'],
+            'FirmName' => $validated['FirmName'],
+            'Email' => $validated['Email'],
+            'Phone' => $validated['Phone'],
+            'Role' => $validated['Role'],
+            // 'Remarks' => $validated['Remarks'],
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
         ]);
 
-        $data['ModifiedBy'] = Auth::id();
-        $data['ModifiedOn'] = now();
-
-        $counsel->update($data);
-
-        return redirect()->route('legal.cases.show', $counsel->LegalCaseID)->with('success', 'Counsel updated successfully.');
+        return redirect()->route('legal.cases.show', $caseId)->with('success', 'Counsel assigned successfully.');
     }
 
-    public function show($id)
+    public function edit($disputeId, $counselId)
+{
+    $case = LegalCase::findOrFail($disputeId);
+    $counsel = LegalCaseCounsel::where('LegalCaseID', $disputeId)
+                               ->findOrFail($counselId);
+
+    return view('legal.disputes.counsels.edit', compact('case', 'counsel'));
+}
+
+public function update(Request $request, $disputeId, $counselId)
+{
+    $case = LegalCase::findOrFail($disputeId);
+    $counsel = LegalCaseCounsel::where('LegalCaseID', $disputeId)
+                               ->findOrFail($counselId);
+
+    $data = $request->validate([
+        'CounselName' => 'required|string|max:255',
+        'FirmName'    => 'nullable|string|max:255',
+        'Email'       => 'nullable|email|max:255',
+        'Phone'       => 'nullable|string|max:50',
+        'Role'        => 'nullable|string|max:100',
+        'Remarks'     => 'nullable|string',
+    ]);
+
+    $data['ModifiedBy'] = Auth::id();
+    $data['ModifiedOn'] = now();
+
+    $counsel->update($data);
+
+    return redirect()
+        ->route('legal.disputes.counsels.show', [$case->Id, $counsel->Id])
+        ->with('success', 'Counsel updated successfully.');
+}
+
+
+    public function show($disputeId, $counselId)
+{
+    $case = LegalCase::findOrFail($disputeId);
+    $counsel = LegalCaseCounsel::where('LegalCaseID', $disputeId)
+                               ->findOrFail($counselId);
+
+    return view('legal.disputes.counsels.show', compact('case', 'counsel'));
+}
+
+
+    public function destroy($id)
     {
-        $counsel = LegalCounsel::with('case')->findOrFail($id);
-        return view('legal.disputes.counsels.show', compact('counsel'));
+        $counsel = LegalCaseCounsel::findOrFail($id);
+        $caseId = $counsel->LegalCaseID;
+
+        $counsel->DeletedBy = Auth::id();
+        $counsel->save();
+        $counsel->delete();
+
+        return redirect()->route('legal.cases.show', $caseId)->with('success', 'Counsel removed successfully.');
     }
 }

@@ -16,51 +16,60 @@
 @endsection
 
 @section('content')
-<div class="row">
-    <!-- Main Form -->
-    <div class="col-md-9">
-        <form action="{{ route('legal.templates.store') }}" method="POST">
-            @csrf
-            <div class="card shadow p-4 rounded-4 mb-4">
-                <h4 class="mb-4">📄 Add New Template</h4>
+<div class="container">
+    <div class="row">
+        <!-- Main Form -->
 
-                <div class="mb-3">
-                    <label for="TemplateName" class="form-label">Template Name</label>
-                    <input type="text" name="TemplateName" class="form-control" required>
+        <div class="col-md-9">
+            <form action="{{ route('legal.templates.store') }}" method="POST">
+                @csrf
+                <div class="card shadow p-4 rounded-4 mb-3">
+                    <p class="text-muted"></p>
+                    <div class="card-header bg-light py-1 px-3 d-flex justify-content-between align-items-centre">
+                        <h5 class="text-info mb-4"><i class="fas fa-file-alt"></i> Add New Template</h5>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TemplateName" class="form-label">Template Name</label>
+                        <input type="text" name="TemplateName" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="DocumentType" class="form-label">Document Type</label>
+                        <input type="text" name="DocumentType" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Version" class="form-label">Version</label>
+                        <input type="text" name="Version" class="form-control" value="v1.0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Description" class="form-label">Description</label>
+                        <textarea name="Description" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TemplateBody" class="form-label">Template Body</label>
+                        <textarea name="TemplateBody" id="editor" class="form-control" rows="10"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">💾 Save Template</button>
                 </div>
+            </form>
+        </div>
 
-                <div class="mb-3">
-                    <label for="DocumentType" class="form-label">Document Type</label>
-                    <input type="text" name="DocumentType" class="form-control">
+        <!-- Clause Picker Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow p-3 rounded-4">
+                <p class="text-muted"></p>
+                <div class="card-header bg-light px-2 py-1 d-flex justify-content-between align-items-centre mb-3">
+                    <h5 class="text-info mb-3"><i class="fas fa-book"></i> Clause Library</h5>
                 </div>
-
-                <div class="mb-3">
-                    <label for="Version" class="form-label">Version</label>
-                    <input type="text" name="Version" class="form-control" value="v1.0">
+                <input type="text" id="clause-search" class="form-control mb-2" placeholder="Search clause...">
+                <div id="clause-results" style="max-height: 500px; overflow-y: auto;">
+                    <p class="text-muted">Start typing to load clauses...</p>
                 </div>
-
-                <div class="mb-3">
-                    <label for="Description" class="form-label">Description</label>
-                    <textarea name="Description" class="form-control" rows="2"></textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label for="TemplateBody" class="form-label">Template Body</label>
-                    <textarea name="TemplateBody" id="editor" class="form-control" rows="10"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-success">💾 Save Template</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Clause Picker Sidebar -->
-    <div class="col-md-3">
-        <div class="card shadow p-3 rounded-4">
-            <h5 class="mb-3">📚 Clause Library</h5>
-            <input type="text" id="clause-search" class="form-control mb-2" placeholder="Search clause...">
-            <div id="clause-results" style="max-height: 500px; overflow-y: auto;">
-                <p class="text-muted">Start typing to load clauses...</p>
             </div>
         </div>
     </div>

@@ -2,17 +2,16 @@
 @section('title', 'Legal Documents')
 @section('content')
 <div class="container">
-    <div class="card p-4 shadow rounded-4">
+    <div class="card p-2 shadow rounded-4">
 
-        <div class="card-header bg-light px-3 py-1">
-            <h6 class="mb-0">📁 Legal Documents Registry</h6>
+        <div class="card-header bg-light px-3 py-2 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-info"><i class="fas fa-folder"></i> Legal Documents Registry</h5>
+            <a href="{{ route('legal.documents.create') }}" class="btn btn-info mb-3 btn-sm p-2"><i class="fas fa-plus me-1"></i> Add New Document</a>
         </div>
         <div class="card-body">
             <p class="text-muted"></p>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <a href="{{ route('legal.documents.create') }}" class="btn btn-primary mb-3 btn-sm">➕ Add New Document</a>
-            </div>
-        <table class="table table-bordered">
+        <table class="table table-hover table-sm align-middle text-centre"
+               style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
             <thead>
                 <tr>
                     <th>Title</th>
@@ -31,7 +30,7 @@
                     <td>Approved</td>
                     <td>Signed</td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                        <a href="#" class="btn btn-sm btn-info">View</a>
                         <a href="#" class="btn btn-sm btn-warning">Edit</a>
                         <a href="#" class="btn btn-sm btn-danger">Delete</a>
                     </td>
@@ -43,7 +42,7 @@
                     <td>In Review</td>
                     <td>Pending</td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                        <a href="#" class="btn btn-sm btn-info">View</a>
                         <a href="#" class="btn btn-sm btn-warning">Edit</a>
                         <a href="#" class="btn btn-sm btn-danger">Delete</a>
                     </td>
@@ -55,7 +54,7 @@
                     <td>Draft</td>
                     <td>Pending</td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                        <a href="#" class="btn btn-sm btn-info">View</a>
                         <a href="#" class="btn btn-sm btn-warning">Edit</a>
                         <a href="#" class="btn btn-sm btn-danger">Delete</a>
                     </td>
@@ -67,7 +66,7 @@
                     <td>Approved</td>
                     <td>Archived</td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                        <a href="#" class="btn btn-sm btn-info">View</a>
                         <a href="#" class="btn btn-sm btn-warning">Edit</a>
                         <a href="#" class="btn btn-sm btn-danger">Delete</a>
                     </td>
@@ -79,7 +78,7 @@
                     <td>Rejected</td>
                     <td>Pending</td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                        <a href="#" class="btn btn-sm btn-info">View</a>
                         <a href="#" class="btn btn-sm btn-warning">Edit</a>
                         <a href="#" class="btn btn-sm btn-danger">Delete</a>
                     </td>

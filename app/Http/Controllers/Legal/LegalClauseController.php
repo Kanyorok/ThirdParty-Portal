@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
 use App\Models\Legal\LegalClause;
 use Illuminate\Support\Facades\Auth;
@@ -11,33 +12,36 @@ class LegalClauseController extends Controller
 {
     public function index()
     {
-        // $clauses = LegalClause::where('IsActive', 1)->orderByDesc('CreatedOn')->get();
-        return view('legal.clauses.index');
+        $clauses = LegalClause::all();
+        return view('legal.clauses.index', compact('clauses'));
     }
 
     public function create()
     {
-        return view('legal.clauses.create');
+        $details = CodeDetail::select('Value')
+            ->where('CodeID', 'ClauseTypes')
+            ->get();
+        return view('legal.clauses.create', compact('details'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'Title' => 'required|string|max:255',
-            'ClauseType' => 'nullable|string|max:100',
+            'ClauseType' => 'required|string|max:100',
             'Content' => 'required|string',
-            'Version' => 'nullable|string|max:50',
+            'Version' => 'required|string|max:50',
         ]);
 
-        LegalClause::create([
-            'Title' => $request->Title,
-            'ClauseType' => $request->ClauseType,
-            'Content' => $request->Content,
-            'IsStandard' => $request->has('IsStandard') ? 1 : 0,
-            'Version' => $request->Version,
-            'IsActive' => 1,
+        $clauses = LegalClause::create([
+            'Title' => $validated['Title'],
+            'ClauseType' => $validated['ClauseType'],
+            'Content' => $validated['Content'],
+            'Version' => $validated['Version'],
+            'IsStandard' => $validated['IsStandard']?? 'No',
+            'ClauseDMSDocID' => $request->ClauseDMSDocID ?? null,
             'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::Id(),
         ]);
 
         return redirect()->route('legal.clauses.index')->with('success', 'Clause created successfully.');
@@ -46,7 +50,10 @@ class LegalClauseController extends Controller
     public function edit($id)
     {
         $clause = LegalClause::findOrFail($id);
-        return view('legal.clauses.edit', compact('clause'));
+        $details = CodeDetail::select('Value')
+            ->where('CodeID', 'ClauseTypes')
+            ->get();
+        return view('legal.clauses.edit', compact('clause', 'details'));
     }
 
     public function update(Request $request, $id)
@@ -64,7 +71,7 @@ class LegalClauseController extends Controller
             'Title' => $request->Title,
             'ClauseType' => $request->ClauseType,
             'Content' => $request->Content,
-            'IsStandard' => $request->has('IsStandard') ? 1 : 0,
+            'IsStandard' => $request->has('IsStandard') ? 'Yes' : 'No',
             'Version' => $request->Version,
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
@@ -76,10 +83,9 @@ class LegalClauseController extends Controller
     public function destroy($id)
     {
         $clause = LegalClause::findOrFail($id);
-        $clause->IsActive = 0;
-        $clause->ModifiedBy = Auth::id();
-        $clause->ModifiedOn = now();
+        $clause->DeletedBy = Auth::id();
         $clause->save();
+        $clause->delete();
 
         return redirect()->route('legal.clauses.index')->with('success', 'Clause archived.');
     }

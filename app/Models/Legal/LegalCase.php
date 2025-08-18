@@ -5,13 +5,19 @@ namespace App\Models\Legal;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Legal\LegalCaseCounsel;
 use App\Models\Legal\LegalCaseOutcome;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalCase extends Model
 {
-    protected $table = 't_LegalCases';
-    protected $primaryKey = 'ID';
-    public $timestamps = false;
+    use SoftDeletes, UserActorTrait;
 
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_LegalCases';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'CaseTitle',
         'CaseNumber',
@@ -22,7 +28,7 @@ class LegalCase extends Model
         'Status',
         'Summary',
         'AssignedCounselID',
-        'DMSDocID',
+        'CaseDMSDocID',
         'IsActive',
         'CreatedBy',
         'CreatedOn',
@@ -32,18 +38,23 @@ class LegalCase extends Model
         'DeletedOn',
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'LegalCasesId';
+    }
+
     /**
      * One case can have many assigned legal counsels
      */
 public function counsels()
 {
-    return $this->hasMany(LegalCounsel::class, 'LegalCaseID', 'ID');
+    return $this->hasMany(LegalCaseCounsel::class, 'LegalCaseID', 'Id');
 }
     /**
      * One case has one outcome (judgment or resolution)
      */
     public function outcome()
     {
-        return $this->hasOne(LegalCaseOutcome::class, 'LegalCaseID', 'ID');
+        return $this->hasOne(LegalCaseOutcome::class, 'LegalCaseID', 'Id');
     }
 }

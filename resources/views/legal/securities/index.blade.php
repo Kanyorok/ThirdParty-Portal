@@ -3,105 +3,68 @@
 
 @section('content')
 <div class="card p-4 shadow rounded-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">🔐 Loan Security / Collateral Registry</h4>
-        <a href="{{ route('legal.securities.create') }}" class="btn btn-primary">➕ Register Security</a>
+    <div class="card-header bg-light px-3 py-2 d-flex justify-content-between align-items-center mb-1">
+        <h4 class="text-info mb-0"><i class="fas fa-lock"></i> Loan Security / Collateral Registry</h4>
+        <a href="{{ route('legal.securities.create') }}" class="btn btn-info"><i class="fas fa-plus me-1"></i> Register Security</a>
     </div>
-
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Security Type</th>
-                <th>Owner Name</th>
-                <th>Loan A/C</th>
-                <th>Value</th>
-                <th>Status</th>
-                <th>Institution</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-        <td>Title Deed</td>
-        <td>John Mwangi</td>
-        <td>LN001245</td>
-        <td>5,000,000</td>
-        <td>Active</td>
-        <td>Equity Bank</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-    <tr>
-        <td>Motor Vehicle Logbook</td>
-        <td>Mary Wanjiku</td>
-        <td>LN001378</td>
-        <td>1,200,000</td>
-        <td>Released</td>
-        <td>Co-operative Bank</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-    <tr>
-        <td>Shares Certificate</td>
-        <td>Ali Hassan</td>
-        <td>LN001459</td>
-        <td>800,000</td>
-        <td>Active</td>
-        <td>NCBA Bank</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-    <tr>
-        <td>Fixed Deposit</td>
-        <td>Lucy Kariuki</td>
-        <td>LN001567</td>
-        <td>2,500,000</td>
-        <td>Pending</td>
-        <td>KCB Bank</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-    <tr>
-        <td>Insurance Policy</td>
-        <td>David Otieno</td>
-        <td>LN001678</td>
-        <td>1,000,000</td>
-        <td>Active</td>
-        <td>Stanbic Bank</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-            {{-- @forelse ($securities as $sec)
+    <div class="card-body">
+        <p class="text-muted">List of registered loan securities and collateral items.</p>
+        <table class="table table-hover table-sm align-middle text-centre"
+               style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            <thead>
                 <tr>
-                    <td>{{ $sec->SecurityType }}</td>
-                    <td>{{ $sec->OwnerName }}</td>
-                    <td>{{ $sec->LoanAccountNumber }}</td>
-                    <td>{{ number_format($sec->Value, 2) }}</td>
-                    <td>{{ $sec->SecurityStatus }}</td>
-                    <td>{{ $sec->Institution }}</td>
-                    <td>
-                        <a href="{{ route('legal.securities.edit', $sec->ID) }}" class="btn btn-sm btn-warning">✏️ Edit</a>
-                    </td>
+                    <th>Security Type</th>
+                    <th>Owner Name</th>
+                    <th>Loan A/C</th>
+                    <th>Status</th>
+                    <th>Institution</th>
+                    <th>Value</th>
+                    <th>Actions</th>
                 </tr>
-            @empty
-                <tr><td colspan="7" class="text-muted">No securities registered.</td></tr>
-            @endforelse --}}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if($securities->count())
+                @foreach ($securities as $sec)
+                    <tr>
+                        <td>{{ $sec->SecurityType }}</td>
+                        <td>{{ $sec->OwnerName }}</td>
+                        <td>{{ $sec->LoanAccountNumber }}</td>
+                        <td><span class="text-success">{{ $sec->SecurityStatus }}</span></td>
+                        <td>{{ $sec->Institution }}</td>
+                        <td>{{ number_format($sec->Value, 2) }}</td>
+                        <td>
+                            {{-- <a href="{{ route('legal.securities.edit', $sec->ID) }}" class="btn btn-sm btn-warning">✏️ Edit</a> --}}
+                            <a href="{{ route('legal.securities.show', $sec->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                            <a href="{{ route('legal.securities.edit', $sec->Id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            <button type="button"
+                                class="btn btn-sm btn-danger custom-delete-btn"
+                                 data-bs-toggle="modal"
+                                data-bs-target="#customDeleteConfirmModal"
+                                data-name="{{$sec->SecurityType}}"    {{-- Pass item name --}}
+                                data-route="{{ route('legal.securities.destroy', $sec->Id) }}">
+                                <i  class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                @endforeach
+                @else
+                    <tr>
+                        <td colspan="7" class="text-muted">
+                            <div class="text-centre p-4 border rounded-3 bg-light">
+                                <p class="mb-3 text-muted fs-5">
+                                    <i class="fas fa-info-circle me-2 text-info"></i>
+                                    <i>No securities registered.</i>
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+    </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection

@@ -2,33 +2,48 @@
 
 namespace App\Models\Legal;
 
+use App\Models\Auth\User;
+use App\Models\Core\CodeDetail;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalObligation extends Model
 {
-    protected $table = 't_LegalObligations';
-    protected $primaryKey = 'ID';
-    public $timestamps = false;
+    use SoftDeletes, UserActorTrait;
 
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_LegalObligations';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'Title',
-        'LinkedType', // 'Contract' or 'Case'
-        'LinkedID',
+        'SourceType', // 'Contract' or 'Case'
         'DueDate',
         'Status', // Pending, Completed, Overdue
         'Description',
+        'AssignedTo', // User ID for assignment
         'CreatedBy',
-        'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn',
-        'DeletedBy',
-        'DeletedOn',
-        'IsActive'
+        'IsActive',
+        'ScheduledID', // Foreign key to t_Schedule
     ];
 
-    public function assignments(): HasMany
+    public static function getPrimaryKey(): string
     {
-        return $this->hasMany(LegalObligationAssignment::class, 'ObligationID');
+        return 'LegalObligationsId';
+    }
+
+    public function details()
+    {
+        return $this->belongsTo(CodeDetail::class, 'SourceType');
+    }
+
+    public function users()
+    {
+        return $this->belongsTo(User::class, 'AssignedTo', 'Id');
     }
 }

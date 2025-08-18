@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Auth\User;
 use App\Models\Legal\LegalObligation;
 use App\Models\Legal\LegalObligationAssignment;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
