@@ -475,11 +475,17 @@ enum PermissionEnum: string
     case InsuranceProductRiderUpdate = 'insuranceproductriderupdate';
     case InsuranceProductRiderDelete = 'insuranceproductriderdelete';
 
-        // Insurance Pricing Rule
+    // Insurance Pricing Rule
     case InsurancePricingRuleView = 'insurancepricingruleview';
     case InsurancePricingRuleCreate = 'insurancepricingrulecreate';
     case InsurancePricingRuleUpdate = 'insurancepricingruleupdate';
     case InsurancePricingRuleDelete = 'insurancepricingruledelete';
+
+    // Commission Rule
+    case CommissionRuleView = 'commissionruleview';
+    case CommissionRuleCreate = 'commissionrulecreate';
+    case CommissionRuleUpdate = 'commissionruleupdate';
+    case CommissionRuleDelete = 'commissionruledelete';
 
 
 
@@ -646,6 +652,7 @@ enum PermissionEnum: string
             [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
             [self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete],            
             [self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete],  
+            [self::CommissionRuleView,self::CommissionRuleCreate,self::CommissionRuleUpdate,self::CommissionRuleDelete],
             
         ]);
     }
@@ -751,6 +758,7 @@ enum PermissionEnum: string
             self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete,
             self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete,
             self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete,
+            self::CommissionRuleView,self::CommissionRuleCreate,self::CommissionRuleUpdate,self::CommissionRuleDelete
             =>ModulesEnum::Insurance,
 
 
@@ -868,8 +876,9 @@ enum PermissionEnum: string
             self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete => 'Insurance Provider ',
             self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete => 'Insurance Product ',
             self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete => 'Insurance Product Rider  ',
-                        self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete => ' Insurance Pricing Rule   ',
-            
+            self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete => ' Insurance Pricing Rule   ',
+            self::CommissionRuleView,self::CommissionRuleCreate,self::CommissionRuleUpdate,self::CommissionRuleDelete => 'Commission Rule',
+
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',

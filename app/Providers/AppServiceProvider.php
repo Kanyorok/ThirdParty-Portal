@@ -71,6 +71,7 @@ use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassurancePremiumPayments;
+use App\Models\Insurance\BancassuranceCommissionRule;
 use App\Models\Insurance\InsuranceProvider;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProductRider;
@@ -131,6 +132,7 @@ use App\Policies\Insurance\BancassurancePremiumPaymentsPolicy;
 use App\Policies\Insurance\InsuranceProviderPolicy;
 use App\Policies\Insurance\InsuranceProductPolicy;
 use App\Policies\Insurance\InsuranceProductRiderPolicy;
+use App\Policies\Insurance\CommissionRulePolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
@@ -324,10 +326,10 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
             BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
             InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
-            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,    
-            InsuranceProductRider::getPrimaryKey() => InsuranceProductRider::class,    
-                    
-            
+            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,
+            InsuranceProductRider::getPrimaryKey() => InsuranceProductRider::class,
+            BancassuranceCommissionRule::getPrimaryKey() => BancassuranceCommissionRule::class,
+
             //Third Parties
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
@@ -395,6 +397,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
         Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
         Gate::policy(InsuranceProductRider::class, InsuranceProductRiderPolicy::class);
+        Gate::policy(BancassuranceCommissionRule::class, CommissionRulePolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
