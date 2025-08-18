@@ -298,17 +298,34 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'EmploymentStatus', 'Description' => 'On Leave', 'Value' => 'OL'],
             ['CodeID' => 'EmploymentStatus', 'Description' => 'Suspended', 'Value' => 'SU'],
 
-
-            
-            ['CodeID' => 'VehicleType', 'Description' => 'Pickup', 'Value' => 'PI'],
-            ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TR'],
+            //Vehicle Types
+            ['CodeID' => 'VehicleType', 'Description' => 'Car', 'Value' => 'CA'],
+            ['CodeID' => 'VehicleType', 'Description' => 'Bus', 'Value' => 'BU'],
+            ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TK'],
             ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
 
+            //Vehicle Statuses
+            ['CodeID' => 'VehicleStatus', 'Description' => 'Active', 'Value' => 'AC'],
+            ['CodeID' => 'VehicleStatus', 'Description' => 'Under Maintenance', 'Value' => 'UM'],
+            ['CodeID' => 'VehicleStatus', 'Description' => 'Retired', 'Value' => 'RT'],
 
 
-           
+            //Insurance Statuses
+            ['CodeID' => 'InsuranceStatus', 'Description' => 'Active', 'Value' => 'ACT'],
+            ['CodeID' => 'InsuranceStatus', 'Description' => 'Pending', 'Value' => 'PEN'],
+            ['CodeID' => 'InsuranceStatus', 'Description' => 'Expired', 'Value' => 'EXP'], 
 
-           
+            //Vehicle Statuses
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Completed', 'Value' => 'CO'],
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Pending', 'Value' => 'PG'], 
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Failed', 'Value' => 'FA'], 
+
+            //Driver Employment Type
+            ['CodeID' => 'EmploymentType', 'Description' => 'Permanent', 'Value' => 'PR'],
+            ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
+            ['CodeID' => 'EmploymentType', 'Description' => 'Hired', 'Value' => 'HR'], 
+
         ];
 
         foreach ($static as $index => $item) {

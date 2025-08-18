@@ -1,20 +1,34 @@
 <?php
 
-
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Fleet\FleetContractedDriver;
+use App\Http\Requests\FleetManagement\FleetContractedDriverAssignmentRequest;
+use App\Models\Fleet\ContractedDriver;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetContractedDriverAssignment;
+use App\Models\HRM\Employee;
+use App\Services\FleetManagement\FleetContractedDriverAssignmentService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 
 class FleetContractedDriverAssignmentController extends Controller
 {
+    protected FleetContractedDriverAssignmentService $service;
+
+    public function __construct(FleetContractedDriverAssignmentService $service)
+    {
+        $this->service = $service;
+    }
+
+    /**
+     * Show create assignment form
+     */
     public function create(Request $request)
     {
-        $driverId = $request->get('driver_id');
+        $driverId = $request->get('DriverID');
         if (!$driverId) {
             abort(404, 'Contracted Driver ID is required.');
         }
@@ -22,38 +36,133 @@ class FleetContractedDriverAssignmentController extends Controller
         $driver = ContractedDriver::findOrFail($driverId);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
-        return view('fleet.contracted_driver_assignments.create', compact('driver', 'vehicles'));
+        // Fetch employees to assign as assigners
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
+
+        return view('fleet.contracted_driver_assignments.create', compact('driver', 'vehicles', 'assigners'));
     }
 
-    public function store(Request $request)
+    /**
+     * Store new assignment
+     */
+    public function store(FleetContractedDriverAssignmentRequest $request)
     {
-        $validated = $request->validate([
-            'DriverID' => 'required|exists:t_FleetContractedDrivers,ID',
-            'VehicleID' => 'required|exists:t_FleetVehicles,VehicleID',
-            'AssignmentDate' => 'required|date',
-            'UnassignmentDate' => 'nullable|date|after_or_equal:AssignmentDate',
-            'Purpose' => 'nullable|string|max:255',
-            'Notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
-        FleetContractedDriverAssignment::create([
-            ...$validated,
-            'AssignedBy' => Auth::id(),
-            'CreatedOn' => now(),
-        ]);
+        // Ensure AssignedBy is set
+        if (!isset($validated['AssignedBy'])) {
+            $validated['AssignedBy'] = Auth::id();
+        }
 
-        return redirect()->route('fleet.contracted_drivers.show', $validated['DriverID'])
+        $assignment = $this->service->create($validated);
+
+        return redirect()
+            ->route('fleet.contracted_drivers.show', $validated['DriverID'])
             ->with('success', 'Vehicle assigned to contracted driver successfully.');
     }
 
-    public function index($driverId)
+    /**
+     * Show list of assignments for current user
+     */
+    public function index()
     {
-        $driver = ContractedDriver::findOrFail($driverId);
-        $assignments = FleetContractedDriverAssignment::where('DriverID', $driverId)
-            ->with('vehicle')
+        $assignments = FleetContractedDriverAssignment::with(['vehicle', 'driver', 'assignedBy'])
+            ->where('AssignedBy', Auth::id())
             ->orderByDesc('AssignmentDate')
             ->get();
 
-        return view('fleet.contracted_driver_assignments.index', compact('driver', 'assignments'));
+        return view('fleet.contracted_driver_assignments.index', compact('assignments'));
     }
+
+    /**
+     * Show edit assignment form
+     */
+   public function edit($driverId, $assignmentId)
+{
+    $assignment = FleetContractedDriverAssignment::with(['vehicle', 'assignedBy'])
+        ->where('DriverID', $driverId)
+        ->where('Id', $assignmentId)
+        ->firstOrFail();
+
+    return response()->json($assignment);
+}
+
+
+public function update(FleetContractedDriverAssignmentRequest $request, $driverId, $assignmentId)
+{
+    // Fetch the assignment
+    $assignment = FleetContractedDriverAssignment::findOrFail($assignmentId);
+
+    // Validate input
+    $validated = $request->validated();
+
+    // Preserve AssignedBy if not explicitly provided
+    if (!isset($validated['AssignedBy'])) {
+        $validated['AssignedBy'] = $assignment->AssignedBy ?? Auth::id();
+    }
+
+    // Update via service
+
+    $this->service->update($assignment, $validated);
+
+// Reload relationships
+$assignment->load(['vehicle', 'assignedBy']);
+
+return response()->json([
+    'Id' => $assignment->Id,
+    'vehicle' => $assignment->vehicle,
+    'AssignmentDate' => $assignment->AssignmentDate,
+    'UnassignmentDate' => $assignment->UnassignmentDate,
+    'Purpose' => $assignment->Purpose,
+    'assignedBy' => $assignment->assignedBy,
+    'Notes' => $assignment->Notes,
+]);
+
+    
+
+    // Otherwise redirect back to assignment index
+    return redirect()
+        ->route('fleet.contracted_driver_assignments.index', $assignment->DriverID)
+        ->with('success', 'Assignment updated successfully.');
+}
+    
+    // In FleetContractedDriverController (show method)
+public function show($id)
+{
+    $driver = ContractedDriver::findOrFail($id);
+    $licenses = $driver->licenses()->get(); // assuming relation exists
+    $assignments = $driver->assignments()->with('vehicle', 'assignedBy')->get();
+
+    // Fetch employees for AssignedBy dropdown
+    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+        ->pluck('name', 'Id');
+
+    $vehicles = FleetVehicle::where('IsActive', 1)->get();    
+
+    return view('fleet.contracted_drivers.show', compact('driver', 'licenses', 'assignments', 'assigners', 'vehicles'));
+}
+
+
+    /**
+     * Delete assignment
+     */
+ public function destroy(Request $request, $driverId, $assignmentId)
+{
+    $assignment = FleetContractedDriverAssignment::findOrFail($assignmentId);
+
+    $this->service->delete($assignment);
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'message' => 'Assignment deleted successfully.'
+        ]);
+    }
+
+    return redirect()
+        ->route('fleet.contracted_drivers.show', ['Id' => $assignment->DriverID])
+        ->with('success', 'Assignment deleted successfully.');
+}
+
+
 }

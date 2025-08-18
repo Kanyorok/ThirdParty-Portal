@@ -1,62 +1,93 @@
 @extends('layouts.app')
-@section('title', 'Schedule Inspection')
+@section('title', 'Register New Driver')
 
 @section('content')
 <div class="card p-4 shadow rounded-4">
-    <h4 class="mb-4">📝 Schedule Inspection</h4>
+    <h4 class="mb-4">🧑‍✈️ Register New Driver</h4>
 
-    <form action="{{ route('fleet.inspection_schedule.store') }}" method="POST">
+    <form action="{{ route('fleet.drivers.store') }}" method="POST">
         @csrf
+        <div class="row g-3">
 
-        <div class="row mb-3">
+            {{-- Full Name --}}
             <div class="col-md-6">
-                <label for="VehicleID" class="form-label">Vehicle</label>
-                <select name="VehicleID" id="VehicleID" class="form-select" required>
-                    <option value="">-- Select Vehicle --</option>
-                    @foreach ($vehicles as $vehicle)
-                        <option value="{{ $vehicle->VehicleID }}">{{ $vehicle->RegistrationNumber }}</option>
+                <label for="FullName" class="form-label">Full Name</label>
+                <input type="text" name="FullName" class="form-control" value="{{ old('FullName') }}" required>
+            </div>
+
+            {{-- Staff Number --}}
+            <div class="col-md-6">
+                <label for="StaffNumber" class="form-label">Staff Member</label>
+                <select name="StaffNumber" id="StaffNumber" class="form-select" required>
+                    <option value="">-- Select Staff Member --</option>
+                    @foreach ($staffNo as $id => $name)
+                        <option value="{{ $id }}" {{ old('StaffNumber') == $id ? 'selected' : '' }}>
+                            {{ $name }}
+                        </option>
                     @endforeach
                 </select>
             </div>
 
+            {{-- National ID --}}
             <div class="col-md-6">
-                <label for="InspectionType" class="form-label">Inspection Type</label>
-                <input type="text" name="InspectionType" id="InspectionType" class="form-control" required placeholder="e.g., Roadworthiness">
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="InspectionDate" class="form-label">Inspection Date</label>
-                <input type="date" name="InspectionDate" id="InspectionDate" class="form-control" required>
+                <label for="NationalID" class="form-label">National ID</label>
+                <input type="text" name="NationalID" class="form-control" value="{{ old('NationalID') }}">
             </div>
 
+            {{-- Phone --}}
             <div class="col-md-6">
-                <label for="ExpiryDate" class="form-label">Expiry Date</label>
-                <input type="date" name="ExpiryDate" id="ExpiryDate" class="form-control">
+                <label for="Phone" class="form-label">Phone Number</label>
+                <input type="text" name="Phone" class="form-control" value="{{ old('Phone') }}">
             </div>
-        </div>
 
-        <div class="row mb-3">
+            {{-- Email --}}
             <div class="col-md-6">
-                <label for="Status" class="form-label">Status</label>
-                <select name="Status" id="Status" class="form-select" required>
-                    <option value="">-- Select Status --</option>
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Failed">Failed</option>
+                <label for="Email" class="form-label">Email</label>
+                <input type="email" name="Email" class="form-control" value="{{ old('Email') }}">
+            </div>
+
+            {{-- License Number --}}
+            <div class="col-md-6">
+                <label for="LicenseNumber" class="form-label">Driver’s License Number</label>
+                <input type="text" name="LicenseNumber" class="form-control" value="{{ old('LicenseNumber') }}" required>
+            </div>
+
+            {{-- License Expiry --}}
+            <div class="col-md-6">
+                <label for="LicenseExpiryDate" class="form-label">License Expiry</label>
+                <input type="date" name="LicenseExpiryDate" class="form-control" value="{{ old('LicenseExpiryDate') }}">
+            </div>
+
+            {{-- Employment Type --}}
+            <div class="col-md-6">
+                <label for="EmploymentType" class="form-label">Employment Type</label>
+                <select name="EmploymentType" class="form-select">
+                    <option value="">Select Type</option>
+                    @foreach($employmentType as $type)
+                        <option value="{{ $type->Value }}" {{ old('EmploymentType') == $type->Value ? 'selected' : '' }}>
+                            {{ $type->Description }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
-            <div class="col-md-6">
-                <label for="Remarks" class="form-label">Remarks</label>
-                <input type="text" name="Remarks" id="Remarks" class="form-control" placeholder="Optional notes">
+            {{-- Notes --}}
+            <div class="col-md-12">
+                <label for="Notes" class="form-label">Notes</label>
+                <textarea name="Notes" class="form-control" rows="2">{{ old('Notes') }}</textarea>
+            </div>
+
+            {{-- Is Active --}}
+            <div class="col-md-4 mt-3">
+                <input type="hidden" name="IsActive" value="0">
+                <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" value="1" {{ old('IsActive') ? 'checked' : '' }}>
+                <label for="IsActive" class="form-check-label">Active</label>
             </div>
         </div>
 
-        <div class="mt-3">
-            <button type="submit" class="btn btn-success">✅ Save Schedule</button>
+        <div class="mt-4">
+            <button class="btn btn-success" type="submit">💾 Save Driver</button>
+            <a href="{{ route('fleet.drivers.index') }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>

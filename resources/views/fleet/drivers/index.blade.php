@@ -21,8 +21,8 @@
                     <th>Phone</th>
                     <th>License No.</th>
                     <th>Expiry</th>
-                    <th>Category</th>
                     <th>Employment</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -31,21 +31,31 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $driver->FullName }}</td>
-                        <td>{{ $driver->StaffNumber }}</td>
+                        <td>{{ $driver->driver->FullName ?? '—' }}</td>
                         <td>{{ $driver->NationalID }}</td>
                         <td>{{ $driver->Phone }}</td>
                         <td>{{ $driver->LicenseNumber }}</td>
                         <td>{{ $driver->LicenseExpiryDate }}</td>
-                        <td>{{ $driver->LicenseCategory }}</td>
-                        <td>{{ $driver->EmploymentType }}</td>
+                        <td>{{ $driver->employmentType->Description ?? '—' }}</td>
                         <td>
-                            <a href="{{ route('fleet.drivers.show', $driver->DriverID) }}" class="btn btn-sm btn-info">View</a>
-                            <a href="{{ route('fleet.drivers.edit', $driver->DriverID) }}" class="btn btn-sm btn-warning">Edit</a>
+                            @if($driver->IsActive)
+                                <span class="badge bg-success">Active</span>
+                            @else
+                                <span class="badge bg-danger">Inactive</span>
+                            @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('fleet.drivers.show', $driver->Id) }}" class="btn btn-sm btn-info">View</a>
+                            <a href="{{ route('fleet.drivers.edit', $driver->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ route('fleet.drivers.destroy', $driver->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this driver?')">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" class="text-center text-muted">No drivers registered.</td>
+                        <td colspan="11" class="text-center text-muted">No drivers registered.</td>
                     </tr>
                 @endforelse
             </tbody>

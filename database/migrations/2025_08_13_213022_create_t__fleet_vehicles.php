@@ -21,19 +21,19 @@ return new class extends Migration
             $table->integer('YearOfManufacture')->nullable();
             $table->string('ChassisNo')->unique();
             $table->string('EngineNo')->nullable();
-            $table->foreignId('FuelType')->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('FuelType')->constrained('t_FuelTypes', 'Id');
             $table->string('Capacity')->nullable();
             $table->decimal('OdometerReading', 10, 2)->default(0);
             $table->foreignId('AssignedBranch')->nullable()->constrained('t_Branches', 'Id');
-            $table->foreignId('AssignedToUser')->nullable()->constrained('t_Users', 'Id');
             $table->foreignId('Status')->constrained('t_CodeDetails', 'ID');
-            $table->foreignId('IsActive')->constrained('t_CodeDetails', 'ID');
+            $table->boolean('IsActive')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
-            $table->dateTime('ModifiedOn');
+            $table->dateTime('ModifiedOn')->nullable();
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
+
         });
 
     }

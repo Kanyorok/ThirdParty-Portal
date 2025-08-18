@@ -3,155 +3,97 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\VehicleType;
-use App\Models\Fleet\FuelType;
 use App\Models\Core\CodeDetail;
-use App\Models\FleetManagement\FleetMake;
-use App\Models\FleetManagement\FleetModel;
 use App\Models\Fleet\Branch;
 use App\Models\Fleet\FleetVehicleAssignment;
-use Illuminate\Support\Facades\Auth;
+use App\Models\FleetManagement\FleetMake;
+use App\Models\FleetManagement\FleetModel;
+use App\Models\Fleet\FuelType;
+use App\Http\Requests\FleetManagement\VehicleManagementRequest;
+use App\Services\FleetManagement\VehicleManagementService;
 
 class VehicleController extends Controller
 {
-    
-public function index()
-{
-    $vehicles = FleetVehicle::with(['vehicleType', 'fuelType', 'branch'])
-        ->where('CreatedBy', Auth::id())
-        ->get();
+    protected VehicleManagementService $vehicleService;
 
-    return view('fleet.vehicles.index', compact('vehicles'));
-}
+    public function __construct(VehicleManagementService $vehicleService)
+    {
+        $this->vehicleService = $vehicleService;
+    }
+
+    public function index()
+    {
+        $vehicles = FleetVehicle::with(['vehicleType', 'fuelType', 'branch'])
+            ->where('CreatedBy', Auth::id())
+            ->get();
+
+        return view('fleet.vehicles.index', compact('vehicles'));
+    }
 
     public function create()
     {
-        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
-        ->orderBy('Value')
-        ->get();
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
         $fuelTypes = FuelType::all();
-        $branches = Branch::where('CreatedBy', 1)->get();
+        $branches = Branch::all();
         $brands = FleetMake::all();
         $fleetModels = FleetModel::all();
-        $vehicleStatuses = CodeDetail::where('CodeID', 'VehicleStatus')
-        ->orderBy('Value')
-        ->get();
+        $vehicleStatuses = CodeDetail::where('CodeID', 'VehicleStatus')->orderBy('Value')->get();
 
         return view('fleet.vehicles.create', compact('vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 'vehicleStatuses'));
     }
 
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'RegistrationNumber' => 'required|string|max:50|unique:t_FleetVehicles,RegistrationNumber',
-        'VehicleTypeID' => 'required|integer',
-        'FuelTypeID' => 'required|integer',
-        'Make' => 'nullable|string|max:100',
-        'Model' => 'nullable|string|max:100',
-        'YearOfManufacture' => 'nullable|integer',
-        'ChassisNumber' => 'nullable|string|max:100',
-        'EngineNumber' => 'nullable|string|max:100',
-        'Capacity' => 'nullable|string|max:50',
-        'OdometerReading' => 'nullable|numeric',
-        'Status' => 'nullable|string|max:50',
-        'AssignedBranchID' => 'nullable|integer',
-        'AssignedToUserID' => 'nullable|integer',
-    ]);
+    public function store(VehicleManagementRequest $request)
+    {
+        $validated = $request->validated();
 
-    $vehicle = FleetVehicle::create([
-        ...$validated,
-        'Status' => $validated['Status'] ?? 'Active',
-        'CreatedBy' => Auth::id(),
-        'CreatedOn' => now(),
-    ]);
+        $vehicle = $this->vehicleService->create($validated);
 
-    // Optional: if either a branch or user was assigned, store it in assignment history
-    if (!empty($validated['AssignedBranchID']) || !empty($validated['AssignedToUserID'])) {
-        \App\Models\Fleet\FleetVehicleAssignment::create([
-            'VehicleID' => $vehicle->VehicleID,
-            'AssignedBranchID' => $validated['AssignedBranchID'],
-            'AssignedToUserID' => $validated['AssignedToUserID'],
-            'AssignmentDate' => now()->toDateString(),
-            'Purpose' => 'Initial Assignment',
-            'Notes' => 'Captured during vehicle registration',
-            'AssignedBy' => Auth::id(),
-            'CreatedOn' => now(),
-        ]);
+        // Optional assignment history
+        
+        return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle registered successfully.');
     }
 
-    return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle registered successfully.');
-}
+    public function show($id)
+    {
+        $vehicle = FleetVehicle::with(['vehicleType', 'fuelType', 'branch', 'brand', 'model'])->findOrFail($id);
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+        $fuelTypes = FuelType::all();
+        $branches = Branch::all();
+        $brands = FleetMake::all();
+        $fleetModels = FleetModel::all();
+
+        return view('fleet.vehicles.show', compact('vehicle', 'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels'));
+    }
 
     public function edit($id)
     {
         $vehicle = FleetVehicle::findOrFail($id);
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+        $fuelTypes = FuelType::all();
+        $branches = Branch::all();
+        $brands = FleetMake::all();
+        $fleetModels = FleetModel::all();
+        $vehicleStatuses = CodeDetail::where('CodeID', 'VehicleStatus')->orderBy('Value')->get();
 
-        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')
-        ->orderBy('Value')
-        ->get();
-        $fuelTypes = CodeDetail::where('CodeID', 'FuelType')
-        ->orderBy('Value')
-        ->get();
-        $branches = Branch::where('CreatedBy', Auth::id())->get();
-
-        return view('fleet.vehicles.edit', compact('vehicle', 'vehicleTypes', 'fuelTypes', 'branches'));
+        return view('fleet.vehicles.edit', compact('vehicle', 'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 'vehicleStatuses'));
     }
 
-    public function update(Request $request, $id)
-{
-    $vehicle = FleetVehicle::findOrFail($id);
+    public function update(VehicleManagementRequest $request, $id)
+    {
+        $vehicle = FleetVehicle::findOrFail($id);
+        $validated = $request->validated();
 
-    $validated = $request->validate([
-        'RegistrationNumber' => 'required|string|max:50|unique:t_FleetVehicles,RegistrationNumber,' . $vehicle->VehicleID . ',VehicleID',
-        'VehicleTypeID' => 'required|integer',
-        'FuelTypeID' => 'required|integer',
-        'Make' => 'nullable|string|max:100',
-        'Model' => 'nullable|string|max:100',
-        'YearOfManufacture' => 'nullable|integer',
-        'ChassisNumber' => 'nullable|string|max:100',
-        'EngineNumber' => 'nullable|string|max:100',
-        'Capacity' => 'nullable|string|max:50',
-        'OdometerReading' => 'nullable|numeric',
-        'Status' => 'nullable|string|max:50',
-        'AssignedBranchID' => 'nullable|integer',
-        'AssignedToUserID' => 'nullable|integer',
-    ]);
+        $this->vehicleService->update($vehicle, $validated);
 
-    // Check if reassignment occurred
-    $isBranchChanged = $validated['AssignedBranchID'] != $vehicle->AssignedBranchID;
-    $isUserChanged = $validated['AssignedToUserID'] != $vehicle->AssignedToUserID;
-
-    // Update vehicle record
-    $vehicle->update([
-        ...$validated,
-        'ModifiedBy' => Auth::id(),
-        'ModifiedOn' => now(),
-    ]);
-
-    // Log assignment history if reassigned
-    if ($isBranchChanged || $isUserChanged) {
-        \App\Models\Fleet\FleetVehicleAssignment::create([
-            'VehicleID' => $vehicle->VehicleID,
-            'AssignedBranchID' => $validated['AssignedBranchID'],
-            'AssignedToUserID' => $validated['AssignedToUserID'],
-            'AssignmentDate' => now()->toDateString(),
-            'Purpose' => 'Reassignment (via edit)',
-            'Notes' => 'Updated from edit form',
-            'AssignedBy' => Auth::id(),
-            'CreatedOn' => now(),
-        ]);
+        return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle updated successfully.');
     }
-
-    return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle updated successfully.');
-}
 
 
     public function deactivate($id)
     {
         $vehicle = FleetVehicle::findOrFail($id);
-
         $vehicle->update([
             'IsActive' => 0,
             'ModifiedBy' => Auth::id(),
@@ -159,5 +101,20 @@ public function store(Request $request)
         ]);
 
         return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle deregistered successfully.');
+    }
+
+   public function getByMake($Id)
+    {
+        $models = FleetModel::where('BrandID', $Id)->get();
+        return response()->json($models);
+    }
+
+
+    public function destroy($id)
+    {
+        $vehicle = FleetVehicle::findOrFail($id);
+        $this->vehicleService->delete($vehicle);
+
+        return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle deleted successfully.');
     }
 }

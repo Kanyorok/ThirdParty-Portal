@@ -6,83 +6,93 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Fleet\FleetInsuranceTracker;
 use App\Models\Fleet\FleetVehicle;
+use App\Http\Requests\FleetManagement\FleetInsuranceTrackerRequest;
+use App\Services\FleetManagement\FleetInsuranceTrackerService;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Auth\User;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Insurance\InsuranceProvider;
+use App\Models\Core\CodeDetail;
 
 class FleetInsuranceTrackerController extends Controller
 {
+    protected FleetInsuranceTrackerService $records;
+
+    public function __construct(FleetInsuranceTrackerService $records)
+    {
+        $this->records = $records;
+    }
+
     public function index()
     {
-        $records = FleetInsuranceTracker::with('vehicle')->whereNull('DeletedOn')->get();
+        $records = FleetInsuranceTracker::with(['insuranceStatus', 'insurance', 'vehicle'])
+            ->where('CreatedBy', Auth::id())
+            ->get();
+
         return view('fleet.compliance.insurance_tracker.index', compact('records'));
     }
 
     public function create()
     {
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
-        return view('fleet.compliance.insurance_tracker.create', compact('vehicles'));
+        $insuranceProvider = InsuranceProvider::all();
+        $insuranceStatuses = CodeDetail::where('CodeID', 'InsuranceStatus')->orderBy('Value')->get();
+
+        return view('fleet.compliance.insurance_tracker.create', compact('insuranceStatuses', 'insuranceProvider', 'vehicles'));
     }
 
-    public function store(Request $request)
+    public function store(FleetInsuranceTrackerRequest $request)
     {
-        $validated = $request->validate([
-            'VehicleID' => 'required|exists:t_FleetVehicles,VehicleID',
-            'InsuranceProvider' => 'required|string|max:100',
-            'PolicyNumber' => 'required|string|max:100',
-            'CoverageStartDate' => 'required|date',
-            'CoverageEndDate' => 'required|date|after:CoverageStartDate',
-            'PremiumAmount' => 'required|numeric',
-            'RenewalReminderDate' => 'nullable|date',
-            'Notes' => 'nullable|string',
-            'DocumentPath' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
-        $validated['CreatedBy'] = Auth::id();
-        $validated['CreatedOn'] = now();
+        if ($request->hasFile('DocumentPath')) {
+            $validated['DocumentPath'] = $request->file('DocumentPath')->store('insurance_documents', 'public');
+        }
 
-        FleetInsuranceTracker::create($validated);
+        $record = $this->records->create($validated);
 
-        return redirect()->route('fleet.insurance.index')->with('success', 'Insurance record created successfully.');
+        return redirect()->route('fleet.insurance_tracker.index')->with('success', 'Insurance record created successfully.');
+    }
+
+    public function show($id)
+    {
+        $record = FleetInsuranceTracker::with(['insuranceStatus', 'insurance', 'vehicle'])->findOrFail($id);
+        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $insuranceProvider = InsuranceProvider::all();
+        $insuranceStatuses = CodeDetail::where('CodeID', 'InsuranceStatus')->orderBy('Value')->get();
+
+        return view('fleet.compliance.insurance_tracker.show', compact('record', 'vehicles', 'insuranceProvider', 'insuranceStatuses'));
     }
 
     public function edit($id)
     {
         $record = FleetInsuranceTracker::findOrFail($id);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
-        return view('fleet.compliance.insurance_tracker.edit', compact('record', 'vehicles'));
+        $insuranceProvider = InsuranceProvider::all();
+        $insuranceStatuses = CodeDetail::where('CodeID', 'InsuranceStatus')->orderBy('Value')->get();
+
+        return view('fleet.compliance.insurance_tracker.edit', compact('record', 'vehicles', 'insuranceStatuses', 'insuranceProvider'));
     }
 
-    public function update(Request $request, $id)
+    public function update(FleetInsuranceTrackerRequest $request, $id)
     {
         $record = FleetInsuranceTracker::findOrFail($id);
+        $validated = $request->validated();
 
-        $validated = $request->validate([
-            'VehicleID' => 'required|exists:t_FleetVehicles,VehicleID',
-            'InsuranceProvider' => 'required|string|max:100',
-            'PolicyNumber' => 'required|string|max:100',
-            'CoverageStartDate' => 'required|date',
-            'CoverageEndDate' => 'required|date|after:CoverageStartDate',
-            'PremiumAmount' => 'required|numeric',
-            'RenewalReminderDate' => 'nullable|date',
-            'Notes' => 'nullable|string',
-            'DocumentPath' => 'nullable|string|max:255',
-        ]);
+        if ($request->hasFile('DocumentPath')) {
+            $validated['DocumentPath'] = $request->file('DocumentPath')->store('insurance_documents', 'public');
+        }
 
-        $validated['ModifiedBy'] = Auth::id();
-        $validated['ModifiedOn'] = now();
+        $this->records->update($record, $validated);
 
-        $record->update($validated);
-
-        return redirect()->route('fleet.insurance.index')->with('success', 'Insurance record updated.');
+        return redirect()->route('fleet.insurance_tracker.index')->with('success', 'Insurance record updated.');
     }
 
     public function destroy($id)
     {
         $record = FleetInsuranceTracker::findOrFail($id);
-        $record->update([
-            'DeletedBy' => Auth::id(),
-            'DeletedOn' => now(),
-        ]);
+        $this->records->delete($record);
 
-        return redirect()->route('fleet.insurance.index')->with('success', 'Insurance record deactivated.');
+        return redirect()->route('fleet.insurance_tracker.index')->with('success', 'Insurance record deactivated.');
     }
 }

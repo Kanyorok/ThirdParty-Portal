@@ -1,110 +1,93 @@
 @extends('layouts.app')
-@section('title', 'Register New Vehicle')
+@section('title', 'Register New Driver')
 
 @section('content')
 <div class="card p-4 shadow rounded-4">
-    <h4 class="mb-4">🚘 Register New Vehicle</h4>
+    <h4 class="mb-4">🧑‍✈️ Register New Driver</h4>
 
-    <form action="{{ route('fleet.vehicles.store') }}" method="POST">
+    <form action="{{ route('fleet.drivers.store') }}" method="POST">
         @csrf
-
         <div class="row g-3">
-            <div class="col-md-4">
-                <label for="RegistrationNumber" class="form-label">Registration Number</label>
-                <input type="text" class="form-control" name="RegistrationNumber" required>
+
+            {{-- Full Name --}}
+            <div class="col-md-6">
+                <label for="FullName" class="form-label">Full Name</label>
+                <input type="text" name="FullName" class="form-control" value="{{ old('FullName') }}" required>
             </div>
 
-            <div class="col-md-4">
-                <label for="VehicleTypeID" class="form-label">Vehicle Type</label>
-                <select class="form-select" name="VehicleTypeID" required>
+            {{-- Staff Number --}}
+            <div class="col-md-6">
+                <label for="StaffNumber" class="form-label">Staff Member</label>
+                <select name="StaffNumber" id="StaffNumber" class="form-select" required>
+                    <option value="">-- Select Staff Member --</option>
+                    @foreach ($staffNo as $employee)
+                        <option value="{{ $employee->Id }}" {{ old('StaffNumber') == $employee->Id ? 'selected' : '' }}>
+                            {{ $employee->LastName }} {{ $employee->FirstName }} ({{ $employee->EmployeeID }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- National ID --}}
+            <div class="col-md-6">
+                <label for="NationalID" class="form-label">National ID</label>
+                <input type="text" name="NationalID" class="form-control" value="{{ old('NationalID') }}">
+            </div>
+
+            {{-- Phone --}}
+            <div class="col-md-6">
+                <label for="Phone" class="form-label">Phone Number</label>
+                <input type="text" name="Phone" class="form-control" value="{{ old('Phone') }}">
+            </div>
+
+            {{-- Email --}}
+            <div class="col-md-6">
+                <label for="Email" class="form-label">Email</label>
+                <input type="email" name="Email" class="form-control" value="{{ old('Email') }}">
+            </div>
+
+            {{-- License Number --}}
+            <div class="col-md-6">
+                <label for="LicenseNumber" class="form-label">Driver’s License Number</label>
+                <input type="text" name="LicenseNumber" class="form-control" value="{{ old('LicenseNumber') }}" required>
+            </div>
+
+            {{-- License Expiry --}}
+            <div class="col-md-6">
+                <label for="LicenseExpiryDate" class="form-label">License Expiry</label>
+                <input type="date" name="LicenseExpiryDate" class="form-control" value="{{ old('LicenseExpiryDate') }}">
+            </div>
+
+            {{-- Employment Type --}}
+            <div class="col-md-6">
+                <label for="EmploymentType" class="form-label">Employment Type</label>
+                <select name="EmploymentType" class="form-select">
                     <option value="">Select Type</option>
-                    @foreach ($vehicleTypes as $type)
-                        <option value="{{ $type->ID }}">{{ $type->Description }}</option>
+                    @foreach($employmentType as $type)
+                        <option value="{{ $type->Value }}" {{ old('EmploymentType') == $type->Value ? 'selected' : '' }}>
+                            {{ $type->Description }}
+                        </option>
                     @endforeach
                 </select>
             </div>
 
-            <div class="col-md-4">
-                <label for="FuelTypeID" class="form-label">Fuel Type</label>
-                <select class="form-select" name="FuelTypeID" >
-                    <option value="">Select Fuel</option>
-                    @foreach ($fuelTypes as $fuel)
-                        <option value="{{ $fuel->ID }}">{{ $fuel->Description }}</option>
-                    @endforeach
-                </select>
+            {{-- Notes --}}
+            <div class="col-md-12">
+                <label for="Notes" class="form-label">Notes</label>
+                <textarea name="Notes" class="form-control" rows="2">{{ old('Notes') }}</textarea>
             </div>
 
-            <div class="col-md-4">
-                <label for="make">Vehicle Make</label>
-                        <select class="form-control" id="make" name="Make" required>
-                            <option value="">-- Select Make --</option>
-                            @foreach($brands as $brand)
-                                <option value="{{ $brand->Id }}" {{ old('Make') == $brand->Id ? 'selected' : '' }}>
-                                    {{ $brand->BrandName }}
-                                </option>
-                            @endforeach
-                        </select>
-            </div>
-
-            <div class="col-md-4">
-                <label for="model">Vehicle Model</label>
-                        <select class="form-control" id="model" name="Model" required>
-                            <option value="">-- Select Model --</option>
-                            @foreach($fleetModels as $model)
-                                <option value="{{ $model->Id }}" {{ old('Model') == $model->Id ? 'selected' : '' }}>
-                                    {{ $model->ModelName }}
-                                </option>
-                            @endforeach
-                        </select>
-            </div>
-
-            <div class="col-md-4">
-                <label for="YearOfManufacture" class="form-label">Year</label>
-                <input type="number" class="form-control" name="YearOfManufacture">
-            </div>
-
-            <div class="col-md-4">
-                <label for="ChassisNumber" class="form-label">Chassis Number</label>
-                <input type="text" class="form-control" name="ChassisNumber">
-            </div>
-
-            <div class="col-md-4">
-                <label for="EngineNumber" class="form-label">Engine Number</label>
-                <input type="text" class="form-control" name="EngineNumber">
-            </div>
-
-            <div class="col-md-4">
-                <label for="Capacity" class="form-label">Capacity</label>
-                <input type="text" class="form-control" name="Capacity">
-            </div>
-
-            <div class="col-md-4">
-                <label for="OdometerReading" class="form-label">Odometer Reading</label>
-                <input type="number" step="0.01" class="form-control" name="OdometerReading">
-            </div>
-
-            <div class="col-md-4">
-                <label for="Status" class="form-label">Status</label>
-                <select class="form-select" name="Status">
-                    <option value="Active">Active</option>
-                    <option value="Under Maintenance">Under Maintenance</option>
-                    <option value="Retired">Retired</option>
-                </select>
-            </div>
-
-            <div class="col-md-4">
-                <label for="AssignedBranchID" class="form-label">Assign to Branch</label>
-                <select class="form-select" name="AssignedBranchID">
-                    <option value="">-- None --</option>
-                    @foreach ($branches as $branch)
-                        <option value="{{ $branch->ID }}">{{ $branch->Name }}</option>
-                    @endforeach
-                </select>
+            {{-- Is Active --}}
+            <div class="col-md-4 mt-3">
+                <input type="hidden" name="IsActive" value="0">
+                <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" value="1" {{ old('IsActive') ? 'checked' : '' }}>
+                <label for="IsActive" class="form-check-label">Active</label>
             </div>
         </div>
 
         <div class="mt-4">
-            <button class="btn btn-success" type="submit">💾 Register Vehicle</button>
+            <button class="btn btn-success" type="submit">💾 Save Driver</button>
+            <a href="{{ route('fleet.drivers.index') }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
