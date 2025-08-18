@@ -7,9 +7,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StorePrequalificationApplicationRequest extends FormRequest
 {
+
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->type === ThirdPartyTypeEnum::Supplier;
+        // return $this->user() && $this->user()->type === ThirdPartyTypeEnum::Supplier;
+        return true;
     }
 
     public function rules(): array
@@ -17,9 +19,8 @@ class StorePrequalificationApplicationRequest extends FormRequest
         return [
             'round_id' => ['required', 'integer', 'exists:t_PrequalificationRounds,RoundID'],
             'responses' => ['required', 'array'],
-            'responses.*.criteria_id' => ['required', 'integer', 'exists:t_Criterias,CriteriaID'],
-            'responses.*.response_text' => ['nullable', 'string'],
-            'responses.*.file' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,png', 'max:2048'],
+            'responses' => ['nullable', 'array'],
+            'responses.*.criteria_id' => ['required_with:responses', 'integer', 'exists:t_PrequalificationCriterias'],
         ];
     }
 }

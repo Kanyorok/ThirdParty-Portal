@@ -7,11 +7,6 @@ use App\Enums\ThirdPartyTypeEnum;
 
 class UpdatePrequalificationApplicationRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize(): bool
     {
         return $this->user() && $this->user()->type === ThirdPartyTypeEnum::Supplier;
@@ -21,9 +16,8 @@ class UpdatePrequalificationApplicationRequest extends FormRequest
     {
         return [
             'responses' => ['required', 'array'],
-            'responses.*.criteria_id' => ['required', 'integer', 'exists:t_Criterias,CriteriaID'],
+            'responses.*.criteria_id' => ['required', 'integer', 'exists:t_PrequalificationCriterias,CriteriaID'],
             'responses.*.response_text' => ['nullable', 'string'],
-            'responses.*.file' => ['sometimes', 'nullable', 'file', 'mimes:pdf,doc,docx,jpg,png', 'max:2048'],
         ];
     }
 }

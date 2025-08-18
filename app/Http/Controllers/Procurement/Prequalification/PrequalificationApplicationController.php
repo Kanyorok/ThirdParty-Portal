@@ -7,33 +7,29 @@ use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Enums\Procurement\PrequalificationRoundEnum;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StorePrequalificationApplicationRequest;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
 use App\Enums\Procurement\PrequalificationApplicationEnum;
 
 class PrequalificationApplicationController extends Controller
 {
-    // ERP Views; Being silly :)
     public function index(): View
     {
-        $applications = PrequalificationApplication::with('round', 'vendor')->paginate(10);
-        return view('procurement.applications.index', compact('applications'));
+        $applications = PrequalificationApplication::with('round', 'supplier')->paginate(10);
+        return view('procurement.suppliers.prequalification.supplier-applications.index', compact('applications'));
     }
 
     public function show(PrequalificationApplication $application): View
     {
-        $application->load('round.masterSections.criteria', 'responses');
-        return view('procurement.applications.show', compact('application'));
+        // $application->load('round.masterSections.criteria', 'responses');
+        return view('procurement.suppliers.prequalification.supplier-applications.show', compact('application'));
     }
 
-    // Someone said API-driven too? Say no more
-    public function apiIndex(Request $request): JsonResponse
+    public function apiIndex(): JsonResponse
     {
-        $vendorId = auth()->id(); //logged on supplier.
+        $vendorId = auth()->id();
         $availableRounds = PrequalificationRound::where('Status', PrequalificationRoundEnum::Open)
             ->whereDoesntHave('applications', function ($query) use ($vendorId) {
                 $query->where('SupplierID', $vendorId);
@@ -50,46 +46,55 @@ class PrequalificationApplicationController extends Controller
 
     public function store(StorePrequalificationApplicationRequest $request): JsonResponse
     {
+        if (!auth()->check()) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+
         $validatedData = $request->validated();
-        $vendorId = auth()->id(); // logged on supplier
+        $user = auth()->user();
+
+        if (!$user->thirdParty) {
+            return response()->json(['error' => 'User not associated with a third party.'], 400);
+        }
+
+        $supplierId = $user->thirdParty->Id;
+
+        $existingApplication = PrequalificationApplication::where('SupplierID', $supplierId)
+            ->where('RoundID', $validatedData['round_id'])
+            ->first();
+
+        if ($existingApplication) {
+            return response()->json([
+                'message' => 'You have already applied for this prequalification round.',
+                'reference' => 'APP-' . $existingApplication->ApplicationID,
+                'application' => $existingApplication,
+            ], 200);
+        }
 
         DB::beginTransaction();
         try {
             $application = PrequalificationApplication::create([
                 'RoundID' => $validatedData['round_id'],
-                'SupplierID' => $vendorId, // this can be done as $supplier->$SupplierID
+                'SupplierID' => $supplierId,
                 'Status' => PrequalificationApplicationEnum::Submitted,
                 'SubmittedOn' => now(),
+                'CreatedBy' => $user->Id,
             ]);
 
-            foreach ($validatedData['responses'] as $response) {
-                $filePath = null;
-                $fileName = null;
-                if (isset($response['file']) && $response['file'] instanceof \Illuminate\Http\UploadedFile) {
-                    $file = $response['file'];
-                    $filePath = $file->store('prequalification_documents', 'public');
-                    $fileName = $file->getClientOriginalName();
-                }
-                $application->responses()->create([
-                    'CriteriaID' => $response['criteria_id'],
-                    'ResponseText' => $response['response_text'] ?? null,
-                    'FilePath' => $filePath,
-                    'FileName' => $fileName,
-                ]);
-            }
-
             DB::commit();
-            $application->load('responses', 'supplier', 'round');
-            // return response()->json(['message' => 'Application submitted successfully.', 'application_id' => $application->ApplicationID], 201);
+
+            $application->load('supplier', 'round');
+
             return response()->json([
-                'message' => 'Application submitted successfully.',
+                'message' => 'Prequalification application submitted successfully.',
+                'reference' => 'APP-' . $application->ApplicationID,
                 'application' => $application,
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to submit application: ' . $e->getMessage());
 
-            return response()->json(['error' => 'Failed to submit application.'], 500);
+            return response()->json(['error' => 'Failed to submit application.', 'trace' => $e->getTraceAsString()], 500);
         }
     }
 }

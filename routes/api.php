@@ -13,6 +13,7 @@ use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicatio
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
+use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierController;
 
 Route::prefix('third-party-auth')->group(function () {
@@ -118,16 +119,18 @@ Route::prefix('v1')->group(function () {
 
 
 // API Routes (for Supplier Portal)
-// Route::prefix('prequalification')->group(
-//     function () {
+Route::prefix('procurement')->name('api.procurement.')
+    ->middleware(['auth:sanctum'])
+    ->group(function () {
+        Route::apiResource('supplier-cat', SupplierCategoryApiController::class);
+        Route::apiResource('supp', SupplierController::class);
 
-Route::prefix('prequalification')->middleware(['auth:sanctum'])->name('api.procurement.')->group(
-    function () {
-        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('applications.api.index');
-        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('applications.api.show');
-        Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
-    }
-);
+        Route::prefix('prequalification')->group(function () {
+            Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('applications.api.index');
+            Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('applications.api.show');
+            Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+        });
+    });
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods

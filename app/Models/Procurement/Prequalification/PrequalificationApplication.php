@@ -24,7 +24,7 @@ class PrequalificationApplication extends Model
     protected $fillable = [
         'SupplierID',
         'RoundID',
-        'CategoryID',
+        // 'CategoryID',
         'SubmittedOn',
         'Status',
         'CreatedBy',

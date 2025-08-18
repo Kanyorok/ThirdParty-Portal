@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Procurement;
+namespace App\Models\Procurement\Prequalification;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

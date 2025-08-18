@@ -4,7 +4,7 @@ namespace App\Models\Procurement\Prequalification;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Auth\User; // Import User model
+use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Models\Procurement\Section;
@@ -51,6 +51,6 @@ class PrequalificationEvaluation extends Model
 
     public function evaluationSection(): BelongsTo
     {
-        return $this->belongsTo(Section::class, 'SectionID', 'id');
+        return $this->belongsTo(Section::class, 'SectionID', 'Id');
     }
 }

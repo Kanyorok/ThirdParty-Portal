@@ -38,7 +38,7 @@ class PrequalificationCriteria extends Model
 
     public function masterSection(): BelongsTo
     {
-        return $this->belongsTo(Section::class, 'SectionId', 'id');
+        return $this->belongsTo(Section::class, 'SectionId', 'Id');
     }
 
     public function masterCriteria(): BelongsTo

@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->foreignId('SupplierID')->constrained('t_ThirdParties', 'Id')->onDelete('cascade');
             $table->foreignId('RoundID')->constrained('t_PrequalificationRounds', 'RoundID')->onDelete('cascade');
-            $table->foreignId('CategoryID')->constrained('t_ItemCategories', 'Id');
+            $table->foreignId('CategoryID')->nullable()->constrained('t_SupplierCategories', 'SupplierCategoryID');
 
             $table->dateTime('SubmittedOn')->useCurrent();
             $table->string('Status', 50);

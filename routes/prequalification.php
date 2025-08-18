@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationRoundController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\SectionController;
 
@@ -16,4 +17,6 @@ Route::prefix('prequalification')
         });
         Route::get('sections/{section}/criteria', [CriteriaController::class, 'fetchAll'])
             ->name('sections.criteria.fetch');
+
+        Route::resource('applications', PrequalificationApplicationController::class)->except(['create', 'store', 'evaluate']);
     });
