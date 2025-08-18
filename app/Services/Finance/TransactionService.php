@@ -2,6 +2,7 @@
 
 namespace App\Services\Finance;
 
+use App\Models\Core\CodeDetail;
 use App\Models\Finance\FinanceGLMapping; // mapping table model
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
@@ -472,7 +473,8 @@ class TransactionService
                     'JournalEntryId'=> $journal->Id,
                     'StartDate'      => $voucher->StartDate,
                     'CuttOffDate'    =>  $voucher->StartDate,
-                    'Frequency'      => $voucher->Frequency,
+                    'Frequency'      => CodeDetail::where('CodeID','JournalPaymentFrequency')
+                                                ->where('Description',$voucher->Frequency)->value('Value'),
                     'ReferenceName'  => 'Voucher',
                     'Description'    => $voucher->Description,
                     'SystemDescription'=>'Auto Voucher Processing: '.$voucher->VoucherNo,
