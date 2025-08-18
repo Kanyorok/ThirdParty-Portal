@@ -56,44 +56,42 @@ class FleetContractedDriverLicenseTrackingController extends Controller
         return response()->json($license);
     }
 
-
-
   public function update(FleetContractedDriverLicenseRequest $request, $driverId, $licenseId)
-{
-    $license = FleetContractedDriverLicense::findOrFail($licenseId);
-    $validated = $request->validated();
-    $this->licenses->update($license, $validated);
+    {
+        $license = FleetContractedDriverLicense::findOrFail($licenseId);
+        $validated = $request->validated();
+        $this->licenses->update($license, $validated);
 
-    if ($request->expectsJson()) {
-        return response()->json([
-            'Id' => $license->Id,
-            'LicenseNumber' => $license->LicenseNumber,
-            'LicenseCategory' => $license->LicenseCategory,
-            'IssueDate' => $license->IssueDate,
-            'ExpiryDate' => $license->ExpiryDate,
-            'Notes' => $license->Notes
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'Id' => $license->Id,
+                'LicenseNumber' => $license->LicenseNumber,
+                'LicenseCategory' => $license->LicenseCategory,
+                'IssueDate' => $license->IssueDate,
+                'ExpiryDate' => $license->ExpiryDate,
+                'Notes' => $license->Notes
+            ]);
+        }
+
+        return redirect()->route('fleet.contracted_driver_licenses.index', $driverId)
+            ->with('success', 'License updated successfully.');
     }
-
-    return redirect()->route('fleet.contracted_driver_licenses.index', $driverId)
-        ->with('success', 'License updated successfully.');
-}
 
 
    public function destroy(Request $request, $driverId, $licenseId)
-{
-    $license = FleetContractedDriverLicense::findOrFail($licenseId);
+    {
+        $license = FleetContractedDriverLicense::findOrFail($licenseId);
 
-    $this->licenses->delete($license);
+        $this->licenses->delete($license);
 
-    if ($request->expectsJson()) {
-        return response()->json([
-            'message' => 'License deleted successfully.'
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'License deleted successfully.'
+            ]);
+        }
+
+        return redirect()->route('fleet.contracted_driver_licenses.index', $driverId)
+            ->with('success', 'License deleted successfully.');
     }
-
-    return redirect()->route('fleet.contracted_driver_licenses.index', $driverId)
-        ->with('success', 'License deleted successfully.');
-}
 
 }

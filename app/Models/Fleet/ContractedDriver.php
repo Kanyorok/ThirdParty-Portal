@@ -35,7 +35,7 @@ class ContractedDriver extends Model
         'LicenseNumber',
         'LicenseExpiryDate',
         'LicenseCategory',
-        'Status',
+        'IsActive',
         'Notes',
         'CreatedBy',
         'CreatedOn',

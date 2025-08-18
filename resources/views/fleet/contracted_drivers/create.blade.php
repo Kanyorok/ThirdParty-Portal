@@ -73,6 +73,20 @@
                 @enderror
             </div>
         </div>
+            <!-- Active Checkbox -->
+            <div class="col-md-12 mt-3">
+                <div class="form-check">
+                    <input type="hidden" name="IsActive" value="0">
+                    <input type="checkbox" name="IsActive" class="form-check-input" id="IsActive" value="1" {{ old('IsActive', 1) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="IsActive">Active</label>
+                </div>
+                @error('IsActive')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+
+
+        
 
         <div class="mt-4">
             <button type="submit" class="btn btn-success">💾 Save</button>

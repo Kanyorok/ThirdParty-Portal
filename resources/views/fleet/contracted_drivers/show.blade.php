@@ -2,140 +2,161 @@
 @section('title', 'Contracted Driver Details')
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <h4 class="mb-4">👤 Driver Profile: {{ $driver->FullName }}</h4>
+<div class="container-fluid py-4">
+    <div class="row">
 
-    <ul class="nav nav-tabs mb-3" id="driverTabs" role="tablist">
-        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#details"> ℹ️ Details</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#licenses"> 👤 Licenses</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#assignments">🚚 Assignments</a></li>
-    </ul>
+        {{-- Left Side Panel: Contracted Driver Details --}}
+        <div class="col-md-4">
+            <div class="card h-100 p-3 shadow rounded-4">
+                <h5 class="card-title fw-bold">{{ $driver->FullName }} Details</h5>
+                <hr>
 
-    <div class="tab-content">
-{{-- Details Tab --}}
-<div class="tab-pane fade show active" id="details">
-    <div class="row g-4">
-        <div class="col-md-4">
-            <strong>Driver No:</strong>
-            <p class="text-muted">{{ $driver->DriverNo }}</p>
-        </div>
-        <div class="col-md-4">
-            <strong>Full Name:</strong>
-            <p class="text-muted">{{ $driver->FullName }}</p>
-        </div>
-        <div class="col-md-4">
-            <strong>National ID:</strong>
-            <p class="text-muted">{{ $driver->NationalID }}</p>
-        </div>
-
-        <div class="col-md-4">
-            <strong>Phone:</strong>
-            <p class="text-muted">{{ $driver->Phone }}</p>
-        </div>
-        <div class="col-md-4">
-            <strong>Company Name:</strong>
-            <p class="text-muted">{{ $driver->CompanyName }}</p>
-        </div>
-        <div class="col-md-4">
-            <strong>License Number:</strong>
-            <p class="text-muted">{{ $driver->LicenseNumber }}</p>
-        </div>
-        <div class="col-md-4">
-            <strong>Contract Start Date:</strong>
-            <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }}</p>
-        </div>
-
-        <div class="col-md-4">
-            <strong>Contract End Date:</strong>
-            <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}</p>
-        </div>
-        <div class="col-md-4">
-            <strong>Active:</strong>
-            <p class="text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</p>
-        </div>
-        <div class="col-md-12">
-            <strong>Notes:</strong>
-            <p class="text-muted">{{ $driver->Notes ?: '—' }}</p>
-        </div>
-    </div>
-</div>
-
-        {{-- Licenses --}}
-
-        <div class="tab-pane fade" id="licenses">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5>Licenses</h5>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addLicenseModal">➕ Add License</button>
+                <div class="row g-2">
+                    <div class="col-md-12">
+                        <strong>Driver No:</strong>
+                        <p class="text-muted">{{ $driver->DriverNo }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Full Name:</strong>
+                        <p class="text-muted">{{ $driver->FullName }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>National ID:</strong>
+                        <p class="text-muted">{{ $driver->NationalID }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Phone:</strong>
+                        <p class="text-muted">{{ $driver->Phone }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Company Name:</strong>
+                        <p class="text-muted">{{ $driver->CompanyName }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>License Number:</strong>
+                        <p class="text-muted">{{ $driver->LicenseNumber }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Contract Start Date:</strong>
+                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Contract End Date:</strong>
+                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Active:</strong>
+                        <p class="text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Notes:</strong>
+                        <p class="text-muted">{{ $driver->Notes ?: '—' }}</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mt-auto">
+                    <a href="{{ route('fleet.contracted_drivers.edit', $driver->Id) }}" class="btn btn-warning me-2">✏️ Edit Details</a>
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDriverModal">🗑️ Delete Driver</button>
+                </div>
             </div>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>License No</th>
-                        <th>Category</th>
-                        <th>Issued</th>
-                        <th>Expiry</th>
-                        <th>Notes</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="licensesTable">
-                    @foreach($licenses as $license)
-                        <tr data-id="{{ $license->Id }}">
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $license->LicenseNumber }}</td>
-                            <td>{{ $license->LicenseCategory }}</td>
-                            <td>{{ $license->IssueDate }}</td>
-                            <td>{{ $license->ExpiryDate }}</td>
-                            <td>{{ $license->Notes }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-warning btn-edit" data-type="license" data-id="{{ $license->Id }}">✏️</button>
-                                <button class="btn btn-sm btn-danger btn-delete" data-type="license" data-id="{{ $license->Id }}">🗑️</button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
         </div>
 
-        {{-- Assignments --}}
-        <div class="tab-pane fade" id="assignments">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5>Assignments</h5>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addAssignmentModal">➕ Add Assignment</button>
-            </div>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Vehicle</th>
-                        <th>Assigned</th>
-                        <th>Unassigned</th>
-                        <th>Purpose</th>
-                        <th>AssignedBy</th>
-                        <th>Notes</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="assignmentsTable">
-                    @foreach($assignments as $assignment)
-                        <tr data-id="{{ $assignment->Id }}">
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $assignment->vehicle?->RegistrationNo?? '' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d M Y') }}</td>
-                        <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d M Y') : '—' }}</td>
-                        <td>{{ $assignment->Purpose ?: '—' }}</td>
-                        <td>{{ $assignment->assignedBy?->LastName ?? '—' }}</td> {{-- assumes relation AssignedByUser --}}
-                        <td>{{ $assignment->Notes ?: '—' }}</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning btn-edit" data-type="assignment" data-id="{{ $assignment->Id }}">✏️</button>
-                            <button class="btn btn-sm btn-danger btn-delete" data-type="assignment" data-id="{{ $assignment->Id }}">🗑️</button>
-                        </td>
+        {{-- Right Side Panel: Tabs for Licenses and Assignments --}}
+        <div class="col-md-8">
+            <div class="card h-100 p-3 shadow rounded-4">
+                <h5 class="card-title fw-bold">Driver Records</h5>
+                <hr>
+                <ul class="nav nav-tabs mb-3" id="driverTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#licenses">👤 Licenses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#assignments">🚚 Assignments</a>
+                    </li>
+                </ul>
 
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                <div class="tab-content">
+                    {{-- Licenses Tab Content --}}
+                    <div class="tab-pane fade show active" id="licenses">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5>Licenses</h5>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addLicenseModal">➕ Add License</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>License No</th>
+                                        <th>Category</th>
+                                        <th>Issued</th>
+                                        <th>Expiry</th>
+                                        <th>Notes</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="licensesTable">
+                                    @foreach($licenses as $license)
+                                    <tr data-id="{{ $license->Id }}">
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $license->LicenseNumber }}</td>
+                                        <td>{{ $license->LicenseCategory }}</td>
+                                        <td>{{ $license->IssueDate }}</td>
+                                        <td>{{ $license->ExpiryDate }}</td>
+                                        <td>{{ $license->Notes }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning btn-edit" data-type="license" data-id="{{ $license->Id }}">✏️</button>
+                                            <button class="btn btn-sm btn-danger btn-delete" data-type="license" data-id="{{ $license->Id }}">🗑️</button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Assignments Tab Content --}}
+                    <div class="tab-pane fade" id="assignments">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5>Assignments</h5>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addAssignmentModal">➕ Add Assignment</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Vehicle</th>
+                                        <th>Assigned</th>
+                                        <th>Unassigned</th>
+                                        <th>Purpose</th>
+                                        <th>AssignedBy</th>
+                                        <th>Notes</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assignmentsTable">
+                                    @foreach($assignments as $assignment)
+                                    <tr data-id="{{ $assignment->Id }}">
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $assignment->vehicle?->RegistrationNo?? '' }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d M Y') }}</td>
+                                        <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d M Y') : '—' }}</td>
+                                        <td>{{ $assignment->Purpose ?: '—' }}</td>
+                                        <td>{{ $assignment->assignedBy?->LastName ?? '—' }}</td>
+                                        <td>{{ $assignment->Notes ?: '—' }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning btn-edit" data-type="assignment" data-id="{{ $assignment->Id }}">✏️</button>
+                                            <button class="btn btn-sm btn-danger btn-delete" data-type="assignment" data-id="{{ $assignment->Id }}">🗑️</button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -196,16 +217,15 @@
                     <input type="date" name="UnassignmentDate" class="form-control">
                     <label class="form-label mt-2">Purpose</label>
                     <input type="text" name="Purpose" class="form-control">
-                 <label for="AssignedBy" class="form-label">Assigned By</label>
-                <select name="AssignedBy" id="AssignedBy" class="form-select" required>
-                    <option value="">-- Select Assigned By --</option>
-                    @foreach ($assigners as $id => $name)
-                        <option value="{{ $id }}" {{ old('AssignedBy', auth()->id()) == $id ? 'selected' : '' }}>
-                            {{ $name }}
-                        </option>
-                    @endforeach
-                </select>
-
+                    <label for="AssignedBy" class="form-label">Assigned By</label>
+                    <select name="AssignedBy" id="AssignedBy" class="form-select" required>
+                        <option value="">-- Select Assigned By --</option>
+                        @foreach ($assigners as $id => $name)
+                            <option value="{{ $id }}" {{ old('AssignedBy', auth()->id()) == $id ? 'selected' : '' }}>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
                     <label class="form-label mt-2">Notes</label>
                     <textarea name="Notes" class="form-control"></textarea>
                 </div>
@@ -222,10 +242,10 @@
 <div class="modal fade" id="editLicenseModal" tabindex="-1">
     <div class="modal-dialog">
         <form id="editLicenseForm">
-    @csrf
-    @method('PUT')
-    <input type="hidden" name="Id" id="editLicenseId">
-    <input type="hidden" name="ContractedDriverID" value="{{ $driver->Id }}">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="Id" id="editLicenseId">
+            <input type="hidden" name="ContractedDriverID" value="{{ $driver->Id }}">
             <div class="modal-content rounded-4">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit License</h5>
@@ -279,14 +299,14 @@
                     <label class="form-label mt-2">Purpose</label>
                     <input type="text" name="Purpose" id="editAssignmentPurpose" class="form-control">
                     <label for="AssignedBy" class="form-label">Assigned By</label>
-                        <select name="AssignedBy" id="AssignedBy" class="form-select" required>
-                            <option value="">-- Select Assigned By --</option>
-                            @foreach ($assigners as $id => $name)
-                                <option value="{{ $id }}" {{ old('AssignedBy', auth()->id()) == $id ? 'selected' : '' }}>
-                                    {{ $name }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <select name="AssignedBy" id="AssignedBy" class="form-select" required>
+                        <option value="">-- Select Assigned By --</option>
+                        @foreach ($assigners as $id => $name)
+                            <option value="{{ $id }}" {{ old('AssignedBy', auth()->id()) == $id ? 'selected' : '' }}>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
                     <label class="form-label mt-2">Notes</label>
                     <textarea name="Notes" id="editAssignmentNotes" class="form-control"></textarea>
                 </div>
@@ -298,21 +318,45 @@
         </form>
     </div>
 </div>
+
+{{-- Delete Driver Modal --}}
+<div class="modal fade" id="deleteDriverModal" tabindex="-1" aria-labelledby="deleteDriverModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteDriverModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this driver? This action will also delete all associated licenses and assignments and cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteDriverForm" method="POST" action="{{ route('fleet.contracted_drivers.destroy', $driver->Id) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @section('scripts')
 <script>
-let storeLicenseUrl     = "{{ route('fleet.contracted_driver_licenses.store', $driver->Id) }}";
-let storeAssignmentUrl  = "{{ route('fleet.contracted_driver_assignments.store', $driver->Id) }}";
-let updateLicenseUrl    = "{{ url('fleet/contracted-drivers/'.$driver->Id.'/licenses') }}/"; 
+let storeLicenseUrl     = "{{ route('fleet.contracted_driver_licenses.store', $driver->Id) }}";
+let storeAssignmentUrl  = "{{ route('fleet.contracted_driver_assignments.store', $driver->Id) }}";
+let updateLicenseUrl    = "{{ url('fleet/contracted-drivers/'.$driver->Id.'/licenses') }}/"; 
 let updateAssignmentUrl = "{{ url('fleet/contracted-drivers/'.$driver->Id.'/assignments') }}/";
+let deleteDriverUrl     = "{{ route('fleet.contracted_drivers.destroy', $driver->Id) }}";
 
-
-// Utility: show success alert
 function showSuccess(message) {
     let alert = `<div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>`;
-    $(".container").prepend(alert);
+    $(".container-fluid").prepend(alert);
     setTimeout(() => { $(".alert").alert('close'); }, 4000);
 }
 
@@ -339,7 +383,7 @@ $(function () {
         .done(function() {
             $("#addAssignmentModal").modal("hide");
             showSuccess("✅ Assignment created successfully!");
-            location.reload(); // reload page to show new data
+            location.reload(); 
         })
         .fail(function(xhr){
             alert("Error: " + (xhr.responseJSON?.message ?? "Something went wrong"));
@@ -396,7 +440,7 @@ $(function () {
     $(document).on("click", ".btn-edit[data-type='assignment']", function () {
         let id = $(this).data("id");
         $.get(updateAssignmentUrl + id + "/edit", function (data) {
-            $("#editAssignmentId").val(data.Id);   
+            $("#editAssignmentId").val(data.Id);   
             $("#editAssignmentVehicle").val(data.VehicleID);
             $("#editAssignmentDate").val(data.AssignmentDate);
             $("#editUnassignmentDate").val(data.UnassignmentDate);
@@ -444,8 +488,8 @@ $(function () {
     $(document).on("click", ".btn-delete", function () {
         if (!confirm("Are you sure?")) return;
         let type = $(this).data("type");
-        let id   = $(this).data("id");
-        let url  = (type === "license" ? updateLicenseUrl : updateAssignmentUrl) + id;
+        let id   = $(this).data("id");
+        let url  = (type === "license" ? updateLicenseUrl : updateAssignmentUrl) + id;
 
         $.ajax({
             url: url,

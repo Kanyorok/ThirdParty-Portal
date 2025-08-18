@@ -25,7 +25,7 @@ class ContractedDriverService
         $data['ContractEndDate'] = $data['ContractEndDate'] ?? null;
         $data['LicenseNumber'] = $data['LicenseNumber'] ?? null;
         $data['Notes'] = $data['Notes'] ?? null;
-        $data['IsActive'] = $data['IsActive'] ?? null;
+        $data['IsActive'] = $data['IsActive'] ?? 1;
         $data['CreatedBy'] = Auth::id();
         $data['CreatedOn'] = now();
         

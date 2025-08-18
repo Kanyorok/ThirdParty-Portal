@@ -24,44 +24,38 @@ class ContractedDriverController extends Controller
         $this->driverService = $driverService;
     }
 
-    // Show all contracted drivers
+    
     public function index()
     {
-        $drivers = ContractedDriver::where('IsActive', 1)->get();
+        $drivers = ContractedDriver::all();
         return view('fleet.contracted_drivers.index', compact('drivers'));
     }
 
-    // Show create form
     public function create()
     {
         return view('fleet.contracted_drivers.create');
     }
 
-    // Store new contracted driver
     public function store(ContractedDriversRequest $request)
-    {
-        $validated = $request->validated();
-        $validated['IsActive'] = 1;
+        {
+            $validated = $request->validated();
+            $this->driverService->create($validated);
 
-        $this->driverService->create($validated);
+            return redirect()->route('fleet.contracted_drivers.index')
+                ->with('success', 'Contracted driver registered successfully.');
+        }
 
-        return redirect()->route('fleet.contracted_drivers.index')
-            ->with('success', 'Contracted driver registered successfully.');
-    }
-
-    // Show edit form
     public function edit($id)
     {
         $driver = ContractedDriver::findOrFail($id);
         return view('fleet.contracted_drivers.edit', compact('driver'));
     }
 
-    // Update existing record
+
     public function update(ContractedDriversRequest $request, $id)
     {
         $driver = ContractedDriver::findOrFail($id);
         $validated = $request->validated();
-        $validated['Status'] = $request->input('Status'); // Ensure Status is passed if required
 
         $this->driverService->update($driver, $validated);
 
@@ -69,7 +63,7 @@ class ContractedDriverController extends Controller
             ->with('success', 'Contracted driver updated successfully.');
     }
 
-    // Deactivate contracted driver
+
     public function deactivate($id)
     {
         $driver = ContractedDriver::findOrFail($id);
@@ -83,34 +77,37 @@ class ContractedDriverController extends Controller
             ->with('success', 'Contracted driver deactivated.');
     }
 
-// Show driver details
-public function show($Id)
-{
-    $driver = ContractedDriver::findOrFail($Id);
+     public function destroy($id)
+    {
+        $driver = ContractedDriver::findOrFail($id);
+        $this->driverService->delete($driver);
 
-    // Licenses for this driver
-    $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
+        return redirect()->route('fleet.contracted_drivers.index')
+            ->with('success', 'Contracted driver deleted successfully.');
+    }
 
-    // Assignments with related vehicle
-    $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
-        ->with('vehicle')
-        ->orderByDesc('AssignmentDate')
-        ->get();
 
-    // All active vehicles
-    $vehicles = FleetVehicle::where('IsActive', 1)->get();
+    public function show($Id)
+    {
+        $driver = ContractedDriver::findOrFail($Id);
+        $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
+        $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
+            ->with('vehicle')
+            ->orderByDesc('AssignmentDate')
+            ->get();
+        $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
-     $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-        ->pluck('name', 'Id');
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
 
-    return view('fleet.contracted_drivers.show', compact(
-        'driver',
-        'licenses',
-        'assignments',
-        'vehicles',
-        'assigners'  // <-- add this
-    ));
-}
+        return view('fleet.contracted_drivers.show', compact(
+            'driver',
+            'licenses',
+            'assignments',
+            'vehicles',
+            'assigners'  
+        ));
+    }
 
 
 }

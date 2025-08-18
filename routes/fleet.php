@@ -155,6 +155,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
         Route::get('/contracted-drivers/{Id}/edit', [ContractedDriverController::class, 'edit'])->name('fleet.contracted_drivers.edit');
         Route::get('/contracted-drivers/{Id}', [ContractedDriverController::class, 'show'])->name('fleet.contracted_drivers.show');
         Route::put('/contracted-drivers/{Id}', [ContractedDriverController::class, 'update'])->name('fleet.contracted_drivers.update');
+        Route::delete('/contracted-drivers/{Id}', [ContractedDriverController::class, 'destroy'])->name('fleet.contracted_drivers.destroy');
         Route::put('/contracted-drivers/{Id}/deactivate', [ContractedDriverController::class, 'deactivate'])->name('fleet.contracted_drivers.deactivate');
 
         // ==================== Contracted Driver Licenses ====================

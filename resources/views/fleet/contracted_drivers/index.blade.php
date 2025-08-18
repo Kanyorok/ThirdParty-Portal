@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Contracted Drivers')
+@section('title', 'Contracted Drivers Management')
 
 @section('content')
 <div class="card p-4 shadow rounded-4">
     <div class="d-flex justify-content-between mb-3">
-        <h4 class="mb-0">🚐 Contracted Drivers</h4>
+        <h4 class="mb-0">🚐 Contracted Drivers List</h4>
         <a href="{{ route('fleet.contracted_drivers.create') }}" class="btn btn-success">
             + Add Contracted Driver
         </a>
@@ -22,7 +22,7 @@
                     <th>Company</th>
                     <th>License No.</th>
                     <th>Contract Period</th>
-                    <th>Status</th>
+                    <th>Active</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -30,7 +30,7 @@
                 @forelse ($drivers as $driver)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                         <td>{{ $driver->DriverNo }}</td>
+                        <td>{{ $driver->DriverNo }}</td>
                         <td>{{ $driver->FullName }}</td>
                         <td>{{ $driver->NationalID ?? '—' }}</td>
                         <td>{{ $driver->Phone ?? '—' }}</td>
@@ -38,8 +38,8 @@
                         <td>{{ $driver->LicenseNumber ?? '—' }}</td>
                         <td>
                             @if($driver->ContractStartDate && $driver->ContractEndDate)
-                                {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }} - 
-                                {{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}
+                                {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d/m/Y') }} - 
+                                {{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d/m/Y') }}
                             @else
                                 —
                             @endif
@@ -48,7 +48,7 @@
                             @if($driver->IsActive)
                                 <span class="badge bg-success">Active</span>
                             @else
-                                <span class="badge bg-secondary">Inactive</span>
+                                <span class="badge bg-danger">Inactive</span>
                             @endif
                         </td>
                         <td class="text-nowrap">
@@ -57,7 +57,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="11" class="text-center text-muted">No contracted drivers found.</td>
+                        <td colspan="10" class="text-center text-muted">No contracted drivers found.</td>
                     </tr>
                 @endforelse
             </tbody>
