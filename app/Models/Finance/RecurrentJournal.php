@@ -29,6 +29,7 @@ class RecurrentJournal extends Model
         'Frequency',
         'ReferenceName',
         'Description',
+        'isVoucher',
         'SystemDescription',
 
         'CreatedBy',

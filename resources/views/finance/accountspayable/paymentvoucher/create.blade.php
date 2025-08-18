@@ -113,14 +113,28 @@
                             <input type="date"
                                    class="form-control @error('StartDate') is-invalid @enderror"
                                    name="StartDate"
-                                   id="StartDate"
                                    value="{{ old('StartDate') }}">
                             @error('StartDate') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
+{{--                        <div class="col-md-2">--}}
+{{--                            <label class="form-label" for="EndDate">End Date <span class="text-danger">*</span></label>--}}
+{{--                            <input type="date"--}}
+{{--                                   class="form-control @error('EndDate') is-invalid @enderror"--}}
+{{--                                   name="EndDate"--}}
+{{--                                   value="{{ old('EndDate') }}">--}}
+{{--                            @error('EndDate') <div class="invalid-feedback">{{ $message }}</div> @enderror--}}
+{{--                        </div>--}}
                         <div class="col-md-4">
                             <label class="form-label" for="Frequency">Frequency <span class="text-danger">*</span></label>
                             <select class="form-select @error('Frequency') is-invalid @enderror" name="Frequency" id="Frequency">
                                 <option value="" disabled selected>-- Select Frequency --</option>
+                                @forelse($paymentFrequencies as $paymentFrequency)
+                                    <option value="{{ $paymentFrequency->Description }}" @selected(old('PaymentType') == $paymentFrequency->Description)>
+                                        {{ $paymentFrequency->Description }}
+                                    </option>
+                                @empty
+                                    <option disabled>No Payment Frequencies Found</option>
+                                @endforelse
                                 <option value="Monthly" @selected(old('Frequency') === 'Monthly')>Monthly</option>
                                 <option value="Biweekly" @selected(old('Frequency') === 'Biweekly')>Biweekly</option>
                                 <option value="Weekly" @selected(old('Frequency') === 'Weekly')>Weekly</option>

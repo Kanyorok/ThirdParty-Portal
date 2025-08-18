@@ -8,9 +8,9 @@
                 <h5 class="mb-0 text-muted">
                     <i class="fas fa-file-invoice-dollar text-info"></i> Voucher Details
                 </h5>
-                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-                    <i class="fas fa-print"></i> Print
-                </button>
+{{--                <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">--}}
+{{--                    <i class="fas fa-print"></i> Print--}}
+{{--                </button>--}}
             </div>
 
             {{-- Voucher Info --}}
@@ -37,8 +37,8 @@
                 </div>
                 <div class="col-md-6">
                     <strong>Status:</strong>
-                    <span class="badge {{ $statusClass }}">
-                    {{ ucfirst($voucher->ApprovalStatus) }}
+                    <span class="badge {{ $voucher->IsProcessed ? 'bg-success' : 'bg-warning text-dark' }}">
+                    {{ ucfirst($voucher->IsProcessed?'Processed':'Pending Processing') }}
                 </span>
                 </div>
             </div>
@@ -107,19 +107,19 @@
             @if(!empty($voucher->Description))
                 <div class="mt-4">
                     <h6 class="text-muted mb-2">Remarks:</h6>
-                       <i> {{ $voucher->Description }}</i>
+                    <i> {{ $voucher->Description }}</i>
                 </div>
             @endif
 
             {{-- Approve / Reject Buttons --}}
-            @if($voucher->ApprovalStatus === 'draft')
+            @if(!$voucher->IsProcessed)
                 <div class="mt-4 d-flex gap-3">
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
-                        <i class="fas fa-check-circle me-1"></i> Approve
+                        <i class="fas fa-check-circle me-1"></i> Process Voucher
                     </button>
-                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                        <i class="fas fa-times-circle me-1"></i> Reject
-                    </button>
+{{--                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">--}}
+{{--                        <i class="fas fa-times-circle me-1"></i> Reject--}}
+{{--                    </button>--}}
                 </div>
             @endif
         </div>
@@ -128,20 +128,23 @@
     {{-- Approve Modal --}}
     <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form action="{{ route('paymentvoucher.approve', $voucher->Id) }}" method="POST">
+            <form action="{{ route('voucher.post', $voucher->Id) }}" method="POST">
                 @csrf
+                @method('POST')
+                <input type="hidden" name="InvoiceID" value="{{$voucher->invoice->Id}}">
+                <input type="hidden" name="VoucherID" value="{{$voucher->Id}}">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Confirm Approval</h5>
+                        <h5 class="modal-title">Confirm Processing</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <label for="approveReason" class="form-label">Reason for approval</label>
-                        <textarea class="form-control" name="Reasons" rows="3" placeholder="Optional reason..."></textarea>
+                        <label for="approveReason" class="form-label">Remarks</label>
+                        <textarea class="form-control" name="Reason" rows="3" placeholder="Remarks..."></textarea>
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-success" id="approveProceedBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
-                            <span class="default-label"><i class="fas fa-check-circle"></i> Proceed to Approve</span>
+                            <span class="default-label"><i class="fas fa-check-circle"></i> Proceed</span>
                         </button>
                     </div>
                 </div>

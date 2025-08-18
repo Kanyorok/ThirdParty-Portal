@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('JournalEntryId')->constrained('t_FinanceJournalEntries', 'Id');
             $table->date('StartDate');
-            $table->date('CuttOffDate');
+            $table->date('CuttOffDate')->nullable();
             $table->date('NextRunDate')->nullable();
             $table->enum('Frequency',['d','w','m','q','y']);
             $table->string('ReferenceName');
             $table->text('Description')->nullable();
+            $table->boolean('isVoucher')->default(false);
             $table->string('SystemDescription', 255)->nullable();
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

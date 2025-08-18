@@ -342,7 +342,6 @@ class InvoiceEntryController extends Controller
                     return back()->with('error', "Invoice $invoice->InvoiceNumber is already posted.");
                 }
 
-                return 12;
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
                     'ModuleID'          => $MODULE_ID,
@@ -400,7 +399,7 @@ class InvoiceEntryController extends Controller
             });
         } catch (\Throwable $e) {
             // Log if you want: Log::error('AP approve error', ['id'=>$id, 'err'=>$e->getMessage()])
-            return $e->getMessage();
+            //return $e->getMessage();
             return back()->with('error', "Approval/Post failed: ".$e->getMessage());
         }
     }

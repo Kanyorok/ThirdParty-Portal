@@ -47,6 +47,10 @@ class PaymentVoucherController extends Controller
             $invoiceAmt=$invoice->InvoiceAmount;
             $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $invoice->Id)->where('ApprovalStatus','posted')->sum('TotalAmount');
             $balance=$invoiceAmt-$amtPaidOnInvoice;
+            //Dont store invoies that are fully paid already
+            if($balance<=0){
+                continue;
+            }
             $invoices[]=[
                 'Id'=>$value->Id,
                 'InvoiceNumber'=>$value->InvoiceNumber,
@@ -59,7 +63,14 @@ class PaymentVoucherController extends Controller
         }
         $paymentMethods=CodeDetail::where('CodeID', 'PaymentMethod')->get();
         $paymentTypes=CodeDetail::where('CodeID', 'PaymentType')->get();
-        return view('finance.accountspayable.paymentvoucher.create', compact('invoices', 'VoucherNo', 'paymentMethods', 'paymentTypes'));
+        $paymentFrequencies=CodeDetail::where('CodeID', 'PaymentFrequency')->get();
+        return view('finance.accountspayable.paymentvoucher.create', compact(
+            'invoices',
+            'VoucherNo',
+            'paymentMethods',
+            'paymentTypes',
+            'paymentFrequencies',
+        ));
     }
 
     public function store(Request $request){
@@ -145,8 +156,14 @@ class PaymentVoucherController extends Controller
 
         $voucher = FinanceVoucher::with('invoice.supplier')->findOrFail($id);
         $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus','posted')->sum('TotalAmount');
+        $statusClass = match($voucher->ApprovalStatus) {
+            'posted' => 'bg-success',
+            'rejected' => 'bg-danger',
+            'draft' => 'bg-warning text-dark',
+            default => 'bg-secondary'
+        };
 
-        return view('finance.accountspayable.paymentvoucher.show', compact('voucher', 'amtPaidOnInvoice'));
+        return view('finance.accountspayable.paymentvoucher.show', compact('voucher', 'amtPaidOnInvoice','statusClass'));
     }
 
     public function approve(Request $request, $id)
@@ -163,7 +180,8 @@ class PaymentVoucherController extends Controller
     public function reject(Request $request, $id)
     {
         $voucher = FinanceVoucher::findOrFail($id);
-        $voucher->Status = 'Rejected';
+        $voucher->Status = 'rejected';
+        $voucher->ApprovalStatus = 'rejected';
         // Optionally log reason: $request->input('reason')
         $voucher->Reasons = $request->Reasons;
         $voucher->save();

@@ -172,12 +172,14 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     //Approval Routes For simulations
     //Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
 
-    //Posting Routes
+    //////// Posting Routes ///////////
     Route::post('/journalApproval/{id}',[\App\Http\Controllers\Finance\PostingController::class,'journalApproval'])->name('journalApproval');
     Route::post('/finance/ap/invoices/{id}/approve', [InvoiceEntryController::class, 'approve'])->name('ap.invoice.approve');
     Route::post('/finance/ap/invoices/{id}/reject', [InvoiceEntryController::class, 'reject'])->name('ap.invoice.reject');
 
     Route::post('/finance/cd/note/{id}/approve', [CreditNoteController::class, 'approve'])->name('cdnote.approve');
     Route::post('/finance/cd/note/{id}/reject', [CreditNoteController::class, 'reject'])->name('cdnote.reject');
+
+    Route::post('/finance/voucher/{id}/post', [PaymentProcessingController::class, 'postVoucher'])->name('voucher.post');
 
 });

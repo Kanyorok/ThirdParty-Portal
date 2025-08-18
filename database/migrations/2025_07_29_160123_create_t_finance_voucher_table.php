@@ -19,10 +19,12 @@ return new class extends Migration
             $table->string('PaymentMethod');
             $table->string('PaymentType')->default('Full');
             $table->date('StartDate')->nullable();
+            $table->date('EndDate')->nullable();
             $table->string('Frequency')->nullable();
             $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
             $table->text('ApprovalReason')->nullable();
-            $table->string('Status')->default('draft');
+            $table->string('Status')->default('draft'); //
+            $table->boolean('IsProcessed')->default(false);
             $table->text('Description');
             $table->text('Reasons')->nullable();
 
