@@ -79,7 +79,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E'],
 
             // Tenant Types
-            ['CodeID' => 'TenantType', 'Description' => 'Individulal'],
+            ['CodeID' => 'TenantType', 'Description' => 'Individual'],
             ['CodeID' => 'TenantType', 'Description' => 'Corporate'],
             ['CodeID' => 'TenantType', 'Description' => 'Government'],
             ['CodeID' => 'TenantType', 'Description' => 'NGO'],

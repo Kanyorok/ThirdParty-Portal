@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title','Surveys')
+
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
@@ -9,17 +10,19 @@
         }
     </style>
 @endsection
+
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="#">CRM</a></li>
 @endsection
+
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-header">
                     <div class="float-end">
-                        <button class="btn btn-primary float-end ms-2 modal-create-survey btn-sm" type="button"><i
-                                class="fas fa-plus-circle"></i> Add a Survey
+                        <button class="btn btn-primary float-end ms-2 modal-create-survey btn-sm" type="button">
+                            <i class="fas fa-plus-circle"></i> Add a Survey
                         </button>
                     </div>
                 </div>
@@ -42,13 +45,13 @@
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="SurveyActionsModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">..</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="onboarding-content with-gradient d-none modal-item" id="createSurveyModal">
@@ -60,36 +63,36 @@
                                        placeholder="Label">
                                 <p id="Label_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
+
                             <div class="mb-3">
-                                <label class="form-label" for="Start">Start <span
-                                        class="text-danger">*</span></label>
+                                <label class="form-label" for="Start">Start <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control flatpickr-datetime" id="Start"
                                        name="Start" placeholder="Select start.">
-                                <p id="Start_error" class="invalid-feedback d-none error col-12"
-                                   role="alert"></p>
+                                <p id="Start_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
+
                             <div class="mb-3">
-                                <label class="form-label" for="End">End <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control flatpickr-datetime " id="End"
+                                <label class="form-label" for="End">End <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control flatpickr-datetime" id="End"
                                        name="End" placeholder="Select end.">
                                 <p id="End_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
+
                             <div class="mb-3">
-                                <label class="form-label" for="Notes">Notes </label>
+                                <label class="form-label" for="Notes">Notes</label>
                                 <textarea name="Notes" id="Notes" rows="3" class="form-control"
                                           maxlength="1000"></textarea>
-                                <p id="Notes_error" class="invalid-feedback d-none error col-12"
-                                   role="alert"></p>
+                                <p id="Notes_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
+
                             <hr>
+
                             <div class="mt-4">
-                                <button type="button" class="btn btn-secondary float-start"
-                                        data-bs-dismiss="modal">
-                                    cancel
+                                <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
+                                    Cancel
                                 </button>
-                                <button class="btn btn-primary float-end" id="createSurveyBtn" type="submit"><i
-                                        class="fas fa-save"></i> add a survey
+                                <button class="btn btn-primary float-end" id="createSurveyBtn" type="submit">
+                                    <i class="fas fa-save"></i> Add a Survey
                                 </button>
                             </div>
                         </form>
@@ -99,11 +102,14 @@
         </div>
     </div>
 @endsection
-@section('scripts')
-    <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
 
-    <script> const $Modal = $('#SurveyActionsModal');
+@section('scripts')
+    <script src="{{ asset('assets/libs/moment/moment-with-locales.js') }}"></script>
+
+    <script>
+        const $Modal = $('#SurveyActionsModal');
         let surveyTable = null;
+
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
             fetchSurveysTable();
@@ -117,7 +123,6 @@
                 minDate: moment().add(10, 'm').format('YYYY-MM-DD'),
             });
 
-
             flatpickr('#End', {
                 altInput: true,
                 minuteIncrement: 1,
@@ -128,7 +133,7 @@
                 onChange: function (selectedDates) {
                     const startDate = Start.selectedDates[0];
                     const endDate = selectedDates[0];
-                    if (endDate < startDate) {
+                    if (startDate && endDate && endDate < startDate) {
                         Start.setDate(endDate);
                     }
                 }
@@ -145,9 +150,9 @@
                 e.preventDefault();
                 if (await saveForm($(this), $('#createSurveyBtn'), true, true, true)) {
                     $Modal.modal('hide');
+                    fetchSurveysTable(); // Reload table after creation
                 }
             });
-
         });
 
         function fetchSurveysTable() {
@@ -156,12 +161,12 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    "order": [[4, 'desc']],
-                    "columnDefs": [
-                        {"className": "text-center", "targets": [3]}
+                    order: [[4, 'desc']],
+                    columnDefs: [
+                        {className: "text-center", targets: [3]}
                     ],
                     ajax: {
-                        url: document.url,
+                        url: "{{ route('surveys.index') }}",
                         error: function (jqXHR) {
                             codeNotify(jqXHR.status);
                         }
@@ -170,22 +175,22 @@
                         {data: "DT_RowIndex", name: 'DT_RowIndex', searchable: false, orderable: false},
                         {data: 'Label', name: 'Label'},
                         {data: 'Status', name: 'Status'},
-                        {data: 'responses_count', name: 'responses_count'},
+                        {data: 'responses_count', name: 'responses_count', searchable: false},
                         {data: 'CreatedOn', name: 'CreatedOn'},
                         {data: 'action', name: 'action', orderable: false, searchable: false},
-                    ], "oLanguage": {
-                        "sEmptyTable": "no surveys under this filter"
+                    ],
+                    oLanguage: {
+                        sEmptyTable: "No surveys under this filter"
                     }
                 });
 
-                surveyTable.on('error', function (er) {
-                    nWarning("an issue occurred while loading Surveys.");
-                    console.log(er);
+                surveyTable.on('error.dt', function (e, settings, techNote, message) {
+                    nWarning("An issue occurred while loading Surveys.");
+                    console.error('DataTable Error:', message);
                 });
             } else {
                 surveyTable.ajax.reload();
             }
         }
-
     </script>
 @endsection

@@ -23,8 +23,11 @@
 
                     <ul class="list-group list-group-flush">
                         @if(PlannerTypeEnum::BranchPlanner->value === $planner->Type->value)
-                            <li class="list-group-item">Branch: <span
-                                    class="float-end">{{ $planner->branch?->BranchName }}</span></li>
+                            <li class="list-group-item">Branch:
+                                <span class="float-end">
+                                        {{ collect($Branches)->firstWhere('BranchID', trim($planner->BranchId))?->Name ?? 'N/A' }}
+                                    </span>
+                            </li>
                             <li class="list-group-item">Mode : <span
                                     class="float-end">{{ $planner->mode?->Description }}</span></li>
                         @endif

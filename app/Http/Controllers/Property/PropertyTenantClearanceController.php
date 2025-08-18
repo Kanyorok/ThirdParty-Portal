@@ -7,7 +7,7 @@ use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyTenantClearanceRequest;
 use App\Models\Core\CodeDetail;
-use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Services\Property\TenantAndLease\PropertyTenantClearanceService;
 use Carbon\Carbon;
@@ -30,7 +30,8 @@ class PropertyTenantClearanceController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyTenantClearance::class);
-        $newtenants = PropertyNewTenant::where('IsActive', true)->get();
+        $newtenants = PropertyLeaseTermination::whereNotIn('LeaseID', PropertyTenantClearance::pluck('LeaseId'))
+            ->with('lease.tenant', 'code')->get();
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
         return view('property.tenantmanagement.tenantclearance.create', compact('newtenants', 'codedetails'));
     }
@@ -45,13 +46,17 @@ class PropertyTenantClearanceController extends Controller
     public function store(PropertyTenantClearanceRequest $request)
     {
         $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyTenantClearance::class);
+
         $validatedData = $request->validated();
         $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
-        $tenant = PropertyNewTenant::findOrFail($validatedData['Tenant']);
-        $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
+        $lease = PropertyLeaseTermination::where('LeaseID', $validatedData['LeaseId'])->firstOrFail();
+        $depositRefunded = $validatedData['DepositRefunded']
+            ? CodeDetail::findOrFail($validatedData['DepositRefunded'])
+            : null;
+
         $clearance = $this->service->create(
-            $tenant,
-            $exitdate = Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
+            $lease,
+            \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
             $validatedData['FinalInspection'],
             $validatedData['AllDuesPaid'],
             $validatedData['KeysReturned'],
@@ -60,14 +65,15 @@ class PropertyTenantClearanceController extends Controller
             $statusEnum,
             $request->user()
         );
-        return redirect()->route('tenantclearance.index')->with('success', 'Tenant created successfully');
 
+        return redirect()->route('tenantclearance.index')->with('success', 'Tenant lease clearance created successfully');
     }
+
 
     public function edit($Id)
     {
         $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
-        $clearancetenant = PropertyTenantClearance::with('tenant')->get()->find($Id);
+        $clearancetenant = PropertyTenantClearance::with('lease')->get()->find($Id);
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
         return view('property.tenantmanagement.tenantclearance.edit', compact('clearancetenant', 'codedetails'));
     }
@@ -78,10 +84,10 @@ class PropertyTenantClearanceController extends Controller
         $validatedData = $request->validated();
         $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
         $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;
-        $TenantId = PropertyTenantClearance::where('Id', $Id)->firstOrFail();
+        $LeaseId = PropertyTenantClearance::where('Id', $Id)->firstOrFail();
         $this->service->update(
-            $TenantId,
-            $exitdate = Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
+            $LeaseId,
+            $exitdate = \Carbon\Carbon::createFromFormat('d/m/Y', $validatedData['ExitDate']),
             $validatedData['FinalInspection'],
             $validatedData['AllDuesPaid'],
             $validatedData['KeysReturned'],

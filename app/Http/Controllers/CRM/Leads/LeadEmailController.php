@@ -5,22 +5,25 @@ namespace App\Http\Controllers\CRM\Leads;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Base\MailToRequest;
 use App\Models\CRM\Lead;
+use App\Models\Communication\Email;
 use App\Services\CRMEmailService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
+
 
 class LeadEmailController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('ajax');
+        $this->middleware('ajax')->except(['index']);
     }
 
     /**
-     * Sent and Received Emails
+     * Display list of lead emails (sent & received).
      * @throws Exception
      */
     public function index(Lead $lead): JsonResponse
@@ -29,25 +32,46 @@ class LeadEmailController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created email.
      * @throws ValidationException
      */
     public function store(MailToRequest $request, Lead $lead): JsonResponse
     {
         $email = $request->getLeadEmail($lead);
-        //  $cc = array_merge($request->cc(), $request->getUsers());
+
         try {
             $activity = DB::transaction(static function () use ($email, $lead, $request) {
-                $service = CRMEmailService::createLead($lead, $email, $request->validated('mail_subject'), $request->validated('mail_content'), $request->user(), $request->getCarbonCopyEmails());
+                $service = CRMEmailService::createLead(
+                    $lead,
+                    $email,
+                    $request->validated('mail_subject'),
+                    $request->validated('mail_content'),
+                    $request->user(),
+                    $request->getCarbonCopyEmails()
+                );
+
                 $activity = $service->addActivity(now());
                 $service->send();
                 return $activity;
             });
-        } catch (Exception | \Throwable $e) {
-            Log::error('Error sending email to lead ' . $e->getMessage());
-            return $this->errored('unexpected error, try again later');
+        } catch (Exception|\Throwable $e) {
+            Log::error('Error sending email to lead: ' . $e->getMessage());
+            return $this->errored('Unexpected error, try again later.');
         }
 
-        return $this->succeeded('sending email', data: ['activity' => $activity]);
+        return $this->succeeded('Email sent successfully', data: ['activity' => $activity]);
     }
+
+    /**
+     * Show full email details for modal view.
+     */
+    public function show(Lead $lead, Email $leadMail)
+    {
+        return view('crm.leads.partials.email-details', [
+            'email' => $leadMail,
+        ]);
+    }
+
+
+
 }

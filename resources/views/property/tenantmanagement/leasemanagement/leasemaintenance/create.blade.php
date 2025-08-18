@@ -99,6 +99,18 @@
                         <input type="number" class="form-control" placeholder="e.g. 25000" name="Deposit" required>
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label">Serive Charge (KES)</label>
+                        <input type="number" class="form-control" placeholder="e.g. 5000" name="ServiceCharge" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Parking Fee (KES)</label>
+                        <input type="number" class="form-control" placeholder="e.g. 1000" name="ParkingFee" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Other charges (KES)</label>
+                        <input type="number" class="form-control" placeholder="e.g. 250" name="OtherCharges" required>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Due Day</label>
                         <input type="number" class="form-control" placeholder="e.g. 5" name="DueDay" required>
                     </div>

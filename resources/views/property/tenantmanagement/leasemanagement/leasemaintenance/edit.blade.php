@@ -136,6 +136,21 @@
                             <input type="number" name="Deposit" step="0.01" class="form-control"
                                    value="{{ old('Deposit', $newlease->Deposit) }}">
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Service Charge (KES)</label>
+                            <input type="number" name="ServiceCharge" step="0.01" class="form-control"
+                                   value="{{ old('ServiceCharge', $newlease->ServiceCharge) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Parking Fee (KES)</label>
+                            <input type="number" name="ParkingFee" step="0.01" class="form-control"
+                                   value="{{ old('ParkingFee', $newlease->ParkingFee) }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Other Charges (KES)</label>
+                            <input type="number" name="OtherCharges" step="0.01" class="form-control"
+                                   value="{{ old('OtherCharges', $newlease->OtherCharges) }}">
+                        </div>
                     </div>
 
                     {{-- Due Day --}}

@@ -18,8 +18,6 @@ class PropertyLeaseSchedule extends Model
 
     protected $fillable = [
         'LeaseNumber',
-        'TenantId',
-        'PropertyId',
         'PaymentFrequency',
         'StartDate',
         'EndDate',
@@ -36,30 +34,9 @@ class PropertyLeaseSchedule extends Model
     {
         return 'ScheduleLeaseId';
     }
-
-    public function getPropertyByTenant()
-    {
-        return $this->hasMany(PropertyNewLease::class, 'TenantId', 'Id');
-    }
-
-    public function getLeaseByProperty()
-    {
-        return $this->hasMany(PropertyNewLease::class, 'PropertyId', 'Id');
-    }
-
     public function lease()
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');
-    }
-
-    public function tenant()
-    {
-        return $this->belongsTo(PropertyNewTenant::class, 'TenantId', 'Id');
-    }
-
-    public function property()
-    {
-        return $this->belongsTo(PropertyRegistry::class, 'PropertyId', 'Id');
     }
 
     public function paymentFrequency()

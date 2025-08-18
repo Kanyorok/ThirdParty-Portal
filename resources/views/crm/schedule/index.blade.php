@@ -70,6 +70,46 @@
                 }
             }
         }
+
+        /* Hide event time completely */
+        .fc-event-time {
+            display: none !important;
+        }
+
+        /* Event title styling */
+        .fc-event-title {
+            white-space: normal !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis;
+            display: block !important;
+            font-size: 0.85em;
+            line-height: 1.2em;
+            word-break: break-word;
+        }
+
+        /* Container styling */
+        .fc-timegrid-event-harness .fc-timegrid-event {
+            padding: 4px !important;
+            min-height: 50px !important;
+            display: flex !important;
+            align-items: center !important; /* vertical centering */
+            justify-content: flex-start !important;
+            white-space: normal !important;
+            word-break: break-word;
+            overflow: hidden !important;
+        }
+
+        /* Main content */
+        .fc-timegrid-event .fc-event-main {
+            white-space: normal !important;
+            overflow: hidden !important;
+            word-wrap: break-word;
+            font-size: 0.85em;
+            width: 100%;
+            line-height: 1.2em;
+        }
+
+
     </style>
 @endsection
 @section('content')

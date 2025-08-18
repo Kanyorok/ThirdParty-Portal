@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Tender Committees')
+@section('title', '')
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Tender Committees</h4>
+        <h4>Tender/RFQ Committees</h4>
         <a href="{{ route('tendercommittee.create') }}" class="btn btn-sm btn-success" data-bs-toggle="modal"
            data-bs-target="#addCommitteeModal">
             + Appoint New Committee</a>
@@ -12,40 +12,42 @@
     <div class="table-responsive">
         <table class="table table-striped table-bordered align-middle">
             <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Tender Ref</th>
-                    <th>Members</th>
-                    <th>Appointment Date</th>
-                    <th>Actions</th>
-                </tr>
+            <tr>
+                <th>#</th>
+                <th>Committee Type</th>
+                <th>Reference</th>
+                <th>Description</th>
+                <th>Members</th>
+                <th>Appointment Date</th>
+                <th>Actions</th>
+            </tr>
             </thead>
             <tbody>
-            @forelse ($tenderCommittees as $item)
+            @forelse ($committees as $index => $item)
                 <tr>
-                    <td>{{$loop->index+1}}</td>
-                    <td>{{$item->tender->TenderNo}}</td>
-                    <td>{{$item->members_count}}</td>
-                    <td>{{$item->AppointmentDate->format('d/m/Y')}}</td>
+                    <td>{{ $index + 1 }}</td>
+                    <td class="text-uppercase">{{ $item['type'] }}</td>
+                    <td>{{ $item['ref'] }}</td>
                     <td>
-                        <a href="{{route('tendercommittee.show',$item->tender->Id)}}">
-                            <button class="btn btn-sm btn-outline-info">View</button>
-                        </a>
-                        {{-- <a href="{{route('tender-criteria.index')}}" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCriteriaModal">
-                            Edit</a>
-                        <a href="#" class="btn btn-sm btn-outline-danger">Delete</a> --}}
+                        @if ($item['type'] === 'tender')
+                            {{ \App\Models\Procurement\Tender::find($item['refId'])->Title ?? 'N/A' }}
+                        @elseif ($item['type'] === 'rfq')
+                            {{ \App\Models\Procurement\RFQ::find($item['refId'])->RFQNumber ?? 'N/A' }}
+                        @endif
+                    </td>
+
+                    <td>{{ $item['members_count'] }}</td>
+                    <td>{{ \Carbon\Carbon::parse($item['appointment_date'])->format('d/m/Y') }}</td>
+                    <td>
+                        <a href="{{ route('tendercommittee.show', ['id' => $item['refId'], 'type' => $item['type']]) }}"
+                           class="btn btn-sm btn-outline-info">View</a>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="12" class="text-center py-4">
-                        <i class="fas fa-users fa-2x text-muted mb-2"></i><br>
-                        No Committee. <a href="#" data-bs-toggle="modal" data-bs-target="#addCommitteeModal">Create a
-                            new one?</a>
-                    </td>
+                    <td colspan="7" class="text-center py-4">No Committees Found.</td>
                 </tr>
             @endforelse
-                <!-- More rows -->
             </tbody>
         </table>
     </div>
@@ -62,24 +64,28 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form action="{{route('tendercommittee.store')}}" method="POST">
+            <form id="committeeForm" action="{{ route('tendercommittee.store') }}" method="POST">
                 @csrf
                 @method('POST')
 
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="tenderRef" class="form-label">Tender Reference</label>
-                            <select class="form-select" id="tenderRef" name="tenderID" required>
-                                <option selected disabled>-- Select Tender --</option>
-                                @foreach ($tenders as $item)
-                                    <option value="{{$item->Id}}">{{$item->TenderNo}} | {{$item->Title}}</option>
-                                @endforeach
+                            <label for="committeeType" class="form-label">Committee Type</label>
+                            <select id="committeeType" class="form-select" name="committeeType" required>
+                                <option value="">-- Select Type --</option>
+                                <option value="tender">Tender</option>
+                                <option value="rfq">RFQ</option>
                             </select>
-                            @error('tenderID')
-                            <div class="alert alert-danger mt-2">{{ $message }}</div>
-                            @enderror
                         </div>
+
+                        <div class="col-md-6">
+                            <label for="referenceId" class="form-label">Reference</label>
+                            <select id="referenceId" class="form-select" name="referenceId" required>
+                                <option value="">-- Select Reference --</option>
+                            </select>
+                        </div>
+
                         <div class="col-md-6">
                             <label for="appointmentDate" class="form-label">Appointment Date</label>
                             <input type="date" class="form-control" name="appointmentDate" id="appointmentDate">
@@ -119,4 +125,40 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const committeeTypeSelect = document.getElementById("committeeType");
+        const referenceSelect = document.getElementById("referenceId");
+        const form = document.getElementById("committeeForm");
+
+        committeeTypeSelect.addEventListener("change", function () {
+            const selectedType = this.value;
+
+            // Change form action based on type
+            if (selectedType === 'rfq') {
+                form.action = "{{ route('rfqcommittee.store') }}";
+            } else {
+                form.action = "{{ route('tendercommittee.store') }}";
+            }
+
+            // Load references
+            referenceSelect.innerHTML = '<option value="">Loading...</option>';
+            fetch(`/procurement/committee-references/${selectedType}`)
+                .then(response => response.json())
+                .then(data => {
+                    referenceSelect.innerHTML = '<option value="">-- Select Reference --</option>';
+                    data.forEach(item => {
+                        const ref = item.RefNo ?? item.RFQNumber ?? 'N/A';
+                        referenceSelect.innerHTML += `<option value="${item.Id}">${ref} ${item.Title ? '| ' + item.Title : ''}</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                    referenceSelect.innerHTML = '<option value="">Error loading options</option>';
+                });
+        });
+    });
+</script>
+
+
 @endsection

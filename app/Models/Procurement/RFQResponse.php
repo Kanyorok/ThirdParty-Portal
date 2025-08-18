@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Models\Inventory\UnitOfMeasure;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Model;
 
@@ -46,4 +47,11 @@ class RFQResponse extends Model
     {
         return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
     }
+
+    public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'UOMId', 'Id');
+    }
+
+
 }

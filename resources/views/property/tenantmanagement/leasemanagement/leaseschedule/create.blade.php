@@ -1,11 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Lease Schedule Generator')
+
 @section('content')
     @if(session('error'))
         <script>
             alert("{{ session('error') }}");
         </script>
     @endif
+
     <div class="container mt-4">
         <h4 class="fw-bold mb-3">📆 Lease Schedule Generator</h4>
 
@@ -35,31 +37,32 @@
                                 @endforeach
                             </select>
                         </div>
+
                         <!-- Display Selected Lease Number -->
                         <div class="col-md-6">
                             <label class="form-label">Lease Number</label>
                             <input type="text" id="lease-display" class="form-control" readonly>
                         </div>
 
-                        <!-- Auto-filled Tenant -->
+                        <!-- Payment Frequency -->
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Frequency</label>
+                            <input type="text" id="frequency-display" class="form-control" readonly>
+                            <input type="hidden" name="PaymentFrequency" id="frequency-id">
+                        </div>
+
+                        <!-- Tenant Display -->
                         <div class="col-md-6">
                             <label class="form-label">Tenant</label>
                             <input type="text" id="tenant-display" class="form-control" readonly>
                             <input type="hidden" name="TenantId" id="tenant-id">
                         </div>
 
-                        <!-- Auto-filled Property -->
+                        <!-- Property Display -->
                         <div class="col-md-6">
                             <label class="form-label">Property</label>
                             <input type="text" id="property-display" class="form-control" readonly>
                             <input type="hidden" name="PropertyId" id="property-id">
-                        </div>
-
-                        <!-- Auto-filled Payment Frequency -->
-                        <div class="col-md-6">
-                            <label class="form-label">Payment Frequency</label>
-                            <input type="text" id="frequency-display" class="form-control" readonly>
-                            <input type="hidden" name="PaymentFrequency" id="frequency-id">
                         </div>
                     </div>
 
@@ -108,13 +111,13 @@
         document.getElementById('lease-select').addEventListener('change', function () {
             const selected = this.options[this.selectedIndex];
 
-            document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber');
-            document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id');
-            document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name');
-            document.getElementById('property-id').value = selected.getAttribute('data-property-id');
-            document.getElementById('property-display').value = selected.getAttribute('data-property-name');
-            document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id');
-            document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name');
+            document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber') || '';
+            document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id') || '';
+            document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name') || '';
+            document.getElementById('property-id').value = selected.getAttribute('data-property-id') || '';
+            document.getElementById('property-display').value = selected.getAttribute('data-property-name') || '';
+            document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id') || '';
+            document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name') || '';
         });
     </script>
 @endsection

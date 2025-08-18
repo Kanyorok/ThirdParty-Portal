@@ -16,7 +16,7 @@
                     <div class="mb-3">
                         <label class="form-label">Tenant</label>
                         <input type="text" class="form-control"
-                               value="{{ $clearancetenant->tenant->TenantName ?? '-' }}" readonly>
+                               value="{{ $clearancetenant->lease->tenant->TenantName ?? '-' }}" readonly>
                     </div>
 
                     <div class="mb-3">

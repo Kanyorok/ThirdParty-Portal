@@ -40,4 +40,9 @@ class PropertyNewTenant extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'TenantType', 'ID');
     }
+
+    public function lease()
+    {
+        return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'ID');
+    }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Auth\ModelRole;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\BR\Account;
@@ -62,23 +61,8 @@ use App\Models\DMS\LegalHold;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
-use App\Models\Inventory\InterBranchRequisition;
-use App\Models\Inventory\InventoryHoldReview;
-use App\Models\Inventory\InventoryType;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\ItemType;
-use App\Models\Inventory\PriceManagement;
-use App\Models\Inventory\StockAdjustment;
-use App\Models\Inventory\StockItem;
-use App\Models\Inventory\Store;
-use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\TransactionTransfer;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\Order;
-use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
@@ -106,7 +90,6 @@ use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\LegalHoldPolicy;
 use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
-use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\ItemCategoryPolicy;
 use App\Policies\Inventory\ItemMasterListPolicy;
@@ -145,6 +128,23 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use App\Policies\Inventory\InventoryHoldReviewPolicy;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\TransactionReceipt;
+use App\Models\Inventory\TransactionTransfer;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\InventoryHoldReview;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItem;
+use App\Models\Auth\ModelRole;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -295,8 +295,6 @@ class AppServiceProvider extends ServiceProvider
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
-
-
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
         ]);
 
