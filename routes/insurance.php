@@ -126,11 +126,11 @@ Route::prefix('bancassurance/claims')->name('bancassurance.claims.')->group(func
     Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
     Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
     Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.index');
-    Route::get('{id}/close', [ClaimController::class, 'closeForm'])->name('closeForm');
-    Route::post('{id}/close', [ClaimController::class, 'storeClosure'])->name('storeClosure');
-    Route::get('closed', [ClaimController::class, 'closedClaimsIndex'])->name('closed');
-    Route::get('initiate-closure', [ClaimController::class, 'initiateClosureForm'])->name('initiateClosureForm');
-    Route::post('initiate-closure/store', [ClaimController::class, 'storeClosureFromList'])->name('storeClosureFromList');
+    Route::get('{id}/close', [ClaimClosureController::class, 'closeForm'])->name('closeForm');
+    Route::post('{id}/close', [ClaimClosureController::class, 'storeClosure'])->name('storeClosure');
+    Route::get('closed', [ClaimClosureController::class, 'closedClaimsIndex'])->name('closed');
+    Route::get('initiate-closure', [ClaimClosureController::class, 'initiateClosureForm'])->name('initiateClosureForm');
+    Route::post('initiate-closure/store', [ClaimClosureController::class, 'storeClosureFromList'])->name('storeClosureFromList');
 
 });
 

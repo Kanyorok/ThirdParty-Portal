@@ -494,11 +494,17 @@ enum PermissionEnum: string
     case InsuranceProductRiderUpdate = 'insuranceproductrider-update';
     case InsuranceProductRiderDelete = 'insuranceproductrider-delete';
 
-        // Insurance Pricing Rule
+    // Insurance Pricing Rule
     case InsurancePricingRuleView = 'insurancepricingrule-view';
     case InsurancePricingRuleCreate = 'insurancepricingrule-create';
     case InsurancePricingRuleUpdate = 'insurancepricingrule-update';
     case InsurancePricingRuleDelete = 'insurancepricingrule-delete';
+
+    //Insurance Claim Closure
+    case InsuranceClaimClosureView = 'insuranceclaimclosure-view';
+    case InsuranceClaimClosureCreate = 'insuranceclaimclosure-create';
+    case InsuranceClaimClosureUpdate = 'insuranceclaimclosure-update';
+    case InsuranceClaimClosureDelete = 'insuranceclaimclosure-delete';
 
 
 
@@ -667,7 +673,8 @@ enum PermissionEnum: string
             [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
             [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
             [self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete],            
-            [self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete],  
+            [self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete], 
+            [self::InsuranceClaimClosureView,self::InsuranceClaimClosureCreate,self::InsuranceClaimClosureUpdate,self::InsuranceClaimClosureDelete],
             
         ]);
     }
@@ -775,7 +782,8 @@ enum PermissionEnum: string
             self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete,
             self::BancassuranceUnderwritingView,self::BancassuranceUnderwritingCreate,self::BancassuranceUnderwritingUpdate,self::BancassuranceUnderwritingDelete,
             self::BancassuranceClaimView,self::BancassuranceClaimUpdate,self::BancassuranceClaimCreate,self::BancassuranceClaimDelete,
-            self::BancassurancePaymentView,self::BancassurancePaymentCreate,self::BancassurancePaymentDelete,self::BancassurancePaymentUpdate
+            self::BancassurancePaymentView,self::BancassurancePaymentCreate,self::BancassurancePaymentDelete,self::BancassurancePaymentUpdate,
+            self::InsuranceClaimClosureView,self::InsuranceClaimClosureCreate,self::InsuranceClaimClosureUpdate,self::InsuranceClaimClosureDelete,
             =>ModulesEnum::Insurance,
 
 
@@ -893,10 +901,11 @@ enum PermissionEnum: string
             self::BancassuranceUnderwritingView,self::BancassuranceUnderwritingCreate,self::BancassuranceUnderwritingUpdate,self::BancassuranceUnderwritingDelete => 'Insurance Under Writting',
             self::BancassuranceClaimView,self::BancassuranceClaimUpdate,self::BancassuranceClaimCreate,self::BancassuranceClaimDelete => 'Insurance Claim',
             self::BancassurancePaymentView,self::BancassurancePaymentCreate,self::BancassurancePaymentDelete,self::BancassurancePaymentUpdate => 'Insurance Payment',
-            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete => 'Insurance Provider ',
-            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete => 'Insurance Product ',
-            self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete => 'Insurance Product Rider  ',
-            self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete => ' Insurance Pricing Rule   ',
+            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete => 'Insurance Provider',
+            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete => 'Insurance Product',
+            self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete => 'Insurance Product Rider',
+            self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete => ' Insurance Pricing Rule',
+            self::InsuranceClaimClosureView,self::InsuranceClaimClosureCreate,self::InsuranceClaimClosureUpdate,self::InsuranceClaimClosureDelete => 'Insurance Claim Closure',
             
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
