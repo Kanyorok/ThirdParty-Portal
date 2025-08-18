@@ -4,10 +4,12 @@ namespace App\Models\DMS;
 
 use App\Enums\DMS\LegalHoldStatusEnum;
 use App\Models\Auth\User;
+use App\Models\CRM\Notes;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalHold extends Model
@@ -51,5 +53,10 @@ class LegalHold extends Model
     {
         return $this->belongsToMany(Document::class, 't_DocumentLegalHolds', 'LegalHoldId', 'DocId', 'Id', 'Id')
             ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps();
+    }
+
+    public function notes(): MorphMany
+    {
+        return $this->morphMany(Notes::class, 'party', "Party", "PartyID", 'ClientID');
     }
 }

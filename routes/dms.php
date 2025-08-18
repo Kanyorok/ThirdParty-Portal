@@ -11,6 +11,7 @@ use App\Http\Controllers\DMS\Files\DocumentPermissionController;
 use App\Http\Controllers\DMS\Files\DocumentRecentController;
 use App\Http\Controllers\DMS\Files\DocumentTagsController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
+use App\Http\Controllers\DMS\LegalHold\DocumentLegalHoldController;
 use App\Http\Controllers\DMS\LegalHold\LegalHoldController;
 use App\Http\Controllers\DMS\Repo\RepositoryController;
 use App\Http\Controllers\DMS\Repo\RepositoryMoveController;
@@ -53,7 +54,8 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     });
     Route::resource('file-tags', TagController::class)->parameters(['file-tags' => 'd_m_s_tags'])->except('edit');
 
-    Route::resource('legal-hold', LegalHoldController::class)->parameters(['legal-hold' => 'd_m_s_legal_hold'])->except('edit');
+    Route::resource('legal-hold/{d_m_s_legal_hold}/hold-files', DocumentLegalHoldController::class)->parameters(['hold-files' => 'document'])->except('edit');
+    Route::resource('legal-hold', LegalHoldController::class)->parameters(['legal-hold' => 'dMSLegalHold'])->except('edit');
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('dms-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([

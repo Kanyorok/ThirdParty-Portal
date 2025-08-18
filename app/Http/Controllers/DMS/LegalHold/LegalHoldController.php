@@ -23,7 +23,7 @@ class LegalHoldController extends Controller
     public function __construct()
     {
         $this->middleware('ajax')->except(['index', 'create', 'show']);
-        $this->authorizeResource(LegalHold::class);
+        //$this->authorizeResource(LegalHold::class);
     }
 
     /**
@@ -32,6 +32,7 @@ class LegalHoldController extends Controller
      */
     public function index(Request $request): View|JsonResponse
     {
+        $this->authorize('viewAny', LegalHold::class);
         if ($request->ajax()) {
             return Datatables::of(LegalHold::query()->lock('WITH(NOLOCK)')->withCount('documents'))->addIndexColumn()
                 ->addColumn('action', function (LegalHold $legalHold) {
@@ -59,6 +60,7 @@ class LegalHoldController extends Controller
      */
     public function store(CreateLegalHoldRequest $request)
     {
+        $this->authorize('create', LegalHold::class);
         $documents = $request->getDocumentIds();
         $actor = $request->user();
 
@@ -120,6 +122,7 @@ class LegalHoldController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create', LegalHold::class);
         return view('dms.legal-hold.create')->with('tags', DMSTags::query()->user($request->user())->get(['t_DMSTags.TagID', 't_DMSTags.Name']));
     }
 
@@ -128,15 +131,9 @@ class LegalHoldController extends Controller
      */
     public function show(LegalHold $dMSLegalHold)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(LegalHold $dMSLegalHold)
-    {
-        //
+        $this->authorize('view', $dMSLegalHold);
+        return view('dms.legal-hold.show')
+            ->with('hold', $dMSLegalHold->loadCount('documents'));
     }
 
     /**
@@ -144,7 +141,28 @@ class LegalHoldController extends Controller
      */
     public function update(Request $request, LegalHold $dMSLegalHold)
     {
-        //
+        $request->validate([
+            'Name' => 'required|string|max:255',
+            'Description' => 'nullable|string|max:5000',
+        ]);
+
+        $actor = $request->user();
+
+        try {
+            return DB::transaction(function () use ($request, $dMSLegalHold, $actor) {
+                $dMSLegalHold->update([
+                    'Name' => $request->string('Name')->trim()->toString(),
+                    'Description' => $request->string('Description', '')->trim()->toString(),
+                    'ModifiedBy' => $actor->Id,
+                ]);
+
+                activity()->causedBy($actor)->performedOn($dMSLegalHold)->event('update')->log('updated ' . $dMSLegalHold->Ref . ' legal hold.');
+                return $this->succeeded('Legal Hold updated successfully', route('legal-hold.show', [$dMSLegalHold->Ref]));
+            });
+        } catch (Throwable|Exception $e) {
+            Log::error('Error updating legal hold: ' . $e);
+            return $this->errored('an error occurred while updating legal hold');
+        }
     }
 
     /**

@@ -4,16 +4,31 @@ namespace App\Http\Controllers\DMS\LegalHold;
 
 use App\Http\Controllers\Controller;
 use App\Models\DMS\DocumentLegalHold;
+use App\Models\DMS\LegalHold;
+use App\Traits\Controller\DocumentsTrait;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DocumentLegalHoldController extends Controller
 {
+    use DocumentsTrait;
+
+    public function __construct()
+    {
+        $this->middleware('ajax');
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request, $legalHoldId): JsonResponse
     {
-        //
+        $legalHold = LegalHold::query()->where('t_DMSLegalHolds.Ref', $legalHoldId)->first();
+        if (!$legalHold instanceof LegalHold) {
+            return $this->errored('Invalid legal hold provided');
+        }
+        $this->authorize('view', $legalHold);
+        return $this->documents($legalHold->documents(), $request->user());
     }
 
     /**
