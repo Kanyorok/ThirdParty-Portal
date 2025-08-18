@@ -55,6 +55,7 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::resource('file-tags', TagController::class)->parameters(['file-tags' => 'd_m_s_tags'])->except('edit');
 
     Route::resource('legal-hold/{d_m_s_legal_hold}/hold-files', DocumentLegalHoldController::class)->parameters(['hold-files' => 'document'])->except('edit');
+    Route::post('legal-hold/{dMSLegalHold}/release', [LegalHoldController::class, 'release'])->name('legal-hold.release');
     Route::resource('legal-hold', LegalHoldController::class)->parameters(['legal-hold' => 'dMSLegalHold'])->except('edit');
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('dms-reports.export');

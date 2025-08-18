@@ -1,4 +1,4 @@
-@php use App\Enums\Core\VisibilityEnum; @endphp
+@php use App\Enums\Core\VisibilityEnum;use App\Enums\DMS\LegalHoldStatusEnum; @endphp
 @extends('dms.layout')
 
 @section('title')
@@ -21,29 +21,48 @@
                     <p class="text-center">Documents : <b>{{ number_format($hold->documents_count) }}</b></p>
                     <p class="text-center">{{ $hold->Description }}</p>
                     <div class="row">
-                        <div class="col-sm-6 col-12">
-                            @can('update', $hold)
-                                <button class="btn btn-info btn-sm modal-update-legal-hold w-100 my-2" type="button"><i
-                                        class="fas fa-edit"></i> update
-                                </button>
-                            @endcan
-                        </div>
-                        <div class="col-sm-6 col-12">
-                            @can('delete', $hold)
-                                <button class="btn btn-warning btn-sm modal-trash-legal-hold w-100 my-2" type="button">
-                                    <i
-                                        class="fas fa-trash"></i> cancel
-                                </button>
-                            @endcan
-                        </div>
-                        <div class="col-sm-6 col-12">
-                            @can('delete', $hold)
-                                <button class="btn btn-primary btn-sm modal-trash-legal-hold w-100 my-2" type="button">
-                                    <i
-                                        class="fas fa-trash"></i> release
-                                </button>
-                            @endcan
-                        </div>
+                        @switch($hold->Status->value)
+                            @case(LegalHoldStatusEnum::Canceled->value)
+                                <div class="col-12">
+                                    <p class="h4 text-warning text-center"><b>CANCELED </b>
+                                        on {{  $hold->ReleasedOn?->format('F d, Y h:i A') }}</p>
+                                </div>
+                                @break
+                            @case(LegalHoldStatusEnum::Released->value)
+                                <div class="col-12">
+                                    <p class="h4 text-primary text-center"><b>RELEASED </b>
+                                        on {{  $hold->ReleasedOn?->format('F d, Y h:i A') }}</p>
+                                </div>
+                                @break
+                            @case(LegalHoldStatusEnum::Active->value)
+                                <div class="col-sm-6 col-12">
+                                    @can('update', $hold)
+                                        <button class="btn btn-info btn-sm modal-update-legal-hold w-100 my-2"
+                                                type="button"><i
+                                                class="fas fa-edit"></i> update
+                                        </button>
+                                    @endcan
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    @can('delete', $hold)
+                                        <button class="btn btn-warning btn-sm modal-trash-legal-hold w-100 my-2"
+                                                type="button">
+                                            <i
+                                                class="fas fa-times"></i> cancel
+                                        </button>
+                                    @endcan
+                                </div>
+                                <div class="col-sm-6 col-12">
+                                    @can('delete', $hold)
+                                        <button class="btn btn-primary btn-sm modal-release-legal-hold w-100 my-2"
+                                                type="button">
+                                            <i
+                                                class="fas fa-check"></i> release
+                                        </button>
+                                    @endcan
+                                </div>
+                                @break
+                        @endswitch
                     </div>
                 </div>
             </div>
@@ -55,10 +74,8 @@
         </div>
         <div class="col-md-8">
             <div class="card">
-
                 <div class="card-body py-0">
                     <ul class="nav nav-tabs profile-tabs" id="LegalHoldTab" role="tablist">
-
                         <li class="nav-item" role="presentation">
                             <a class="nav-link active" id="document-legal-hold-tab-2" href="#tab-1" data-bs-toggle="tab"
                                role="tab"
@@ -175,25 +192,44 @@
                             </div>
                         </form>
                     </div>
-                    {{--  <div class="onboarding-content with-gradient d-none modal-item text-center" id="trashTagModal">
-                          <h4 class="text-danger">
-                              Trash Document Tag: <b>{{ $tag->Name }}</b> ?
-                          </h4>
-                          <form id="trashTagForm" method="post"
-                                action="{{ route('file-tags.destroy',[$tag->TagID]) }}"> @csrf @method('delete')
-                              <div class="mt-4">
-                                  <button type="button" class="btn btn-secondary float-start"
-                                          data-bs-dismiss="modal">
-                                      no, cancel
-                                  </button>
-                                  <button class="btn btn-danger float-end" id="trashTagBtn"
-                                          type="submit"><i
-                                          class="fas fa-trash"></i> yes,
-                                      trash {{ \Illuminate\Support\Str::limit($tag->TagID ,20) }}
-                                  </button>
-                              </div>
-                          </form>
-                      </div>--}}
+                    <div class="onboarding-content with-gradient d-none modal-item text-center"
+                         id="cancelLegalHoldModal">
+                        <h4 class="text-danger">
+                            Cancel Legal Hold <b>{{ $hold->Ref }}</b> ?
+                        </h4>
+                        <form id="cancelLegalHoldForm" method="post"
+                              action="{{ route('legal-hold.destroy',[$hold->Ref]) }}"> @csrf @method('delete')
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start"
+                                        data-bs-dismiss="modal">
+                                    no, cancel
+                                </button>
+                                <button class="btn btn-danger float-end" id="cancelLegalHoldBtn"
+                                        type="submit"><i
+                                        class="fas fa-times"></i> yes, cancel Hold
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="onboarding-content with-gradient d-none modal-item text-center"
+                         id="releaseLegalHoldModal">
+                        <h4 class="text-primary">
+                            Release Legal Hold <b>{{ $hold->Ref }}</b> ?
+                        </h4>
+                        <form id="releaseLegalHoldForm" method="post"
+                              action="{{ route('legal-hold.release',[$hold->Ref]) }}"> @csrf
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-secondary float-start"
+                                        data-bs-dismiss="modal">
+                                    no, cancel
+                                </button>
+                                <button class="btn btn-primary float-end" id="releaseLegalHoldBtn"
+                                        type="submit"><i
+                                        class="fas fa-check"></i> yes, release Hold
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -206,33 +242,31 @@
             $.fn.dataTable.ext.errMode = 'none';
             fetchDocumentsTable();
 
-            /* $(document).on('click', '.modal-trash-rule', function () {
-                 $(".modal-title").html('<b class="text-danger">Remove </b> tagging rule');
-                 $(".modal-item").addClass('d-none');
-                 $("#trashTaggingRuleForm").attr('action', $(this).data('click_url'));
-                 $("#trashTaggingRule").html($(this).data('info'));
-                 $('#trashTaggingRuleModal').removeClass('d-none');
-                 $Modal.modal('show');
-             });
-             $('form#trashTaggingRuleForm').submit(async function (e) {
-                 e.preventDefault();
-                 if (await saveForm($(this), $('#trashTaggingRuleBtn'), false, true, true)) {
-                     $Modal.modal('hide');
-                     fetchTaggingRulesTable();
-                 }
-             });
-             $(document).on('click', '.modal-trash-legal-hold', function () {
-                 $(".modal-title").html('Trash Legal Hold : {{ $hold->Name }}');
+
+            $(document).on('click', '.modal-release-legal-hold', function () {
+                $(".modal-title").html('Release Legal Hold : {{ $hold->Name }}');
                 $(".modal-item").addClass('d-none');
-                $('#trashLegalHoldModal').removeClass('d-none');
+                $('#releaseLegalHoldModal').removeClass('d-none');
                 $Modal.modal('show');
             });
-            $('form#trashLegalHoldForm').submit(async function (e) {
+            $('form#releaseLegalHoldForm').submit(async function (e) {
                 e.preventDefault();
-                if (await saveForm($(this), $('#trashLegalHoldBtn'), true, true, true)) {
+                if (await saveForm($(this), $('#releaseLegalHoldBtn'), true, true, true)) {
                     $Modal.modal('hide');
                 }
-            });*/
+            });
+            $(document).on('click', '.modal-trash-legal-hold', function () {
+                $(".modal-title").html('Cancel Legal Hold : {{ $hold->Name }}');
+                $(".modal-item").addClass('d-none');
+                $('#cancelLegalHoldModal').removeClass('d-none');
+                $Modal.modal('show');
+            });
+            $('form#cancelLegalHoldForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $('#cancelLegalHoldBtn'), true, true, true)) {
+                    $Modal.modal('hide');
+                }
+            });
 
             $(document).on('click', '.modal-update-legal-hold', function () {
                 $(".modal-title").html('Update Legal Hold : {{ $hold->Name }}');

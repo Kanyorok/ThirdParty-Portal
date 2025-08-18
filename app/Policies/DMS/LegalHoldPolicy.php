@@ -2,6 +2,7 @@
 
 namespace App\Policies\DMS;
 
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\DMS\LegalHold;
 
@@ -12,7 +13,7 @@ class LegalHoldPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSLegalHoldView->value);
     }
 
     /**
@@ -20,7 +21,7 @@ class LegalHoldPolicy
      */
     public function view(User $user, LegalHold $dMSLegalHold): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSLegalHoldView->value);
     }
 
     /**
@@ -28,7 +29,7 @@ class LegalHoldPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::DMSLegalHoldCreate->value);
     }
 
     /**
@@ -36,7 +37,7 @@ class LegalHoldPolicy
      */
     public function update(User $user, LegalHold $dMSLegalHold): bool
     {
-        return true;
+        return ($user->Id === $dMSLegalHold->CreatedBy || $user->can(PermissionEnum::DMSLegalHoldRelease->value));
     }
 
     /**
@@ -44,7 +45,12 @@ class LegalHoldPolicy
      */
     public function delete(User $user, LegalHold $dMSLegalHold): bool
     {
-        return true;
+        return $this->update($user, $dMSLegalHold);
+    }
+
+    public function release(User $user, LegalHold $dMSLegalHold): bool
+    {
+        return $this->delete($user, $dMSLegalHold);
     }
 
     /**

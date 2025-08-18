@@ -72,9 +72,7 @@ class LegalHoldController extends Controller
                     'Ref' => $request->getRef(),
                     'Description' => $request->string('Description', '')->toString(),
                     'CreatedBy' => $actor->Id,
-                    'CreatedOn' => $dated,
                     'ModifiedBy' => $actor->Id,
-                    'ModifiedOn' => $dated,
                 ])->refresh();
                 $hold->documents()->attach($documents, [
                     'CreatedBy' => $actor->Id,
@@ -150,7 +148,7 @@ class LegalHoldController extends Controller
 
         try {
             return DB::transaction(function () use ($request, $dMSLegalHold, $actor) {
-                $dMSLegalHold->update([
+                $dMSLegalHold->forceFill([
                     'Name' => $request->string('Name')->trim()->toString(),
                     'Description' => $request->string('Description', '')->trim()->toString(),
                     'ModifiedBy' => $actor->Id,
@@ -166,10 +164,108 @@ class LegalHoldController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Cancel
      */
-    public function destroy(LegalHold $dMSLegalHold)
+    public function destroy(Request $request, LegalHold $dMSLegalHold)
     {
-        //
+        $actor = $request->user();
+        try {
+            return DB::transaction(function () use ($dMSLegalHold, $actor) {
+                $dMSLegalHold->update([
+                    'Status' => LegalHoldStatusEnum::Canceled,
+                    'ReleasedOn' => now(),
+                    'ReleasedBy' => $actor->Id,
+                ]);
+
+
+                $documents = $dMSLegalHold->documents()->get(['DocId'])->pluck('DocId')->toArray();
+                $dated = now();
+                $activities = (config('activitylog.enabled')) ? collect($documents)->map(function ($document) use ($dMSLegalHold, $dated, $actor) {
+                    return [
+                        'log_name' => config('activitylog.default_log_name'),
+                        'description' => 'Legal Hold (' . $dMSLegalHold->Ref . ') Canceled',
+                        'subject_id' => $document,
+                        'subject_type' => Document::getPrimaryKey(),
+                        'causer_id' => $actor->Id,
+                        'causer_type' => User::getPrimaryKey(),
+                        'created_at' => $dated,
+                        'updated_at' => $dated,
+                        'event' => 'Legal Hold'
+                    ];
+                })->add([
+                    'log_name' => config('activitylog.default_log_name'),
+                    'description' => 'Canceled legal hold for documents',
+                    'subject_id' => $dMSLegalHold->Id,
+                    'subject_type' => LegalHold::getPrimaryKey(),
+                    'causer_id' => $actor->Id,
+                    'causer_type' => User::getPrimaryKey(),
+                    'created_at' => $dated,
+                    'updated_at' => $dated,
+                    'event' => 'Canceled'
+                ]) : collect();
+
+                if ($activities->isNotEmpty()) {
+                    DB::table(config('activitylog.table_name'))->insert($activities->toArray());
+                }
+
+                return $this->succeeded('Legal Hold canceled successfully', route('legal-hold.show', [$dMSLegalHold->Ref]));
+            });
+        } catch (Throwable|Exception $e) {
+            Log::error('Error canceling legal hold: ' . $e);
+            return $this->errored('an error occurred while canceling legal hold');
+        }
+    }
+
+    /**
+     * release
+     */
+    public function release(Request $request, LegalHold $dMSLegalHold)
+    {
+        $actor = $request->user();
+        try {
+            return DB::transaction(function () use ($dMSLegalHold, $actor) {
+                $dMSLegalHold->update([
+                    'Status' => LegalHoldStatusEnum::Released,
+                    'ReleasedOn' => now(),
+                    'ReleasedBy' => $actor->Id,
+                ]);
+
+
+                $documents = $dMSLegalHold->documents()->get(['DocId'])->pluck('DocId')->toArray();
+                $dated = now();
+                $activities = (config('activitylog.enabled')) ? collect($documents)->map(function ($document) use ($dMSLegalHold, $dated, $actor) {
+                    return [
+                        'log_name' => config('activitylog.default_log_name'),
+                        'description' => 'Legal Hold (' . $dMSLegalHold->Ref . ') Released',
+                        'subject_id' => $document,
+                        'subject_type' => Document::getPrimaryKey(),
+                        'causer_id' => $actor->Id,
+                        'causer_type' => User::getPrimaryKey(),
+                        'created_at' => $dated,
+                        'updated_at' => $dated,
+                        'event' => 'Legal Hold'
+                    ];
+                })->add([
+                    'log_name' => config('activitylog.default_log_name'),
+                    'description' => 'legal hold released',
+                    'subject_id' => $dMSLegalHold->Id,
+                    'subject_type' => LegalHold::getPrimaryKey(),
+                    'causer_id' => $actor->Id,
+                    'causer_type' => User::getPrimaryKey(),
+                    'created_at' => $dated,
+                    'updated_at' => $dated,
+                    'event' => 'Released'
+                ]) : collect();
+
+                if ($activities->isNotEmpty()) {
+                    DB::table(config('activitylog.table_name'))->insert($activities->toArray());
+                }
+
+                return $this->succeeded('Legal Hold released successfully', route('legal-hold.show', [$dMSLegalHold->Ref]));
+            });
+        } catch (Throwable|Exception $e) {
+            Log::error('Error releasing legal hold: ' . $e);
+            return $this->errored('an error occurred while releasing legal hold');
+        }
     }
 }
