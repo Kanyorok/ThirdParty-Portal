@@ -326,6 +326,16 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
             ['CodeID' => 'EmploymentType', 'Description' => 'Hired', 'Value' => 'HR'], 
 
+            //Vehicle Request Status
+            ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
+            ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Pending', 'Value' => 'pe'],
+            ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Rejected', 'Value' => 'Re'], 
+
+            //Driver Type
+            ['CodeID' => 'DriverType', 'Description' => 'Contracted', 'Value' => 'Co'],
+            ['CodeID' => 'DriverType', 'Description' => 'Permanent', 'Value' => 'Pe'],
+
+
         ];
 
         foreach ($static as $index => $item) {

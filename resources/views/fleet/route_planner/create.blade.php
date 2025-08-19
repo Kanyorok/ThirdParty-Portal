@@ -2,7 +2,23 @@
 @section('title', 'Plan Route')
 
 @section('head')
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+#map-wrapper {
+width: 100%;
+height: 400px;
+position: relative;
+overflow: hidden;
+border-radius: 0.5rem;
+}
+
+#map {
+width: 100%;
+height: 100%;
+}
+
+
+</style>
 @endsection
 
 @section('content')
@@ -23,8 +39,8 @@
                 <select name="VehicleID" class="form-select" required>
                     <option value="">-- Select Vehicle --</option>
                     @foreach($vehicles as $vehicle)
-                        <option value="{{ $vehicle->VehicleID }}">
-                            {{ $vehicle->RegistrationNumber }} - {{ $vehicle->Make }} {{ $vehicle->Model }}
+                        <option value="{{ $vehicle->Id }}">
+                            {{ $vehicle->RegistrationNo }}
                         </option>
                     @endforeach
                 </select>
@@ -42,10 +58,12 @@
             </div>
 
             <div class="col-md-12">
-                <label class="form-label">Map Preview</label>
-                <div id="map" style="height: 400px;" class="rounded shadow-sm border"></div>
+            <label class="form-label">Map Preview</label>
+            <div id="map-wrapper" class="shadow-sm border rounded-4">
+            <div id="map"></div>
             </div>
-        </div>
+            </div>
+
 
         <div class="mt-4">
             <button class="btn btn-success" type="submit">🚀 Save Route</button>
@@ -57,8 +75,10 @@
 @section('scripts')
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        let map = L.map('map').setView([-1.2921, 36.8219], 10); // Default center (Nairobi)
+        // Initialize map inside card
+        let map = L.map('map', { zoomControl: true }).setView([-1.2921, 36.8219], 10); // Default: Nairobi
 
+        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
         }).addTo(map);
@@ -82,11 +102,13 @@
                     map.removeLayer(window.routePolyline);
                 }
 
-                window.routePolyline = L.polyline(coords, { color: 'blue' }).addTo(map);
+                // Draw bold green polyline
+                window.routePolyline = L.polyline(coords, { color: 'green', weight: 5 }).addTo(map);
                 map.fitBounds(window.routePolyline.getBounds());
             }
         }
 
+        // Event listeners
         document.getElementById('waypoints-container').addEventListener('input', drawRoute);
 
         document.getElementById('add-waypoint').addEventListener('click', () => {

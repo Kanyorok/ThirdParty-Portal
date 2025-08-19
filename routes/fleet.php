@@ -178,6 +178,10 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
         Route::get('/trip-logs', [FleetTripLogController::class, 'index'])->name('fleet.trip_logs.index');
         Route::get('/trip-logs/create', [FleetTripLogController::class, 'create'])->name('fleet.trip_logs.create');
         Route::post('/trip-logs', [FleetTripLogController::class, 'store'])->name('fleet.trip_logs.store');
+        Route::get('/trip-logs{Id}', [FleetTripLogController::class, 'show'])->name('fleet.trip_logs.show');
+        Route::get('/trip-logs{Id}/edit', [FleetTripLogController::class, 'edit'])->name('fleet.trip_logs.edit');
+        Route::put('trip-logs{Id}', [FleetTripLogController::class, 'update'])->name('fleet.trip_logs.update');
+        Route::delete('trip-logs{Id}', [FleetTripLogController::class, 'destroy'])->name('fleet.trip_logs.destroy');
 
         // ==================== Route Planner ====================
         Route::get('/route-planner', [FleetRoutePlannerController::class, 'index'])->name('fleet.route_planner.index');
@@ -188,6 +192,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
         Route::get('/fuel-logs', [FleetFuelLogController::class, 'index'])->name('fleet.fuel_logs.index');
         Route::get('/fuel-logs/create', [FleetFuelLogController::class, 'create'])->name('fleet.fuel_logs.create');
         Route::post('/fuel-logs', [FleetFuelLogController::class, 'store'])->name('fleet.fuel_logs.store');
+        Route::get('/fuel-logs{Id}', [FleetFuelLogController::class, 'show'])->name('fleet.fuel_logs.show');
 
         // ==================== Vehicle Requests ====================
         Route::get('/vehicle-requests', [FleetVehicleRequestController::class, 'index'])->name('fleet.vehicle_requests.index');

@@ -25,8 +25,9 @@ class FleetRoutePlannerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'VehicleID'  => 'required|exists:t_FleetVehicles,Id',
             'TripName'   => 'required|string|max:255',
-            'VehicleID'  => 'required|exists:t_FleetVehicles,VehicleID',
+            'VehicleID'  => 'required|exists:t_FleetVehicles,Id',
             'Waypoints'  => 'required|array|min:2',
             'Waypoints.*'=> 'required|string|max:255',
         ]);

@@ -4,6 +4,8 @@
 namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\FleetManagement\FleetMake;
+use App\Models\FleetManagement\FleetModel;
 
 class FleetRoutePlan extends Model
 {
@@ -24,7 +26,7 @@ class FleetRoutePlan extends Model
 
     public function vehicle()
     {
-        return $this->belongsTo(FleetVehicle::class, 'VehicleID');
+        return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
     }
 
     public function creator()
