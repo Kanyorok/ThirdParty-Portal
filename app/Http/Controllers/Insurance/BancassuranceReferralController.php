@@ -10,6 +10,8 @@ use App\Models\Core\CodeDetail;
 use App\Models\Auth\User;
 use App\Models\HRM\Employee;
 use App\Models\Insurance\BancAssuranceReferral;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProvider;
 use App\Services\Insurance\BancAssuranceReferralService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -25,12 +27,19 @@ public function index()
 }
 public function create()
 {
-    $insuranceproducts = CodeDetail::where('CodeID','InsuranceProduct')->get();
-    $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
+    
+    $insurers = InsuranceProvider::all();
     $users = User::with('employee')->get();
-
-    return view('bancassurance.referrals.create', compact('users', 'insurers','insuranceproducts'));
+    return view('bancassurance.referrals.create', compact('users', 'insurers'));
 }
+
+
+public function getProductsByInsurer($insurerId)
+{
+    $products = InsuranceProduct::where('InsuranceProviderID', $insurerId)->get();
+    return response()->json($products);
+}
+
 
 public function store(BancAssuranceReferralRequest $request)
 {

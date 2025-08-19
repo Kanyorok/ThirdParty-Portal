@@ -36,6 +36,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
     Route::get('assign/list', [BancassuranceReferralController::class, 'assignList'])->name('assign.list');
     Route::post('assign/{Id}', [BancassuranceReferralController::class, 'assign'])->name('assign');
     Route::get('performance', [BancassuranceReferralController::class, 'performanceView'])->name('performance');
+    Route::get('referrals/products/{insurerId}', [BancassuranceReferralController::class, 'getProductsByInsurer'])->name('referrals.products');
 
 });
 
