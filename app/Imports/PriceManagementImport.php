@@ -25,7 +25,7 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
             DB::table('t_Pricing')->insert([
                 'ItemID' => $data['ItemID'],  // or your mapped field
                 'UOMCode' => $data['UOMCode'],
-                'EstimatedPrice' => $data['EstimatedPrice'], // or EstimatedPrice if preferred
+                //'EstimatedPrice' => $data['EstimatedPrice'], // or EstimatedPrice if preferred
                 'ActualPrice' => $data['ActualPrice'],
                 'EffectiveFrom' => $data['EffectiveFrom'],
                 'EffectiveTo' => $data['EffectiveTo'],

@@ -72,12 +72,7 @@
             @endif
         </div>
         <div class="col-md-6">
-            <strong>Status:</strong>
-            @if($item->Status == 1)
-                <span class="badge bg-success">Active</span>
-            @else
-                <span class="badge bg-warning">Inactive</span>
-            @endif
+            <p class="card-text"><strong>Status:</strong> {{ $item->status->Description ?? 'N/A' }}</p>
         </div>
     </div>
 

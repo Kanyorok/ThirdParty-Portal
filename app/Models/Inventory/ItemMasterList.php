@@ -11,6 +11,7 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\PriceManagement;
+use App\Models\Core\CodeDetail;
 
 class ItemMasterList extends Model
 {
@@ -56,7 +57,7 @@ class ItemMasterList extends Model
         'UOM' => 'integer',
         'InventoryType' => 'integer',
         'Category' => 'integer',
-        'Status' => 'boolean',
+        'Status' => 'integer',
         'ImageId' => 'integer',
         'ItemDescription' => 'string',
         'DocumentUpload' => 'string',
@@ -82,6 +83,11 @@ class ItemMasterList extends Model
     public function image()
     {
         return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
     }
 
     public function itemType()

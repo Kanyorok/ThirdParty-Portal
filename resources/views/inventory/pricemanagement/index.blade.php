@@ -63,10 +63,6 @@
 
                 <div class="mb-3">
                     <label class="form-label">Estimated Price</label>
-                    <input type="number" step="0.01" class="form-control" name="EstimatedPrice" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Actual Price</label>
                     <input type="number" step="0.01" class="form-control" name="ActualPrice" required>
                 </div>
                 <div class="mb-3">
@@ -105,7 +101,6 @@
                         <th>Item</th>
                         <th>UOM</th>
                         <th>Estimated Price</th>
-                        <th>Actual Price</th>
                         <th>Currency</th>
                         <th>Effective From</th>
                         <th>Effective To</th>
@@ -120,7 +115,6 @@
                         <td>{{ $price->PriceID }}</td>
                         <td>{{ $price->item->ItemName ?? $price->item->ItemCode ?? '-' }}</td>
                         <td>{{ $price->uom->Code ?? '-' }}</td>
-                        <td>{{ number_format($price->EstimatedPrice, 2) }}</td>
                         <td>{{ number_format($price->ActualPrice, 2) }}</td>
                         <td>{{ $price->CurrencyCode }}</td>
                         <td>{{ $price->EffectiveFrom ? \Carbon\Carbon::parse($price->EffectiveFrom)->format('Y-m-d') : '—' }}</td>
@@ -156,7 +150,7 @@
                     <input class="form-control" type="file" name="file" accept=".csv,.xlsx,.xls" required>
                 </div>
                 <div class="alert alert-info small">
-                    Ensure your file has headers: <code>ItemCode, UOMCode, EstimatedPrice, ActualPrice, EffectiveFrom, EffectiveTo,
+                    Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo,
                         Currency, IsDefault</code>
                     <br>
                     <a href="{{ asset('templates/price_upload_template.xlsx') }}" class="btn btn-sm btn-outline-primary mt-2">

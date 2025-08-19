@@ -7,6 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreItemCategoryRequest;
 use App\Http\Requests\Inventory\UpdateItemCategoryRequest;
 use App\Models\Inventory\ItemCategories;
+use App\Models\Core\CodeDetail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Services\Inventory\ItemCategoryService;
 
 class ItemCategoryController extends Controller
@@ -28,7 +32,10 @@ class ItemCategoryController extends Controller
     {
         $this->authorize('create', ItemCategories::class);
         $categories = ItemCategories::whereNull('ParentId')->get();
-        return view('inventory.itemmaster.itemcategory.create', compact('categories'));
+        $status = CodeDetail::where('CodeID', 'CategoryStatus')
+            ->orderBy('Value')
+            ->get();
+        return view('inventory.itemmaster.itemcategory.create', compact('categories', 'status'));
     }
 
     public function store(StoreItemCategoryRequest $request)
@@ -50,7 +57,10 @@ class ItemCategoryController extends Controller
         $category = ItemCategories::with('parent')->findOrFail($id);
         $this->authorize('update', $category);
         $categories = ItemCategories::whereNull('ParentId')->where('Id', '!=', $id)->get();
-        return view('inventory.itemmaster.itemcategory.edit', compact('category', 'categories'));
+        $status = CodeDetail::where('CodeID', 'CategoryStatus')
+            ->orderBy('Value')
+            ->get();
+        return view('inventory.itemmaster.itemcategory.edit', compact('category', 'categories', 'status'));
     }
 
     public function update(UpdateItemCategoryRequest $request, $id)
