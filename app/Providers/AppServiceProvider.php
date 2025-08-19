@@ -65,6 +65,7 @@ use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
+use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\BancassuranceCustomer;
@@ -72,6 +73,7 @@ use App\Models\Insurance\BancassuranceCustomerContact;
 use App\Models\Insurance\BancassuranceBeneficiaries;
 use App\Models\Insurance\BancassurancePremiumPayments;
 use App\Models\Insurance\BancassuranceCommissionRule;
+use App\Models\Insurance\BancassuranceUnderwriting;
 use App\Models\Insurance\InsuranceProvider;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProductRider;
@@ -123,12 +125,14 @@ use App\Policies\CrmBranchPolicy;
 use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\RepositoryPolicy;
+use App\Policies\Insurance\BancassuranceClaimPolicy;
 use App\Policies\Insurance\BancassurancePoliciesPolicy;
+use App\Policies\Insurance\BancassurancePremiumPaymentsPolicy;
 use App\Policies\Insurance\BancAssuranceReferralPolicy;
 use App\Policies\Insurance\BancassuranceCustomersPolicy;
 use App\Policies\Insurance\BancassuranceCustomersContactsPolicy;
 use App\Policies\Insurance\BancassuranceCustomersBeneficiariesPolicy;
-use App\Policies\Insurance\BancassurancePremiumPaymentsPolicy;
+use App\Policies\Insurance\BancassuranceUnderwritingPolicy;
 use App\Policies\Insurance\InsuranceProviderPolicy;
 use App\Policies\Insurance\InsuranceProductPolicy;
 use App\Policies\Insurance\InsuranceProductRiderPolicy;
@@ -165,7 +169,7 @@ use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
 use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
-Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
+Use App\Policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
@@ -325,6 +329,8 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
             BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
             BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
+            BancassuranceUnderwriting::getPrimaryKey() => BancassuranceUnderwriting::class,
+            BancassuranceClaim::getPrimaryKey() => BancassuranceClaim::class,
             InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
             InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,
             InsuranceProductRider::getPrimaryKey() => InsuranceProductRider::class,
@@ -394,6 +400,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BancassuranceCustomerContact::class, BancassuranceCustomersContactsPolicy::class);
         Gate::policy(BancassuranceBeneficiaries::class, BancassuranceCustomersBeneficiariesPolicy::class);
         Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
+        Gate::policy(BancassuranceUnderwriting::class,BancassuranceUnderwritingPolicy::class);
+        Gate::policy(BancassuranceClaim::class,BancassuranceClaimPolicy::class);
         Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
         Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
         Gate::policy(InsuranceProductRider::class, InsuranceProductRiderPolicy::class);

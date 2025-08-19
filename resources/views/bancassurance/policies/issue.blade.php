@@ -3,6 +3,7 @@
 
 @section('content')
 <div class="container mt-4">
+
     <h4>📄 Issue Policy: {{ $policy->PolicyNumber ?? 'Pending Number' }}</h4>
 
     <form action="{{ route('bancassurance.policies.storeIssuance', $policy->Id) }}" method="POST" enctype="multipart/form-data">

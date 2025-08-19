@@ -2,12 +2,15 @@
 
 namespace App\Services\Insurance;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 
 class BancassurancePolicyService
@@ -58,7 +61,7 @@ class BancassurancePolicyService
             'IssuedDate' => $IssuedDate,
             'ExpiryDate' => $ExpiryDate,
             'IsActive' => $IsActive,
-            'Status' => $Status,
+            'Status' => $Status->value,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
@@ -69,4 +72,32 @@ class BancassurancePolicyService
         return new self($policy);
     }
     
+
+
+    public static function uploadpolicy(
+        BancassurancePolicy $policy,
+        User $user,
+        UploadedFile $document = null
+    ): self {
+        if ($document) {
+        $policy->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::BancassurancePolicyView->value],
+            $user
+            );
+        }
+
+        // $policy->ModifiedBy = $user->Id;
+        // $policy->ModifiedOn = now();
+        // $policy->save();
+
+        activity()
+            ->causedBy($user->Id)
+            ->performedOn($policy)
+            ->event('update')
+            ->log("Document uploaded on Policy {$policy->Id}.");
+
+        return new self($policy);
+    }
 }

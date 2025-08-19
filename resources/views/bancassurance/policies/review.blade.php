@@ -25,11 +25,6 @@
             <input type="file" name="documents[]" class="form-control" multiple required>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Underwriter Email</label>
-            <input type="email" name="underwriter_email" class="form-control" placeholder="e.g., underwriting@provider.com" required>
-        </div>
-
         <div class="text-end">
             <button class="btn btn-primary">📤 Submit to Underwriter</button>
         </div>

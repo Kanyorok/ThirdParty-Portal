@@ -103,7 +103,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            {{-- <div class="col-md-4">
                 <label class="form-label">Policy Status</label>
                 <select name="Status" class="form-select" required>
                     <option value="">-- Select --</option>
@@ -113,7 +113,7 @@
                         </option>
                     @endforeach
                 </select>
-            </div>
+            </div> --}}
         </div>
         {{-- Dates --}}
         <div class="row mb-3">

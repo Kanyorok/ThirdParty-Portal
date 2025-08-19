@@ -27,33 +27,17 @@
             @forelse ($claims as $claim)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $claim->PolicyNumber }}</td>
-                <td>{{ $claim->ClaimType }}</td>
+                <td>{{ $claim->policy->PolicyNumber }}</td>
+                <td>{{ $claim->claimtype->Description }}</td>
                 <td>{{ $claim->ClaimReason }}</td>
                 <td>{{ number_format($claim->ClaimAmount, 2) }}</td>
-                <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d M Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d/m/Y') }}</td>
                 <td>
-                    <span class="badge 
-                        @if($claim->Status == 'Initiated') bg-warning
-                        @elseif($claim->Status == 'Under Assessment') bg-info
-                        @elseif($claim->Status == 'Approved') bg-success
-                        @elseif($claim->Status == 'Rejected') bg-danger
-                        @elseif($claim->Status == 'Paid') bg-primary
-                        @endif">
-                        {{ $claim->Status }}
+                    <span class="#">
+                        {{ $claim->status->Description}}
                     </span>
                 </td>
-                <td>
-                    @if($mode === 'assessment')
-                        <a href="{{ route('bancassurance.claims.assessForm', $claim->Id) }}" class="btn btn-sm btn-outline-info">
-                            📝 Assess
-                        </a>
-                    @else
-                        <a href="{{ route('bancassurance.claims.documents', $claim->Id) }}" class="btn btn-sm btn-outline-secondary">
-                            📂 Documents
-                        </a>
-                    @endif
-                </td>
+                <td><a href="{{ route('bancassurance.claims.assessForm', $claim->Id) }}" class="btn btn-sm btn-outline-info">Assess</a></td>
             </tr>
             @empty
             <tr>

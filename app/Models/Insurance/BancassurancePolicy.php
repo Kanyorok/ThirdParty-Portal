@@ -3,6 +3,7 @@
 namespace App\Models\Insurance;
 
 use App\Models\Core\CodeDetail;
+use App\Traits\Controller\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassurancePolicy extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
