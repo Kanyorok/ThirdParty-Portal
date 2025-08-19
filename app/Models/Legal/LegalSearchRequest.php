@@ -2,37 +2,41 @@
 
 namespace App\Models\Legal;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalSearchRequest extends Model
 {
-    use HasFactory;
+    use SoftDeletes, UserActorTrait;
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
 
     protected $table = 't_LegalSearchRequests';
-    protected $primaryKey = 'ID';
-    public $timestamps = false;
-
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'RequestType',
         'EntityName',
-        'EntityType',
-        'RegistrationNumber',
-        'Country',
+        // 'EntityType',
+        // 'RegistrationNumber',
+        // 'Country',
         'RequestedBy',
         'RequestDate',
         'Status',
+        // 'IsActive',
         'Remarks',
+        'Findings',
+        'ApprovalReason',
         'CreatedBy',
-        'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn',
-        'IsActive',
     ];
 
-    // Relationships (optional example)
-    public function requestedByUser()
+    public static function getPrimaryKey(): string
     {
-        return $this->belongsTo(\App\Models\User::class, 'RequestedBy');
+        return 'LegalSearchRequestsId';
     }
+    
 }

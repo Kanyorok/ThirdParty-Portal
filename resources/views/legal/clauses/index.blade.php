@@ -3,94 +3,67 @@
 
 @section('content')
 <div class="card p-4 shadow rounded-4">
-    <div class="d-flex justify-content-between mb-3">
-        <h4>🧾 Clause / Template Library</h4>
-        <a href="{{ route('legal.clauses.create') }}" class="btn btn-primary">➕ Add Clause</a>
+    <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-centre mb-3">
+        <h4 class="mb-0 text-info"><i class="fas fa-file-contract"></i> Clause / Template Library</h4>
+        <a href="{{ route('legal.clauses.create') }}" class="btn btn-info"><i class="fas fa-plus me-1"></i> Add Clause</a>
     </div>
-
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Version</th>
-                <th>Standard</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Quality Management Policy</td>
-                <td>Policy</td>
-                <td>1.0</td>
-                <td>ISO 9001</td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-primary">View</a>
-                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Environmental Safety Manual</td>
-                <td>Manual</td>
-                <td>2.3</td>
-                <td>ISO 14001</td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-primary">View</a>
-                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Information Security Procedure</td>
-                <td>Procedure</td>
-                <td>3.1</td>
-                <td>ISO 27001</td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-primary">View</a>
-                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Workplace Safety Checklist</td>
-                <td>Checklist</td>
-                <td>1.5</td>
-                <td>OSHA</td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-primary">View</a>
-                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Supplier Compliance Guidelines</td>
-                <td>Guideline</td>
-                <td>4.0</td>
-                <td>ISO 45001</td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-primary">View</a>
-                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
-
-            {{-- @foreach ($clauses as $clause)
+    <div class="card-body">
+        <p class="text-muted">Browse, manage, and update standard legal clauses and templates for quick inclusion in contracts and legal documents.</p>
+        <table class="table table-hover table-sm align-middle text-centre"
+            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            <thead>
                 <tr>
-                    <td>{{ $clause->Title }}</td>
-                    <td>{{ $clause->ClauseType }}</td>
-                    <td>{{ $clause->Version }}</td>
-                    <td>{{ $clause->IsStandard ? 'Yes' : 'No' }}</td>
-                    <td>
-                        <a href="{{ route('legal.clauses.edit', $clause->ID) }}" class="btn btn-sm btn-info">✏️ Edit</a>
-                        <form action="{{ route('legal.clauses.destroy', $clause->ID) }}" method="POST" style="display:inline;">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Archive this clause?')">🗑️ Archive</button>
-                        </form>
-                    </td>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Version</th>
+                    <th>Standard</th>
+                    <th>Actions</th>
                 </tr>
-            @endforeach --}}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if($clauses->count())
+                @foreach ($clauses as $clause)
+                    <tr>
+                        <td>{{ $clause->Title }}</td>
+                        <td>{{ $clause->ClauseType }}</td>
+                        <td>{{ $clause->Version }}</td>
+                        <td>
+                            @if($clause->IsStandard === 'Yes')
+                                <span class="badge bg-success">Yes</span>
+                            @else
+                                <span class="badge bg-secondary">No</span>
+                            @endif
+                        </td>
+                        <td>
+                            {{-- <a href="{{ route('legal.clauses.edit', $clause->ID) }}" class="btn btn-sm btn-info">✏️ Edit</a> --}}
+                            <a href="{{ route('legal.clauses.show', $clause->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                            <a href="{{ route('legal.clauses.edit', $clause->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                            <button type="button"
+                                class="btn btn-sm btn-danger custom-delete-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#customDeleteConfirmModal"
+                                data-name="{{$clause->Title}}"    {{-- Pass item name--}}
+                                data-route="{{ route('legal.clauses.destroy', $clause->Id) }}"> {{-- Pass delete route --}}
+                                <i  class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                @endforeach
+                @else
+                    <tr>
+                        <td colspan="5" class="p-0">
+                            <div class="text-centre p-4 border rounded-3 bg-light">
+                                <p class="mb-3 text-muted fs-5">
+                                    <i class="fas fa-info-circle me-2 text-info"></i>
+                                    <i>No Clauses Added.</i>
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+    </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection

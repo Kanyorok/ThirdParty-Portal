@@ -2,21 +2,44 @@
 
 namespace App\Models\Legal;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalCaseEvidence extends Model
 {
-    protected $table = 't_LegalCaseEvidence';
-    protected $primaryKey = 'ID';
-    public $timestamps = false;
+    use SoftDeletes, UserActorTrait;
 
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_LegalCaseEvidence';
+    protected $primaryKey = 'Id';
     protected $fillable = [
-        'LegalCaseID', 'EvidenceTitle', 'Description', 'DMSDocumentID',
-        'ExternalLink', 'UploadedBy', 'UploadedOn', 'IsActive'
+        'LegalCaseID',
+        'EvidenceTitle',
+        'Description',
+        'DMSDocumentID',
+        'ExternalLink',
+        'IsActive',
+        'UploadedBy',
+        'UploadedOn',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+        'DeletedOn',
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'LegalCaseEvidenceId';
+    }
 
     public function case()
     {
-        return $this->belongsTo(LegalCase::class, 'LegalCaseID');
+        return $this->belongsTo(LegalCase::class, 'LegalCaseID','Id');
     }
 }

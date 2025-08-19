@@ -2,102 +2,71 @@
 @section('title', 'Legal Case Registry')
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4>⚖️ Legal Case Registry</h4>
-        <a href="{{ route('legal.cases.create') }}" class="btn btn-primary">➕ New Legal Case</a>
+<div class="card p-4 shadow rounded-4 border-0 mb-0">
+    <div class="card-header bg-light px-3 py-2 d-flex justify-content-between align-items-center mb-4">
+        <h4 class="text-info mb-0"><i class="fas fa-balance-scale"></i> Legal Case Registry</h4>
+        <a href="{{ route('legal.cases.create') }}" class="btn btn-info"><i class="fas fa-plus me-1"></i> New Legal Case</a>
     </div>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Case Title</th>
-                <th>Court</th>
-                <th>Filing Date</th>
-                <th>Opposing Party</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-    <tr>
-        <td>ABC Corp vs XYZ Ltd</td>
-        <td>High Court</td>
-        <td>2023-04-15</td>
-        <td>XYZ Ltd</td>
-        <td>Ongoing</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-    <tr>
-        <td>John Doe vs Jane Smith</td>
-        <td>Supreme Court</td>
-        <td>2022-11-10</td>
-        <td>Jane Smith</td>
-        <td>Closed</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-    <tr>
-        <td>County of Nairobi vs Alpha Contractors</td>
-        <td>Commercial Court</td>
-        <td>2024-02-28</td>
-        <td>Alpha Contractors</td>
-        <td>Pending</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-    <tr>
-        <td>Mary Wanjiku vs Green Estates Ltd</td>
-        <td>Environment & Land Court</td>
-        <td>2023-07-19</td>
-        <td>Green Estates Ltd</td>
-        <td>Ongoing</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
-    <tr>
-        <td>Peter Kamau vs National Transport Authority</td>
-        <td>Administrative Court</td>
-        <td>2024-05-09</td>
-        <td>National Transport Authority</td>
-        <td>Appeal Filed</td>
-        <td>
-            <a href="#" class="btn btn-sm btn-primary">View</a>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-        </td>
-    </tr>
+    <div class="card-body">
+        <p class="text-muted">A centralized record of all legal cases, their details, and statuses.</p>
+         @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
-            {{-- @forelse($cases as $case)
+        <table class="table table-hover table-sm align-middle text-centre"
+            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+            <thead>
                 <tr>
-                    <td>{{ $case->CaseTitle }}</td>
-                    <td>{{ $case->CourtName }}</td>
-                    <td>{{ \Carbon\Carbon::parse($case->FilingDate)->format('d M Y') }}</td>
-                    <td>{{ $case->OpposingParty }}</td>
-                    <td>{{ $case->Status }}</td>
-                    <td>
-                        <a href="{{ route('legal.cases.show', $case->ID) }}" class="btn btn-sm btn-info">View</a>
-                        <a href="{{ route('legal.cases.edit', $case->ID) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{{ route('legal.cases.evidence.index', $case->ID) }}" class="btn btn-sm btn-dark">📂 Evidence</a>
-                    </td>
+                    <th>Case Title</th>
+                    <th>Court</th>
+                    <th>Filing Date</th>
+                    <th>Opposing Party</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
-            @empty
-                <tr><td colspan="6">No cases found.</td></tr>
-            @endforelse --}}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if($cases->count())
+                @foreach($cases as $case)
+                    <tr>
+                        <td>{{ $case->CaseTitle }}</td>
+                        <td>{{ $case->CourtName }}</td>
+                        <td>{{ \Carbon\Carbon::parse($case->FilingDate)->format('d m Y') }}</td>
+                        <td>{{ $case->OpposingParty }}</td>
+                        <td>{{ $case->Status }}</td>
+                        <td>
+                            <a href="{{ route('legal.cases.evidence.index', $case->Id) }}" class="btn btn-sm btn-dark">📂 Evidence</a>
+                            <a href="{{ route('legal.cases.show', $case->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                            <a href="{{ route('legal.cases.edit', $case->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                            <button type="button"
+                                class="btn btn-sm btn-danger custom-delete-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#customDeleteConfirmModal"
+                                data-name="{{$case->CaseTitle}}"    {{-- Pass item name --}}
+                                data-route="{{ route('taxruleconfig.destroy', $case->Id) }}">
+                                <i  class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                @endforeach
+                @else
+                    <tr>
+                        <td colspan="6" class="p-0">
+                            <div class="text-centre p-4 border rounded-3 bg-light">
+                                <p class="mb-3 text-muted fs-5">
+                                    <i class="fas fa-info-circle me-2 text-info"></i>
+                                    <i>No cases found.</i>
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+    </div>
 </div>
 @endsection
