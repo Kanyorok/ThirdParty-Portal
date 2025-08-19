@@ -506,6 +506,12 @@ enum PermissionEnum: string
     case InsuranceClaimClosureUpdate = 'insuranceclaimclosure-update';
     case InsuranceClaimClosureDelete = 'insuranceclaimclosure-delete';
 
+    // Commission Rule
+    case CommissionRuleView = 'commissionruleview';
+    case CommissionRuleCreate = 'commissionrulecreate';
+    case CommissionRuleUpdate = 'commissionruleupdate';
+    case CommissionRuleDelete = 'commissionruledelete';
+
 
 
 
@@ -675,6 +681,7 @@ enum PermissionEnum: string
             [self::InsuranceProductRiderView,self::InsuranceProductRiderCreate,self::InsuranceProductRiderUpdate,self::InsuranceProductRiderDelete],            
             [self::InsurancePricingRuleView,self::InsurancePricingRuleCreate,self::InsurancePricingRuleUpdate,self::InsurancePricingRuleDelete], 
             [self::InsuranceClaimClosureView,self::InsuranceClaimClosureCreate,self::InsuranceClaimClosureUpdate,self::InsuranceClaimClosureDelete],
+            [self::CommissionRuleView,self::CommissionRuleCreate,self::CommissionRuleUpdate,self::CommissionRuleDelete],
             
         ]);
     }
@@ -784,6 +791,7 @@ enum PermissionEnum: string
             self::BancassuranceClaimView,self::BancassuranceClaimUpdate,self::BancassuranceClaimCreate,self::BancassuranceClaimDelete,
             self::BancassurancePaymentView,self::BancassurancePaymentCreate,self::BancassurancePaymentDelete,self::BancassurancePaymentUpdate,
             self::InsuranceClaimClosureView,self::InsuranceClaimClosureCreate,self::InsuranceClaimClosureUpdate,self::InsuranceClaimClosureDelete,
+            self::CommissionRuleView,self::CommissionRuleCreate,self::CommissionRuleUpdate,self::CommissionRuleDelete
             =>ModulesEnum::Insurance,
 
 

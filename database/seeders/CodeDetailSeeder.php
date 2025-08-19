@@ -292,6 +292,30 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimStatus','Description' => 'Rejected', 'Value' => 'R'],
             ['CodeID' => 'ClaimStatus','Description' => 'Paid', 'Value' => 'P'],
 
+            // PolicyTypeId
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Life Insurance', 'Value' => 'L'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Motor Insurance', 'Value' => 'B'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Property Insurance', 'Value' => 'P'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Travel Insurance', 'Value' => 'T'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Personal Accident Insurance', 'Value' => 'A'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Business Interruption Insurance', 'Value' => 'I'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Marine Cargo Insurance', 'Value' => 'M'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Health Insurance', 'Value' => 'H'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Education Policy', 'Value' => 'E'],
+
+
+            // AppliesTo
+            ['CodeID' => 'AppliesTo', 'Description' => 'AppliesTo', 'Value' => 'J'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Vehicle', 'Value' => 'B'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Jubilee', 'Value' => 'J'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Britam', 'Value' => 'B'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'CIC Insurance', 'Value' => 'C'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Individual ', 'Value' => 'I'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Corporate ', 'Value' => 'C'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Government ', 'Value' => 'G'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Spouse ', 'Value' => 'S'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Child ', 'Value' => 'C'],
+
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],

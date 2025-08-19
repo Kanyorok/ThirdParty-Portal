@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">👤 New Customer Profile & KYC</h4>
+    <h4 class="mb-3">👤 New Customer Profile </h4>
 
     <form method="POST" action="{{ route('bancassurance.customers.store') }}"enctype="multipart/form-data">
         @csrf

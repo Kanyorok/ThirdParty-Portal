@@ -150,6 +150,9 @@ Route::prefix('commissions/rules')->name('commissions.rules.')->group(function (
     Route::get('/', [CommissionRuleController::class, 'index'])->name('index');
     Route::get('create', [CommissionRuleController::class, 'create'])->name('create');
     Route::post('store', [CommissionRuleController::class, 'store'])->name('store');
+    Route::get('{Id}/edit', [CommissionRuleController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [CommissionRuleController::class, 'update'])->name('update');
+    Route::delete('{Id}/destroy', [CommissionRuleController::class, 'destroy'])->name('destroy');
 });
 
 Route::prefix('commissions/tiers')->name('bancassurance.commissions.tiers.')->group(function () {
