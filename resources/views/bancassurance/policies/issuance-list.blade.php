@@ -23,11 +23,11 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $policy->PolicyNumber ?? '—' }}</td>
-                <td>{{ $policy->CustomerName }}</td>
-                <td>{{ $policy->ProductName }}</td>
-                <td>{{ $policy->InsurerName }}</td>
-                <td>{{ $policy->Status }}</td>
-                <td>{{ \Carbon\Carbon::parse($policy->CreatedAt)->format('d M Y') }}</td>
+                <td>{{ $policy->customer->FullName }}</td>
+                <td>{{ $policy->product->Description }}</td>
+                <td>{{ $policy->insurer->Description }}</td>
+                <td>{{ $policy->Status->label() }}</td>
+                <td>{{ \Carbon\Carbon::parse($policy->CreatedAt)->format('d/m/Y') }}</td>
                 <td>
                     <a href="{{ route('bancassurance.policies.issueForm', $policy->Id) }}"
                        class="btn btn-sm btn-success">✅ Issue Now</a>

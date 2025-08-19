@@ -20,7 +20,26 @@ use Illuminate\Support\Facades\DB;
 
 class PolicyController extends Controller
 {
-    //
+    // Policy Proposal
+public function index(Request $request)
+{
+    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
+    $statuses = InsurancePolicyStatus::cases();
+
+    $query = BancassurancePolicy::with(['customer', 'product', 'insurer'])
+        ->when($request->status, fn($q) => $q->where('Status', $request->status))
+        ->when($request->from, fn($q) => $q->whereDate('PolicyStartDate', '>=', $request->from))
+        ->when($request->to, fn($q) => $q->whereDate('PolicyEndDate', '<=', $request->to))
+        ->when($request->customer, function ($q) use ($request) {
+            $q->whereHas('customer', fn($q2) =>
+                $q2->where('FullName', 'like', '%' . $request->customer . '%'));
+        })
+        ->orderByDesc('Id')
+        ->get();
+
+    return view('bancassurance.policies.index', compact('query', 'statuses'))->with(['policies' => $query]);
+}
+
 public function create(Request $request)
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
@@ -45,7 +64,7 @@ public function store(BancassurancePolicyRequest $request)
     $ProductId = CodeDetail::findOrFail($validated['ProductID'] ?? null);
     $InsurerId = CodeDetail::findOrFail($validated['InsurerID'] ?? null);
     $Paymentfrquency = CodeDetail::findOrFail($validated['PaymentFrequency'] ?? null);
-    $Status = InsurancePolicyStatus::from($validated['Status']);
+    $Status = InsurancePolicyStatus::Proposal;
 
 
    $policy = BancassurancePolicyService::create(
@@ -65,7 +84,7 @@ public function store(BancassurancePolicyRequest $request)
         $request->user(),
     );
 
-    // Optional: Update referral status
+    //Optional: Update referral status
     if (
         $request->filled('ReferralID') &&
         in_array($Status, [InsurancePolicyStatus::Issued])
@@ -80,62 +99,10 @@ public function store(BancassurancePolicyRequest $request)
     return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
 }
 
-public function index(Request $request)
-{
-    $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
-    $statuses = InsurancePolicyStatus::cases();
-
-    $query = BancassurancePolicy::with(['customer', 'product', 'insurer'])
-        ->when($request->status, fn($q) => $q->where('Status', $request->status))
-        ->when($request->from, fn($q) => $q->whereDate('PolicyStartDate', '>=', $request->from))
-        ->when($request->to, fn($q) => $q->whereDate('PolicyEndDate', '<=', $request->to))
-        ->when($request->customer, function ($q) use ($request) {
-            $q->whereHas('customer', fn($q2) =>
-                $q2->where('FullName', 'like', '%' . $request->customer . '%'));
-        })
-        ->orderByDesc('Id')
-        ->get();
-
-    return view('bancassurance.policies.index', compact('query', 'statuses'))->with(['policies' => $query]);
-}
 
 
 
-public function submitForUnderwriting(Request $request, $id)
-{
-    $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
-    $request = $request->validate([
-        'Document' => 'nullable|file|max:2048'
-    ]);
-
-    $document = $request->file('Document');
-
-    $PolicyId = DB::table('t_BancassurancePolicies')->where('Id', $id)->first();
-
-    if (!$PolicyId) {
-        return redirect()->back()->with('error', 'Policy not found.');
-    }
-
-    // Upload files and save paths
-    $upload = BancassurancePolicyService::uploadpolicy(
-        $PolicyId,
-        $request->user(),
-        $document
-    );
-
-    // Send email to underwriter
-
-    // Update policy status
-    DB::table('t_BancassurancePolicies')->where('Id', $id)->update([
-        'Status' => InsurancePolicyStatus::SubmittedForUnderwriting->value,
-        'ModifiedBy' => auth()->id(),
-        'ModifiedOn' => now()
-    ]);
-
-    return redirect()->route('bancassurance.policies.index')->with('success', 'Proposal submitted to underwriter.');
-}
-
-
+//Proposal Review
 public function reviewIndex()
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
@@ -156,6 +123,43 @@ public function review($id)
     
     return view('bancassurance.policies.review', compact('policy'));
 }
+public function submitForUnderwriting(Request $request, $id)
+{
+    $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
+
+    $validated = $request->validate([
+        'Document' => 'nullable|file|max:2048'
+    ]);
+
+    $document = $request->file('Document');
+
+    // Get policy as Eloquent model
+    $policy = BancassurancePolicy::find($id);
+
+    if (!$policy) {
+        return redirect()->back()->with('error', 'Policy not found.');
+    }
+
+    // Upload file + update ModifiedBy
+    $upload = BancassurancePolicyService::uploadpolicy(
+        $policy,
+        $request->user(),
+        $document
+    );
+
+    // Update policy status
+    $policy->update([
+        'Status'     => InsurancePolicyStatus::SubmittedForUnderwriting->value,
+        'ModifiedBy' => auth()->id(),
+        'ModifiedOn' => now()
+    ]);
+
+    return redirect()->route('bancassurance.policies.index')
+        ->with('success', 'Proposal submitted to underwriter.');
+}
+
+
+
 
 
 // Show the feedback form
@@ -225,11 +229,11 @@ public function storeFeedback(BancassuranceUnderwritingRequest $request, $id)
     // Update policy status based on decision
     if ($Decision->Description === 'Approved') {
         $Policy->update([
-            'Status'     => InsurancePolicyStatus::Issued->value,
+            'Status'     => InsurancePolicyStatus::AwaitingIssuance->value,
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now()
         ]);
-    } elseif ($Decision->Description === 'Rejected') {
+    } elseif ($Decision->Description === 'Decline') {
         $Policy->update([
             'Status'     => InsurancePolicyStatus::Rejected->value,
             'ModifiedBy' => auth()->id(),
@@ -252,57 +256,54 @@ public function feedbackList()
     return view('bancassurance.policies.feedback-list', compact('proposals'));
 }
 
-// Show issuance form
-// public function issueForm($id)
-// {
-//     $policy = DB::table('t_BancassurancePolicies as p')
-//         ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-//         ->select('p.*', 'c.FullName as CustomerName')
-//         ->where('p.Id', $id)
-//         ->first();
-
-//     if (!$policy || $policy->Status !== 'ApprovedForIssuance') {
-//         return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not eligible for issuance.');
-//     }
-
-//     return view('bancassurance.policies.issue', compact('policy'));
-// }
-
-// // Store issuance details
-// public function storeIssuance(Request $request, $id)
-// {
-//     $request->validate([
-//         'IssuedDate' => 'required|date',
-//         'ExpiryDate' => 'required|date|after:IssuedDate',
-//         'PolicyNumber' => 'required|string|max:50',
-//         'PolicyDocument' => 'nullable|file|mimes:pdf,doc,docx|max:2048'
-//     ]);
-
-//     $filePath = null;
-//     if ($request->hasFile('PolicyDocument')) {
-//         $filePath = $request->file('PolicyDocument')->store('policies', 'public');
-//     }
-
-//     DB::table('t_BancassurancePolicies')->where('Id', $id)->update([
-//         'PolicyNumber' => $request->PolicyNumber,
-//         'IssuedDate' => $request->IssuedDate,
-//         'ExpiryDate' => $request->ExpiryDate,
-//         'PolicyDocumentPath' => $filePath,
-//         'IsIssued' => 1,
-//         'Status' => 'Issued',
-//         'ModifiedBy' => auth()->id(),
-//         'ModifiedOn' => now()
-//     ]);
-
-//     return redirect()->route('bancassurance.policies.index')->with('success', 'Policy issued successfully.');
-// }
+//Issue Policy
 public function issuanceList()
 {
     $policies = BancassurancePolicy::with(['customer','insurer','product'])
-    ->where('Status', InsurancePolicyStatus::Issued->value)
+    ->where('Status', InsurancePolicyStatus::AwaitingIssuance->value)
     ->get();
 
     return view('bancassurance.policies.issuance-list', compact('policies'));
+}
+
+
+public function issueForm($id)
+{
+    $policy = BancassurancePolicy::where('Id', $id)
+        ->where('Status', InsurancePolicyStatus::AwaitingIssuance->value)
+        ->firstOrFail();
+
+    return view('bancassurance.policies.issue', compact('policy'));
+}
+
+
+// Store issuance details
+public function storeIssuance(Request $request, $id)
+{
+    $request->validate([
+        'IssuedDate' => 'required|date',
+        'ExpiryDate' => 'required|date|after:IssuedDate',
+        'PolicyNumber' => 'required|string|max:50',
+        'PolicyDocument' => 'nullable|file|mimes:pdf,doc,docx|max:2048'
+    ]);
+
+    $filePath = null;
+    if ($request->hasFile('PolicyDocument')) {
+        $filePath = $request->file('PolicyDocument')->store('policies', 'public');
+    }
+
+    DB::table('t_BancassurancePolicies')->where('Id', $id)->update([
+        'PolicyNumber' => $request->PolicyNumber,
+        'IssuedDate' => $request->IssuedDate,
+        'ExpiryDate' => $request->ExpiryDate,
+        'PolicyDocumentPath' => $filePath,
+        'IsIssued' => 1,
+        'Status' => 'Issued',
+        'ModifiedBy' => auth()->id(),
+        'ModifiedOn' => now()
+    ]);
+
+    return redirect()->route('bancassurance.policies.index')->with('success', 'Policy issued successfully.');
 }
 
 
