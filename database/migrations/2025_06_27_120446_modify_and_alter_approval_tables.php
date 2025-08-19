@@ -63,6 +63,7 @@ return new class extends Migration {
             $table->foreignId('WorkFlowLimitId')->nullable()->constrained('t_WorkFlowLimits', 'Id');
             $table->foreignId('PermissionId')->nullable()->constrained('t_Permissions', 'id');
             $table->integer('Count')->default(0);
+            $table->foreignId('StatusId')->constrained('t_CodeDetails', 'ID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->timestamp('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -75,6 +76,8 @@ return new class extends Migration {
             $table->id('Id');
             $table->string("Source")->comment('PrimaryKey');
             $table->string("SourceID", 100);
+            $table->string("Stage", 200);
+            $table->decimal('Amount', 20, 4)->nullable();
             $table->longText('Notes')->nullable();
             $table->foreignId('StatusId')->constrained('t_CodeDetails', 'ID');//todo add submitted default for this
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
