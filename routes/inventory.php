@@ -136,7 +136,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/uomconversion/{Id}', [UOMConversionController::class, 'update'])->name('uomconversion.update');
     Route::delete('/uomconversion/{Id}', [UOMConversionController::class, 'destroy'])->name('uomconversion.destroy');
 
-
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
     //Route::resource('interbranchrequisition', InterBranchRequisitionController::class);
