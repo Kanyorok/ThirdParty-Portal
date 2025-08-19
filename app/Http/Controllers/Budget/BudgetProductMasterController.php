@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Budget;
 
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetGLMaster;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use Illuminate\Http\Request;
@@ -19,8 +20,8 @@ class BudgetProductMasterController extends Controller
             $data[] = [
                 'Code' => $p->ProductTypeID,
                 'Name' => $p->Description,
-                'Type' => BudgetProductType::find($p->CBSProductID)->Name,
-                'GLCode' => BudgetGLAccount::find($p->GLAccountID)->GTType,
+                'Type' => BudgetProductType::where('ProductCode',$p->ProductTypeID)->pluck('Name')->first(),
+                'GLCode' => BudgetGLMaster::where('AccountID',$p->GLAccountID)->pluck('GLAccountTypeID')->first(),
             ];
         }
         return view('budgetandanalytics.productmaster.index', compact('data'));

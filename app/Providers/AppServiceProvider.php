@@ -357,6 +357,19 @@ class AppServiceProvider extends ServiceProvider
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
 
+            PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
+            PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
+            PropertyFloor::getPrimaryKey() => PropertyFloor::class,
+            PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
+            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
+            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
+            PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
+            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
+            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
+
               //Fleet Management
             FleetMake::getPrimaryKey() => FleetMake::class,
             FleetModel::getPrimaryKey() => FleetModel::class,

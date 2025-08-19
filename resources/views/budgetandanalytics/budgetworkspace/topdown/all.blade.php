@@ -1,53 +1,64 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'General Ledger Entries')
 @section('content')
-    <div class="container mt-4">
-        <!-- Alert Popup -->
+    <div class="container mt-3">
         <div id="edit-alert" class="alert alert-info alert-dismissible fade show" role="alert"
              style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1050;">
             Editing in progress...
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-        <!-- Budget Summary -->
-        <div class="row mb-3 g-2">
-            @php
-                $budget = $budgets->where('Id', $budgetId)->first();
-                $branch = $branches->where('Id', $branchId)->first();
-            @endphp
-            <div class="col-md-6">
-                <label class="form-label fw-medium">Budget</label>
-                <div class="border rounded p-2 bg-light">
-                    <span class="fw-bold">{{ $budget ? $budget->Name : 'N/A' }}</span>
-                    <span>({{ $budget ? $budget->From . ' to ' . $budget->To : 'N/A' }})</span>
-                </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <button type="button" class="btn btn-primary btn-sm" id="toggle-edit">
+                <i class="fas fa-edit me-1"></i> Enable Edit
+            </button>
+            <div class="d-flex align-items-center">
+                <span class="text-muted fs-6 me-2" id="save-status">Saved</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="undo-btn" disabled>
+                    <i class="fas fa-undo me-1"></i> Undo
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="redo-btn" disabled>
+                    <i class="fas fa-redo me-1"></i> Redo
+                </button>
             </div>
-            <div class="col-md-6">
-                <label class="form-label fw-medium">Branch</label>
-                <div class="border rounded p-2 bg-light">
-                    <span class="fw-bold">{{ $branch ? $branch->Name : 'N/A' }}</span>
-                </div>
-            </div>
-            {{-- <div class="col-md-3">
-                <label class="form-label fw-medium">Frequency</label>
-                <div class="border rounded p-2 bg-light">
-                    <span class="fw-bold">Monthly</span>
-                </div>
-            </div> --}}
         </div>
 
-        <form method="POST" action="{{ route('topdownallocation.store') }}">
+        <form method="POST" action="{{ route('topdownallocation.update',$budgetId) }}" id="budget-form">
             @csrf
-            @method('POST')
-            <input type="hidden" name="branchId" value="{{ $branchId }}">
+            @method('PATCH')
             <input type="hidden" name="budgetId" value="{{ $budgetId }}">
-            <input type="hidden" name="format" value="m">
+            <input type="hidden" name="BudgetID" value="{{ $budgetId }}">
+            <div class="row mb-3 g-2">
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Budget</label>
+                    <select class="form-select form-select-sm" name="BudgetID" required disabled>
+                        <option selected disabled>-- Select Budget --</option>
+                        @foreach ($budgets as $item)
+                            <option
+                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }} :
+                                {{ Carbon::parse($item->From)->format('Y-m-d') }}
+                                to  {{ Carbon::parse($item->To)->format('Y-m-d') }} </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium"> Branch</label>
+                    <select class="form-select form-select-sm" name="BranchID" required disabled>
+                        <option selected disabled>All</option>
+                    </select>
+                </div>
+                {{--                <div class="col-md-4">--}}
+                {{--                    <label class="form-label fw-medium">Select Format</label>--}}
+                {{--                    <select class="form-select form-select-sm" id="format" name="format" disabled>--}}
+                {{--                        <option value="m" selected>Monthly</option>--}}
+                {{--                    </select>--}}
+                {{--                </div>--}}
+            </div>
 
-            <!-- MONTHLY FORMAT -->
             <div id="monthly_form" class="table-responsive mb-3">
-                <div style="overflow-x: auto; overflow-y: auto; max-height: 600px; position: relative;">
-                    <table class="table table-bordered table-striped table-sm" id="budget-table"
-                           style="min-width: 1600px;">
+                <div style="overflow-x: auto; overflow-y: auto; max-height: 500px; position: relative;">
+                    <table class="table table-bordered table-striped table-sm" id="budget-table">
                         <thead class="table-light text-center">
                         <tr style="position: sticky; top: 0; background: #f8f9fa; z-index: 10; box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);">
                             <th style="position: sticky; left: 0; background: #f8f9fa; z-index: 11; min-width: 100px; max-width: 100px;">
@@ -57,16 +68,15 @@
                                 Budget Line
                             </th>
                             @for ($m = 1; $m <= 12; $m++)
-                                <th style="min-width: 120px;">Month {{ $m }}</th>
+                                <th style="min-width: 100px;">Month {{ $m }}</th>
                             @endfor
                             <th style="min-width: 120px;">Budget 2025</th>
                             <th style="min-width: 120px;">Actuals Dec 2024</th>
-                            <th style="min-width: 110px;">% Change</th>
+                            <th style="min-width: 100px;">% Change</th>
                         </tr>
                         </thead>
                         <tbody>
                         @php
-                            // Group accounts by GLAccountTypeID
                             $groupedAccounts = $glsMaster->groupBy('GLAccountTypeID');
                             $accountTypes = ['A' => 'Assets', 'L' => 'Liabilities', 'E' => 'Expenses', 'I' => 'Income'];
                         @endphp
@@ -77,30 +87,29 @@
                                 </tr>
                                 @foreach ($groupedAccounts[$typeId] as $item)
                                     <tr data-account-id="{{ $item->AccountID }}"
-                                        data-account-type="{{ $item->GLAccountTypeID ?? 'NA' }}">
+                                        data-account-type="{{ $item->GLAccountTypeID }}">
                                         <td style="position: sticky; left: 0; background: #fff; z-index: 9; min-width: 100px; max-width: 100px;">
                                             {{ $item->AccountID }}
                                         </td>
-                                        <td style="position: sticky; left: 100px; background: #fff; z-index: 9; min-width: 200px; max-width: 200px; text-wrap: wrap; overflow: hidden; text-overflow: ellipsis;"
+                                        <td style="position: sticky; left: 100px; background: #fff; min-width: 200px; max-width: 200px; text-wrap: wrap; overflow: hidden; text-overflow: ellipsis;"
                                             title="{{ $item->Description }}">
-                                            {{ $item->Description }} <b>({{ $item->GLAccountTypeID ?? 'NA' }})</b>
+                                            {{ $item->Description }} <b>({{ $item->GLAccountTypeID }})</b>
                                         </td>
-                                        <input type="hidden" name="gl_data[{{ $item->AccountID }}][Description]"
-                                               value="{{ $item->Description }}">
-                                        <input type="hidden" name="gl_data[{{ $item->AccountID }}][AttachID]"
-                                               value="{{ $item->Id }}">
-                                        <input type="hidden" name="gl_data[{{ $item->AccountID }}][GLAccountTypeID]"
-                                               value="{{ $item->GLAccountTypeID ?? 'NA' }}">
                                         @for ($m = 1; $m <= 12; $m++)
+                                            @php
+                                                $monthKey = 'Month' . $m;
+                                                $value = $item->$monthKey ?? 0;
+                                            @endphp
                                             <td>
                                                 <input type="text"
                                                        name="monthly_allocations[{{ $item->AccountID }}][{{ $m }}]"
                                                        class="form-control form-control-sm text-end monthly-input"
                                                        placeholder="0.00"
-                                                       data-val="0"
-                                                       value=""
+                                                       data-val="{{ $value }}"
+                                                       value="{{ $value > 0 ? number_format($value, 0) : '' }}"
                                                        inputmode="numeric"
-                                                       style="width: 120px; padding: 2px 5px;"/>
+                                                       disabled
+                                                       style="width: 100px; padding: 2px 5px;"/>
                                             </td>
                                         @endfor
                                         <td>
@@ -113,13 +122,13 @@
                                         <td>
                                             <input class="form-control form-control-sm text-end"
                                                    style="width: 120px; padding: 2px 5px;"
-                                                   value="{{ $item->ActualsDec2024 ?? 0.00 }}"
+                                                   value="{{ number_format($item->Actuals) ?? 0.00 }}"
                                                    readonly/>
                                         </td>
                                         <td>
                                             <input class="form-control form-control-sm text-end percent-change"
-                                                   style="width: 110px; padding: 2px 5px;"
-                                                   value="{{ $item->PercentChange ?? '0.00%' }}"
+                                                   style="width: 100px; padding: 2px 5px;"
+                                                   value="{{ number_format($item->PercentageChange).'%' ?? '0.00%' }}"
                                                    readonly/>
                                         </td>
                                     </tr>
@@ -129,7 +138,6 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- Totals and Metrics Row -->
                 <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-3">
                     <button type="submit" class="btn btn-success btn-sm" id="submit-btn"
                             onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
@@ -154,39 +162,61 @@
                         <div class="border rounded p-2 bg-info text-white">
                             <span class="fw-bold">Variance:</span> <span id="variance" class="fw-bold">0</span>
                         </div>
-{{--                        <div class="border rounded p-2 bg-warning">--}}
-{{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
-{{--                                                                           class="fw-bold">0.00%</span>--}}
-{{--                        </div>--}}
+                        {{--                        <div class="border rounded p-2 bg-warning">--}}
+                        {{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
+                        {{--                                                                           class="fw-bold">0.00%</span>--}}
+                        {{--                        </div>--}}
                     </div>
                 </div>
             </div>
         </form>
-    </div>
 
-    <!-- Context Menu -->
-    <div id="context-menu" class="dropdown-menu" style="position: absolute; display: none; z-index: 1000;">
-        <a class="dropdown-item" href="#" id="clear-row">Clear Row</a>
+        <div id="context-menu" class="dropdown-menu" style="position: absolute; display: none; z-index: 1000;">
+            <a class="dropdown-item" href="#" id="clear-row">Clear Row</a>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const table = document.getElementById('budget-table');
+            const toggle = document.getElementById('toggle-edit');
+            const undo = document.getElementById('undo-btn');
+            const redo = document.getElementById('redo-btn');
+            const saveStatus = document.getElementById('save-status');
             const submitBtn = document.getElementById('submit-btn');
             const editAlert = document.getElementById('edit-alert');
+            let edit = false;
+            let history = [];
+            let redoStack = [];
             let hasEdited = false;
 
-            // Number formatting
             const formatNumber = (num) => {
                 return num.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             };
 
-            // Parse formatted number
             const parseNumber = (str) => {
                 return parseFloat(str.replace(/,/g, '')) || 0;
             };
 
-            // Calculate row total
+            function capture() {
+                const snapshot = Array.from(table.querySelectorAll('.monthly-input'))
+                    .map(el => el.dataset.val);
+                history.push(snapshot);
+                if (history.length > 50) history.shift();
+                redoStack = [];
+                undo.disabled = false;
+                redo.disabled = true;
+            }
+
+            function restore(snapshot) {
+                const inputs = table.querySelectorAll('.monthly-input');
+                inputs.forEach((el, i) => {
+                    el.dataset.val = snapshot[i] || '0';
+                    el.value = snapshot[i] && snapshot[i] !== '0' ? formatNumber(parseFloat(snapshot[i])) : '';
+                });
+                recalcAll();
+            }
+
             function recalcRow(row) {
                 let sum = 0;
                 row.querySelectorAll('.monthly-input').forEach(el => {
@@ -196,39 +226,45 @@
                 row.querySelector('.total-input').value = formatNumber(sum);
             }
 
-            // Calculate category totals, net position, variance, and percentage variance
             function recalcAll() {
                 const categoryTotals = {'A': 0, 'L': 0, 'E': 0, 'I': 0};
                 table.querySelectorAll('tbody tr[data-account-type]').forEach(row => {
                     recalcRow(row);
                     const total = parseNumber(row.querySelector('.total-input').value);
                     const accountType = row.dataset.accountType;
-                    if (categoryTotals[accountType] !== undefined) {
-                        categoryTotals[accountType] += total;
-                    }
+                    categoryTotals[accountType] += total;
                 });
 
-                // Update category totals
                 document.getElementById('category-a').textContent = formatNumber(categoryTotals['A']);
                 document.getElementById('category-l').textContent = formatNumber(categoryTotals['L']);
                 document.getElementById('category-e').textContent = formatNumber(categoryTotals['E']);
                 document.getElementById('category-i').textContent = formatNumber(categoryTotals['I']);
 
-                // Calculate Net Position (A + E - L - I)
                 const netPosition = categoryTotals['A'] + categoryTotals['E'] - categoryTotals['L'] - categoryTotals['I'];
                 document.getElementById('net-position').textContent = formatNumber(netPosition);
 
-                // Calculate Variance and Percentage Variance
-                const actuals = 0; // Hardcoded from Actuals Dec 2024
-                const variance = actuals - netPosition; // Actual - Budget Total (Net Position)
+                const actuals = 4000000;
+                const variance = actuals - netPosition;
                 const percentVariance = actuals !== 0 ? ((variance / actuals) * 100).toFixed(2) : 0;
                 document.getElementById('variance').textContent = formatNumber(variance);
                 document.getElementById('percent-variance').textContent = `${percentVariance}%`;
             }
 
-            // Input handling
+            toggle.onclick = () => {
+                edit = !edit;
+                toggle.innerHTML = edit
+                    ? '<i class="fas fa-lock me-1"></i> Editing in Progress'
+                    : '<i class="fas fa-edit me-1"></i> Enable Edit';
+                toggle.classList.toggle('btn-primary', !edit);
+                toggle.classList.toggle('btn-warning', edit);
+                table.querySelectorAll('.monthly-input').forEach(el => el.disabled = !edit);
+                submitBtn.style.display = edit ? 'block' : 'none';
+                if (edit && history.length === 0) capture();
+            };
+
             table.querySelectorAll('.monthly-input').forEach(el => {
                 el.addEventListener('input', () => {
+                    if (!edit) return;
                     if (!hasEdited) {
                         editAlert.style.display = 'block';
                         setTimeout(() => {
@@ -251,6 +287,7 @@
                         el.dataset.val = '0';
                         el.value = '';
                     }
+                    capture();
                     recalcAll();
                 });
                 el.addEventListener('focus', () => {
@@ -263,7 +300,7 @@
                     el.value = rawValue !== '0' ? formatNumber(parseFloat(rawValue)) : '';
                 });
                 el.addEventListener('keydown', (e) => {
-                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                    if (edit && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                         e.preventDefault();
                         const inputs = Array.from(table.querySelectorAll('.monthly-input'));
                         const currentIndex = inputs.indexOf(el);
@@ -279,10 +316,10 @@
                 });
             });
 
-            // Context menu
             const contextMenu = document.getElementById('context-menu');
             const clearRowItem = document.getElementById('clear-row');
             table.addEventListener('contextmenu', (e) => {
+                if (!edit) return;
                 e.preventDefault();
                 const row = e.target.closest('tr');
                 if (!row) return;
@@ -290,6 +327,7 @@
                 contextMenu.style.left = `${e.pageX}px`;
                 contextMenu.style.top = `${e.pageY}px`;
                 clearRowItem.onclick = () => {
+                    capture();
                     row.querySelectorAll('.monthly-input').forEach(input => {
                         input.dataset.val = '0';
                         input.value = '';
@@ -302,16 +340,13 @@
                 contextMenu.style.display = 'none';
             });
 
-            // Form submission
             submitBtn.addEventListener('click', (e) => {
-                if (submitBtn.form.checkValidity()) {
-                    submitBtn.disabled = true;
-                    submitBtn.innerText = 'Saving...';
-                    submitBtn.form.submit();
-                }
+                e.preventDefault();
+                saveStatus.textContent = 'Saving...';
+                saveStatus.classList.add('saving');
+                document.getElementById('budget-form').submit();
             });
 
-            // Highlight significant % changes
             table.querySelectorAll('.percent-change').forEach(input => {
                 const value = parseFloat(input.value.replace('%', '')) || 0;
                 if (value > 100) {
@@ -319,7 +354,6 @@
                 }
             });
 
-            // Initial calculations
             recalcAll();
         });
     </script>
@@ -360,6 +394,14 @@
             box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
         }
 
+        #save-status.saving {
+            color: #007bff;
+        }
+
+        #save-status.saved {
+            color: #28a745;
+        }
+
         #edit-alert {
             max-width: 300px;
         }
@@ -374,6 +416,5 @@
             font-size: 0.9rem;
         }
     </style>
-
 
 @endsection
