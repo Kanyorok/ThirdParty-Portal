@@ -284,7 +284,26 @@ class CodeDetailSeeder extends Seeder
             // Stock Consumption
             ['CodeID' => 'IssuedToType', 'Description' => 'Employee', 'Value' => 'E'],
             ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
+            
+            // Fleet Management
 
+            ['CodeID' => 'EmploymentStatus', 'Description' => 'Retired', 'Value' => 'RE'],
+            ['CodeID' => 'EmploymentStatus', 'Description' => 'On Leave', 'Value' => 'OL'],
+            ['CodeID' => 'EmploymentStatus', 'Description' => 'Suspended', 'Value' => 'SU'],
+
+
+            
+            ['CodeID' => 'VehicleType', 'Description' => 'Pickup', 'Value' => 'PI'],
+            ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TR'],
+            ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
+
+            //Inventory Categories Status
+            ['CodeID' => 'CategoryStatus', 'Description' => 'Active', 'Value' => 'Ac'],
+            ['CodeID' => 'CategoryStatus', 'Description' => 'Inactive', 'Value' => 'In'],
+
+            //Inventory Item Status
+            ['CodeID' => 'ItemStatus', 'Description' => 'Active', 'Value' => 'AC'],
+            ['CodeID' => 'ItemStatus', 'Description' => 'Inactive', 'Value' => 'IN'],
            
         ];
 

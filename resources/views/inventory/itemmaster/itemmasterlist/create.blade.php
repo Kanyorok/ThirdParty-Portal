@@ -103,10 +103,15 @@
             <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control"
                    accept=".pdf,.doc,.docx,.xls,.xlsx">
         </div>
-        <div class="form-check mb-3">
-            <input type="hidden" name="Status" value="0">
-            <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" checked>
-            <label class="form-check-label" for="Status">Is Active</label>
+
+        <div class="mb-3">
+            <label for="Status" class="form-label">Item Status</label>
+              <select class="form-control" name="Status">
+                <option value="">Select Status</option>
+                @foreach($status as $stat)
+                    <option value="{{ $stat->ID }}">{{ $stat->Description }}</option>
+                @endforeach
+            </select>
         </div>
 
         <button type="submit" class="btn btn-primary">✅ Save Item</button>

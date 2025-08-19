@@ -9,6 +9,7 @@ use App\Models\Inventory\StockIssue;
 use App\Models\Inventory\TransactionTransfer;
 use App\Services\Inventory\StockAdjustmentService;
 use App\Services\Inventory\TransactionTransferService;
+use App\Policies\Inventory\TransactionTransferPolicy;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -90,6 +91,9 @@ class TransactionApprovalController extends Controller
 
     public function approve(Request $request, $id)
     {
+        $transfer = TransactionTransfer::findOrFail($id);
+        $this->authorize('approve', $transfer);
+
         $transactionType = $request->input('transaction_type');
 
         try {
@@ -111,6 +115,7 @@ class TransactionApprovalController extends Controller
 
     public function reject(Request $request, $id)
     {
+        $this->authorize('approve', TransactionTransfer::class);
         $transactionType = $request->input('transaction_type');
 
         if ($transactionType === 'Stock Adjustment') {
