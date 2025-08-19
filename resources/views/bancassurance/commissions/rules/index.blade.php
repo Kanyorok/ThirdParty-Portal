@@ -31,7 +31,7 @@
                 <tr>
                     <td>{{ $rule->Id }}</td>
                     <td>{{ $rule->RuleName }}</td>
-                    <td>{{ $rule->Product->Name}}</td>
+                    <td>{{ $rule->product->Name}}</td>
                     <td>{{ $rule->policytypes->Description }}</td>
                     <td>{{ $rule->CommissionRate}}</td>
                     <td>{{ $rule->FixedAmount }}</td>

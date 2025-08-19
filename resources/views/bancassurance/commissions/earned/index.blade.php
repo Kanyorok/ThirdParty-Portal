@@ -35,8 +35,7 @@
     @if($earneds->isEmpty())
         <p class="text-muted">No earned commissions found for the selected period.</p>
     @else
-        <form method="POST" action="{{ route('bancassurance.commissions.earned.bulkPayout') }}">
-            @csrf
+
             <input type="hidden" name="month" value="{{ $month }}">
             <input type="hidden" name="year" value="{{ $year }}">
 
@@ -60,15 +59,15 @@
                         <tr>
                             <td>{{ $e->Id }}</td>
                             <td>{{ $e->PolicyNumber }}</td>
-                            <td>{{ $e->EarnedByType }} #{{ $e->EarnedByID }}</td>
-                            <td>KES {{ number_format($e->EarnedAmount, 2) }}</td>
+                            <td>{{ $e->EarnedByType }} #{{ $e->EarnedById }}</td>
+                            <td>{{ number_format($e->EarnedAmount, 2) }}</td>
                             <td>{{ \Carbon\Carbon::parse($e->EarnedDate)->format('d M Y') }}</td>
-                            <td>{{ $e->IsPaid ? 'Paid' : 'Unpaid' }}</td>
+                            <td>{{ $e->Status ? 'Paid' : 'Unpaid' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
-        </form>
+       
     @endif
 </div>
 @endsection

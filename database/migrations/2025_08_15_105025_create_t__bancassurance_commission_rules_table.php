@@ -28,7 +28,6 @@ return new class extends Migration
             $table->dateTime('DeletedOn')->nullable();
         });
     }
-
     /**
      * Reverse the migrations.
      */

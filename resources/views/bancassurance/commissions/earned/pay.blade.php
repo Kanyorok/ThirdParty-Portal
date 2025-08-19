@@ -14,7 +14,7 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Amount (KES)</label>
+            <label class="form-label">Amount </label>
             <input type="text" name="PaidAmount" class="form-control" value="{{ $commission->EarnedAmount }}" required>
         </div>
 

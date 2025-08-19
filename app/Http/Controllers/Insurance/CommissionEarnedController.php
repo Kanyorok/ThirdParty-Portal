@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Insurance\BancassuranceCommissionEarned;
 use Illuminate\Support\Facades\DB;
 
 class CommissionEarnedController extends Controller
@@ -24,7 +25,7 @@ public function index(Request $request)
 
     $earneds = $query->orderByDesc('e.EarnedDate')->get();
 
-    return view('bancassurance.commissions.earned.index', compact('earneds', 'month', 'year'));
+    return view('bancassurance.commissions.earned.index', compact('earneds', 'month', 'year',));
 }
 
     public function payForm($id)
