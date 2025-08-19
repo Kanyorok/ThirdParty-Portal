@@ -25,12 +25,12 @@ return new class extends Migration {
             $table->softDeletes('DeletedOn');
         });
 
-    
+
         Schema::create('t_Workflows', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('Name', 100)->index();
             $table->string('Source', 100);
-            $table->string('FinalStage', 100);
+            $table->string('FinalStage', 100)->nullable();
             $table->longText('Description')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -63,7 +63,7 @@ return new class extends Migration {
             $table->foreignId('WorkFlowLimitId')->nullable()->constrained('t_WorkFlowLimits', 'Id');
             $table->foreignId('PermissionId')->nullable()->constrained('t_Permissions', 'id');
             $table->integer('Count')->default(0);
-            $table->foreignId('StatusId')->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('StatusId')->nullable()->constrained('t_CodeDetails', 'ID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->timestamp('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

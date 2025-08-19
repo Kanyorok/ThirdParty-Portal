@@ -67,10 +67,10 @@ SELECT @UserHasPermissions = CASE WHEN EXISTS (
                     WHERE [t_Users].[Id] = [t_ModelPermissions].[model_id]
                     AND [t_ModelPermissions].[model_type] = 'UserID'
                     AND [name] IN (@permissionName)
-                )
+                ))
                 AND [t_Users].[DeletedOn] IS NULL
                 AND [t_Users].Id = @UserID
-        ) THEN 1 ELSE 0 END;
+        ) )THEN 1 ELSE 0 END;
 
 -- Get status value from t_CodeDetails
 DECLARE @StatusValue NVARCHAR(50);
