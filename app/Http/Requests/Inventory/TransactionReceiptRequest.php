@@ -29,6 +29,8 @@ class TransactionReceiptRequest extends FormRequest
             'GeneralRemarks' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.item' => 'required|exists:t_Items,Id',
+            'items.*.unit_cost' => 'required|numeric|min:0',
+            'items.*.uom' => 'required|exists:t_UOM,Id',
             'items.*.dispatched_qty' => 'nullable|numeric|min:0',
             'items.*.discrepancy' => 'nullable|numeric',
             'items.*.received_qty' => 'required|numeric|min:0',
