@@ -2,31 +2,44 @@
 
 namespace App\Models\Legal;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use PhpParser\Node\Expr\Cast;
 
 class LegalIntellectualProperty extends Model
 {
-    protected $table = 't_LegalIntellectualProperties';
-    protected $primaryKey = 'ID';
-    public $timestamps = false;
+    use SoftDeletes, UserActorTrait;
 
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_LegalIntellectualProperties';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'Title',
-        'Type', // e.g. Trademark, Patent, Copyright
+        'IPType', // e.g. Trademark, Patent, Copyright
         'RegistrationNumber',
-        'FilingDate',
+        'RegistrationDate',
         'ExpiryDate',
         'Status', // e.g. Active, Expired, Disputed, Pending Renewal
         'Owner',
-        'Jurisdiction',
         'DMSDocID', // DMS integration
         'Remarks',
+        'IsDisputed',
+        'DisputeReason',
         'CreatedBy',
-        'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn',
-        'DeletedBy',
-        'DeletedOn',
-        'IsActive'
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'LegalIntellectualPropertiesId';
+    }
+
+    protected $casts = [
+        'IsDisputed' => 'boolean',
+    ];
+
 }

@@ -2,19 +2,76 @@
 @section('title', 'View Counsel')
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <h4 class="mb-4">👨‍⚖️ Counsel Details</h4>
-    <ul class="list-group">
-        <li class="list-group-item"><strong>Name:</strong> {{ $counsel->CounselName }}</li>
-        <li class="list-group-item"><strong>Firm:</strong> {{ $counsel->FirmName }}</li>
-        <li class="list-group-item"><strong>Email:</strong> {{ $counsel->Email }}</li>
-        <li class="list-group-item"><strong>Phone:</strong> {{ $counsel->Phone }}</li>
-        <li class="list-group-item"><strong>Role:</strong> {{ $counsel->Role }}</li>
-        <li class="list-group-item"><strong>External:</strong> {{ $counsel->IsExternal ? 'Yes' : 'No' }}</li>
-        <li class="list-group-item"><strong>Assigned On:</strong> {{ \Carbon\Carbon::parse($counsel->AssignedOn)->format('d M Y') }}</li>
-        <li class="list-group-item"><strong>Remarks:</strong> {{ $counsel->Remarks }}</li>
-    </ul>
+<div class="container mt-4">
+    <div class="card shadow-sm border rounded-4 overflow-hidden">
+        
+        {{-- Header --}}
+        <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
+            <h5 class="text-info mb-0">
+                <i class="fas fa-user-tie"></i> Counsel Details
+            </h5>
+            <a href="{{ route('legal.disputes.counsels.index', $case->Id) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
 
-    <a href="{{ route('legal.disputes.counsels.index', $case->ID) }}" class="btn btn-secondary mt-3">↩️ Back to List</a>
+        {{-- Body --}}
+        <div class="card-body bg-white">
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <div class="p-3 border rounded bg-light">
+                        <strong>Name:</strong>
+                        <div>{{ $counsel->CounselName }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 border rounded bg-light">
+                        <strong>Firm:</strong>
+                        <div>{{ $counsel->FirmName ?? '—' }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 border rounded bg-light">
+                        <strong>Email:</strong>
+                        <div>{{ $counsel->Email ?? '—' }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 border rounded bg-light">
+                        <strong>Phone:</strong>
+                        <div>{{ $counsel->Phone ?? '—' }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 border rounded bg-light">
+                        <strong>Role:</strong>
+                        <div>{{ $counsel->Role ?? '—' }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 border rounded bg-light">
+                        <strong>Assigned On:</strong>
+                        <div>
+                            {{ $counsel->AssignedOn ? \Carbon\Carbon::parse($counsel->AssignedOn)->format('d M Y') : '—' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Remarks --}}
+            <div class="border rounded p-3 bg-light mt-4">
+                <h6 class="text-info fw-bold mb-1">
+                    <i class="fas fa-sticky-note"></i> Remarks:
+                </h6>
+                <p class="mb-0 fw-semibold">{{ $counsel->Remarks ?? '—' }}</p>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

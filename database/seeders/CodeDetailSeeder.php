@@ -232,6 +232,49 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentTerm', 'Description' => 'Based on certified project work progress', 'Value' => 'PP'],
             ['CodeID' => 'PaymentTerm', 'Description' => '90% on completion, 10% after retention period', 'Value' => 'R'],
 
+            //Legal clauses types
+            ['CodeID' => 'ClauseTypes', 'Description' => 'Specifies the responsibilities and obligations of each party.', 'Value' => 'Obligation Clause'],
+            ['CodeID' => 'ClauseTypes', 'Description' => 'Defines the start date, duration, and end date of the agreement.', 'Value' => 'Term Clause'],
+            ['CodeID' => 'ClauseTypes', 'Description' => 'Describes the payment terms, methods, and schedules.', 'Value' => 'Payment Clause'],
+            ['CodeID' => 'ClauseTypes', 'Description' => 'Covers conditions for terminating the agreement.', 'Value' => 'Termination Clause'],
+            ['CodeID' => 'ClauseTypes', 'Description' => 'Specifies confidentiality and non-disclosure obligations.', 'Value' => 'Confidentiality Clause'],
+            ['CodeID' => 'ClauseTypes', 'Description' => 'Sets out the process for resolving disputes.', 'Value' => 'Dispute Resolution Clause'],
+            ['CodeID' => 'ClauseTypes', 'Description' => 'Outlines penalties or remedies for breaches.', 'Value' => 'Breach Clause'],
+
+            //Legal Obligations
+            ['CodeID' => 'LegalSourceTypes', 'Description' => 'Obligations and tasks required under the contract.', 'Value' => 'Contract'],
+            ['CodeID' => 'LegalSourceTypes', 'Description' => 'Obligations and actions required for the case.', 'Value' => 'Case'],
+
+            //Legal Intelleactuals IP types
+            ['CodeID' => 'IPTypes', 'Description' => 'Exclusive rights granted for an invention or process.', 'Value' => 'Patent'],
+            ['CodeID' => 'IPTypes', 'Description' => 'Legal protection for brand names, logos, and slogans.', 'Value' => 'Trademark'],
+            ['CodeID' => 'IPTypes', 'Description' => 'Protection for artistic, literary, or musical works.', 'Value' => 'Copyright'],
+            ['CodeID' => 'IPTypes', 'Description' => 'Protection for the visual design or shape of an object.', 'Value' => 'Industrial Design'],
+            ['CodeID' => 'IPTypes', 'Description' => 'Rights protecting confidential business information.', 'Value' => 'Trade Secret'],           
+
+            //Legal Loan Security types
+            ['CodeID' => 'LoanSecurityTypes', 'Description' => 'Property pledged as security for a loan.', 'Value' => 'Real Estate Mortgage'],
+            ['CodeID' => 'LoanSecurityTypes', 'Description' => 'Motor vehicle pledged as collateral.', 'Value' => 'Vehicle Logbook'],
+            ['CodeID' => 'LoanSecurityTypes', 'Description' => 'Cash deposited and held as loan security.', 'Value' => 'Cash Deposit'],
+            ['CodeID' => 'LoanSecurityTypes', 'Description' => 'Business equipment or machinery pledged as collateral.', 'Value' => 'Equipment Charge'],
+            ['CodeID' => 'LoanSecurityTypes', 'Description' => 'Personal commitment from a guarantor to repay the loan.', 'Value' => 'Personal Guarantee'],
+            ['CodeID' => 'LoanSecurityTypes', 'Description' => 'Financial instruments like shares or bonds used as security.', 'Value' => 'Securities Pledge'],
+
+            //Legal Loan securities Loacations
+            ['CodeID' => 'LoanSecurityLocations', 'Description' => 'Physical location where the secured asset is kept or registered.', 'Value' => 'On-Site Storage'],
+            [ 'CodeID' => 'LoanSecurityLocations','Description' => 'Third-party secured warehouse or bonded storage facility.','Value' => 'Bonded Warehouse'],
+            ['CodeID' => 'LoanSecurityLocations','Description' => 'Registered with the relevant government agency or land registry.','Value' => 'Government Registry'],
+            [ 'CodeID' => 'LoanSecurityLocations', 'Description' => 'Held in the possession of the lender until the loan is repaid.', 'Value' => 'Lender Custody'],
+            ['CodeID' => 'LoanSecurityLocations', 'Description' => 'Stored in a bank vault or secured bank deposit box.', 'Value' => 'Bank Vault'],
+
+            //Legal Search Requests Types
+            ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Verification of company registration details.', 'Value' => 'Company Search'],
+            ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for pending or completed court cases involving an entity.', 'Value' => 'Court Case Search'],
+            ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Verification of land title ownership and encumbrances.', 'Value' => 'Land Title Search'],
+            ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for registered trademarks and related rights.', 'Value' => 'Trademark Search'],
+            ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for registered patents and intellectual property.', 'Value' => 'Patent Search'],
+            ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for bankruptcy or insolvency status of an individual or company.', 'Value' => 'Bankruptcy Search'],
+
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Trade Shows', 'DisplayOrder' => 2],

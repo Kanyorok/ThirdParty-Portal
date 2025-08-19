@@ -57,19 +57,26 @@ Route::prefix('legal')->name('legal.')->group(function () {
 
     // Obligations (main list)
     Route::resource('obligations', LegalObligationController::class);
+    Route::get('/legal/obligations/{id}', [LegalObligationController::class,'getObligations'])->name('legal.getObligations');
+    Route::patch('obligations/{id}/assignUser', [LegalObligationController::class, 'assignUser'])
+    ->name('obligations.assignUser');
 
     // Obligation Assignments (nested under obligations)
     Route::resource('obligations.assignments', LegalObligationAssignmentController::class);
 
     // Search Requests
     Route::resource('search_requests', LegalSearchRequestController::class);
+    Route::patch('store_findings/{id}', [LegalSearchRequestController::class, 'storeApprovalStatus'])->name('store_findings.storeApprovalStatus');
+
 
     // Securities
     Route::resource('securities', LoanSecurityController::class);
 
     // Intellectual Property
     Route::resource('intellectual', LegalIntellectualPropertyController::class);
+    Route::patch('raiseDispute/{id}', [LegalIntellectualPropertyController::class, 'raiseDispute'])->name('intellectual.raiseDispute');
 
     // IP Tracking
     Route::resource('ip-tracking', LegalIPTrackingController::class);
+
 });

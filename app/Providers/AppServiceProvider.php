@@ -172,7 +172,16 @@ use App\Models\Finance\FinanceModuleTransactions;
 use App\Models\Finance\FinanceTaxType;
 use App\Models\Finance\FinanceTransactionTypes;
 use App\Models\Finance\TaxJurisdiction;
+use App\Models\Legal\LegalCase;
+use App\Models\Legal\LegalCaseCounsel;
+use App\Models\Legal\LegalCaseEvidence;
+use App\Models\Legal\LegalCaseOutcome;
+use App\Models\Legal\LegalClause;
 use App\Models\Legal\LegalDocument;
+use App\Models\Legal\LegalIntellectualProperty;
+use App\Models\Legal\LegalObligation;
+use App\Models\Legal\LegalSearchRequest;
+use App\Models\Legal\LoanSecurity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -360,6 +369,15 @@ class AppServiceProvider extends ServiceProvider
             
             //////////////  Legal  ////////////////
             LegalDocument::getPrimaryKey() => LegalDocument::class,
+            LegalClause::getPrimaryKey() => LegalClause::class,
+            LegalCase::getPrimaryKey() => LegalCase::class,
+            LegalObligation::getPrimaryKey() => LegalObligation::class,
+            LegalSearchRequest::getPrimaryKey() => LegalSearchRequest::class,
+            LegalIntellectualProperty::getPrimaryKey() => LegalIntellectualProperty::class,
+            LoanSecurity::getPrimaryKey() => LoanSecurity::class,
+            LegalCaseEvidence::getPrimaryKey() => LegalCaseEvidence::class,
+            LegalCaseCounsel::getPrimaryKey() => LegalCaseCounsel::class,
+            LegalCaseOutcome::getPrimaryKey() => LegalCaseOutcome::class,
 
         ]);
 

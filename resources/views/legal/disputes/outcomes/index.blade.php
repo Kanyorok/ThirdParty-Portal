@@ -5,7 +5,7 @@
 <div class="card p-4 shadow rounded-4">
     <div class="d-flex justify-content-between mb-3">
         <h4>📜 Case Outcomes for: {{ $case->CaseTitle }}</h4>
-        <a href="{{ route('legal.disputes.outcomes.create', $case->ID) }}" class="btn btn-primary">➕ Add Outcome</a>
+        <a href="{{ route('legal.disputes.outcomes.create', $case->Id) }}" class="btn btn-primary">➕ Add Outcome</a>
     </div>
 
     <table class="table table-bordered">

@@ -2,31 +2,38 @@
 
 namespace App\Models\Legal;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LoanSecurity extends Model
 {
-    protected $table = 't_LoanSecurities';
-    protected $primaryKey = 'ID';
-    public $timestamps = false;
+    use SoftDeletes, UserActorTrait;
 
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_LegalLoanSecurities';
+    protected $primaryKey = 'Id';
     protected $fillable = [
         'SecurityType',
-        'Description',
         'OwnerName',
         'OwnerIDNumber',
         'LoanAccountNumber',
         'Value',
         'Institution',
         'RegistrationDetails',
+        'Locations',
         'SecurityStatus',
         'Remarks',
         'CreatedBy',
-        'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn',
-        'DeletedBy',
-        'DeletedOn',
-        'IsActive'
     ];
+
+    public static function getPrimaryKey(): string
+    {
+        return 'LegalLoanSecuritiesId';
+    }
+
 }
