@@ -61,7 +61,7 @@
             </div>
         </div>
 
-        {{-- Right Side Panel: Tabs for Licenses and Assignments --}}
+        {{-- Right Side Panel: Tabs for Licenses, Assignments, and Trips --}}
         <div class="col-md-8">
             <div class="card h-100 p-3 shadow rounded-4">
                 <h5 class="card-title fw-bold">Driver Records</h5>
@@ -72,6 +72,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" data-bs-toggle="tab" href="#assignments">🚚 Assignments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#trips">🗺️ Trips</a>
                     </li>
                 </ul>
 
@@ -149,6 +152,47 @@
                                             <button class="btn btn-sm btn-warning btn-edit" data-type="assignment" data-id="{{ $assignment->Id }}">✏️</button>
                                             <button class="btn btn-sm btn-danger btn-delete" data-type="assignment" data-id="{{ $assignment->Id }}">🗑️</button>
                                         </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Trips Tab Content --}}
+                    <div class="tab-pane fade" id="trips">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5>Trips</h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Trip No</th>
+                                        <th>Vehicle</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Start Location</th>
+                                        <th>End Location</th>
+                                        <th>Distance (Km)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tripsTable">
+                                    @foreach($trips as $trip)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $trip->TripNo }}</td>
+                                        <td>{{ $trip->vehicle?->RegistrationNo ?? 'N/A' }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d M Y') }}</td>
+                                        <td>{{ $trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d M Y') : '—' }}</td>
+                                        <td>{{ $trip->StartTime }}</td>
+                                        <td>{{ $trip->EndTime }}</td>
+                                        <td>{{ $trip->StartLocation }}</td>
+                                        <td>{{ $trip->EndLocation }}</td>
+                                        <td>{{ $trip->DistanceCovered }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -345,11 +389,11 @@
 
 @section('scripts')
 <script>
-let storeLicenseUrl     = "{{ route('fleet.contracted_driver_licenses.store', $driver->Id) }}";
-let storeAssignmentUrl  = "{{ route('fleet.contracted_driver_assignments.store', $driver->Id) }}";
-let updateLicenseUrl    = "{{ url('fleet/contracted-drivers/'.$driver->Id.'/licenses') }}/"; 
-let updateAssignmentUrl = "{{ url('fleet/contracted-drivers/'.$driver->Id.'/assignments') }}/";
-let deleteDriverUrl     = "{{ route('fleet.contracted_drivers.destroy', $driver->Id) }}";
+let storeLicenseUrl       = "{{ route('fleet.contracted_driver_licenses.store', $driver->Id) }}";
+let storeAssignmentUrl    = "{{ route('fleet.contracted_driver_assignments.store', $driver->Id) }}";
+let updateLicenseUrl      = "{{ url('fleet/contracted-drivers/'.$driver->Id.'/licenses') }}/";  
+let updateAssignmentUrl   = "{{ url('fleet/contracted-drivers/'.$driver->Id.'/assignments') }}/";
+let deleteDriverUrl       = "{{ route('fleet.contracted_drivers.destroy', $driver->Id) }}";
 
 function showSuccess(message) {
     let alert = `<div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
@@ -440,7 +484,7 @@ $(function () {
     $(document).on("click", ".btn-edit[data-type='assignment']", function () {
         let id = $(this).data("id");
         $.get(updateAssignmentUrl + id + "/edit", function (data) {
-            $("#editAssignmentId").val(data.Id);   
+            $("#editAssignmentId").val(data.Id);    
             $("#editAssignmentVehicle").val(data.VehicleID);
             $("#editAssignmentDate").val(data.AssignmentDate);
             $("#editUnassignmentDate").val(data.UnassignmentDate);
@@ -488,8 +532,8 @@ $(function () {
     $(document).on("click", ".btn-delete", function () {
         if (!confirm("Are you sure?")) return;
         let type = $(this).data("type");
-        let id   = $(this).data("id");
-        let url  = (type === "license" ? updateLicenseUrl : updateAssignmentUrl) + id;
+        let id   = $(this).data("id");
+        let url  = (type === "license" ? updateLicenseUrl : updateAssignmentUrl) + id;
 
         $.ajax({
             url: url,

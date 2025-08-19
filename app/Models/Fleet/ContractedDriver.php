@@ -8,6 +8,9 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Fleet\FleetTripLog;
+use App\Models\Core\CodeDetail;
+
 
 class ContractedDriver extends Model
 {
@@ -50,4 +53,6 @@ class ContractedDriver extends Model
     {
         return 'DriverId';
     }
+
+    
 }

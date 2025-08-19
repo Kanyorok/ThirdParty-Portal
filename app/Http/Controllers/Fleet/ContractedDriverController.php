@@ -9,6 +9,8 @@ use App\Services\FleetManagement\ContractedDriverService;
 use App\Models\Fleet\FleetContractedDriverLicense;
 use App\Models\Fleet\FleetVehicle;
 use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\FleetTripLog;
+use App\Models\Core\CodeDetail;
 use App\Models\Auth\User;
 use App\Models\HRM\Employee;
 use App\Models\Fleet\FleetContractedDriverAssignment;
@@ -88,26 +90,37 @@ class ContractedDriverController extends Controller
 
 
     public function show($Id)
-    {
-        $driver = ContractedDriver::findOrFail($Id);
-        $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
-        $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
-            ->with('vehicle')
-            ->orderByDesc('AssignmentDate')
-            ->get();
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+{
+    $driver = ContractedDriver::findOrFail($Id);
+    $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
+    $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
+        ->with('vehicle')
+        ->orderByDesc('AssignmentDate')
+        ->get();
+    $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
-        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-            ->pluck('name', 'Id');
+    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+        ->pluck('name', 'Id');
 
-        return view('fleet.contracted_drivers.show', compact(
-            'driver',
-            'licenses',
-            'assignments',
-            'vehicles',
-            'assigners'  
-        ));
-    }
+    // ✅ Fetch driver type ID only once
+    $contractedDriverTypeId = CodeDetail::where('Description', 'Contracted')->value('ID');
+
+    $trips = FleetTripLog::with(['vehicle'])
+        ->where('DriverID', $driver->Id)
+        ->where('DriverType', $contractedDriverTypeId) // ✅ scalar value, no subquery
+        ->orderByDesc('TripStartDate')
+        ->get();
+
+    return view('fleet.contracted_drivers.show', compact(
+        'driver',
+        'licenses',
+        'assignments',
+        'vehicles',
+        'assigners',
+        'trips'
+    ));
+}
+
 
 
 }
