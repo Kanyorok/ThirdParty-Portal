@@ -136,22 +136,22 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'DepositRefunded', 'Description' => 'Not Refunded', 'Value' => 'N'],
 
             // Source
-            ['CodeID' => 'Source', 'Description' => 'Transfer Receipts'],
-            ['CodeID' => 'Source', 'Description' => 'Stock Adjustment'],
-            ['CodeID' => 'Source', 'Description' => 'Transaction Transfer'],
+            ['CodeID' => 'Source', 'Description' => 'Transfer Receipts', 'Value' => 'Tr'],
+            ['CodeID' => 'Source', 'Description' => 'Stock Adjustment', 'Value' => 'Sa'],
+            ['CodeID' => 'Source', 'Description' => 'Transaction Transfer', 'Value' => 'Tt'],
 
             // Defects Condition
-            ['CodeID' => 'DefectsCondition', 'Description' => 'Contaminated'],
-            ['CodeID' => 'DefectsCondition', 'Description' => 'Irreparable'],
+            ['CodeID' => 'DefectsCondition', 'Description' => 'Contaminated', 'Value' => 'C'],
+            ['CodeID' => 'DefectsCondition', 'Description' => 'Irreparable', 'Value' => 'Ir'],
 
             // Adjustment Reason
-            ['CodeID' => 'AdjustmentReason', 'Description' => 'Damage'],
-            ['CodeID' => 'AdjustmentReason', 'Description' => 'Damaged in Transit'],
-            ['CodeID' => 'AdjustmentReason', 'Description' => 'Stock Found'],
-            ['CodeID' => 'AdjustmentReason', 'Description' => 'Expired'],
-            ['CodeID' => 'AdjustmentReason', 'Description' => 'Shrinkage'],
-            ['CodeID' => 'AdjustmentReason', 'Description' => 'Other'],
-            ['CodeID' => 'AdjustmentReason', 'Description' => 'In Transit'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Damage', 'Value' => 'Da'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Damaged in Transit', 'Value' => 'Di'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Stock Found', 'Value' => 'Sf'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Expired', 'Value' => 'Ex'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Shrinkage', 'Value' => 'Sh'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'Other', 'Value' => 'Ot'],
+            ['CodeID' => 'AdjustmentReason', 'Description' => 'In Transit', 'Value' => 'It'],
 
             // Payment Frequency
             ['CodeID' => 'PaymentFrequency', 'Description' => 'Annually', 'Value' => 'A'],
@@ -280,6 +280,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => StaticListsService::CustomerType, 'Description' => 'Taxi Driver', 'DisplayOrder' => 3],
             ['CodeID' => StaticListsService::Industries, 'Description' => 'Agriculture', 'DisplayOrder' => 1],
             ['CodeID' => StaticListsService::Industries, 'Description' => 'Tourism', 'DisplayOrder' => 2],
+
+            // Stock Consumption
+            ['CodeID' => 'IssuedToType', 'Description' => 'Employee', 'Value' => 'E'],
+            ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
+
+           
         ];
 
         foreach ($static as $index => $item) {
