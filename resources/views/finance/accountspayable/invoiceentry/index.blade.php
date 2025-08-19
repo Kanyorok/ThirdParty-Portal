@@ -57,12 +57,28 @@
                                        title="View Invoice">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('invoiceentry.edit', $item->Id) }}"
-                                       class="btn btn-sm btn-outline-primary me-1"
-                                       title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('invoiceentry.destroy', $item->Id) }}" method="POST"
+                                    @if($item->ApprovalStatus === 'Draft')
+                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"
+                                        class="btn btn-sm btn-outline-primary me-1"
+                                        title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @else
+                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"
+                                        class="btn btn-sm btn-outline-primary me-1"
+                                        title="Edit">
+                                            <i class="fas fa-edit" disabled></i>
+                                        </a>
+                                    @endif
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-danger custom-delete-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#customDeleteConfirmModal"
+                                        data-name="{{$item->InvoiceNumber}}"    {{-- Pass item name --}}
+                                        data-route="{{ route('invoiceentry.destroy', $item->Id) }}">
+                                        <i  class="fas fa-trash-alt"></i>
+                                    </button>
+                                    {{-- <form action="{{ route('invoiceentry.destroy', $item->Id) }}" method="POST"
                                           style="display:inline;"
                                           onsubmit="return confirm('Are you sure you want to delete this invoice?')">
                                         @csrf
@@ -70,7 +86,7 @@
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
-                                    </form>
+                                    </form> --}}
                                 </td>
                             </tr>
                         @empty
@@ -96,6 +112,7 @@
             </div>
         </div>
     </div>
+@include('components.modals.delete-confirm')
 @endsection
 
 @section('styles')

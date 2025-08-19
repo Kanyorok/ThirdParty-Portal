@@ -46,7 +46,7 @@ class TransactionAdjustmentController extends Controller
 
     public function getBranchStock($branchId)
     {
-        $stockItems = StockItem::with('item')
+        $stockItems = StockItem::with('item', 'uom')
             ->where('Branch', $branchId)
             ->get();
 

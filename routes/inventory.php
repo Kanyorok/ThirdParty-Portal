@@ -16,6 +16,7 @@ use App\Http\Controllers\Inventory\ReportsController;
 use App\Http\Controllers\Inventory\SKUController;
 use App\Http\Controllers\Inventory\StockIssueController;
 use App\Http\Controllers\Inventory\StockTakeController;
+use App\Http\Controllers\Inventory\StockConsumptionController;
 use App\Http\Controllers\Inventory\StockValuationHistoryController;
 use App\Http\Controllers\Inventory\StoreController;
 use App\Http\Controllers\Inventory\TransactionAdjustmentController;
@@ -44,6 +45,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/get-subcategory', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
 
 
+
     Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
     Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
     Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
@@ -62,6 +64,9 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/sku/{Id}', [SKUController::class, 'destroy'])->name('sku.destroy');
     Route::get('/get-stores', [SKUController::class, 'getStores'])->name('get.stores');
     Route::get('/info/get-items', [SKUController::class, 'getItemsByCategoryOrSubcategory'])->name('get.items');
+    Route::get('get-item-details', [SKUController::class, 'getItemDetails'])->name('sku.item-details');
+
+
 
     //Route::resource('itemcategory', ItemCategoryController::class);
     Route::get('/itemcategory', [ItemCategoryController::class, 'index'])->name('itemcategory.index');
@@ -109,8 +114,28 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/stocktake/branches/{storeId}', [StockTakeController::class, 'getStoreByBranch'])->name('getstores');
     Route::get('/stock-items/{branchId}/{storeId}', [StockTakeController::class, 'getStockItems'])->name('stocktake.items');
 
+    //Route::resource('stockconsumption', StockConsumptionController::class);
+    Route::get('/stockconsumption', [StockConsumptionController::class, 'index'])->name('stockconsumption.index');
+    Route::get('/stockconsumption/create', [StockConsumptionController::class, 'create'])->name('stockconsumption.create');
+    Route::get('/stockconsumption/get-issued-to-options', [StockConsumptionController::class, 'getIssuedToOptions'])->name('stockconsumption.getIssuedToOptions');
+    Route::get('/stockconsumption/get-stores', [StockConsumptionController::class, 'getStores'])->name('stockconsumption.getStores');
+    Route::get('/stockconsumption/get-uom', [StockConsumptionController::class, 'getUOM'])->name('stockconsumption.getUOM');
 
-    Route::resource('uomconversion', UOMConversionController::class);
+    Route::post('/stockconsumption', [StockConsumptionController::class, 'store'])->name('stockconsumption.store');
+    Route::get('/stockconsumption/{Id}', [StockConsumptionController::class, 'show'])->name('stockconsumption.show');
+    Route::get('/stockconsumption/{Id}/edit', [StockConsumptionController::class, 'edit'])->name('stockconsumption.edit');
+    Route::put('/stockconsumption/{Id}', [StockConsumptionController::class, 'update'])->name('stockconsumption.update');
+    Route::delete('/stockconsumption/{Id}', [StockConsumptionController::class, 'destroy'])->name('stockconsumption.destroy');
+
+    //Route::resource('uomconversion', UOMConversionController::class);
+    Route::get('/uomconversion', [UOMConversionController::class, 'index'])->name('uomconversion.index');
+    Route::get('/uomconversion/create', [UOMConversionController::class, 'create'])->name('uomconversion.create');
+    Route::post('/uomconversion', [UOMConversionController::class, 'store'])->name('uomconversion.store');
+    Route::get('/uomconversion/{Id}', [UOMConversionController::class, 'show'])->name('uomconversion.show');
+    Route::get('/uomconversion/{Id}/edit', [UOMConversionController::class, 'edit'])->name('uomconversion.edit');
+    Route::put('/uomconversion/{Id}', [UOMConversionController::class, 'update'])->name('uomconversion.update');
+    Route::delete('/uomconversion/{Id}', [UOMConversionController::class, 'destroy'])->name('uomconversion.destroy');
+
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
     //Route::resource('interbranchrequisition', InterBranchRequisitionController::class);

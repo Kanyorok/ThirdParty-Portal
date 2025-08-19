@@ -2,10 +2,10 @@
 @section('title', 'Create Activity')
 
 @section('content')
-    <div class="card p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5>📝 Create Activity</h5>
-        </div>
+    <div class="card p-2">
+{{--        <div class="d-flex justify-content-between align-items-center mb-3">--}}
+{{--            <h5>📝 Create Activity</h5>--}}
+{{--        </div>--}}
 
         @if ($errors->any())
             <div class="alert alert-danger">
