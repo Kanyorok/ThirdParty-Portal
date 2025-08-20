@@ -36,6 +36,8 @@
                 <tr>
                     <th>#</th>
                     <th>Item Name</th>
+                    <th>UOM</th>
+                    <th>Unit Cost</th>
                     <th>Dispatched Qty</th>
                     <th>Received Qty</th>
                     <th>Discrepancy</th>
@@ -53,6 +55,8 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
+                        <td>{{ $item->item->uom->Code ?? 'N/A' }}</td>
+                        <td>{{ number_format($item->UnitCost, 2) }}</td>
                         <td>{{ $dispatchedQty }}</td>
                         <td>{{ $receivedQty }}</td>
                         <td>{{ $discrepancy }}</td>

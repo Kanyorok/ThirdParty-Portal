@@ -3,7 +3,7 @@
 
 @section('content')
     <div class="card p-4">
-        <h5 class="mb-4">➕ Add Budget Rate Type</h5>
+{{--        <h5 class="mb-4">➕ Add Budget Rate Type</h5>--}}
 
         <form method="POST" action="{{ route('rates.store') }}">
             @csrf

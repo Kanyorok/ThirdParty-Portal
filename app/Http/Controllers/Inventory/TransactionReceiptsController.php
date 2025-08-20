@@ -12,6 +12,10 @@ use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Services\Inventory\TransactionReceiptService;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 
 class TransactionReceiptsController extends Controller
 {
@@ -48,17 +52,28 @@ class TransactionReceiptsController extends Controller
     public function store(TransactionReceiptRequest $request)
     {
         $this->authorize('create', TransactionReceipt::class);
+
         $validatedData = $request->validated();
         $items = $validatedData['items'] ?? [];
         unset($validatedData['items']);
 
+       $transfer = TransactionTransfer::findOrFail($validatedData['TransferID']);
+
+        if (Auth::user()->BranchID !== $transfer->ToBranch) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['TransferID' => 'You are not authorized to receive this transfer.']);
+        }
+
+
         try {
             $receipt = $this->service->createReceipt($validatedData, $items);
-            return redirect()->route('transactionsreceipts.index')->with('success', 'Transaction receipt posted successfully.');
+            return redirect()
+                ->route('transactionsreceipts.index')
+                ->with('success', 'Transaction receipt posted successfully.');
         } catch (ValidationException $e) {
-            $transferId = $validatedData['TransferID'] ?? null;
-            $transfer = TransactionTransfer::find($transferId);
-            $branchId = $transfer?->ToBranch;
+            $branchId = $transfer->ToBranch;
 
             $itemsWithDetails = collect($items)->map(function ($item) use ($branchId) {
                 $itemModel = ItemMasterList::find($item['item']);
@@ -80,6 +95,7 @@ class TransactionReceiptsController extends Controller
         }
     }
 
+
     public function show($id)
     {
         $this->authorize('view', TransactionReceipt::class);
@@ -99,29 +115,46 @@ class TransactionReceiptsController extends Controller
         return redirect()->route('transactionsreceipts.index')->with('success', 'Receipt deleted.');
     }
 
-    public function getTransferItems($id)
-    {
-        $transfer = TransactionTransfer::with('items.item')->findOrFail($id);
-        $branchId = $transfer->ToBranch;
+   public function getTransferItems($id)
+{
+    $transfer = TransactionTransfer::with([
+        'items.item.price',
+        'items.item.uom',
+        'ToBranch'
+    ])->findOrFail($id);
 
-        $branchStores = Store::where('BranchID', $branchId)
-            ->select('Id', 'StoreName')
-            ->get();
+    $branchId = $transfer->ToBranch;
 
-        $itemsWithStores = $transfer->items->map(function ($transferItem) use ($branchStores) {
-            $item = $transferItem->item;
+    $branchStores = Store::where('BranchID', $branchId)
+        ->select('Id', 'StoreName')
+        ->get();
 
-            return [
-                'Item' => $transferItem->Item,
-                'DispatchedQty' => $transferItem->DispatchedQty,
-                'item' => $item,
-                'stores' => $branchStores,
-            ];
-        });
+    $itemsWithStores = $transfer->items->map(function ($transferItem) use ($branchStores) {
+        $item = $transferItem->item;
 
-        return response()->json([
-            'items' => $itemsWithStores,
-            'from_branch' => $branchId,
-        ]);
-    }
+        return [
+            'Item' => $item->Id,
+            'DispatchedQty' => $transferItem->DispatchedQty,
+            'item' => [
+                'ItemName' => $item->ItemName,
+                'Id' => $item->Id,
+                'uom' => [
+                    'Code' => $item->uom?->Code ?? 'N/A'
+                ],
+            ],
+            'stores' => $branchStores,
+            'UnitCost' => $item->price?->ActualPrice ?? 0,
+            'UOM' => $item->UOM,
+            'UOMCode' => $item->uom?->Code ?? 'N/A',
+            'PriceID' => $item->price?->Id ?? null,
+        ];
+    });
+
+    return response()->json([
+        'items' => $itemsWithStores,
+        'from_branch' => $branchId,
+    ]);
+}
+
+
 }

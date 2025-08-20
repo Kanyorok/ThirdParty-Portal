@@ -50,15 +50,8 @@
                 <input type="hidden" name="UOM" value="{{ $price->UOM }}">
             </div>
 
-
             <div class="mb-3">
                 <label class="form-label">Estimated Price</label>
-                <input type="number" step="0.01" class="form-control" name="EstimatedPrice"
-                       value="{{ old('EstimatedPrice', $price->EstimatedPrice) }}" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Actual Price</label>
                 <input type="number" step="0.01" class="form-control" name="ActualPrice"
                        value="{{ old('ActualPrice', $price->ActualPrice) }}" required>
             </div>

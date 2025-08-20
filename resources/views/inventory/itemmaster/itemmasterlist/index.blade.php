@@ -14,11 +14,10 @@
     @endif
 
 <div class="container bg-white shadow-sm rounded p-4">
-    <h4 class="mb-4">📦 Item Master List</h4>
+    <h4 class="mb-4">Items List</h4>
 
     <div class="d-flex justify-content-between mb-3">
         <a href="{{ route('itemmasterlist.create') }}" class="btn btn-success">➕ Add New Item</a>
-        <input type="text" class="form-control w-25" id="searchBox" placeholder="🔍 Search...">
     </div>
 
     @if(session('success'))
