@@ -251,5 +251,65 @@ class CreditNoteController extends Controller
         }
     }
 
+    public function destroy(int $id)
+    {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceCDNotes::class);
+
+        $note = FinanceCDNotes::findOrFail($id);
+
+        if ($note->ApprovalStatus === 'posted') {
+            return back()->with('error', 'Cannot delete a posted note.');
+        }
+
+        $note->DeletedBy = Auth::id();
+        $note->save();
+        $note->delete();
+
+        activity('Transaction Posting')
+            ->performedOn($note)
+            ->causedBy(Auth::id())
+            ->withProperties(['action' => 'delete'])
+            ->log('Deleted Note: '.$note->CDNumber);
+
+        return redirect()->route('creditnote.index')->with('success', 'Credit/Debit Note deleted successfully.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceCDNotes::class);
+
+        $note = FinanceCDNotes::findOrFail($id);
+
+        $validated = $request->validate([
+            'InvoiceRefNo'=> 'required|exists:t_FinanceInvoiceEntry,Id',
+            'NoteDate'=> 'required|date',
+            'NoteAmount'=> 'required|numeric|min:0.00',
+            'Description'=> 'required|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $note->update([
+                'InvoiceRefNo' => $validated['InvoiceRefNo'],
+                'NoteDate' => $validated['NoteDate'],
+                'NoteAmount' => $validated['NoteAmount'],
+                'Description' => $validated['Description'],
+                'ModifiedBy' => Auth::id(),
+            ]);
+
+            activity('Transaction Posting')
+                ->performedOn($note)
+                ->causedBy(Auth::id())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated Note: '.$note->CDNumber);
+
+            DB::commit();
+            return redirect()->route('creditnote.index')->with('success', 'Credit/Debit Note updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return back()->with('error', $th->getMessage());
+        }
+    }
+
 }
 

@@ -2,6 +2,8 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Core\Branch;
+use App\Models\HRM\Department;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -67,4 +69,20 @@ class FinanceTransaction extends Model
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
     ];
+
+    public function glAccounts()
+    {
+        return $this->belongsTo(FinanceGLAccounts::class, 'GLAccountID', 'Id');
+    }
+
+    public function branches()
+    {
+        return $this->belongsTo(Branch::class, 'BranchID', 'Id');
+    }
+
+    public function departments()
+    {
+        return $this->belongsTo(Department::class, 'DepartmentID', 'Id');
+    }
+
 }
