@@ -5,7 +5,6 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">Registered Customers</h4>
     <table id="Customerregistry" class="table table-bordered table-hover">
         <thead>
             <tr>

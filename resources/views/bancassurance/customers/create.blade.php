@@ -34,12 +34,12 @@
 
         <div class="row mb-3">
             <div class="col-md-3">
-                <label class="form-label">Date of Birth </label>
-                <input type="date" name="DateOfBirth" class="form-control">
+                <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                <input type="date" name="DateOfBirth" class="form-control" required>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Gender</label>
-                <select name="Gender" class="form-select">
+                <label class="form-label">Gender <span class="text-danger">*</span></label>
+                <select name="Gender" class="form-select" required>
                 <option value="">--Select a status--</option>
               @foreach ($genders as $gender)
                 <option value="{{ $gender->ID }}">
@@ -49,8 +49,8 @@
             </select>
           </div>
             <div class="col-md-3">
-                <label class="form-label">Marital Status</label>
-                <select name="MaritalStatus" class="form-select">
+                <label class="form-label">Marital Status <span class="text-danger">*</span></label>
+                <select name="MaritalStatus" class="form-select" required>
                 <option value="">--Select a status--</option>
               @foreach ($maritalstatus as $status)
                 <option value="{{ $status->ID }}">
@@ -60,7 +60,7 @@
             </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Occupation</label>
+                <label class="form-label">Occupation </label>
                 <select name="Occupation" class="form-select">
                 <option value="">--Select Occupation--</option>
               @foreach ($occupations as $occupation)

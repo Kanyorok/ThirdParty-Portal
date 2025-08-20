@@ -5,9 +5,7 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <a href="{{ route('bancassurance.customers.communication.create',) }}" class="btn btn-success mb-3">
-        ➕ New Communication Log
-    </a>
+    <a href="{{ route('bancassurance.customers.communication.create',) }}" class="btn btn-success mb-3">New Communication Log</a>
 
     <table id="Customercontacts" class="table table-striped table-bordered">
         <thead>
@@ -26,7 +24,7 @@
             @forelse($logs as $log)
                 <tr>
                     <td>{{$log->customers->FullName}}</td>
-                    <td>{{ \Carbon\Carbon::parse($log->ContactDate)->format('d-M-Y H:i') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($log->ContactDate)->format('d/m/Y') }}</td>
                     <td>{{ $log->contacttypes->Description }}</td>
                     <td>{{ $log->Summary }}</td>
                     <td>{{ $log->employees->FirstName }}</td>
@@ -43,9 +41,6 @@
                 </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="5" class="text-center">No communication logs found.</td>
-                </tr>
             @endforelse
         </tbody>
     </table>
