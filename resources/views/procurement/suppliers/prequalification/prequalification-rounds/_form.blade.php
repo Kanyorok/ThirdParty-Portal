@@ -83,6 +83,7 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
         {{ $message }}
     </div>
     @enderror
+
     <div class="accordion" id="sectionsAccordion">
         @foreach($masterSections as $index => $section)
         @php
@@ -132,13 +133,6 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                     <hr>
                     <h4>Criteria</h4>
                     @if(!$readOnly)
-                    <div class="mb-2">
-                        <label class="d-block">Total Criteria Weight</label>
-                        <div class="progress mb-1">
-                            <div id="criteriaWeightProgress_{{ $section->Id }}" class="progress-bar bg-info" role="progressbar" style="width: 0%">0%</div>
-                        </div>
-                        <small id="criteriaWeightWarning_{{ $section->Id }}" class="text-danger" style="display:none;"></small>
-                    </div>
                     <div class="criteria-list">
                         @foreach($section->criteria as $c_index => $criteria)
                         @php
@@ -166,7 +160,7 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                                         value="{{ old("sections.$index.criteria.$c_index.weight", $linkedCriterion->Weight ?? 0) }}"
                                         class="form-control form-control-sm criteria-weight-input"
                                         placeholder="Weight %"
-                                        min="0" max="100">
+                                        min="0" max="10">
                                 </div>
                             </div>
                         </div>
@@ -174,7 +168,6 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                     </div>
                     @else
                     @if($linkedCriteria->count())
-                    <p><strong>Total Criteria Weight:</strong> {{ $linkedCriteria->sum('Weight') }}%</p>
                     <ul>
                         @foreach($linkedCriteria as $criterion)
                         <li>{{ $criterion->masterCriteria->CriteriaName }} (Weight: {{ $criterion->Weight }}%)</li>
@@ -192,7 +185,13 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
 
     @if(!$readOnly)
     <div class="mt-4">
-        <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Update Round' : 'Create Round' }}</button>
+        <button type="submit" class="btn btn-primary">
+            @if($isEdit)
+            <i class="fas fa-save me-1"></i> Update Round
+            @else
+            <i class="fas fa-plus-circle me-1"></i> Create Round
+            @endif
+        </button>
     </div>
     @endif
 </form>
@@ -208,14 +207,12 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
 
         function updateTotalWeights() {
             let totalSectionWeight = 0;
-            let allCriteriaValid = true;
             let hasIncludedSections = false;
 
             accordionItems.forEach(item => {
                 const sectionCheckbox = item.querySelector('input[id^="section_included_"]');
                 const sectionIncluded = sectionCheckbox ? sectionCheckbox.checked : false;
                 const sectionWeightInput = item.querySelector('.section-weight-input');
-                const criteriaWeightInputs = item.querySelectorAll('.criteria-weight-input');
                 const sectionWeight = parseInt(sectionWeightInput?.value) || 0;
                 const sectionWeightDisplay = item.querySelector('.section-weight-display');
 
@@ -226,51 +223,6 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                 if (sectionIncluded) {
                     hasIncludedSections = true;
                     totalSectionWeight += sectionWeight;
-
-                    let totalCriteriaWeight = 0;
-                    let hasIncludedCriteria = false;
-
-                    criteriaWeightInputs.forEach(input => {
-                        const criteriaCheckbox = input.closest('.card').querySelector('input[type=checkbox]');
-                        if (criteriaCheckbox && criteriaCheckbox.checked) {
-                            hasIncludedCriteria = true;
-                            const weight = parseInt(input.value) || 0;
-                            totalCriteriaWeight += weight;
-                        }
-                    });
-
-                    const criteriaProgressBar = item.querySelector('div[id^="criteriaWeightProgress_"]');
-                    const criteriaWarning = item.querySelector('small[id^="criteriaWeightWarning_"]');
-
-                    if (criteriaProgressBar) {
-                        const progressPercentage = sectionWeight > 0 ? Math.min((totalCriteriaWeight / sectionWeight) * 100, 100) : 0;
-                        criteriaProgressBar.style.width = progressPercentage + '%';
-                        criteriaProgressBar.textContent = totalCriteriaWeight + '%';
-
-                        if (hasIncludedCriteria) {
-                            if (totalCriteriaWeight !== sectionWeight) {
-                                if (criteriaWarning) {
-                                    criteriaWarning.style.display = 'block';
-                                    criteriaWarning.textContent = `Total criteria weight (${totalCriteriaWeight}%) must equal section weight (${sectionWeight}%).`;
-                                }
-                                allCriteriaValid = false;
-                            } else {
-                                if (criteriaWarning) {
-                                    criteriaWarning.style.display = 'none';
-                                }
-                            }
-                        } else if (sectionWeight > 0) {
-                            if (criteriaWarning) {
-                                criteriaWarning.style.display = 'block';
-                                criteriaWarning.textContent = 'Please select criteria for this section or set section weight to 0.';
-                            }
-                            allCriteriaValid = false;
-                        } else {
-                            if (criteriaWarning) {
-                                criteriaWarning.style.display = 'none';
-                            }
-                        }
-                    }
                 }
             });
 
@@ -293,7 +245,7 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
             }
 
             if (submitBtn) {
-                submitBtn.disabled = !isSectionWeightValid || !allCriteriaValid;
+                submitBtn.disabled = !isSectionWeightValid;
             }
         }
 
@@ -309,22 +261,18 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                         bsCollapse.show();
                     } else {
                         bsCollapse.hide();
-
                         const sectionWeightInput = this.closest('.accordion-item').querySelector('.section-weight-input');
                         if (sectionWeightInput) {
                             sectionWeightInput.value = 0;
                         }
-
                         const criteriaCheckboxes = collapseEl.querySelectorAll('input[type=checkbox]');
                         const criteriaWeightContainers = collapseEl.querySelectorAll('.criteria-weight-container');
                         const criteriaWeightInputs = collapseEl.querySelectorAll('.criteria-weight-input');
-
                         criteriaCheckboxes.forEach(cb => cb.checked = false);
                         criteriaWeightContainers.forEach(container => container.style.display = 'none');
                         criteriaWeightInputs.forEach(input => input.value = 0);
                     }
                 }
-
                 updateTotalWeights();
             });
         });
@@ -334,7 +282,6 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                 const value = parseInt(this.value) || 0;
                 if (value < 0) this.value = 0;
                 if (value > 100) this.value = 100;
-
                 updateTotalWeights();
             });
         });
@@ -356,8 +303,6 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                         weightInput.value = 0;
                     }
                 }
-
-                updateTotalWeights();
             });
         });
 
@@ -365,9 +310,7 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
             input.addEventListener('input', function() {
                 const value = parseInt(this.value) || 0;
                 if (value < 0) this.value = 0;
-                if (value > 100) this.value = 100;
-
-                updateTotalWeights();
+                if (value > 10) this.value = 10;
             });
         });
 

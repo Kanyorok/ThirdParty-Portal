@@ -26,12 +26,12 @@
                     <thead class="table-primary">
                         <tr>
                             <th>Application ID</th>
+                            <th>Round Name</th>
                             <th>Supplier Name</th>
-                            <th>Trading Name</th>
-                            <th>Physical Address</th>
                             <th>Email</th>
-                            <th>Phone</th>
-                            <th>Date Submitted</th>
+                            <th>Phone No</th>
+                            <th>Categories</th>
+                            <th>Application Date</th>
                             <th>Status</th>
                             <th class="text-center">Actions</th>
                         </tr>
@@ -40,11 +40,19 @@
                         @foreach ($applications as $application)
                         <tr>
                             <td><span class="fw-semibold text-dark">APP-{{ $application->ApplicationID }}</span></td>
+                            <td><span class="fw-semibold">{{ $application->round->Title ?? 'N/A' }}</span></td>
                             <td>{{ $application->supplier->ThirdPartyName }}</td>
-                            <td>{{ $application->supplier->TradingName ?? 'N/A' }}</td>
-                            <td>{{ $application->supplier->PhysicalAddress ?? 'N/A' }}</td>
                             <td>{{ $application->supplier->Email ?? 'N/A' }}</td>
                             <td>{{ $application->supplier->Phone ?? 'N/A' }}</td>
+                            <td>
+                                @if($application->categories->isNotEmpty())
+                                @foreach($application->categories as $category)
+                                <span class="badge bg-secondary me-1">{{ $category->CategoryName }}</span>
+                                @endforeach
+                                @else
+                                <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
                             <td>{{ \Carbon\Carbon::parse($application->SubmittedOn)->format('M d, Y') }}</td>
                             <td>
                                 <span class="badge bg-{{ $application->Status->getColor() }} px-3 py-2">
@@ -54,8 +62,6 @@
                             <td class="text-center">
                                 <div class="btn-group">
                                     <a href="{{ route('prequalification.applications.show', $application->ApplicationID) }}" class="btn btn-sm btn-outline-primary">View</a>
-                                    <!-- TODO: Implement evaluate to make this work -->
-                                    <a href="{{ route('prequalification.applications.edit', $application->ApplicationID) }}" class="btn btn-sm btn-outline-warning">Evaluate</a>
                                     <form action="{{ route('prequalification.applications.destroy', $application->ApplicationID) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this application?');">
                                         @csrf
                                         @method('DELETE')

@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Models\Procurement\Section;
-use App\Models\Procurement\Criteria;
 
 class PrequalificationSection extends Model
 {
@@ -43,8 +42,7 @@ class PrequalificationSection extends Model
 
     public function criteria(): HasMany
     {
-        return $this->hasMany(PrequalificationCriteria::class, 'SectionId', 'SectionId')
-            ->with('masterCriteria');
+        return $this->hasMany(PrequalificationCriteria::class, 'SectionId', 'SectionId');
     }
 
     public static function getPrimaryKey(): string

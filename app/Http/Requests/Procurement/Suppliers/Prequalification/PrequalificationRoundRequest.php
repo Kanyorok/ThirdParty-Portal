@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Procurement\Suppliers\Prequalification;
 
 use App\Enums\Procurement\PrequalificationRoundEnum;
-use App\Models\Procurement\Section;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
@@ -30,24 +29,17 @@ abstract class PrequalificationRoundRequest extends FormRequest
             'sections.*.included' => ['nullable', 'boolean'],
             'sections.*.weight' => [
                 function ($attribute, $value, $fail) {
-                    // Extract section index from attribute path
+                    $sections = $this->input('sections', []);
                     preg_match('/sections\.(\d+)\.weight/', $attribute, $matches);
                     $sectionIndex = $matches[1] ?? null;
 
-                    if ($sectionIndex !== null) {
-                        $sections = $this->input('sections', []);
-                        $isIncluded = !empty($sections[$sectionIndex]['included']);
-
-                        if ($isIncluded) {
-                            if (empty($value) || !is_numeric($value)) {
-                                $fail('Weight is required when section is included.');
-                                return;
-                            }
-
-                            $weight = (int) $value;
-                            if ($weight < 0 || $weight > 100) {
-                                $fail('Weight must be between 0 and 100.');
-                            }
+                    if ($sectionIndex !== null && !empty($sections[$sectionIndex]['included'])) {
+                        if (empty($value) && !is_numeric($value)) {
+                            $fail('Weight is required when section is included.');
+                            return;
+                        }
+                        if ((int) $value < 0 || (int) $value > 100) {
+                            $fail('Weight must be between 0 and 100.');
                         }
                     }
                 },
@@ -61,25 +53,18 @@ abstract class PrequalificationRoundRequest extends FormRequest
             'sections.*.criteria.*.included' => ['nullable', 'boolean'],
             'sections.*.criteria.*.weight' => [
                 function ($attribute, $value, $fail) {
-                    // Extract section and criteria indices from attribute path
+                    $sections = $this->input('sections', []);
                     preg_match('/sections\.(\d+)\.criteria\.(\d+)\.weight/', $attribute, $matches);
                     $sectionIndex = $matches[1] ?? null;
                     $criteriaIndex = $matches[2] ?? null;
 
-                    if ($sectionIndex !== null && $criteriaIndex !== null) {
-                        $sections = $this->input('sections', []);
-                        $isIncluded = !empty($sections[$sectionIndex]['criteria'][$criteriaIndex]['included']);
-
-                        if ($isIncluded) {
-                            if (empty($value) || !is_numeric($value)) {
-                                $fail('Weight is required when criteria is included.');
-                                return;
-                            }
-
-                            $weight = (int) $value;
-                            if ($weight < 0 || $weight > 100) {
-                                $fail('Weight must be between 0 and 100.');
-                            }
+                    if ($sectionIndex !== null && $criteriaIndex !== null && !empty($sections[$sectionIndex]['criteria'][$criteriaIndex]['included'])) {
+                        if (empty($value) && !is_numeric($value)) {
+                            $fail('Weight is required when criteria is included.');
+                            return;
+                        }
+                        if ((int) $value < 0 || (int) $value > 10) {
+                            $fail('Weight must be between 0 and 10.');
                         }
                     }
                 },
@@ -90,56 +75,27 @@ abstract class PrequalificationRoundRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {
-            $sections = $this->input('sections', []);
+            $sections = collect($this->input('sections', []));
             $totalSectionWeight = 0;
-            $hasIncludedSections = false;
 
-            foreach ($sections as $sectionIndex => $section) {
-                // Skip if section is not included
-                if (empty($section['included'])) {
-                    continue;
-                }
+            // Only consider sections that are marked as "included"
+            $includedSections = $sections->filter(function ($section) {
+                return !empty($section['included']);
+            });
 
-                $hasIncludedSections = true;
+            if ($includedSections->isEmpty()) {
+                $validator->errors()->add('sections', 'At least one section must be included.');
+                return;
+            }
+
+            foreach ($includedSections as $section) {
                 $sectionWeight = (int) ($section['weight'] ?? 0);
                 $totalSectionWeight += $sectionWeight;
-                $totalCriteriaWeight = 0;
-
-                // Check if section has criteria
-                if (isset($section['criteria']) && is_array($section['criteria'])) {
-                    $hasIncludedCriteria = false;
-
-                    foreach ($section['criteria'] as $criteriaIndex => $criteria) {
-                        if (!empty($criteria['included'])) {
-                            $hasIncludedCriteria = true;
-                            $criteriaWeight = (int) ($criteria['weight'] ?? 0);
-                            $totalCriteriaWeight += $criteriaWeight;
-                        }
-                    }
-
-                    // Only validate criteria weights if there are included criteria
-                    if ($hasIncludedCriteria && $totalCriteriaWeight !== $sectionWeight) {
-                        $sectionModel = Section::find($section['section_id']);
-                        $sectionName = $sectionModel ? $sectionModel->SectionName : 'Unknown Section';
-                        $validator->errors()->add('sections', "The total weight of criteria for section '{$sectionName}' must equal its section weight of {$sectionWeight}%. Current total: {$totalCriteriaWeight}%");
-                    }
-                } else {
-                    if ($sectionWeight > 0) {
-                        $sectionModel = Section::find($section['section_id']);
-                        $sectionName = $sectionModel ? $sectionModel->SectionName : 'Unknown Section';
-                        $validator->errors()->add('sections', "Section '{$sectionName}' has weight but no criteria selected.");
-                    }
-                }
             }
 
-            // Only check total section weight if there are included sections
-            if ($hasIncludedSections && $totalSectionWeight !== 100) {
-                $validator->errors()->add('sections', "The total weight of all included sections must equal 100%. Current total: {$totalSectionWeight}%");
-            }
-
-            // Check if at least one section is included
-            if (!$hasIncludedSections) {
-                $validator->errors()->add('sections', 'At least one section must be included.');
+            // Validate that the total weight of all sections is 100
+            if ($totalSectionWeight !== 100) {
+                $validator->errors()->add('sections', "The total weight of all included sections must equal 100. Current total: {$totalSectionWeight}.");
             }
         });
     }

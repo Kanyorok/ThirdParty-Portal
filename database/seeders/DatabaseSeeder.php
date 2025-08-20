@@ -68,8 +68,8 @@ class DatabaseSeeder extends Seeder
                 $this->call(TenantRegistrySeeder::class);
 
                 $this->call(PropertyNewLeaseSeeder::class);
-                $this->call(ThirdPartySeeder::class);
                 $this->call(ThirdPartyUserSeeder::class);
+                $this->call(ThirdPartySeeder::class);
                 $this->call(ThirdPartyCategorySeeder::class);
                 $this->call(ThirdPartiesBankDetailsSeeder::class);
 

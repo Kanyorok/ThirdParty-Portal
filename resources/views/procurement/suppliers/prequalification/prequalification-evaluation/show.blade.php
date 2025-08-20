@@ -3,6 +3,18 @@
 @section('content')
 <div class="container my-5">
 
+    @if (session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+    @endif
+
+    @if (session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
+    @endif
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Prequalification Application</h1>
@@ -11,25 +23,14 @@
             </p>
         </div>
         <div class="d-flex align-items-center">
-            {{-- Button to trigger the evaluation form --}}
+            {{-- Conditionally show the Evaluate button --}}
+            @if($application->round)
             <a href="{{ route('prequalification.prequalification-evaluation.show', $application->ApplicationID) }}" class="btn btn-primary me-2">
                 <i class="fa fa-clipboard-check me-1"></i> Evaluate
             </a>
+            @endif
 
-            {{-- Button to generate and view the results --}}
-            <form action="{{ route('prequalification.prequalification-evaluation.generate-results', $application->ApplicationID) }}" method="POST" class="d-inline me-2">
-                @csrf
-                <button type="submit" class="btn btn-success">
-                    <i class="fa fa-calculator me-1"></i> Generate & View Results
-                </button>
-            </form>
-
-            {{-- Button to view already generated results --}}
-            <a href="{{ route('prequalification.prequalification-evaluation.results', $application->ApplicationID) }}" class="btn btn-info me-2">
-                <i class="fa fa-chart-bar me-1"></i> View Results
-            </a>
-
-            <a href="{{ route('prequalification.applications.index') }}" class="btn btn-outline-secondary">
+            <a href="{{ route('prequalification.prequalification-applications.index') }}" class="btn btn-outline-secondary">
                 <i class="fa fa-arrow-left me-1"></i> Back to Applications
             </a>
         </div>

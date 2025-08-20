@@ -34,4 +34,15 @@ enum PrequalificationStatusEnum: string
             self::Rejected => 'red',
         };
     }
+
+    public function canTransition(self $next): string
+    {
+        return match ($this) {
+            self::Draft => in_array($next, [self::Submitted]),
+            self::Submitted => in_array($next, [self::UnderReview, self::ReturnedForCorrection]),
+            self::UnderReview => in_array($next, [self::Approved, self::Rejected, self::ReturnedForCorrection]),
+            self::ReturnedForCorrection => in_array($next, [self::Submitted]),
+            self::Approved, self::Rejected => false, // final states
+        };
+    }
 }

@@ -14,8 +14,6 @@ use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-use App\Models\Procurement\ThirdParty\SupplierCategory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Supplier extends ThirdParties
 {
@@ -69,6 +67,16 @@ class Supplier extends ThirdParties
             ->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier)
             ->where('IsPrequalified', true)
             ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\ThirdParty\SupplierCategory::class,
+            't_ThirdParty_SupplierCategory',
+            'third_party_id',
+            'supplier_category_id'
+        )->withTimestamps();
     }
 
     public function scopeOnlySuppliers($query)

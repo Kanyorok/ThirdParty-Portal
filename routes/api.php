@@ -74,6 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
+// currencies
 Route::prefix('v1')->group(function () {
     Route::get('currencies', [ApiCurrencyController::class, 'list']);
 });

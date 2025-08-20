@@ -9,9 +9,11 @@
             <h4 class="mb-0 text-primary">Prequalification Round: {{ $prequalificationRound->Title }}</h4>
             <div>
                 <a href="{{ route('prequalification.prequalification-rounds.edit', $prequalificationRound) }}" class="btn btn-warning me-2">
-                    <i class="bi bi-pencil"></i> Edit
+                    <i class="fas fa-edit"></i> Edit Round
                 </a>
-                <a href="{{ route('prequalification.prequalification-rounds.index') }}" class="btn btn-light">Back to List</a>
+                <a href="{{ route('prequalification.prequalification-rounds.index') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
             </div>
         </div>
         <div class="card-body">
@@ -24,3 +26,7 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uW/j/jJ/1k1Fw/Gg6wzR5yV7qg6l2P7x3t4q8G+3j/6Cj9q/q8Cg2s8/j2VqQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+@endpush

@@ -4,10 +4,11 @@ namespace App\Models\Procurement\Prequalification;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\ThirdParies\Supplier;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\ThirdParty\SupplierCategory;
+use App\Models\ThirdParty\ThirdParties;
 use App\Enums\Procurement\PrequalificationApplicationEnum;
 
 class PrequalificationApplication extends Model
@@ -24,7 +25,6 @@ class PrequalificationApplication extends Model
     protected $fillable = [
         'SupplierID',
         'RoundID',
-        // 'CategoryID',
         'SubmittedOn',
         'Status',
         'CreatedBy',
@@ -40,9 +40,9 @@ class PrequalificationApplication extends Model
         'Status' => PrequalificationApplicationEnum::class,
     ];
 
-    public function supplier(): BelongsTo
+    public function supplier()
     {
-        return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
+        return $this->belongsTo(ThirdParties::class, 'SupplierID', 'Id');
     }
 
     public function round(): BelongsTo
@@ -53,5 +53,15 @@ class PrequalificationApplication extends Model
     public function evaluations(): HasMany
     {
         return $this->hasMany(PrequalificationEvaluation::class, 'ApplicationID', 'ApplicationID');
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            SupplierCategory::class,
+            't_PrequalificationApplicationCategories',
+            'ApplicationID',
+            'CategoryID'
+        )->withTimestamps();
     }
 }

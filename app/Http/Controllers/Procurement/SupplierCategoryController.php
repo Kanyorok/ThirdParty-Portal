@@ -8,16 +8,12 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\Procurement\Suppliers\StoreSupplierCategoryRequest;
 use App\Http\Requests\Procurement\Suppliers\UpdateSupplierCategoryRequest;
+use Illuminate\Http\JsonResponse;
 
 class SupplierCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        if ($request->wantsJson()) {
-            $categories = SupplierCategory::all();
-            return response()->json($categories);
-        }
-
         if ($request->ajax()) {
             $categories = SupplierCategory::select(
                 'SupplierCategoryID',
@@ -48,6 +44,12 @@ class SupplierCategoryController extends Controller
         $supplierCategories = SupplierCategory::all();
 
         return view('procurement.suppliers.supplier_categories.index', compact('supplierCategories'));
+    }
+
+    public function all(): JsonResponse
+    {
+        $categories = SupplierCategory::all();
+        return response()->json($categories);
     }
 
     public function create()
@@ -101,37 +103,5 @@ class SupplierCategoryController extends Controller
         }
 
         return redirect()->route('proc.supplier-cat.index')->with('success', 'Supplier Category deleted successfully.');
-    }
-
-    public function getPreferredCategories(): \Illuminate\Http\JsonResponse
-    {
-        $user = auth()->id();
-        if (!$user || !$user->thirdParty) {
-            return response()->json(['message' => 'User not authenticated or not associated with a third party.'], 404);
-        }
-
-        $preferredCategories = $user->thirdParty->supplierCategories;
-
-        return response()->json($preferredCategories);
-    }
-
-    public function updatePreferredCategories(Request $request): \Illuminate\Http\JsonResponse
-    {
-        $request->validate([
-            'category_ids' => 'required|array',
-            'category_ids.*' => 'exists:t_SupplierCategories,SupplierCategoryID',
-        ]);
-
-        $user = auth()->user();
-        if (!$user || !$user->thirdParty) {
-            return response()->json(['message' => 'User not authenticated or not associated with a third party.'], 404);
-        }
-
-        $user->thirdParty->supplierCategories()->sync($request->input('category_ids'));
-
-        return response()->json([
-            'message' => 'Preferred categories updated successfully.',
-            'data' => $user->thirdParty->supplierCategories
-        ], 200);
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class PrequalificationRound extends Model
@@ -64,18 +65,27 @@ class PrequalificationRound extends Model
         return $this->hasMany(PrequalificationApplication::class, 'RoundID', 'RoundID');
     }
 
-    public function prequalificationSections()
+    public function prequalificationSections(): HasMany
     {
         return $this->hasMany(PrequalificationSection::class, 'RoundId', 'RoundID')
             ->with('masterSection', 'criteria');
     }
 
-    public function prequalificationCriteria()
+    public function prequalificationCriteria(): HasMany
     {
         return $this->hasMany(PrequalificationCriteria::class, 'RoundId', 'RoundID')
             ->with(['masterCriteria', 'masterSection']);
     }
 
+    public function supplierCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\ThirdParty\SupplierCategory::class,
+            't_PrequalificationRoundSupplierCategory',
+            'round_id',
+            'supplier_category_id'
+        )->withTimestamps();
+    }
 
     public function masterSections(): HasManyThrough
     {

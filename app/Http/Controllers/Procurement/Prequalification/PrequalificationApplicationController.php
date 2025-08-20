@@ -23,8 +23,15 @@ class PrequalificationApplicationController extends Controller
 
     public function show(PrequalificationApplication $application): View
     {
-        // $application->load('round.masterSections.criteria', 'responses');
-        return view('procurement.suppliers.prequalification.supplier-applications.show', compact('application'));
+        // $application->load('round.masterSections.criteria');
+        // return view('procurement.suppliers.prequalification.supplier-applications.show', compact('application'));
+
+        $application->load('round.prequalificationSections.masterSection.criteria');
+
+        return view(
+            'procurement.suppliers.prequalification.supplier-applications.show',
+            compact('application')
+        );
     }
 
     public function apiIndex(): JsonResponse
@@ -46,17 +53,12 @@ class PrequalificationApplicationController extends Controller
 
     public function store(StorePrequalificationApplicationRequest $request): JsonResponse
     {
-        if (!auth()->check()) {
-            return response()->json(['error' => 'User not authenticated'], 401);
-        }
+        if (!auth()->check()) return response()->json(['error' => 'User not authenticated'], 401);
+
+        $user = auth()->user();
+        if (!$user->thirdParty) return response()->json(['error' => 'User not associated with a third party.'], 400);
 
         $validatedData = $request->validated();
-        $user = auth()->user();
-
-        if (!$user->thirdParty) {
-            return response()->json(['error' => 'User not associated with a third party.'], 400);
-        }
-
         $supplierId = $user->thirdParty->Id;
 
         $existingApplication = PrequalificationApplication::where('SupplierID', $supplierId)
@@ -65,7 +67,7 @@ class PrequalificationApplicationController extends Controller
 
         if ($existingApplication) {
             return response()->json([
-                'message' => 'You have already applied for this prequalification round.',
+                'message' => 'Already applied.',
                 'reference' => 'APP-' . $existingApplication->ApplicationID,
                 'application' => $existingApplication,
             ], 200);
@@ -81,20 +83,39 @@ class PrequalificationApplicationController extends Controller
                 'CreatedBy' => $user->Id,
             ]);
 
-            DB::commit();
+            if (!empty($validatedData['category_ids'])) {
+                $application->categories()->sync($validatedData['category_ids']);
+            }
 
-            $application->load('supplier', 'round');
+            DB::commit();
+            $application->load('supplier', 'round', 'categories');
 
             return response()->json([
-                'message' => 'Prequalification application submitted successfully.',
+                'message' => 'Application submitted successfully.',
                 'reference' => 'APP-' . $application->ApplicationID,
                 'application' => $application,
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to submit application: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to submit application.',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
-            return response()->json(['error' => 'Failed to submit application.', 'trace' => $e->getTraceAsString()], 500);
+    public function destroy(PrequalificationApplication $application)
+    {
+        try {
+            $application->delete();
+            return redirect()
+                ->route('prequalification.applications.index')
+                ->with('success', 'Application deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to delete application: ' . $e->getMessage());
+            return redirect()
+                ->route('prequalification.applications.index')
+                ->with('error', 'Failed to delete application. Please try again.');
         }
     }
 }

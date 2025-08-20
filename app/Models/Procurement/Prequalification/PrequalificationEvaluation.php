@@ -4,10 +4,10 @@ namespace App\Models\Procurement\Prequalification;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\Auth\User;
 use App\Models\Procurement\Section;
+use App\Models\Procurement\Criteria;
 
 class PrequalificationEvaluation extends Model
 {
@@ -39,18 +39,24 @@ class PrequalificationEvaluation extends Model
         'DeletedOn' => 'datetime',
     ];
 
+    // This is a single prequalification appplication - comes from the supplier portal
     public function application(): BelongsTo
     {
         return $this->belongsTo(PrequalificationApplication::class, 'ApplicationID', 'ApplicationID');
     }
-
+    // Evaluator is of type User
     public function evaluator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'EvaluatorID', 'UserID');
     }
-
+    // Section to be evaluated 
     public function evaluationSection(): BelongsTo
     {
         return $this->belongsTo(Section::class, 'SectionID', 'Id');
+    }
+    // criteria within the section to be evaluated
+    public function criteria(): BelongsTo
+    {
+        return $this->belongsTo(Criteria::class, 'CriteriaID', 'Id');
     }
 }

@@ -3,98 +3,192 @@
 namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationEvaluation;
-use App\Models\Procurement\Prequalification\PrequalificationRound;
-use Illuminate\Http\Request;
+use App\Models\Procurement\Prequalification\PrequalificationCriteria;
+use App\Models\Procurement\Prequalification\PrequalificationResult;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-
-// Assuming you have this Enum to update the application status
-use App\Enums\Procurement\PrequalificationApplicationEnum;
 
 class PrequalificationEvaluationController extends Controller
 {
-    public function index(PrequalificationRound $prequalificationRound): View
+    public function index(): View
     {
-        $applications = $prequalificationRound->applications()->with('supplier')->paginate(10);
-        return view('procurement.suppliers.evaluationsection.index', [
-            'prequalificationRound' => $prequalificationRound,
-            'applications' => $applications,
-        ]);
+        $evaluations = PrequalificationEvaluation::with(['application', 'criteria'])
+            ->where('EvaluatorID', Auth::id())
+            ->paginate(10);
+
+        return view('procurement.suppliers.prequalification.prequalification-evaluation.index', compact('evaluations'));
     }
 
-    public function create(PrequalificationApplication $application): View
+    public function showEvaluationForm($applicationId): View|RedirectResponse
     {
+        $application = PrequalificationApplication::with('supplier')->findOrFail($applicationId);
         $round = $application->round;
-        $sections = $round->evaluationSections()
+
+        if (!$round) {
+            return redirect()->back()->with('error', 'The prequalification round for this application could not be found.');
+        }
+
+        $evaluatorId = Auth::id();
+
+        $sections = $round->prequalificationSections()
             ->with(['masterSection', 'criteria.masterCriteria'])
             ->get();
-        $evaluations = PrequalificationEvaluation::where('ApplicationID', $application->ApplicationID)
-            ->where('EvaluatorID', auth()->id())
+
+        $existingEvaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
+            ->where('EvaluatorID', $evaluatorId)
             ->get()
-            ->keyBy(function ($item) {
-                return $item->CriteriaID;
-            });
-        return view('procurement.suppliers.evaluationcriteria.create', [
-            'application' => $application,
-            'round' => $round,
-            'sections' => $sections,
-            'evaluations' => $evaluations,
-        ]);
+            ->keyBy('CriteriaID');
+
+        return view('procurement.suppliers.prequalification.prequalification-evaluation.evaluate', compact('application', 'sections', 'existingEvaluations'));
     }
 
-    public function store(Request $request, PrequalificationApplication $application): RedirectResponse
+    public function submitEvaluation(Request $request, $applicationId): RedirectResponse
     {
-        $validatedData = $request->validate([
-            'evaluations' => 'required|array',
-            'evaluations.*.CriteriaID' => 'required|exists:t_PrequalificationRoundCriteria,CriteriaID',
-            'evaluations.*.Score' => 'required|numeric|min:0',
-            'evaluations.*.Remarks' => 'nullable|string|max:1000',
-        ]);
-        DB::beginTransaction();
-        try {
-            // First, delete any previous evaluations by this user to avoid conflicts
-            PrequalificationEvaluation::where('ApplicationID', $application->ApplicationID)
-                ->where('EvaluatorID', auth()->id())
-                ->delete();
+        $evaluatorId = Auth::id();
 
-            foreach ($validatedData['evaluations'] as $evaluationData) {
-                // Fetch the SectionID once before creating the evaluation
-                $roundCriteria = $application->round->evaluationCriteria()
-                    ->where('CriteriaId', $evaluationData['CriteriaID'])
-                    ->first();
-                if ($roundCriteria) {
-                    PrequalificationEvaluation::create([
-                        'ApplicationID' => $application->ApplicationID,
-                        'EvaluatorID' => auth()->id(),
-                        'CriteriaID' => $evaluationData['CriteriaID'],
-                        'SectionID' => $roundCriteria->SectionId,
-                        'Score' => $evaluationData['Score'],
-                        'Remarks' => $evaluationData['Remarks'],
-                        'MaxScore' => 10,
-                    ]);
-                }
+        $request->validate([
+            'criteria_scores' => 'required|array',
+            'criteria_scores.*.criteria_id' => 'required|integer',
+            'criteria_scores.*.score' => 'nullable|numeric|min:0',
+            'criteria_scores.*.max_score' => 'required|numeric|min:0',
+            'criteria_scores.*.comments' => 'nullable|string',
+            'general_comments' => 'nullable|string',
+        ]);
+
+        foreach ($request->input('criteria_scores') as $evaluationData) {
+            $criteriaId = $evaluationData['criteria_id'];
+            $maxScore = $evaluationData['max_score'];
+            $scoreAwarded = $evaluationData['score'];
+
+            $prequalificationCriteria = PrequalificationCriteria::where('CriteriaId', $criteriaId)
+                ->first();
+
+            if (!$prequalificationCriteria) {
+                continue;
             }
 
-            // After all evaluations are submitted, update the application's status
-            // This is crucial for the approval workflow to proceed
-            $application->Status = PrequalificationApplicationEnum::Submitted;
-            $application->save();
+            $sectionId = $prequalificationCriteria->SectionId;
 
-            DB::commit();
-            return redirect()
-                ->route('prequalification.evaluation.index', $application->RoundId)
-                ->with('success', 'Evaluation submitted successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to submit evaluation: ' . $e->getMessage());
+            if (!is_null($scoreAwarded) && $scoreAwarded > $maxScore) {
+                throw ValidationException::withMessages([
+                    "criteria_scores.{$criteriaId}.score" => "Score awarded cannot exceed the max score of {$maxScore}."
+                ]);
+            }
 
-            return back()
-                ->withInput()
-                ->with('error', 'Failed to submit evaluation. Please try again.');
+            PrequalificationEvaluation::updateOrCreate(
+                [
+                    'ApplicationID' => $applicationId,
+                    'EvaluatorID' => $evaluatorId,
+                    'CriteriaID' => $criteriaId,
+                ],
+                [
+                    'SectionID' => $sectionId,
+                    'Score' => $scoreAwarded,
+                    'MaxScore' => $maxScore,
+                    'Remarks' => $evaluationData['comments'],
+                ]
+            );
         }
+
+        $application = PrequalificationApplication::find($applicationId);
+        if ($request->filled('general_comments')) {
+            $application->GeneralComments = $request->input('general_comments');
+            $application->save();
+        }
+
+        return redirect()->route('prequalification.applications.show', $applicationId)
+            ->with('success', 'Evaluation submitted successfully!');
+    }
+
+    public function generateResults($applicationId): RedirectResponse
+    {
+        $evaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
+            ->with('criteria')
+            ->get();
+
+        $totalOverallScore = 0;
+        $totalMaxScore = 0;
+
+        foreach ($evaluations as $evaluation) {
+            $criteriaWeight = $evaluation->criteria->Weight ?? 0;
+            $criteriaScore = $evaluation->Score ?? 0;
+            $criteriaMaxScore = $evaluation->MaxScore ?? 0;
+
+            $weightedScore = 0;
+            if ($criteriaMaxScore > 0) {
+                $weightedScore = ($criteriaScore / $criteriaMaxScore) * $criteriaWeight;
+            }
+            $totalOverallScore += $weightedScore;
+            $totalMaxScore += $criteriaWeight;
+        }
+
+        // Set a passing threshold of 70%
+        $passingThreshold = 70;
+        $decision = ($totalOverallScore >= $passingThreshold) ? 'Passed' : 'Failed';
+
+        PrequalificationResult::updateOrCreate(
+            ['ApplicationID' => $applicationId],
+            [
+                'TotalScore' => $totalOverallScore,
+                'Decision' => $decision,
+                'ApprovalBy' => Auth::id(),
+            ]
+        );
+
+        return redirect()->route('prequalification-evaluation.results', $applicationId)
+            ->with('success', 'Prequalification results generated successfully!');
+    }
+
+    public function showResults($applicationId): View
+    {
+        $application = PrequalificationApplication::with(['supplier'])->findOrFail($applicationId);
+
+        $evaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
+            ->with(['criteria.masterCriteria', 'criteria.section.masterSection'])
+            ->get();
+
+        $result = PrequalificationResult::where('ApplicationID', $applicationId)->firstOrFail();
+
+        $sections = [];
+        foreach ($evaluations as $evaluation) {
+            $sectionId = $evaluation->SectionID;
+
+            if (!isset($sections[$sectionId])) {
+                $sections[$sectionId] = [
+                    'name' => optional($evaluation->criteria->section->masterSection)->SectionName,
+                    'criteria' => [],
+                    'sectionScore' => 0,
+                    'sectionMaxScore' => 0,
+                ];
+            }
+
+            $criteriaWeight = $evaluation->criteria->Weight ?? 0;
+            $criteriaScore = $evaluation->Score ?? 0;
+            $criteriaMaxScore = $evaluation->MaxScore ?? 0;
+
+            $weightedScore = 0;
+            if ($criteriaMaxScore > 0) {
+                $weightedScore = ($criteriaScore / $criteriaMaxScore) * $criteriaWeight;
+            }
+
+            $sections[$sectionId]['criteria'][] = [
+                'name' => optional($evaluation->criteria->masterCriteria)->MasterCriteriaName,
+                'score' => $criteriaScore,
+                'maxScore' => $criteriaMaxScore,
+                'weight' => $criteriaWeight,
+                'weightedScore' => $weightedScore,
+                'remarks' => $evaluation->Remarks,
+            ];
+
+            $sections[$sectionId]['sectionScore'] += $weightedScore;
+            $sections[$sectionId]['sectionMaxScore'] += $criteriaWeight;
+        }
+
+        return view('procurement.suppliers.prequalification.prequalification-evaluation.show_results', compact('application', 'sections', 'result'));
     }
 }
