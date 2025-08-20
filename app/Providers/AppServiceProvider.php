@@ -43,6 +43,11 @@ use App\Models\CRM\Contact;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
+use App\Models\Finance\FinanceJournalEntry;
+use App\Models\Finance\FinanceJournalLines;
+use App\Models\Finance\FinanceTransaction;
+use App\Models\Finance\RecurrentJournal;
+use App\Models\Finance\ReverseJournalEntry;
 use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
@@ -63,6 +68,8 @@ use App\Models\DMS\DocumentTags;
 use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
+use App\Models\Finance\FinanceCDNotes;
+use App\Models\Finance\FinanceGLMapping;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Insurance\BancassuranceClaim;
@@ -90,6 +97,7 @@ use App\Models\Inventory\Store;
 use App\Models\Inventory\TransactionReceipt;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\UOMConversion;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\Order;
@@ -149,6 +157,7 @@ use App\Policies\Inventory\StockItemPolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\TransactionReceiptPolicy;
 use App\Policies\Inventory\TransactionTransferPolicy;
+use App\Policies\Inventory\UOMConversionPolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
@@ -178,14 +187,38 @@ use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
+use App\Models\FleetManagement\FleetMake;
+use App\Models\FleetManagement\FleetModel;
+use App\Models\FleetManagement\VehicleRegistry;
+use App\Models\FleetManagement\DriverManagement;
+use App\Policies\FleetManagement\DriverManagementPolicy;
+use App\Policies\FleetManagement\FleetMakePolicy;
+use App\Policies\FleetManagement\FleetModelPolicy;
+use App\Policies\FleetManagement\VehicleRegistryPolicy; 
+use App\Policies\FleetManagement\DriverPolicy;
+
+
+
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 use App\Models\Finance\FinanceInvoiceEntry;
+use App\Models\Finance\FinanceModuleTransactions;
 use App\Models\Finance\FinanceTaxType;
+use App\Models\Finance\FinanceTransactionTypes;
 use App\Models\Finance\TaxJurisdiction;
+use App\Models\Legal\LegalCase;
+use App\Models\Legal\LegalCaseCounsel;
+use App\Models\Legal\LegalCaseEvidence;
+use App\Models\Legal\LegalCaseOutcome;
+use App\Models\Legal\LegalClause;
+use App\Models\Legal\LegalDocument;
+use App\Models\Legal\LegalIntellectualProperty;
+use App\Models\Legal\LegalObligation;
+use App\Models\Legal\LegalSearchRequest;
+use App\Models\Legal\LoanSecurity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -269,6 +302,7 @@ class AppServiceProvider extends ServiceProvider
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
             ModelRole::getPrimaryKey() => ModelRole::class,
+            UOMConversion::getPrimaryKey() => UOMConversion::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -290,9 +324,30 @@ class AppServiceProvider extends ServiceProvider
             Budget::getPrimaryKey() => Budget::class,
             BudgetGLAccountSubType::getPrimaryKey() => BudgetGLAccountSubType::class,
             BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
+
+
+            BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
+            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
+            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
+            BudgetLine::getPrimaryKey() => BudgetLine::class,
+            BudgetPeriods::getPrimaryKey() => BudgetPeriods::class,
+            BudgetPeriodTypes::getPrimaryKey() => BudgetPeriodTypes::class,
+            BudgetScenarioPlanning::getPrimaryKey() => BudgetScenarioPlanning::class,
+            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
+            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
+            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
+            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
+            BudgetDriverProjections::getPrimaryKey() => BudgetDriverProjections::class,
+            BudgetTopDown::getPrimaryKey() => BudgetTopDown::class,
+            BudgetTopDownData::getPrimaryKey() => BudgetTopDownData::class,
+            BudgetActivity::getPrimaryKey() => BudgetActivity::class,
+            BudgetMonthlyAllocation::getPrimaryKey() => BudgetMonthlyAllocation::class,
+            Budget::getPrimaryKey() => Budget::class,
+            BudgetGLAccountSubType::getPrimaryKey() => BudgetGLAccountSubType::class,
+            BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
             BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
             BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
-            
+
             //Property Management
             PropertyType::getPrimaryKey() => PropertyType::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
@@ -310,6 +365,9 @@ class AppServiceProvider extends ServiceProvider
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
+            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
+            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
             PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
             //DMS
@@ -321,6 +379,26 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
+
+            PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
+            PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
+            PropertyFloor::getPrimaryKey() => PropertyFloor::class,
+            PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
+            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
+            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
+            PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
+            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
+            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
+
+              //Fleet Management
+            FleetMake::getPrimaryKey() => FleetMake::class,
+            FleetModel::getPrimaryKey() => FleetModel::class,
+            VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
+            DriverManagement::getPrimaryKey() => DriverManagement::class,
+
 
             //Insurance
             BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
@@ -346,6 +424,28 @@ class AppServiceProvider extends ServiceProvider
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+            FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
+            FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
+            RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
+            ReverseJournalEntry::getPrimaryKey() => ReverseJournalEntry::class,
+            FinanceTransaction::getPrimaryKey() => FinanceTransaction::class,
+            FinanceCDNotes::getPrimaryKey() => FinanceCDNotes::class,
+            FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
+            FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
+            FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
+            
+            //////////////  Legal  ////////////////
+            LegalDocument::getPrimaryKey() => LegalDocument::class,
+            LegalClause::getPrimaryKey() => LegalClause::class,
+            LegalCase::getPrimaryKey() => LegalCase::class,
+            LegalObligation::getPrimaryKey() => LegalObligation::class,
+            LegalSearchRequest::getPrimaryKey() => LegalSearchRequest::class,
+            LegalIntellectualProperty::getPrimaryKey() => LegalIntellectualProperty::class,
+            LoanSecurity::getPrimaryKey() => LoanSecurity::class,
+            LegalCaseEvidence::getPrimaryKey() => LegalCaseEvidence::class,
+            LegalCaseCounsel::getPrimaryKey() => LegalCaseCounsel::class,
+            LegalCaseOutcome::getPrimaryKey() => LegalCaseOutcome::class,
+
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -379,7 +479,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);
         Gate::policy(PropertyBlock::class, PropertyStructuralPolicy::class);
-        Gate::policy(PropertyAttachments::class, PropertyAttachmentsPolicy::class);       
+        Gate::policy(PropertyAttachments::class, PropertyAttachmentsPolicy::class);
         Gate::policy(PropertyNewTenant::class, PropertyNewTenantPolicy::class);
         Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
@@ -405,7 +505,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
         Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
         Gate::policy(InsuranceProductRider::class, InsuranceProductRiderPolicy::class);
-        Gate::policy(BancassuranceCommissionRule::class, CommissionRulePolicy::class);
+        Gate::policy(BancassuranceCommissionRule::class, CommissionRulePolicy::class);        Gate::policy(FleetMake::class, FleetMakePolicy::class);
+        Gate::policy(FleetModel::class, FleetModelPolicy::class);
+        Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
+        Gate::policy(DriverManagement::class, DriverManagementPolicy::class);
+        Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

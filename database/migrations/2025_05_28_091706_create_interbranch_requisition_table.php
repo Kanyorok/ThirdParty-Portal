@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->foreignId('ToBranch')->constrained('t_Branches', 'Id');
             $table->foreignId('ItemCode')->constrained('t_Items', 'Id');
             $table->foreignId('ItemName')->constrained('t_Items', 'Id');
-            $table->foreignId('UOM')->constrained('t_Items', 'Id');
+           $table->foreignId('UOM')->constrained('t_Items', 'Id');
             $table->integer('Requested Qty');
             $table->string('Remarks');
             $table->boolean('Status');

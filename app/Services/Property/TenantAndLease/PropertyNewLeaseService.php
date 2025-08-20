@@ -46,12 +46,14 @@ class PropertyNewLeaseService
         UploadedFile $document = null
     ): self {
 
-            $lastLeaseNumber = PropertyNewLease::withTrashed() // in case you're using soft deletes
-                ->selectRaw("MAX(CAST(SUBSTRING(LeaseNumber, 7, LEN(LeaseNumber)) AS INT)) as max_number")
-                ->value('max_number');
+        $lastLeaseNumber = PropertyNewLease::withTrashed()
+            ->selectRaw("CAST(SUBSTRING(LeaseNumber, 7, 5) AS INT) as num")
+            ->orderByDesc('num')
+            ->value('num');
 
-            $nextNumber = $lastLeaseNumber ? $lastLeaseNumber + 1 : 1;
-            $leaseNumber = 'LEASE-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        $nextNumber = $lastLeaseNumber ? $lastLeaseNumber + 1 : 1;
+        $leaseNumber = 'LEASE-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
 
 
         $newlease = PropertyNewLease::create([

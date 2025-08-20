@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('t_BudgetDriverRates', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('PeriodTypeID')->constrained('t_BudgetPeriodTypes', 'Id');
-            $table->foreignId('ProductTypeID')->constrained('t_BudgetProductTypes', 'Id');
+            $table->foreignId('ProductTypeID')->constrained('t_BudgetProductTypes', 'Id');// Change to point to t_BudgetProducts
             $table->foreignId('RateTypeID')->constrained('t_BudgetRates', 'Id');
             $table->decimal('RateValue', 5, 2)->default(0.00)->unsigned()->check('RateValue <= 100.00');
             $table->dateTime('EffectiveDate');

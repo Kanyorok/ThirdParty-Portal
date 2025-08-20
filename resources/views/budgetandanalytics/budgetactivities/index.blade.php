@@ -1,11 +1,11 @@
 @extends('layouts.app')
 @section('title', 'Activities Overview')
 @section('content')
-    <div class="container mt-4">
-        <div class="card p-4">
-            <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">
-                📊 Budget Activities Overview
-            </div>
+    <div class="container mt-1">
+        <div class="card p-1">
+{{--            <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">--}}
+{{--                📊 Budget Activities Overview--}}
+{{--            </div>--}}
 
             <div class="card-body mb-0">
                 @if(session('success'))
@@ -90,49 +90,6 @@
     </div>
 
 
-    @foreach ($activities as $item)
-        <!-- View Allocations Modal -->
-        <div class="modal fade" id="viewAllocationsModal-{{ $item->Id }}" tabindex="-1"
-             aria-labelledby="viewAllocationsLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content rounded-3 shadow">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="viewAllocationsLabel">Monthly Allocations
-                            for {{ $item->ActivityName }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <table class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>Amount</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach ($item->allocations as $alloc)
-                                <tr>
-                                    <td>{{ DateTime::createFromFormat('!m', $alloc->Month)->format('F') }}</td>
-                                    <td>{{ number_format($alloc->Amount) }}</td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                            <tfoot>
-                            <tr>
-                                <th>Total</th>
-                                <th>{{ number_format($item->FullAllocation) }}</th>
-                            </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </div>
-    @endforeach
 
     @include('components.modals.delete-confirm')
 @endsection

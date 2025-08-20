@@ -3,14 +3,12 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">👤 New Customer Profile </h4>
-
     <form method="POST" action="{{ route('bancassurance.customers.store') }}"enctype="multipart/form-data">
         @csrf
 
         <div class="row mb-3">
             <div class="col-md-6">
-                <label class="form-label">Full Name</label>
+                <label class="form-label">Full Name <span class="text-danger">*</span></label>
                 <input type="text" name="FullName" class="form-control" required>
             </div>
             <div class="col-md-6">
@@ -25,18 +23,18 @@
             </select>
           </div>
             <div class="col-md-3">
-                <label class="form-label">National ID</label>
+                <label class="form-label">National ID <span class="text-danger">*</span></label>
                 <input type="text" name="NationalID" class="form-control" required>
             </div>
             <div class="col-md-3">
-                <label class="form-label">KRA PIN</label>
-                <input type="text" name="KRAPIN" class="form-control">
+                <label class="form-label">KRA PIN <span class="text-danger">*</span></label>
+                <input type="text" name="KRAPIN" class="form-control" required>
             </div>
         </div>
 
         <div class="row mb-3">
             <div class="col-md-3">
-                <label class="form-label">Date of Birth</label>
+                <label class="form-label">Date of Birth </label>
                 <input type="date" name="DateOfBirth" class="form-control">
             </div>
             <div class="col-md-3">
@@ -76,12 +74,12 @@
 
         <div class="row mb-3">
             <div class="col-md-4">
-                <label class="form-label">Phone</label>
-                <input type="text" name="PhoneNumber" class="form-control">
+                <label class="form-label">Phone <span class="text-danger">*</span></label>
+                <input type="text" name="PhoneNumber" class="form-control" required>
             </div>
             <div class="col-md-4">
-                <label class="form-label">Email</label>
-                <input type="email" name="Email" class="form-control">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" name="Email" class="form-control" required>
             </div>
             <div class="col-md-4">
                 <label class="form-label">Address</label>

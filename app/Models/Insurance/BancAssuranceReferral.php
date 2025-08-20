@@ -53,7 +53,7 @@ class BancAssuranceReferral extends Model
 
     public function referredByEmployee()
     {
-        return $this->belongsTo(Employee::class, 'ReferredBy', 'Id');
+        return $this->belongsTo(employee::class, 'ReferredBy', 'Id');
     }
 
     

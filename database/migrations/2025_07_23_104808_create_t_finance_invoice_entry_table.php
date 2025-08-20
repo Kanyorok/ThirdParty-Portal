@@ -21,8 +21,12 @@ return new class extends Migration
             $table->foreignId('GRNReference')->constrained('t_GoodsReceipts', 'Id');
             $table->date('InvoiceDate');
             $table->decimal('InvoiceAmount', 10, 2);
+            $table->enum('ApprovalStatus', ['draft', 'posted','rejected'])->default('draft');
+            $table->text('ApprovalReason')->nullable();
+            $table->string('Status', 20)->default('draft'); //To be used in workflows
+            $table->string('DocumentTypeID', 255)->nullable();
             $table->text('Description');
-            
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

@@ -5,10 +5,8 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">👥 Registered Customers</h4>
-    <a href="{{ route('bancassurance.customers.create',) }}" class="btn btn-success mb-3">
-        ➕  Register New Customer
-    </a>
+    <h4 class="mb-3">Registered Customers</h4>
+    <a href="{{ route('bancassurance.customers.create',) }}" class="btn btn-success mb-3">Register New Customer</a>
     <table id="customerregistry" class="table table-bordered table-striped align-middle">
         <thead>
             <tr>
@@ -44,9 +42,6 @@
                 </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="7" class="text-center">No customers found.</td>
-                </tr>
             @endforelse
         </tbody>
     </table>

@@ -36,8 +36,8 @@
                     <tr>
                         <td>{{ $loop->iteration ?? '-'}}</td>
                         <td>{{ $referral->ClientName ?? '-'}}</td>
-                        <td>{{ $referral->insuranceProduct->Description ?? '-' }}</td>
-                        <td>{{ $referral->preferredInsurer->Description ?? '-' }}</td>
+                        <td>{{ $referral->insuranceProduct->Name ?? '-' }}</td>
+                        <td>{{ $referral->preferredInsurer->Name ?? '-' }}</td>
                         <td>
                             <span class="badge bg-{{ $referral->Status->badgeColor() }}">
                                 {{ $referral->Status->label() ?? '-'}}
@@ -46,7 +46,7 @@
                         <td>{{ $referral->assignedToUser->Name ?? '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') ?? '-'}}</td>
                         <td>
-                            <a href="#" class="btn btn-sm btn-info">View</a>
+                            <a href="{{ route('bancassurance.referrals.show', $referral->Id) }}" class="btn btn-sm btn-info">View</a>
                             <a href="{{ route('bancassurance.referrals.edit', $referral->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                             <form action="{{ route('bancassurance.referrals.destroy', $referral->Id) }}" method="POST" class="d-inline">
                             @csrf

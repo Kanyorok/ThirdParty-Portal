@@ -3,7 +3,7 @@
 
 @section('content')
     <div class="card p-4">
-        <h5 class="mb-4">✏️ Edit Budget Rate Type</h5>
+{{--        <h5 class="mb-4">✏️ Edit Budget Rate Type</h5>--}}
 
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
