@@ -63,7 +63,7 @@ return new class extends Migration {
             $table->foreignId('WorkFlowLimitId')->nullable()->constrained('t_WorkFlowLimits', 'Id');
             $table->foreignId('PermissionId')->nullable()->constrained('t_Permissions', 'id');
             $table->integer('Count')->default(0);
-            $table->foreignId('StatusId')->constrained('t_CodeDetails', 'ID');
+            $table->foreignId('StatusId')->nullable()->constrained('t_CodeDetails', 'ID');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->timestamp('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
