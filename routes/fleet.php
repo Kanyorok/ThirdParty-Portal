@@ -137,17 +137,27 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
         Route::get('/drivers/{Id}', [FleetDriverController::class, 'show'])->name('fleet.drivers.show');
         Route::put('/drivers/{Id}', [FleetDriverController::class, 'update'])->name('fleet.drivers.update');
         Route::delete('/drivers/{Id}', [FleetDriverController::class, 'destroy'])->name('fleet.drivers.destroy');
-
+ 
         // ==================== Fleet Driver Assignments ====================
         Route::get('/driver-assignments', [FleetDriverAssignmentController::class, 'index'])->name('fleet.driver_assignments.index');
         Route::get('/driver-assignments/create', [FleetDriverAssignmentController::class, 'create'])->name('fleet.driver_assignments.create');
         Route::post('/driver-assignments', [FleetDriverAssignmentController::class, 'store'])->name('fleet.driver_assignments.store');
+        Route::get('/driver-assignments/{Id}/edit', [FleetDriverAssignmentController::class, 'edit'])->name('fleet.driver_assignments.edit');
+        Route::get('/driver-assignments/{Id}', [FleetDriverAssignmentController::class, 'show'])->name('fleet.driver_assignments.show');
+        Route::put('/driver-assignments/{Id}', [FleetDriverAssignmentController::class, 'update'])->name('fleet.driver_assignments.update');
+        Route::delete('/driver-assignments/{Id}', [FleetDriverAssignmentController::class, 'destroy'])->name('fleet.driver_assignments.destroy');
+
 
         // ==================== Fleet Driver License Tracking ====================
-        Route::get('/drivers/{driver}/licenses', [FleetDriverLicenseTrackingController::class, 'index'])->name('fleet.licenses.index');
-        Route::get('/drivers/{driver}/licenses/create', [FleetDriverLicenseTrackingController::class, 'create'])->name('fleet.licenses.create');
-        Route::post('/licenses', [FleetDriverLicenseTrackingController::class, 'store'])->name('fleet.licenses.store');
 
+        Route::get('/driver-licenses', [FleetDriverLicenseTrackingController::class, 'index'])->name('fleet.licenses.index');
+        Route::get('/driver-licenses/create', [FleetDriverLicenseTrackingController::class, 'create'])->name('fleet.licenses.create');
+        Route::post('/driver-licenses', [FleetDriverLicenseTrackingController::class, 'store'])->name('fleet.licenses.store');
+        Route::get('/driver-licenses/{Id}/edit', [FleetDriverLicenseTrackingController::class, 'edit'])->name('licenses.drivers.edit');
+        Route::get('/driver-licenses/{Id}', [FleetDriverLicenseTrackingController::class, 'show'])->name('fleet.licenses.show');
+        Route::put('/driver-licenses/{Id}', [FleetDriverLicenseTrackingController::class, 'update'])->name('fleet.licenses.update');
+        Route::delete('/driver-licenses/{Id}', [FleetDriverLicenseTrackingController::class, 'destroy'])->name('fleet.licenses.destroy');
+ 
         // ==================== Contracted Drivers ====================
         Route::get('/contracted-drivers', [ContractedDriverController::class, 'index'])->name('fleet.contracted_drivers.index');
         Route::get('/contracted-drivers/create', [ContractedDriverController::class, 'create'])->name('fleet.contracted_drivers.create');

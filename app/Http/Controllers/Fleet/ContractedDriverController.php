@@ -102,14 +102,11 @@ class ContractedDriverController extends Controller
     $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
         ->pluck('name', 'Id');
 
-    // ✅ Fetch driver type ID only once
-    $contractedDriverTypeId = CodeDetail::where('Description', 'Contracted')->value('ID');
-
-    $trips = FleetTripLog::with(['vehicle'])
+   $trips = FleetTripLog::with(['vehicle'])
         ->where('DriverID', $driver->Id)
-        ->where('DriverType', $contractedDriverTypeId) // ✅ scalar value, no subquery
         ->orderByDesc('TripStartDate')
         ->get();
+
 
     return view('fleet.contracted_drivers.show', compact(
         'driver',

@@ -5,6 +5,11 @@ namespace App\Http\Controllers\Fleet;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetTripLog;
+use Illuminate\Support\Facades\DB;
+use App\Models\Fleet\FleetDriverAssignment;
+use App\Models\Fleet\FleetDriverLicenseTracking;
 use App\Services\FleetManagement\FleetDriverService;
 use App\Models\Core\CodeDetail;
 use App\Http\Requests\FleetManagement\FleetDriverRequest;
@@ -97,14 +102,35 @@ class FleetDriverController extends Controller
             ->with('success', 'Driver deactivated successfully.');
     }
 
-    public function show($id)
+      public function show($Id)
 {
-    $driver = FleetDriver::with(['driver', 'employmentType'])
-        ->where('CreatedBy', Auth::id())
-        ->findOrFail($id);
+    $driver = FleetDriver::findOrFail($Id);
+    $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
+    $assignments = FleetDriverAssignment::where('DriverID', $Id)
+        ->with('vehicle')
+        ->orderByDesc('AssignmentDate')
+        ->get();
+    $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
-    return view('fleet.drivers.show', compact('driver'));
+    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+        ->pluck('name', 'Id');
+
+  
+      $trips = FleetTripLog::with(['vehicle'])
+        ->where('DriverID', $driver->Id)
+        ->orderByDesc('TripStartDate')
+        ->get();
+
+    return view('fleet.drivers.show', compact(
+        'driver',
+        'licenses',
+        'assignments',
+        'vehicles',
+        'assigners',
+        'trips'
+    ));
 }
+    
 
 
 }
