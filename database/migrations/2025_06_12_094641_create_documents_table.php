@@ -47,7 +47,7 @@ return new class extends Migration {
             $table->string('Version');
             $table->string('Path', 2000);
             $table->char('Disk', 2)->comment('Disk Enum');
-            $table->string('Checksum', 100);
+            $table->string('Checksum', 255);
             $table->unsignedBigInteger('Size');
             $table->foreignId('DocumentId')->constrained('t_Documents', 'Id');
             $table->longText('Description')->nullable();

@@ -32,20 +32,20 @@
             <input type="hidden" name="BudgetID" value="{{ $budgetId }}">
             <input type="hidden" name="BranchID" value="{{ $branchId }}">
             <div class="row mb-3 g-2">
-                <div class="col-md-4">
-                    <label class="form-label fw-medium">Select Budget</label>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Budget</label>
                     <select class="form-select form-select-sm" name="BudgetID" required disabled>
                         <option selected disabled>-- Select Budget --</option>
                         @foreach ($budgets as $item)
                             <option
-                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }}
-                                - {{ Carbon::parse($item->From)->format('Y-m-d') }}
-                                to {{ Carbon::parse($item->To)->format('Y-m-d') }}</option>
+                                value="{{ $item->Id }}" {{ $budgetId == $item->Id ? 'selected' : '' }}>{{ $item->Name }} :
+                                 {{ Carbon::parse($item->From)->format('Y-m-d') }}
+                                to  {{ Carbon::parse($item->To)->format('Y-m-d') }} </option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-medium">Select Branch</label>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium"> Branch</label>
                     <select class="form-select form-select-sm" name="BranchID" required disabled>
                         <option selected disabled>-- Select Branch --</option>
                         @foreach ($branches as $item)
@@ -54,12 +54,12 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-medium">Select Format</label>
-                    <select class="form-select form-select-sm" id="format" name="format" disabled>
-                        <option value="m" selected>Monthly</option>
-                    </select>
-                </div>
+{{--                <div class="col-md-4">--}}
+{{--                    <label class="form-label fw-medium">Select Format</label>--}}
+{{--                    <select class="form-select form-select-sm" id="format" name="format" disabled>--}}
+{{--                        <option value="m" selected>Monthly</option>--}}
+{{--                    </select>--}}
+{{--                </div>--}}
             </div>
 
             <div id="monthly_form" class="table-responsive mb-3">
@@ -128,13 +128,13 @@
                                         <td>
                                             <input class="form-control form-control-sm text-end"
                                                    style="width: 120px; padding: 2px 5px;"
-                                                   value="{{ $item->ActualsDec2024 ?? 4000000 }}"
+                                                   value="{{ number_format($item->Actuals) ?? 0.00 }}"
                                                    readonly/>
                                         </td>
                                         <td>
                                             <input class="form-control form-control-sm text-end percent-change"
                                                    style="width: 100px; padding: 2px 5px;"
-                                                   value="{{ $item->PercentChange ?? '0.00%' }}"
+                                                   value="{{ number_format($item->PercentageChange).'%' ?? '0.00%' }}"
                                                    readonly/>
                                         </td>
                                     </tr>
@@ -168,10 +168,10 @@
                         <div class="border rounded p-2 bg-info text-white">
                             <span class="fw-bold">Variance:</span> <span id="variance" class="fw-bold">0</span>
                         </div>
-                        <div class="border rounded p-2 bg-warning">
-                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"
-                                                                           class="fw-bold">0.00%</span>
-                        </div>
+{{--                        <div class="border rounded p-2 bg-warning">--}}
+{{--                            <span class="fw-bold">% Variance:</span> <span id="percent-variance"--}}
+{{--                                                                           class="fw-bold">0.00%</span>--}}
+{{--                        </div>--}}
                     </div>
                 </div>
             </div>
@@ -423,7 +423,4 @@
         }
     </style>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 @endsection

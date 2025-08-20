@@ -35,8 +35,8 @@ class PropertyCategoryController extends Controller
             $validated['Name'],
             $validated['Description'],
             'PropertyCategory',
-            '500000',
-            auth()->user()
+            '500000',   
+            Auth::user()
         );
 
         return redirect()->route('propertycategory.index')->with('success', 'property category created successfully');

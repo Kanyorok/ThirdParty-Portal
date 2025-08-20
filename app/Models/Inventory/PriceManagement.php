@@ -25,7 +25,7 @@ class PriceManagement extends Model
         'PriceID',
         'ItemID',
         'UOM',
-        'EstimatedPrice',
+        //'EstimatedPrice',
         'ActualPrice',
         'CurrencyCode',
         'EffectiveFrom',

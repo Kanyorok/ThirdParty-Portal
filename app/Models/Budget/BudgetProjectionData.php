@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetProjectionData extends Model
 {
-    use UserActorTrait,SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     protected $table = 't_BudgetProjectionsData';
     protected $primaryKey = 'Id';
@@ -16,6 +16,7 @@ class BudgetProjectionData extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
+
     public static function getPrimaryKey(): string
     {
         return 'BudgetProjectionId';

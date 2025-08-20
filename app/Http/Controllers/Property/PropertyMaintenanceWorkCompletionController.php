@@ -36,7 +36,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
         $validated = $request->validated();
 
         $requestNumber = PropertyMaintenanceAssign::findOrFail($validated['RequestNumber']);
-        $finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);$finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);
+        $finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);
         $document = $request->file('Document');
 
         $user = Auth::user();
@@ -48,7 +48,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
             $validated['PartsUsed'],
             $validated['Cost'],
             $finalstatus,
-            auth()->user(),
+             Auth::user(),
             $document
         );
         
@@ -82,7 +82,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
                 $validated['PartsUsed'],
                 $validated['Cost'],
                 $finalstatus,
-                auth()->user(),
+                 Auth::user(),
                 $document
             );
 

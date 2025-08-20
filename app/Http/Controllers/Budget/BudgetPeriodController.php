@@ -223,11 +223,11 @@ class BudgetPeriodController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetPeriods::class);
 
         $validated = $request->validate([
-            'Name'        => 'required|string|max:255',
-            'FiscalYear'  => 'required|integer|min:2000|max:2100',
-            'From'        => 'required|date',
-            'To'          => 'required|date|after_or_equal:From',
-            'Notes'       => 'nullable|string|max:1000',
+            'Name' => 'required|string|max:255',
+            'FiscalYear' => 'required|integer|min:2000|max:2100',
+            'From' => 'required|date',
+            'To' => 'required|date|after_or_equal:From',
+            'Notes' => 'nullable|string|max:1000',
         ]);
 
         DB::beginTransaction();
@@ -236,12 +236,12 @@ class BudgetPeriodController extends Controller
             $period = Budget::findOrFail($id);
 
             $period->update([
-                'Name'        => $validated['Name'],
-                'FiscalYear'  => $validated['FiscalYear'],
-                'From'        => $validated['From'],
-                'To'          => $validated['To'],
-                'Notes'       => $validated['Notes'] ?? null,
-                'ModifiedBy'  => Auth::id(),
+                'Name' => $validated['Name'],
+                'FiscalYear' => $validated['FiscalYear'],
+                'From' => $validated['From'],
+                'To' => $validated['To'],
+                'Notes' => $validated['Notes'] ?? null,
+                'ModifiedBy' => Auth::id(),
             ]);
 
             DB::commit();
@@ -360,7 +360,7 @@ class BudgetPeriodController extends Controller
                 $check = BudgetGLMasterAllocations::where('BudgetID', $budgetID)->first();
 
                 $now = Carbon::now();
-                if ($check) { // Do some insert in the BudgetMasterAllocation
+                if  ($check)  { // Do some insert in the BudgetMasterAllocation
                     //Get distinct values of all the branches id
                     $branchIDS = BudgetGLMasterAllocations::where('BudgetID', $budgetID)->distinct()->pluck('BranchID')->toArray();
                     //Insert the data based on the branches
@@ -371,7 +371,7 @@ class BudgetPeriodController extends Controller
                             'GLAttachmentID' => $action->Id,
                             'AccountID' => $gl['AccountID'],
                             'Description' => $gl['Description'] ?? null,
-                            'GLAccountTypeID' =>  $gl['GLAccountTypeID'],
+                            'GLAccountTypeID' => $gl['GLAccountTypeID'],
                             //'Total' => $total,
                             'CreatedBy' => Auth::id(),
                             'CreatedOn' => $now,

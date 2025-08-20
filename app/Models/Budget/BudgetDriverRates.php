@@ -45,7 +45,7 @@ class BudgetDriverRates extends Model
 
     public function productType(): BelongsTo
     {
-        return $this->belongsTo(BudgetProductType::class, 'ProductTypeID', 'Id');
+        return $this->belongsTo(BudgetProduct::class, 'ProductTypeID', 'Id');
     }
 
     public function periodType(): BelongsTo
