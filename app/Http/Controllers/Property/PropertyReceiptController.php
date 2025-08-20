@@ -94,7 +94,7 @@ class PropertyReceiptController extends Controller
                 $AmountPaidNow,
                 $PaymentMethod,
                 $validated['ReferenceNo'],
-                $validated['Remarks'],
+                $validated['Remarks'] ?? '',
                 Auth::user()
             );
 

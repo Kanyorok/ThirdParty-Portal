@@ -180,6 +180,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],
 
+
             // Procurement Method
             ['CodeID' => 'ProcurementMethod', 'Description' => 'RFQ', 'Value' => 'R'],
             ['CodeID' => 'ProcurementMethod', 'Description' => 'Direct Purchase', 'Value' => 'D'],
@@ -215,12 +216,54 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PriorityLevel', 'Description' => 'High', 'Value' => 'H'],
             ['CodeID' => 'PriorityLevel', 'Description' => 'Critical', 'Value' => 'C'],
 
+            // Payment  Modes 
+            ['CodeID' => 'PaymentModes', 'Description' => 'Cash', 'Value' => 'C'],
+            ['CodeID' => 'PaymentModes', 'Description' => 'Cheque', 'Value' => 'CH'],
+            ['CodeID' => 'PaymentModes', 'Description' => 'Bank Transfer', 'Value' => 'BT'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Standing Order', 'Value' => 'SO'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Mobile Money (M-Pesa)', 'Value' => 'MM'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Credit Card', 'Value' => 'CC'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Debit Card', 'Value' => 'DC'],
+            ['CodeID' => 'PaymentModes', 'Description' => '	Payroll Deduction', 'Value' => 'PD'],
+
+
             // Property DocumentType
             ['CodeID' => 'DocumentType', 'Description' => 'Ownership','Value' => 'S'],
             ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan', 'Value' => 'A'],
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
 
+            // Gender
+            ['CodeID' => 'Gender', 'Description' => 'Male','Value' => 'M'],
+            ['CodeID' => 'Gender', 'Description' => 'Female', 'Value' => 'F'],
+
+            // MaritalStatus
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Single','Value' => 'S'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Married', 'Value' => 'M'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Divorced', 'Value' => 'D'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Widowed', 'Value' => 'W'],
+            
+            // Relationships
+            ['CodeID' => 'Relationships', 'Description' => 'Spouse','Value' => 'S'],
+            ['CodeID' => 'Relationships', 'Description' => 'Child', 'Value' => 'C'],
+            ['CodeID' => 'Relationships', 'Description' => 'Parent', 'Value' => 'P'],
+            ['CodeID' => 'Relationships', 'Description' => 'Sibling', 'Value' => 'S'],    
+            ['CodeID' => 'Relationships', 'Description' => 'Relative', 'Value' => 'R'],
+            ['CodeID' => 'Relationships', 'Description' => 'Friend', 'Value' => 'F'],
+            ['CodeID' => 'Relationships', 'Description' => 'LegalGuardian', 'Value' => 'LG'],
+            
+            
+            
+            // Occupation
+            ['CodeID' => 'Occupation', 'Description' => 'Employed','Value' => 'E'],
+            ['CodeID' => 'Occupation', 'Description' => 'Not Employed', 'Value' => 'N'],
+
+            // ContactType
+            ['CodeID' => 'ContactType', 'Description' => '📞 Call','Value' => 'C'],
+            ['CodeID' => 'ContactType', 'Description' => '📧 Email', 'Value' => 'E'],
+            ['CodeID' => 'ContactType', 'Description' => '📲 SMS', 'Value' => 'S'],
+            ['CodeID' => 'ContactType', 'Description' => '🏢 Visit', 'Value' => 'V'],
+            
             //Payment Terms
             ['CodeID' => 'PaymentTerm', 'Description' => 'Cash on Delivery – payment immediately on receipt', 'Value' => 'CD'],
             ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 30 days from invoice date', 'Value' => 'N3'],
@@ -276,6 +319,19 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for registered trademarks and related rights.', 'Value' => 'Trademark Search'],
             ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for registered patents and intellectual property.', 'Value' => 'Patent Search'],
             ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for bankruptcy or insolvency status of an individual or company.', 'Value' => 'Bankruptcy Search'],
+          
+            // Insurance Product 
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Life Insurance', 'Value' => 'L'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Health Insurance', 'Value' => 'H'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Property Insurance', 'Value' => 'P'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Vehicle Insurance', 'Value' => 'V'],
+            ['CodeID' => 'InsuranceProduct', 'Description' => 'Travel Insurance', 'Value' => 'T'],
+
+            // Insurance Provider
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'Jubilee', 'Value' => 'J'],
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'Britam', 'Value' => 'B'],
+            ['CodeID' => 'InsuranceProvider', 'Description' => 'CIC Insurance', 'Value' => 'C'],
+
 
             // StaticListsService entries
             ['CodeID' => StaticListsService::MarketingModes, 'Description' => 'Outdoor Marketing', 'DisplayOrder' => 1],
@@ -300,11 +356,43 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'EmploymentStatus', 'Description' => 'On Leave', 'Value' => 'OL'],
             ['CodeID' => 'EmploymentStatus', 'Description' => 'Suspended', 'Value' => 'SU'],
 
-
-            
-            ['CodeID' => 'VehicleType', 'Description' => 'Pickup', 'Value' => 'PI'],
-            ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TR'],
+            //Vehicle Types
+            ['CodeID' => 'VehicleType', 'Description' => 'Car', 'Value' => 'CA'],
+            ['CodeID' => 'VehicleType', 'Description' => 'Bus', 'Value' => 'BU'],
+            ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TK'],
             ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
+
+            //Vehicle Statuses
+            ['CodeID' => 'VehicleStatus', 'Description' => 'Active', 'Value' => 'AC'],
+            ['CodeID' => 'VehicleStatus', 'Description' => 'Under Maintenance', 'Value' => 'UM'],
+            ['CodeID' => 'VehicleStatus', 'Description' => 'Retired', 'Value' => 'RT'],
+
+
+            //Insurance Statuses
+            ['CodeID' => 'InsuranceStatus', 'Description' => 'Active', 'Value' => 'ACT'],
+            ['CodeID' => 'InsuranceStatus', 'Description' => 'Pending', 'Value' => 'PEN'],
+            ['CodeID' => 'InsuranceStatus', 'Description' => 'Expired', 'Value' => 'EXP'], 
+
+            //Vehicle Statuses
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Completed', 'Value' => 'CO'],
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Pending', 'Value' => 'PG'], 
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Failed', 'Value' => 'FA'], 
+
+            //Driver Employment Type
+            ['CodeID' => 'EmploymentType', 'Description' => 'Permanent', 'Value' => 'PR'],
+            ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
+            ['CodeID' => 'EmploymentType', 'Description' => 'Hired', 'Value' => 'HR'], 
+
+            //Vehicle Request Status
+            ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
+            ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Pending', 'Value' => 'pe'],
+            ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Rejected', 'Value' => 'Re'], 
+
+            //Driver Type
+            ['CodeID' => 'DriverType', 'Description' => 'Contracted', 'Value' => 'Co'],
+            ['CodeID' => 'DriverType', 'Description' => 'Permanent', 'Value' => 'Pe'],
+
 
             //Inventory Categories Status
             ['CodeID' => 'CategoryStatus', 'Description' => 'Active', 'Value' => 'Ac'],

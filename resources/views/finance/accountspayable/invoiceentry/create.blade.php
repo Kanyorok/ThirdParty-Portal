@@ -66,7 +66,6 @@
                 </select>
                 <small class="form-text text-muted">A PO must first be selected.</small>
             </div>
-
             <div class="col-md-6 mb-3">
                 <label class="form-label">Invoice Date<span class="text-danger">*</span></label>
                 <input type="date" name="InvoiceDate" class="form-control" required>

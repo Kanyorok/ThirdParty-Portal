@@ -421,7 +421,64 @@ enum PermissionEnum: string
     case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
 
 
+
+    /*
+     *
+     * ========================================  Insurance  ========================================
+     */
+
+
+    //Bancassurance Referral
+    case BancassuranceReferralCreate = 'bancassurancereferralcreate';
+    case BancassuranceReferralUpdate = 'bancassurancereferralupdate';
+    case BancassuranceReferralDelete = 'bancassurancereferraldelete';
+    case BancassuranceReferralView = 'bancassurancereferralview';
+
+
+    case BancassurancePolicyCreate = 'bancassurancepolicycreate';
+    case BancassurancePolicyView = 'bancassurancepolicyview';
+    case BancassurancePolicyUpdate = 'bancassurancepolicyupdate';
+    case BancassurancePolicyDelete = 'bancassurancepolicydelete';
+
+
+    // Bancassurance Customers
+    case BancassuranceCustomersCreate = 'bancassurancecustomerscreate';
+    case BancassuranceCustomersView = 'bancassurancecustomersview';
+    case BancassuranceCustomersUpdate = 'bancassurancecustomersupdate';
+    case BancassuranceCustomersDelete = 'bancassurancecustomersdelete';
     
+        // Bancassurance Customers Contacts
+    case BancassuranceCustomersContactsCreate = 'bancassurancecustomerscontactscreate';
+    case BancassuranceCustomersContactsView = 'bancassurancecustomerscontactsview';
+    case BancassuranceCustomersContactsUpdate = 'bancassurancecustomerscontactsupdate';
+    case BancassuranceCustomersContactsDelete = 'bancassurancecustomerscontactsdelete';
+
+
+    // Bancassurance Customers Beneficiaries
+    case BancassuranceCustomersBeneficiariesCreate = 'bancassurancecustomersbeneficiariescreate';
+    case BancassuranceCustomersBeneficiariesView = 'bancassurancecustomersbeneficiariesview';
+    case BancassuranceCustomersBeneficiariesUpdate = 'bancassurancecustomersbeneficiariesupdate';
+    case BancassuranceCustomersBeneficiariesDelete = 'bancassurancecustomersbeneficiariesdelete';
+
+    // Bancassurance Premium Payments
+    case BancassurancePremiumPaymentsView = 'bancassurancepremiumpaymentsview';
+    case BancassurancePremiumPaymentsCreate = 'bancassurancepremiumpaymentscreate';
+    case BancassurancePremiumPaymentsUpdate = 'bancassurancepremiumpaymentsupdate';
+    case BancassurancePremiumPaymentsDelete = 'bancassurancepremiumpaymentsdelete';
+
+
+// Insurance Provider
+    case InsuranceProviderView = 'insuranceproviderview';
+    case InsuranceProviderCreate = 'insuranceprovidercreate';
+    case InsuranceProviderUpdate = 'insuranceproviderupdate';
+    case InsuranceProviderDelete = 'insuranceproviderdelete';
+
+    // Insurance Product
+    case InsuranceProductView = 'insuranceproductview';
+    case InsuranceProductCreate = 'insuranceproductcreate';
+    case InsuranceProductUpdate = 'insuranceproductupdate';
+    case InsuranceProductDelete = 'insuranceproductdelete';
+
 
     /*
      *
@@ -584,7 +641,6 @@ enum PermissionEnum: string
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete],
 
 
-            //Property Management
             ///////////////////////  Finance  /////////////////////////////////////
             [self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete],
             [self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete],
@@ -592,7 +648,7 @@ enum PermissionEnum: string
             [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
 
-
+            //Property Management
             [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
             [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
             [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
@@ -610,11 +666,17 @@ enum PermissionEnum: string
             [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
 
-              ///////////////////////  Fleet Management  /////////////////////////////////////
-            [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
-            [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
-            [self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy],
-            [self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy],
+
+            //Insurance
+            [self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete],
+            [self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete],
+            [self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete],
+            [self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete],
+            [self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete],
+            [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
+            [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
+            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
+            
         ]);
     }
 
@@ -718,6 +780,20 @@ enum PermissionEnum: string
             self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView
             => ModulesEnum::Property,
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            //Insurance
+            self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete,
+            self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete,
+            self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete,
+            self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete,
+            self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete,
+            self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete,
+            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete,
+            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete,
+            
+            =>ModulesEnum::Insurance,
+
+
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
                 self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete
@@ -833,6 +909,17 @@ enum PermissionEnum: string
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
+            //Insurance
+            self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete => 'Referral',
+            self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete => 'Insurance Policy',
+            self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete => 'Insurance Customers',
+            self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete => 'Insurance Customers Contacts',
+            self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete => 'Insurance Customers Beneficiaries',
+            self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete => 'Insurance Premium Payments',
+            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete => 'Insurance Provider ',
+            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete => 'Insurance Product ',
+            
+            
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',

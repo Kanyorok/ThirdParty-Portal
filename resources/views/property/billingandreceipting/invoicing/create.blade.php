@@ -24,7 +24,7 @@
         <!-- Lease Selection -->
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label">Select Lease</label>
+            <label class="form-label">Select Lease<span class="text-danger">*</span></label>
             <select name="Lease" class="form-select" required>
               <option value="">-- Select Lease --</option>
               @foreach ($newleases as $newlease)
@@ -40,12 +40,12 @@
           </div>
 
           <div class="col-md-3">
-            <label class="form-label">Billing Month</label>
+            <label class="form-label">Billing Month<span class="text-danger">*</span></label>
             <input type="month" class="form-control" value="{{ old('BillingMonth', '2025-05') }}" name="BillingMonth">
           </div>
 
           <div class="col-md-3">
-            <label class="form-label">Invoice Date</label>
+            <label class="form-label">Invoice Date<span class="text-danger">*</span></label>
             <input type="date" class="form-control" value="{{ old('InvoiceDate', '2025-05-01') }}" name="InvoiceDate">
           </div>
         </div>
@@ -53,7 +53,7 @@
         <!-- Charges Summary -->
         <div class="row g-3 mb-3">
           <div class="col-md-4">
-            <label class="form-label">Rent Amount</label>
+            <label class="form-label">Rent Amount<span class="text-danger">*</span></label>
             <input type="number" class="form-control" 
                   value="{{ old('RentAmount', 0) }}" 
                   name="RentAmount" step="0.01" min="0" required>

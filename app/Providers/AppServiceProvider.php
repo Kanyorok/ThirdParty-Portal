@@ -74,6 +74,14 @@ use App\Models\Finance\FinanceGLMapping;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\DepartmentNeed;
+use App\Models\Insurance\BancassurancePolicy;
+use App\Models\Insurance\BancAssuranceReferral;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\Insurance\BancassuranceCustomerContact;
+use App\Models\Insurance\BancassuranceBeneficiaries;
+use App\Models\Insurance\BancassurancePremiumPayments;
+use App\Models\Insurance\InsuranceProvider;
+use App\Models\Insurance\InsuranceProduct;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -89,7 +97,6 @@ use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\UOMConversion;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
@@ -124,6 +131,14 @@ use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\LegalHoldPolicy;
 use App\Policies\DMS\RepositoryPolicy;
+use App\Policies\Insurance\BancassurancePoliciesPolicy;
+use App\Policies\Insurance\BancAssuranceReferralPolicy;
+use App\Policies\Insurance\BancassuranceCustomersPolicy;
+use App\Policies\Insurance\BancassuranceCustomersContactsPolicy;
+use App\Policies\Insurance\BancassuranceCustomersBeneficiariesPolicy;
+use App\Policies\Insurance\BancassurancePremiumPaymentsPolicy;
+use App\Policies\Insurance\InsuranceProviderPolicy;
+use App\Policies\Insurance\InsuranceProductPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
@@ -374,6 +389,17 @@ class AppServiceProvider extends ServiceProvider
             PropertyBlock::getPrimaryKey() => PropertyBlock::class,
             PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
+            //Insurance
+            BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
+            BancassurancePolicy::getPrimaryKey() => BancassurancePolicy::class,
+            BancassuranceCustomer::getPrimaryKey() => BancassuranceCustomer::class,
+            BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
+            BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
+            BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
+            InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
+            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,            
+            
+            //Third Parties
               //Fleet Management
             FleetMake::getPrimaryKey() => FleetMake::class,
             FleetModel::getPrimaryKey() => FleetModel::class,
@@ -389,6 +415,10 @@ class AppServiceProvider extends ServiceProvider
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+
+            //Fleet Management
+            FleetMake::getPrimaryKey() => FleetMake::class,
+            FleetModel::getPrimaryKey() => FleetModel::class,
             FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
             FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
             RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
@@ -460,6 +490,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
+        Gate::policy(BancAssuranceReferral::class, BancAssuranceReferralPolicy::class);
+        Gate::policy(BancassurancePolicy::class, BancassurancePoliciesPolicy::class);
+        Gate::policy(BancassuranceCustomer::class, BancassuranceCustomersPolicy::class);
+        Gate::policy(BancassuranceCustomerContact::class, BancassuranceCustomersContactsPolicy::class);
+        Gate::policy(BancassuranceBeneficiaries::class, BancassuranceCustomersBeneficiariesPolicy::class);
+        Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
+        Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
+        Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
         Gate::policy(FleetMake::class, FleetMakePolicy::class);
         Gate::policy(FleetModel::class, FleetModelPolicy::class);
         Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
