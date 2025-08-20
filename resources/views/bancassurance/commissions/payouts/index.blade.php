@@ -13,8 +13,6 @@
                 <tr>
                     <th>#</th>
                     <th>Policy Number</th>
-                    <th>Beneficiary</th>
-                    <th>Earned Amount</th>
                     <th>Paid Amount</th>
                     <th>Reference</th>
                     <th>Date</th>
@@ -26,13 +24,11 @@
                 @foreach($payouts as $p)
                     <tr>
                         <td>{{ $p->Id }}</td>
-                        <td>{{ $p->PolicyNumber }}</td>
-                        <td>{{ $p->EarnedByType }} #{{ $p->EarnedByID }}</td>
-                        <td>{{ number_format($p->EarnedAmount, 2) }}</td>
+                        <td>{{ $p->policies->PolicyNumber }}</td>
                         <td>{{ number_format($p->PaidAmount, 2) }}</td>
                         <td>{{ $p->PayoutReference }}</td>
                         <td>{{ \Carbon\Carbon::parse($p->PaymentDate)->format('d M Y') }}</td>
-                        <td>{{ $p->PaymentMode }}</td>
+                        <td>{{ $p->paymentmodes->Description }}</td>
                         <td>{{ $p->Remarks }}</td>
                     </tr>
                 @endforeach

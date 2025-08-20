@@ -37,7 +37,7 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Approved Amount (KES)</label>
+            <label class="form-label">Approved Amount</label>
             <input type="number" name="ApprovalAmount" step="0.01" class="form-control" required>
         </div>
 

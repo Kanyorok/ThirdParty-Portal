@@ -164,10 +164,12 @@ Route::prefix('bancassurance/commissions')->name('bancassurance.commissions.')->
     // Earned Commissions
     Route::get('earned', [CommissionEarnedController::class, 'index'])->name('earned.index');
     Route::get('earned/{id}/pay', [CommissionEarnedController::class, 'payForm'])->name('earned.payForm');
-    Route::post('earned/{id}/pay', [CommissionEarnedController::class, 'storePayout'])->name('earned.storePayout');
+    Route::post('earned/{id}/pay', [CommissionPayoutController::class, 'storePayout'])->name('earned.storePayout');
 
     // Payout History
     Route::get('payouts', [CommissionPayoutController::class, 'index'])->name('payouts.index');
+    Route::get('payouts/{Id}/pay', [CommissionPayoutController::class, 'pay'])->name('payouts.pay');
+    Route::post('payouts/store', [CommissionPayoutController::class, 'store'])->name('payouts.store');
 });
 
 Route::prefix('bancassurance/insurers')->name('bancassurance.insurers.')->group(function () {
