@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Inventory\PriceManagementRequest;
 use App\Services\Inventory\PriceManagementService;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Imports\PricingImport;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Auth;
 
 class PriceManagementController extends Controller
 {
@@ -24,11 +23,12 @@ class PriceManagementController extends Controller
     public function index()
     {
         $prices = $this->priceService->list();
-       
-        $items = ItemMasterList::with('uom') // eager-load UOM relationship
-        ->whereNotIn('Id', function ($query) {
-            $query->select('ItemID')->from('t_Pricing');
-        })->get();
+
+        $items = ItemMasterList::with('uom')
+            ->whereNotIn('Id', function ($query) {
+                $query->select('ItemID')->from('t_Pricing');
+            })
+            ->get();
 
         return view('inventory.pricemanagement.index', compact('prices', 'items'));
     }
@@ -41,12 +41,13 @@ class PriceManagementController extends Controller
         return view('inventory.pricemanagement.create', compact('items', 'uoms'));
     }
 
-    public function store(Request $request)
+    public function store(PriceManagementRequest $request)
     {
         $this->authorize('create', PriceManagement::class);
-        $this->priceService->create($request->all());
+        $this->priceService->create($request->validated());
 
-        return redirect()->route('pricemanagement.index')->with('success', 'Price created and assigned to item!');
+        return redirect()->route('pricemanagement.index')
+            ->with('success', 'Price created and assigned to item!');
     }
 
     public function edit($id)
@@ -58,18 +59,16 @@ class PriceManagementController extends Controller
         return view('inventory.pricemanagement.edit', compact('price', 'items', 'uoms'));
     }
 
-    public function update(Request $request, $id)
+    public function update(PriceManagementRequest $request, $id)
     {
         $price = PriceManagement::findOrFail($id);
         $this->authorize('update', PriceManagement::class);
 
-        // Prevent changes to protected fields
-        $data = $request->except(['ItemID', 'UOM', 'ItemCode']);
+        // Pass only validated data — FormRequest already skips ItemID/UOM for update
+        $this->priceService->update($price, $request->validated());
 
-        // Pass to service for validation + update
-        $this->priceService->update($price, $data);
-
-        return redirect()->route('pricemanagement.index')->with('success', 'Price updated!');
+        return redirect()->route('pricemanagement.index')
+            ->with('success', 'Price updated!');
     }
 
     public function destroy($id)
@@ -78,12 +77,14 @@ class PriceManagementController extends Controller
         $this->authorize('destroy', PriceManagement::class);
         $this->priceService->delete($price);
 
-        return redirect()->route('pricemanagement.index')->with('success', 'Price deleted.');
+        return redirect()->route('pricemanagement.index')
+            ->with('success', 'Price deleted.');
     }
 
-    public function importPricing(Request $request)
+    public function importPricing(PriceManagementRequest $request)
     {
         $this->authorize('update', PriceManagement::class);
+
         $request->validate([
             'file' => 'required|file|mimes:xlsx,csv'
         ]);

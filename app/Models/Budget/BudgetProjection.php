@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BudgetProjection extends Model
 {
-    use UserActorTrait,softDeletes;
+    use UserActorTrait, softDeletes;
 
     protected $table = 't_BudgetProjections';
     protected $primaryKey = 'Id';
@@ -17,6 +17,7 @@ class BudgetProjection extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
+
     public static function getPrimaryKey(): string
     {
         return 'BudgetProjectionId';
@@ -43,19 +44,26 @@ class BudgetProjection extends Model
         'DeletedOn' => 'datetime',
     ];
 
-    public function budget(){
+    public function budget()
+    {
         return $this->belongsTo(Budget::class, 'BudgetID', 'Id');
     }
 
-    public function budgetLine(){
+    public function budgetLine()
+    {
         return $this->belongsTo(BudgetLine::class, 'BudgetLineID', 'Id');
     }
-    public function product(){
+
+    public function product()
+    {
         return $this->belongsTo(BudgetProduct::class, 'ProductID', 'Id');
     }
-    public function allocations(){
+
+    public function allocations()
+    {
         return $this->hasMany(BudgetProjectionData::class, 'BudgetProjectionID', 'Id');
     }
+
     public function getTotalAllocationAttribute()
     {
         return $this->allocations()->sum('Amount');

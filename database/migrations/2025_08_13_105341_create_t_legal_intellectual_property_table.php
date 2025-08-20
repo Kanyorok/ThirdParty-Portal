@@ -1,0 +1,44 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('t_LegalIntellectualProperties', function (Blueprint $table) {
+            $table->id('Id');
+            $table->string('Title');
+            $table->string('IPType'); // Trademark, Patent, Copyright
+            $table->string('RegistrationNumber', 100);
+            $table->date('RegistrationDate');
+            $table->date('ExpiryDate');
+            $table->string('Status')->default('Inactive'); // Active, Expired, etc.
+            $table->string('Owner', 255);
+            $table->unsignedBigInteger('DMSDocID')->nullable(); // DMS integration
+            $table->text('Remarks')->nullable();
+            $table->boolean('IsDisputed')->default(false);
+            $table->text('DisputeReason')->nullable();
+
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('t_LegalIntellectualProperties');
+    }
+};

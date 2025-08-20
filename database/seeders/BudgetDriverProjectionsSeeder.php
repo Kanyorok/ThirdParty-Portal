@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Auth\User;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+use App\Models\Auth\User;
 
 class BudgetDriverProjectionsSeeder extends Seeder
 {
@@ -29,48 +30,46 @@ class BudgetDriverProjectionsSeeder extends Seeder
             throw new \Exception('No currencies found in t_Currencies table. Please seed t_Currencies first.');
         }
 
-        // $periodIds = DB::table('t_BudgetPeriods')->pluck('Id')->toArray();
-        // if (empty($periodIds)) {
-        //     throw new \Exception('No periods found in t_BudgetPeriods table. Please seed t_BudgetPeriods first.');
-        // }
-
         $productTypeIds = DB::table('t_BudgetProductTypes')->pluck('Id')->toArray();
         if (empty($productTypeIds)) {
             throw new \Exception('No product types found in t_BudgetProductTypes table. Please seed t_BudgetProductTypes first.');
         }
 
-        $faker = \Faker\Factory::create();
         $projectionCount = 10;
+
         for ($i = 0; $i < $projectionCount; $i++) {
             $budgetId = $budgetIds[$i % count($budgetIds)];
             $currencyId = $currencyIds[$i % count($currencyIds)];
-            // $periodId = $periodIds[$i % count($periodIds)];
+
+            $createdOn = Carbon::now()->subDays(rand(1, 30));
+            $modifiedOn = Carbon::now()->subDays(rand(0, 10));
 
             $projId = DB::table('t_BudgetDriverProjections')->insertGetId([
                 'BudgetID' => $budgetId,
                 'CurrencyID' => $currencyId,
-                // 'PeriodID' => $periodId,
                 'CreatedBy' => $userIds[array_rand($userIds)],
-                'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
+                'CreatedOn' => $createdOn,
                 'ModifiedBy' => $userIds[array_rand($userIds)],
-                'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)),
+                'ModifiedOn' => $modifiedOn,
                 'DeletedBy' => null,
                 'DeletedOn' => null,
             ]);
 
             // Attach 1-3 random products for each projection
             $productCount = rand(1, 3);
-            $selectedProducts = $faker->randomElements($productTypeIds, $productCount);
+            shuffle($productTypeIds);
+            $selectedProducts = array_slice($productTypeIds, 0, $productCount);
+
             foreach ($selectedProducts as $prodId) {
                 DB::table('t_BudgetDriverProjectionsData')->insert([
                     'BudgetDriverProjectionsID' => $projId,
                     'ProductID' => $prodId,
-                    'Volume' => $faker->numberBetween(100, 10000),
-                    'Value' => $faker->randomFloat(2, 10000, 1000000),
+                    'Volume' => rand(100, 10000),
+                    'Value' => round(rand(1000000, 100000000) / 100, 2), // Between 10,000 and 1,000,000 with 2 decimals
                     'CreatedBy' => $userIds[array_rand($userIds)],
-                    'CreatedOn' => Carbon::now()->subDays(rand(1, 30)),
+                    'CreatedOn' => $createdOn,
                     'ModifiedBy' => $userIds[array_rand($userIds)],
-                    'ModifiedOn' => Carbon::now()->subDays(rand(0, 10)),
+                    'ModifiedOn' => $modifiedOn,
                     'DeletedBy' => null,
                     'DeletedOn' => null,
                 ]);

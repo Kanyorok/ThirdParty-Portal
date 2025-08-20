@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetGLAccount;
+use App\Models\Budget\BudgetGLMaster;
+use App\Models\Budget\BudgetGLSubType;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetLineCategories;
 use App\Models\Budget\BudgetLinesGLAccount;
@@ -29,41 +31,44 @@ class BudgetLineMappingController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetLine::class);
 
         //Fetch Budget Lines with related glAccounts and category
-        $budgetLines = BudgetLine::with(['glAccounts', 'category', 'glAccountSubType', 'department', 'glAccountType'])->get();
+        $budgetLines = BudgetLine::with(['newGlAccounts', 'category', 'glSubType', 'department', 'glAccountType'])->get();
 
         //Fetch Budget line category
-        $budgetCategories=BudgetLineCategories::all();
+        $budgetCategories = BudgetLineCategories::all();
 
         //Pull the GLS
-        $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
+        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description', 'GLAccountTypeID as GTType')->get();
 
         //Fetch Product type
-        $productTypes=BudgetProductType::select('Id','Name')->get();
-        return view('budgetandanalytics.budgetlinemapping.index',compact('budgetLines','gls','productTypes','budgetCategories'));
+        $productTypes = BudgetProductType::select('Id', 'Name')->get();
+        return view('budgetandanalytics.budgetlinemapping.index', compact('budgetLines', 'gls', 'productTypes', 'budgetCategories'));
     }
 
     public function create()
     {
         //Check Permissions
-        $this->authorize(PermissionEnum::BudgetSetupCreate,BudgetLine::class);
+        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
         //Pull the GLS
-        $gls=BudgetGLAccount::select('Id','Description','GTType')->get();
+        $gls = BudgetGLAccount::select('Id', 'Description', 'GTType')->get();
 
         //Fetch Budget line category
-        $budgetCategories=BudgetLineCategories::all();
+        $budgetCategories = BudgetLineCategories::all();
 
         //Fetch Product type
         //$productTypes=BudgetProductType::select('Id','Name')->get();
-        $productTypes=BudgetProduct::select('Id','Description')->get();
+        $productTypes = BudgetProduct::select('Id', 'Description')->get();
 
         //Fetch GL Account Types
-        $glAccountTypes=CodeDetail::select('Id','CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
+        $glAccountTypes = CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
 
         //Fetch GLAccountSubType
-        $glSubtype=BudgetGLAccountSubType::select('Id','GLAccountTypeValue','GLAccountSubTypeName')->get();
+        //$glSubtype = Budget::select('Id', 'GLAccountTypeID', 'Description')->get();
+        $glSubtype = DB::table('t_BudgetGLSubTypes')
+            ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')
+            ->get();
 
         $departments = Department::all();
-        return view('budgetandanalytics.budgetlinemapping.create',compact(
+        return view('budgetandanalytics.budgetlinemapping.create', compact(
             'gls',
             'productTypes',
             'budgetCategories',
@@ -89,7 +94,6 @@ class BudgetLineMappingController extends Controller
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
         ]);
-
         try {
             DB::beginTransaction();
             //Check if there is a default so that we can drop the existing and add the one created
@@ -98,12 +102,12 @@ class BudgetLineMappingController extends Controller
             }
             $budgetLine = BudgetLine::create([
                 'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
-                'LineName'=>$validated['LineName'],
+                'LineName' => $validated['LineName'],
                 'DepartmentID' => $validated['DepartmentID'],
                 'GLAccountTypeID' => $validated['GLAccountTypeID'],
                 'GLAccountSubTypeID' => $validated['GLAccountSubTypeID'],
-                'Description'=>$validated['Description'],
-                'IsDefault'   => $request->has('IsDefault') ? 1 : 0,
+                'Description' => $validated['Description'],
+                'IsDefault' => $request->has('IsDefault') ? 1 : 0,
                 'IsProductDriven' => $validated['IsProductDriven'],
 
                 'CreatedBy' => Auth::id(),
@@ -159,11 +163,11 @@ class BudgetLineMappingController extends Controller
     {
         $budgetLine = BudgetLine::findOrFail($id);
         $budgetCategories = BudgetLineCategories::all();
-        $gls = BudgetGLAccount::select('Id', 'Description')->get();
+        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description')->get();
         $productTypes = BudgetProduct::select('Id', 'Description')->get();
         $departments = \App\Models\HRM\Department::all();
-        $glAccountTypes = \App\Models\Core\CodeDetail::select('Id','CodeID','Value','Description')->where('CodeID','GLAccountType')->get();
-        $glSubtype = \App\Models\Budget\BudgetGLAccountSubType::select('Id','GLAccountTypeValue','GLAccountSubTypeName')->get();
+        $glAccountTypes = \App\Models\Core\CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
+        $glSubtype = \App\Models\Budget\BudgetGLAccountSubType::select('Id', 'GLAccountTypeValue', 'GLAccountSubTypeName')->get();
 
         // Get currently selected GLs for this budget line
         $selectedGLs = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
@@ -249,7 +253,7 @@ class BudgetLineMappingController extends Controller
 
             // Sync Product Types mapping
             // Remove old mappings
-            $productTypes=BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)->delete();
+            $productTypes = BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)->delete();
             // Add new mappings if any
             if ($request->has('ProductTypes') && is_array($request->ProductTypes)) {
                 foreach ($request->ProductTypes as $typeId) {
@@ -287,8 +291,16 @@ class BudgetLineMappingController extends Controller
 
     public function getGLAccountSubTypes($typeId)
     {
-        $subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
+        //$subTypes = \App\Models\Budget\BudgetGLAccountSubType::where('GLAccountTypeValue', $typeId)->get();
+        $subTypes = DB::table('t_BudgetGLSubTypes')
+                    ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')->where('GLAccountTypeID', $typeId)
+                    ->get();
         return response()->json($subTypes);
+    }
+
+    public function getGLTypes($typeId){
+        $glTypes=BudgetGLMaster::where('GLSubAccountTypeID',$typeId)->get();
+        return response()->json($glTypes);
     }
 
     public function show($id)
@@ -296,20 +308,20 @@ class BudgetLineMappingController extends Controller
         // Check permission
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetLine::class);
 
-        $data=[];
+        $data = [];
         $budgetLine = BudgetLine::findOrFail($id);
-        $budgetLineName=$budgetLine->LineName;
+        $budgetLineName = $budgetLine->LineName;
 
-        $products=BudgetLineProductTypes::where('BudgetLineId', $id)->with('product')
+        $products = BudgetLineProductTypes::where('BudgetLineId', $id)->with('product')
             ->get();
 
         // Eager load productTypes for the given budget line
         // $budgetLine = BudgetLine::with(['productTypes'])->where('Id',$id)->firstOrFail();
-        return view('budgetandanalytics.budgetlinemapping.show', compact('products','budgetLineName'));
+        return view('budgetandanalytics.budgetlinemapping.show', compact('products', 'budgetLineName'));
     }
 
 
-    public function destroy(Request $request,$id)
+    public function destroy(Request $request, $id)
     {
         //Check if user has permissions
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
@@ -320,13 +332,13 @@ class BudgetLineMappingController extends Controller
             //find budgetline by id
             $budgetLine = BudgetLine::findOrFail($id);
             //Delete GLS assoc with the budget line
-            BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->update(['DeletedBy'=>Auth::id()]);
+            BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->update(['DeletedBy' => Auth::id()]);
             BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)->delete();
             //Delete the products associated with the budget line
-            BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)->update(['DeletedBy'=>Auth::id()]);
+            BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)->update(['DeletedBy' => Auth::id()]);
             BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)->delete();
             //Delete the budget line itself
-            $budgetLine->update(['DeletedBy'=>Auth::id()]);
+            $budgetLine->update(['DeletedBy' => Auth::id()]);
             $budgetLine->delete();
             $budgetLine->save();
 
@@ -348,7 +360,7 @@ class BudgetLineMappingController extends Controller
     }
 
 
-    public function destroyProduct(Request $request,$id)
+    public function destroyProduct(Request $request, $id)
     {
         //Check if user has permissions
         $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetLine::class);
@@ -356,7 +368,7 @@ class BudgetLineMappingController extends Controller
         //Try deleting the Line and its associated mappings in BudgetLinesGLAccount
         DB::beginTransaction();
         try {
-            $budgetLineProduct= BudgetLineProductTypes::where('Id', $id)->delete();
+            $budgetLineProduct = BudgetLineProductTypes::where('Id', $id)->delete();
             //Log the acitivity
             activity()
                 ->performedOn(new BudgetLineProductTypes())
