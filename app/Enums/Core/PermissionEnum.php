@@ -434,14 +434,21 @@ enum PermissionEnum: string
     case EmployeesDelete = 'employee-delete';
 
 
-    /*
- *
- * ========================================  Budget and Analytics  ========================================
- */
+    /** ========================================  Budget and Analytics  ========================================*/
     case BudgetSetupView = 'budgetSetup-view';
     case BudgetSetupCreate = 'budgetSetup-create';
     case BudgetSetupUpdate = 'budgetSetup-update';
     case BudgetSetupDelete = 'budgetSetup-delete';
+
+
+    /** ======================================== Document Management System ========================================*/
+
+    case DMSView = 'dms-view';
+    case DMSBulkUpload = 'dms-bulkUpload';
+
+    case DMSLegalHoldCreate = 'dmsLegalHold-create';
+    case DMSLegalHoldView = 'dmsLegalHold-view';
+    case DMSLegalHoldRelease = 'dmsLegalHold-release';
 
 
  /*
@@ -640,6 +647,7 @@ enum PermissionEnum: string
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
 
+            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
 
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
@@ -764,7 +772,7 @@ enum PermissionEnum: string
             self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete, => 'Plan Line Items',
             self::PlanMaintenanceRead, self::PlanMaintenanceWrite, self::PlanMaintenanceUpdate, self::PlanMaintenanceDelete, => 'Plan Maintenance',
             self::PlanManualInputRead, self::PlanManualInputWrite, self::PlanManualInputUpdate, self::PlanManualInputDelete, => 'Plan Manual Input',
-            self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete, => 'Plan amendmend',
+            self::PlanEditRead, self::PlanEditWrite, self::PlanEditUpdate, self::PlanEditDelete, => 'Plan amendment',
             //Requisition
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval, self::RequisitionItemsRead, self::RequisitionItemsWrite, self::RequisitionItemsUpdate, self::RequisitionItemsDelete, self::RequisitionItemsApproval => 'Requisitions',
 
@@ -822,6 +830,7 @@ enum PermissionEnum: string
             self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
             self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
+            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             ///////////////////////  Finance   /////////////////////////

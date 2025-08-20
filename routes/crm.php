@@ -101,7 +101,7 @@ Route::namespace('CRM')->prefix('crm')->group(function () {
             Route::resource('lead-calls', 'LeadCallController')->except(['edit', 'destroy']);
             Route::resource('lead-contacts', 'LeadContactController')->only(['index', 'create', 'store']);
 
-Route::resource('lead-mail', 'LeadEmailController')->only(['index', 'store', 'show']);
+            Route::resource('lead-mail', 'LeadEmailController')->only(['index', 'store', 'show']);
             Route::resource('lead-sms', 'LeadMessageController')->only(['index', 'store']);
 
             Route::resource('lead-tasks', 'LeadTaskController')->only(['index', 'store', 'update']);

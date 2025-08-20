@@ -7,21 +7,21 @@ use App\Enums\Core\ExtensionsEnum;
 use App\Helpers\SystemHelper;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Support\Collection;
-
-// Add getID3 import for media file analysis
 use getID3;
-use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use PhpOffice\PhpPresentation\IOFactory as PptFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpWord\IOFactory as WordFactory;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class FileProperties
+// Add getID3 import for media file analysis
+
+class UploadFileProperties
 {
-    public const TIME_FORMAT = 'H:i:s';
-    public const DATE_TIME_FORMAT = 'Y-m-d H:i:s T';
+    public const string TIME_FORMAT = 'H:i:s';
+    public const string DATE_TIME_FORMAT = 'Y-m-d H:i:s T';
 
     protected Collection $properties;
 

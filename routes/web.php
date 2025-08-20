@@ -43,8 +43,8 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
         Route::resource('branches', 'CrmBranchController')->parameters(['branches' => 'crm_branch'])->except(['edit', 'create', 'show']);
 
-Route::resource('roles', 'RoleController'); // remove ->except(['show'])
-Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
+        Route::resource('roles', 'RoleController'); // remove ->except(['show'])
+        Route::get('roles/{id}/ajax', 'RoleController@showAjax')->name('roles.showAjax');
 
 
         Route::namespace('Users')->group(function () {

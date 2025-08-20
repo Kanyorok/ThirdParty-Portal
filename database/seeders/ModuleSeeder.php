@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class ModuleSeeder extends Seeder
 {
-
     /**
      * Run the database seeds.
      */
@@ -28,11 +27,12 @@ class ModuleSeeder extends Seeder
         $this->_seed($this->_inventory($fresh));
         $this->_seed($this->_propertyManagement($fresh));
         $this->_seed($this->_fleetManagement($fresh));
-        $this->_seed($this->_documentManagement($fresh));
+        $this->_seed($this->_dms($fresh));
         $this->_seed($this->_legal($fresh));
         $this->_seed($this->_insurance($fresh));
         $this->_seed($this->_hrm($fresh));
         $this->_seed($this->_finance($fresh));
+        $this->_seed($this->_budgetline($fresh));
         $this->_seed($this->_settings($fresh));
         $this->_seed($this->_myAccount($fresh));
         $this->_seed($this->_budgetline($fresh));
@@ -169,10 +169,11 @@ class ModuleSeeder extends Seeder
             //Awards
             ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index'],
 
+
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
-            // ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
-            // ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
+            ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
+            ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
             //            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
 
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
@@ -238,8 +239,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 498200, 'Name' => 'Load Opening Stock', 'Icon' => null, 'Description' => 'Load Opening Stock', 'Route' => 'openingstock.create', 'ParentID' => 498000],
 
             ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventory-reports.index', 'ParentID' => 400000],
-
-
 
 
         ]);
@@ -440,6 +439,16 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 702000, 'Name' => 'Repository', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.index'],
             ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'file-tags.index'],
             ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'files.upload'],
+            ['ModuleID' => 705000, 'Name' => 'Legal Hold', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'legal-hold.index'],
+            ['ModuleID' => 701000, 'Name' => 'Repository Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'drepositorymanagement.index'],
+            ['ModuleID' => 702000, 'Name' => 'Setup Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dtypessetupmanagement.index'],
+            ['ModuleID' => 703000, 'Name' => 'Categories Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'categoriesmanagement.index'],
+            ['ModuleID' => 704000, 'Name' => 'Version Control', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'versioncontrolmanagement.index'],
+            ['ModuleID' => 705000, 'Name' => 'Search Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'searchmanagement.index'],
+            ['ModuleID' => 706000, 'Name' => 'Renewal Management', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'renewalmanagement.index'],
+            ['ModuleID' => 707000, 'Name' => 'Access Control', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'accessmanagement.index'],
+            ['ModuleID' => 708000, 'Name' => 'Audit Trail', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'trailmanagement.index'],
+            ['ModuleID' => 709000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'uploadmanagement.index'],
 
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);
@@ -683,7 +692,6 @@ class ModuleSeeder extends Seeder
     {
         $values = collect([
             ['ModuleID' => 9900000, 'Name' => ModulesEnum::MyAccount->description(), 'Icon' => '<i class="fas fa-user"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-
             ['ModuleID' => 9900100, 'Name' => 'Schedule', 'Icon' => '<i class=" fas fa-calendar"></i>', 'Description' => '', 'ParentID' => 9900000, 'Route' => 'schedule.index'],
             ['ModuleID' => 9900200, 'Name' => 'Tickets', 'Icon' => '<i data-feather="check-square"></i>', 'Description' => '', 'ParentID' => 9900000, 'Route' => 'tickets.index'],
         ]);
