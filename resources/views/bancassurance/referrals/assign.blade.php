@@ -6,8 +6,6 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">🧭 Assign Referrals</h4>
-
     <table class="table table-bordered" id="assignTable">
         <thead>
             <tr>
@@ -39,9 +37,7 @@
                         </select>
                     </td>
                     <td>
-                        <button type="submit" class="btn btn-sm btn-success">
-                            Assign
-                        </button>
+                        <button type="submit" class="btn btn-sm btn-success">Assign</button>
                     </td>
                 </form>
             </tr>
