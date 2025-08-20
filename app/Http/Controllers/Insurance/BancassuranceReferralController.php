@@ -51,9 +51,9 @@ public function store(BancAssuranceReferralRequest $request)
 
     $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
 
-    $InsuranceProductId = !empty($validated['InsuranceProductId']) ? CodeDetail::findOrFail($validated['InsuranceProductId']) : null;
+    $InsuranceProductId = !empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
 
-    $PreferredInsurerId = CodeDetail::findOrFail($validated['PreferredInsurerId']);
+    $PreferredInsurerId = InsuranceProvider::findOrFail($validated['PreferredInsurerId']);
 
     $branchId = $user->employee->BranchId ?? null;
     $BranchId = Branch::findOrFail($branchId);
@@ -85,15 +85,15 @@ public function store(BancAssuranceReferralRequest $request)
 public function edit($Id)
 {
     $referral = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser'])->findOrFail($Id);
-    $insuranceproducts = CodeDetail::where('CodeID', 'InsuranceProduct')->get();
-    $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
+    $insuranceproducts = InsuranceProduct::all();
+    $insurers = InsuranceProvider::all();
     $users = User::with('employee')->get();
 
     return view('bancassurance.referrals.edit', compact('referral', 'users', 'insurers', 'insuranceproducts'));
 }
 
 public function update(BancAssuranceReferralRequest $request, $Id)
-{
+{  
     $user = auth()->user();
     $validated = $request->validated();
 
@@ -104,9 +104,9 @@ public function update(BancAssuranceReferralRequest $request, $Id)
 
     $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
 
-    $InsuranceProductId = !empty($validated['InsuranceProductId']) ? CodeDetail::findOrFail($validated['InsuranceProductId']) : null;
+    $InsuranceProductId = !empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
 
-    $PreferredInsurerId = CodeDetail::findOrFail($validated['PreferredInsurerId']);
+    $PreferredInsurerId = InsuranceProvider::findOrFail($validated['PreferredInsurerId']);
 
     $Status = $AssignedTo ? InsuranceReferralStatus::Assigned : InsuranceReferralStatus::Pending;
 
@@ -135,7 +135,13 @@ public function update(BancAssuranceReferralRequest $request, $Id)
         ->with('success', 'Referral updated successfully!');
 }
 
+public function show($Id)
+{
+    $referral = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser', 'referredByEmployee'])
+        ->findOrFail($Id);
 
+    return view('bancassurance.referrals.show', compact('referral'));
+}
 
 public function assignList()
 {

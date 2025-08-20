@@ -11,28 +11,20 @@
         {{-- Client Info --}}
         <div class="row mb-3">
             <div class="col-md-6">
-                <label class="form-label">
-                    Client Name <span class="text-danger">*</span>
-                </label>
+                <label class="form-label">Client Name <span class="text-danger">*</span></label>
                 <input type="text" name="ClientName" class="form-control" value="{{ old('ClientName') }}" required>
             </div>
             <div class="col-md-3">
-                <label class="form-label">
-                    ID Number <span class="text-danger">*</span>
-                </label>
+                <label class="form-label">ID Number <span class="text-danger">*</span></label>
                 <input type="text" name="ClientIDNumber" class="form-control" value="{{ old('ClientIDNumber') }}" required>
             </div>
             <div class="col-md-3">
-                <label class="form-label">
-                    Phone <span class="text-danger">*</span>
-                </label>
-                <input 
-                    type="text" 
-                    name="ClientPhone" 
-                    class="form-control" 
-                    value="{{ old('ClientPhone') }}" 
-                    required
-                >
+                <label class="form-label">Phone <span class="text-danger">*</span></label>
+                <input type="text" name="ClientPhone" class="form-control" value="{{ old('ClientPhone') }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="text" name="ClientEmail" class="form-control" value="{{ old('ClientEmail') }}" required>
             </div>
         </div>
 
@@ -42,12 +34,7 @@
                 <label class="form-label">
                     Preferred Insurer <span class="text-danger">*</span>
                 </label>
-                <select 
-                    id="insurer-select" 
-                    name="PreferredInsurerId" 
-                    class="form-select" 
-                    required
-                >
+                <select id="insurer-select" name="PreferredInsurerId" class="form-select" required>
                     <option value="">-- Select Insurer --</option>
                     @foreach ($insurers as $insurer)
                         <option 
@@ -64,12 +51,7 @@
                 <label class="form-label">
                     Insurance Product <span class="text-danger">*</span>
                 </label>
-                <select 
-                    id="product-select" 
-                    name="InsuranceProductId" 
-                    class="form-select" 
-                    required
-                >
+                <select id="product-select" name="InsuranceProductId" class="form-select" required>
                     <option value="">-- Select Product --</option>
                 </select>
             </div>
@@ -94,8 +76,7 @@
                     @foreach ($users as $user)
                         <option 
                             value="{{ $user->Id }}" 
-                            {{ old('ReferredBy') == $user->Id ? 'selected' : '' }}
-                        >
+                            {{ old('ReferredBy') == $user->Id ? 'selected' : '' }}>
                             {{ $user->Name }}
                             {{ $user->employee ? ' - ' . $user->employee->FullName : '' }}
                         </option>
@@ -121,9 +102,9 @@
 
         {{-- Remarks --}}
         <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="">
                 <label class="form-label">Remarks</label>
-                <input type="textbox" name="Remarks" class="form-control" value="{{ old('Remarks') }}">
+                <textarea type="text" name="Remarks" class="form-control"></textarea>
             </div>
         </div>
 
