@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class DocumentService extends PermissionsService
