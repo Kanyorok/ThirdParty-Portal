@@ -43,11 +43,11 @@ class FleetContractedDriverAssignment extends Model
         'DeletedOn',
     ];
 
+
     public static function getPrimaryKey(): string
     {
         return 'AssgId';
     }
-
     public function vehicle()
     {
         return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
