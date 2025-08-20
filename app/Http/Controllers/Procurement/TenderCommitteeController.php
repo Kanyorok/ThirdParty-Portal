@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\RFQCommittee;
+use App\Models\Procurement\RFQCommitteeMember;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommittee;
 use App\Models\Procurement\TenderCommitteeMember;
@@ -24,7 +25,7 @@ class TenderCommitteeController extends Controller
         // Tender Committees
         $tenderCommittees = TenderCommittee::with('tender')->withCount('members')->get()->map(function ($item) {
             return [
-                'id' => $item->Id,
+                'id' => $item->Id ?? $item->TenderID,
                 'type' => 'tender',
                 'ref' => $item->tender->TenderNo ?? 'N/A',
                 'refId' => $item->TenderID,
@@ -36,7 +37,7 @@ class TenderCommitteeController extends Controller
         // RFQ Committees
         $rfqCommittees = RFQCommittee::with('rfq')->withCount('members')->get()->map(function ($item) {
             return [
-                'id' => $item->Id,
+                'id' => $item->Id ?? $item->RFQID,
                 'type' => 'rfq',
                 'ref' => $item->rfq->RFQNumber ?? 'N/A',
                 'refId' => $item->RFQID,
@@ -44,7 +45,7 @@ class TenderCommitteeController extends Controller
                 'appointment_date' => $item->AppointmentDate,
             ];
         });
-
+//dd($rfqCommittees);
         // Combine both
         $committees = collect($tenderCommittees)
             ->merge($rfqCommittees)
@@ -157,15 +158,20 @@ class TenderCommitteeController extends Controller
         $title = null;
 
         if ($type === 'tender') {
-            $tender = Tender::findOrFail($id);
+            $tender = Tender::find($id);
+            if (!$tender) {
+                return redirect()->back()->with('error', 'Tender not found with ID: ' . $id);
+            }
             $title = $tender->Title;
             $committeeMembers = TenderCommitteeMember::where('TenderID', $id)->with('employee')->get();
         } elseif ($type === 'rfq') {
-            $rfq = RFQ::findOrFail($id);
+            $rfq = RFQ::find($id);
+            if (!$rfq) {
+                return redirect()->back()->with('error', 'RFQ not found with ID: ' . $id);
+            }
             $title = $rfq->RFQNumber;
-            $committeeMembers = \App\Models\Procurement\RFQCommitteeMember::where('RFQID', $id)->with('employee')->get();
+            $committeeMembers = RFQCommitteeMember::where('RFQID', $id)->get();
         }
-
         return view('procurement.tendering.bidopeningandevaluation.committeeappointment.TenderMembers', [
             'committeeMembers' => $committeeMembers,
             'tenderTitle' => $title,

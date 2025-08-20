@@ -1,39 +1,82 @@
 @extends('layouts.app')
 @section('title', 'Tax Jurisdictions')
 @section('content')
-    <div class="container mt-4">
-        <h4 class="mb-3">🌍 Tax Jurisdictions</h4>
+    <div class="container mt-3">
 
-        <div class="mb-3 text-end">
+        <div class="mb-3">
             <a href="{{ route('taxjurisdiction.create') }}" class="btn btn-primary">➕ Add Jurisdiction</a>
         </div>
+        <div class="card p-2">
+{{--                <div class="card-header bg-dark text-white">--}}
+{{--                    🌍 Tax Jurisdictions--}}
+{{--                </div>--}}
 
-        <table class="table table-bordered table-striped">
-            <thead>
-            <tr>
-                <th>Jurisdiction</th>
-                <th>Currency</th>
-                <th>Tax Authority</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Kenya</td>
-                <td>KES</td>
-                <td>KRA</td>
-                <td><span class="badge bg-success">Active</span></td>
-                <td><a href="#" class="btn btn-sm btn-info">View</a></td>
-            </tr>
-            <tr>
-                <td>Uganda</td>
-                <td>UGX</td>
-                <td>URA</td>
-                <td><span class="badge bg-success">Active</span></td>
-                <td><a href="#" class="btn btn-sm btn-info">View</a></td>
-            </tr>
-            </tbody>
-        </table>
+                <div class="card-body">
+                    <p class="text-muted mt-0">
+                        Manage tax jurisdictions for your organization.
+                    </p>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Jurisdiction</th>
+                                <th>Currency</th>
+                                <th>Tax Authority</th>
+                                <th>Status</th>
+                                <th style="white-space: nowrap; text-align: center;">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            @if ($taxJurisdictions->count())
+                            <tr>
+                                @foreach($taxJurisdictions as $item)
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $item->JurisdictionName ?? '-' }}</td>
+                                    <td>{{ $item->currency->Code ?? '-' }}</td>
+                                    <td>{{ $item->TaxAuthority ?? '-'}}</td>
+                                    <td>
+                                        @if ($item->Status)
+                                            <span class="badge bg-success">Active</span>
+                                        @else
+                                            <span class="badge bg-danger">Inactive</span>
+                                        @endif
+                                    </td>
+                                    <td style="white-space: nowrap; text-align: center;">
+                                        <a href="{{ route('taxjurisdiction.edit', $item->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                        {{-- <form action="{{ route('taxjurisdiction.destroy', $item->Id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this jurisdiction?')">Delete</button>
+                                        </form> --}}
+                                        <button type="button"
+                                            class="btn btn-sm btn-danger custom-delete-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{$item->JurisdictionName}}"    {{-- Pass item name --}}
+                                            data-route="{{ route('taxjurisdiction.destroy', $item->Id) }}"> {{-- Pass delete route --}}
+                                            Delete
+                                        </button>
+                                    </td>
+
+                                @endforeach
+                            </tr>
+                                @else
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class = "text-center">
+                                                No Tax Jurisdictions found
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+            </div>
+        </div>
     </div>
+@include('components.modals.delete-confirm')
 @endsection

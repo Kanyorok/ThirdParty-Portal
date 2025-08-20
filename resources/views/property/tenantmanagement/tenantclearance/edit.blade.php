@@ -11,7 +11,7 @@
             <a href="{{ route('tenantclearance.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
         </div>
 
-        <form method="POST" action="{{ route('tenantclearance.update', $clearancetenant->Id) }}">
+        <form method="POST" action="{{ route('tenantclearance.update', $clearancetenant->Id) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 

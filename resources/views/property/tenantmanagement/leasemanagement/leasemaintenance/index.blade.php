@@ -30,8 +30,8 @@
                         <td>{{ $newlease->LeaseNumber ?? '-' }}</td>
                         <td>{{ $newlease->tenant->TenantName ?? '-' }}</td>
                         <td>{{ $newlease->property->PropertyName ?? '-' }}</td>
-                        <td>{{ Carbon::parse($newlease->StartDate)->format('d/m/Y') }}</td>
-                        <td>{{ Carbon::parse($newlease->EndDate)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($newlease->EndDate)->format('d/m/Y') }}</td>
                         <td>{{ $newlease->code->Description ?? '-' }}</td>
                         <td>{{ $newlease->DueDay ?? '-' }}</td>
                         <td class="d-flex gap-1">

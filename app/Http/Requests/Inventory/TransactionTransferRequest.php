@@ -28,6 +28,7 @@ class TransactionTransferRequest extends FormRequest
             'ToBranch' => 'exists:t_Branches,Id',
             'items' => 'required|array|min:1',
             'items.*.item' => 'required|exists:t_Items,Id',
+            'items.*.unit_cost' => 'required|numeric|min:0',
             'items.*.uom' => 'required|exists:t_UOM,Id',
             'items.*.approved_qty' => 'required|numeric|min:1',
             'items.*.dispatched_qty' => 'required|numeric|min:0',

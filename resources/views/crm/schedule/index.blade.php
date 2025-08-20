@@ -71,43 +71,45 @@
             }
         }
 
-        /* Hide event time completely */
-        .fc-event-time {
-            display: none !important;
-        }
+  /* Hide event time completely */
+    
+  .fc-event-time {
+        display: none !important;
+    }
 
-        /* Event title styling */
-        .fc-event-title {
-            white-space: normal !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis;
-            display: block !important;
-            font-size: 0.85em;
-            line-height: 1.2em;
-            word-break: break-word;
-        }
+    /* Allow event title to wrap */
+    .fc-event-title {
+        white-space: normal !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis;
+        display: block !important;
+        font-size: 0.85em;
+        line-height: 1.2em;
+        word-break: break-word;
+    }
 
-        /* Container styling */
-        .fc-timegrid-event-harness .fc-timegrid-event {
-            padding: 4px !important;
-            min-height: 50px !important;
-            display: flex !important;
-            align-items: center !important; /* vertical centering */
-            justify-content: flex-start !important;
-            white-space: normal !important;
-            word-break: break-word;
-            overflow: hidden !important;
-        }
+    /* Make the event box rectangular but retain default colors */
+    .fc-timegrid-event-harness .fc-timegrid-event {
+        padding: 6px 8px !important;
+        min-height: 50px !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        white-space: normal !important;
+        word-break: break-word;
+        overflow: hidden !important;
+        border-radius: 4px !important;
+        box-shadow: none !important;
+    }
 
-        /* Main content */
-        .fc-timegrid-event .fc-event-main {
-            white-space: normal !important;
-            overflow: hidden !important;
-            word-wrap: break-word;
-            font-size: 0.85em;
-            width: 100%;
-            line-height: 1.2em;
-        }
+    /* Main content inside the event box */
+    .fc-timegrid-event .fc-event-main {
+        white-space: normal !important;
+        word-wrap: break-word;
+        width: 100%;
+        font-size: 0.85em;
+        line-height: 1.2em;
+    }
 
 
     </style>

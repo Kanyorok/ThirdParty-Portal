@@ -12,7 +12,7 @@
         </div>
     @endif
     <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">➕ Add Budget Line & GL Mapping</div>
+{{--        <div class="card-header bg-secondary text-white">➕ Add Budget Line & GL Mapping</div>--}}
         <div class="card-body">
             <p class="text-muted">
                 Use this form to create a new Budget Line. A Budget Line defines a specific category under your budget,
@@ -26,9 +26,9 @@
                 <div class="row">
                     <!-- 🧾 Budget Line Entry -->
                     <div class="mb-3">
-                        <label class="form-label">Budget Category</label>
+                        <label class="form-label">Budget Line Category</label>
                         <select class="form-select" name="BudgetLineCategoryID" required>
-                            <option selected disabled>-- Select Budget Category --</option>
+                            <option selected disabled>-- Select Budget Line Category --</option>
                             @foreach ($budgetCategories as $category)
                                 <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
                             @endforeach
@@ -72,6 +72,16 @@
                         </select>
                     </div>
 
+                    <!-- 🔗 CBS GL Mapping -->
+                    <h6>🔗 CBS GL Accounts (Multiple)</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Select CBS GLs</label>
+                        <select multiple class="form-select" id="glTypes" name="GLS[]" required size="8">
+
+                        </select>
+                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Description</label>
                         <textarea class="form-control" rows="2" name="Description"
@@ -79,18 +89,6 @@
                         @error('Description')
                         <div class="text-danger">{{ $message }}</div>
                         @enderror
-                    </div>
-
-                    <!-- 🔗 CBS GL Mapping -->
-                    <h6>🔗 CBS GL Accounts (Multiple)</h6>
-                    <div class="mb-3">
-                        <label class="form-label">Select CBS GLs</label>
-                        <select multiple class="form-select" name="GLS[]" required>
-                        @foreach ($gls as $item)
-                            <option value="{{ $item->Id }}">GL00{{ $item->Id }} - {{ $item->Description }}</option>
-                        @endforeach
-                        </select>
-                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
                     </div>
 
                     <!-- ❓ Is Projection Product Driven -->
@@ -105,11 +103,11 @@
 
                     <!-- 🔗 Product Type Mapping -->
                     <div class="mb-3" id="productTypeSection" style="display: none;">
-                        <h6>🔗 Product Types (Multiple)</h6>
-                        <label class="form-label">Select Product Types</label>
-                        <select multiple class="form-select" name="ProductTypes[]">
+                        <h6>🔗 Products (Multiple)</h6>
+                        <label class="form-label">Select Product </label>
+                        <select multiple class="form-select" name="ProductTypes[]" size="15">
                             @foreach ($productTypes as $type)
-                                <option value="{{ $type->Id }}">{{ $type->Name }}</option>
+                                <option value="{{ $type->Id }}">{{ $type->Description }}</option>
                             @endforeach
                         </select>
                         <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple Product Types.</div>
@@ -155,6 +153,7 @@
             const productTypeSection = document.getElementById('productTypeSection');
             const typeSelect = document.getElementById('glAccountTypeSelect');
             const subTypeSelect = document.getElementById('glAccountSubTypeSelect');
+            const glTypesSelect = document.getElementById('glTypes');
 
             IsProductDriven.addEventListener('change', function () {
                 if (this.value === '1') {
@@ -167,15 +166,46 @@
             typeSelect.addEventListener('change', function () {
                 const typeId = this.value;
                 subTypeSelect.innerHTML = '<option selected disabled>Loading...</option>';
-                fetch(`/budgetlinemapping/gl-subtypes/${typeId}`)
+                fetch(`/budget/budgetlinemapping/gl-subtypes/${typeId}`)
                     .then(response => response.json())
                     .then(data => {
                         subTypeSelect.innerHTML = '<option selected disabled>-- Select Sub-Type --</option>';
                         data.forEach(function (subType) {
-                            subTypeSelect.innerHTML += `<option value="${subType.Id}">${subType.GLAccountSubTypeName}</option>`;
+                            subTypeSelect.innerHTML += `<option data-type-id="${subType.GLSubAccountTypeID}" value="${subType.Id}">${subType.Description}</option>`;
                         });
                     });
             });
+
+            subTypeSelect.addEventListener('change', function () {
+                //const typeId = this.value;
+                const selectedOption = this.options[this.selectedIndex];
+                const typeId = selectedOption.dataset.typeId;
+
+                // Clear GL Types first
+                glTypesSelect.innerHTML = '<option disabled>Loading...</option>';
+
+                fetch(`/budget/budgetlinemapping/gl-types/${typeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Reset and populate GL Types dropdown
+                        glTypesSelect.innerHTML = '';
+                        if (data.length === 0) {
+                            glTypesSelect.innerHTML = '<option disabled>No GLs found</option>';
+                        } else {
+                            data.forEach(item => {
+                                const option = document.createElement('option');
+                                option.value = item.BudgetGLID;
+                                option.textContent = item.Description.trim(); // trim in case of extra spaces
+                                glTypesSelect.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading GL Types:', error);
+                        glTypesSelect.innerHTML = '<option disabled>Error loading GLs</option>';
+                    });
+            });
+
         });
     </script>
 

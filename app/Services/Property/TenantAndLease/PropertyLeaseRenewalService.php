@@ -17,20 +17,19 @@ class PropertyLeaseRenewalService
      * @throws Exception if the lease renewal already exists or creation fails.
      */
     public static function create(
-        int    $leaseId,
-        int    $paymentFrequencyId,
-        string $EndDateCurrentLease,
-        string $NewStartDate,
-        string $NewEndDate,
-        int    $NewMonthlyRent,
-        float  $ServiceCharge,
-        float  $ParkingFee,
-        float  $OtherCharges,
-        string $Remarks,
-        User   $user
-    ): PropertyLeaseRenewal
-    {
-        DB::beginTransaction();
+    int $leaseId,
+    int $paymentFrequencyId,
+    string $EndDateCurrentLease,
+    string $NewStartDate,
+    string $NewEndDate,
+    int $NewMonthlyRent,
+    float $ServiceCharge,
+    float $ParkingFee,
+    float $OtherCharges,
+    string $Remarks = null,
+    User $user
+): PropertyLeaseRenewal {
+    DB::beginTransaction();
 
         try {
             //Prevent duplicate renewal

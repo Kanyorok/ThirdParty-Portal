@@ -29,6 +29,8 @@ class StockItemRequest extends FormRequest
         return [
             'Batch' => 'required|boolean',
             'ItemID' => 'required|exists:t_Items,Id',
+            'UOM' => 'nullable|exists:t_UOM,Id',
+            'UnitCost' => 'nullable|numeric|min:0',
             'Serial' => 'required|boolean',
             'Perishable' => 'required|boolean',
             'Saleable' => 'required|boolean',

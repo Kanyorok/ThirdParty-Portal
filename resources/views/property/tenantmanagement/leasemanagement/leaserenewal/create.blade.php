@@ -31,7 +31,7 @@
                 <!-- Lease Selection -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Select Lease Number</label>
+                        <label class="form-label">Select Lease Number<span class="text-danger">*</span></label>
                         <select id="lease-select" name="LeaseId" class="form-select" required>
                             <option value="">-- Select Lease --</option>
                             @foreach ($newleases as $lease)
@@ -51,24 +51,24 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Lease Number</label>
+                        <label class="form-label">Lease Number<span class="text-danger">*</span></label>
                         <input type="text" id="lease-display" class="form-control" readonly>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Tenant</label>
+                        <label class="form-label">Tenant<span class="text-danger">*</span></label>
                         <input type="text" id="tenant-display" class="form-control" readonly>
                         <input type="hidden" name="TenantId" id="tenant-id">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Property</label>
+                        <label class="form-label">Property<span class="text-danger">*</span></label>
                         <input type="text" id="property-display" class="form-control" readonly>
                         <input type="hidden" name="PropertyId" id="property-id">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Payment Frequency</label>
+                        <label class="form-label">Payment Frequency<span class="text-danger">*</span></label>
                         <input type="text" id="frequency-display" class="form-control" readonly>
                         <input type="hidden" name="PaymentFrequency" id="frequency-id">
                     </div>
@@ -77,38 +77,35 @@
                 <!-- Dates -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label">End Date of Current Lease</label>
-                        <input type="date" class="form-control" name="EndDateCurrentLease" value="EndDateCurrentLease"
-                               placeholder="22/06/2025">
+                        <label class="form-label">End Date of Current Lease<span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="EndDateCurrentLease" value="EndDateCurrentLease" placeholder="22/06/2025">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">New Start Date</label>
-                        <input type="date" class="form-control" name="NewStartDate" value="NewStartDate"
-                               placeholder="22/06/2025">
+                        <label class="form-label">New Start Date<span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="NewStartDate" value="NewStartDate" placeholder="22/06/2025">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">New End Date</label>
-                        <input type="date" class="form-control" name="NewEndDate" value="NewEndDate"
-                               placeholder="22/06/2100">
+                        <label class="form-label">New End Date<span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="NewEndDate" value="NewEndDate" placeholder="22/06/2100">
                     </div>
                 </div>
 
                 <!-- Financial Terms -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-3">
-                        <label class="form-label">New Monthly Rent</label>
+                        <label class="form-label">New Monthly Rent<span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="NewMonthlyRent" value="NewMonthlyRent">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Service Charge</label>
+                        <label class="form-label">Service Charge<span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="ServiceCharge" value="ServiceCharge">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Parking Fee</label>
+                        <label class="form-label">Parking Fee<span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="ParkingFee" value="ParkingFee">
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Other Charges</label>
+                        <label class="form-label">Other Charges<span class="text-danger">*</span></label>
                         <input type="number" class="form-control" name="OtherCharges" value="OtherCharges">
                     </div>
                 </div>
@@ -121,7 +118,7 @@
                 </div>
 
                 <!-- Submit -->
-                <button class="btn btn-success">🔁 Renew Lease</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">🔁 Renew Lease</button>
             </div>
         </div>
     </form>

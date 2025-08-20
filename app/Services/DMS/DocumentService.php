@@ -82,10 +82,10 @@ class DocumentService extends PermissionsService
         if (is_null(Relation::getMorphedModel($Related))) {
             throw new ErroredException('Invalid Related Entity');
         }
-
-        $this->document->relations()->create([
+        DocumentRelation::create([
             'Related' => $Related,
             'RelatedId' => $RelatedId,
+            'DocumentId' => $this->document->Id,
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);

@@ -2,6 +2,8 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyBlock;
@@ -13,6 +15,7 @@ use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyLeaseScheduleService;
 use DateTime;
+use Illuminate\Http\UploadedFile;
 
 class PropertyNewLeaseService
 {
@@ -28,20 +31,20 @@ class PropertyNewLeaseService
         PropertyRegistry $PropertyID,
         PropertyBlock $BlockID,
         PropertyFloor $FloorID,
-        PropertyUnit  $Unit,
-        DateTime      $StartDate,
-        DateTime      $EndDate,
-        CodeDetail    $PaymentFrequency,
-        float         $MonthlyRent,
-        float         $Deposit,
-        float         $ServiceCharge,
-        float         $ParkingFee,
-        float         $OtherCharges,
-        int           $DueDay,
-        string        $SpecialTerms,
-        User          $user
-    ): self
-    {
+        PropertyUnit $Unit,
+        DateTime $StartDate,
+        DateTime $EndDate,
+        CodeDetail $PaymentFrequency,
+        float $MonthlyRent,
+        float $Deposit,
+        float $ServiceCharge,
+        float $ParkingFee,
+        float $OtherCharges,
+        int $DueDay,
+        string $SpecialTerms = null,
+        User $user,
+        UploadedFile $document = null
+    ): self {
 
         $lastLeaseNumber = PropertyNewLease::withTrashed() // in case you're using soft deletes
         ->selectRaw("MAX(CAST(SUBSTRING(LeaseNumber, 7, LEN(LeaseNumber)) AS INT)) as max_number")
@@ -72,6 +75,15 @@ class PropertyNewLeaseService
             'ModifiedBy' => $user->Id,
         ]);
 
+        if ($document) {
+        $newlease->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::PropertyNewLeaseView->value],
+            $user
+            );
+        }
+
         PropertyLeaseScheduleService::create(
             leaseId: $newlease->Id,
             paymentFrequencyId: $PaymentFrequency->ID,
@@ -97,22 +109,22 @@ class PropertyNewLeaseService
     public static function update(
         PropertyNewLease $lease,
         PropertyRegistry $PropertyID,
-        PropertyBlock    $BlockID,
-        PropertyFloor    $FloorID,
-        PropertyUnit     $Unit,
-        DateTime         $StartDate,
-        DateTime         $EndDate,
-        CodeDetail       $PaymentFrequency,
-        float            $MonthlyRent,
-        float            $Deposit,
-        float            $ServiceCharge,
-        float            $ParkingFee,
-        float            $OtherCharges,
-        int              $DueDay,
-        string           $SpecialTerms,
-        User             $user
-    ): self
-    {
+        PropertyBlock $BlockID,
+        PropertyFloor $FloorID,
+        PropertyUnit $Unit,
+        DateTime $StartDate,
+        DateTime $EndDate,
+        CodeDetail $PaymentFrequency,
+        float $MonthlyRent,
+        float $Deposit,
+        float $ServiceCharge,
+        float $ParkingFee,
+        float $OtherCharges,
+        int $DueDay,
+        string $SpecialTerms,
+        User $user,
+        UploadedFile $document = null
+    ): self {
         $lease->update([
             'PropertyID' => $PropertyID->Id,
             'BlockID' => $BlockID->Id,
@@ -131,10 +143,19 @@ class PropertyNewLeaseService
             'ModifiedBy' => $user->Id,
         ]);
 
+        if ($document) {
+        $lease->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::PropertyNewLeaseView->value],
+            $user
+            );
+        }
+
         //Delete old schedule entries if needed (optional cleanup)
         PropertyLeaseSchedule::where('LeaseNumber', $lease->Id)->delete();
 
-        // ✅ Regenerate schedule
+        //Regenerate schedule
         PropertyLeaseScheduleService::create(
             leaseId: $lease->Id,
             paymentFrequencyId: $PaymentFrequency->ID,

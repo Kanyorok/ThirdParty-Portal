@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQSection;
-use App\Models\Procurement\RFQSettingSection;
+use App\Models\Procurement\Section;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +20,7 @@ class RFQSectionController extends Controller
         $rfqs = RFQ::withCount(['sections', 'criteria'])
             ->with('sections')
             ->get();
-        $sections = RFQSettingSection::all();
+        $sections = Section::all();
         $rfqList = RFQ::select('Id', 'RFQNumber')->get(); // or any other fields you need
 
         return view('procurement.rfqcriteriasetup.rfqevaluations', compact('rfqs', 'sections', 'rfqList'));

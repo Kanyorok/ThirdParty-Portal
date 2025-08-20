@@ -1,76 +1,126 @@
 @extends('layouts.app')
-@section('title', 'Payment Processing - Accounts Payable')
+@section('title', 'Payment Processing')
+
 @section('content')
-<div class="container mt-5">
-    <h2>Payment Processing - Accounts Payable</h2>
-    <a href="{{ route('paymentprocessing.create') }}" class="btn btn-primary mb-3">Schedule/Make Payment</a>
+    <div class="container my-3">
+        <!-- Card for Payment Vouchers -->
+        <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
+            <div class="card-body p-3">
+                <!-- Payment Vouchers Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle table-striped text-center"
+                           style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Voucher No</th>
+                            <th>Invoice Ref</th>
+                            <th>Payment Method</th>
+                            <th class="text-end">Amount</th>
+                            <th>Status</th>
+                            <th>Payment Type</th>
+{{--                            <th>Description</th>--}}
+                            <th class="text-center">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @forelse($vouchers as $item)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $item->VoucherNo ?? '-' }}</td>
+                                <td>{{ $item->invoice->InvoiceNumber ?? '-' }}</td>
+                                <td>{{ $item->PaymentMethod ?? '-' }}</td>
+                                <td class="text-end">{{ $item->TotalAmount ? number_format($item->TotalAmount, 2) : '-' }}</td>
+                                <td>
+                                    @if($item->IsProcessed)
+                                        <span class="badge bg-success">
+                                            Processed
+                                        </span>
+                                    @else
+                                        <span class="badge bg-warning">
+                                            Pending
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>{{ $item->PaymentType ?? '-' }}</td>
+{{--                                <td title="{{ $item->Description ?? '-' }}" style="white-space: nowrap;">--}}
+{{--                                    {{ $item->Description ?? '-' }}--}}
+{{--                                </td>--}}
+                                <td class="text-center">
+                                    <a href="{{ route('paymentprocessing.show', $item->Id) }}"
+                                       class="btn btn-sm btn-outline-info me-1"
+                                       title="View Voucher">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('paymentprocessing.edit', $item->Id) }}"
+                                       class="btn btn-sm btn-outline-primary me-1"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('paymentvoucher.destroy', $item->Id) }}" method="POST"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Are you sure you want to delete this voucher?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="p-0">
+                                    <div class="text-center p-4 border rounded-3 bg-light">
+                                        <p class="mb-3 text-muted fs-5">
+                                            <i class="fas fa-info-circle me-2 text-info"></i>
+                                            <i>No payment vouchers found for Processing.</i>
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
 
-    <h4 class="mt-4">Scheduled Payments</h4>
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Vendor</th>
-                <th>Invoice No.</th>
-                <th>Amount (Ksh)</th>
-                <th>Scheduled Date</th>
-                <th>Remarks</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>1</td>
-                <td>ABC Supplies Ltd</td>
-                <td>INV-2025-01</td>
-                <td>75,000</td>
-                <td>2025-05-20</td>
-                <td>Scheduled after delivery verification</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>XYZ Logistics</td>
-                <td>INV-2025-11</td>
-                <td>48,500</td>
-                <td>2025-05-25</td>
-                <td>Payment after GRN approval</td>
-            </tr>
-        </tbody>
-    </table>
+@section('styles')
+    <style>
+        /* Hover effect for rows */
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color 0.2s ease;
+        }
 
-    <h4 class="mt-5">Completed Payments</h4>
-    <table class="table table-bordered table-striped">
-        <thead class="table-success">
-            <tr>
-                <th>#</th>
-                <th>Vendor</th>
-                <th>Invoice No.</th>
-                <th>Amount (Ksh)</th>
-                <th>Paid On</th>
-                <th>Method</th>
-                <th>Remarks</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>1</td>
-                <td>Global Tech Ltd</td>
-                <td>INV-2025-03</td>
-                <td>150,000</td>
-                <td>2025-05-01</td>
-                <td>Bank Transfer</td>
-                <td>Quarterly license renewal</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>Quick Supplies</td>
-                <td>INV-2025-07</td>
-                <td>30,000</td>
-                <td>2025-05-03</td>
-                <td>Cheque</td>
-                <td>Advance for office supplies</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+        /* Compact buttons */
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
 
+        /* Table padding */
+        .table-sm th, .table-sm td {
+            padding: 0.5rem;
+        }
+
+        /* Card styling */
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            .btn-sm {
+                padding: 0.2rem 0.4rem;
+            }
+        }
+    </style>
 @endsection

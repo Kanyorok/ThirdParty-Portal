@@ -1,16 +1,22 @@
-@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Purchase Orders')
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-    <style>
-        .select2-container {
-            width: 100% !important;
-        }
-    </style>
+<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+</style>
 @endsection
 @section('content')
 
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-end">
+            <a href="{{ route('purchaseOrder.create') }}" class="btn btn-primary">
+                <i class="fa fa-plus"></i> Add New LPO
+            </a>
+        </div>
+    </div>
     <div class="row">
         <div class="col-12">
             <div class="card mb-3">
@@ -18,7 +24,6 @@
                     <table id="ordersTable"
                            class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                         <thead>
-
                         <tr>
                             <th>#</th>
                             <th>Order No</th>
@@ -32,39 +37,28 @@
                             <th>Created On</th>
                             <th>Action</th>
                         </tr>
-
                         </thead>
                         <tbody>
                         @forelse($details as $item)
-                            <tr>
-                                <td>{{  $loop->iteration }}</td>
-                                <td>{{ $item->OrderNo }}</td>
-                                <td>{{ Carbon::parse($item->OrderDate)->format('}}</td>
-                                <td>{{
-echo e( $item->Ex}}</td>
-                                <td>{{
-echo e( $item->P}}</td>
-                                <td>{{
-echo e( $item->B}}</td>
-                                <td>{{
-echo e( number_format($item->UnitPr}}</td>
-                                <td>{{
-echo e( $item->ord}}</td>
-                                <td>{{
-echo e( $item->Cr}}</td>
-                                <td>{{
-echo e( Carbon::parse($item->CreatedOn)->}}</td>
-                                <td><a href="{{ ?><?php
-echo e( route('purchaseOrder.sh}}" class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ ?><?php
-echo e( route('purchaseOrder.approv}}"
-                                       class="btn btn-success btn-sm">Approve</a>
-                                </td>
-                            </tr>
+                          <tr>
+                              <td>{{ $loop->iteration }}</td>
+                              <td>{{ $item->OrderNo }}</td>
+                              <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d-m-Y') }}</td>
+                              <td>{{ $item->ExtOrdNum }}</td>
+                              <td>{{ $item->Priority }}</td>
+                              <td>{{ $item->BranchID }}</td>
+                              <td>{{ number_format($item->UnitPrice, 2) }}</td>
+                              <td>{{ $item->ordercount }}</td>
+                              <td>{{ $item->CreatedBy }}</td>
+                              <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
+                              <td> <a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info btn-sm">View</a>
+                                  <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
+                              </td>
+                          </tr>
                         @empty
-                            <tr>
-                                <td colspan="15" class="text-center">No orders found.</td>
-                            </tr>
+                        <tr>
+                            <td colspan="15" class="text-center">No orders found.</td>
+                        </tr>
                         @endforelse
                         </tbody>
                     </table>
@@ -73,11 +67,35 @@ echo e( route('purchaseOrder.approv}}"
         </div>
     </div>
 
-@endsection
-@section(v->startS)
-    <script src="{{ ?><?php
-echo e( asset('assets/plugins/select2/js/select}}"></script>
-    <script src="{{ ?><?php
-echo e( asset('assets/js/}}"></script>
+    <!-- Modal for Show Order -->
+    <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="orderModalLabel">Purchase Order Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="orderModalBody">
+            <!-- Order details will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
 
+@endsection
+
+@section('scripts')
+    <script>
+        $(document).on('click', '.view-order', function() {
+            var orderId = $(this).data('id');
+            var url = "{{ url('procurement/purchaseOrder') }}/" + orderId;
+            $('#orderModalBody').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+            $('#orderModal').modal('show');
+            $.get(url, function(data) {
+                $('#orderModalBody').html(data);
+            }).fail(function() {
+                $('#orderModalBody').html('<div class="alert alert-danger">Failed to load order details.</div>');
+            });
+        });
+    </script>
 @endsection

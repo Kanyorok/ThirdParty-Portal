@@ -47,7 +47,6 @@ class PropertyLeaseScheduleService
             'ModifiedBy' => $user->Id,
         ]);
 
-        // Log the activity
         activity()
             ->causedBy($user)
             ->performedOn($leaseSchedule)

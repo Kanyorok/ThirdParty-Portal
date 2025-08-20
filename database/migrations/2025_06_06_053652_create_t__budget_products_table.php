@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('t_BudgetProducts', function (Blueprint $table) {
             $table->id('Id');
             $table->unsignedBigInteger('CBSProductID');
-            $table->foreign('CBSProductID')->references('Id')->on('t_BudgetProductTypes');
+            //$table->foreign('CBSProductID')->references('Id')->on('t_BudgetProductTypes');
             $table->string('Description', 255)->nullable();
             $table->string('ProductTypeID', 10)->nullable();
             $table->foreignId('CurrencyID')->references('Id')->on('t_Currencies');

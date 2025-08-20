@@ -19,8 +19,10 @@ class StockItemService
                     // Create StockItem first to get primary key `Id`
                     $stockItem = StockItem::create([
                         'ItemID' => $data['ItemID'],
+                        'UnitCost' => $data['UnitCost'] ?? null,
+                        'UOM' => $data['UOM'],
                         'Branch' => $data['Branch'],
-                        'Store' => $data['Store'] ?? null, // Ensure 'Store' is explicitly null if not provided
+                        'Store' => $data['Store'] ?? null, 
                         'CurrentQty' => $data['CurrentQty'],
                         'Status' => $data['Status'],
                         'Batch' => $data['Batch'] ?? false,

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Auth\ModelRole;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\BR\Account;
@@ -39,6 +40,15 @@ use App\Models\Core\Task;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
 use App\Models\CRM\Contact;
+use App\Models\Finance\FinanceGLAccounts;
+use App\Models\Finance\FinanceGLSubAccountTypes;
+use App\Models\Finance\FinanceGLTypeGroup;
+use App\Models\Finance\FinanceJournalEntry;
+use App\Models\Finance\FinanceJournalLines;
+use App\Models\Finance\FinanceTransaction;
+use App\Models\Finance\RecurrentJournal;
+use App\Models\Finance\ReverseJournalEntry;
+use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;
 use App\Models\CRM\MarketingPlanner;
@@ -59,10 +69,29 @@ use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
 use App\Models\DMS\LegalHold;
 use App\Models\DMS\Repository;
+use App\Models\Finance\FinanceCDNotes;
+use App\Models\Finance\FinanceGLMapping;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
 use App\Models\Procurement\DepartmentNeed;
+use App\Models\Inventory\InterBranchRequisition;
+use App\Models\Inventory\InventoryHoldReview;
+use App\Models\Inventory\InventoryType;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemType;
+use App\Models\Inventory\PriceManagement;
+use App\Models\Inventory\StockAdjustment;
+use App\Models\Inventory\StockItem;
+use App\Models\Inventory\Store;
+use App\Models\Inventory\TransactionReceipt;
+use App\Models\Inventory\TransactionTransfer;
+use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Inventory\UOMConversion;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\DepartmentNeeds;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\PlanLineItem;
 use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
@@ -72,15 +101,21 @@ use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\SchedulePlan;
 use App\Models\PropertyManagement\PropertyBlock;
 use App\Models\PropertyManagement\PropertyFloor;
+use App\Models\PropertyManagement\PropertyAttachments;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyLeaseRenewal;
+use App\Models\PropertyManagement\PropertyLeaseTermination;
+use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyMaintenanceRequest;
+use App\Models\PropertyManagement\PropertyMaintenanceAssign;
+use App\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
+use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyReceipt;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyType;
-use App\Models\PropertyManagement\PropertyUnit;
 use App\Models\Settings\APICredential;
 use App\Models\ThirdParies\Board;
 use App\Models\ThirdParies\Competitor;
@@ -90,6 +125,7 @@ use App\Policies\DMS\DocumentPolicy;
 use App\Policies\DMS\LegalHoldPolicy;
 use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
+use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\ItemCategoryPolicy;
 use App\Policies\Inventory\ItemMasterListPolicy;
@@ -100,6 +136,7 @@ use App\Policies\Inventory\StockItemPolicy;
 use App\Policies\Inventory\StorePolicy;
 use App\Policies\Inventory\TransactionReceiptPolicy;
 use App\Policies\Inventory\TransactionTransferPolicy;
+use App\Policies\Inventory\UOMConversionPolicy;
 use App\Policies\Inventory\UnitOfMeasurePolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
@@ -113,9 +150,15 @@ use App\Policies\Procurement\SchedulePlanPolicy;
 use App\Policies\ProductDevelopmentPolicy;
 use App\Policies\PropertyManagement\PropertyCategoryPolicy;
 use App\Policies\PropertyManagement\PropertyFloorPolicy;
+use App\Policies\PropertyManagement\PropertyAttachmentsPolicy;
 use App\Policies\PropertyManagement\PropertyInvoicePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseRenewalPolicy;
 use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
+use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
+use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
+use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
+Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
+use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
 use App\Policies\PropertyManagement\PropertyRegistryPolicy;
@@ -123,29 +166,38 @@ use App\Policies\PropertyManagement\PropertyStructuralPolicy;
 use App\Policies\PropertyManagement\PropertyTenantClearancePolicy;
 use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
+use App\Models\FleetManagement\FleetMake;
+use App\Models\FleetManagement\FleetModel;
+use App\Models\FleetManagement\VehicleRegistry;
+use App\Models\FleetManagement\DriverManagement;
+use App\Policies\FleetManagement\DriverManagementPolicy;
+use App\Policies\FleetManagement\FleetMakePolicy;
+use App\Policies\FleetManagement\FleetModelPolicy;
+use App\Policies\FleetManagement\VehicleRegistryPolicy; 
+use App\Policies\FleetManagement\DriverPolicy;
+
+
+
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
-use App\Policies\Inventory\InventoryHoldReviewPolicy;
-use App\Models\Inventory\ItemType;
-use App\Models\Inventory\ItemMasterList;
-use App\Models\Inventory\TransactionReceipt;
-use App\Models\Inventory\TransactionTransfer;
-use App\Models\Inventory\ItemCategories;
-use App\Models\Inventory\StockItem;
-use App\Models\Inventory\UnitOfMeasure;
-use App\Models\Inventory\Store;
-use App\Models\Inventory\InventoryType;
-use App\Models\Inventory\PriceManagement;
-use App\Models\Inventory\StockAdjustment;
-use App\Models\Inventory\InventoryHoldReview;
-use App\Models\Inventory\InterBranchRequisition;
-use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\PlanLineItem;
-use App\Models\Auth\ModelRole;
-
+use App\Models\Finance\FinanceInvoiceEntry;
+use App\Models\Finance\FinanceModuleTransactions;
+use App\Models\Finance\FinanceTaxType;
+use App\Models\Finance\FinanceTransactionTypes;
+use App\Models\Finance\TaxJurisdiction;
+use App\Models\Legal\LegalCase;
+use App\Models\Legal\LegalCaseCounsel;
+use App\Models\Legal\LegalCaseEvidence;
+use App\Models\Legal\LegalCaseOutcome;
+use App\Models\Legal\LegalClause;
+use App\Models\Legal\LegalDocument;
+use App\Models\Legal\LegalIntellectualProperty;
+use App\Models\Legal\LegalObligation;
+use App\Models\Legal\LegalSearchRequest;
+use App\Models\Legal\LoanSecurity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -181,6 +233,7 @@ class AppServiceProvider extends ServiceProvider
             Client::getPrimaryKey() => Client::class,
             Email::getPrimaryKey() => Email::class,
             Competitor::getPrimaryKey() => Competitor::class,
+            Committee::getPrimaryKey() => Committee::class,
             Contact::getPrimaryKey() => Contact::class,
             DebtProduct::getPrimaryKey() => DebtProduct::class,
             Department::getPrimaryKey() => Department::class,
@@ -229,7 +282,8 @@ class AppServiceProvider extends ServiceProvider
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
-
+            ModelRole::getPrimaryKey() => ModelRole::class,
+            UOMConversion::getPrimaryKey() => UOMConversion::class,
 
             ///////// Budget and Analytics /////////
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
@@ -274,10 +328,28 @@ class AppServiceProvider extends ServiceProvider
             BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
             BudgetMonthlyProjectionAllocation::getPrimaryKey() => BudgetMonthlyProjectionAllocation::class,
             BudgetManualEntryAllocations::getPrimaryKey() => BudgetManualEntryAllocations::class,
+
+            //Property Management
+            PropertyType::getPrimaryKey() => PropertyType::class,
             CategoryMaster::getPrimaryKey() => CategoryMaster::class,
+            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
+            PropertyAttachments::getPrimaryKey() => PropertyAttachments::class,
+            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyMaintenanceRequest::getPrimaryKey() => PropertyMaintenanceRequest::class,
+            PropertyMaintenanceAssign::getPrimaryKey() => PropertyMaintenanceAssign::class,
+            PropertyMaintenanceWorkCompletion::getPrimaryKey() => PropertyMaintenanceWorkCompletion::class,
+            PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
+            PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
+            PropertyFloor::getPrimaryKey() => PropertyFloor::class,
+            PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
+            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
+            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
+            PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
             PropertyType::getPrimaryKey() => PropertyType::class,
             PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
             PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
             //DMS
             DMSTags::getPrimaryKey() => DMSTags::class,
@@ -288,14 +360,57 @@ class AppServiceProvider extends ServiceProvider
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
+
             PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
             PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
             PropertyFloor::getPrimaryKey() => PropertyFloor::class,
             PropertyUnit::getPrimaryKey() => PropertyUnit::class,
+            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
+            PropertyType::getPrimaryKey() => PropertyType::class,
+            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
+            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
+            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
+
+              //Fleet Management
+            FleetMake::getPrimaryKey() => FleetMake::class,
+            FleetModel::getPrimaryKey() => FleetModel::class,
+            VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
+            DriverManagement::getPrimaryKey() => DriverManagement::class,
+
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+
+            //////////////  Finance  ////////////////
+            FinanceGLAccounts::getPrimaryKey()=>FinanceGLAccounts::class,
+            FinanceGLSubAccountTypes::getPrimaryKey()=>FinanceGLSubAccountTypes::class,
+            FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
+            TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
+            FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
+            FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+            FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
+            FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
+            RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
+            ReverseJournalEntry::getPrimaryKey() => ReverseJournalEntry::class,
+            FinanceTransaction::getPrimaryKey() => FinanceTransaction::class,
+            FinanceCDNotes::getPrimaryKey() => FinanceCDNotes::class,
+            FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
+            FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
+            FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
+            
+            //////////////  Legal  ////////////////
+            LegalDocument::getPrimaryKey() => LegalDocument::class,
+            LegalClause::getPrimaryKey() => LegalClause::class,
+            LegalCase::getPrimaryKey() => LegalCase::class,
+            LegalObligation::getPrimaryKey() => LegalObligation::class,
+            LegalSearchRequest::getPrimaryKey() => LegalSearchRequest::class,
+            LegalIntellectualProperty::getPrimaryKey() => LegalIntellectualProperty::class,
+            LoanSecurity::getPrimaryKey() => LoanSecurity::class,
+            LegalCaseEvidence::getPrimaryKey() => LegalCaseEvidence::class,
+            LegalCaseCounsel::getPrimaryKey() => LegalCaseCounsel::class,
+            LegalCaseOutcome::getPrimaryKey() => LegalCaseOutcome::class,
+
         ]);
 
         Gate::policy(Role::class, RolePolicy::class);
@@ -330,6 +445,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyType::class, PropertyTypePolicy::class);
         Gate::policy(PropertyRegistry::class, PropertyRegistryPolicy::class);
         Gate::policy(PropertyBlock::class, PropertyStructuralPolicy::class);
+        Gate::policy(PropertyAttachments::class, PropertyAttachmentsPolicy::class);
         Gate::policy(PropertyNewTenant::class, PropertyNewTenantPolicy::class);
         Gate::policy(PropertyTenantClearance::class, PropertyTenantClearancePolicy::class);
         Gate::policy(PropertyFloor::class, PropertyFloorPolicy::class);
@@ -338,7 +454,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyLeaseRenewal::class, PropertyLeaseRenewalPolicy::class);
         Gate::policy(PropertyInvoice::class, PropertyInvoicePolicy::class);
         Gate::policy(PropertyReceipt::class, PropertyReceiptPolicy::class);
+        Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
+        Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
+        Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
         Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
+        Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
+        Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
+        Gate::policy(FleetMake::class, FleetMakePolicy::class);
+        Gate::policy(FleetModel::class, FleetModelPolicy::class);
+        Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
+        Gate::policy(DriverManagement::class, DriverManagementPolicy::class);
+        Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);
@@ -376,5 +502,7 @@ class AppServiceProvider extends ServiceProvider
          Event::listen(NewCampaignEvent::class);
          Event::listen(CampaignSubmittedEvent::class);
          Event::listen(CampaignRunEvent::class);*/
+
+
     }
 }

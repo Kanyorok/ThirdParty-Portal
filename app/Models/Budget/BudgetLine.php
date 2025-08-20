@@ -65,9 +65,22 @@ class BudgetLine extends Model
             ->wherePivot('DeletedOn', null); // Only fetch if DeletedOn is NULL
     }
 
+    public function newGlAccounts()
+    {
+        return $this->belongsToMany(BudgetGLMaster::class, 't_BudgetLinesGLAccounts', 'BudgetLineID', 'BudgetGLAccountID')
+            ->withTimestamps()
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy', 'DeletedOn'])
+            ->wherePivot('DeletedOn', null); // Only fetch if DeletedOn is NULL
+    }
+
     public function glAccountSubType()
     {
         return $this->belongsTo(BudgetGLAccountSubType::class, 'GLAccountSubTypeID', 'Id');
+    }
+
+    public function glSubType() //Implemented this due to the change in where we are pointing to the new Tables
+    {
+        return $this->belongsTo(BudgetGLSubType::class, 'GLAccountSubTypeID', 'Id');
     }
 
     public function department()
@@ -83,7 +96,19 @@ class BudgetLine extends Model
     public function productTypes()
     {
         return $this->belongsToMany(
-            BudgetProductType::class,          // The related model
+            BudgetProduct::class,          // The related model
+            't_BudgetLineProductTypes',        // The pivot table
+            'BudgetLineId',                    // Foreign key on pivot pointing to this model
+            'ProductTypeId',                   // Foreign key on pivot pointing to related model
+            'Id',                              // Local key on this model
+            'Id'                               // Local key on related model
+        );
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(
+            BudgetProduct::class,          // The related model
             't_BudgetLineProductTypes',        // The pivot table
             'BudgetLineId',                    // Foreign key on pivot pointing to this model
             'ProductTypeId',                   // Foreign key on pivot pointing to related model
