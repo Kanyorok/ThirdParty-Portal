@@ -6,7 +6,7 @@
     <h4>📜 Commission Payout History</h4>
 
     @if($payouts->isEmpty())
-        <div class="alert alert-info">No commission payouts have been recorded yet.</div>
+        <div class="alert alert-info">No commission payouts yet recorded .</div>
     @else
         <table class="table table-bordered">
             <thead class="table-light">
