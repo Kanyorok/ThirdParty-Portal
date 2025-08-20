@@ -55,7 +55,7 @@
                 <div class="col-md-4">
                     <label class="form-label fw-bold text-muted">Referred By</label>
                     <div class="fs-6">
-                        {{ $referral->referredByEmployee->Name ?? $referral->ReferredBy ?? '-' }}
+                        {{ $referral->referredByEmployee ?? $referral->ReferredBy ?? '-' }}
                     </div>
                 </div>
                 <div class="col-md-4">

@@ -137,8 +137,7 @@ public function update(BancAssuranceReferralRequest $request, $Id)
 
 public function show($Id)
 {
-    $referral = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser', 'referredByEmployee'])
-        ->findOrFail($Id);
+    $referral = BancAssuranceReferral::findOrFail($Id);
 
     return view('bancassurance.referrals.show', compact('referral'));
 }
