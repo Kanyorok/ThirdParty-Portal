@@ -251,7 +251,7 @@ class CreditNoteController extends Controller
         }
     }
 
-    public function destroy(int $id)
+    public function destroy($id)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceCDNotes::class);
 
