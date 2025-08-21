@@ -404,11 +404,7 @@ class ModuleSeeder extends Seeder
             //Fleet Management
             ['ModuleID' => 601000, 'Name' => 'Vehicle Management', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 601100, 'Name' => 'Vehicle Master', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => 'fleet.vehicles.index'],
-<<<<<<< Updated upstream
-            ['ModuleID' => 601200, 'Name' => 'Compliance', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => 'fleet.vehicles.index'],
-=======
             ['ModuleID' => 601200, 'Name' => 'Compliance', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => null],
->>>>>>> Stashed changes
             ['ModuleID' => 601210, 'Name' => 'Insurance Tracker', 'Icon' => 'Track insurance policies, premiums, providers, and renewal dates', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.insurance_tracker.index'],
             ['ModuleID' => 601220, 'Name' => 'License Tracker & Inspection Schedule', 'Icon' => 'Track vehicle inspection types, dates, and compliance status', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.inspection_schedule.index'],
 
@@ -449,11 +445,6 @@ class ModuleSeeder extends Seeder
             //Configuration
             ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
-<<<<<<< Updated upstream
-           
-=======
-
->>>>>>> Stashed changes
             //Reports
             ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'reports.index'],
         ]);
@@ -480,7 +471,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'file-tags.index'],
             ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'files.upload'],
             ['ModuleID' => 705000, 'Name' => 'Legal Hold', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'legal-hold.index'],
-            
+
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);
 
@@ -555,7 +546,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 902000, 'Name' => 'Customers', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 902100, 'Name' => 'Customer Profile & KYC', 'Icon' => 'fas fa-user-plus', 'Description' => 'Create customer profile with KYC', 'Route' => 'bancassurance.customers.check', 'ParentID' => 902000],
             ['ModuleID' => 902300, 'Name' => 'Customer Listing', 'Icon' => 'fas fa-user-friends', 'Description' => 'Add or edit customer beneficiaries', 'Route' => 'bancassurance.customers.index', 'ParentID' => 902000],
-            ['ModuleID' => 902400, 'Name' => 'Customer Communications', 'Icon' => 'fas fa-comments', 'Description' => 'Track calls, emails, visits and SMS logs', 'Route' =>'bancassurance.customers.communication.index', 'ParentID' => 902000],
+            ['ModuleID' => 902400, 'Name' => 'Customer Communications', 'Icon' => 'fas fa-comments', 'Description' => 'Track calls, emails, visits and SMS logs', 'Route' => 'bancassurance.customers.communication.index', 'ParentID' => 902000],
             ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => null, 'Route' => 'bancassurance.policies.create', 'ParentID' => 900000],
             ['ModuleID' => 903100, 'Name' => 'Policy Proposals', 'Icon' => null, 'Description' => 'List and manage policy proposals', 'Route' => 'bancassurance.policies.index', 'ParentID' => 903000],
             ['ModuleID' => 903200, 'Name' => 'Proposal Review', 'Icon' => null, 'Description' => 'Review policy proposals and make underwriting decisions', 'Route' => 'bancassurance.policies.reviewIndex', 'ParentID' => 903000],
