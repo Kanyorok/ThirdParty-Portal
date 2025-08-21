@@ -42,17 +42,17 @@ class BancassurancePolicy extends Model
 
     Public function product()
     {
-        return $this->belongsTo(CodeDetail::class, 'ProductID', 'ID');
+        return $this->belongsTo(InsuranceProduct::class, 'ProductID', 'Id');
     }
 
     public function insurer()
     {
-        return $this->belongsTo(CodeDetail::class, 'InsurerID', 'ID');
+        return $this->belongsTo(InsuranceProvider::class, 'InsurerID', 'Id');
     }
 
     public function paymentfrequency()
     {
-        return $this->belongsTo(CodeDetail::class,'PaymentFrequency', 'ID');
+        return $this->belongsTo(InsuranceProduct::class,'PaymentFrequency', 'Id');
     }
 
     public function referral()

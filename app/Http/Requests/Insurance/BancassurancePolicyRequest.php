@@ -25,8 +25,8 @@ class BancassurancePolicyRequest extends FormRequest
     {
         return [
             'CustomerID' => 'required|exists:t_BancassuranceCustomers,Id',
-            'ProductID' => 'required|exists:t_CodeDetails,ID',
-            'InsurerID' => 'nullable|exists:t_CodeDetails,ID',
+            'ProductID' => 'required|exists:t_InsuranceProducts,Id',
+            'InsurerID' => 'nullable|exists:t_InsuranceProviders,Id',
             'SumAssured' => 'required|numeric|min:0',
             'PremiumAmount' => 'required|numeric|min:0',
             'PolicyStartDate' => 'required|date',
@@ -36,7 +36,6 @@ class BancassurancePolicyRequest extends FormRequest
             'IssuedDate' => 'nullable|date',
             'ExpiryDate' => 'nullable|date|after_or_equal:IssuedDate',
             'IsActive' => 'boolean',
-            //'Status'    => ['required', new Enum(InsurancePolicyStatus::class)],
             'Document' => 'nullable|file|max:2048'
         ];
     }

@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>📋 Underwriting Feedback – Policy #{{ $policy->PolicyNumber }}</h4>
+    <h4>Underwriting Feedback – Policy #{{ $policy->PolicyNumber }}</h4>
     <p><strong>Customer:</strong> {{ $policy->customer->FullName }}</p>
 
     <form method="POST" action="{{ route('bancassurance.policies.feedback.store', $policy->Id) }}">
@@ -11,7 +11,7 @@
 
         {{-- Underwriter Name (optional or from auth?) --}}
         <div class="mb-3">
-            <p><strong>Underwriter Name:</strong> {{ $policy->insurer->Description }}</p>
+            <p><strong>Underwriter Name:</strong> {{ $policy->insurer->Name }}</p>
         </div>
 
         {{-- Feedback Date --}}
@@ -56,7 +56,7 @@
         </div>
 
         <div class="text-end">
-            <button class="btn btn-success">💾 Submit Feedback</button>
+            <button class="btn btn-success">Submit Feedback</button>
         </div>
     </form>
 </div>

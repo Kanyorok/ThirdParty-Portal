@@ -12,6 +12,8 @@ use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProvider;
 use App\Services\Insurance\BancassurancePolicyService;
 use App\Services\Insurance\BancassuranceUnderwritingService;
 use Illuminate\Http\Request;
@@ -40,17 +42,22 @@ public function index(Request $request)
     return view('bancassurance.policies.index', compact('query', 'statuses'))->with(['policies' => $query]);
 }
 
-public function create(Request $request)
+public function create()
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $referrals = BancAssuranceReferral::all();
     $customers = BancassuranceCustomer::all();
-    $products = CodeDetail::where('CodeID', 'InsuranceProduct')->get();
-    $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
+    $insurers = InsuranceProvider::all();
     $paymentfrequencys = CodeDetail::where('CodeID','PaymentFrequency')->get();
 
     return view('bancassurance.policies.create', compact(
-        'customers', 'products', 'insurers', 'paymentfrequencys', 'referrals'));
+        'customers', 'insurers', 'paymentfrequencys', 'referrals'));
+}
+
+public function getProductsByInsurer($insurerId)
+{
+    $products = InsuranceProduct::where('InsuranceProviderID', $insurerId)->get();
+    return response()->json($products);
 }
 
 
@@ -60,9 +67,9 @@ public function store(BancassurancePolicyRequest $request)
     $validated = $request->validated();
 
     $CustomerId = BancassuranceCustomer::findOrFail($validated['CustomerID']);
-    $referralId = BancAssuranceReferral::findOrFail($validated['ReferralID'] ?? null);
-    $ProductId = CodeDetail::findOrFail($validated['ProductID'] ?? null);
-    $InsurerId = CodeDetail::findOrFail($validated['InsurerID'] ?? null);
+    $referralId = isset($validated['ReferralID']) ? BancAssuranceReferral::find($validated['ReferralID']) : null;
+    $ProductId = InsuranceProduct::findOrFail($validated['ProductID'] ?? null);
+    $InsurerId = InsuranceProvider::findOrFail($validated['InsurerID'] ?? null);
     $Paymentfrquency = CodeDetail::findOrFail($validated['PaymentFrequency'] ?? null);
     $Status = InsurancePolicyStatus::Proposal;
 
@@ -267,41 +274,25 @@ public function issuanceList()
 }
 
 
-public function issueForm($id)
-{
-    $policy = BancassurancePolicy::where('Id', $id)
-        ->where('Status', InsurancePolicyStatus::AwaitingIssuance->value)
-        ->firstOrFail();
+// public function issueForm($id)
+// {
+//     $policy = BancassurancePolicy::where('Id', $id)
+//         ->where('Status', InsurancePolicyStatus::AwaitingIssuance->value)
+//         ->firstOrFail();
 
-    return view('bancassurance.policies.issue', compact('policy'));
-}
+//     return view('bancassurance.policies.issue', compact('policy'));
+// }
 
 
 // Store issuance details
-public function storeIssuance(Request $request, $id)
+public function storeIssuance($id)
 {
-    $request->validate([
-        'IssuedDate' => 'required|date',
-        'ExpiryDate' => 'required|date|after:IssuedDate',
-        'PolicyNumber' => 'required|string|max:50',
-        'PolicyDocument' => 'nullable|file|mimes:pdf,doc,docx|max:2048'
-    ]);
-
-    $filePath = null;
-    if ($request->hasFile('PolicyDocument')) {
-        $filePath = $request->file('PolicyDocument')->store('policies', 'public');
-    }
-
-    DB::table('t_BancassurancePolicies')->where('Id', $id)->update([
-        'PolicyNumber' => $request->PolicyNumber,
-        'IssuedDate' => $request->IssuedDate,
-        'ExpiryDate' => $request->ExpiryDate,
-        'PolicyDocumentPath' => $filePath,
-        'IsIssued' => 1,
-        'Status' => 'Issued',
-        'ModifiedBy' => auth()->id(),
-        'ModifiedOn' => now()
-    ]);
+    $Policy = BancassurancePolicy::find($id);
+        $Policy->update([
+            'Status'     => InsurancePolicyStatus::Issued->value,
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now()
+        ]);
 
     return redirect()->route('bancassurance.policies.index')->with('success', 'Policy issued successfully.');
 }

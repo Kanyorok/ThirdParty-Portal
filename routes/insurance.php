@@ -73,6 +73,7 @@ Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(
     Route::get('create', [PolicyController::class, 'create'])->name('create');
     Route::post('store', [PolicyController::class, 'store'])->name('store');
     Route::get('review', [PolicyController::class, 'reviewIndex'])->name('reviewIndex');
+    Route::get('products/{insurerId}', [PolicyController::class, 'getProductsByInsurer'])->name('policy.products');
     Route::get('{id}/review', [PolicyController::class, 'review'])->name('review'); // ✅ Add this
     Route::post('{id}/submit', [PolicyController::class, 'submitForUnderwriting'])->name('submitUnderwriting');
     Route::get('{id}/feedback', [PolicyController::class, 'feedbackForm'])->name('feedbackForm');

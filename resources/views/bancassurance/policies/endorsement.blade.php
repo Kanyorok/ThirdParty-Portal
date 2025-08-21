@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>📄 Endorse Policy: {{ $policy->PolicyNumber }}</h4>
+    <h4>Endorse Policy: {{ $policy->PolicyNumber }}</h4>
 
     <form action="{{ route('bancassurance.policies.storeEndorsement', $policy->Id) }}" method="POST" enctype="multipart/form-data">
         @csrf

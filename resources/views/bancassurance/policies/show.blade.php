@@ -3,11 +3,9 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>📄 Policy Details</h4>
-
     <div class="card mb-4">
         <div class="card-body">
-            <h5 class="mb-3">🧾 Policy Summary</h5>
+            <h5 class="mb-3">Policy Summary</h5>
             <div class="row">
                 <div class="col-md-4"><strong>Policy No:</strong><br>{{ $policy->PolicyNumber }}</div>
                 <div class="col-md-4"><strong>Customer:</strong><br>{{ $policy->CustomerName }}</div>
@@ -15,15 +13,15 @@
             </div>
             <div class="row mt-3">
                 <div class="col-md-4"><strong>Status:</strong><br><span class="badge bg-success">{{ $policy->Status }}</span></div>
-                <div class="col-md-4"><strong>Start Date:</strong><br>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d M Y') }}</div>
-                <div class="col-md-4"><strong>End Date:</strong><br>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</div>
+                <div class="col-md-4"><strong>Start Date:</strong><br>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</div>
+                <div class="col-md-4"><strong>End Date:</strong><br>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</div>
             </div>
         </div>
     </div>
 
     {{-- 💳 Installment Tracker --}}
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white">💳 Installment Tracker</div>
+        <div class="card-header bg-primary text-white">Installment Tracker</div>
         <div class="card-body">
             @php
                 $balance = $policy->TotalPremium - $policy->AmountPaid;
@@ -52,20 +50,16 @@
             </div>
 
             @if($progress < 100 && isset($policy->NextInstallmentDueDate) && \Carbon\Carbon::parse($policy->NextInstallmentDueDate)->isPast())
-                <div class="alert alert-warning mt-3">
-                    ⚠️ Next installment is overdue.
-                </div>
+                <div class="alert alert-warning mt-3">Next installment is overdue.</div>
             @endif
 
-            <a href="{{ route('bancassurance.premiums.create', $policy->Id) }}" class="btn btn-success mt-3">
-                ➕ Record Premium Payment
-            </a>
+            <a href="{{ route('bancassurance.premiums.create', $policy->Id) }}" class="btn btn-success mt-3">Record Premium Payment</a>
         </div>
     </div>
 
     {{-- 📄 Payment History --}}
     <div class="card">
-        <div class="card-header bg-secondary text-white">📄 Payment History</div>
+        <div class="card-header bg-secondary text-white">Payment History</div>
         <div class="card-body p-0">
             <table class="table table-striped mb-0">
                 <thead>
@@ -79,7 +73,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($installments as $i => $row)
+                    @forelse($installments as $row)
                         <tr>
                             <td>{{$loop->iteration}}</td>
                             <td>{{ \Carbon\Carbon::parse($row->PaymentDate)->format('d/m/Y') }}</td>

@@ -10,6 +10,8 @@ use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProvider;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 
@@ -25,8 +27,8 @@ class BancassurancePolicyService
     
     public static function create(
         BancassuranceCustomer $CustomerID,
-        CodeDetail $ProductID,
-        ?CodeDetail $InsurerID,
+        InsuranceProduct $ProductID,
+        ?InsuranceProvider $InsurerID,
         float $SumAssured,
         float $PremiumAmount,
         Carbon $PolicyStartDate,
@@ -49,8 +51,8 @@ class BancassurancePolicyService
         
         $policy = BancassurancePolicy::create([
             'CustomerID' => $CustomerID -> Id,
-            'ProductID' => $ProductID -> ID,
-            'InsurerID' => $InsurerID -> ID ?? null,
+            'ProductID' => $ProductID -> Id,
+            'InsurerID' => $InsurerID -> Id ?? null,
             'PolicyNumber' => $PolicyNumber,
             'SumAssured' => $SumAssured,
             'PremiumAmount' => $PremiumAmount,
@@ -87,10 +89,6 @@ class BancassurancePolicyService
             $user
             );
         }
-
-        // $policy->ModifiedBy = $user->Id;
-        // $policy->ModifiedOn = now();
-        // $policy->save();
 
         activity()
             ->causedBy($user->Id)

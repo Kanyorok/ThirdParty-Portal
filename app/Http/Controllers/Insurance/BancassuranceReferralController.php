@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsuranceReferralStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancAssuranceReferralRequest;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
 use App\Models\Auth\User;
 use App\Models\HRM\Employee;
 use App\Models\Insurance\BancAssuranceReferral;
@@ -21,13 +21,14 @@ class BancassuranceReferralController extends Controller
 
 public function index()
 {
+    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
     $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])->get();
 
     return view('bancassurance.referrals.index', compact('referrals'));
 }
 public function create()
 {
-    
+    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
     $insurers = InsuranceProvider::all();
     $users = User::with('employee')->get();
     return view('bancassurance.referrals.create', compact('users', 'insurers'));
@@ -43,6 +44,7 @@ public function getProductsByInsurer($insurerId)
 
 public function store(BancAssuranceReferralRequest $request)
 {
+    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
     $user = auth()->user();
     $validated = $request->validated();
 
@@ -84,6 +86,7 @@ public function store(BancAssuranceReferralRequest $request)
 
 public function edit($Id)
 {
+    $this->authorize(PermissionEnum::BancassuranceReferralUpdate, BancAssuranceReferral::class);
     $referral = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser'])->findOrFail($Id);
     $insuranceproducts = InsuranceProduct::all();
     $insurers = InsuranceProvider::all();
@@ -94,6 +97,7 @@ public function edit($Id)
 
 public function update(BancAssuranceReferralRequest $request, $Id)
 {  
+    $this->authorize(PermissionEnum::BancassuranceReferralUpdate, BancAssuranceReferral::class);
     $user = auth()->user();
     $validated = $request->validated();
 
@@ -137,6 +141,7 @@ public function update(BancAssuranceReferralRequest $request, $Id)
 
 public function show($Id)
 {
+    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
     $referral = BancAssuranceReferral::findOrFail($Id);
 
     return view('bancassurance.referrals.show', compact('referral'));
@@ -144,6 +149,7 @@ public function show($Id)
 
 public function assignList()
 {
+    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
     $referrals = BancAssuranceReferral::with('insuranceProduct')
         ->whereNull('AssignedTo')
         ->where('Status',InsuranceReferralStatus::Pending->value) // Assuming 'P' stands for 'Pending'
@@ -159,6 +165,7 @@ public function assignList()
 
 public function assign(Request $request, $Id)
 {
+    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
     $request->validate([
         'AssignedTo' => 'required|exists:t_Employees,Id',
     ]);
@@ -177,6 +184,7 @@ public function assign(Request $request, $Id)
 
 public function performanceView()
 {
+    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
     $referrals = BancAssuranceReferral::with(['referredByEmployee.branch'])->get();
 
     $grouped = $referrals->groupBy(function ($referral) {
@@ -201,6 +209,7 @@ public function performanceView()
 
 Public function destroy($Id)
 {
+    $this->authorize(PermissionEnum::BancassuranceReferralDelete, BancAssuranceReferral::class);
     $referral = BancAssuranceReferral::findOrFail($Id);
     $referral->DeletedBy = Auth()->Id();
     $referral->save();
