@@ -432,10 +432,9 @@ Route::resource('procawards', AwardsController::class);
 Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.index');
 Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');
 Route::post('contracts', [ContractsController::class, 'store'])->name('contracts.store');
-Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('contracts.view');
+Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('contracts.show');
 Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
 Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
-
 
 // Contracts - Approval Queue
 Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approve_index');
@@ -453,7 +452,6 @@ Route::post('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::cla
 Route::get('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('contractcycle.terminate');
 Route::post('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('contractcycle.terminate.submit');
 Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('contractcycle.execution');
-
 
 Route::resource('deliverynotes', DeliveryController::class);
 Route::resource('goodsinspection', InspectionController::class);
