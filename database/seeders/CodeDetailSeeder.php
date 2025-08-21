@@ -393,6 +393,20 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ItemStatus', 'Description' => 'Active', 'Value' => 'AC'],
             ['CodeID' => 'ItemStatus', 'Description' => 'Inactive', 'Value' => 'IN'],
            
+            //Maintenance Type
+            ['CodeID' => 'FleetMaintenanceType', 'Description' => 'Routine', 'Value' => 'RO'],
+            ['CodeID' => 'FleetMaintenanceType', 'Description' => 'Inspection', 'Value' => 'IN'],
+            ['CodeID' => 'FleetMaintenanceType', 'Description' => 'Emergency', 'Value' => 'EM'],
+
+            //Repair Type
+            ['CodeID' => 'FleetRepairType', 'Description' => 'Normal', 'Value' => 'NO'],
+            ['CodeID' => 'FleetRepairType', 'Description' => 'Emergency', 'Value' => 'EM'],
+
+            //Maintenance Status
+            ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
+            ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Acknowledged', 'Value' => 'AC'],
+            ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Completed', 'Value' => 'CO'],
+           
         ];
 
         foreach ($static as $index => $item) {

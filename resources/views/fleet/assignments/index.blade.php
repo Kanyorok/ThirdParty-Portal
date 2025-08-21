@@ -23,7 +23,7 @@
                 @forelse ($assignments as $item)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $item->vehicle->RegistrationNumber }}</td>
+                        <td>{{ $item->vehicle->RegistrationNo }}</td>
                         <td>{{ $item->user->name ?? '-' }}</td>
                         <td>{{ $item->branch->Name ?? '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->AssignmentDate)->format('d-M-Y') }}</td>
