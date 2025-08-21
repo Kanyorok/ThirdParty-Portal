@@ -436,6 +436,7 @@ Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('c
 Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
 Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
 
+
 // Contracts - Approval Queue
 Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approve_index');
 Route::get('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');

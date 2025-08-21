@@ -175,6 +175,13 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 307300, 'Name' => 'Link RFQ to Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.linkRFQ'],
             //            ['ModuleID' => 307400, 'Name' => 'Purchase Order Approval', 'Icon' => null,'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.approval'],
 
+            // Contracts 
+            
+            ['ModuleID' => 307500, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 307510, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contracts.index'],
+            ['ModuleID' => 307520, 'Name' => 'Contract Lifecycle', 'Icon' => null, 'Description' => '', 'ParentID' => 307500, 'Route' => 'contractcycle.index'],
+
+
             ['ModuleID' => 308000, 'Name' => 'Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 308100, 'Name' => 'View Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.index'],
             ['ModuleID' => 308200, 'Name' => 'Create Good Receipt', 'Icon' => null, 'Description' => '', 'ParentID' => 308000, 'Route' => 'procurementreceipts.create'],
