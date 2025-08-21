@@ -33,16 +33,19 @@
                             <a href="{{ route('rfqcriterias.show', $rfq->Id) }}"
                                class="btn btn-sm btn-outline-{{ $rfq->criteria_count > 0 ? 'primary' : 'danger' }}">
                                 {{ $rfq->criteria_count ?? 0 }}
-                                <i class="fa fa-eye" style="font-size: 18px; color: {{ $rfq->criteria_count > 0 ? 'rgb(63, 63, 252)' : 'red' }}"></i>
+                                <i class="fa fa-eye"
+                                   style="font-size: 18px; color: {{ $rfq->criteria_count > 0 ? 'rgb(63, 63, 252)' : 'red' }}"></i>
 
                                 @if(($rfq->criteria_count ?? 0) == 0)
-                                    <span class="badge bg-danger ms-1" data-bs-toggle="tooltip" title="No criteria assigned">!</span>
+                                    <span class="badge bg-danger ms-1" data-bs-toggle="tooltip"
+                                          title="No criteria assigned">!</span>
                                 @endif
                             </a>
                         </td>
                         <td>{{ $rfq->sections->sum('Weight') ?? 0 }}%</td>
                         <td>
-                            <a href="{{ route('rfqcriterias.show', $rfq->Id) }}" class="btn btn-sm btn-outline-primary">Setup Criteria</a>
+                            <a href="{{ route('rfqcriterias.show', $rfq->Id) }}" class="btn btn-sm btn-outline-primary">Setup
+                                Criteria</a>
                         </td>
                     </tr>
                 @endforeach
@@ -52,7 +55,8 @@
     </div>
 
     <!-- Add RFQ Section Modal -->
-    <div class="modal fade" id="addRfqSectionModal" tabindex="-1" aria-labelledby="addRfqSectionModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addRfqSectionModal" tabindex="-1" aria-labelledby="addRfqSectionModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
@@ -61,7 +65,7 @@
                 </div>
 
                 <form action="{{ route('rfqcriteriasetup.evaluations.save') }}" method="POST">
-                @csrf
+                    @csrf
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Select RFQ</label>

@@ -78,7 +78,7 @@ class PropertyMaintenanceRequestController extends Controller
                     $IssueType,
                     $Priority,
                     $validated['IssueDescription']?? '--',
-                    auth()->user(),
+                    Auth::user(),
                     $document
         );
 
@@ -122,7 +122,7 @@ class PropertyMaintenanceRequestController extends Controller
                 $IssueType,
                 $Priority,
                 $validated['IssueDescription'],
-                auth()->user(),
+                 Auth::user(),
                 $document
             );
 

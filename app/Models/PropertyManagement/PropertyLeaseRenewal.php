@@ -10,7 +10,7 @@ use App\Traits\Model\UserActorTrait;
 class PropertyLeaseRenewal extends Model
 {
 
-     use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait;
     //
     protected $table = 't_RenewLease';
     public const CREATED_AT = 'CreatedOn';
@@ -42,7 +42,8 @@ class PropertyLeaseRenewal extends Model
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');
     }
-     public function paymentFrequency()
+
+    public function paymentFrequency()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }

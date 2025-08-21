@@ -60,7 +60,9 @@
                         <hr>
                         <form id="trashRoleForm" method="post">@csrf @method('delete')
                             <div class="mt-4">
-                                <button type="button" class="btn btn-success float-start" data-bs-dismiss="modal">no, keep</button>
+                                <button type="button" class="btn btn-success float-start" data-bs-dismiss="modal">no,
+                                    keep
+                                </button>
                                 <button class="btn btn-danger float-end" id="trashRoleBtn" type="submit">
                                     <i class="fas fa-trash"></i> yes, delete
                                 </button>

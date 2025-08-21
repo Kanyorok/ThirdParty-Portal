@@ -65,12 +65,12 @@ class LeadEmailController extends Controller
     /**
      * Show full email details for modal view.
      */
-public function show(Lead $lead, Email $leadMail)
-{
-    return view('crm.leads.partials.email-details', [
-        'email' => $leadMail,
-    ]);
-}
+    public function show(Lead $lead, Email $leadMail)
+    {
+        return view('crm.leads.partials.email-details', [
+            'email' => $leadMail,
+        ]);
+    }
 
 
 

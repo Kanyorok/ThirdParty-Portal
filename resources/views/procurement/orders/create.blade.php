@@ -103,7 +103,12 @@
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms <span class="text-danger">*</span></label>
-                    <input type="text" name="terms" class="form-control terms @error('terms') is-invalid @enderror" placeholder="e.g., Net 30, 50%" value="{{ old('terms') }}" required/>
+                    <select class="form-control terms @error('terms') is-invalid @enderror" name="terms" required>
+                        <option selected disabled>Select Payment Term</option>
+                        @foreach ($paymentTerms as $term)
+                            <option value="{{ $term->ID }}" {{ old('terms') == $term->ID ? 'selected' : '' }}>{{ $term->Description }}</option>
+                        @endforeach
+                    </select>
                     @error('terms')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
@@ -119,7 +124,7 @@
 
             <!-- Line Items Table -->
             <div class="table-responsive mb-4">
-                <table class="table table-bordered table-sm">
+                <table class="table table-bordered" id="line-items-table">
                     <thead class="table-light">
                     <tr>
                         <th style="width: 3%; min-width: 30px;">#</th>
@@ -133,7 +138,7 @@
                         <th style="width: 15%; min-width: 150px;">Line Total</th>
                     </tr>
                     </thead>
-                    <tbody id="po-items">
+                    <tbody id="item-rows">
                     <tr>
                         <td class="line-no">1.</td>
                         <td class="text-start">
@@ -480,5 +485,77 @@
             }
         });
     </script>
+<script>
+    $(document).ready(function () {
+        $('#rfq-id').on('change', function () {
+            const rfqId = $(this).val();
+            if (!rfqId) return;
+
+            $.ajax({
+                url: `/purchase-order/rfq-items/${rfqId}`,
+                method: 'GET',
+                success: function (response) {
+                    const tbody = $('#item-rows');
+                    tbody.empty();
+
+                    response.items.forEach((item, index) => {
+                        const row = `
+                            <tr>
+                                <td>
+                                    <input type="hidden" name="itemCode[]" value="${item.itemCode}">
+                                    <input type="text" class="form-control" value="${item.itemName}" readonly>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control" name="itemType[]" value="${item.itemType}" readonly>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control quantity" name="quantity[]" value="${item.quantity}" min="1" required>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control unit-price" name="unitPrice[]" value="${item.unitPrice}" min="0" required>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control tax" name="tax[]" value="" min="0">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control discount" name="discount[]" value="" min="0">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control total" name="total[]" value="" readonly>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+                                </td>
+                            </tr>`;
+                        tbody.append(row);
+                    });
+                },
+                error: function () {
+                    alert('Failed to load RFQ items.');
+                }
+            });
+        });
+
+        // Remove row handler
+        $(document).on('click', '.remove-row', function () {
+            $(this).closest('tr').remove();
+        });
+
+        // Live calculation of total (qty * unitPrice + tax - discount)
+        $(document).on('input', '.quantity, .unit-price, .tax, .discount', function () {
+            const row = $(this).closest('tr');
+            const qty = parseFloat(row.find('.quantity').val()) || 0;
+            const price = parseFloat(row.find('.unit-price').val()) || 0;
+            const tax = parseFloat(row.find('.tax').val()) || 0;
+            const discount = parseFloat(row.find('.discount').val()) || 0;
+
+            const subtotal = qty * price;
+            const total = subtotal + tax - discount;
+
+            row.find('.total').val(total.toFixed(2));
+        });
+    });
+</script>
+
 
 @endsection

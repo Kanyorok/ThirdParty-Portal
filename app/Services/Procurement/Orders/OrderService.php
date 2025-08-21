@@ -178,6 +178,10 @@ class OrderService
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_Orders.AccountID', '=', 't_Suppliers.Id')
             ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR)'))
+            ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), function ($join) {
+                    $join->whereRaw('CAST(t_CodeDetails.ID AS VARCHAR(50)) = t_Orders.terms')
+                        ->where('t_CodeDetails.CodeID', '=', 'PaymentTerm');
+                })
             ->where('t_Orders.Id', '=', $id)
             ->select(DB::raw('
                 t_Orders.Id,
@@ -195,7 +199,9 @@ class OrderService
                 t_Orders.OrdTotIncl,
                 t_Orders.OrdTotTax,
                 t_Orders.OrdDiscAmnt,
-                t_Suppliers.SupplierName
+                t_Suppliers.SupplierName,
+                t_CodeDetails.Description as terms_description,
+                t_Orders.terms as terms_id
             '))
             ->groupBy(
                 't_Orders.Id',
@@ -212,7 +218,9 @@ class OrderService
                 't_Orders.OrdTotTax',
                 't_Orders.OrdDiscAmnt',
                 't_Suppliers.SupplierName',
-                't_RFQ.RFQNumber'
+                't_RFQ.RFQNumber',
+                't_CodeDetails.Description',
+                't_Orders.terms'
             )
             ->first();
     }

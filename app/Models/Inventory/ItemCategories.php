@@ -5,6 +5,7 @@ namespace App\Models\Inventory;
 use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ItemCategories extends Model
@@ -30,6 +31,7 @@ class ItemCategories extends Model
         'Name',
         'Description',
         'ParentId',
+        'Status',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
@@ -42,6 +44,7 @@ class ItemCategories extends Model
         'Name'  => 'string',
         'Description'   => 'string',
         'ParentId'      => 'integer',
+        'Status'        => 'integer',
         'CreatedBy'     => 'integer',
         'ModifiedBy'    => 'integer',
         'DeletedBy'     => 'integer',
@@ -69,7 +72,11 @@ class ItemCategories extends Model
     {
         return $this->belongsTo(ItemCategories::class, 'ParentId');
     }
-
+    
+    public function status()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
+    }
 
     public function children()
     {

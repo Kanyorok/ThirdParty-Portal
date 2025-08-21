@@ -46,7 +46,7 @@ class PropertyReceiptService
             'AmountPaidNow' => $AmountPaidNow,
             'PaymentMethod' => $PaymentMethod->ID,
             'ReferenceNo' => $ReferenceNo,
-            'Remarks' => $Remarks,
+            'Remarks' => $Remarks = null,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

@@ -221,9 +221,15 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Tender Creteria setup
     Route::resource('sections', SectionController::class)->except(['update', 'destroy']);
-    Route::resource('criterias', CriteriaController::class)->except(['update', 'destroy']);
-    Route::resource('tenderevaluations', TenderEvaluationsController::class);
-    Route::post("/store-tender-sections", [TenderEvaluationsController::class, 'tenderSections'])->name('store-tender-sections');
+    Route::resource('criterias', CriteriaController::class)
+        ->except(['update', 'destroy'])
+        ->names([
+            'index' => 'procurement.criterias.index',
+            'show' => 'procurement.criterias.show',
+            'store' => 'procurement.criterias.store',
+        ]);
+    Route::resource('tenderevaluations',  TenderEvaluationsController::class);
+    Route::post("/store-tender-sections",  [TenderEvaluationsController::class,  'tenderSections'])->name('store-tender-sections');
     Route::get('/tender-criteria/{tenderId}', [TenderEvaluationsController::class, 'getTenderCriteria'])->name('tender-criteria');
     Route::post('/tender-criteria', [TenderEvaluationsController::class, 'storeTenderCriteria'])->name('tender-criteria.store');
     Route::post('/store-criteria-scores', [TenderEvaluationsController::class, 'criteriaScores'])->name('store-criteria-scores');
@@ -410,6 +416,12 @@ Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupControl
 // Route::resource('supplierslist', SupplierListingController::class);
 
 // Route::resource('preqapplications', PrequalificationApplicationsController::class);
+Route::resource('preqevaluation', PrequalificationEvaluationController::class);
+Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
+Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+Route::resource('supplierslist', SupplierListingController::class);
+
+Route::resource('preqapplications', PrequalificationApplicationsController::class);
 Route::resource('preqevaluation', PrequalificationEvaluationController::class);
 Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
 Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);

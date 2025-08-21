@@ -27,7 +27,7 @@ class PropertyLeaseRenewalController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
-        $newleases = PropertyNewLease::with('tenant','property')
+        $newleases = PropertyNewLease::with('tenant', 'property')
             ->where('isActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
             ->get();
@@ -55,10 +55,10 @@ class PropertyLeaseRenewalController extends Controller
 
     public function store(PropertyLeaseRenewalRequest $request)
     {
-       try {
-    $validated = $request->validated();
-    $leaseId = (int) $validated['LeaseId'];
-    $paymentFrequencyId = (int) $validated['PaymentFrequency'];
+        try {
+            $validated = $request->validated();
+            $leaseId = (int)$validated['LeaseId'];
+            $paymentFrequencyId = (int)$validated['PaymentFrequency'];
 
     // Use the lease ID to get the full lease
     $lease = PropertyNewLease::findOrFail($leaseId);
@@ -83,14 +83,15 @@ class PropertyLeaseRenewalController extends Controller
     }
 }
     public function edit($Id)
-        {
-            //Check if user has permission to edit tender categories
-            $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
-            $leaserenewal = PropertyLeaseRenewal::where('isActive', true)->findOrFail($Id);
-            $newleases = PropertyNewLease::with('tenant','property')->get();
-            return view('property.tenantmanagement.leasemanagement.leaserenewal.edit',compact('leaserenewal','newleases'));
-        }
-     public function update(PropertyLeaseRenewalRequest $request, $Id)
+    {
+        //Check if user has permission to edit tender categories
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
+        $leaserenewal = PropertyLeaseRenewal::where('isActive', true)->findOrFail($Id);
+        $newleases = PropertyNewLease::with('tenant', 'property')->get();
+        return view('property.tenantmanagement.leasemanagement.leaserenewal.edit', compact('leaserenewal', 'newleases'));
+    }
+
+    public function update(PropertyLeaseRenewalRequest $request, $Id)
     {
         $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
 

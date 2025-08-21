@@ -37,7 +37,7 @@ class PropertyBlockController extends Controller
             $propertyregistry,
             $validated['BlockName'],
             $validated['Description'] ?? '',
-            auth()->user()
+            Auth::user()
         );
 
            return redirect()->route('addblock.index')->with('success','property block created successfully');

@@ -152,8 +152,6 @@ class TenderCommitteeController extends Controller
     }
 
 
-
-
     public function show($id, $type)
     {
         $committeeMembers = collect();

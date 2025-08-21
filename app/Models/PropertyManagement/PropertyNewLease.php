@@ -47,6 +47,7 @@ class PropertyNewLease extends Model
     {
         return 'LeaseId';
     }
+
     protected $casts = [
         'Status' => PropertyNewLeaseEnum::class,
     ];

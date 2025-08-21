@@ -28,9 +28,9 @@ class PropertyLeaseRenewalRequest extends FormRequest
             'NewStartDate' => 'required|date',
             'NewEndDate' => 'required|date',
             'NewMonthlyRent' => 'required|integer',
-            'ServiceCharge' =>  'nullable|integer',
-            'ParkingFee'    =>  'nullable|integer',
-            'OtherCharges'  =>  'nullable|integer',
+            'ServiceCharge' => 'nullable|integer',
+            'ParkingFee' => 'nullable|integer',
+            'OtherCharges' => 'nullable|integer',
             'Remarks' => 'nullable|string|max:100',
         ];
     }

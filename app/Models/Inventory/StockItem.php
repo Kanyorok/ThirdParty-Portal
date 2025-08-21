@@ -25,6 +25,8 @@ class StockItem extends Model
     protected $fillable = [
         'SKUCode',
         'ItemID',
+        'UOM',
+        'UnitCost',
         'Batch',
         'Serial',
         'Perishable',
@@ -74,6 +76,11 @@ class StockItem extends Model
         return $this->belongsTo(Store::class, 'Store', 'Id');
     }
 
+    public function uom()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
+    }
+
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'Branch', 'Id');
@@ -83,6 +90,8 @@ class StockItem extends Model
     {
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
+
+
 
 
 }

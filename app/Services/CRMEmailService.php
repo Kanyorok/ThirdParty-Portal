@@ -108,31 +108,31 @@ class CRMEmailService
     /**
      * @throws Exception
      */
-  public static function dt(Builder|MorphMany $query, array $with = []): JsonResponse
-{
-    $query->lock('WITH(NOLOCK)');
-    if (!empty($with)) {
-        $query->with($with);
-    }
+    public static function dt(Builder|MorphMany $query, array $with = []): JsonResponse
+    {
+        $query->lock('WITH(NOLOCK)');
+        if (!empty($with)) {
+            $query->with($with);
+        }
 
-    return Datatables::of($query->select('*'))
-        ->addIndexColumn()
-        ->addColumn('id', fn (Email $email) => $email->EmailID) // 👈 required for JS
-        ->addColumn('action', function (Email $email) {
-            return '<button class="btn btn-sm btn-primary view-email" data-id="' . $email->EmailID . '">
+        return Datatables::of($query->select('*'))
+            ->addIndexColumn()
+            ->addColumn('id', fn(Email $email) => $email->EmailID) // 👈 required for JS
+            ->addColumn('action', function (Email $email) {
+                return '<button class="btn btn-sm btn-primary view-email" data-id="' . $email->EmailID . '">
                         <i class="fas fa-eye"></i> View
                     </button>';
-        })
-        ->editColumn('Type', fn(Email $email) => $email->Type->name)
-        ->editColumn('CreatedOn', fn(Email $email) => $email->CreatedOn?->format('F d, Y h:i A'))
-        ->editColumn('Dated', function (Email $email) {
-            return $email->Dated instanceof Carbon
-                ? $email->Dated->format('F d, Y h:i A')
-                : $email->CreatedOn?->format('F d, Y h:i A');
-        })
-        ->rawColumns(['action'])
-        ->make();
-}
+            })
+            ->editColumn('Type', fn(Email $email) => $email->Type->name)
+            ->editColumn('CreatedOn', fn(Email $email) => $email->CreatedOn?->format('F d, Y h:i A'))
+            ->editColumn('Dated', function (Email $email) {
+                return $email->Dated instanceof Carbon
+                    ? $email->Dated->format('F d, Y h:i A')
+                    : $email->CreatedOn?->format('F d, Y h:i A');
+            })
+            ->rawColumns(['action'])
+            ->make();
+    }
 
     public static function testConfig(string $host, int $port, EmailEncryptionEnum $encryption, string $username, #[SensitiveParameter] string $password): bool
     {
@@ -141,20 +141,40 @@ class CRMEmailService
             $mailer->alwaysFrom($username, config('org.name'));
             $mailer->alwaysTo($username, config('org.name'));
             $mailer->setSymfonyTransport(Mail::createSymfonyTransport([
-                'transport' => 'smtp',
-                'timeout' => 5,
+                'transport'  => 'smtp',
+                'timeout'    => 5,
+                'host'       => $host,
+                'port'       => $port,
+                'encryption' => $encryption->value, // Ensure it's a string (e.g., 'tls', 'ssl')
+                'username'   => $username,
+                'password'   => $password,
+            ]));
+
+            return $mailer->sendNow(new TestMail()) instanceof SentMessage;
+
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+            Log::error('Mail transport error', [
                 'host' => $host,
                 'port' => $port,
-                'encryption' => $encryption,
+                'encryption' => $encryption->value,
                 'username' => $username,
-                'password' => $password,
-            ]));
-            return ($mailer->sendNow(new TestMail()) instanceof SentMessage);
-        } catch (Exception|RuntimeException) {
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('General mail config error', [
+                'host' => $host,
+                'port' => $port,
+                'encryption' => $encryption->value,
+                'username' => $username,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return false;
     }
+
 
     public function getParty(): string
     {

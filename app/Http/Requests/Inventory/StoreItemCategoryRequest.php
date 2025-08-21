@@ -29,6 +29,7 @@ class StoreItemCategoryRequest extends FormRequest
             'Name' => 'required|string|max:255',
             'Description' => 'nullable|string',
             'ParentId' => 'nullable|exists:t_ItemCategories,Id',
+            'Status' => 'nullable|exists:t_CodeDetails,ID',
         ];
     }
 }

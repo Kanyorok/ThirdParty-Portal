@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Add Drivers')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="container py-4">
 
@@ -9,62 +12,53 @@
         <a href="{{ route('drivermanagement.create') }}" class="btn btn-primary">Add New Driver</a>
     </div>
 
-    <!-- Driver Table (div-based) -->
-    <div class="border rounded overflow-hidden">
+    <!-- Driver Table -->
+    <div class="card">
+        <div class="card-body">
 
-        <!-- Header -->
-        <div class="d-flex bg-dark text-white font-weight-bold p-2">
-            <div class="flex-fill">DRIVER ID</div>
-            <div class="flex-fill">NAME</div>
-            <div class="flex-fill">LICENSE NUMBER</div>
-            <div class="flex-fill">EXPIRY</div>
-            <div class="flex-fill">STATUS</div>
-            <div class="flex-fill">PHONE</div>
-            <div class="flex-fill">ACTIONS</div>
-        </div>
-
-        <!-- Row 1 -->
-        <div class="d-flex bg-light p-2 border-top">
-            <div class="flex-fill">DRV001</div>
-            <div class="flex-fill">James Njoroge</div>
-            <div class="flex-fill">DLK123456</div>
-            <div class="flex-fill">2026-12-31</div>
-            <div class="flex-fill text-muted">Active</div>
-            <div class="flex-fill">+254712345678</div>
-            <div class="flex-fill d-flex gap-2">
-                <button class="btn btn-sm btn-info text-white me-2">View</button>
-                <button class="btn btn-sm btn-warning text-white">Edit</button>
+            <div class="table-responsive">
+        <table id="driversTable" class="table table-bordered table-striped align-middle">
+            <thead class="table-light">  
+                        <tr>
+                            <th>#</th>
+                            <th>Driver ID</th>
+                            <th>Name</th>
+                            <th>License Number</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($drivers as $driver)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $driver->DriverID }}</td>                    
+                            <td>{{ $driver->DriverName }}</td>
+                            <td>{{ $driver->LicenseNumber }}</td>
+                            <td>{{ \Carbon\Carbon::parse($driver->LicenseExpiryDate)->format('m/d/Y') }}</td>
+                            <td>{{ $driver->status->Description ?? 'Unknown' }}</td>
+                            <td>{{ $driver->Phone }}</td>
+                            <td>
+                                <a href="{{ route('drivermanagement.show', $driver->Id) }}"
+                                      class="btn btn-sm btn-info">View</a>
+                                <a href="{{ route('drivermanagement.edit', $driver->Id) }}"
+                                      class="btn btn-sm btn-warning">Edit</a>
+                                <form action="{{ route('drivermanagement.destroy', $driver->Id) }}"
+                                      method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Are you sure you want to delete this driver?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
-
-        <!-- Row 2 -->
-        <div class="d-flex p-2 border-top">
-            <div class="flex-fill">DRV002</div>
-            <div class="flex-fill">Mary Wambui</div>
-            <div class="flex-fill">DLK654321</div>
-            <div class="flex-fill">2025-08-15</div>
-            <div class="flex-fill text-muted">On Leave</div>
-            <div class="flex-fill">+254700112233</div>
-            <div class="flex-fill d-flex gap-2">
-                <button class="btn btn-sm btn-info text-white me-2">View</button>
-                <button class="btn btn-sm btn-warning text-white">Edit</button>
-            </div>
-        </div>
-
-        <!-- Row 3 -->
-        <div class="d-flex bg-light p-2 border-top">
-            <div class="flex-fill">DRV003</div>
-            <div class="flex-fill">Peter Otieno</div>
-            <div class="flex-fill">DLK789456</div>
-            <div class="flex-fill">2027-03-10</div>
-            <div class="flex-fill text-muted">Active</div>
-            <div class="flex-fill">+254799876543</div>
-            <div class="flex-fill d-flex gap-2">
-                <button class="btn btn-sm btn-info text-white me-2">View</button>
-                <button class="btn btn-sm btn-warning text-white">Edit</button>
-            </div>
-        </div>
-    </div>
+    </div>  
 </div>
-
     @endsection

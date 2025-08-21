@@ -46,12 +46,12 @@ class PropertyNewLeaseService
         UploadedFile $document = null
     ): self {
 
-            $lastLeaseNumber = PropertyNewLease::withTrashed() // in case you're using soft deletes
-                ->selectRaw("MAX(CAST(SUBSTRING(LeaseNumber, 7, LEN(LeaseNumber)) AS INT)) as max_number")
-                ->value('max_number');
+        $lastLeaseNumber = PropertyNewLease::withTrashed() // in case you're using soft deletes
+        ->selectRaw("MAX(CAST(SUBSTRING(LeaseNumber, 7, LEN(LeaseNumber)) AS INT)) as max_number")
+            ->value('max_number');
 
-            $nextNumber = $lastLeaseNumber ? $lastLeaseNumber + 1 : 1;
-            $leaseNumber = 'LEASE-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        $nextNumber = $lastLeaseNumber ? $lastLeaseNumber + 1 : 1;
+        $leaseNumber = 'LEASE-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
 
         $newlease = PropertyNewLease::create([
@@ -85,16 +85,16 @@ class PropertyNewLeaseService
         }
 
         PropertyLeaseScheduleService::create(
-        leaseId: $newlease->Id,
-        paymentFrequencyId: $PaymentFrequency->ID,
-        startDate: $StartDate->format('Y-m-d'),
-        endDate: $EndDate->format('Y-m-d'),
-        baseRent: $MonthlyRent,
-        serviceCharge: $ServiceCharge,
-        parkingFee: $ParkingFee,
-        otherCharges: $OtherCharges,
-        user: $user
-    );
+            leaseId: $newlease->Id,
+            paymentFrequencyId: $PaymentFrequency->ID,
+            startDate: $StartDate->format('Y-m-d'),
+            endDate: $EndDate->format('Y-m-d'),
+            baseRent: $MonthlyRent,
+            serviceCharge: $ServiceCharge,
+            parkingFee: $ParkingFee,
+            otherCharges: $OtherCharges,
+            user: $user
+        );
 
         activity()->causedBy($user->Id)
             ->performedOn($newlease)
@@ -103,8 +103,6 @@ class PropertyNewLeaseService
 
         return new self($newlease);
     }
-
-
 
 
     //Update

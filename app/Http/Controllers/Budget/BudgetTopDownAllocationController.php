@@ -45,41 +45,19 @@ class BudgetTopDownAllocationController extends Controller
     {
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
-            'BranchID' => 'required|exists:t_Branches,Id',
+            'BranchID' => 'required',
         ]);
-
-        // //Check if its being edited
-        // $isBeingEdited = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
-        //     ->where('BranchID', $validated['BranchID'])
-        //     ->where('IsBeingEdited', true)
-        //     ->exists();
-        // if ($isBeingEdited) {//
-        //     //get user name who is editing
-        //     $editingUser = BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
-        //         ->where('BranchID', $validated['BranchID'])
-        //         ->where('IsBeingEdited', true)
-        //         ->value('IsBeingEditedBy');
-        //     // Get the name of the user who is currently editing
-        //     $editingUserName = User::find($editingUser)->name ?? 'Unknown User';
-        //     // Redirect back with an error message
-        //     return redirect()->back()->with('error', "This budget allocation is currently being edited by $editingUserName. Please try again later.");
-        // }else//Set the edit true
-        // {
-        //     // Set the IsBeingEdited flag to true for the current user
-        //     BudgetGLMasterAllocations::where('BudgetID', $validated['BudgetID'])
-        //         ->where('BranchID', $validated['BranchID'])
-        //         ->update([
-        //             'IsBeingEdited' => true,
-        //             'IsBeingEditedBy' => Auth::id(),
-        //             'ModifiedOn' => Carbon::now(),
-        //         ]);
-        // }
-
         $budgets = Budget::all();
         $branches = Branch::all();
 
         $budgetId = $validated['BudgetID'];
         $branchId = $validated['BranchID'];
+
+        //Logic for All branches
+        if($validated['BranchID']=='all'){
+            return $this->displayAllBranches($validated['BudgetID']);
+        }
+
         $check = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
             ->where('BranchID', $branchId)
             ->first();
@@ -123,6 +101,12 @@ class BudgetTopDownAllocationController extends Controller
             $glsMaster = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
                 ->where('BranchID', $branchId)
                 ->get();
+
+//            $glsMaster = collect(DB::select("EXEC GetBudgetWorkspace :budgetId, :branchId", [
+//                'budgetId' => $budgetId,
+//                'branchId' => $branchId
+//            ]));
+
             $isExisting = true;
             return view('budgetandanalytics.budgetworkspace.topdown.exist', compact(
                 'budgets',
@@ -152,6 +136,78 @@ class BudgetTopDownAllocationController extends Controller
             ));
         }
     }
+
+
+    public function displayAllBranches($budgetID)
+    {
+        $budgetId = $budgetID;
+        $budgetName = Budget::find($budgetId)->Name ?? 'Unknown Budget';
+        $branchName = 'All Branches';
+
+        $budgets = Budget::all();
+        $branches = Branch::all();
+
+        $allocations = BudgetGLMasterAllocations::where('BudgetID', $budgetId)
+            ->get();
+
+        if ($allocations->isEmpty()) {
+            // No records found - return the 'create' view
+            $glsMaster = BudgetGLsAttachments::where('BudgetID', $budgetId)
+                ->whereNull('DeletedOn')
+                ->select('Id', 'AccountID', 'Description', 'GLAccountTypeID')
+                ->get();
+
+            $isExisting = false;
+
+            return view('budgetandanalytics.budgetworkspace.topdown.create', compact(
+                'budgets',
+                'branches',
+                'glsMaster',
+                'isExisting',
+                'budgetName',
+                'branchName',
+                'budgetId'
+            ));
+        }
+
+        // Fields to be summed
+        $monthFields = [
+            'Month1', 'Month2', 'Month3', 'Month4', 'Month5', 'Month6',
+            'Month7', 'Month8', 'Month9', 'Month10', 'Month11', 'Month12', 'Total'
+        ];
+
+        // Group by AccountID and sum all monthly fields
+        $glsMaster = $allocations->groupBy('AccountID')->map(function ($items) use ($monthFields) {
+            $summed = $items->first()->replicate(); // base object
+
+            foreach ($monthFields as $field) {
+                $summed->{$field} = $items->sum(function ($item) use ($field) {
+                    return floatval($item->{$field});
+                });
+            }
+
+            return $summed;
+        })->values(); // convert to Collection
+
+        $isExisting = true;
+
+        //Call from SP
+        return$glsMaster = collect(DB::select("EXEC GetBudgetWorkspaceAllBranches :budgetId", [
+            'budgetId' => $budgetId
+        ]));
+
+
+        return view('budgetandanalytics.budgetworkspace.topdown.all', compact(
+            'budgets',
+            'branches',
+            'glsMaster',
+            'isExisting',
+            'budgetName',
+            'branchName',
+            'budgetId'
+        ));
+    }
+
 
     public function create(Request $request)
     {

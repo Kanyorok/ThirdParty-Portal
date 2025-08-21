@@ -30,27 +30,28 @@
                             <td>{{ $item->Description }}</td>
                             <td>
                                 <button
-                                        class="btn btn-sm btn-outline-primary"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editSectionModal"
-                                        data-id="{{ $item->id }}"
-                                        data-name="{{ $item->SectionName }}"
-                                        data-desc="{{ $item->Description }}"
+                                    class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editSectionModal"
+                                    data-id="{{ $item->id }}"
+                                    data-name="{{ $item->SectionName }}"
+                                    data-desc="{{ $item->Description }}"
                                 >
                                     <i class="fas fa-edit"></i>
                                 </button>
 
                                 <button
-                                        class="btn btn-sm btn-outline-danger"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#deleteSectionModal"
-                                        data-id="{{ $item->id }}"
-                                        data-name="{{ $item->SectionName }}"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteSectionModal"
+                                    data-id="{{ $item->id }}"
+                                    data-name="{{ $item->SectionName }}"
                                 >
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
 
-                                <a href="{{ route('rfqsettingcriterias.show', $item->id) }}" class="btn btn-sm btn-outline-success">
+                                <a href="{{ route('rfqsettingcriterias.show', $item->id) }}"
+                                   class="btn btn-sm btn-outline-success">
                                     View Criterias
                                 </a>
 
@@ -64,7 +65,8 @@
     </div>
 
     <!-- Add Section Modal -->
-    <div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
@@ -78,12 +80,15 @@
                         <div class="mb-3">
                             <label class="form-label">Section Name</label>
                             <input type="text" name="name" class="form-control" placeholder="e.g. Technical, Financial">
-                            @error('name')<div class="text-danger mt-2">{{ $message }}</div>@enderror
+                            @error('name')
+                            <div class="text-danger mt-2">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Description</label>
-                            <textarea name="desc" class="form-control" rows="2" placeholder="Optional description"></textarea>
-                            @error('desc')<div class="text-danger mt-2">{{ $message }}</div>@enderror
+                            <textarea name="desc" class="form-control" rows="2"
+                                      placeholder="Optional description"></textarea>
+                            @error('desc')
+                            <div class="text-danger mt-2">{{ $message }}</div>@enderror
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -96,7 +101,8 @@
     </div>
 
     <!-- Edit Section Modal -->
-    <div class="modal fade" id="editSectionModal" tabindex="-1" aria-labelledby="editSectionModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editSectionModal" tabindex="-1" aria-labelledby="editSectionModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
@@ -126,7 +132,8 @@
     </div>
 
     <!-- Delete Section Modal -->
-    <div class="modal fade" id="deleteSectionModal" tabindex="-1" aria-labelledby="deleteSectionModalLabel" aria-hidden="true">
+    <div class="modal fade" id="deleteSectionModal" tabindex="-1" aria-labelledby="deleteSectionModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
