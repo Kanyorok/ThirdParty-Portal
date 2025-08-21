@@ -14,7 +14,6 @@
 @section('content')
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4>Manual Bid Submissions</h4>
       <a href="{{ route('tendersubmission.create') }}" class="btn btn-sm btn-success">+ Record Manual Submission</a>
     </div>
 
