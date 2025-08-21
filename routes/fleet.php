@@ -218,6 +218,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::post('/maintenance-schedule', [FleetMaintenanceScheduleController::class, 'store'])->name('fleet.maintenance_schedule.store');
     Route::get('/maintenance-schedule/{Id}/edit', [FleetMaintenanceScheduleController::class, 'edit'])->name('fleet.maintenance_schedule.edit');
     Route::put('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'update'])->name('fleet.maintenance_schedule.update');
+    Route::get('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'show'])->name('fleet.maintenance_schedule.show');
     Route::put('/maintenance-schedule/{Id}/cancel', [FleetMaintenanceScheduleController::class, 'cancel'])->name('fleet.maintenance_schedule.cancel');
 
     // ==================== Repair Logs ====================
@@ -227,6 +228,8 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::get('/repair-logs/{Id}/edit', [FleetRepairLogController::class, 'edit'])->name('fleet.repair_logs.edit');
     Route::put('/repair-logs/{Id}', [FleetRepairLogController::class, 'update'])->name('fleet.repair_logs.update');
     Route::get('/repair-logs/{Id}/show', [FleetRepairLogController::class, 'show'])->name('fleet.repair_logs.show');
+    Route::delete('/repair-logs/{Id}', [FleetRepairLogController::class, 'destroy'])->name('fleet.repair_logs.destroy');
+
 
     // ==================== Service Alerts ====================
     Route::get('/service-alerts', [FleetServiceAlertController::class, 'index'])->name('fleet.alerts.index');
@@ -254,7 +257,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::get('/telematics/create', [FleetTelematicsDeviceController::class, 'create'])->name('fleet.telematics.create');
     Route::post('/telematics', [FleetTelematicsDeviceController::class, 'store'])->name('fleet.telematics.store');
 
-    // ==================== Insurance Tracker info Routes====================
+    // ==================== Insurance Tracker ====================
     Route::get('/insurance-tracker', [FleetInsuranceTrackerController::class, 'index'])->name('fleet.insurance_tracker.index');
     Route::get('/insurance-tracker/create', [FleetInsuranceTrackerController::class, 'create'])->name('fleet.insurance_tracker.create');
     Route::post('/insurance-tracker', [FleetInsuranceTrackerController::class, 'store'])->name('fleet.insurance_tracker.store');
