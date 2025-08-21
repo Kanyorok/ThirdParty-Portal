@@ -10,7 +10,6 @@ use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQSupplierResponseEvaluation;
-use App\Models\Procurement\SupplierResponseEvaluation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -27,7 +26,56 @@ class RFQEvaluationController extends Controller
             'evaluations.supplier',
         ])->get();
 
-        return view('procurement.rfqevaluation.index', compact('rfqEvaluations'));
+        $evaluationsRanked = [];
+
+        foreach ($rfqEvaluations as $evaluation) {
+            $grouped = $evaluation->evaluations->groupBy('SupplierId');
+
+            foreach ($grouped as $supplierId => $evalGroup) {
+                $sectionGroups = $evalGroup->groupBy(fn($e) => $e->rfqCriteria?->section?->SectionName ?? 'Uncategorized');
+                $grandWeightedTotal = 0;
+
+                foreach ($sectionGroups as $section => $criteriaList) {
+                    $first = $criteriaList->first();
+                    $sectionWeight = $first->rfqCriteria?->weightedSection?->Weight ?? 0;
+                    $maxScorePerCriteria = 10;
+                    $maxTotal = $criteriaList->count() * $maxScorePerCriteria;
+                    $actualTotal = $criteriaList->sum('Score');
+
+                    if ($maxTotal > 0) {
+                        $grandWeightedTotal += round(($actualTotal / $maxTotal) * $sectionWeight, 2);
+                    }
+                }
+
+                $evaluationsRanked[] = [
+                    'evaluation' => $evaluation,
+                    'supplier' => $evalGroup->first()->supplier,
+                    'supplierId' => $supplierId,
+                    'rfq' => $evaluation->rfq,
+                    'weightedTotal' => $grandWeightedTotal,
+                    'response' => RFQResponse::where('SupplierId', $supplierId)
+                        ->where('RFQId', $evaluation->RFQId)
+                        ->first(),
+                ];
+            }
+        }
+
+        // Group by RFQId and rank within each group
+        $groupedByRFQ = collect($evaluationsRanked)->groupBy('rfq.id');
+
+        $finalRanked = [];
+        foreach ($groupedByRFQ as $rfqId => $evaluations) {
+            // Sort by weightedTotal in descending order within each RFQ
+            $sorted = $evaluations->sortByDesc('weightedTotal')->values();
+
+            // Assign rank within the current RFQ group
+            foreach ($sorted as $rank => $entry) {
+                $entry['rank'] = $rank + 1;
+                $finalRanked[] = $entry;
+            }
+        }
+
+        return view('procurement.rfqevaluation.index', ['rfqEvaluations' => $rfqEvaluations, 'evaluationsRanked' => $finalRanked]);
     }
 
     public function create()
@@ -54,7 +102,14 @@ class RFQEvaluationController extends Controller
             'Evaluations' => 'required|array',
         ]);
 
-        //dd($validated);
+        // Check for existing evaluation
+        $existingEvaluation = RFQEvaluation::where('RFQId', $validated['RFQId'])
+            ->where('UserCode', $validated['UserID'])
+            ->first();
+
+        if ($existingEvaluation) {
+            return back()->with('error', 'You have already submitted an evaluation for this RFQ. Please review the existing evaluation.');
+        }
 
         DB::beginTransaction();
         try {
@@ -102,7 +157,6 @@ class RFQEvaluationController extends Controller
         }
     }
 
-
     public function getRFQResponses($rfqId)
     {
         $rfqResponses = RFQResponse::where('RFQId', $rfqId)
@@ -134,10 +188,11 @@ class RFQEvaluationController extends Controller
         $member = RFQCommitteeMember::with('user.employee')
             ->where('RFQID', $rfq->Id)
             ->where('UserID', $employeeId)
+           // ->where('Response', 1)
             ->first();
 
         if (!$member) {
-            return response()->json(['error' => 'User not part of committee']);
+            return response()->json(['error' => 'User not part of committee or has not accepted the appointment']);
         }
 
         return response()->json([

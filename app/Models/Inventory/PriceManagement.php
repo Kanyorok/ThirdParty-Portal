@@ -20,12 +20,12 @@ class PriceManagement extends Model
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
 
-
     protected $fillable = [
+        'ItemCode',
         'PriceID',
         'ItemID',
         'UOM',
-        'EstimatedPrice',
+        //'EstimatedPrice',
         'ActualPrice',
         'CurrencyCode',
         'EffectiveFrom',

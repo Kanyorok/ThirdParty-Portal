@@ -11,30 +11,31 @@
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-6">
-          <label class="form-label">Select Property</label>
+          <label class="form-label">Select Property<span class="text-danger">*</span></label>
             <select name="PropertyID" class="form-select" required>
                 @foreach ($properties as $property)
-                    <option value="{{ $property->id }}">{{ $property->PropertyName }}</option>
+                    <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
                 @endforeach
             </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Document Title</label>
+          <label class="form-label">Document Title<span class="text-danger">*</span></label>
             <input type="text" class="form-control" placeholder="e.g. Title Deed, Blueprint" name="DocumentTitle">
         </div>
       </div>
 
       <div class="row g-3 mb-3">
         <div class="col-md-6">
-          <label class="form-label">Document Type</label>
-            <select class="form-select" name="DocumentType">
-            <option>Ownership</option>
-            <option>Architectural Plan</option>
-            <option>Utility Bill</option>
-            <option>Insurance</option>
-            <option>Other</option>
-          </select>
-        </div>
+          <label class="form-label">Document Type<span class="text-danger">*</span></label>
+        <select class="form-select" name="DocumentType">
+          <option value="">--Select a status--</option>
+              @foreach ($documenttypes as $documenttype)
+                <option value="{{ $documenttype->ID }}">
+                  {{ $documenttype->Description }}
+                </option>
+              @endforeach
+            </select>
+          </div>
         <div class="col-md-6">
           <label class="form-label">Upload File</label>
           <input type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
@@ -42,10 +43,10 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Description / Notes</label>
+        <label class="form-label">Description / Notes </label>
           <textarea class="form-control" rows="2" placeholder="Optional notes..." name="Description"></textarea>
       </div>
-        <button class="btn btn-success">📎 Upload Document</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">📎 Upload Document</button>
     </form>
     </div>
   </div>

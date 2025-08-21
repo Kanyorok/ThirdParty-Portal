@@ -22,13 +22,11 @@ use Throwable;
 
 class RepositoryService extends PermissionsService
 {
-    protected const string ROOT = 'root';
-    protected const string Internal = 'internal';
+    protected const ROOT = 'root';
+    protected const Internal = 'internal';
 
 
-    public function __construct(public Repository $repo)
-    {
-    }
+    public function __construct(public Repository $repo) {}
 
     public static function getUser(User $actor, array $parents = []): Collection
     {
@@ -57,7 +55,7 @@ class RepositoryService extends PermissionsService
 
     public static function module(ModulesEnum $module): Repository
     {
-        return Repository::query()->where('RepositoryId', $module->value)->withTrashed()->firstOr(function () use ($module) {
+        return Repository::query()->where('RepositoryId', (string)$module->value)->withTrashed()->firstOr(function () use ($module) {
             $actor = SystemHelper::user();
             return (new self(self::_create(Name: $module->description(), actor: $actor, repository: self::internal(), Description: $module->description() . ' Uploaded files', RepoId: $module->value)))
                 ->visibility(VisibilityEnum::Private, $actor)->repo;
@@ -82,7 +80,7 @@ class RepositoryService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder ' . $this->repo->Name . ' visibility : ' . $visibility->value);
                 return $this;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update repository visibility: ');
             Log::error($e);
             throw new ErroredException();
@@ -113,7 +111,7 @@ class RepositoryService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($this->repo)->event('update')->log('Updated folder name : ' . $this->repo->Name);
                 return $this;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update repository: ');
             Log::error($e);
             throw new ErroredException();
@@ -151,7 +149,7 @@ class RepositoryService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($repo)->event('create')->log('Created folder : ' . $repo->Name);
                 return $repo;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error creating repository: ');
             Log::error($e);
             throw new ErroredException();

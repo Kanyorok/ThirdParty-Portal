@@ -15,14 +15,14 @@
                     @if ($isSet)
                         {{-- <label class="form-label fw-semibold">{{ $budgetName }}</label> --}}
                     @else
-                    <label class="form-label fw-semibold">Select a Budget</label>
+                        <label class="form-label fw-semibold mt-2">Select a Budget</label>
                     @endif
                     <select name="BudgetLineID" class="form-select" required onchange="this.form.submit()">
                         @if ($isSet)
                             <option disabled value="">-- Select Budget --</option>
                             @foreach ($budgets as $item)
                                 <option
-                                    value="{{ $item->Id }}" {{ $budgetId==$item->Id?'slected':'' }}>{{ $item->Name }}</option>
+                                    value="{{ $item->Id }}" {{ $budgetId==$item->Id?'selected':'' }}>{{ $item->Name }}</option>
                             @endforeach
                         @else
                         <option disabled selected>-- Select Budget --</option>
@@ -52,7 +52,8 @@
                                 <thead class="table-light">
                                 <tr>
                                     <th class="text-start ps-3">{{ $subTypeName }}</th>
-                                    <th class="bg-warning-subtle">Prev. Year</th>
+                                    {{--                                    <th class="bg-warning-subtle">Prev. Year</th>--}}
+                                    <th class="bg-warning-subtle">Rate</th>
                                     @foreach($months as $m)
                                         <th>Month {{ $m }}</th>
                                     @endforeach
@@ -77,7 +78,8 @@
                                     @endphp
                                     <tr>
                                         <td class="text-start ps-3">{{ $entry['budgetLineName'] }}</td>
-                                        <td class="bg-warning-subtle">{{ number_format($prev, 2) }}</td>
+                                        {{--                                    <td class="bg-warning-subtle">{{ number_format($prev, 2) }}</td>--}}
+                                        <td class="bg-warning-subtle">{{ number_format($entry['rate'], 2) }}%</td>
                                         @foreach($months as $m)
                                             <td>
                                                 @if ($entry['allocationType'] === 'monthly')
@@ -116,9 +118,12 @@
             </div>
             @php $grandTotal += $categoryTotal; @endphp
         @endforeach
+
+        @if($data)
         <div class="text-end fs-5 fw-bold text-success me-3 mb-4">
             💰 Total Budget Cost: {{ number_format($grandTotal, 2) }}
         </div>
+        @endif
 
         <div class="text-end mb-5">
             {{-- <a href="{{ route('budgetconsolidation.export', ['format' => 'excel']) }}" class="btn btn-success me-2">📥 Export to Excel</a>

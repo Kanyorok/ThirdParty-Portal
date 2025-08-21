@@ -3,13 +3,14 @@
 namespace App\Models\PropertyManagement;
 
 use App\Models\Core\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyNewTenant extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
     protected $table = 't_TenantMaintenance';
     public const CREATED_AT = 'CreatedOn';
     public const UPDATED_AT = 'ModifiedOn';

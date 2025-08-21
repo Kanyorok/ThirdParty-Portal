@@ -2,6 +2,7 @@
 
 namespace App\Services\Property\BillingAndReceipting;
 
+use App\Enums\Property\PropertyInvoiceEnum;
 use App\Models\Auth\User;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
@@ -23,31 +24,48 @@ class PropertyInvoiceService
         float  $RentAmount,
         float  $ServicesCharge,
         float  $OtherCharges,
+        float  $ParkingFee,
         string $InvoiceNotes,
+        PropertyInvoiceEnum $Status,
         User   $user
     ): self
     {
+        // Get the latest invoice number
+        $lastInvoice = PropertyInvoice::selectRaw("InvoiceNumber, CAST(SUBSTRING(InvoiceNumber, 5, LEN(InvoiceNumber)) AS INT) as NumPart")
+            ->orderByDesc('NumPart')
+            ->first();
 
-
-        $lastInvoice = PropertyInvoice::orderByDesc('Id')->first();
-        $nextNumber = $lastInvoice ? ((int)filter_var($lastInvoice->InvoiceNumber, FILTER_SANITIZE_NUMBER_INT)) + 1 : 1;
+        $nextNumber = $lastInvoice ? $lastInvoice->NumPart + 1 : 1;
         $InvoiceNumber = 'INV-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
-        $invoice = PropertyInvoice::create([
-            'InvoiceNumber' => $InvoiceNumber,
-            'Lease' => $Lease->Id,
-            'BillingMonth' => $BillingMonth,
-            'InvoiceDate' => $InvoiceDate,
-            'RentAmount' => $RentAmount,
-            'ServicesCharge' => $ServicesCharge,
-            'OtherCharges' => $OtherCharges,
-            'InvoiceNotes' => $InvoiceNotes,
-            'CreatedBy' => $user->Id,
-            'ModifiedBy' => $user->Id,
-        ]);
+        try {
+            $invoice = PropertyInvoice::create([
+                'InvoiceNumber' => $InvoiceNumber,
+                'Lease' => $Lease->Id,
+                'BillingMonth' => $BillingMonth,
+                'InvoiceDate' => $InvoiceDate,
+                'RentAmount' => $RentAmount,
+                'ServicesCharge' => $ServicesCharge,
+                'OtherCharges' => $OtherCharges,
+                'InvoiceNotes' => $InvoiceNotes,
+                'ParkingFee'    =>  $ParkingFee,
+                'Status' => PropertyInvoiceEnum::Pending->value,
+                'CreatedBy' => $user->Id,
+                'ModifiedBy' => $user->Id,
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if (str_contains($e->getMessage(), 't_rentinvoice_invoicenumber_unique')) {
+                // Optional: retry with a new number (careful with recursion/loops)
+                // or throw a custom exception or return a useful response
+                throw new \Exception("Duplicate invoice number detected. Please try again.");
+            } else {
+                throw $e;
+            }
+        }
 
         activity()->causedBy($user->Id)->performedOn($invoice)->event('create')->log("Added Property Invoice {$invoice->Id}.");
 
         return new self($invoice);
     }
+
 }

@@ -20,7 +20,7 @@
         <th>Quantity</th>
         <th>Est. Cost</th>
         <th>Status</th>
-        <th>Required By</th>
+        <th>Submitted By</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -102,8 +102,8 @@
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Item</label>
-                <input type="text" class="form-control" value="${need.ItemID ?? 'Unknown'}" readonly>
+                <label class="form-label">Item Code</label>
+                <input type="text" class="form-control" value="${need.item?.ItemCode ?? 'Unknown'}" readonly>
               </div>
 
               <div class="col-md-3">

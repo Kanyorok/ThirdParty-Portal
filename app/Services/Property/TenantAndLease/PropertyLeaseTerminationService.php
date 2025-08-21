@@ -2,6 +2,8 @@
 
 namespace App\Services\Property\TenantAndLease;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
@@ -9,6 +11,7 @@ use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewLease;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
 class PropertyLeaseTerminationService
@@ -16,18 +19,16 @@ class PropertyLeaseTerminationService
     /**
      * Create a new class instance.
      */
-    public function __construct(PropertyLeaseTermination $propertyLeaseTermination)
-    {
-    }
+    public function __construct(PropertyLeaseTermination $propertyLeaseTermination) {}
 
     public static function create(
         PropertyNewLease $LeaseID,
         string     $TerminationDate,
         CodeDetail $TerminationReason,
-        string $Remarks,
-        User   $user
-    ): self
-    {
+        string $Remarks = null,
+        User $user,
+        UploadedFile $document = null
+    ): self {
         DB::beginTransaction();
 
         try {
@@ -40,6 +41,15 @@ class PropertyLeaseTerminationService
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
             ]);
+
+            if ($document) {
+                $termination->newDocument(
+                    ModulesEnum::Property,
+                    $document,
+                    [PermissionEnum::PropertyLeaseTerminationView->value],
+                    $user
+                );
+            }
 
             // Deactivate the main lease
             $LeaseID->IsActive = false;
@@ -61,7 +71,6 @@ class PropertyLeaseTerminationService
                     'ModifiedBy' => $user->Id,
                 ]);
 
-            // Log activity
             activity()
                 ->causedBy($user->Id)
                 ->performedOn($termination)

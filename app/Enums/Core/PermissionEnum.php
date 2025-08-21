@@ -11,7 +11,7 @@ enum PermissionEnum: string
 {
     use UsefulEnumTrait;
 
-    //calls
+        //calls
     case CallRead = 'call-read';
     case CallWrite = 'call-create';
     case CallUpdate = 'call-update';
@@ -21,40 +21,40 @@ enum PermissionEnum: string
     case ScheduleWrite = 'schedule-create';
     case ScheduleDelete = 'schedule-delete';
 
-    //Marketing List
+        //Marketing List
     case MarketingListRead = 'marketing-list-read';
     case MarketingListWrite = 'marketing-list-create';
     case MarketingListUpdate = 'marketing-list-update';
     case MarketingListDelete = 'marketing-list-delete';
-    //case MarketingListApproval = 'marketing-list-approval';
+        //case MarketingListApproval = 'marketing-list-approval';
 
-    //Marketing Plan
+        //Marketing Plan
     case MarketingPlannerRead = 'marketing-planner-read';
     case MarketingPlannerWrite = 'marketing-planner-create';
     case MarketingPlannerUpdate = 'marketing-planner-update';
     case MarketingPlannerDelete = 'marketing-planner-delete';
     case MarketingPlannerApproval = 'marketing-planner-approval';
 
-    //campaigns
+        //campaigns
     case CampaignRead = 'campaign-read';
     case CampaignWrite = 'campaign-create';
     case CampaignUpdate = 'campaign-update';
     case CampaignDelete = 'campaign-delete';
     case CampaignApproval = 'campaign-approval';
 
-    //Emails
+        //Emails
     case EmailRead = 'email-read';
     case EmailAssign = 'email-assign';
     case EmailDelete = 'email-delete';
 
-    //tickets
+        //tickets
     case TicketRead = 'ticket-read';
     case TicketWrite = 'ticket-create';
     case TicketUpdate = 'ticket-update';
     case TicketDelete = 'ticket-delete';
     case TicketApproval = 'ticket-approval';
 
-    //Leads
+        //Leads
     case LeadRead = 'lead-read';
     case LeadDelegate = 'lead-delegate';
     case LeadWrite = 'lead-create';
@@ -63,27 +63,27 @@ enum PermissionEnum: string
     case LeadDelete = 'lead-delete';
     case LeadsManager = 'leadsManager';
 
-    //Product Development
+        //Product Development
     case ProductDevelopmentRead = 'product-development-read';
     case ProductDevelopmentWrite = 'product-development-create';
     case ProductDevelopmentUpdate = 'product-development-update';
     case ProductDevelopmentDelete = 'product-development-delete';
 
-    //surveys
+        //surveys
     case SurveyRead = 'survey-read';
     case SurveyWrite = 'survey-create';
-    //case SurveyUpdate = 'survey-update';
+        //case SurveyUpdate = 'survey-update';
     case SurveyDelete = 'survey-delete';
     case SurveyApproval = 'survey-approval';
 
-    //Competitor Analysis
+        //Competitor Analysis
     case Competitor = 'competitor';
     case CompetitorLLM = 'competitor-crawlAi';
 
-    // Reviews
+        // Reviews
     case ReviewsView = 'review-view';
 
-    // Debt Recovery
+        // Debt Recovery
     case DebtCollectionView = 'debt-collection-view';
     case DebtNotificationView = 'debt-notificationsView';
     case DebtCollectionLists = 'debt-marketingLists';
@@ -92,17 +92,17 @@ enum PermissionEnum: string
     case DebtCollectionAdmin = 'debt-collection-admin';
 
 
-    //Socials
+        //Socials
     case SocialRead = 'social-read';
     case SocialWrite = 'social-create';
     case SocialDelete = 'social-delete';
 
-    //System Codes
+        //System Codes
     case ListsView = 'lists-view';
     case ListsUpdate = 'lists-update';
     case Teams = 'teams';
     case Branches = 'branches';
-    case Users = 'users';//set branch manager.
+    case Users = 'users'; //set branch manager.
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
     case UsersSessions = 'users-nonExpiringSessions';
@@ -121,59 +121,59 @@ enum PermissionEnum: string
     case Roles = 'roles';
     case Members = 'members';
 
-    //User role
+        //User role
     case Ceo = 'ceo';
 
     case MarketingManager = 'marketingManager';
     case Managers = 'manager';
 
-    /*
+        /*
      *
      * ========================================  Procurement  ========================================
      */
-    //Requisitions
+        //Requisitions
     case RequisitionRead = 'requisition-read';
     case RequisitionWrite = 'requisition-create';
     case RequisitionUpdate = 'requisition-update';
     case RequisitionDelete = 'requisition-delete';
     case RequisitionApproval = 'requisition-approval';
 
-    //RequisitionItems
+        //RequisitionItems
     case RequisitionItemsRead = 'requisitionItem-read';
     case RequisitionItemsWrite = 'requisitionItem-create';
     case RequisitionItemsUpdate = 'requisitionItem-update';
     case RequisitionItemsDelete = 'requisitionItem-delete';
     case RequisitionItemsApproval = 'requisitionItem-approval';
 
-    //RFQ
+        //RFQ
     case RfqRead = 'rfq-read';
     case RfqWrite = 'rfq-create';
     case RfqUpdate = 'rfq-update';
     case RfqDelete = 'rfq-delete';
     case RfqApproval = 'rfq-approval';
 
-    //RequisitionItems
+        //RequisitionItems
     case PurchaseOrderRead = 'purchaseOrder-read';
     case PurchaseOrderWrite = 'purchaseOrder-create';
     case PurchaseOrderUpdate = 'purchaseOrder-update';
     case PurchaseOrderDelete = 'purchaseOrder-delete';
     case PurchaseOrderApproval = 'purchaseOrder-approval';
 
-    //ProcurementPlan Department Needs
+        //ProcurementPlan Department Needs
     case DepartmentNeedsRead = 'departmentneeds-read';
     case DepartmentNeedsWrite = 'departmentneeds-create';
     case DepartmentNeedsUpdate = 'departmentneeds-update';
     case DepartmentNeedsDelete = 'departmentneeds-delete';
     case DepartmentNeedsApproval = 'departmentneeds-approval';
 
-    //Tender
+        //Tender
     case TenderRead = 'tender-read';
     case TenderWrite = 'tender-create';
     case TenderUpdate = 'tender-update';
     case TenderDelete = 'tender-delete';
     case TenderApproval = 'tender-approval';
 
-    //Tender Suppliers
+        //Tender Suppliers
     case BidSubmissionRead = 'BidSubmission-read';
     case BidSubmissionWrite = 'BidSubmission-create';
     case BidSubmissionUpdate = 'BidSubmission-update';
@@ -189,45 +189,45 @@ enum PermissionEnum: string
     case VendorClarificationsUpdate = 'VendorClarifications-update';
     case VendorClarificationsDelete = 'VendorClarifications-delete';
 
-    //Procument Plan- Plan Consolidation
+        //Procument Plan- Plan Consolidation
     case PlanConsolidationRead = 'planconsolidation-read';
     case PlanConsolidationWrite = 'planconsolidation-write';
     case PlanConsolidationUpdate = 'planconsolidation-update';
     case PlanConsolidationDelete = 'planconsolidation-delete';
 
-    //Procument Plan- Plan Maintain
+        //Procument Plan- Plan Maintain
     case PlanMaintenanceRead = 'planmaintenance-read';
     case PlanMaintenanceWrite = 'planmaintenance-write';
     case PlanMaintenanceUpdate = 'planmaintenance-update';
     case PlanMaintenanceDelete = 'planmaintenance-delete';
 
-    //Procument Plan- Plan Manual Input
+        //Procument Plan- Plan Manual Input
     case PlanManualInputRead = 'planmanualinput-read';
     case PlanManualInputWrite = 'planmanualinput-write';
     case PlanManualInputUpdate = 'planmanualinput-update';
     case PlanManualInputDelete = 'planmanualinput-delete';
 
-    //Procument Plan- Plan Amend
+        //Procument Plan- Plan Amend
     case PlanEditRead = 'planedit-read';
     case PlanEditWrite = 'planedit-write';
     case PlanEditUpdate = 'planedit-update';
     case PlanEditDelete = 'planedit-delete';
 
-    //Procument Plan- Plan Line Items
+        //Procument Plan- Plan Line Items
     case PlanLineItemsRead = 'planlineitems-read';
     case PlanLineItemsWrite = 'planlineitems-write';
     case PlanLineItemsUpdate = 'planlineitems-update';
     case PlanLineItemsDelete = 'planlineitems-delete';
 
-    //ProcurementPlan ProcurementMethod
+        //ProcurementPlan ProcurementMethod
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
 
-    //ProcurementPlan Procurement Schedule
-    //case SchedulePlanRead = 'scheduleplan-read';
-    //case SchedulePlanWrite = 'scheduleplan-create';
-    //case SchedulePlanUpdate = 'scheduleplan-update';
-    /*
+        //ProcurementPlan Procurement Schedule
+        //case SchedulePlanRead = 'scheduleplan-read';
+        //case SchedulePlanWrite = 'scheduleplan-create';
+        //case SchedulePlanUpdate = 'scheduleplan-update';
+        /*
     *
     * ========================================  Inventory  ========================================
     */
@@ -297,54 +297,133 @@ enum PermissionEnum: string
     case StockAdjustmentUpdate = 'stockAdjustment-update';
     case StockAdjustmentCreate = 'stockAdjustment-create';
     case StockAdjustmentDestroy = 'stockAdjustment-destroy';
-    // case StockAdjustmentApproval= 'stockAdjustment-approval';
+    case StockAdjustmentApproval = 'stockAdjustment-approval';
 
-    /*
+
+    case InventoryHoldReviewView = 'inventoryHoldReview-view';
+    case InventoryHoldReviewUpdate = 'inventoryHoldReview-update';
+    case InventoryHoldReviewCreate = 'inventoryHoldReview-create';
+    case InventoryHoldReviewDestroy = 'inventoryHoldReview-destroy';
+
+    case UOMConversionView = 'uomConversion-view';
+    case UOMConversionUpdate = 'uomConversion-update';
+    case UOMConversionCreate = 'uomConversion-create';
+    case UOMConversionDestroy = 'uomConversion-destroy';
+
+        /*
      *
      * ========================================  Property Management  ========================================
      */
 
-    //property category
+        //property category
     case PropertyCategoryCreate = 'propertycategory-create';
     case PropertyCategoryUpdate = 'propertycategory-update';
     case PropertyCategoryDelete = 'propertycategory-delete';
     case PropertyCategoryView = 'propertycategory-view';
 
-    //Property type
+        //Property type
     case PropertyTypeCreate = 'propertytype-create';
     case PropertyTypeUpdate = 'propertytype-update';
     case PropertyTypeDelete = 'propertytype-delete';
     case PropertyTypeView = 'propertytype-view';
 
 
-    //Property Registry
+        //Property Registry
     case PropertyRegistryCreate = 'propertyregistry-create';
     case PropertyRegistryUpdate = 'propertyregistry-update';
     case PropertyRegistryDelete = 'propertyregistry-delete';
     case PropertyRegistryView = 'propertyregistry-view';
 
 
-    //Property Block
+        //Property Block
     case PropertyStructuralCreate = 'propertystructural-create';
     case PropertyStructuralUpdate = 'propertystructural-update';
     case PropertyStructuralDelete = 'propertystructural-delete';
     case PropertyStructuralView = 'propertystructural-view';
 
 
-    //Tenant Mentenance
+        //Property Attachments
+    case PropertyAttachmentsCreate = 'propertyattachments-create';
+    case PropertyAttachmentsUpdate = 'propertyattachments-update';
+    case PropertyAttachmentsDelete = 'propertyattachments-delete';
+    case PropertyAttachmentsView = 'propertyattachments-view';
+
+
+
+        //Tenant Mentenance
     case TenantMentenanceCreate = 'tenantmentenance-create';
     case TenantMentenanceUpdate = 'tenantmentenance-update';
     case TenantMentenanceDelete = 'tenantmentenance-delete';
     case TenantMentenanceView = 'tenantmentenance-view';
 
-    //Property Tenant Clearance
+        //Property Tenant Clearance
     case TenantClearanceCreate = 'tenantclearance-create';
     case TenantClearanceUpdate = 'tenantclearance-update';
     case TenantClearanceDelete = 'tenantclearance-delete';
     case TenantClearanceView = 'tenantclearance-view';
 
 
-    /*
+        //Property New Lease
+    case PropertyNewLeaseCreate = 'propertynewlease-create';
+    case PropertyNewLeaseUpdate = 'propertynewlease-update';
+    case PropertyNewLeaseDelete = 'propertynewlease-delete';
+    case PropertyNewLeaseView = 'propertynewlease-view';
+
+        //Property lease schedule
+    case PropertyLeaseScheduleCreate = 'propertyleaseschedule-create';
+    case PropertyLeaseScheduleUpdate = 'propertyleaseschedule-update';
+
+    case PropertyLeaseScheduleDelete = 'propertyleaseschedule-delete';
+    case PropertyLeaseScheduleView = 'propertyleaseschedule-view';
+
+        //Property lease Renewal
+    case PropertyLeaseRenewalCreate = 'propertyleaserenewal-create';
+    case PropertyLeaseRenewalUpdate = 'propertyleaserenewal-update';
+    case PropertyLeaseRenewalDelete = 'propertyleaserenewal-delete';
+    case PropertyLeaseRenewalView = 'propertyleaserenewal-view';
+
+
+        //Property Lease Termination
+    case PropertyLeaseTerminationCreate = 'propertyleasetermination-create';
+    case PropertyLeaseTerminationUpdate = 'propertyleasetermination-update';
+    case PropertyLeaseTerminationDelete = 'propertyleasetermination-delete';
+    case PropertyLeaseTerminationView = 'propertyleasetermination-view';
+
+        //Property Invoice
+    case PropertyInvoiceCreate = 'propertyinvoice-create';
+    case PropertyInvoiceUpdate = 'propertyinvoice-update';
+    case PropertyInvoiceDelete = 'propertyinvoice-delete';
+    case PropertyInvoiceView = 'propertyinvoice-view';
+
+        //Property Receipt
+    case PropertyReceiptCreate = 'propertyreceipt-create';
+    case PropertyReceiptUpdate = 'propertyreceipt-update';
+    case PropertyReceiptDelete = 'propertyreceipt-delete';
+    case PropertyReceiptView = 'propertyreceipt-view';
+
+        //Property Maintenance Request
+    case PropertyMaintenanceRequestCreate = 'propertymaintenancerequest-create';
+    case PropertyMaintenanceRequestUpdate = 'propertymaintenancerequest-update';
+    case PropertyMaintenanceRequestDelete = 'propertymaintenancerequest-delete';
+    case PropertyMaintenanceRequestView = 'propertymaintenancerequest-view';
+
+
+        //Property Maintenance Assign
+    case PropertyMaintenanceAssignCreate = 'propertymaintenanceassign-create';
+    case PropertyMaintenanceAssignUpdate = 'propertymaintenanceassign-update';
+    case PropertyMaintenanceAssignDelete = 'propertymaintenanceassign-delete';
+    case PropertyMaintenanceAssignView = 'propertymaintenanceassign-view';
+
+        //Property Maintenance Work Completion
+    case PropertyMaintenanceWorkCompletionCreate = 'propertymaintenanceworkcompletion-create';
+    case PropertyMaintenanceWorkCompletionUpdate = 'propertymaintenanceworkcompletion-update';
+    case PropertyMaintenanceWorkCompletionDelete = 'propertymaintenanceworkcompletion-delete';
+    case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
+
+
+
+
+        /*
      *
      * ========================================  Human Resource management  ========================================
      */
@@ -355,14 +434,14 @@ enum PermissionEnum: string
     case EmployeesDelete = 'employee-delete';
 
 
-    /** ========================================  Budget and Analytics  ========================================*/
+/** ========================================  Budget and Analytics  ========================================*/
     case BudgetSetupView = 'budgetSetup-view';
     case BudgetSetupCreate = 'budgetSetup-create';
     case BudgetSetupUpdate = 'budgetSetup-update';
     case BudgetSetupDelete = 'budgetSetup-delete';
 
 
-    /** ======================================== Document Management System ========================================*/
+/** ======================================== Document Management System ========================================*/
 
     case DMSView = 'dms-view';
     case DMSBulkUpload = 'dms-bulkUpload';
@@ -370,6 +449,67 @@ enum PermissionEnum: string
     case DMSLegalHoldCreate = 'dmsLegalHold-create';
     case DMSLegalHoldView = 'dmsLegalHold-view';
     case DMSLegalHoldRelease = 'dmsLegalHold-release';
+
+
+        /*
+ *
+ * ========================================  Finance  ========================================
+ */
+        //Chart Of Accounts
+    case FinanceCOAView = 'financeCOA-view';
+    case FinanceCOACreate = 'financeCOA-create';
+    case FinanceCOAUpdate = 'financeCOA-update';
+    case FinanceCOADelete = 'financeCOA-delete';
+
+        //General Ledger
+    case FinanceGeneralLedgerView = 'financeGeneralLedger-view';
+    case FinanceGeneralLedgerCreate = 'financeGeneralLedger-create';
+    case FinanceGeneralLedgerUpdate = 'financeGeneralLedger-update';
+    case FinanceGeneralLedgerDelete = 'financeGeneralLedger-delete';
+
+        //Accounts Payable
+    case FinanceAccountsPayableView = 'financeAccountsPayable-view';
+    case FinanceAccountsPayableCreate = 'financeAccountsPayable-create';
+    case FinanceAccountsPayableUpdate = 'financeAccountsPayable-update';
+    case FinanceAccountsPayableDelete = 'financeAccountsPayable-delete';
+
+        //Accounts Receivable
+    case FinanceAccountsReceivableView = 'financeAccountsReceivable-view';
+    case FinanceAccountsReceivableCreate = 'financeAccountsReceivable-create';
+    case FinanceAccountsReceivableUpdate = 'financeAccountsReceivable-update';
+    case FinanceAccountsReceivableDelete = 'financeAccountsReceivable-delete';
+
+        //Tax Setting
+    case FinanceTaxSettingView = 'financeTaxSetting-view';
+    case FinanceTaxSettingCreate = 'financeTaxSetting-create';
+    case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
+    case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
+
+
+        /*
+ *
+ * ========================================  FleetManagement  ========================================
+ */
+    case FleetModelView = 'fleetModel-view';
+    case FleetModelCreate = 'fleetModel-create';
+    case FleetModelUpdate = 'fleetModel-update';
+    case FleetModelDestroy = 'fleetModel-delete';
+
+    case FleetMakeView = 'fleetMake-view';
+    case FleetMakeCreate = 'fleetMake-create';
+    case FleetMakeUpdate = 'fleetMake-update';
+    case FleetMakeDestroy = 'fleetMake-delete';
+
+    case VehicleRegistryView = 'vehicleRegistry-view';
+    case VehicleRegistryCreate = 'vehicleRegistry-create';
+    case VehicleRegistryUpdate = 'vehicleRegistry-update';
+    case VehicleRegistryDestroy = 'vehicleRegistry-destroy';
+
+    case DriverManagementView = 'driverManagement-view';
+    case DriverManagementCreate = 'driverManagement-create';
+    case DriverManagementUpdate = 'driverManagement-update';
+    case DriverManagementDestroy = 'driverManagement-destroy';
+
 
 
     public static function display(): Collection
@@ -425,7 +565,10 @@ enum PermissionEnum: string
             [self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy],
             [self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy],
             [self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval],
-            [self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy],
+
+            [self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval],
+            [self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy],
+            [self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy],
 
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
@@ -442,26 +585,57 @@ enum PermissionEnum: string
 
 
             //Property Management
+            ///////////////////////  Finance  /////////////////////////////////////
+            [self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete],
+            [self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete],
+            [self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete],
+            [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
+            [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
+
+
             [self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete],
             [self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete],
             [self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete],
             [self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete],
+            [self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete],
             [self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView],
             [self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView],
-            [self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete],
-            [self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete],
+            [self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView],
+            [self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView],
+            [self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView],
+            [self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView],
+            [self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView],
+            [self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView],
+            [self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView],
+            [self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView],
+            [self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView],
 
-            [self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease]
-
+            ///////////////////////  Fleet Management  /////////////////////////////////////
+            [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
+            [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
+            [self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy],
+            [self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy],
         ]);
     }
 
     public static function approvals(): Collection
     {
-        return collect([self::MarketingPlannerApproval, /* self::MarketingListApproval,*/ self::TicketApproval, self::CampaignApproval, self::SurveyApproval, self::Ceo, self::MarketingManager,
-            self::PurchaseOrderApproval, self::RequisitionApproval, self::RequisitionItemsApproval, self::DepartmentNeedsApproval, self::TenderApproval,
-            self::PurchaseOrderApproval, self::RequisitionApproval, self::RequisitionItemsApproval]);
-
+        return collect([
+            self::MarketingPlannerApproval, /* self::MarketingListApproval,*/
+            self::TicketApproval,
+            self::CampaignApproval,
+            self::SurveyApproval,
+            self::Ceo,
+            self::MarketingManager,
+            self::PurchaseOrderApproval,
+            self::RequisitionApproval,
+            self::RequisitionItemsApproval,
+            self::DepartmentNeedsApproval,
+            self::TenderApproval,
+            self::PurchaseOrderApproval,
+            self::RequisitionApproval,
+            self::RequisitionItemsApproval
+        ]);
     }
 
 
@@ -521,23 +695,54 @@ enum PermissionEnum: string
             self::ItemTypeView, self::ItemTypeUpdate, self::ItemTypeCreate, self::ItemTypeDestroy,
             self::UOMView, self::UOMUpdate, self::UOMCreate, self::UOMDestroy,
             self::InterBranchRequisitionView, self::InterBranchRequisitionUpdate, self::InterBranchRequisitionCreate, self::InterBranchRequisitionDestroy, self::InterBranchRequisitionApproval,
+            self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy,
+            self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy,
+
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy,
-            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy, self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy, self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval, self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy => ModulesEnum::Inventory,
+            self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy,
+            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy,
+            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval,
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => ModulesEnum::Inventory,
+            //Fleet Management
+            self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy,
+            self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy,
+            self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy,
+            self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy
+            => ModulesEnum::Fleet,
+
 
             //Property Management
             self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete,
+            self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete,
+            self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete,
+            self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete,
+            self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete,
             self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView,
             self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView,
-            self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete, self::PropertyRegistryView,
-            self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete, self::PropertyStructuralView,
-            self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete
+            self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView,
+            self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView,
+            self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView,
+            self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView,
+            self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView,
+            self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView,
+            self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView,
+            self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView,
+            self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView
             => ModulesEnum::Property,
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
-            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete,
-            => ModulesEnum::BudgetLine
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete
+            => ModulesEnum::BudgetLine,
 
+
+            ////////////////////   Finance   ////////////////////////////
+            self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete,
+            self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete,
+            self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete,
+            self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete,
+            self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete,
+            => ModulesEnum::Finance,
         };
     }
 
@@ -604,7 +809,17 @@ enum PermissionEnum: string
             self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy => 'Receipt',
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy => 'Stock Take',
             self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval => 'Transfer',
-            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy => 'Stock Adjustment',
+
+            self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => 'Stock Adjustment',
+            //self::InventoryHoldView, self::InventoryHoldUpdate, self::InventoryHoldCreate, self::InventoryHoldDestroy => 'Inventory Hold',
+            self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy => 'Inventory Hold Review',
+            self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy => 'UOM Conversion',
+
+            //Fleet Management
+            self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy => 'Fleet Model',
+            self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy => 'Fleet Make',
+            self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy => 'Vehicle Registry',
+            self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy => 'Driver Management',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',
@@ -614,10 +829,27 @@ enum PermissionEnum: string
             self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete => 'Property Type',
             self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete => 'Property Registry',
             self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete => 'Property Structural Mapping',
+            self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete => 'Property Attachments ',
             self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView => 'Tenant Maintenance',
             self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView => 'Tenant Clearance',
+            self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView => 'Property New Lease',
+            self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView => 'Lease Termination',
+            self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView => 'Property Lease Schedule',
+            self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView => 'Property Lease Renewal',
+            self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView => 'Property Invoice',
+            self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView => 'Property Receipt',
+            self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
+            self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
+            self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+
+            ///////////////////////  Finance   /////////////////////////
+            self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
+            self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',
+            self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
+            self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
+            self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
         };
     }
 }

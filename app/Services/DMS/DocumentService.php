@@ -82,10 +82,10 @@ class DocumentService extends PermissionsService
         if (is_null(Relation::getMorphedModel($Related))) {
             throw new ErroredException('Invalid Related Entity');
         }
-
-        $this->document->relations()->create([
+        DocumentRelation::create([
             'Related' => $Related,
             'RelatedId' => $RelatedId,
+            'DocumentId' => $this->document->Id,
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);
@@ -134,16 +134,24 @@ class DocumentService extends PermissionsService
             return $path;
         }
         throw new ErroredException('Saving file failed.');
-
     }
 
     /**
      * @throws ErroredException
      */
     private static function _create(
-        Repository     $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum,
-        CategoryMaster $category = null, bool $copyPermissions = true, Collection $properties = null): DocumentService
-    {
+        Repository     $repository,
+        User $actor,
+        DisksEnum $disk,
+        string $name,
+        ExtensionsEnum $extension,
+        string $path,
+        int $sizeInBytes,
+        string $checksum,
+        CategoryMaster $category = null,
+        bool $copyPermissions = true,
+        Collection $properties = null
+    ): DocumentService {
         try {
             return DB::transaction(static function () use ($path, $checksum, $properties, $sizeInBytes, $disk, $category, $extension, $repository, $name, $actor, $copyPermissions) {
                 $document = Document::create([
@@ -169,7 +177,7 @@ class DocumentService extends PermissionsService
                 }
                 return $service->_newVersion($disk, $path, $name, $sizeInBytes, $actor, $properties, $checksum);
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error creating document: ');
             Log::error($e);
             throw new ErroredException('Saving file failed.');
@@ -303,8 +311,6 @@ class DocumentService extends PermissionsService
             Log::error('Error checking in document: ' . $e);
         }
         throw new ErroredException('checking in document failed');
-
-
     }
 
     public function validateToken(User $user, string $token): bool
@@ -422,7 +428,6 @@ class DocumentService extends PermissionsService
         return ($this->document->Visibility->value === VisibilityEnum::Private->value)
             ? '<i data-feather="lock" title="Private" class="text-danger icon-size"></i>'
             : '<i data-feather="globe" title="Public" class="text-primary icon-size"></i> ';
-
     }
 
     public function tags(User $user): BelongsToMany
@@ -466,7 +471,7 @@ class DocumentService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($this->document)->event('update')->log('Updated file ' . $this->document->Name . ' visibility : ' . $visibility->description());
                 return $this;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update document visibility: ');
             Log::error($e);
             throw new ErroredException();
@@ -481,5 +486,4 @@ class DocumentService extends PermissionsService
         $this->document = $this->_trashPermissions($this->document, $permission, $actor);
         return $this;
     }
-
 }

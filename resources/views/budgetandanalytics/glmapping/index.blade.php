@@ -2,9 +2,9 @@
 @section('title', 'CBS GL Accounts')
 @section('content')
     <div class="card mb-4">
-        <div class="card-header bg-dark text-white">
-            🧾 CBS GL Accounts
-        </div>
+{{--        <div class="card-header bg-dark text-white">--}}
+{{--            🧾 CBS GL Accounts--}}
+{{--        </div>--}}
         <div class="card-body">
             <p class="text-muted">
                 Below is a list of General Ledger accounts synced from Core Banking System (CBS).
@@ -18,7 +18,7 @@
                         <tr>
                             <th>#</th>
                             <th>GL Account No</th>
-                            <th>GL Name</th>
+{{--                            <th>GL Name</th>--}}
                             <th>Description</th>
                             <th>GL Type</th>
                             <th>Mapped to Budget Line</th>
@@ -30,10 +30,10 @@
                     @foreach($gls as $gls)
                         <tr>
                             <td>{{$loop->iteration}}</td>
-                            <td>GL00{{$gls->Id}}</td>
+                            <td>{{$gls->AccountID}}</td>
                             <td class="text-break">{{$gls->Description}}</td>
-                            <td class="text-break">{{$gls->Description}}</td>
-                            <td>{{$gls->GTType}}</td>
+{{--                            <td class="text-break">{{$gls->Description}}</td>--}}
+                            <td>{{$gls->GLAccountTypeID}}</td>
                             <td><span class="badge bg-success">✅ Yes</span></td>
                             <td><span class="badge bg-success">✔</span></td>
                             {{-- <td>

@@ -61,7 +61,7 @@ class PropertyTypeController extends Controller
         $validated = $request->validate([
             'PropertyTypeName' => 'required|string|max:50',
             'PropertyCategoryId' => 'required|exists:t_CategoryMaster,Id',
-            'Description' => 'required|string|max:100',
+            'Description' => 'nullable|string|max:100',
 
         ]);
 
@@ -73,7 +73,7 @@ class PropertyTypeController extends Controller
             $type->update([
                 'PropertyTypeName' => $validated['PropertyTypeName'],
                 'PropertyCategoryId' => $validated['PropertyCategoryId'],
-                'Description' => $validated['Description'],
+                'Description' => $validated['Description'] ?? '',
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
             ]);

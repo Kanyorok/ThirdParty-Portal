@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Procurement;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\ProcurementPlanStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Procurement\ProcurementPlan\SchedulePlanRequest;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItem;
 use App\Services\Procurement\ProcurementPlan\SchedulePlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Core\CodeDetail;
 use Throwable;
 
 class ProcurementSchedulePlanController extends Controller
@@ -24,7 +26,8 @@ class ProcurementSchedulePlanController extends Controller
     public function index()
     {
         $draftedplans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        return view('procurement.procurementplan.scheduleplan.index', compact('draftedplans'));
+        $procurementModes = CodeDetail::where('CodeID', 'ProcurementMethod')->get();
+        return view('procurement.procurementplan.scheduleplan.index', compact('draftedplans', 'procurementModes'));
     }
 
     public function create(Request $request)
@@ -54,6 +57,7 @@ class ProcurementSchedulePlanController extends Controller
                 return [
                     'LineItemID' => $lineItem->LineItemID,
                     'item_name' => $lineItem->item?->ItemName,
+                    'ProcurementMethod' => optional($lineItem->procurementMode)->Description,
                     'MergedQty' => $lineItem->MergedQty,
                     'ScheduleQTY' => $lineItem->schedulePlan?->ScheduleQTY,
                     'ScheduleType' => $displayType,
@@ -70,7 +74,7 @@ class ProcurementSchedulePlanController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store(SchedulePlanRequest  $request)
     {
         $actor = $request->user();
         $plan = ConsolidatedProcurementPlan::findOrFail($request->input('pending_plan_id'));
@@ -95,14 +99,16 @@ class ProcurementSchedulePlanController extends Controller
                     }
                 }
             } elseif ($mode === 'month') {
-                for ($m = 1; $m <= 12; $m++) {
-                    $qty = (int)$request->input("month{$m}_{$lineItemId}", 0);
-                    if ($qty > 0) {
-                        $periods["M{$m}"] = $qty;
-                        $totalQty += $qty;
+                    $periodsInput = $request->input('periods', []);
+                    for ($m = 1; $m <= 12; $m++) {
+                        $key = "M{$m}_{$lineItemId}";
+                        $qty = (int)($periodsInput[$key] ?? 0);
+                        if ($qty > 0) {
+                            $periods["M{$m}"] = $qty;
+                            $totalQty += $qty;
+                        }
                     }
                 }
-            }
 
             $mergedQty = $lineItem->MergedQty ?? 0;
             if ($totalQty > $mergedQty) {
@@ -123,7 +129,7 @@ class ProcurementSchedulePlanController extends Controller
                 'ScheduleQTY' => $totalQty,
                 'ScheduleType' => $mode,
                 'Status' => $status,
-                'periods' => $periods,
+                'periods' => !empty($periods) ? $periods : [],
             ];
 
             $this->schedulePlanService->create($dataForService, $actor, $plan, $lineItem);

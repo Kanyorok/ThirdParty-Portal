@@ -46,12 +46,12 @@ class RFQSection extends Model
 
     public function section()
     {
-        return $this->belongsTo(RFQSettingSection::class, 'SectionID', 'id');
+        return $this->belongsTo(Section::class, 'SectionID', 'id');
     }
 
     public function criteria()
     {
-        return $this->hasMany(RFQCriteria::class, 'SectionID', 'SectionID');
+        return $this->hasMany(Criteria::class, 'SectionID', 'SectionID');
     }
 
     public function rfq()
@@ -63,6 +63,4 @@ class RFQSection extends Model
     {
         return $this->hasMany(RFQCriteria::class, 'SectionID');
     }
-
-
 }

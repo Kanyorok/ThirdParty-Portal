@@ -141,20 +141,40 @@ class CRMEmailService
             $mailer->alwaysFrom($username, config('org.name'));
             $mailer->alwaysTo($username, config('org.name'));
             $mailer->setSymfonyTransport(Mail::createSymfonyTransport([
-                'transport' => 'smtp',
-                'timeout' => 5,
+                'transport'  => 'smtp',
+                'timeout'    => 5,
+                'host'       => $host,
+                'port'       => $port,
+                'encryption' => $encryption->value, // Ensure it's a string (e.g., 'tls', 'ssl')
+                'username'   => $username,
+                'password'   => $password,
+            ]));
+
+            return $mailer->sendNow(new TestMail()) instanceof SentMessage;
+
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+            Log::error('Mail transport error', [
                 'host' => $host,
                 'port' => $port,
-                'encryption' => $encryption,
+                'encryption' => $encryption->value,
                 'username' => $username,
-                'password' => $password,
-            ]));
-            return ($mailer->sendNow(new TestMail()) instanceof SentMessage);
-        } catch (Exception|RuntimeException) {
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('General mail config error', [
+                'host' => $host,
+                'port' => $port,
+                'encryption' => $encryption->value,
+                'username' => $username,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return false;
     }
+
 
     public function getParty(): string
     {

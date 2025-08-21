@@ -17,42 +17,41 @@ class PropertyLeaseRenewalService
      * @throws Exception if the lease renewal already exists or creation fails.
      */
     public static function create(
-        int    $leaseId,
-        int    $paymentFrequencyId,
+        int $leaseId,
+        int $paymentFrequencyId,
         string $EndDateCurrentLease,
         string $NewStartDate,
         string $NewEndDate,
-        int    $NewMonthlyRent,
-        float  $ServiceCharge,
-        float  $ParkingFee,
-        float  $OtherCharges,
-        string $Remarks,
-        User   $user
-    ): PropertyLeaseRenewal
-    {
+        int $NewMonthlyRent,
+        float $ServiceCharge,
+        float $ParkingFee,
+        float $OtherCharges,
+        string $Remarks = null,
+        User $user
+    ): PropertyLeaseRenewal {
         DB::beginTransaction();
 
         try {
             //Prevent duplicate renewal
             if (PropertyLeaseRenewal::where('LeaseNumber', $leaseId)->exists()) {
                 throw new \Exception('This lease is already renewed.');
-        }
+            }
 
             //Create LeaseRenewal record
-        $leaseRenewal = PropertyLeaseRenewal::create([
-            'LeaseNumber' => $leaseId,
-            'PaymentFrequency' => $paymentFrequencyId,
-            'EndDateCurrentLease' => $EndDateCurrentLease,
-            'NewStartDate' => $NewStartDate,
-            'NewEndDate' => $NewEndDate,
-            'NewMonthlyRent' => $NewMonthlyRent,
-            'ServiceCharge' => $ServiceCharge,
-            'ParkingFee' => $ParkingFee,
-            'OtherCharges' => $OtherCharges,
-            'Remarks' => $Remarks,
-            'CreatedBy' => $user->Id,
-            'ModifiedBy' => $user->Id,
-        ]);
+            $leaseRenewal = PropertyLeaseRenewal::create([
+                'LeaseNumber' => $leaseId,
+                'PaymentFrequency' => $paymentFrequencyId,
+                'EndDateCurrentLease' => $EndDateCurrentLease,
+                'NewStartDate' => $NewStartDate,
+                'NewEndDate' => $NewEndDate,
+                'NewMonthlyRent' => $NewMonthlyRent,
+                'ServiceCharge' => $ServiceCharge,
+                'ParkingFee' => $ParkingFee,
+                'OtherCharges' => $OtherCharges,
+                'Remarks' => $Remarks,
+                'CreatedBy' => $user->Id,
+                'ModifiedBy' => $user->Id,
+            ]);
 
             //Update original lease status to "Renewed"
             $oldLease = PropertyNewLease::findOrFail($leaseId);
@@ -79,16 +78,15 @@ class PropertyLeaseRenewalService
                 'ModifiedBy' => $user->Id,
             ]);
 
-        activity()
-            ->causedBy($user)
-            ->performedOn($leaseRenewal)
-            ->withProperties(['LeaseId' => $leaseId])
-            ->log("Lease Renewed. Old Lease ID {$leaseId}, New Lease ID {$leaseRenewal->Id}");
+            activity()
+                ->causedBy($user)
+                ->performedOn($leaseRenewal)
+                ->withProperties(['LeaseId' => $leaseId])
+                ->log("Lease Renewed. Old Lease ID {$leaseId}, New Lease ID {$leaseRenewal->Id}");
 
             DB::commit();
 
-        return $leaseRenewal;
-
+            return $leaseRenewal;
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
@@ -114,8 +112,7 @@ class PropertyLeaseRenewalService
         float                $OtherCharges,
         string               $Remarks,
         User                 $user
-    ): void
-    {
+    ): void {
         DB::beginTransaction();
 
         try {
@@ -167,8 +164,7 @@ class PropertyLeaseRenewalService
     public static function delete(
         PropertyLeaseRenewal $leaseRenewal,
         User                 $user
-    ): void
-    {
+    ): void {
         DB::beginTransaction();
 
         try {
@@ -197,7 +193,4 @@ class PropertyLeaseRenewalService
             throw $e;
         }
     }
-
-
-
 }

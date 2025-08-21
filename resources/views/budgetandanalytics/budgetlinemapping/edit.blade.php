@@ -3,9 +3,9 @@
 @section('content')
     <div class="container mt-4">
         <div class="card shadow-sm rounded-4">
-            <div class="card-header bg-dark text-white mb-0">
-                ✏️ Edit Budget Line Mapping
-            </div>
+{{--            <div class="card-header bg-dark text-white mb-0">--}}
+{{--                ✏️ Edit Budget Line Mapping--}}
+{{--            </div>--}}
             <div class="card-body">
                 @if ($errors->any())
                     <div class="alert alert-danger rounded-3">
@@ -79,7 +79,7 @@
 
                     <div class="mb-3">
                         <label for="GLS" class="form-label">GL Accounts <span class="text-danger">*</span></label>
-                        <select class="form-select" name="GLS[]" id="GLS" multiple required>
+                        <select class="form-select" name="GLS[]" id="GLS" multiple required size="10">
                             @foreach($gls as $gl)
                                 <option
                                     value="{{ $gl->Id }}" {{ in_array($gl->Id, $selectedGLs ?? []) ? 'selected' : '' }}>{{ $gl->Description }}</option>
@@ -100,16 +100,16 @@
                     <!-- 🔗 Product Type Mapping -->
                     <div class="mb-3" id="productTypeSection"
                          style="display: {{ $budgetLine->IsProductDriven ? 'block' : 'none' }};">
-                        <h6>🔗 Product Types (Multiple)</h6>
-                        <label class="form-label">Select Product Types</label>
+                        <h6>🔗 Product (Multiple)</h6>
+                        <label class="form-label">Select Product</label>
                         <select multiple class="form-select" name="ProductTypes[]"
                                 id="ProductTypesSelect" {{ $budgetLine->IsProductDriven ? '' : 'disabled' }}>
                             @foreach($productTypes as $type)
                                 <option
-                                    value="{{ $type->Id }}" {{ isset($selectedProductTypes) && in_array($type->Id, $selectedProductTypes) ? 'selected' : '' }}>{{ $type->Name }}</option>
+                                    value="{{ $type->Id }}" {{ isset($selectedProductTypes) && in_array($type->Id, $selectedProductTypes) ? 'selected' : '' }}>{{ $type->Description }}</option>
                             @endforeach
                         </select>
-                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple Product Types.</div>
+                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple Product.</div>
                     </div>
 
                     {{-- <div class="form-check mb-3">

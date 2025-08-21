@@ -27,7 +27,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Item</label>
-                <select class="form-select" name="ItemID" required>
+                <select class="form-select" name="ItemID" disabled>
                     <option disabled>Select Item</option>
                     @foreach($items as $item)
                         <option value="{{ $item->Id }}" {{ $item->Id == $price->ItemID ? 'selected' : '' }}>
@@ -39,7 +39,7 @@
 
             <div class="mb-3">
                 <label class="form-label">UOM</label>
-                <select class="form-select" name="UOM" required>
+                <select class="form-select" name="UOM_display" disabled>
                     <option disabled>Select UOM</option>
                     @foreach($uoms as $uom)
                         <option value="{{ $uom->Id }}" {{ $uom->Id == $price->UOM ? 'selected' : '' }}>
@@ -47,17 +47,11 @@
                         </option>
                     @endforeach
                 </select>
+                <input type="hidden" name="UOM" value="{{ $price->UOM }}">
             </div>
-
 
             <div class="mb-3">
                 <label class="form-label">Estimated Price</label>
-                <input type="number" step="0.01" class="form-control" name="EstimatedPrice"
-                       value="{{ old('EstimatedPrice', $price->EstimatedPrice) }}" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Actual Price</label>
                 <input type="number" step="0.01" class="form-control" name="ActualPrice"
                        value="{{ old('ActualPrice', $price->ActualPrice) }}" required>
             </div>

@@ -10,6 +10,7 @@ use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
+use App\Models\Core\CodeDetail;
 use App\Providers\Inventory\InterBranchRequisitionPolicy;
 use App\Services\Inventory\InterBranchRequisitionService;
 use Exception;
@@ -29,6 +30,7 @@ class InterBranchRequisitionController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', InterBranchRequisition::class);
         $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
         if ($request->filled('status')) {
             $enum = InterBranchRequisitionEnum::tryFrom($request->status);
@@ -45,7 +47,7 @@ class InterBranchRequisitionController extends Controller
 
     public function create()
     {
-        // $this->authorize('create', InterBranchRequisition::class);
+        $this->authorize('create', InterBranchRequisition::class);
         $branches = Branch::all();
         $uoms = UnitOfMeasure::all();
         return view('inventory.interbranchrequisition.create', compact('branches', 'uoms'));
@@ -53,7 +55,7 @@ class InterBranchRequisitionController extends Controller
 
     public function store(InterBranchRequisitionRequest $request)
     {
-        // $this->authorize('create', InterBranchRequisition::class);
+         $this->authorize('create', InterBranchRequisition::class);
         $data = $request->validated();
 
 
@@ -82,6 +84,7 @@ class InterBranchRequisitionController extends Controller
 
     public function show($Id)
     {
+        $this->authorize('view', InterBranchRequisition::class);
         $item = InterBranchRequisition::with([
             'fromBranch',
             'toBranch',
@@ -148,8 +151,8 @@ class InterBranchRequisitionController extends Controller
 
     public function destroy($Id)
     {
+        $this->authorize('destroy', InterBranchRequisition::class);
         $item = InterBranchRequisition::findOrFail($Id);
-        $this->authorize('destroy', $item);
         $this->service->delete($item);
         return redirect()->route('interbranchrequisition.index')->with('success', 'Requisition deleted successfully.');
     }
@@ -186,130 +189,140 @@ class InterBranchRequisitionController extends Controller
         ]);
     }
 
-    /**
-     * Get categories that have items in stock for a given branch.
-     */
-    public function getCategoriesByBranch(Request $request)
-    {
-        $fromBranchId = $request->get('from_branch_id');
+                /**
+                 * Get categories that have items in stock for a given branch.
+                 */
+            public function getCategoriesByBranch(Request $request)
+            {
+                $fromBranchId = $request->get('from_branch_id');
 
-        if (!is_numeric($fromBranchId)) {
-            return response()->json(['message' => 'Invalid branch selected.', 'categories' => []]);
-        }
-
-        $categories = DB::table('t_Items')
-            ->join('t_Stockitems', 't_Items.Id', '=', 't_Stockitems.ItemId')
-            ->join('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
-            ->leftJoin('t_ItemCategories as parent_category', 't_ItemCategories.ParentId', '=', 'parent_category.Id')
-            ->select(
-                't_ItemCategories.Id',
-                't_ItemCategories.Name',
-                't_ItemCategories.ParentId',
-                'parent_category.Name as ParentName'
-            )
-            ->where('t_Stockitems.Branch', $fromBranchId)
-            ->where('t_Stockitems.CurrentQty', '>', 0)
-            ->where('t_Items.Status', 1)
-            ->distinct('t_ItemCategories.Id')
-            ->get();
-
-        $result = [];
-        $uniqueTopLevelCategories = [];
-
-        foreach ($categories as $category) {
-            if ($category->ParentId === null) { // This is a top-level category itself
-                $uniqueTopLevelCategories[$category->Id] = ['Id' => $category->Id, 'Name' => $category->Name];
-            } else { // This is a subcategory, add its parent if not already added
-                if (!isset($uniqueTopLevelCategories[$category->ParentId])) {
-                    $uniqueTopLevelCategories[$category->ParentId] = ['Id' => $category->ParentId, 'Name' => $category->ParentName];
+                if (!is_numeric($fromBranchId)) {
+                    return response()->json(['message' => 'Invalid branch selected.', 'categories' => []]);
                 }
+
+                // 🔹 Get active status ID dynamically
+                $activeStatusId = CodeDetail::where('CodeID', 'ItemStatus')
+                    ->where('Description', 'Active') // adjust column if needed
+                    ->value('ID');
+
+                $categories = DB::table('t_Items')
+                    ->join('t_Stockitems', 't_Items.Id', '=', 't_Stockitems.ItemId')
+                    ->join('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
+                    ->leftJoin('t_ItemCategories as parent_category', 't_ItemCategories.ParentId', '=', 'parent_category.Id')
+                    ->select(
+                        't_ItemCategories.Id',
+                        't_ItemCategories.Name',
+                        't_ItemCategories.ParentId',
+                        'parent_category.Name as ParentName'
+                    )
+                    ->where('t_Stockitems.Branch', $fromBranchId)
+                    ->where('t_Stockitems.CurrentQty', '>', 0)
+                    ->where('t_Items.Status', $activeStatusId)
+                    ->distinct('t_ItemCategories.Id')
+                    ->get();
+
+                $result = [];
+                $uniqueTopLevelCategories = [];
+
+                foreach ($categories as $category) {
+                    if ($category->ParentId === null) {
+                        $uniqueTopLevelCategories[$category->Id] = ['Id' => $category->Id, 'Name' => $category->Name];
+                    } else {
+                        if (!isset($uniqueTopLevelCategories[$category->ParentId])) {
+                            $uniqueTopLevelCategories[$category->ParentId] = ['Id' => $category->ParentId, 'Name' => $category->ParentName];
+                        }
+                    }
+                }
+
+                usort($uniqueTopLevelCategories, fn($a, $b) => strcmp($a['Name'], $b['Name']));
+
+                if (empty($uniqueTopLevelCategories)) {
+                    return response()->json(['message' => 'No categories with available items in this branch.', 'categories' => []]);
+                }
+
+                return response()->json(['message' => 'Categories retrieved successfully.', 'categories' => array_values($uniqueTopLevelCategories)]);
             }
-        }
 
-        usort($uniqueTopLevelCategories, function ($a, $b) {
-            return strcmp($a['Name'], $b['Name']);
-        });
+                /**
+                 * Get subcategories that have items in stock for a given branch and parent category.
+                 */
+                public function getSubcategoriesByBranchAndCategory(Request $request)
+            {
+                $fromBranchId = $request->get('from_branch_id');
+                $categoryId = $request->get('category_id');
 
-        if (empty($uniqueTopLevelCategories)) {
-            return response()->json(['message' => 'No categories with available items in this branch.', 'categories' => []]);
-        }
+                if (!is_numeric($fromBranchId) || !is_numeric($categoryId)) {
+                    return response()->json(['message' => 'Invalid branch or category selected.', 'subcategories' => []]);
+                }
 
-        return response()->json(['message' => 'Categories retrieved successfully.', 'categories' => array_values($uniqueTopLevelCategories)]);
-    }
+                $activeStatusId = CodeDetail::where('CodeID', 'ItemStatus')
+                    ->where('Description', 'Active')
+                    ->value('ID');
 
-    /**
-     * Get subcategories that have items in stock for a given branch and parent category.
-     */
-    public function getSubcategoriesByBranchAndCategory(Request $request)
-    {
-        $fromBranchId = $request->get('from_branch_id');
-        $categoryId = $request->get('category_id'); // This is the parent category ID
+                $subcategories = DB::table('t_Items')
+                    ->join('t_Stockitems', 't_Items.Id', '=', 't_Stockitems.ItemId')
+                    ->join('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
+                    ->select('t_ItemCategories.Id', 't_ItemCategories.Name')
+                    ->where('t_Stockitems.Branch', $fromBranchId)
+                    ->where('t_ItemCategories.ParentId', $categoryId)
+                    ->where('t_Stockitems.CurrentQty', '>', 0)
+                    ->where('t_Items.Status', $activeStatusId)
+                    ->distinct('t_ItemCategories.Id')
+                    ->get();
 
-        if (!is_numeric($fromBranchId) || !is_numeric($categoryId)) {
-            return response()->json(['message' => 'Invalid branch or category selected.', 'subcategories' => []]);
-        }
+                if ($subcategories->isEmpty()) {
+                    return response()->json(['message' => 'No subcategories with available items for this category in this branch.', 'subcategories' => []]);
+                }
 
-        $subcategories = DB::table('t_Items')
-            ->join('t_Stockitems', 't_Items.Id', '=', 't_Stockitems.ItemId')
-            ->join('t_ItemCategories', 't_Items.Category', '=', 't_ItemCategories.Id')
-            ->select('t_ItemCategories.Id', 't_ItemCategories.Name')
-            ->where('t_Stockitems.Branch', $fromBranchId)
-            ->where('t_ItemCategories.ParentId', $categoryId) // Filter by parent category
-            ->where('t_Stockitems.CurrentQty', '>', 0)
-            ->where('t_Items.Status', 1)
-            ->distinct('t_ItemCategories.Id')
-            ->get();
-
-        if ($subcategories->isEmpty()) {
-            return response()->json(['message' => 'No subcategories with available items for this category in this branch.', 'subcategories' => []]);
-        }
-
-        return response()->json(['message' => 'Subcategories retrieved successfully.', 'subcategories' => $subcategories]);
-    }
+                return response()->json(['message' => 'Subcategories retrieved successfully.', 'subcategories' => $subcategories]);
+            }
 
 
-    /**
-     * Get items available in stock for a given branch and category/subcategory.
-     */
-    public function getItemsByBranchAndCategoryOrSubcategory(Request $request)
-    {
-        $categoryId = $request->get('category_id');
-        $subcategoryId = $request->get('subcategory_id');
-        $fromBranchId = $request->get('from_branch_id');
+                /**
+                 * Get items available in stock for a given branch and category/subcategory.
+                 */
+                public function getItemsByBranchAndCategoryOrSubcategory(Request $request)
+            {
+                $categoryId = $request->get('category_id');
+                $subcategoryId = $request->get('subcategory_id');
+                $fromBranchId = $request->get('from_branch_id');
 
-        if ((!is_null($subcategoryId) && !is_numeric($subcategoryId)) ||
-            (!is_null($categoryId) && !is_numeric($categoryId)) ||
-            (!is_null($fromBranchId) && !is_numeric($fromBranchId))) {
-            return response()->json(['message' => 'Invalid input provided.', 'items' => []]);
-        }
+                if ((!is_null($subcategoryId) && !is_numeric($subcategoryId)) ||
+                    (!is_null($categoryId) && !is_numeric($categoryId)) ||
+                    (!is_null($fromBranchId) && !is_numeric($fromBranchId))) {
+                    return response()->json(['message' => 'Invalid input provided.', 'items' => []]);
+                }
 
-        if (empty($fromBranchId)) {
-            return response()->json(['message' => 'Please select a "Requesting Branch" first to view available items.', 'items' => []]);
-        }
+                if (empty($fromBranchId)) {
+                    return response()->json(['message' => 'Please select a "Requesting Branch" first to view available items.', 'items' => []]);
+                }
 
-        $itemsQuery = DB::table('t_Items')
-            ->select('t_Items.Id', 't_Items.ItemName')
-            ->where('t_Items.Status', 1);
+                $activeStatusId = CodeDetail::where('CodeID', 'ItemStatus')
+                    ->where('Description', 'Active')
+                    ->value('ID');
 
-        if ($subcategoryId) {
-            $itemsQuery->where('t_Items.Category', $subcategoryId);
-        } elseif ($categoryId) {
-            $itemsQuery->where('t_Items.Category', $categoryId);
-        } else {
+                $itemsQuery = DB::table('t_Items')
+                    ->select('t_Items.Id', 't_Items.ItemName')
+                    ->where('t_Items.Status', $activeStatusId);
 
-            return response()->json(['message' => 'Please select a category or subcategory.', 'items' => []]);
-        }
+                if ($subcategoryId) {
+                    $itemsQuery->where('t_Items.Category', $subcategoryId);
+                } elseif ($categoryId) {
+                    $itemsQuery->where('t_Items.Category', $categoryId);
+                } else {
+                    return response()->json(['message' => 'Please select a category or subcategory.', 'items' => []]);
+                }
 
-        $items = $itemsQuery->join('t_Stockitems', 't_Items.Id', '=', 't_Stockitems.ItemId')
-            ->where('t_Stockitems.Branch', $fromBranchId)
-            ->where('t_Stockitems.CurrentQty', '>', 0)
-            ->distinct('t_Items.Id')
-            ->get();
+                $items = $itemsQuery->join('t_Stockitems', 't_Items.Id', '=', 't_Stockitems.ItemId')
+                    ->where('t_Stockitems.Branch', $fromBranchId)
+                    ->where('t_Stockitems.CurrentQty', '>', 0)
+                    ->distinct('t_Items.Id')
+                    ->get();
 
-        if ($items->isEmpty()) {
-            return response()->json(['message' => 'No items available in stock for the selected category/branch.', 'items' => []]);
-        }
+                if ($items->isEmpty()) {
+                    return response()->json(['message' => 'No items available in stock for the selected category/branch.', 'items' => []]);
+                }
 
-        return response()->json(['message' => 'Items retrieved successfully.', 'items' => $items]);
-    }
-}
+                return response()->json(['message' => 'Items retrieved successfully.', 'items' => $items]);
+            }
+            }

@@ -33,7 +33,7 @@ class RFQCriteriaController extends Controller
         }
 
 
-        return view('procurement.rfqcriteriasetup.rfqcriteria', [
+        return view('procurement.rfqcriteriasetup.rfqCriteria', [
             'rfq' => $rfq,
             'rfqSections' => $rfqSections,
         ]);

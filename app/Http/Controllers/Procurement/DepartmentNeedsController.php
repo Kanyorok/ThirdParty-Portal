@@ -8,6 +8,7 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\DepartmentNeed;
 use App\Services\Procurement\ProcurementPlan\DepartmentNeedsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -62,6 +63,11 @@ class DepartmentNeedsController extends Controller
                     'NeedID' => $line->NeedID,
                     'ItemID' => $line->ItemID,
                     'ItemName' => $line->item->ItemName ?? 'Unknown',
+                    'ItemCode' => $line->item->ItemCode ?? 'Unknown',
+                    'item' => $line->item ? [
+                        'ItemCode' => $line->item->ItemCode ?? 'Unknown',
+                        'ItemName' => $line->item->ItemName ?? 'Unknown',
+                    ] : null,
                     'RequestedQty' => $line->RequestedQty,
                     'EstimatedUnitCost' => $line->EstimatedUnitCost,
                     'Status' => $line->Status,
@@ -82,7 +88,7 @@ class DepartmentNeedsController extends Controller
                 'EstimatedUnitCost' => $needData['EstimatedUnitCost'],
                 'FiscalYear' => $needData['FiscalYear'],
                 'ModifiedOn' => now(),
-                'ModifiedBy' => $request->user()->id,
+                'ModifiedBy' => Auth::id(),
             ]);
         }
 
