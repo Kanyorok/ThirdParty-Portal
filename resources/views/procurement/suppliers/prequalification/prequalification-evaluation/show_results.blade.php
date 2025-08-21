@@ -4,69 +4,64 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white py-3">
-            <h4 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Prequalification Report</h4>
-        </div>
-        <div class="card-body">
-            <h5 class="card-title">Application Details</h5>
-            <p><strong>Application ID:</strong> {{ $application->ApplicationID }}</p>
-            <p><strong>Supplier:</strong> {{ optional($application->supplier)->SupplierName ?? 'N/A' }}</p>
-        </div>
-    </div>
-
-    @foreach ($sections as $section)
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 text-muted">{{ $section['name'] }}</h5>
-            <span class="badge bg-secondary p-2">
-                Section Score: {{ number_format($section['sectionScore'], 2) }} / {{ number_format($section['sectionMaxScore'], 2) }}
-            </span>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover table-sm">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Criteria</th>
-                            <th class="text-center">Score</th>
-                            <th class="text-center">Max Score</th>
-                            <th class="text-center">Weight</th>
-                            <th class="text-center">Weighted Score</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($section['criteria'] as $criteria)
-                        <tr>
-                            <td>{{ $criteria['name'] }}</td>
-                            <td class="text-center">{{ $criteria['score'] }}</td>
-                            <td class="text-center">{{ $criteria['maxScore'] }}</td>
-                            <td class="text-center">{{ $criteria['weight'] }}%</td>
-                            <td class="text-center">{{ number_format($criteria['weightedScore'], 2) }}</td>
-                            <td>{{ $criteria['remarks'] }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    @endforeach
-
     <div class="card shadow-sm">
-        <div class="card-body bg-dark text-white rounded-lg">
-            <h5 class="card-title text-center text-white">Final Prequalification Decision</h5>
-            <div class="text-center fs-2 fw-bold">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 text-primary">Prequalification Results for {{ $application->applicationNo }}</h4>
+            <a href="{{ route('prequalification.applications.show', $application->ApplicationID) }}" class="btn btn-light">
+                <i class="fas fa-arrow-circle-left me-2"></i>Back to Application
+            </a>
+        </div>
+        <div class="card-body">
+            <p>
+                <strong>Supplier:</strong> {{ $application->supplier->ThirdPartyName }}<br>
+                <strong>Total Score:</strong> {{ number_format($result->TotalScore, 2) }}%<br>
+                <strong>Decision:</strong>
                 @if ($result->Decision === 'Passed')
-                <span class="text-success"><i class="fas fa-check-circle me-2"></i>Passed</span>
+                <span class="badge bg-success">Passed</span>
                 @else
-                <span class="text-danger"><i class="fas fa-times-circle me-2"></i>Failed</span>
+                <span class="badge bg-danger">Failed</span>
                 @endif
+            </p>
+
+            <hr>
+
+            @foreach ($sections as $section)
+            <div class="mb-4">
+                <h5 class="text-secondary">{{ $section['name'] }}
+                    <small class="text-muted ms-2">
+                        (Score: {{ number_format($section['sectionScore'], 2) }}% /
+                        Max: {{ $section['sectionMaxScore'] }}%)
+                    </small>
+                </h5>
+                <hr class="mt-1">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50%;">CRITERIA</th>
+                                <th style="width: 10%;">WEIGHT (%)</th>
+                                <th style="width: 10%;">AWARDED SCORE</th>
+                                <th style="width: 10%;">MAX SCORE</th>
+                                <th style="width: 10%;">WEIGHTED SCORE (%)</th>
+                                <th style="width: 10%;">REMARKS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($section['criteria'] as $criteria)
+                            <tr>
+                                <td>{{ $criteria['name'] }}</td>
+                                <td>{{ $criteria['weight'] }}%</td>
+                                <td>{{ $criteria['score'] ?? 'N/A' }}</td>
+                                <td>{{ $criteria['maxScore'] }}</td>
+                                <td>{{ number_format($criteria['weightedScore'], 2) }}%</td>
+                                <td>{{ $criteria['remarks'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="text-center mt-2">
-                <p class="text-muted">Final score: {{ number_format($result->TotalScore, 2) }}</p>
-            </div>
+            @endforeach
         </div>
     </div>
 </div>

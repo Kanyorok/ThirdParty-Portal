@@ -11,8 +11,6 @@
             <h6 class="m-0 font-weight-bold text-primary">Edit Category Details</h6>
         </div>
         <div class="card-body">
-            <!-- The form action has been updated to correctly pass the category object
-                 with the 'supplier_cat' key to match the route parameter. -->
             <form action="{{ route('proc.supplier-cat.update', ['supplier_cat' => $category]) }}" method="POST">
                 @csrf
                 @method('PUT')

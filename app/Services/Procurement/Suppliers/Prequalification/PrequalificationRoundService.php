@@ -2,7 +2,7 @@
 
 namespace App\Services\Procurement\Suppliers\Prequalification;
 
-use App\Models\Procurement\PrequalificationRound;
+use App\Models\Procurement\Prequalification\PrequalificationRound;
 use Illuminate\Database\Eloquent\Collection;
 
 class PrequalificationRoundService

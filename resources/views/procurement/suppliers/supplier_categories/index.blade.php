@@ -19,11 +19,10 @@
     <div class=" mb-4">
         <div class="card-body">
             <div class="table-responsive">
-                {{-- DataTables will be initialized on this table --}}
                 <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
                     <thead class="bg-primary text-white">
                         <tr>
-                            <th>ID</th>
+                            <th>Category ID</th>
                             <th>Category Name</th>
                             <th>Description</th>
                             <th>Status</th>
@@ -47,7 +46,6 @@
                                 <a href="{{ route('proc.supplier-cat.edit', $category) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                     <i class="fa fa-edit"></i>
                                 </a>
-                                {{-- Button to trigger the delete modal --}}
                                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" data-category-id="{{ $category->SupplierCategoryID }}" title="Delete">
                                     <i class="fa fa-trash"></i>
                                 </button>
@@ -61,7 +59,6 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal --}}
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -85,7 +82,6 @@
 </div>
 @endsection
 
-{{-- Add the DataTables CSS and JS files --}}
 @push('head_scripts')
 <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.bootstrap5.css">
 @endpush
@@ -98,13 +94,11 @@
         // Initialize DataTables
         const dataTable = new DataTable('#dataTable');
 
-        // Logic for the delete confirmation modal
         const deleteModal = document.getElementById('deleteModal');
         deleteModal.addEventListener('show.bs.modal', function(event) {
             const button = event.relatedTarget;
             const categoryId = button.getAttribute('data-category-id');
             const form = deleteModal.querySelector('#deleteForm');
-            // Assuming your delete route is structured like /proc/supplier-cat/{id}
             form.action = '/proc/supplier-cat/' + categoryId;
         });
     });

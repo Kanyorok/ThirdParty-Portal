@@ -6,6 +6,7 @@ use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicatio
 use App\Http\Controllers\Procurement\CriteriaController;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationResultsController; // Add this line
 
 Route::prefix('prequalification')
     ->name('prequalification.')
@@ -22,13 +23,19 @@ Route::prefix('prequalification')
         Route::resource('applications', PrequalificationApplicationController::class)
             ->except(['create', 'store', 'evaluate']);
 
-        // Evaluation Routes
-        Route::get('applications/{applicationId}/evaluate', [PrequalificationEvaluationController::class, 'showEvaluationForm'])
-            ->name('prequalification-evaluation.show');
-        Route::post('applications/{applicationId}/evaluate', [PrequalificationEvaluationController::class, 'submitEvaluation'])
-            ->name('prequalification-evaluation.submit');
-        Route::post('applications/{applicationId}/generate-results', [PrequalificationEvaluationController::class, 'generateResults'])
-            ->name('prequalification-evaluation.generate-results');
-        Route::get('applications/{applicationId}/results', [PrequalificationEvaluationController::class, 'showResults'])
-            ->name('prequalification-evaluation.results');
+        // Evaluation Routes (for form display and submission)
+        Route::controller(PrequalificationEvaluationController::class)->group(function () {
+            Route::get('applications/{applicationId}/evaluate', 'showEvaluationForm')
+                ->name('prequalification-evaluation.show');
+            Route::post('applications/{applicationId}/evaluate', 'submitEvaluation')
+                ->name('prequalification-evaluation.submit');
+        });
+
+        // Results Routes (for generation and viewing)
+        Route::controller(PrequalificationResultsController::class)->group(function () {
+            Route::post('applications/{applicationId}/generate-results', 'generateResults')
+                ->name('prequalification-evaluation.generate-results');
+            Route::get('applications/{applicationId}/results', 'showResults')
+                ->name('prequalification-evaluation.results');
+        });
     });

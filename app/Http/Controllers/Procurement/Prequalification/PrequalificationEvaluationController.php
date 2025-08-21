@@ -3,21 +3,20 @@
 namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use App\Models\Procurement\Prequalification\PrequalificationEvaluation;
 use App\Models\Procurement\Prequalification\PrequalificationCriteria;
-use App\Models\Procurement\Prequalification\PrequalificationResult;
+use App\Models\Procurement\Prequalification\PrequalificationEvaluation;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class PrequalificationEvaluationController extends Controller
 {
     public function index(): View
     {
-        $evaluations = PrequalificationEvaluation::with(['application', 'criteria'])
+        $evaluations = PrequalificationEvaluation::with(['application.supplier', 'application.result', 'criteria'])
             ->where('EvaluatorID', Auth::id())
             ->paginate(10);
 
@@ -103,92 +102,5 @@ class PrequalificationEvaluationController extends Controller
 
         return redirect()->route('prequalification.applications.show', $applicationId)
             ->with('success', 'Evaluation submitted successfully!');
-    }
-
-    public function generateResults($applicationId): RedirectResponse
-    {
-        $evaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
-            ->with('criteria')
-            ->get();
-
-        $totalOverallScore = 0;
-        $totalMaxScore = 0;
-
-        foreach ($evaluations as $evaluation) {
-            $criteriaWeight = $evaluation->criteria->Weight ?? 0;
-            $criteriaScore = $evaluation->Score ?? 0;
-            $criteriaMaxScore = $evaluation->MaxScore ?? 0;
-
-            $weightedScore = 0;
-            if ($criteriaMaxScore > 0) {
-                $weightedScore = ($criteriaScore / $criteriaMaxScore) * $criteriaWeight;
-            }
-            $totalOverallScore += $weightedScore;
-            $totalMaxScore += $criteriaWeight;
-        }
-
-        // Set a passing threshold of 70%
-        $passingThreshold = 70;
-        $decision = ($totalOverallScore >= $passingThreshold) ? 'Passed' : 'Failed';
-
-        PrequalificationResult::updateOrCreate(
-            ['ApplicationID' => $applicationId],
-            [
-                'TotalScore' => $totalOverallScore,
-                'Decision' => $decision,
-                'ApprovalBy' => Auth::id(),
-            ]
-        );
-
-        return redirect()->route('prequalification-evaluation.results', $applicationId)
-            ->with('success', 'Prequalification results generated successfully!');
-    }
-
-    public function showResults($applicationId): View
-    {
-        $application = PrequalificationApplication::with(['supplier'])->findOrFail($applicationId);
-
-        $evaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
-            ->with(['criteria.masterCriteria', 'criteria.section.masterSection'])
-            ->get();
-
-        $result = PrequalificationResult::where('ApplicationID', $applicationId)->firstOrFail();
-
-        $sections = [];
-        foreach ($evaluations as $evaluation) {
-            $sectionId = $evaluation->SectionID;
-
-            if (!isset($sections[$sectionId])) {
-                $sections[$sectionId] = [
-                    'name' => optional($evaluation->criteria->section->masterSection)->SectionName,
-                    'criteria' => [],
-                    'sectionScore' => 0,
-                    'sectionMaxScore' => 0,
-                ];
-            }
-
-            $criteriaWeight = $evaluation->criteria->Weight ?? 0;
-            $criteriaScore = $evaluation->Score ?? 0;
-            $criteriaMaxScore = $evaluation->MaxScore ?? 0;
-
-            $weightedScore = 0;
-            if ($criteriaMaxScore > 0) {
-                $weightedScore = ($criteriaScore / $criteriaMaxScore) * $criteriaWeight;
-            }
-
-            $sections[$sectionId]['criteria'][] = [
-                'name' => optional($evaluation->criteria->masterCriteria)->MasterCriteriaName,
-                'score' => $criteriaScore,
-                'maxScore' => $criteriaMaxScore,
-                'weight' => $criteriaWeight,
-                'weightedScore' => $weightedScore,
-                'remarks' => $evaluation->Remarks,
-            ];
-
-            $sections[$sectionId]['sectionScore'] += $weightedScore;
-            $sections[$sectionId]['sectionMaxScore'] += $criteriaWeight;
-        }
-
-        return view('procurement.suppliers.prequalification.prequalification-evaluation.show_results', compact('application', 'sections', 'result'));
     }
 }
