@@ -329,7 +329,6 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
     //Bid Submission
     Route::resource('tendersubmission', TenderSubmissionController::class);
-    //Route::resource('tendersubmission', TenderSubmissionController::class);
     Route::get('bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index'); //
     Route::post('bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
     Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
