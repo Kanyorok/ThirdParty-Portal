@@ -25,8 +25,9 @@ class Section extends Model
         'IsActive',
         'CreatedBy',
         'ModifiedBy',
-        'sectionable_id',
-        'sectionable_type',
+        // Ignore these; Meant for a pivot table; bad casing
+     //   'sectionable_id',
+       // 'sectionable_type',
     ];
 
     protected $casts = [
@@ -54,12 +55,16 @@ class Section extends Model
         return $this->primaryKey;
     }
 
+    public function rfqSections()
+    {
+        return $this->hasMany(RFQSection::class, 'SectionID', 'id');
+    }
+
     public function criteria(): HasMany
     {
         return $this->hasMany(Criteria::class, 'SectionID', 'Id');
     }
 
-    // Make this assignable to many
     public function sectionable()
     {
         return $this->morphTo();
