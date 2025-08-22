@@ -15,4 +15,8 @@ class CreditManagementController extends Controller
     public function create(){
         return view('finance.accountsreceivable.creditmanagement.create');
     }
+
+    public function show($id){
+        return view('finance.accountsreceivable.creditmanagement.show');
+    }
 }

@@ -43,6 +43,8 @@ use App\Models\CRM\Contact;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
+use App\Models\Finance\FinanceInvoice;
+use App\Models\Finance\FinanceInvoiceLine;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\Finance\FinanceTransaction;
@@ -171,7 +173,7 @@ use App\Models\FleetManagement\DriverManagement;
 use App\Policies\FleetManagement\DriverManagementPolicy;
 use App\Policies\FleetManagement\FleetMakePolicy;
 use App\Policies\FleetManagement\FleetModelPolicy;
-use App\Policies\FleetManagement\VehicleRegistryPolicy; 
+use App\Policies\FleetManagement\VehicleRegistryPolicy;
 use App\Policies\FleetManagement\DriverPolicy;
 
 
@@ -394,7 +396,9 @@ class AppServiceProvider extends ServiceProvider
             FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
             FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
-            
+            FinanceInvoice::getPrimaryKey() => FinanceInvoice::class,
+            FinanceInvoiceLine::getPrimaryKey() => FinanceInvoiceLine::class,
+
             //////////////  Legal  ////////////////
             LegalDocument::getPrimaryKey() => LegalDocument::class,
             LegalClause::getPrimaryKey() => LegalClause::class,
