@@ -1,14 +1,37 @@
 <?php
 
+use App\Http\Controllers\Fleet\ContractedDriverController;
+use App\Http\Controllers\Fleet\FleetAlertRuleController;
+use App\Http\Controllers\Fleet\FleetContractedDriverAssignmentController;
+use App\Http\Controllers\Fleet\FleetContractedDriverLicenseTrackingController;
+use App\Http\Controllers\Fleet\FleetDriverAssignmentController;
+use App\Http\Controllers\Fleet\FleetDriverController;
+use App\Http\Controllers\Fleet\FleetDriverLicenseTrackingController;
+use App\Http\Controllers\Fleet\FleetFuelLogController;
+use App\Http\Controllers\Fleet\FleetGpsController;
+use App\Http\Controllers\Fleet\FleetInspectionScheduleController;
+use App\Http\Controllers\Fleet\FleetInsuranceTrackerController;
+use App\Http\Controllers\Fleet\FleetMaintenanceScheduleController;
+use App\Http\Controllers\Fleet\FleetRepairLogController;
+use App\Http\Controllers\Fleet\FleetRoutePlannerController;
+use App\Http\Controllers\Fleet\FleetRunningCostController;
+use App\Http\Controllers\Fleet\FleetServiceAlertController;
+use App\Http\Controllers\Fleet\FleetTelematicsDeviceController;
+use App\Http\Controllers\Fleet\FleetTripLogController;
+use App\Http\Controllers\Fleet\FleetVehicleAssignmentController;
+use App\Http\Controllers\Fleet\FleetVehicleRequestController;
+use App\Http\Controllers\Fleet\ReportsController;
+use App\Http\Controllers\Fleet\VehicleController;
+use App\Http\Controllers\Fleet\VehicleDocumentController;
 use App\Http\Controllers\FleetManagement\ComplianceAndDocumentationController;
 use App\Http\Controllers\FleetManagement\DriverManagementController;
 use App\Http\Controllers\FleetManagement\FleetMakeController;
 use App\Http\Controllers\FleetManagement\FleetModelController;
 use App\Http\Controllers\FleetManagement\FleetProcurementAndDisposalController;
 use App\Http\Controllers\FleetManagement\FuelManagementController;
+use App\Http\Controllers\FleetManagement\FuelTypeController;
 use App\Http\Controllers\FleetManagement\InventoryOfSparePartsController;
 use App\Http\Controllers\FleetManagement\LicensingController;
-use App\Http\Controllers\FleetManagement\ReportsController;
 use App\Http\Controllers\FleetManagement\ServiceTrackingController;
 use App\Http\Controllers\FleetManagement\TripManagementController;
 use App\Http\Controllers\FleetManagement\UtilizationController;
@@ -16,33 +39,7 @@ use App\Http\Controllers\FleetManagement\VehicleManagementController;
 use Illuminate\Support\Facades\Route;
 
 
-use App\Http\Controllers\Fleet\VehicleController;
-use App\Http\Controllers\Fleet\FleetVehicleAssignmentController;
-use App\Http\Controllers\Fleet\VehicleDocumentController;
-use App\Http\Controllers\Fleet\FleetDriverController;
-use App\Http\Controllers\Fleet\FleetDriverAssignmentController;
-use App\Http\Controllers\Fleet\FleetDriverLicenseTrackingController;
-use App\Http\Controllers\Fleet\ContractedDriverController;
-use App\Http\Controllers\Fleet\FleetContractedDriverAssignmentController;
-use App\Http\Controllers\Fleet\FleetContractedDriverLicenseTrackingController;
-use App\Http\Controllers\Fleet\FleetTripLogController;
-use App\Http\Controllers\Fleet\FleetRoutePlannerController;
-use App\Http\Controllers\Fleet\FleetFuelLogController;
-use App\Http\Controllers\Fleet\FleetVehicleRequestController;
-use App\Http\Controllers\Fleet\FleetMaintenanceScheduleController;
-use App\Http\Controllers\Fleet\FleetRepairLogController;
-use App\Http\Controllers\Fleet\FleetServiceAlertController;
-use App\Http\Controllers\Fleet\FleetAlertRuleController;
-use App\Http\Controllers\Fleet\FleetRunningCostController;
-use App\Http\Controllers\Fleet\FleetGpsController;
-use App\Http\Controllers\Fleet\FleetTelematicsDeviceController;
-use App\Http\Controllers\Fleet\FleetInsuranceTrackerController;
-use App\Http\Controllers\Fleet\FleetInspectionScheduleController;
-use App\Http\Controllers\FleetManagement\FuelTypeController;
-
-
-
-Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
+Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::resource('tripmanagement', TripManagementController::class);
     Route::resource('fuelmanagement', FuelManagementController::class);
 
@@ -102,7 +99,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::resource('fleetprocurementanddisposal', FleetProcurementAndDisposalController::class);
     Route::resource('inventoryofspareparts', InventoryOfSparePartsController::class);
     Route::resource('utilization', UtilizationController::class);
-    Route::resource('reports', ReportsController::class);
+    //   Route::resource('reports', ReportsController::class);
 
 
     // ==================== Fleet Vehicles ====================
@@ -276,4 +273,10 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::get('/compliance/inspection-schedule{Id}/edit', [FleetInspectionScheduleController::class, 'edit'])->name('fleet.inspection_schedule.edit');
     Route::put('compliance/inspection-schedule/{Id}', [FleetInspectionScheduleController::class, 'update'])->name('fleet.inspection_schedule.update');
     Route::delete('compliance/inspection-schedule/{Id}', [FleetInspectionScheduleController::class, 'destroy'])->name('fleet.inspection_schedule.destroy');
+
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('fleet-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'fleet-reports.index',
+        'show' => 'fleet-reports.show'
+    ]);
 });
