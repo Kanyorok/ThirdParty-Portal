@@ -16,7 +16,7 @@
                 <tr>
                     <th>Request Type</th>
                     <th>Entity Name</th>
-                    <th>Requested By</th>
+                    {{-- <th>Requested By</th> --}}
                     <th>Date</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -28,7 +28,7 @@
                         <tr>
                             <td>{{ $request->RequestType }}</td>
                             <td>{{ $request->EntityName }}</td>
-                            <td>{{ $request->RequestedBy }}</td>
+                            {{-- <td>{{ $request->RequestedBy }}</td> --}}
                             <td>{{ \Carbon\Carbon::parse($request->RequestedOn)->format('d-m-Y') }}</td>
                             <td>
                                 @if($request->Status == 'Pending')

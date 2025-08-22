@@ -45,7 +45,7 @@ class LegalSearchRequestController extends Controller
             // 'Country'=> $validated['Country'],
             // 'RequestDate'=> $validated['RequestDate'],
             'Remarks'=> $validated['Remarks'],
-            'Status'=> $validated['Status'] ?? 'pending',
+            'Status'=> $validated['Status'] ?? 'Pending',
             // 'IsActive'=> $validated['IsActive'] ?? false,
             'RequestDate' =>$requestdate,
             'RequestedBy' => Auth::id(),
@@ -86,7 +86,7 @@ class LegalSearchRequestController extends Controller
         $data['ModifiedOn'] = now();
 
 
-        LegalSearchRequest::where('ID', $id)->update($data);
+        LegalSearchRequest::where('Id', $id)->update($data);
 
         return redirect()->route('legal.search_requests.index')->with('success', 'Search request updated.');
     }
@@ -106,10 +106,19 @@ class LegalSearchRequestController extends Controller
         $searchRequests = LegalSearchRequest::findOrFail($id);
 
         $validated = $request->validate([
-            'Status' => 'required|string',
+            'Status' => 'required|string|in:Approved,Rejected',
             'Findings' => 'nullable|string',
             'ApprovalReason' => 'nullable|string',
         ]);
+
+        if ($validated['Status'] === 'Approved' && empty($validated['Findings'])) {
+            return back()->withErrors(['Findings' => 'Findings are required when approving.'])->withInput();
+        }
+
+        if ($validated['Status'] === 'Rejected' && empty($validated['ApprovalReason'])) {
+            return back()->withErrors(['ApprovalReason' => 'Rejection reason is required when rejecting.'])->withInput();
+        }
+
         $searchRequests->update([
             'Status' => $validated['Status'],
             'Findings' => $validated['Findings'],
@@ -117,6 +126,9 @@ class LegalSearchRequestController extends Controller
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
-        return redirect()->route('legal.search_requests.index')->with('success', 'Search request status updated.');
+
+        return redirect()->route('legal.search_requests.index')
+            ->with('success', 'Search request status updated.');
     }
+
 }
