@@ -21,7 +21,7 @@ use App\Http\Controllers\Legal\LoanSecurityController;
 use App\Http\Controllers\Legal\ReportsController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('legal')->group(function () {
+Route::prefix('legal')->prefix('legal')->group(function () {
     Route::name('legal.')->group(function () {
 
     // Legal Documents & nested dispatches/execution logs
