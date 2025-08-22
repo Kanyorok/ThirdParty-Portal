@@ -102,8 +102,6 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::resource('fleetprocurementanddisposal', FleetProcurementAndDisposalController::class);
     Route::resource('inventoryofspareparts', InventoryOfSparePartsController::class);
     Route::resource('utilization', UtilizationController::class);
-    Route::resource('reports', ReportsController::class);
-
 
     // ==================== Fleet Vehicles ====================
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('fleet.vehicles.index');
@@ -218,7 +216,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::post('/maintenance-schedule', [FleetMaintenanceScheduleController::class, 'store'])->name('fleet.maintenance_schedule.store');
     Route::get('/maintenance-schedule/{Id}/edit', [FleetMaintenanceScheduleController::class, 'edit'])->name('fleet.maintenance_schedule.edit');
     Route::put('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'update'])->name('fleet.maintenance_schedule.update');
-        Route::get('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'show'])->name('fleet.maintenance_schedule.show');
+    Route::get('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'show'])->name('fleet.maintenance_schedule.show');
     Route::get('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'show'])->name('fleet.maintenance_schedule.show');
     Route::put('/maintenance-schedule/{Id}/cancel', [FleetMaintenanceScheduleController::class, 'cancel'])->name('fleet.maintenance_schedule.cancel');
 
@@ -231,7 +229,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::get('/repair-logs/{Id}/show', [FleetRepairLogController::class, 'show'])->name('fleet.repair_logs.show');
     Route::delete('/repair-logs/{Id}', [FleetRepairLogController::class, 'destroy'])->name('fleet.repair_logs.destroy');
 
-        Route::delete('/repair-logs/{Id}', [FleetRepairLogController::class, 'destroy'])->name('fleet.repair_logs.destroy');
+    Route::delete('/repair-logs/{Id}', [FleetRepairLogController::class, 'destroy'])->name('fleet.repair_logs.destroy');
 
 
     // ==================== Service Alerts ====================
@@ -277,4 +275,9 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::get('/compliance/inspection-schedule{Id}/edit', [FleetInspectionScheduleController::class, 'edit'])->name('fleet.inspection_schedule.edit');
     Route::put('compliance/inspection-schedule/{Id}', [FleetInspectionScheduleController::class, 'update'])->name('fleet.inspection_schedule.update');
     Route::delete('compliance/inspection-schedule/{Id}', [FleetInspectionScheduleController::class, 'destroy'])->name('fleet.inspection_schedule.destroy');
+
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'fleet-reports.index',
+        'show' => 'fleet-reports.show'
+    ]);
 });
