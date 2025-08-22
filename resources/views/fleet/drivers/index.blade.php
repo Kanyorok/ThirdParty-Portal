@@ -49,11 +49,6 @@
                         </td>
                         <td>
                             <a href="{{ route('fleet.drivers.show', $driver->Id) }}" class="btn btn-sm btn-info">View</a>
-                            <a href="{{ route('fleet.drivers.edit', $driver->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <form action="{{ route('fleet.drivers.destroy', $driver->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this driver?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </form>
                         </td>
                     </tr>
                 @empty
