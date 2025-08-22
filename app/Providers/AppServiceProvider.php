@@ -71,6 +71,7 @@ use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
 use App\Models\DMS\Repository;
 use App\Models\Finance\FinanceCDNotes;
+use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceGLMapping;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
@@ -398,6 +399,7 @@ class AppServiceProvider extends ServiceProvider
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
             FinanceInvoice::getPrimaryKey() => FinanceInvoice::class,
             FinanceInvoiceLine::getPrimaryKey() => FinanceInvoiceLine::class,
+            FinanceCreditManagement::getPrimaryKey() => FinanceCreditManagement::class,
 
             //////////////  Legal  ////////////////
             LegalDocument::getPrimaryKey() => LegalDocument::class,
