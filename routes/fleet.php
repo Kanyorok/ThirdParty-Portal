@@ -8,7 +8,7 @@ use App\Http\Controllers\FleetManagement\FleetProcurementAndDisposalController;
 use App\Http\Controllers\FleetManagement\FuelManagementController;
 use App\Http\Controllers\FleetManagement\InventoryOfSparePartsController;
 use App\Http\Controllers\FleetManagement\LicensingController;
-use App\Http\Controllers\FleetManagement\ReportsController;
+use App\Http\Controllers\Fleet\ReportsController;
 use App\Http\Controllers\FleetManagement\ServiceTrackingController;
 use App\Http\Controllers\FleetManagement\TripManagementController;
 use App\Http\Controllers\FleetManagement\UtilizationController;
@@ -275,6 +275,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::put('compliance/inspection-schedule/{Id}', [FleetInspectionScheduleController::class, 'update'])->name('fleet.inspection_schedule.update');
     Route::delete('compliance/inspection-schedule/{Id}', [FleetInspectionScheduleController::class, 'destroy'])->name('fleet.inspection_schedule.destroy');
 
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('fleet-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'fleet-reports.index',
         'show' => 'fleet-reports.show'
