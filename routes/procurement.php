@@ -418,9 +418,9 @@ Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupControl
 Route::resource('preqevaluation', PrequalificationEvaluationController::class);
 Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
 Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
-Route::resource('supplierslist', SupplierListingController::class);
+// Route::resource('supplierslist', SupplierListingController::class);
 
-Route::resource('preqapplications', PrequalificationApplicationsController::class);
+// Route::resource('preqapplications', PrequalificationApplicationsController::class);
 Route::resource('preqevaluation', PrequalificationEvaluationController::class);
 Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
 Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
