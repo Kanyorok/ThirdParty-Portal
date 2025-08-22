@@ -23,20 +23,21 @@ class PropertyInvoiceService
         string $BillingMonth,
         string $InvoiceDate,
         float  $RentAmount,
-        float  $ServicesCharge,
-        float  $OtherCharges,
-        float  $ParkingFee,
-        string $InvoiceNotes,
+        float  $ServicesCharge = null,
+        float  $OtherCharges = null,
+        float  $ParkingFee = null,
+        string $InvoiceNotes = null,
         PropertyInvoiceEnum $Status,
         User   $user
     ): self
     {
         // Get the latest invoice number
-        $lastInvoice = PropertyInvoice::selectRaw("InvoiceNumber, CAST(SUBSTRING(InvoiceNumber, 5, LEN(InvoiceNumber)) AS INT) as NumPart")
-            ->orderByDesc('NumPart')
-            ->first();
+        $lastInvoice = PropertyInvoice::withTrashed()
+            ->selectRaw("CAST(SUBSTRING(InvoiceNumber, 5, 5) AS INT) as num")
+            ->orderByDesc('num')
+            ->value('num');
 
-        $nextNumber = $lastInvoice ? $lastInvoice->NumPart + 1 : 1;
+        $nextNumber = $lastInvoice ? $lastInvoice + 1 : 1;
         $InvoiceNumber = 'INV-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
         try {
@@ -130,7 +131,6 @@ class PropertyInvoiceService
         }
 
         activity()->causedBy($user->Id)->performedOn($invoice)->event('create')->log("Added Property Invoice {$invoice->Id}.");
-
         return new self($invoice);
     }
 

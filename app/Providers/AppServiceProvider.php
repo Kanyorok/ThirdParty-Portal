@@ -69,13 +69,25 @@ use App\Models\DMS\DocumentRelation;
 use App\Models\DMS\DocumentTags;
 use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
+use App\Models\DMS\LegalHold;
 use App\Models\DMS\Repository;
 use App\Models\Finance\FinanceCDNotes;
 use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceGLMapping;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
-use App\Models\Procurement\DepartmentNeed;
+use App\Models\Insurance\BancassuranceClaim;
+use App\Models\Insurance\BancassurancePolicy;
+use App\Models\Insurance\BancAssuranceReferral;
+use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\Insurance\BancassuranceCustomerContact;
+use App\Models\Insurance\BancassuranceBeneficiaries;
+use App\Models\Insurance\BancassurancePremiumPayments;
+use App\Models\Insurance\BancassuranceCommissionRule;
+use App\Models\Insurance\BancassuranceUnderwriting;
+use App\Models\Insurance\InsuranceProvider;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\InventoryHoldReview;
 use App\Models\Inventory\InventoryType;
@@ -91,10 +103,9 @@ use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\UOMConversion;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
-use App\Models\Procurement\DepartmentNeeds;
+use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItem;
-use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
@@ -124,7 +135,20 @@ use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
 use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
+use App\Policies\DMS\LegalHoldPolicy;
 use App\Policies\DMS\RepositoryPolicy;
+use App\Policies\Insurance\BancassuranceClaimPolicy;
+use App\Policies\Insurance\BancassurancePoliciesPolicy;
+use App\Policies\Insurance\BancassurancePremiumPaymentsPolicy;
+use App\Policies\Insurance\BancAssuranceReferralPolicy;
+use App\Policies\Insurance\BancassuranceCustomersPolicy;
+use App\Policies\Insurance\BancassuranceCustomersContactsPolicy;
+use App\Policies\Insurance\BancassuranceCustomersBeneficiariesPolicy;
+use App\Policies\Insurance\BancassuranceUnderwritingPolicy;
+use App\Policies\Insurance\InsuranceProviderPolicy;
+use App\Policies\Insurance\InsuranceProductPolicy;
+use App\Policies\Insurance\InsuranceProductRiderPolicy;
+use App\Policies\Insurance\CommissionRulePolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
@@ -158,7 +182,7 @@ use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
 use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
-Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
+use App\Policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
@@ -199,6 +223,9 @@ use App\Models\Legal\LegalIntellectualProperty;
 use App\Models\Legal\LegalObligation;
 use App\Models\Legal\LegalSearchRequest;
 use App\Models\Legal\LoanSecurity;
+use App\Models\Procurement\Section;
+use Illuminate\Support\Facades\View;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -219,6 +246,8 @@ class AppServiceProvider extends ServiceProvider
 
             //Core
             SpecialPermission::getPrimaryKey() => SpecialPermission::class,
+            ModelRole::getPrimaryKey() => ModelRole::class,
+            'RoleId' => Role::class,
             APICredential::getPrimaryKey() => APICredential::class,
             Comment::getPrimaryKey() => Comment::class,
             Report::getPrimaryKey() => Report::class,
@@ -373,21 +402,49 @@ class AppServiceProvider extends ServiceProvider
             PropertyBlock::getPrimaryKey() => PropertyBlock::class,
             PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
-              //Fleet Management
+            //Insurance
+            BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
+            BancassurancePolicy::getPrimaryKey() => BancassurancePolicy::class,
+            BancassuranceCustomer::getPrimaryKey() => BancassuranceCustomer::class,
+            BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
+            BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
+            BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
+            InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
+            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,
+
+            //Third Parties
+            //Fleet Management
             FleetMake::getPrimaryKey() => FleetMake::class,
             FleetModel::getPrimaryKey() => FleetModel::class,
             VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
             DriverManagement::getPrimaryKey() => DriverManagement::class,
 
-            PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+
+            //Insurance
+            BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
+            BancassurancePolicy::getPrimaryKey() => BancassurancePolicy::class,
+            BancassuranceCustomer::getPrimaryKey() => BancassuranceCustomer::class,
+            BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
+            BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
+            BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
+            BancassuranceUnderwriting::getPrimaryKey() => BancassuranceUnderwriting::class,
+            BancassuranceClaim::getPrimaryKey() => BancassuranceClaim::class,
+            InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
+            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,
+            InsuranceProductRider::getPrimaryKey() => InsuranceProductRider::class,
+            BancassuranceCommissionRule::getPrimaryKey() => BancassuranceCommissionRule::class,
 
             //////////////  Finance  ////////////////
-            FinanceGLAccounts::getPrimaryKey()=>FinanceGLAccounts::class,
-            FinanceGLSubAccountTypes::getPrimaryKey()=>FinanceGLSubAccountTypes::class,
-            FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
+            FinanceGLAccounts::getPrimaryKey() => FinanceGLAccounts::class,
+            FinanceGLSubAccountTypes::getPrimaryKey() => FinanceGLSubAccountTypes::class,
+            FinanceGLTypeGroup::getPrimaryKey() => FinanceGLTypeGroup::class,
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+
+            //Fleet Management
+            FleetMake::getPrimaryKey() => FleetMake::class,
+            FleetModel::getPrimaryKey() => FleetModel::class,
             FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
             FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
             RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
@@ -397,9 +454,11 @@ class AppServiceProvider extends ServiceProvider
             FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
             FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
+
             FinanceInvoice::getPrimaryKey() => FinanceInvoice::class,
             FinanceInvoiceLine::getPrimaryKey() => FinanceInvoiceLine::class,
             FinanceCreditManagement::getPrimaryKey() => FinanceCreditManagement::class,
+
 
             //////////////  Legal  ////////////////
             LegalDocument::getPrimaryKey() => LegalDocument::class,
@@ -420,6 +479,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Repository::class, RepositoryPolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(DMSTags::class, DMSTagPolicy::class);
+        Gate::policy(LegalHold::class, LegalHoldPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
@@ -458,9 +518,21 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
         Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
-        Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
+        // Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
+        Gate::policy(BancAssuranceReferral::class, BancAssuranceReferralPolicy::class);
+        Gate::policy(BancassurancePolicy::class, BancassurancePoliciesPolicy::class);
+        Gate::policy(BancassuranceCustomer::class, BancassuranceCustomersPolicy::class);
+        Gate::policy(BancassuranceCustomerContact::class, BancassuranceCustomersContactsPolicy::class);
+        Gate::policy(BancassuranceBeneficiaries::class, BancassuranceCustomersBeneficiariesPolicy::class);
+        Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
+        Gate::policy(BancassuranceUnderwriting::class, BancassuranceUnderwritingPolicy::class);
+        Gate::policy(BancassuranceClaim::class, BancassuranceClaimPolicy::class);
+        Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
+        Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
+        Gate::policy(InsuranceProductRider::class, InsuranceProductRiderPolicy::class);
+        Gate::policy(BancassuranceCommissionRule::class, CommissionRulePolicy::class);
         Gate::policy(FleetMake::class, FleetMakePolicy::class);
         Gate::policy(FleetModel::class, FleetModelPolicy::class);
         Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
@@ -504,6 +576,12 @@ class AppServiceProvider extends ServiceProvider
          Event::listen(CampaignSubmittedEvent::class);
          Event::listen(CampaignRunEvent::class);*/
 
-
+        View::composer(
+            ['procurement.suppliers.prequalification.prequalification-rounds.create', 'procurement.suppliers.prequalification.prequalification-rounds.edit'],
+            function ($view) {
+                $masterSections = Section::with('criteria')->get();
+                $view->with('masterSections', $masterSections);
+            }
+        );
     }
 }

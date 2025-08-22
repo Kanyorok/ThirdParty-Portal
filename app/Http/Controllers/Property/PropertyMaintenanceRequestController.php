@@ -60,7 +60,7 @@ class PropertyMaintenanceRequestController extends Controller
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestCreate, PropertyMaintenanceRequest::class);
         //dd($request->all());
         $validated = $request->validated();
-     
+
         $Property = PropertyRegistry::findOrFail($validated['Property']);
         $Block    = PropertyBlock::findOrFail($validated['Block']);
         $Floor    = PropertyFloor::findOrFail($validated['Floor']);
@@ -68,7 +68,7 @@ class PropertyMaintenanceRequestController extends Controller
         $IssueType = CodeDetail::findOrFail($validated['IssueType']);
         $Priority  = CodeDetail::findOrFail($validated['Priority']);
         $document = $request->file('Document');
-        
+
         $maintenancerequest = PropertyMaintenanceService::create(
                     $Property,
                     $Block,
@@ -78,7 +78,7 @@ class PropertyMaintenanceRequestController extends Controller
                     $IssueType,
                     $Priority,
                     $validated['IssueDescription']?? '--',
-                    auth()->user(),
+            Auth::user(),
                     $document
         );
 
@@ -122,7 +122,7 @@ class PropertyMaintenanceRequestController extends Controller
                 $IssueType,
                 $Priority,
                 $validated['IssueDescription'],
-                auth()->user(),
+                Auth::user(),
                 $document
             );
 

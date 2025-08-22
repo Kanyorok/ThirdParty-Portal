@@ -2,10 +2,13 @@
 @section('title', 'Tender Initiation Form')
 @section('content')
 <style>
-    .is-invalid, .form-control.is-invalid, .form-select.is-invalid {
+    .is-invalid,
+    .form-control.is-invalid,
+    .form-select.is-invalid {
         border-color: #dc3545 !important;
-        box-shadow: 0 0 0 0.2rem rgba(220,53,69,.25) !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, .25) !important;
     }
+
     .invalid-feedback.d-block {
         color: #dc3545;
         font-weight: bold;
@@ -52,7 +55,7 @@
                 <select class="form-select @error('tender_category_id') is-invalid @enderror" id="tenderCategory" name="tender_category_id" required>
                     <option selected disabled>-- Select Category --</option>
                     @foreach ($tenderCategories as $item)
-                        <option value="{{$item->Id}}" {{ old('tender_category_id') == $item->Id ? 'selected' : '' }}>{{$item->TenderCategory}}</option>
+                    <option value="{{$item->Id}}" {{ old('tender_category_id') == $item->Id ? 'selected' : '' }}>{{$item->TenderCategory}}</option>
                     @endforeach
                 </select>
                 @error('tender_category_id')
@@ -64,7 +67,7 @@
                 <select class="form-select @error('item_category_id') is-invalid @enderror" id="itemCategory" name="item_category_id" required>
                     <option selected disabled>-- Item Categories --</option>
                     @foreach ($allItemsCategories as $item)
-                        <option value="{{$item->Id}}" {{ old('item_category_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}}</option>
+                    <option value="{{$item->Id}}" {{ old('item_category_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}}</option>
                     @endforeach
                 </select>
                 @error('item_category_id')
@@ -76,7 +79,7 @@
                 <select class="form-select @error('currency_id') is-invalid @enderror" id="currencyType" name="currency_id" required>
                     <option selected disabled>-- Select Your Currency --</option>
                     @foreach ($allCurrency as $item)
-                        <option value="{{$item->Id}}" {{ old('currency_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}} ({{$item->Code}})</option>
+                    <option value="{{$item->Id}}" {{ old('currency_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}} ({{$item->Code}})</option>
                     @endforeach
                 </select>
                 @error('currency_id')
@@ -89,12 +92,12 @@
         <ul class="nav nav-tabs mt-4" id="itemEntryTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="fromPlan-tab" data-bs-toggle="tab" data-bs-target="#fromPlan"
-                        type="button" role="tab">From Procurement Plan
+                    type="button" role="tab">From Procurement Plan
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manualEntry"
-                        type="button" role="tab">Manual Entry
+                    type="button" role="tab">Manual Entry
                 </button>
             </li>
         </ul>
@@ -106,10 +109,10 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">Select Procurement Plan:</label>
                     <select class="form-select" id="selectedProcurementPlan" name="procurement_plan_id"
-                            onchange="loadPlanItemsForPlan()">
+                        onchange="loadPlanItemsForPlan()">
                         <option selected disabled>-- Choose Procurement Plan --</option>
                         @foreach ($procurementPlan as $item)
-                            <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
+                        <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
                         @endforeach
                     </select>
                 </div>
@@ -133,14 +136,14 @@
                     <label class="form-label fw-bold">Selected Items</label>
                     <table class="table table-bordered" id="planItemsGrid">
                         <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Planned Qty</th>
-                            <th>Qty to Tender</th>
-                            <th>Specs</th>
-                            <th>PR Ref (optional)</th>
-                            <th></th>
-                        </tr>
+                            <tr>
+                                <th>Item</th>
+                                <th>Planned Qty</th>
+                                <th>Qty to Tender</th>
+                                <th>Specs</th>
+                                <th>PR Ref (optional)</th>
+                                <th></th>
+                            </tr>
                         </thead>
                         <tbody name="plan_items">
                         </tbody>
@@ -152,17 +155,17 @@
             <div class="tab-pane fade" id="manualEntry" role="tabpanel">
                 <table class="table table-bordered">
                     <thead>
-                    <tr>
-                        <th>Item Description</th>
-                        <th>Qty</th>
-                        <th>Specs</th>
-                        <th>PR Ref (optional)</th>
-                        <th></th>
-                    </tr>
+                        <tr>
+                            <th>Item Description</th>
+                            <th>Qty</th>
+                            <th>Specs</th>
+                            <th>PR Ref (optional)</th>
+                            <th></th>
+                        </tr>
                     </thead>
-            <tbody id="manualItemsBody">
-            <!-- No default row; rows will be added dynamically -->
-            </tbody>
+                    <tbody id="manualItemsBody">
+                        <!-- No default row; rows will be added dynamically -->
+                    </tbody>
                 </table>
                 <button type="button" class="btn btn-sm btn-primary" onclick="addManualItemRow()">➕ Add Item</button>
             </div>
@@ -221,51 +224,43 @@
         <!-- Buttons -->
         <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary">Save Tender</button>
-            {{-- <button type="button" class="btn btn-outline-secondary">Save Draft</button> --}}
-            {{-- <button type="reset" class="btn btn-outline-dark">Cancel</button>
-            <button type="button" class="btn btn-outline-info">Edit</button> --}}
         </div>
     </form>
 
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Toggle supplier section based on tender type
-    const open = document.getElementById('openTender');
-    const restricted = document.getElementById('restrictedTender');
-    const section = document.getElementById('restrictedSuppliersSection');
+    document.addEventListener('DOMContentLoaded', function() {
+        const open = document.getElementById('openTender');
+        const restricted = document.getElementById('restrictedTender');
+        const section = document.getElementById('restrictedSuppliersSection');
 
-    open.addEventListener('change', () => section.style.display = 'none');
-    restricted.addEventListener('change', () => section.style.display = 'block');
+        open.addEventListener('change', () => section.style.display = 'none');
+        restricted.addEventListener('change', () => section.style.display = 'block');
 
-    // Initialize manual item dropdowns
-    updateManualItemSelects();
-});
-
-// Store all items with their category for filtering
-const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
-
-// Track selected item category
-let selectedItemCategory = document.getElementById('itemCategory').value;
-
-// Helper to create filtered options HTML
-function getFilteredItemOptions(categoryId) {
-    let html = '<option selected disabled>-- Select Item --</option>';
-    allItemsWithCategoryIds.forEach(item => {
-        if (String(item.Category) === String(categoryId)) { // Use String comparison to avoid type issues
-            html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
-        }
+        updateManualItemSelects();
     });
-    return html;
-}
 
-let manualItemIndex = 1;
+    const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
 
-function addManualItemRow() {
-    const tableBody = document.getElementById('manualItemsBody');
-    const row = document.createElement('tr');
-    row.innerHTML = `
+    let selectedItemCategory = document.getElementById('itemCategory').value;
+
+    function getFilteredItemOptions(categoryId) {
+        let html = '<option selected disabled>-- Select Item --</option>';
+        allItemsWithCategoryIds.forEach(item => {
+            if (String(item.Category) === String(categoryId)) {
+                html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+            }
+        });
+        return html;
+    }
+
+    let manualItemIndex = 1;
+
+    function addManualItemRow() {
+        const tableBody = document.getElementById('manualItemsBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
         <td>
             <select class="form-select manual-item-select" name="manual_items[${manualItemIndex}][item_id]" required>
                 ${getFilteredItemOptions(selectedItemCategory)}
@@ -284,77 +279,70 @@ function addManualItemRow() {
             <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">🗑</button>
         </td>
     `;
-    tableBody.appendChild(row);
-    manualItemIndex++;
-}
+        tableBody.appendChild(row);
+        manualItemIndex++;
+    }
 
-// Update all manual item selects when category changes
-function updateManualItemSelects() {
-    selectedItemCategory = document.getElementById('itemCategory').value;
-    const selects = document.querySelectorAll('.manual-item-select');
-    selects.forEach(select => {
-        const prevValue = select.value;
-        select.innerHTML = getFilteredItemOptions(selectedItemCategory);
-        // Restore previous value if still valid
-        if ([...select.options].some(opt => opt.value === prevValue)) {
-            select.value = prevValue;
-        }
-    });
-}
-
-document.getElementById('itemCategory').addEventListener('change', updateManualItemSelects);
-
-// Debug: Output all categories and items for troubleshooting
-console.log('AllItemsWithCategoryIds:', allItemsWithCategoryIds);
-console.log('ItemCategory dropdown options:', Array.from(document.getElementById('itemCategory').options).map(opt => ({ value: opt.value, text: opt.text })));
-
-// ----- Procurement Plan Section -----
-const procurementPlans = @json($procurementPlansOutput);
-const planItemData = @json($planItemData);
-const addedPlanItems = new Set();
-
-function loadPlanItemsForPlan() {
-    const planId = document.getElementById('selectedProcurementPlan').value;
-    const select = document.getElementById('planItemSelect');
-    select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
-
-    if (procurementPlans[planId]) {
-        procurementPlans[planId].forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.itemId;
-            opt.textContent = `${item.name} (${item.plannedQty})`;
-            select.appendChild(opt);
+    function updateManualItemSelects() {
+        selectedItemCategory = document.getElementById('itemCategory').value;
+        const selects = document.querySelectorAll('.manual-item-select');
+        selects.forEach(select => {
+            const prevValue = select.value;
+            select.innerHTML = getFilteredItemOptions(selectedItemCategory);
+            if ([...select.options].some(opt => opt.value === prevValue)) {
+                select.value = prevValue;
+            }
         });
     }
-}
 
-function addPlanItemToGrid() {
-    const planId = document.getElementById('selectedProcurementPlan').value;
-    const select = document.getElementById('planItemSelect');
-    const itemId = select.value;
-    const tbody = document.querySelector('#planItemsGrid tbody');
+    document.getElementById('itemCategory').addEventListener('change', updateManualItemSelects);
 
-    if (!planId || !itemId) {
-        alert('Please select both a plan and an item.');
-        return;
+    const procurementPlans = @json($procurementPlansOutput);
+    const planItemData = @json($planItemData);
+    const addedPlanItems = new Set();
+
+    function loadPlanItemsForPlan() {
+        const planId = document.getElementById('selectedProcurementPlan').value;
+        const select = document.getElementById('planItemSelect');
+        select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
+
+        if (procurementPlans[planId]) {
+            procurementPlans[planId].forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.itemId;
+                opt.textContent = `${item.name} (${item.plannedQty})`;
+                select.appendChild(opt);
+            });
+        }
     }
 
-    const uniqueKey = `${planId}-${itemId}`;
+    function addPlanItemToGrid() {
+        const planId = document.getElementById('selectedProcurementPlan').value;
+        const select = document.getElementById('planItemSelect');
+        const itemId = select.value;
+        const tbody = document.querySelector('#planItemsGrid tbody');
 
-    if (addedPlanItems.has(uniqueKey)) {
-        alert('Item already added for this plan.');
-        return;
-    }
+        if (!planId || !itemId) {
+            alert('Please select both a plan and an item.');
+            return;
+        }
 
-    const itemList = planItemData[planId] || [];
-    const item = itemList.find(obj => String(obj.itemId) === String(itemId));
+        const uniqueKey = `${planId}-${itemId}`;
 
-    if (!item) {
-        alert('Item not found in plan data.');
-        return;
-    }
+        if (addedPlanItems.has(uniqueKey)) {
+            alert('Item already added for this plan.');
+            return;
+        }
 
-    const row = `
+        const itemList = planItemData[planId] || [];
+        const item = itemList.find(obj => String(obj.itemId) === String(itemId));
+
+        if (!item) {
+            alert('Item not found in plan data.');
+            return;
+        }
+
+        const row = `
         <tr data-id="${uniqueKey}">
             <td>${item.name}</td>
             <td>${item.plannedQty}</td>
@@ -374,73 +362,73 @@ function addPlanItemToGrid() {
         </tr>
     `;
 
-    tbody.insertAdjacentHTML('beforeend', row);
-    addedPlanItems.add(uniqueKey);
-    select.selectedIndex = 0;
-}
+        tbody.insertAdjacentHTML('beforeend', row);
+        addedPlanItems.add(uniqueKey);
+        select.selectedIndex = 0;
+    }
 
-function removePlanItemFromGrid(uniqueKey) {
-    const row = document.querySelector(`#planItemsGrid tr[data-id="${uniqueKey}"]`);
-    if (row) row.remove();
-    addedPlanItems.delete(uniqueKey);
-}
+    function removePlanItemFromGrid(uniqueKey) {
+        const row = document.querySelector(`#planItemsGrid tr[data-id="${uniqueKey}"]`);
+        if (row) row.remove();
+        addedPlanItems.delete(uniqueKey);
+    }
 </script>
 
 <script>
-const suppliers = @json($suppliers);
-const openTender = document.getElementById('openTender');
-const restrictedTender = document.getElementById('restrictedTender');
-const suppliersSection = document.getElementById('restrictedSuppliersSection');
-const suppliersList = document.getElementById('suppliersList');
-const itemCategory = document.getElementById('itemCategory');
+    const suppliers = @json($suppliers);
+    const openTender = document.getElementById('openTender');
+    const restrictedTender = document.getElementById('restrictedTender');
+    const suppliersSection = document.getElementById('restrictedSuppliersSection');
+    const suppliersList = document.getElementById('suppliersList');
+    const itemCategory = document.getElementById('itemCategory');
 
-function populateSuppliers(categoryId = null) {
-    suppliersList.innerHTML = '';
-    const filteredSuppliers = categoryId
-        ? suppliers.filter(supplier => String(supplier.CategoryId) === String(categoryId))
-        : suppliers;
+    function populateSuppliers(categoryId = null) {
+        suppliersList.innerHTML = '';
+        const filteredSuppliers = categoryId ?
+            suppliers.filter(supplier => String(supplier.CategoryId) === String(categoryId)) :
+            suppliers;
 
-    if (filteredSuppliers.length === 0) {
-        const option = document.createElement('option');
-        option.disabled = true;
-        option.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
-        suppliersList.appendChild(option);
-        return;
+        if (filteredSuppliers.length === 0) {
+            const option = document.createElement('option');
+            option.disabled = true;
+            option.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
+            suppliersList.appendChild(option);
+            return;
+        }
+
+        filteredSuppliers.forEach(supplier => {
+            const option = document.createElement('option');
+            option.value = supplier.Id;
+            option.textContent = supplier.ThirdPartyName;
+            suppliersList.appendChild(option);
+        });
     }
 
-    filteredSuppliers.forEach(supplier => {
-        const option = document.createElement('option');
-        option.value = supplier.Id;
-        option.textContent = supplier.SupplierName;
-        suppliersList.appendChild(option);
-    });
-}
-
-openTender.addEventListener('change', () => {
-    suppliersSection.style.display = 'none';
-    suppliersList.innerHTML = '';
-    itemCategory.value = '';
-});
-
-restrictedTender.addEventListener('change', () => {
-    suppliersSection.style.display = 'block';
-    populateSuppliers(itemCategory.value || null);
-});
-
-itemCategory.addEventListener('change', () => {
-    if (restrictedTender.checked) {
-        suppliersSection.style.display = 'block';
-        populateSuppliers(itemCategory.value);
-    } else {
+    openTender.addEventListener('change', () => {
         suppliersSection.style.display = 'none';
         suppliersList.innerHTML = '';
-    }
-});
+        itemCategory.value = '';
+    });
+
+    restrictedTender.addEventListener('change', () => {
+        suppliersSection.style.display = 'block';
+        populateSuppliers(itemCategory.value || null);
+    });
+
+    itemCategory.addEventListener('change', () => {
+        if (restrictedTender.checked) {
+            suppliersSection.style.display = 'block';
+            populateSuppliers(itemCategory.value);
+        } else {
+            suppliersSection.style.display = 'none';
+            suppliersList.innerHTML = '';
+        }
+    });
 </script>
 
 <script>
     const originalItemOptions = [];
-    const categoryData = [/* your category objects with id and parentId */];
+    const categoryData = @json($categoryData ?? []);
 
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.manual-item-select option').forEach(opt => {
@@ -453,10 +441,9 @@ itemCategory.addEventListener('change', () => {
     document.getElementById('itemCategory').addEventListener('change', (e) => {
         const selectedCategoryId = e.target.value;
 
-        // Get list of subcategory IDs
         const subCategoryIds = categoryData
-            .filter(cat => cat.parentId === selectedCategoryId)
-            .map(cat => cat.id);
+            .filter(cat => String(cat.parentId) === String(selectedCategoryId))
+            .map(cat => String(cat.id));
 
         document.querySelectorAll('.manual-item-select').forEach(select => {
             const defaultOption = select.querySelector('option:first-child');
@@ -465,7 +452,7 @@ itemCategory.addEventListener('change', () => {
 
             originalItemOptions.forEach(opt => {
                 const itemCat = opt.dataset.itemCategory;
-                if (itemCat === selectedCategoryId || subCategoryIds.includes(itemCat)) {
+                if (String(itemCat) === String(selectedCategoryId) || subCategoryIds.includes(String(itemCat))) {
                     select.appendChild(opt.cloneNode(true));
                 }
             });
