@@ -379,9 +379,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 505100, 'Name' => 'Property Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertysettings.index'],
 
             // First level - Reports
-            ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'propertyreports.index'],
-            /* ['ModuleID' => 50510, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' =>],
-             ['ModuleID' => 50520, 'Name' => 'Analytics', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' => 'propertyanalytics.index'],*/
+            ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'property-reports.index'],
+
         ]);
         if ($fresh) {
             $data = $values;
