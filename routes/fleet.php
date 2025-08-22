@@ -116,7 +116,6 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
         ->name('models.byMake');
 
 
-
     // ==================== Fleet Vehicle Assignments ====================
     Route::get('/assignments', [FleetVehicleAssignmentController::class, 'index'])->name('fleet.assignments.index');
     Route::get('/assignments/create', [FleetVehicleAssignmentController::class, 'create'])->name('fleet.assignments.create');

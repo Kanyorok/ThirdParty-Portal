@@ -24,67 +24,66 @@ class FleetVehicleRequestService
             return 'VR-0001';
         }
 
-        $lastNumber = (int) substr($latest->Id, -4);
+        $lastNumber = (int)substr($latest->Id, -4);
         $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
 
-        return 'VR'  . '-' . $newNumber;
+        return 'VR' . '-' . $newNumber;
     }
 
 
+    public function create(array $validated)
+    {
+        return DB::transaction(function () use ($validated) {
+            $request = FleetVehicleRequest::create([
+                'RequestedBy' => $validated['RequestedBy'],
+                'Department' => $validated['Department'],
+                'RequestDate' => $validated['RequestDate'],
+                'TripNo' => $validated['TripNo'],
+                'TripDate' => $validated['TripDate'],
+                'Purpose' => $validated['Purpose'],
+                'FromLocation' => $validated['FromLocation'],
+                'ToLocation' => $validated['ToLocation'],
+                'PassengerCount' => $validated['PassengerCount'] ?? null,
+                'PreferredVehicleType' => $validated['PreferredVehicleType'] ?? null,
+                'Status' => $this->getStatusValue('Pending'),
+                'RequestID' => $this->generateRequestId(),
+                'CreatedOn' => now(),
 
-public function create(array $validated)
-{
-    return DB::transaction(function () use ($validated) {
-        $request = FleetVehicleRequest::create([
-            'RequestedBy' => $validated['RequestedBy'],
-            'Department' => $validated['Department'],
-            'RequestDate' => $validated['RequestDate'],
-            'TripNo' => $validated['TripNo'],
-            'TripDate' => $validated['TripDate'],
-            'Purpose' => $validated['Purpose'],
-            'FromLocation' => $validated['FromLocation'],
-            'ToLocation' => $validated['ToLocation'],
-            'PassengerCount' => $validated['PassengerCount'] ?? null,
-            'PreferredVehicleType' => $validated['PreferredVehicleType'] ?? null,
-            'Status' => $this->getStatusValue('Pending'),
-            'RequestID' => $this->generateRequestId(),
-            'CreatedOn' => now(),
+            ]);
 
-        ]);
-
-        Workflow::create([
-            'Source'    => 'FleetVehicleRequest',
-            'SourceID'  => $request->Id,
-            'Stage'     => $this->getStageLabel('Pending'),
-            'Status'    => $this->getStatusValue('Pending'),
-            'Notes'     => 'Vehicle request submitted, awaiting approval',
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy'=> Auth::id(),
-            'ModifiedOn'=> now(),
-        ]);
-
-        PendingWorkflow::updateOrCreate(
-            ['Source' => 'FleetVehicleRequest', 'SourceID' => $request->Id],
-            [
-                'Stage'     => $this->getStageLabel('Pending'),
-                'UserId'    => $validated['RequestedBy'], 
+            Workflow::create([
+                'Source' => 'FleetVehicleRequest',
+                'SourceID' => $request->Id,
+                'Stage' => $this->getStageLabel('Pending'),
+                'Status' => $this->getStatusValue('Pending'),
+                'Notes' => 'Vehicle request submitted, awaiting approval',
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
-                'ModifiedBy'=> Auth::id(),
-                'ModifiedOn'=> now(),
-            ]
-        );
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
-        activity()
-            ->causedBy(Auth::user())
-            ->performedOn($request)
-            ->event('created')
-            ->log("Vehicle Request {$request->RequestID} created.");
+            PendingWorkflow::updateOrCreate(
+                ['Source' => 'FleetVehicleRequest', 'SourceID' => $request->Id],
+                [
+                    'Stage' => $this->getStageLabel('Pending'),
+                    'UserId' => $validated['RequestedBy'],
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]
+            );
 
-        return $request;
-    });
-}
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($request)
+                ->event('created')
+                ->log("Vehicle Request {$request->RequestID} created.");
+
+            return $request;
+        });
+    }
 
     public function update(FleetVehicleRequest $request, array $validated)
     {
@@ -120,22 +119,22 @@ public function create(array $validated)
 
             $request->update([
                 'RejectionReason' => $validated['RejectionReason'] ?? null,
-                'Status'     => $this->getStatusValue('Approved'),
+                'Status' => $this->getStatusValue('Approved'),
                 'ApprovedBy' => Auth::user()->employee?->Id,
                 'ApprovedOn' => now(),
                 'ModifiedOn' => now(),
             ]);
 
             Workflow::create([
-                'Source'    => 'FleetVehicleRequest',
-                'SourceID'  => $request->Id,
-                'Stage'     => $this->getStageLabel('Approved'),
-                'Status'    => $this->getStatusValue('Approved'),
-                'Notes'     => 'Vehicle request approved',
+                'Source' => 'FleetVehicleRequest',
+                'SourceID' => $request->Id,
+                'Stage' => $this->getStageLabel('Approved'),
+                'Status' => $this->getStatusValue('Approved'),
+                'Notes' => 'Vehicle request approved',
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
-                'ModifiedBy'=> Auth::id(),
-                'ModifiedOn'=> now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ]);
 
             PendingWorkflow::where('Source', 'FleetVehicleRequest')
@@ -162,23 +161,23 @@ public function create(array $validated)
             }
 
             $request->update([
-                'Status'          => $this->getStatusValue('Rejected'),
+                'Status' => $this->getStatusValue('Rejected'),
                 'RejectionReason' => $reason,
                 'ApprovedBy' => Auth::user()->employee?->Id,
-                'ApprovedOn'      => now(),
-                'ModifiedOn'      => now(),
+                'ApprovedOn' => now(),
+                'ModifiedOn' => now(),
             ]);
 
             Workflow::create([
-                'Source'    => 'FleetVehicleRequest',
-                'SourceID'  => $request->Id,
-                'Stage'     => $this->getStageLabel('Rejected'),
-                'Status'    => $this->getStatusValue('Rejected'),
-                'Notes'     => "Request rejected: {$reason}",
+                'Source' => 'FleetVehicleRequest',
+                'SourceID' => $request->Id,
+                'Stage' => $this->getStageLabel('Rejected'),
+                'Status' => $this->getStatusValue('Rejected'),
+                'Notes' => "Request rejected: {$reason}",
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
-                'ModifiedBy'=> Auth::id(),
-                'ModifiedOn'=> now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ]);
 
             PendingWorkflow::where('Source', 'FleetVehicleRequest')

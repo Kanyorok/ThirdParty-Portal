@@ -107,7 +107,7 @@
               </div>
             </div>
             <div class="modal-body">
-              <!-- RFQ & Committee Info -->
+                <!-- RFQ & Committee Info -->
               <div class="row mb-3">
                 <div class="col-md-6">
                   <p><strong>Committee Member:</strong> {{ $evaluation->CommitteeMemberName }}</p>
@@ -118,7 +118,7 @@
                   <p><strong>Confirmed:</strong> {{ $evaluation->Confirmation ? '✅ Yes' : '❌ No' }}</p>
                 </div>
               </div>
-              <hr>
+                <hr>
               <div class="card mb-4">
                 <div class="card-header bg-light fw-bold">
                   Supplier: {{ $supplier->SupplierName ?? 'N/A' }}

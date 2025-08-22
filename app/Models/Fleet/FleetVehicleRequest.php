@@ -28,7 +28,7 @@ class FleetVehicleRequest extends Model
 
 
     protected $fillable = [
-        'RequestID','RequestedBy', 'Department', 'RequestDate', 'TripNo', 'TripDate',
+        'RequestID', 'RequestedBy', 'Department', 'RequestDate', 'TripNo', 'TripDate',
         'Purpose', 'FromLocation', 'ToLocation', 'PassengerCount',
         'PreferredVehicleType', 'Status', 'ApprovedBy',
         'ApprovedOn', 'RejectionReason', 'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'];

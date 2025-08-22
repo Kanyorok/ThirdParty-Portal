@@ -61,14 +61,14 @@ class FleetInsuranceTracker extends Model
     }
 
 
-   public function insurance()
+    public function insurance()
     {
         return $this->belongsTo(InsuranceProvider::class, 'InsuranceProvider', 'Id');
     }
 
-     public function insuranceStatus()
+    public function insuranceStatus()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
     }
-    
+
 }

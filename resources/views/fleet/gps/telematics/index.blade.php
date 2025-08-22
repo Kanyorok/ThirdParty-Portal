@@ -2,15 +2,15 @@
 @section('title', 'GPS & Telematics Devices')
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <h4 class="mb-4">📡 GPS & Telematics Integration</h4>
+    <div class="card p-4 shadow rounded-4">
+        <h4 class="mb-4">📡 GPS & Telematics Integration</h4>
 
-    <a href="{{ route('fleet.telematics.create') }}" class="btn btn-success mb-3">
-        ➕ Add Telematics Device
-    </a>
+        <a href="{{ route('fleet.telematics.create') }}" class="btn btn-success mb-3">
+            ➕ Add Telematics Device
+        </a>
 
-    <table class="table table-bordered table-striped align-middle">
-        <thead class="table-dark">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-dark">
             <tr>
                 <th>#</th>
                 <th>Vehicle</th>
@@ -22,8 +22,8 @@
                 <th>Notes</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach($devices as $index => $device)
                 <tr>
                     <td>{{ $index + 1 }}</td>
@@ -44,11 +44,12 @@
                     <td>{{ $device->Notes }}</td>
                     <td>
                         <a href="{{ route('fleet.telematics.show', $device->ID) }}" class="btn btn-sm btn-secondary">View</a>
-                        <a href="{{ route('fleet.telematics.edit', $device->ID) }}" class="btn btn-sm btn-primary">Edit</a>
+                        <a href="{{ route('fleet.telematics.edit', $device->ID) }}"
+                           class="btn btn-sm btn-primary">Edit</a>
                     </td>
                 </tr>
             @endforeach
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

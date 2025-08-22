@@ -26,7 +26,8 @@ class FleetGpsController extends Controller
 
         return view('fleet.gps.live_dashboard', compact('vehicleLocations'));
     }
-public function movementHistory(Request $request)
+
+    public function movementHistory(Request $request)
     {
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
 

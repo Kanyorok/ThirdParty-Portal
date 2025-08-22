@@ -16,7 +16,7 @@ use App\Models\HRM\Employee;
 class FleetContractedDriverAssignment extends Model
 {
 
-      
+
     use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
@@ -48,6 +48,7 @@ class FleetContractedDriverAssignment extends Model
     {
         return 'AssgId';
     }
+
     public function vehicle()
     {
         return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');

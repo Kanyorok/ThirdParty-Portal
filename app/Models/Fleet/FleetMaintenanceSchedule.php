@@ -14,7 +14,8 @@ use App\Models\Core\CodeDetail;
 
 class FleetMaintenanceSchedule extends Model
 {
-     use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -24,7 +25,7 @@ class FleetMaintenanceSchedule extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ScheduleID','VehicleID', 'MaintenanceType', 'ScheduledDate',
+        'ScheduleID', 'VehicleID', 'MaintenanceType', 'ScheduledDate',
         'ScheduledMileage', 'Location', 'Notes', 'Status', 'MaintenanceStatus',
         'CreatedBy',
         'CreatedOn',
@@ -34,7 +35,7 @@ class FleetMaintenanceSchedule extends Model
         'DeletedOn',
     ];
 
-     public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return 'ScheduleId';
     }

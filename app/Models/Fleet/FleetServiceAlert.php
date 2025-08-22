@@ -16,6 +16,7 @@ use App\Models\Core\CodeDetail;
 class FleetServiceAlert extends Model
 {
     use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -25,9 +26,9 @@ class FleetServiceAlert extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'AlertID','ScheduleID','RepairID','VehicleID', 'AlertType', 'Description',
+        'AlertID', 'ScheduleID', 'RepairID', 'VehicleID', 'AlertType', 'Description',
         'TriggerMileage', 'TriggerDate',
-        'IsAcknowledged', 'AcknowledgedOn', 'AcknowledgedBy','MaintenanceStatus',
+        'IsAcknowledged', 'AcknowledgedOn', 'AcknowledgedBy', 'MaintenanceStatus',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -36,16 +37,16 @@ class FleetServiceAlert extends Model
         'DeletedOn',
     ];
 
-     public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return 'AlertId';
-    
+
     }
 
     public function schedule()
-{
-    return $this->belongsTo(FleetMaintenanceSchedule::class, 'ScheduleID', 'Id');
-}
+    {
+        return $this->belongsTo(FleetMaintenanceSchedule::class, 'ScheduleID', 'Id');
+    }
 
 
     public function vehicle()

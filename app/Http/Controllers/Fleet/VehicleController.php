@@ -51,7 +51,7 @@ class VehicleController extends Controller
         $vehicle = $this->vehicleService->create($validated);
 
         // Optional assignment history
-        
+
         return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle registered successfully.');
     }
 
@@ -103,7 +103,7 @@ class VehicleController extends Controller
         return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle deregistered successfully.');
     }
 
-   public function getByMake($Id)
+    public function getByMake($Id)
     {
         $models = FleetModel::where('BrandID', $Id)->get();
         return response()->json($models);

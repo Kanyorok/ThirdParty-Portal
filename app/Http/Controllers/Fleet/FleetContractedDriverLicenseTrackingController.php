@@ -50,13 +50,13 @@ class FleetContractedDriverLicenseTrackingController extends Controller
     public function edit($driverId, $licenseId)
     {
         $license = FleetContractedDriverLicense::where('ContractedDriverID', $driverId)
-                    ->where('Id', $licenseId)
-                    ->firstOrFail(); 
+            ->where('Id', $licenseId)
+            ->firstOrFail();
 
         return response()->json($license);
     }
 
-  public function update(FleetContractedDriverLicenseRequest $request, $driverId, $licenseId)
+    public function update(FleetContractedDriverLicenseRequest $request, $driverId, $licenseId)
     {
         $license = FleetContractedDriverLicense::findOrFail($licenseId);
         $validated = $request->validated();
@@ -78,7 +78,7 @@ class FleetContractedDriverLicenseTrackingController extends Controller
     }
 
 
-   public function destroy(Request $request, $driverId, $licenseId)
+    public function destroy(Request $request, $driverId, $licenseId)
     {
         $license = FleetContractedDriverLicense::findOrFail($licenseId);
 

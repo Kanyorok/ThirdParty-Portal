@@ -6,8 +6,6 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">🧭 Assign Referrals</h4>
-
     <table class="table table-bordered" id="assignTable">
         <thead>
             <tr>
@@ -19,8 +17,8 @@
                 <th>Assign To</th>
                 <th>Action</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach($referrals as $referral)
             <tr>
                 <form method="POST" action="{{ route('bancassurance.referrals.assign', $referral->Id) }}">
@@ -39,29 +37,27 @@
                         </select>
                     </td>
                     <td>
-                        <button type="submit" class="btn btn-sm btn-success">
-                            Assign
-                        </button>
+                        <button type="submit" class="btn btn-sm btn-success">Assign</button>
                     </td>
                 </form>
             </tr>
             @endforeach
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 
-@section('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#assignTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true
+    @section('scripts')
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $('#assignTable').DataTable({
+                    pageLength: 10,
+                    ordering: true,
+                    searching: true,
+                    lengthChange: true
+                });
             });
-        });
-    </script>
-@endsection
+        </script>
+    @endsection
 @endsection

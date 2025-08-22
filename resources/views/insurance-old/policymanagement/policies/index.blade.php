@@ -2,13 +2,13 @@
 @section('title', 'Policy Master List')
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-4">📘 Policy Master Register</h4>
-  <div class="mb-2 d-flex justify-content-between">
-  <a href="{{ route('policy-proposals.create') }}"  class="btn btn-success">➕ New Policy Proposal</a>
-  </div>
-    <table class="table table-bordered table-striped">
-        <thead>
+    <div class="container mt-4">
+        <h4 class="mb-4">📘 Policy Master Register</h4>
+        <div class="mb-2 d-flex justify-content-between">
+            <a href="{{ route('policy-proposals.create') }}" class="btn btn-success">➕ New Policy Proposal</a>
+        </div>
+        <table class="table table-bordered table-striped">
+            <thead>
             <tr>
                 <th>#</th>
                 <th>Policy No</th>
@@ -21,8 +21,8 @@
                 <th>Expiry</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {{-- Sample static rows --}}
             <tr>
                 <td>1</td>
@@ -53,7 +53,7 @@
                     <a href="#" class="btn btn-sm btn-primary">Edit Proposal</a>
                 </td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

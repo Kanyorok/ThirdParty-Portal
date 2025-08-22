@@ -77,11 +77,11 @@ class PropertyNewLeaseService
         ]);
 
         if ($document) {
-        $newlease->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::PropertyNewLeaseView->value],
-            $user
+            $newlease->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyNewLeaseView->value],
+                $user
             );
         }
 
@@ -145,11 +145,11 @@ class PropertyNewLeaseService
         ]);
 
         if ($document) {
-        $lease->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::PropertyNewLeaseView->value],
-            $user
+            $lease->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyNewLeaseView->value],
+                $user
             );
         }
 

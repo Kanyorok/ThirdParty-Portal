@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,7 +14,7 @@ return new class extends Migration
             $table->id('Id');
             $table->foreignId('CustomerID')->constrained('t_BancassuranceCustomers', 'Id');
             $table->date('ContactDate');
-            $table->foreignId('ContactType')->constrained('t_CodeDetails','ID');
+            $table->foreignId('ContactType')->constrained('t_CodeDetails', 'ID');
             $table->string('Summary');
             $table->foreignId('HandledBy')->nullable()->constrained('t_Employees', 'Id');
             $table->string('Notes');
@@ -25,7 +24,7 @@ return new class extends Migration
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-            
+
         });
     }
 

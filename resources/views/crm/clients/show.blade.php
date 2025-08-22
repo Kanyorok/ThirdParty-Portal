@@ -374,13 +374,13 @@
                                 </div>
                                 <div class="card-body row">
                                     <div class="col-md-4 col-12 text-center">
-                                        Start <br> <b>{{ $schedule->StartOn->format('M d, Y h:i a') }}</b>
+                                        Start <br> <b>{{ $schedule->StartOn?->format('M d, Y h:i a') }}</b>
                                     </div>
                                     <div class="col-md-4 col-12 text-center">
-                                        End <br><b> {{ $schedule->EndOn->format('M d, Y h:i a') }}</b>
+                                        End <br><b> {{ $schedule->EndOn?->format('M d, Y h:i a') }}</b>
                                     </div>
                                     <div class="col-md-4 col-12 text-center">
-                                        Duration <br> <b>{{ $schedule->EndOn->diffInMinutes($schedule->StartOn,true) }}
+                                        Duration <br> <b>{{ $schedule->EndOn?->diffInMinutes($schedule->StartOn,true) }}
                                             min</b>
                                     </div>
                                     <div class="col-12"><b>Notes</b> <br>{{ $schedule->Notes }}</div>
@@ -410,13 +410,13 @@
                                 </div>
                                 <div class="card-body row">
                                     <div class="col-md-4 col-12 text-center">
-                                        Start <br> <b>{{ $schedule->StartOn->format('M d, Y h:i a') }}</b>
+                                        Start <br> <b>{{ $schedule->StartOn?->format('M d, Y h:i a') }}</b>
                                     </div>
                                     <div class="col-md-4 col-12 text-center">
-                                        End <br><b> {{ $schedule->EndOn->format('M d, Y h:i a') }}</b>
+                                        End <br><b> {{ $schedule->EndOn?->format('M d, Y h:i a') }}</b>
                                     </div>
                                     <div class="col-md-4 col-12 text-center">
-                                        Duration <br> <b>{{ $schedule->EndOn->diffInMinutes($schedule->StartOn,true) }}
+                                        Duration <br> <b>{{ $schedule->EndOn?->diffInMinutes($schedule->StartOn,true) }}
                                             min</b>
                                     </div>
                                     <div class="col-12"><b>Notes</b> <br>{{ $schedule->Notes }}</div>

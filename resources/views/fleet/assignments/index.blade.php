@@ -2,12 +2,12 @@
 @section('title', 'Vehicle Assignment History')
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <h4 class="mb-4">📜 Vehicle Assignment History</h4>
+    <div class="card p-4 shadow rounded-4">
+        <h4 class="mb-4">📜 Vehicle Assignment History</h4>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
-            <thead class="table-light">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Vehicle</th>
@@ -18,8 +18,8 @@
                     <th>Notes</th>
                     <th>Assigned By</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @forelse ($assignments as $item)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
@@ -36,8 +36,8 @@
                         <td colspan="8" class="text-center text-muted">No assignment history found.</td>
                     </tr>
                 @endforelse
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 @endsection

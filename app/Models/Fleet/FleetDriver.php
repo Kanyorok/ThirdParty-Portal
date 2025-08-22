@@ -14,7 +14,7 @@ use App\Models\HRM\Employee;
 
 class FleetDriver extends Model
 {
-     use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -25,9 +25,9 @@ class FleetDriver extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'DriverNo','FullName', 'StaffNumber', 'NationalID', 'Phone', 'Email',
+        'DriverNo', 'FullName', 'StaffNumber', 'NationalID', 'Phone', 'Email',
         'LicenseNumber', 'LicenseExpiryDate', 'EmploymentType',
-        'Status', 'Notes', 'IsActive',     'CreatedBy',
+        'Status', 'Notes', 'IsActive', 'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
         'ModifiedOn',
@@ -50,5 +50,5 @@ class FleetDriver extends Model
         return $this->belongsTo(Employee::class, 'StaffNumber', 'Id');
     }
 
-    
+
 }

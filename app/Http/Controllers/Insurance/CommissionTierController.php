@@ -11,33 +11,33 @@ use Illuminate\Support\Facades\Storage;
 class CommissionTierController extends Controller
 {
     //
-public function index($ruleId)
-{
-    $tiers = DB::table('t_BancassuranceCommissionTiers')
-        ->where('RuleID', $ruleId)
-        ->orderBy('MinValue')
-        ->get();
+    public function index($ruleId)
+    {
+        $tiers = DB::table('t_BancassuranceCommissionTiers')
+            ->where('RuleID', $ruleId)
+            ->orderBy('MinValue')
+            ->get();
 
-    return view('bancassurance.commissions.tiers.index', compact('tiers', 'ruleId'));
-}
+        return view('bancassurance.commissions.tiers.index', compact('tiers', 'ruleId'));
+    }
 
-public function store(Request $request, $ruleId)
-{
-    $request->validate([
-        'MinValue' => 'required|numeric|min:0',
-        'MaxValue' => 'nullable|numeric|gt:MinValue',
-        'CommissionRate' => 'required|numeric|min:0|max:100',
-    ]);
+    public function store(Request $request, $ruleId)
+    {
+        $request->validate([
+            'MinValue' => 'required|numeric|min:0',
+            'MaxValue' => 'nullable|numeric|gt:MinValue',
+            'CommissionRate' => 'required|numeric|min:0|max:100',
+        ]);
 
-    DB::table('t_BancassuranceCommissionTiers')->insert([
-        'RuleID' => $ruleId,
-        'MinValue' => $request->MinValue,
-        'MaxValue' => $request->MaxValue,
-        'CommissionRate' => $request->CommissionRate,
-        'CreatedAt' => now(),
-    ]);
+        DB::table('t_BancassuranceCommissionTiers')->insert([
+            'RuleID' => $ruleId,
+            'MinValue' => $request->MinValue,
+            'MaxValue' => $request->MaxValue,
+            'CommissionRate' => $request->CommissionRate,
+            'CreatedAt' => now(),
+        ]);
 
-    return redirect()->route('bancassurance.commissions.tiers.index', $ruleId)->with('success', 'Tier added.');
-}
+        return redirect()->route('bancassurance.commissions.tiers.index', $ruleId)->with('success', 'Tier added.');
+    }
 
 }
