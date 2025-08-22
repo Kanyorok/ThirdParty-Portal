@@ -508,6 +508,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 802100, 'Name' => 'Maintenance',            'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.maintenance.index'],
             ['ModuleID' => 802200, 'Name' => 'Clauses Library',        'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.clauses.index'],
             ['ModuleID' => 802300, 'Name' => 'Templates Library',      'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.templates.index'],
+
+            ['ModuleID' => 899000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal-reports.index'],
         ]);
 
         if ($fresh) {
