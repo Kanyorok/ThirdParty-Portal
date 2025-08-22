@@ -4,10 +4,10 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-3">👥 Registered Customers</h4>
-    <table id="Customerregistry" class="table table-bordered table-hover">
-        <thead>
+    <div class="container mt-4">
+        <h4 class="mb-3">👥 Registered Customers</h4>
+        <table id="Customerregistry" class="table table-bordered table-hover">
+            <thead>
             <tr>
                 <th>#</th>
                 <th>Full Name</th>
@@ -17,8 +17,8 @@
                 <th>Date of Birth</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse ($customers as $i => $customer)
                 <tr>
                     <td>{{ $i + 1 }}</td>
@@ -28,9 +28,12 @@
                     <td>{{ $customer->Email }}</td>
                     <td>{{ $customer->DateOfBirth }}</td>
                     <td>
-                        <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" class="btn btn-sm btn-info">📄 View Portfolio</a> 
-                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}" class="btn btn-sm btn-secondary">🕓 Communication History</a>
-                        <a href="{{ route('bancassurance.customers.beneficiaries.create') }}" class="btn btn-sm btn-primary">➕ Add Beneficiary</a>
+                        <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}"
+                           class="btn btn-sm btn-info">📄 View Portfolio</a>
+                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}"
+                           class="btn btn-sm btn-secondary">🕓 Communication History</a>
+                        <a href="{{ route('bancassurance.customers.beneficiaries.create') }}"
+                           class="btn btn-sm btn-primary">➕ Add Beneficiary</a>
                     </td>
                 </tr>
             @empty
@@ -38,20 +41,20 @@
                     <td colspan="7" class="text-center">No customers found.</td>
                 </tr>
             @endforelse
-        </tbody>
-    </table>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#Customerregistry').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
+    <script>
+        $(document).ready(function () {
+            $('#Customerregistry').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
         });
-    });
-</script>
+    </script>
 @endsection

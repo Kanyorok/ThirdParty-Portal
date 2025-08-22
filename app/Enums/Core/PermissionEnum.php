@@ -347,7 +347,6 @@ enum PermissionEnum: string
     case PropertyAttachmentsUpdate = 'propertyattachments-update';
     case PropertyAttachmentsDelete = 'propertyattachments-delete';
     case PropertyAttachmentsView = 'propertyattachments-view';
-    
 
 
     //Tenant Mentenance
@@ -394,7 +393,7 @@ enum PermissionEnum: string
     case PropertyInvoiceUpdate = 'propertyinvoice-update';
     case PropertyInvoiceDelete = 'propertyinvoice-delete';
     case PropertyInvoiceView = 'propertyinvoice-view';
-    
+
     //Property Receipt
     case PropertyReceiptCreate = 'propertyreceipt-create';
     case PropertyReceiptUpdate = 'propertyreceipt-update';
@@ -408,18 +407,17 @@ enum PermissionEnum: string
     case PropertyMaintenanceRequestView = 'propertymaintenancerequest-view';
 
 
-     //Property Maintenance Assign
+    //Property Maintenance Assign
     case PropertyMaintenanceAssignCreate = 'propertymaintenanceassign-create';
     case PropertyMaintenanceAssignUpdate = 'propertymaintenanceassign-update';
     case PropertyMaintenanceAssignDelete = 'propertymaintenanceassign-delete';
     case PropertyMaintenanceAssignView = 'propertymaintenanceassign-view';
 
-     //Property Maintenance Work Completion
+    //Property Maintenance Work Completion
     case PropertyMaintenanceWorkCompletionCreate = 'propertymaintenanceworkcompletion-create';
     case PropertyMaintenanceWorkCompletionUpdate = 'propertymaintenanceworkcompletion-update';
     case PropertyMaintenanceWorkCompletionDelete = 'propertymaintenanceworkcompletion-delete';
     case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
-
 
 
     /*
@@ -446,8 +444,8 @@ enum PermissionEnum: string
     case BancassuranceCustomersView = 'bancassurancecustomersview';
     case BancassuranceCustomersUpdate = 'bancassurancecustomersupdate';
     case BancassuranceCustomersDelete = 'bancassurancecustomersdelete';
-    
-        // Bancassurance Customers Contacts
+
+    // Bancassurance Customers Contacts
     case BancassuranceCustomersContactsCreate = 'bancassurancecustomerscontactscreate';
     case BancassuranceCustomersContactsView = 'bancassurancecustomerscontactsview';
     case BancassuranceCustomersContactsUpdate = 'bancassurancecustomerscontactsupdate';
@@ -508,10 +506,10 @@ enum PermissionEnum: string
     case DMSLegalHoldRelease = 'dmsLegalHold-release';
 
 
- /*
- *
- * ========================================  Finance  ========================================
- */
+    /*
+    *
+    * ========================================  Finance  ========================================
+    */
     //Chart Of Accounts
     case FinanceCOAView = 'financeCOA-view';
     case FinanceCOACreate = 'financeCOA-create';
@@ -543,10 +541,10 @@ enum PermissionEnum: string
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
 
 
- /*
- *
- * ========================================  FleetManagement  ========================================
- */
+    /*
+    *
+    * ========================================  FleetManagement  ========================================
+    */
     case FleetModelView = 'fleetModel-view';
     case FleetModelCreate = 'fleetModel-create';
     case FleetModelUpdate = 'fleetModel-update';
@@ -626,7 +624,7 @@ enum PermissionEnum: string
             [self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval],
             [self::InventoryHoldReviewView, self::InventoryHoldReviewUpdate, self::InventoryHoldReviewCreate, self::InventoryHoldReviewDestroy],
             [self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy],
-          
+
             [self::PlanConsolidationRead, self::PlanConsolidationWrite, self::PlanConsolidationUpdate, self::PlanConsolidationDelete],
             [self::PlanLineItemsRead, self::PlanLineItemsWrite, self::PlanLineItemsUpdate, self::PlanLineItemsDelete],
             [self::BidSubmissionRead, self::BidSubmissionWrite, self::BidSubmissionUpdate, self::BidSubmissionDelete],
@@ -649,34 +647,34 @@ enum PermissionEnum: string
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
 
             //Property Management
-            [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
-            [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
-            [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
-            [self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete],
-            [self::PropertyAttachmentsView,self::PropertyAttachmentsCreate,self::PropertyAttachmentsUpdate,self::PropertyAttachmentsDelete],
-            [self::TenantMentenanceCreate,self::TenantMentenanceUpdate,self::TenantMentenanceDelete,self::TenantMentenanceView],
-            [self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView],
-            [self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView],
-            [self::PropertyLeaseTerminationCreate,self::PropertyLeaseTerminationUpdate,self::PropertyLeaseTerminationDelete,self::PropertyLeaseTerminationView],
-            [self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView],
-            [self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView],
-            [self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView],
-            [self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView],
-            [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
-            [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
-            [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
+            [self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete],
+            [self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete],
+            [self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete],
+            [self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete],
+            [self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete],
+            [self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView],
+            [self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView],
+            [self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView],
+            [self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView],
+            [self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView],
+            [self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView],
+            [self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView],
+            [self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView],
+            [self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView],
+            [self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView],
+            [self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView],
 
 
             //Insurance
-            [self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete],
-            [self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete],
-            [self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete],
-            [self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete],
-            [self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete],
-            [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
-            [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
-            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
-            
+            [self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete],
+            [self::BancassurancePolicyCreate, self::BancassurancePolicyView, self::BancassurancePolicyUpdate, self::BancassurancePolicyDelete],
+            [self::BancassuranceCustomersCreate, self::BancassuranceCustomersView, self::BancassuranceCustomersUpdate, self::BancassuranceCustomersDelete],
+            [self::BancassuranceCustomersContactsCreate, self::BancassuranceCustomersContactsView, self::BancassuranceCustomersContactsUpdate, self::BancassuranceCustomersContactsDelete],
+            [self::BancassuranceCustomersBeneficiariesCreate, self::BancassuranceCustomersBeneficiariesView, self::BancassuranceCustomersBeneficiariesUpdate, self::BancassuranceCustomersBeneficiariesDelete],
+            [self::BancassurancePremiumPaymentsView, self::BancassurancePremiumPaymentsCreate, self::BancassurancePremiumPaymentsUpdate, self::BancassurancePremiumPaymentsDelete],
+            [self::InsuranceProviderView, self::InsuranceProviderCreate, self::InsuranceProviderUpdate, self::InsuranceProviderDelete],
+            [self::InsuranceProductView, self::InsuranceProductCreate, self::InsuranceProductUpdate, self::InsuranceProductDelete],
+
         ]);
     }
 
@@ -750,54 +748,54 @@ enum PermissionEnum: string
 
             self::PriceManagementView, self::PriceManagementUpdate, self::PriceManagementCreate, self::PriceManagementDestroy,
             self::StockTakeView, self::StockTakeCreate, self::StockTakeUpdate, self::StockTakeDestroy,
-            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy, 
-            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval, 
+            self::TransactionReceiptView, self::TransactionReceiptUpdate, self::TransactionReceiptCreate, self::TransactionReceiptDestroy,
+            self::TransactionTransferView, self::TransactionTransferUpdate, self::TransactionTransferCreate, self::TransactionTransferDestroy, self::TransactionTransferApproval,
             self::StockAdjustmentView, self::StockAdjustmentUpdate, self::StockAdjustmentCreate, self::StockAdjustmentDestroy, self::StockAdjustmentApproval => ModulesEnum::Inventory,
             //Fleet Management
-            self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy,
-            self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy,
-            self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy,
-            self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy
+            self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy,
+            self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy,
+            self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy,
+            self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy
             => ModulesEnum::Fleet,
 
 
-          //Property Management
-            self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete,
-            self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete,
-            self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete,
-            self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete,
-            self::PropertyAttachmentsView,self::PropertyAttachmentsCreate,self::PropertyAttachmentsUpdate,self::PropertyAttachmentsDelete,
-            self::TenantMentenanceCreate,self::TenantMentenanceUpdate,self::TenantMentenanceDelete,self::TenantMentenanceView,
-            self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView,
-            self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView,
-            self::PropertyLeaseTerminationCreate,self::PropertyLeaseTerminationUpdate,self::PropertyLeaseTerminationDelete,self::PropertyLeaseTerminationView,
-            self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView,
-            self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView,
-            self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView,
-            self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView,
-            self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView,
-            self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView,
-            self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView
+            //Property Management
+            self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete,
+            self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete,
+            self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete,
+            self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete,
+            self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete,
+            self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView,
+            self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView,
+            self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView,
+            self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView,
+            self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView,
+            self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView,
+            self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView,
+            self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView,
+            self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView,
+            self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView,
+            self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView
             => ModulesEnum::Property,
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             //Insurance
-            self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete,
-            self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete,
-            self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete,
-            self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete,
-            self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete,
-            self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete,
-            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete,
-            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete,
-            
-            =>ModulesEnum::Insurance,
+            self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete,
+            self::BancassurancePolicyCreate, self::BancassurancePolicyView, self::BancassurancePolicyUpdate, self::BancassurancePolicyDelete,
+            self::BancassuranceCustomersCreate, self::BancassuranceCustomersView, self::BancassuranceCustomersUpdate, self::BancassuranceCustomersDelete,
+            self::BancassuranceCustomersContactsCreate, self::BancassuranceCustomersContactsView, self::BancassuranceCustomersContactsUpdate, self::BancassuranceCustomersContactsDelete,
+            self::BancassuranceCustomersBeneficiariesCreate, self::BancassuranceCustomersBeneficiariesView, self::BancassuranceCustomersBeneficiariesUpdate, self::BancassuranceCustomersBeneficiariesDelete,
+            self::BancassurancePremiumPaymentsView, self::BancassurancePremiumPaymentsCreate, self::BancassurancePremiumPaymentsUpdate, self::BancassurancePremiumPaymentsDelete,
+            self::InsuranceProviderView, self::InsuranceProviderCreate, self::InsuranceProviderUpdate, self::InsuranceProviderDelete,
+            self::InsuranceProductView, self::InsuranceProductCreate, self::InsuranceProductUpdate, self::InsuranceProductDelete,
+
+            => ModulesEnum::Insurance,
 
 
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
-                self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete
-                => ModulesEnum::BudgetLine,
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete
+            => ModulesEnum::BudgetLine,
 
 
             ////////////////////   Finance   ////////////////////////////
@@ -881,45 +879,45 @@ enum PermissionEnum: string
             self::UOMConversionView, self::UOMConversionUpdate, self::UOMConversionCreate, self::UOMConversionDestroy => 'UOM Conversion',
 
             //Fleet Management
-            self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy => 'Fleet Model',
-            self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy => 'Fleet Make',
-            self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy => 'Vehicle Registry',
-            self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy => 'Driver Management',
+            self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy => 'Fleet Model',
+            self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy => 'Fleet Make',
+            self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy => 'Vehicle Registry',
+            self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy => 'Driver Management',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',
 
             //Property Management
-            self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete => 'Property Category',
-            self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete => 'Property Type',
+            self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete => 'Property Category',
+            self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete => 'Property Type',
             self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete => 'Property Registry',
             self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete => 'Property Structural Mapping',
-            self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete => 'Property Attachments ',      
-            self::TenantMentenanceCreate,self::TenantMentenanceUpdate,self::TenantMentenanceDelete,self::TenantMentenanceView => 'Tenant Maintenance',
-            self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView=> 'Tenant Clearance',
-            self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView => 'Property New Lease',
-            self::PropertyLeaseTerminationCreate,self::PropertyLeaseTerminationUpdate,self::PropertyLeaseTerminationDelete,self::PropertyLeaseTerminationView => 'Lease Termination',
-            self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView => 'Property Lease Schedule',
-            self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView => 'Property Lease Renewal', 
-            self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView => 'Property Invoice',
-            self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView => 'Property Receipt',
-            self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
-            self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
-            self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
+            self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete => 'Property Attachments ',
+            self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView => 'Tenant Maintenance',
+            self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView => 'Tenant Clearance',
+            self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView => 'Property New Lease',
+            self::PropertyLeaseTerminationCreate, self::PropertyLeaseTerminationUpdate, self::PropertyLeaseTerminationDelete, self::PropertyLeaseTerminationView => 'Lease Termination',
+            self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView => 'Property Lease Schedule',
+            self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView => 'Property Lease Renewal',
+            self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView => 'Property Invoice',
+            self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView => 'Property Receipt',
+            self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
+            self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
+            self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             //Insurance
-            self::BancassuranceReferralCreate,self::BancassuranceReferralView,self::BancassuranceReferralUpdate,self::BancassuranceReferralDelete => 'Referral',
-            self::BancassurancePolicyCreate,self::BancassurancePolicyView,self::BancassurancePolicyUpdate,self::BancassurancePolicyDelete => 'Insurance Policy',
-            self::BancassuranceCustomersCreate,self::BancassuranceCustomersView,self::BancassuranceCustomersUpdate,self::BancassuranceCustomersDelete => 'Insurance Customers',
-            self::BancassuranceCustomersContactsCreate,self::BancassuranceCustomersContactsView,self::BancassuranceCustomersContactsUpdate,self::BancassuranceCustomersContactsDelete => 'Insurance Customers Contacts',
-            self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete => 'Insurance Customers Beneficiaries',
-            self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete => 'Insurance Premium Payments',
-            self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete => 'Insurance Provider ',
-            self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete => 'Insurance Product ',
-            
-            
+            self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete => 'Referral',
+            self::BancassurancePolicyCreate, self::BancassurancePolicyView, self::BancassurancePolicyUpdate, self::BancassurancePolicyDelete => 'Insurance Policy',
+            self::BancassuranceCustomersCreate, self::BancassuranceCustomersView, self::BancassuranceCustomersUpdate, self::BancassuranceCustomersDelete => 'Insurance Customers',
+            self::BancassuranceCustomersContactsCreate, self::BancassuranceCustomersContactsView, self::BancassuranceCustomersContactsUpdate, self::BancassuranceCustomersContactsDelete => 'Insurance Customers Contacts',
+            self::BancassuranceCustomersBeneficiariesCreate, self::BancassuranceCustomersBeneficiariesView, self::BancassuranceCustomersBeneficiariesUpdate, self::BancassuranceCustomersBeneficiariesDelete => 'Insurance Customers Beneficiaries',
+            self::BancassurancePremiumPaymentsView, self::BancassurancePremiumPaymentsCreate, self::BancassurancePremiumPaymentsUpdate, self::BancassurancePremiumPaymentsDelete => 'Insurance Premium Payments',
+            self::InsuranceProviderView, self::InsuranceProviderCreate, self::InsuranceProviderUpdate, self::InsuranceProviderDelete => 'Insurance Provider ',
+            self::InsuranceProductView, self::InsuranceProductCreate, self::InsuranceProductUpdate, self::InsuranceProductDelete => 'Insurance Product ',
+
+
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',

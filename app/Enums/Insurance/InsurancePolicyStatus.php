@@ -4,13 +4,13 @@ namespace App\Enums\Insurance;
 
 use App\Traits\UsefulEnumTrait;
 
-enum InsurancePolicyStatus:string
+enum InsurancePolicyStatus: string
 {
     use UsefulEnumTrait;
 
     case Proposal = 'P';
 
-    case SubmittedForUnderwriting  = 'S';
+    case SubmittedForUnderwriting = 'S';
 
     case Issued = 'I';
 

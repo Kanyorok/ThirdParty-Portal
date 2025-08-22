@@ -118,7 +118,6 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
         ->name('models.byMake');
 
 
-
     // ==================== Fleet Vehicle Assignments ====================
     Route::get('/assignments', [FleetVehicleAssignmentController::class, 'index'])->name('fleet.assignments.index');
     Route::get('/assignments/create', [FleetVehicleAssignmentController::class, 'create'])->name('fleet.assignments.create');
@@ -218,7 +217,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::post('/maintenance-schedule', [FleetMaintenanceScheduleController::class, 'store'])->name('fleet.maintenance_schedule.store');
     Route::get('/maintenance-schedule/{Id}/edit', [FleetMaintenanceScheduleController::class, 'edit'])->name('fleet.maintenance_schedule.edit');
     Route::put('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'update'])->name('fleet.maintenance_schedule.update');
-        Route::get('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'show'])->name('fleet.maintenance_schedule.show');
+    Route::get('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'show'])->name('fleet.maintenance_schedule.show');
     Route::get('/maintenance-schedule/{Id}', [FleetMaintenanceScheduleController::class, 'show'])->name('fleet.maintenance_schedule.show');
     Route::put('/maintenance-schedule/{Id}/cancel', [FleetMaintenanceScheduleController::class, 'cancel'])->name('fleet.maintenance_schedule.cancel');
 
@@ -231,7 +230,7 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::get('/repair-logs/{Id}/show', [FleetRepairLogController::class, 'show'])->name('fleet.repair_logs.show');
     Route::delete('/repair-logs/{Id}', [FleetRepairLogController::class, 'destroy'])->name('fleet.repair_logs.destroy');
 
-        Route::delete('/repair-logs/{Id}', [FleetRepairLogController::class, 'destroy'])->name('fleet.repair_logs.destroy');
+    Route::delete('/repair-logs/{Id}', [FleetRepairLogController::class, 'destroy'])->name('fleet.repair_logs.destroy');
 
 
     // ==================== Service Alerts ====================

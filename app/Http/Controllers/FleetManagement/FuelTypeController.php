@@ -31,9 +31,9 @@ class FuelTypeController extends Controller
      */
     public function index()
     {
-        $fuelTypes = FuelType::all();   
+        $fuelTypes = FuelType::all();
         return view('fleetmanagement.fueltypes.index', compact('fuelTypes'));
-    }   
+    }
 
     public function create()
     {
@@ -64,7 +64,7 @@ class FuelTypeController extends Controller
 
     public function destroy($id)
     {
-        
+
         $fuelType = FuelType::findOrFail($id);
         $this->service->delete($fuelType);
         return redirect()->route('fueltypes.index')->with('success', 'Fuel type deleted successfully.');

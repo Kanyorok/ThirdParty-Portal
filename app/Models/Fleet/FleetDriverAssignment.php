@@ -14,7 +14,7 @@ use App\Models\HRM\Employee;
 
 class FleetDriverAssignment extends Model
 {
-     use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -43,10 +43,11 @@ class FleetDriverAssignment extends Model
 
     ];
 
-     public static function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
         return 'DriverId';
     }
+
     public function vehicle()
     {
         return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');

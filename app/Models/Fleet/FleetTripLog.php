@@ -15,7 +15,8 @@ use App\Models\HRM\Employee;
 
 
 class FleetTripLog extends Model
-{ use UserActorTrait, SoftDeletes;
+{
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -40,8 +41,9 @@ class FleetTripLog extends Model
         'Notes',
         'CreatedBy',
         'CreatedOn',
-        
+
     ];
+
     public static function getPrimaryKey(): string
     {
         return 'TripId';
@@ -49,14 +51,14 @@ class FleetTripLog extends Model
 
     public function vehicle()
     {
-        return $this->belongsTo(FleetVehicle::class, 'VehicleID','Id');
+        return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
     }
 
-      public function driverType()
+    public function driverType()
     {
-        return $this->belongsTo(CodeDetail::class, 'DriverType','ID');
+        return $this->belongsTo(CodeDetail::class, 'DriverType', 'ID');
     }
-    
+
 
     public function driverPermanent()
     {
@@ -65,7 +67,7 @@ class FleetTripLog extends Model
 
     public function driverContracted()
     {
-        return $this->belongsTo(ContractedDriver::class, 'DriverID', 'Id'); 
+        return $this->belongsTo(ContractedDriver::class, 'DriverID', 'Id');
     }
 
 

@@ -22,7 +22,7 @@ class BancassurancePolicy extends Model
     protected $fillable = [
         'CustomerID', 'ProductID', 'InsurerID', 'PolicyNumber', 'SumAssured',
         'PremiumAmount', 'PolicyStartDate', 'PolicyEndDate', 'PaymentFrequency',
-        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive','Status', 'CreatedBy',
+        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive', 'Status', 'CreatedBy',
         'ModifiedBy', 'DeletedBy'
     ];
 
@@ -34,12 +34,13 @@ class BancassurancePolicy extends Model
     protected $casts = [
         'Status' => InsurancePolicyStatus::class,
     ];
+
     public function customer()
     {
         return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
     }
 
-    Public function product()
+    public function product()
     {
         return $this->belongsTo(CodeDetail::class, 'ProductID', 'ID');
     }
@@ -51,7 +52,7 @@ class BancassurancePolicy extends Model
 
     public function paymentfrequency()
     {
-        return $this->belongsTo(CodeDetail::class,'PaymentFrequency', 'ID');
+        return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
 
     public function referral()

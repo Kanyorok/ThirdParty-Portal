@@ -24,12 +24,12 @@ class FleetDriverController extends Controller
         $this->fleetDriverService = $fleetDriverService;
     }
 
-     public function index()
+    public function index()
     {
         $drivers = FleetDriver::with(['driver', 'employmentType'])
             ->where('CreatedBy', Auth::id())
             ->get();
-            
+
 
         return view('fleet.drivers.index', compact('drivers'));
     }
@@ -53,7 +53,7 @@ class FleetDriverController extends Controller
         $employmentType = CodeDetail::where('CodeID', 'EmploymentType')
             ->orderBy('Value')
             ->get();
-            
+
 
         return view('fleet.drivers.create', compact('staffNo', 'employmentType'));
     }
@@ -103,35 +103,34 @@ class FleetDriverController extends Controller
             ->with('success', 'Driver deactivated successfully.');
     }
 
-      public function show($Id)
-{
-    $driver = FleetDriver::findOrFail($Id);
-    $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
-    $assignments = FleetDriverAssignment::where('DriverID', $Id)
-        ->with('vehicle')
-        ->orderByDesc('AssignmentDate')
-        ->get();
-    $vehicles = FleetVehicle::where('IsActive', 1)->get();
+    public function show($Id)
+    {
+        $driver = FleetDriver::findOrFail($Id);
+        $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
+        $assignments = FleetDriverAssignment::where('DriverID', $Id)
+            ->with('vehicle')
+            ->orderByDesc('AssignmentDate')
+            ->get();
+        $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
-    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-        ->pluck('name', 'Id');
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
 
-  
-      $trips = FleetTripLog::with(['vehicle'])
-        ->where('DriverID', $driver->Id)
-        ->orderByDesc('TripStartDate')
-        ->get();
 
-    return view('fleet.drivers.show', compact(
-        'driver',
-        'licenses',
-        'assignments',
-        'vehicles',
-        'assigners',
-        'trips'
-    ));
-}
-    
+        $trips = FleetTripLog::with(['vehicle'])
+            ->where('DriverID', $driver->Id)
+            ->orderByDesc('TripStartDate')
+            ->get();
+
+        return view('fleet.drivers.show', compact(
+            'driver',
+            'licenses',
+            'assignments',
+            'vehicles',
+            'assigners',
+            'trips'
+        ));
+    }
 
 
 }

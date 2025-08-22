@@ -16,7 +16,7 @@ class FleetServiceAlertService
     private function generateAlertID(): string
     {
         $latest = FleetServiceAlert::withTrashed()->latest('CreatedOn')->first();
-        $lastId = $latest ? (int) str_replace('ALT-', '', $latest->AlertID) : 0;
+        $lastId = $latest ? (int)str_replace('ALT-', '', $latest->AlertID) : 0;
         return 'ALT-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
     }
 
@@ -30,20 +30,20 @@ class FleetServiceAlertService
             $statusId ??= $this->getStatusId('Scheduled');
 
             $alert = FleetServiceAlert::create([
-                'AlertID'           => $this->generateAlertID(),
-                'ScheduleID'        => $schedule->Id,
-                'VehicleID'         => $schedule->VehicleID,
-                'AlertType'         => $schedule->MaintenanceType,
-                'TriggerDate'       => $schedule->ScheduledDate,
-                'TriggerMileage'    => $schedule->ScheduledMileage,
-                'Description'    => $schedule->Notes,
+                'AlertID' => $this->generateAlertID(),
+                'ScheduleID' => $schedule->Id,
+                'VehicleID' => $schedule->VehicleID,
+                'AlertType' => $schedule->MaintenanceType,
+                'TriggerDate' => $schedule->ScheduledDate,
+                'TriggerMileage' => $schedule->ScheduledMileage,
+                'Description' => $schedule->Notes,
                 'MaintenanceStatus' => $statusId,
-                'CreatedBy'         => Auth::id(),
-                'CreatedOn'         => now(),
-                'ModifiedBy'        => Auth::id(),
-                'ModifiedOn'        => now(),
-                'AcknowledgedBy'    => null,
-                'AcknowledgedOn'    => null,
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+                'AcknowledgedBy' => null,
+                'AcknowledgedOn' => null,
             ]);
 
             $this->logWorkflow('ServiceAlert', $alert->Id, $statusId, 'Alert created from schedule');
@@ -65,17 +65,17 @@ class FleetServiceAlertService
 
             $alert->update([
                 'MaintenanceStatus' => $statusId,
-                'IsAcknowledged'    => true,
-                'AcknowledgedBy'    => Auth::id(),
-                'AcknowledgedOn'    => now(),
-                'ModifiedBy'        => Auth::id(),
-                'ModifiedOn'        => now(),
+                'IsAcknowledged' => true,
+                'AcknowledgedBy' => Auth::id(),
+                'AcknowledgedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ]);
 
             $schedule->update([
                 'MaintenanceStatus' => $statusId,
-                'ModifiedBy'        => Auth::id(),
-                'ModifiedOn'        => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ]);
 
             $this->logWorkflow('ServiceAlert', $alert->Id, $statusId, 'Alert acknowledged');
@@ -103,9 +103,9 @@ class FleetServiceAlertService
 
             $alert->update([
                 'MaintenanceStatus' => $statusId,
-                'TriggerMileage'     => $mileage,
-                'ModifiedBy'        => Auth::id(),
-                'ModifiedOn'        => now(),
+                'TriggerMileage' => $mileage,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
             ]);
 
 
@@ -155,7 +155,7 @@ class FleetServiceAlertService
 
     private function logWorkflow(string $source, int $sourceId, ?int $statusId, ?string $notes = null)
     {
-        $enumValue = match($statusId) {
+        $enumValue = match ($statusId) {
             $this->getStatusId('Scheduled') => WorkflowStatus::Scheduled,
             $this->getStatusId('Acknowledged') => WorkflowStatus::Acknowledged,
             $this->getStatusId('Completed') => WorkflowStatus::Completed,
@@ -163,13 +163,13 @@ class FleetServiceAlertService
         };
 
         Workflow::create([
-            'Source'     => $source,
-            'SourceID'   => $sourceId,
-            'Stage'      => $statusId,
-            'Status'     => $enumValue,
-            'Notes'      => $notes,
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
+            'Source' => $source,
+            'SourceID' => $sourceId,
+            'Stage' => $statusId,
+            'Status' => $enumValue,
+            'Notes' => $notes,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
@@ -177,10 +177,10 @@ class FleetServiceAlertService
         PendingWorkflow::updateOrCreate(
             ['Source' => $source, 'SourceID' => $sourceId],
             [
-                'Stage'      => $statusId,
-                'UserId'     => Auth::id(),
-                'CreatedBy'  => Auth::id(),
-                'CreatedOn'  => now(),
+                'Stage' => $statusId,
+                'UserId' => Auth::id(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]

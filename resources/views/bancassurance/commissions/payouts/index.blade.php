@@ -2,14 +2,14 @@
 @section('title', 'Commission Payout History')
 
 @section('content')
-<div class="container mt-4">
-    <h4>📜 Commission Payout History</h4>
+    <div class="container mt-4">
+        <h4>📜 Commission Payout History</h4>
 
-    @if($payouts->isEmpty())
-        <div class="alert alert-info">No commission payouts have been recorded yet.</div>
-    @else
-        <table class="table table-bordered">
-            <thead class="table-light">
+        @if($payouts->isEmpty())
+            <div class="alert alert-info">No commission payouts have been recorded yet.</div>
+        @else
+            <table class="table table-bordered">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Policy Number</th>
@@ -21,8 +21,8 @@
                     <th>Mode</th>
                     <th>Remarks</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($payouts as $p)
                     <tr>
                         <td>{{ $p->Id }}</td>
@@ -36,8 +36,8 @@
                         <td>{{ $p->Remarks }}</td>
                     </tr>
                 @endforeach
-            </tbody>
-        </table>
-    @endif
-</div>
+                </tbody>
+            </table>
+        @endif
+    </div>
 @endsection

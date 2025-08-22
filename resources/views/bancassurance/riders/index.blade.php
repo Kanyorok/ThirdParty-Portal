@@ -2,22 +2,22 @@
 @section('title', 'Insurance Product Riders')
 
 @section('content')
-<div class="container mt-4">
-    <h4>🧩 Riders & Add-ons</h4>
+    <div class="container mt-4">
+        <h4>🧩 Riders & Add-ons</h4>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
-    <div class="mb-3 text-end">
-        <a href="{{ route('bancassurance.riders.create') }}" class="btn btn-primary">➕ Add Rider</a>
-    </div>
+        <div class="mb-3 text-end">
+            <a href="{{ route('bancassurance.riders.create') }}" class="btn btn-primary">➕ Add Rider</a>
+        </div>
 
-    @if($riders->isEmpty())
-        <p class="text-muted">No riders added yet.</p>
-    @else
-        <table class="table table-bordered table-striped">
-            <thead class="table-light">
+        @if($riders->isEmpty())
+            <p class="text-muted">No riders added yet.</p>
+        @else
+            <table class="table table-bordered table-striped">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Provider</th>
@@ -29,31 +29,31 @@
                     <th>Status</th>
                     <th>Created</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($riders as $rider)
-                <tr>
-                    <td>{{ $rider->Id }}</td>
-                    <td>{{ $rider->ProviderName }}</td>
-                    <td>{{ $rider->ProductName }}</td>
-                    <td>{{ $rider->RiderName }}</td>
-                    <td>{{ $rider->Description ?? '-' }}</td>
-                    <td>{{ number_format($rider->AdditionalPremium, 2) }}</td>
-                    <td>
+                    <tr>
+                        <td>{{ $rider->Id }}</td>
+                        <td>{{ $rider->ProviderName }}</td>
+                        <td>{{ $rider->ProductName }}</td>
+                        <td>{{ $rider->RiderName }}</td>
+                        <td>{{ $rider->Description ?? '-' }}</td>
+                        <td>{{ number_format($rider->AdditionalPremium, 2) }}</td>
+                        <td>
                         <span class="badge bg-{{ $rider->IsOptional ? 'info' : 'secondary' }}">
                             {{ $rider->IsOptional ? 'Yes' : 'No' }}
                         </span>
-                    </td>
-                    <td>
+                        </td>
+                        <td>
                         <span class="badge bg-{{ $rider->IsActive ? 'success' : 'danger' }}">
                             {{ $rider->IsActive ? 'Active' : 'Inactive' }}
                         </span>
-                    </td>
-                    <td>{{ \Carbon\Carbon::parse($rider->CreatedAt)->format('d M Y') }}</td>
-                </tr>
+                        </td>
+                        <td>{{ \Carbon\Carbon::parse($rider->CreatedAt)->format('d M Y') }}</td>
+                    </tr>
                 @endforeach
-            </tbody>
-        </table>
-    @endif
-</div>
+                </tbody>
+            </table>
+        @endif
+    </div>
 @endsection

@@ -62,7 +62,7 @@ class FleetContractedDriverAssignmentController extends Controller
         return view('fleet.contracted_driver_assignments.index', compact('assignments'));
     }
 
-   public function edit($driverId, $assignmentId)
+    public function edit($driverId, $assignmentId)
     {
         $assignment = FleetContractedDriverAssignment::with(['vehicle', 'assignedBy'])
             ->where('DriverID', $driverId)
@@ -92,22 +92,22 @@ class FleetContractedDriverAssignmentController extends Controller
             'Purpose' => $assignment->Purpose,
             'assignedBy' => $assignment->assignedBy,
             'Notes' => $assignment->Notes,
-    ]);
+        ]);
 
-            return redirect()
+        return redirect()
             ->route('fleet.contracted_driver_assignments.index', $assignment->DriverID)
             ->with('success', 'Assignment updated successfully.');
     }
-        
+
     public function show($id)
     {
         $driver = ContractedDriver::findOrFail($id);
-        $licenses = $driver->licenses()->get(); 
+        $licenses = $driver->licenses()->get();
         $assignments = $driver->assignments()->with('vehicle', 'assignedBy')->get();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
 
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();    
+        $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
         return view('fleet.contracted_drivers.show', compact('driver', 'licenses', 'assignments', 'assigners', 'vehicles'));
     }
@@ -130,4 +130,4 @@ class FleetContractedDriverAssignmentController extends Controller
     }
 
 
-    }
+}

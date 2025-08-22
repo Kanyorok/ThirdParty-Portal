@@ -39,7 +39,7 @@ class FleetTripLogController extends Controller
             ->get();
         $contractedDrivers = ContractedDriver::where('IsActive', 1)->get();
 
-        return view('fleet.trip_logs.create', compact('vehicles', 'drivers', 'contractedDrivers','driverTypes'));
+        return view('fleet.trip_logs.create', compact('vehicles', 'drivers', 'contractedDrivers', 'driverTypes'));
     }
 
     public function store(FleetTripLogRequest $request)
@@ -63,7 +63,7 @@ class FleetTripLogController extends Controller
             ->get();
         $contractedDrivers = ContractedDriver::where('IsActive', 1)->get();
 
-        return view('fleet.trip_logs.show', compact('vehicles','tripLogs', 'drivers', 'contractedDrivers','driverTypes'));
+        return view('fleet.trip_logs.show', compact('vehicles', 'tripLogs', 'drivers', 'contractedDrivers', 'driverTypes'));
     }
 
     public function edit($id)
@@ -74,7 +74,7 @@ class FleetTripLogController extends Controller
             ->orderBy('Value')
             ->get();
         $contractedDrivers = ContractedDriver::where('IsActive', 1)->get();
-        return view('fleet.vehicles.edit', compact('vehicles', 'drivers', 'contractedDrivers','driverTypes'));
+        return view('fleet.vehicles.edit', compact('vehicles', 'drivers', 'contractedDrivers', 'driverTypes'));
     }
 
     public function update(FleetTripLogRequest $request, $id)

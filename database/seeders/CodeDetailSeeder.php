@@ -216,7 +216,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PriorityLevel', 'Description' => 'High', 'Value' => 'H'],
             ['CodeID' => 'PriorityLevel', 'Description' => 'Critical', 'Value' => 'C'],
 
-            // Payment  Modes 
+            // Payment  Modes
             ['CodeID' => 'PaymentModes', 'Description' => 'Cash', 'Value' => 'C'],
             ['CodeID' => 'PaymentModes', 'Description' => 'Cheque', 'Value' => 'CH'],
             ['CodeID' => 'PaymentModes', 'Description' => 'Bank Transfer', 'Value' => 'BT'],
@@ -234,36 +234,35 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
 
             // Gender
-            ['CodeID' => 'Gender', 'Description' => 'Male','Value' => 'M'],
+            ['CodeID' => 'Gender', 'Description' => 'Male', 'Value' => 'M'],
             ['CodeID' => 'Gender', 'Description' => 'Female', 'Value' => 'F'],
 
             // MaritalStatus
-            ['CodeID' => 'MaritalStatus', 'Description' => 'Single','Value' => 'S'],
+            ['CodeID' => 'MaritalStatus', 'Description' => 'Single', 'Value' => 'S'],
             ['CodeID' => 'MaritalStatus', 'Description' => 'Married', 'Value' => 'M'],
             ['CodeID' => 'MaritalStatus', 'Description' => 'Divorced', 'Value' => 'D'],
             ['CodeID' => 'MaritalStatus', 'Description' => 'Widowed', 'Value' => 'W'],
-            
+
             // Relationships
-            ['CodeID' => 'Relationships', 'Description' => 'Spouse','Value' => 'S'],
+            ['CodeID' => 'Relationships', 'Description' => 'Spouse', 'Value' => 'S'],
             ['CodeID' => 'Relationships', 'Description' => 'Child', 'Value' => 'C'],
             ['CodeID' => 'Relationships', 'Description' => 'Parent', 'Value' => 'P'],
-            ['CodeID' => 'Relationships', 'Description' => 'Sibling', 'Value' => 'S'],    
+            ['CodeID' => 'Relationships', 'Description' => 'Sibling', 'Value' => 'S'],
             ['CodeID' => 'Relationships', 'Description' => 'Relative', 'Value' => 'R'],
             ['CodeID' => 'Relationships', 'Description' => 'Friend', 'Value' => 'F'],
             ['CodeID' => 'Relationships', 'Description' => 'LegalGuardian', 'Value' => 'LG'],
-            
-            
-            
+
+
             // Occupation
-            ['CodeID' => 'Occupation', 'Description' => 'Employed','Value' => 'E'],
+            ['CodeID' => 'Occupation', 'Description' => 'Employed', 'Value' => 'E'],
             ['CodeID' => 'Occupation', 'Description' => 'Not Employed', 'Value' => 'N'],
 
             // ContactType
-            ['CodeID' => 'ContactType', 'Description' => '📞 Call','Value' => 'C'],
+            ['CodeID' => 'ContactType', 'Description' => '📞 Call', 'Value' => 'C'],
             ['CodeID' => 'ContactType', 'Description' => '📧 Email', 'Value' => 'E'],
             ['CodeID' => 'ContactType', 'Description' => '📲 SMS', 'Value' => 'S'],
             ['CodeID' => 'ContactType', 'Description' => '🏢 Visit', 'Value' => 'V'],
-            
+
             //Payment Terms
             ['CodeID' => 'PaymentTerm', 'Description' => 'Cash on Delivery – payment immediately on receipt', 'Value' => 'CD'],
             ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 30 days from invoice date', 'Value' => 'N3'],
@@ -295,7 +294,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'IPTypes', 'Description' => 'Legal protection for brand names, logos, and slogans.', 'Value' => 'Trademark'],
             ['CodeID' => 'IPTypes', 'Description' => 'Protection for artistic, literary, or musical works.', 'Value' => 'Copyright'],
             ['CodeID' => 'IPTypes', 'Description' => 'Protection for the visual design or shape of an object.', 'Value' => 'Industrial Design'],
-            ['CodeID' => 'IPTypes', 'Description' => 'Rights protecting confidential business information.', 'Value' => 'Trade Secret'],           
+            ['CodeID' => 'IPTypes', 'Description' => 'Rights protecting confidential business information.', 'Value' => 'Trade Secret'],
 
             //Legal Loan Security types
             ['CodeID' => 'LoanSecurityTypes', 'Description' => 'Property pledged as security for a loan.', 'Value' => 'Real Estate Mortgage'],
@@ -319,8 +318,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for registered trademarks and related rights.', 'Value' => 'Trademark Search'],
             ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for registered patents and intellectual property.', 'Value' => 'Patent Search'],
             ['CodeID' => 'LegalSearchRequestTypes', 'Description' => 'Search for bankruptcy or insolvency status of an individual or company.', 'Value' => 'Bankruptcy Search'],
-          
-            // Insurance Product 
+
+            // Insurance Product
             ['CodeID' => 'InsuranceProduct', 'Description' => 'Life Insurance', 'Value' => 'L'],
             ['CodeID' => 'InsuranceProduct', 'Description' => 'Health Insurance', 'Value' => 'H'],
             ['CodeID' => 'InsuranceProduct', 'Description' => 'Property Insurance', 'Value' => 'P'],
@@ -349,7 +348,7 @@ class CodeDetailSeeder extends Seeder
             // Stock Consumption
             ['CodeID' => 'IssuedToType', 'Description' => 'Employee', 'Value' => 'E'],
             ['CodeID' => 'IssuedToType', 'Description' => 'Department', 'Value' => 'D'],
-            
+
             // Fleet Management
 
             ['CodeID' => 'EmploymentStatus', 'Description' => 'Retired', 'Value' => 'RE'],
@@ -371,23 +370,23 @@ class CodeDetailSeeder extends Seeder
             //Insurance Statuses
             ['CodeID' => 'InsuranceStatus', 'Description' => 'Active', 'Value' => 'ACT'],
             ['CodeID' => 'InsuranceStatus', 'Description' => 'Pending', 'Value' => 'PEN'],
-            ['CodeID' => 'InsuranceStatus', 'Description' => 'Expired', 'Value' => 'EXP'], 
+            ['CodeID' => 'InsuranceStatus', 'Description' => 'Expired', 'Value' => 'EXP'],
 
             //Vehicle Statuses
             ['CodeID' => 'InspectionStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
             ['CodeID' => 'InspectionStatus', 'Description' => 'Completed', 'Value' => 'CO'],
-            ['CodeID' => 'InspectionStatus', 'Description' => 'Pending', 'Value' => 'PG'], 
-            ['CodeID' => 'InspectionStatus', 'Description' => 'Failed', 'Value' => 'FA'], 
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Pending', 'Value' => 'PG'],
+            ['CodeID' => 'InspectionStatus', 'Description' => 'Failed', 'Value' => 'FA'],
 
             //Driver Employment Type
             ['CodeID' => 'EmploymentType', 'Description' => 'Permanent', 'Value' => 'PR'],
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
-            ['CodeID' => 'EmploymentType', 'Description' => 'Hired', 'Value' => 'HR'], 
+            ['CodeID' => 'EmploymentType', 'Description' => 'Hired', 'Value' => 'HR'],
 
             //Vehicle Request Status
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Pending', 'Value' => 'pe'],
-            ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Rejected', 'Value' => 'Re'], 
+            ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Rejected', 'Value' => 'Re'],
 
             //Driver Type
             ['CodeID' => 'DriverType', 'Description' => 'Contracted', 'Value' => 'Co'],
@@ -401,7 +400,7 @@ class CodeDetailSeeder extends Seeder
             //Inventory Item Status
             ['CodeID' => 'ItemStatus', 'Description' => 'Active', 'Value' => 'AC'],
             ['CodeID' => 'ItemStatus', 'Description' => 'Inactive', 'Value' => 'IN'],
-           
+
             //Maintenance Type
             ['CodeID' => 'FleetMaintenanceType', 'Description' => 'Routine', 'Value' => 'RO'],
             ['CodeID' => 'FleetMaintenanceType', 'Description' => 'Inspection', 'Value' => 'IN'],
@@ -415,7 +414,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Acknowledged', 'Value' => 'AC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Completed', 'Value' => 'CO'],
-           
+
         ];
 
         foreach ($static as $index => $item) {

@@ -14,18 +14,19 @@ class FleetTripLogService
     /**
      * Generate a unique trip number
      */
-  private function generateTripNo(): string
-{    $latestTripNo = FleetTripLog::withTrashed()->latest('CreatedOn')->first();
+    private function generateTripNo(): string
+    {
+        $latestTripNo = FleetTripLog::withTrashed()->latest('CreatedOn')->first();
 
-    if (!$latestTripNo || !$latestTripNo->Id) {
-        return 'TRP-0001';
+        if (!$latestTripNo || !$latestTripNo->Id) {
+            return 'TRP-0001';
+        }
+
+        $lastId = (int)str_replace('TRP-', '', $latestTripNo->Id);
+        $newId = $lastId + 1;
+
+        return 'TRP-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
-
-    $lastId = (int) str_replace('TRP-', '', $latestTripNo->Id);
-    $newId = $lastId + 1;
-
-    return 'TRP-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
-}
 
     /**
      * Create a new trip
@@ -75,8 +76,8 @@ class FleetTripLogService
 
             $tripLog->update([
                 'VehicleID' => $data['VehicleID'],
-                'DriverType' => $driver['type_id'],   
-                'DriverID' => $driver['driver_id'],   
+                'DriverType' => $driver['type_id'],
+                'DriverID' => $driver['driver_id'],
                 'TripStartDate' => $data['TripStartDate'] ?? $tripLog->TripStartDate,
                 'TripEndDate' => $data['TripEndDate'] ?? $tripLog->TripEndDate,
                 'StartTime' => $data['StartTime'] ?? $tripLog->StartTime,
@@ -115,7 +116,6 @@ class FleetTripLogService
             $tripLog->DeletedOn = now();
             $tripLog->save();
             activity()
-            
                 ->causedBy(Auth::user())
                 ->performedOn($tripLog)
                 ->log("Trip log deleted for VehicleID: {$tripLog->VehicleID}");

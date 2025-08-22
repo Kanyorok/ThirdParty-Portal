@@ -28,7 +28,7 @@ class BancAssuranceReferral extends Model
     ];
 
     protected $casts = [
-    'Status' => InsuranceReferralStatus::class,
+        'Status' => InsuranceReferralStatus::class,
     ];
 
     public static function getPrimaryKey(): string
@@ -56,5 +56,5 @@ class BancAssuranceReferral extends Model
         return $this->belongsTo(Employee::class, 'ReferredBy', 'Id');
     }
 
-    
+
 }

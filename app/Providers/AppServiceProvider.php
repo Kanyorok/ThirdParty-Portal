@@ -172,7 +172,7 @@ use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
 use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
-Use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
+use APP\policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
@@ -188,7 +188,7 @@ use App\Models\FleetManagement\DriverManagement;
 use App\Policies\FleetManagement\DriverManagementPolicy;
 use App\Policies\FleetManagement\FleetMakePolicy;
 use App\Policies\FleetManagement\FleetModelPolicy;
-use App\Policies\FleetManagement\VehicleRegistryPolicy; 
+use App\Policies\FleetManagement\VehicleRegistryPolicy;
 use App\Policies\FleetManagement\DriverPolicy;
 
 
@@ -397,10 +397,10 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
             BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
             InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
-            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,            
-            
+            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,
+
             //Third Parties
-              //Fleet Management
+            //Fleet Management
             FleetMake::getPrimaryKey() => FleetMake::class,
             FleetModel::getPrimaryKey() => FleetModel::class,
             VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
@@ -409,9 +409,9 @@ class AppServiceProvider extends ServiceProvider
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
             //////////////  Finance  ////////////////
-            FinanceGLAccounts::getPrimaryKey()=>FinanceGLAccounts::class,
-            FinanceGLSubAccountTypes::getPrimaryKey()=>FinanceGLSubAccountTypes::class,
-            FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
+            FinanceGLAccounts::getPrimaryKey() => FinanceGLAccounts::class,
+            FinanceGLSubAccountTypes::getPrimaryKey() => FinanceGLSubAccountTypes::class,
+            FinanceGLTypeGroup::getPrimaryKey() => FinanceGLTypeGroup::class,
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
@@ -428,7 +428,7 @@ class AppServiceProvider extends ServiceProvider
             FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
             FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
-            
+
             //////////////  Legal  ////////////////
             LegalDocument::getPrimaryKey() => LegalDocument::class,
             LegalClause::getPrimaryKey() => LegalClause::class,

@@ -17,185 +17,185 @@ use Illuminate\Http\Request;
 class BancassuranceReferralController extends Controller
 {
 
-public function index()
-{
-    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])->get();
+    public function index()
+    {
+        $referrals = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser',])->get();
 
-    return view('bancassurance.referrals.index', compact('referrals'));
-}
-public function create()
-{
-    $insuranceproducts = CodeDetail::where('CodeID','InsuranceProduct')->get();
-    $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
-    $users = User::with('employee')->get();
+        return view('bancassurance.referrals.index', compact('referrals'));
+    }
 
-    return view('bancassurance.referrals.create', compact('users', 'insurers','insuranceproducts'));
-}
+    public function create()
+    {
+        $insuranceproducts = CodeDetail::where('CodeID', 'InsuranceProduct')->get();
+        $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
+        $users = User::with('employee')->get();
 
-public function store(BancAssuranceReferralRequest $request)
-{
-    $user = auth()->user();
-    $validated = $request->validated();
+        return view('bancassurance.referrals.create', compact('users', 'insurers', 'insuranceproducts'));
+    }
 
-    // Handle nullable relationships safely
-    $ReferredBy = !empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
+    public function store(BancAssuranceReferralRequest $request)
+    {
+        $user = auth()->user();
+        $validated = $request->validated();
 
-    $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
+        // Handle nullable relationships safely
+        $ReferredBy = !empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
 
-    $InsuranceProductId = !empty($validated['InsuranceProductId']) ? CodeDetail::findOrFail($validated['InsuranceProductId']) : null;
+        $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
 
-    $PreferredInsurerId = CodeDetail::findOrFail($validated['PreferredInsurerId']);
+        $InsuranceProductId = !empty($validated['InsuranceProductId']) ? CodeDetail::findOrFail($validated['InsuranceProductId']) : null;
 
-    $branchId = $user->employee->BranchId ?? null;
-    $BranchId = Branch::findOrFail($branchId);
+        $PreferredInsurerId = CodeDetail::findOrFail($validated['PreferredInsurerId']);
 
-    // Determine status based on assignment
-    $Status = $AssignedTo ? InsuranceReferralStatus::Assigned : InsuranceReferralStatus::Pending;
+        $branchId = $user->employee->BranchId ?? null;
+        $BranchId = Branch::findOrFail($branchId);
 
-    // Create the referral
-    $assurancereferral = BancAssuranceReferralService::create(
-        $validated['ClientName'],
-        $validated['ClientIDNumber'],
-        $validated['ClientPhone'], 
-        $validated['ClientEmail'],
-        $ReferredBy,
-        Carbon::parse($validated['ReferralDate']),
-        $InsuranceProductId,
-        $PreferredInsurerId,
-        $validated['Remarks'],
-        $Status,
-        $AssignedTo,
-        $BranchId,
-        auth()->user()
-    );
+        // Determine status based on assignment
+        $Status = $AssignedTo ? InsuranceReferralStatus::Assigned : InsuranceReferralStatus::Pending;
 
-    return redirect()->route('bancassurance.referrals.index')
-        ->with('success', 'Referral submitted!');
-}
+        // Create the referral
+        $assurancereferral = BancAssuranceReferralService::create(
+            $validated['ClientName'],
+            $validated['ClientIDNumber'],
+            $validated['ClientPhone'],
+            $validated['ClientEmail'],
+            $ReferredBy,
+            Carbon::parse($validated['ReferralDate']),
+            $InsuranceProductId,
+            $PreferredInsurerId,
+            $validated['Remarks'],
+            $Status,
+            $AssignedTo,
+            $BranchId,
+            auth()->user()
+        );
 
-public function edit($Id)
-{
-    $referral = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser'])->findOrFail($Id);
-    $insuranceproducts = CodeDetail::where('CodeID', 'InsuranceProduct')->get();
-    $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
-    $users = User::with('employee')->get();
+        return redirect()->route('bancassurance.referrals.index')
+            ->with('success', 'Referral submitted!');
+    }
 
-    return view('bancassurance.referrals.edit', compact('referral', 'users', 'insurers', 'insuranceproducts'));
-}
+    public function edit($Id)
+    {
+        $referral = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser'])->findOrFail($Id);
+        $insuranceproducts = CodeDetail::where('CodeID', 'InsuranceProduct')->get();
+        $insurers = CodeDetail::where('CodeID', 'InsuranceProvider')->get();
+        $users = User::with('employee')->get();
 
-public function update(BancAssuranceReferralRequest $request, $Id)
-{
-    $user = auth()->user();
-    $validated = $request->validated();
+        return view('bancassurance.referrals.edit', compact('referral', 'users', 'insurers', 'insuranceproducts'));
+    }
 
-    $referral = BancAssuranceReferral::where('Id', $Id)->firstOrFail();
+    public function update(BancAssuranceReferralRequest $request, $Id)
+    {
+        $user = auth()->user();
+        $validated = $request->validated();
 
-    // Fetch model instances
-    $ReferredBy = !empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
+        $referral = BancAssuranceReferral::where('Id', $Id)->firstOrFail();
 
-    $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
+        // Fetch model instances
+        $ReferredBy = !empty($validated['ReferredBy']) ? User::findOrFail($validated['ReferredBy']) : $user;
 
-    $InsuranceProductId = !empty($validated['InsuranceProductId']) ? CodeDetail::findOrFail($validated['InsuranceProductId']) : null;
+        $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
 
-    $PreferredInsurerId = CodeDetail::findOrFail($validated['PreferredInsurerId']);
+        $InsuranceProductId = !empty($validated['InsuranceProductId']) ? CodeDetail::findOrFail($validated['InsuranceProductId']) : null;
 
-    $Status = $AssignedTo ? InsuranceReferralStatus::Assigned : InsuranceReferralStatus::Pending;
+        $PreferredInsurerId = CodeDetail::findOrFail($validated['PreferredInsurerId']);
 
-    $branchId = $user->employee->BranchId ?? null;
-    $Branch = Branch::findOrFail($branchId);
+        $Status = $AssignedTo ? InsuranceReferralStatus::Assigned : InsuranceReferralStatus::Pending;
 
-    // Pass model instances to the service (not IDs)
-    $referralupdate = BancAssuranceReferralService::update(
-        $referral,
-        $validated['ClientName'],
-        $validated['ClientIDNumber'],
-        $validated['ClientPhone'],
-        $validated['ClientEmail'],
-        $ReferredBy,
-        Carbon::parse($validated['ReferralDate']),
-        $InsuranceProductId,
-        $PreferredInsurerId,
-        $validated['Remarks'],
-        $Status,
-        $AssignedTo,
-        $Branch,
-        $user
-    );
+        $branchId = $user->employee->BranchId ?? null;
+        $Branch = Branch::findOrFail($branchId);
 
-    return redirect()->route('bancassurance.referrals.index')
-        ->with('success', 'Referral updated successfully!');
-}
+        // Pass model instances to the service (not IDs)
+        $referralupdate = BancAssuranceReferralService::update(
+            $referral,
+            $validated['ClientName'],
+            $validated['ClientIDNumber'],
+            $validated['ClientPhone'],
+            $validated['ClientEmail'],
+            $ReferredBy,
+            Carbon::parse($validated['ReferralDate']),
+            $InsuranceProductId,
+            $PreferredInsurerId,
+            $validated['Remarks'],
+            $Status,
+            $AssignedTo,
+            $Branch,
+            $user
+        );
 
-
-
-public function assignList()
-{
-    $referrals = BancAssuranceReferral::with('insuranceProduct')
-        ->whereNull('AssignedTo')
-        ->where('Status',InsuranceReferralStatus::Pending->value) // Assuming 'P' stands for 'Pending'
-        ->get();
-
-    $employees = Employee::whereNull('DeletedOn')
-        ->select('Id', 'FirstName', 'LastName')
-        ->get();
-
-    return view('bancassurance.referrals.assign', compact('referrals', 'employees'));
-}
+        return redirect()->route('bancassurance.referrals.index')
+            ->with('success', 'Referral updated successfully!');
+    }
 
 
-public function assign(Request $request, $Id)
-{
-    $request->validate([
-        'AssignedTo' => 'required|exists:t_Employees,Id',
-    ]);
+    public function assignList()
+    {
+        $referrals = BancAssuranceReferral::with('insuranceProduct')
+            ->whereNull('AssignedTo')
+            ->where('Status', InsuranceReferralStatus::Pending->value) // Assuming 'P' stands for 'Pending'
+            ->get();
 
-    $referral = BancAssuranceReferral::findOrFail($Id);
+        $employees = Employee::whereNull('DeletedOn')
+            ->select('Id', 'FirstName', 'LastName')
+            ->get();
 
-    $referral->AssignedTo = $request->AssignedTo;
-    $referral->Status = InsuranceReferralStatus::Assigned->value;
-    $referral->ModifiedOn = now();
-    $referral->ModifiedBy = auth()->Id(); 
+        return view('bancassurance.referrals.assign', compact('referrals', 'employees'));
+    }
 
-    $referral->save();
 
-    return redirect()->back()->with('success', 'Referral assigned successfully.');
-}
+    public function assign(Request $request, $Id)
+    {
+        $request->validate([
+            'AssignedTo' => 'required|exists:t_Employees,Id',
+        ]);
 
-public function performanceView()
-{
-    $referrals = BancAssuranceReferral::with(['referredByEmployee.branch'])->get();
+        $referral = BancAssuranceReferral::findOrFail($Id);
 
-    $grouped = $referrals->groupBy(function ($referral) {
-        return $referral->referredByEmployee?->Id ?? 'Unknown';
-    });
+        $referral->AssignedTo = $request->AssignedTo;
+        $referral->Status = InsuranceReferralStatus::Assigned->value;
+        $referral->ModifiedOn = now();
+        $referral->ModifiedBy = auth()->Id();
 
-    $performance = $grouped->map(function ($items) {
-        $employee = $items->first()->referredByEmployee;
-        $branch = $employee?->branch;
+        $referral->save();
 
-        return [
-            'StaffName' => $employee ? $employee->FirstName . ' ' . $employee->LastName : 'Unknown',
-            'BranchName' => $branch?->Name ?? 'Unknown',
-            'Total' => $items->count(),
-            'Converted' => $items->where('Status', InsuranceReferralStatus::Converted->value)->count(),
-            'Pending' => $items->where('Status', InsuranceReferralStatus::Pending->value)->count(),
-        ];
-    })->sortByDesc('Total');
+        return redirect()->back()->with('success', 'Referral assigned successfully.');
+    }
 
-    return view('bancassurance.referrals.performance', ['performance' => $performance]);
-}
+    public function performanceView()
+    {
+        $referrals = BancAssuranceReferral::with(['referredByEmployee.branch'])->get();
 
-Public function destroy($Id)
-{
-    $referral = BancAssuranceReferral::findOrFail($Id);
-    $referral->DeletedBy = Auth()->Id();
-    $referral->save();
-    $referral->delete();
+        $grouped = $referrals->groupBy(function ($referral) {
+            return $referral->referredByEmployee?->Id ?? 'Unknown';
+        });
 
-    activity()->causedBy(auth()->user()->Id)->performedOn($referral)
-    ->event('delete')->log("Deleted Bank Assurance Referral {$referral->Id}.");
+        $performance = $grouped->map(function ($items) {
+            $employee = $items->first()->referredByEmployee;
+            $branch = $employee?->branch;
 
-    return redirect()->route('bancassurance.referrals.index')->with('success', 'Referral deleted successfully!');
+            return [
+                'StaffName' => $employee ? $employee->FirstName . ' ' . $employee->LastName : 'Unknown',
+                'BranchName' => $branch?->Name ?? 'Unknown',
+                'Total' => $items->count(),
+                'Converted' => $items->where('Status', InsuranceReferralStatus::Converted->value)->count(),
+                'Pending' => $items->where('Status', InsuranceReferralStatus::Pending->value)->count(),
+            ];
+        })->sortByDesc('Total');
 
-}
+        return view('bancassurance.referrals.performance', ['performance' => $performance]);
+    }
+
+    public function destroy($Id)
+    {
+        $referral = BancAssuranceReferral::findOrFail($Id);
+        $referral->DeletedBy = Auth()->Id();
+        $referral->save();
+        $referral->delete();
+
+        activity()->causedBy(auth()->user()->Id)->performedOn($referral)
+            ->event('delete')->log("Deleted Bank Assurance Referral {$referral->Id}.");
+
+        return redirect()->route('bancassurance.referrals.index')->with('success', 'Referral deleted successfully!');
+
+    }
 }

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,16 +12,16 @@ return new class extends Migration
     {
         Schema::create('t_BancassurancePolicies', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('CustomerID')->Constrained('t_BancassuranceCustomers','Id');
-            $table->foreignId('ProductID')->Constrained('t_CodeDetails','ID');
-            $table->foreignId('InsurerID')->Constrained('t_CodeDetails','ID')->nullable();
+            $table->foreignId('CustomerID')->Constrained('t_BancassuranceCustomers', 'Id');
+            $table->foreignId('ProductID')->Constrained('t_CodeDetails', 'ID');
+            $table->foreignId('InsurerID')->Constrained('t_CodeDetails', 'ID')->nullable();
             $table->string('PolicyNumber');
-            $table->float('SumAssured',18,2);
-            $table->float('PremiumAmount',18,2);
+            $table->float('SumAssured', 18, 2);
+            $table->float('PremiumAmount', 18, 2);
             $table->date('PolicyStartDate');
             $table->date('PolicyEndDate');
-            $table->foreignId('PaymentFrequency')->Constrained('t_CodeDetails','ID');
-            $table->foreignId('ReferralID')->Constrained('t_BancassuranceReferrals','Id');
+            $table->foreignId('PaymentFrequency')->Constrained('t_CodeDetails', 'ID');
+            $table->foreignId('ReferralID')->Constrained('t_BancassuranceReferrals', 'Id');
             $table->date('IssuedDate');
             $table->date('ExpiryDate');
             $table->boolean('IsActive');
@@ -32,7 +31,7 @@ return new class extends Migration
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
-            $table->softDeletes('DeletedOn');            
+            $table->softDeletes('DeletedOn');
         });
     }
 
