@@ -2,13 +2,15 @@
 
 namespace App\Models\Legal;
 
+use App\Models\DMS\Document;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalCaseEvidence extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -41,5 +43,13 @@ class LegalCaseEvidence extends Model
     public function case()
     {
         return $this->belongsTo(LegalCase::class, 'LegalCaseID','Id');
+    }
+
+    /**
+     * Relation to uploaded documents.
+     */
+    public function documents()
+    {
+        return $this->morphMany(Document::class, 'documentable')->latest();
     }
 }
