@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
+use App\Models\Fleet\FleetRoutePlan;
+use App\Models\Fleet\FleetVehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetRoutePlan;
 
 class FleetRoutePlannerController extends Controller
 {
@@ -27,7 +27,7 @@ class FleetRoutePlannerController extends Controller
         $validated = $request->validate([
             'VehicleID'  => 'required|exists:t_FleetVehicles,Id',
             'TripName'   => 'required|string|max:255',
-            'VehicleID'  => 'required|exists:t_FleetVehicles,Id',
+            #'VehicleID'  => 'required|exists:t_FleetVehicles,Id',
             'Waypoints'  => 'required|array|min:2',
             'Waypoints.*'=> 'required|string|max:255',
         ]);
