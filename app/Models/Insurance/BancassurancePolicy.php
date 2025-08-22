@@ -52,7 +52,7 @@ class BancassurancePolicy extends Model
 
     public function paymentfrequency()
     {
-        return $this->belongsTo(InsuranceProduct::class,'PaymentFrequency', 'Id');
+        return $this->belongsTo(CodeDetail::class,'PaymentFrequency', 'ID');
     }
 
     public function referral()

@@ -3,8 +3,6 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>💳 Record Premium Payment</h4>
-
     <form method="POST" action="{{ route('bancassurance.premiums.store') }}">
         @csrf
 
@@ -15,8 +13,8 @@
                 @foreach ($policies as $policy)
                     <option
                         value="{{ $policy->Id }}"
-                        data-paymentfrequency="{{ $policy->paymentfrequency->Description }}"
-                        data-customerid="{{ $policy->customer->FullName }}">
+                        data-paymentfrequency="{{ $policy->paymentfrequency->Description}}"
+                        data-customerid="{{ $policy->customerID }}">
                         {{ $policy->PolicyNumber }}
                     </option>
                 @endforeach
@@ -74,7 +72,7 @@
         </div>
 
         <div class="text-end">
-            <button type="submit" class="btn btn-success">💾 Record Payment</button>
+            <button type="submit" class="btn btn-success">Record Payment</button>
         </div>
     </form>
 </div>

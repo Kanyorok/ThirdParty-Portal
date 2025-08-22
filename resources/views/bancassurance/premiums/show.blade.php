@@ -2,7 +2,6 @@
 @section('title', 'Premium Payment Details')
 @section('content')
 <div class="container mt-5" style="max-width: 700px;">
-    <h3 class="mb-4">Premium Payment Details</h3>
     <div class="card">
         <div class="card-body">
             <dl class="row">
@@ -10,7 +9,7 @@
                 <dd class="col-sm-8">{{ $payment->policies->PolicyNumber ?? '-' }}</dd>
 
                 <dt class="col-sm-4">Customer Name</dt>
-                <dd class="col-sm-8">{{ $payment->customer->FullName ?? '-' }}</dd>
+                <dd class="col-sm-8">{{ $payment->CustomerID ?? '-' }}</dd>
 
                 <dt class="col-sm-4">Payment Frequency</dt>
                 <dd class="col-sm-8">{{ $payment->PaymentFrequency ?? '-' }}</dd>

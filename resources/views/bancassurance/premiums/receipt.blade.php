@@ -32,7 +32,7 @@
         <div class="col-md-6">
             <p><strong>Receipt No:</strong> {{ $payment->Id }}</p>
             <p><strong>Policy Number:</strong> {{ $payment->policies->PolicyNumber }}</p>
-            <p><strong>CustomerId:</strong> {{ $payment->customer->FullName }}</p>
+            <p><strong>CustomerId:</strong> {{ $payment->CustomerID }}</p>
             
         </div>
         <div class="col-md-6">

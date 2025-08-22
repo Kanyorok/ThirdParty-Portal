@@ -6,12 +6,8 @@
 @section('content')
 <div class="container mt-4">
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>💳 Premium Payments</h4>
 
-    {{-- Optional: dropdown to select policy to record premium for --}}
-    <a href="{{ route('bancassurance.premiums.create') }}" class="btn btn-primary">
-        ➕ Record Premium Payment
-    </a>
+    <a href="{{ route('bancassurance.premiums.create') }}" class="btn btn-primary">Record Premium Payment</a>
 </div>
 
     <table id="PremiumPaymentsTable" class="table table-striped table-bordered mt-3">
@@ -31,13 +27,13 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $payment->policies->PolicyNumber }}</td>
-                <td>{{ $payment->customer->FullName }}</td>
+                <td>{{ $payment->CustomerID ?? 'N/A' }}</td>
                 <td>{{ $payment->PaymentFrequency }}</td>
-                <td>{{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d M Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d/m/Y') }}</td>
                 <td>{{ number_format($payment->Amount, 2) }}</td>
                 <td>
-          <a href="{{ route('bancassurance.premiums.show', $payment->Id) }}" class="btn btn-sm btn-info">👁 View</a>
-                    <a href="{{ route('bancassurance.premiums.printReceipt', $payment->Id) }}" class="btn btn-sm btn-secondary">🖨️ Print Receipt</a>
+          <a href="{{ route('bancassurance.premiums.show', $payment->Id) }}" class="btn btn-sm btn-info">View</a>
+                    <a href="{{ route('bancassurance.premiums.printReceipt', $payment->Id) }}" class="btn btn-sm btn-secondary">Print Receipt</a>
                     <a href="{{ route('bancassurance.premiums.edit', $payment->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                     <form action="{{ route('bancassurance.premiums.destroy', $payment->Id) }}" method="POST" class="d-inline">
                       @csrf
@@ -49,9 +45,6 @@
             </td>
             </tr>
             @empty
-            <tr>
-                <td colspan="8" class="text-center">No premium payments recorded yet.</td>
-            </tr>
             @endforelse
         </tbody>
     </table>
