@@ -5,19 +5,15 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4>🧩 Riders & Add-ons</h4>
+    <h4>Riders & Add-ons</h4>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     <div class="mb-3 text-end">
-        <a href="{{ route('bancassurance.riders.create') }}" class="btn btn-primary">➕ Add Rider</a>
+        <a href="{{ route('bancassurance.riders.create') }}" class="btn btn-primary">Add Rider</a>
     </div>
-
-    @if($riders->isEmpty())
-        <p class="text-muted">No riders added yet.</p>
-    @else
         <table id='InsuranceProductRider'class="table table-bordered table-striped">
             <thead class="table-light">
                 <tr>
@@ -37,7 +33,7 @@
                 @foreach($riders as $rider)
                 <tr>
                     <td>{{ $rider->Id }}</td>
-                    <td>{{ $rider->provider->InsuranceProviderNO }}</td>
+                    <td>{{ $rider->provider->Name }}</td>
                     <td>{{ $rider->product->Name }}</td>
                     <td>{{ $rider->RiderName }}</td>
                     <td>{{ $rider->Description ?? '-' }}</td>
@@ -52,9 +48,9 @@
                             {{ $rider->IsActive ? 'Active' : 'Inactive' }}
                         </span>
                     </td>
-                    <td>{{ \Carbon\Carbon::parse($rider->CreatedAt)->format('d M Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($rider->CreatedAt)->format('d/m/Y') }}</td>
                     <td>
-                     <a href="{{ route('bancassurance.riders.edit', $rider->Id) }}" class="btn btn-sm btn-warning">✏️ Edit</a>
+                     <a href="{{ route('bancassurance.riders.edit', $rider->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('bancassurance.riders.destroy', $rider->Id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
@@ -67,7 +63,6 @@
                 @endforeach
             </tbody>
         </table>
-    @endif
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

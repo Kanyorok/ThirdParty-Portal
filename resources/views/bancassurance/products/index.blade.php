@@ -5,20 +5,18 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4>📦 Insurance Products</h4>
-
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     <div class="mb-3 text-end">
-        <a href="{{ route('bancassurance.products.create') }}" class="btn btn-primary">➕ New Product</a>
+        <a href="{{ route('bancassurance.products.create') }}" class="btn btn-primary">New Product</a>
     </div>
         <table  id='InsuranceProduct' class="table table-bordered">
             <thead class="table-light">
                 <tr>
                     <th>#</th>         
-                    <th>InsuranceProviderId</th>
+                    <th>Provider</th>
                     <th>Name</th>
                     <th>Type</th>
                     <th>Description</th>
@@ -30,7 +28,7 @@
                 @foreach($products as $product)
                 <tr>
                     <td>{{ $product->Id }}</td>
-                    <td>{{ $product->provider->InsuranceProviderNO }}</td>
+                    <td>{{ $product->provider->Name }}</td>
                     <td>{{ $product->Name }}</td>
                     <td>{{ $product->Type ?? '-' }}</td>
                     <td>{{ $product->Description ?? '-' }}</td>
@@ -42,7 +40,7 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('bancassurance.products.edit', $product->Id) }}" class="btn btn-sm btn-warning">✏️ Edit</a>
+                        <a href="{{ route('bancassurance.products.edit', $product->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('bancassurance.products.destroy', $product->Id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')

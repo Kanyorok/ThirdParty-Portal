@@ -5,15 +5,14 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4>🏢 Insurance Providers</h4>
     <div class="mb-3 text-end">
-        <a href="{{ route('bancassurance.insurers.create') }}" class="btn btn-primary">➕ Add Provider</a>
+        <a href="{{ route('bancassurance.insurers.create') }}" class="btn btn-primary">Add Provider</a>
     </div>
         <table id='InsuranceProvider' class="table table-bordered table-hover">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
-                    <th>InsuranceProvider Number</th>
+                    <th>Provider Number</th>
                     <th>Name</th>
                     <th>Country</th>
                     <th>Contact Person</th>
@@ -39,10 +38,10 @@
                             {{ $provider->IsActive ? 'Active' : 'Inactive' }}
                         </span>
                     </td>
-                    <td>{{ \Carbon\Carbon::parse($provider->CreatedAt)->format('d M Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($provider->CreatedAt)->format('d/m/Y') }}</td>
                     <td>
-                        <a href="{{ route('bancassurance.insurers.edit', $provider->Id) }}" class="btn btn-sm btn-warning">✏️ Edit</a>
-                        <a href="{{ route('bancassurance.insurers.products', $provider->Id) }}" class="btn btn-sm btn-info">📦 View Products</a>
+                        <a href="{{ route('bancassurance.insurers.edit', $provider->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{{ route('bancassurance.insurers.products', $provider->Id) }}" class="btn btn-sm btn-info">View Products</a>
                     <form action="{{ route('bancassurance.insurers.destroy', $provider->Id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')

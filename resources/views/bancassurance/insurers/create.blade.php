@@ -2,33 +2,32 @@
 @section('title', 'Register Insurance Provider')
 @section('content')
 <div class="container mt-4">
-    <h4>🏢 Register Insurance Provider</h4>
 
     <form method="POST" action="{{ route('bancassurance.insurers.store') }}" enctype="multipart/form-data">
         @csrf
 
         <div class="mb-3">
-            <label class="form-label">Name</label>
+            <label class="form-label">Name <span class="text-danger">*</span></label>
             <input name="Name" type="text" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Country</label>
+            <label class="form-label">Country <span class="text-danger">*</span></label>
             <input name="Country" type="text" class="form-control">
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Contact Person</label>
+            <label class="form-label">Contact Person <span class="text-danger">*</span></label>
             <input name="ContactPerson" type="text" class="form-control">
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Email</label>
+            <label class="form-label">Email <span class="text-danger">*</span></label>
             <input name="Email" type="email" class="form-control">
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Phone</label>
+            <label class="form-label">Phone <span class="text-danger">*</span></label>
             <input name="Phone" type="text" class="form-control">
         </div>
 

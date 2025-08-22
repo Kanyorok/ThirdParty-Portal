@@ -3,14 +3,12 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>✏️ Edit Pricing Rule</h4>
-
     <form method="POST" action="{{ route('bancassurance.pricing.update', $rule->Id) }}">
         @csrf
         @method('PUT')
 
          <div class="mb-3">
-            <label class="form-label">Select Provider</label>
+            <label class="form-label">Select Provider <span class="text-danger">*</span></label>
             <select name="InsuranceProviderId" id="Provider-select" class="form-select" required>
                 <option value="">-- Select --</option>
                 @foreach($providers as $provider)
@@ -22,7 +20,7 @@
         </div>
 
         <div class="mb-3">
-             <label class="form-label">Product</label>
+             <label class="form-label">Product <span class="text-danger">*</span></label>
             <select name="Product" id='Product-select' class="form-select" required>
                 <option value="">-- Select --</option>
             </select>
@@ -30,39 +28,39 @@
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label">Min Age</label>
+                <label class="form-label">Min Age <span class="text-danger">*</span></label>
                 <input type="number" name="MinAge" class="form-control" value="{{ $rule->AgeMin }}" required>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Max Age</label>
+                <label class="form-label">Max Age <span class="text-danger">*</span></label>
                 <input type="number" name="MaxAge" class="form-control" value="{{ $rule->AgeMax }}" required>
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label">Min Coverage</label>
+                <label class="form-label">Min Coverage <span class="text-danger">*</span></label>
                 <input type="number" name="MinCoverage" class="form-control" step="0.01" value="{{ $rule->CoverageAmountMin }}" required>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Max Coverage</label>
+                <label class="form-label">Max Coverage <span class="text-danger">*</span></label>
                 <input type="number" name="MaxCoverage" class="form-control" step="0.01" value="{{ $rule->CoverageAmountMax }}" required>
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label">Min Tenure (Years)</label>
+                <label class="form-label">Min Tenure (Years) <span class="text-danger">*</span></label>
                 <input type="number" name="MinTenure" class="form-control" value="{{ $rule->TenureMin }}" required>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Max Tenure (Years)</label>
+                <label class="form-label">Max Tenure (Years) <span class="text-danger">*</span></label>
                 <input type="number" name="MaxTenure" class="form-control" value="{{ $rule->TenureMax }}" required>
             </div>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Premium Rate (%)</label>
+            <label class="form-label">Premium Rate (%) <span class="text-danger">*</span></label>
             <input type="number" name="PremiumRate" class="form-control" step="0.01" value="{{ $rule->PremiumRate }}" required>
         </div>
 
@@ -72,8 +70,8 @@
         </div>
 
         <div class="text-end">
-            <button type="submit" class="btn btn-success">💾 Update Rule</button>
-            <a href="{{ route('bancassurance.pricing.index') }}" class="btn btn-secondary">🔙 Cancel</a>
+            <button type="submit" class="btn btn-success">Update Rule</button>
+            <a href="{{ route('bancassurance.pricing.index') }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>

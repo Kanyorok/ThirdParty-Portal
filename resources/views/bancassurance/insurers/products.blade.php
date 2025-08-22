@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>📦 Products for {{ $provider->Name }}</h4>
+    <h4>Products for {{ $provider->Name }}</h4>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>

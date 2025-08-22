@@ -5,19 +5,15 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4>💰 Insurance Pricing Rules</h4>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     <div class="mb-3 text-end">
-        <a href="{{ route('bancassurance.pricing.create') }}" class="btn btn-primary">➕ Add Pricing Rule</a>
+        <a href="{{ route('bancassurance.pricing.create') }}" class="btn btn-primary">Add Pricing Rule</a>
     </div>
 
-    @if($rules->isEmpty())
-        <p class="text-muted">No pricing rules configured yet.</p>
-    @else
         <table id='InsurancePricingRule'class="table table-bordered table-striped">
             <thead class="table-light">
                 <tr>
@@ -36,7 +32,7 @@
                 @foreach($rules as $rule)
                 <tr>
                     <td>{{ $rule->Id }}</td>
-                    <td>{{ $rule->provider->InsuranceProviderNO}}</td>
+                    <td>{{ $rule->provider->Name}}</td>
                     <td>{{ $rule->product->Name }}</td>
                     <td>
                        {{ number_format($rule->CoverageAmountMax, 2) }} -
@@ -53,7 +49,7 @@
                         @endif
                     </td>
                     <td>
-                         <a href="{{ route('bancassurance.pricing.edit', $rule->Id) }}" class="btn btn-sm btn-warning">✏️ Edit</a>
+                         <a href="{{ route('bancassurance.pricing.edit', $rule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                          <form method="POST" action="{{ route('bancassurance.pricing.destroy', $rule->Id) }}" method="POST" class="d-inline">
                          @csrf
                          @method('DELETE')
@@ -66,7 +62,6 @@
                 @endforeach
             </tbody>
         </table>
-    @endif
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

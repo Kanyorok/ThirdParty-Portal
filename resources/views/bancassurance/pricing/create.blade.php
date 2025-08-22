@@ -3,77 +3,92 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>➕ Add Pricing Rule</h4>
+    <div class="card shadow-lg rounded-3">
+        <div class="card-body">
+            <form method="POST" action="{{ route('bancassurance.pricing.store') }}">
+                @csrf
 
-    <form method="POST" action="{{ route('bancassurance.pricing.store') }}">
-        @csrf
+                {{-- Provider --}}
+                <div class="mb-3">
+                    <label class="form-label">Select Provider <span class="text-danger">*</span></label>
+                    <select name="InsuranceProviderId" id="Provider-select" class="form-select" required>
+                        <option value="">-- Select Provider --</option>
+                        @foreach($providers as $provider)
+                            <option value="{{ $provider->Id }}">{{ $provider->Name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-<div class="mb-3">
-            <label class="form-label">Select Provider </label>
-            <select name="InsuranceProviderId" id='Provider-select' class="form-select" required>
-                <option value="">-- Select --</option>
-                @foreach($providers as $provider)
-                    <option value="{{ $provider->Id }}">{{ $provider->InsuranceProviderNO }}</option>
-                @endforeach
-              </select>
-        </div> 
+                {{-- Product --}}
+                <div class="mb-3">
+                    <label class="form-label">Product <span class="text-danger">*</span></label>
+                    <select name="Product" id="Product-select" class="form-select" required>
+                        <option value="">-- Select Product --</option>
+                    </select>
+                </div>
 
-        <div class="mb-3">
-             <label class="form-label">Product</label>
-            <select name="Product" id='Product-select' class="form-select" required>
-                <option value="">-- Select --</option>
-            </select>
+                {{-- Rule Name --}}
+                <div class="mb-3">
+                    <label class="form-label">Pricing Rule Name <span class="text-danger">*</span></label>
+                    <input type="text" name="RuleName" class="form-control" maxlength="150" required>
+                </div>
+
+                {{-- Coverage & Premium --}}
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Max Coverage <span class="text-danger">*</span></label>
+                        <input type="number" name="CoverageAmountMax" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Min Coverage <span class="text-danger">*</span></label>
+                        <input type="number" name="CoverageAmountMin" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Premium Rate (%) <span class="text-danger">*</span></label>
+                        <input type="number" name="PremiumRate" class="form-control" step="0.01" required>
+                    </div>
+                </div>
+
+                {{-- Age --}}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Min Age <span class="text-danger">*</span></label>
+                        <input type="number" name="AgeMin" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Max Age <span class="text-danger">*</span></label>
+                        <input type="number" name="AgeMax" class="form-control" required>
+                    </div>
+                </div>
+
+                {{-- Tenure --}}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Min Tenure (Months) <span class="text-danger">*</span></label>
+                        <input type="number" name="TenureMin" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Max Tenure (Months) <span class="text-danger">*</span></label>
+                        <input type="number" name="TenureMax" class="form-control" required>
+                    </div>
+                </div>
+
+                {{-- Is Active --}}
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="IsActive" value="1" id="primaryCheck">
+                    <label class="form-check-label" for="primaryCheck">Active</label>
+                </div>
+
+                {{-- Submit --}}
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success px-4">💾 Save Pricing Rule</button>
+                </div>
+            </form>
         </div>
-
-        <div class="mb-3">
-                <label class="form-label"> Rule Name</label>
-                <input type="text" name="RuleName" class="form-control" required maxlength="150">
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label for="CoverageAmountMax" class="form-label">Max Coverage </label>
-                <input type="number" name="CoverageAmountMax" class="form-control" required step="0.01">
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label for="CoverageAmountMin" class="form-label">Min Coverage </label>
-                <input type="number" name="CoverageAmountMin" class="form-control" required step="0.01">
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label for="PremiumRate" class="form-label">Premium Rate (%)</label>
-                <input type="number" name="PremiumRate" class="form-control" step="0.01" required>
-            </div>
-            
-            <div class="col-md-3 mb-3">
-                <label for="AgeMin" class="form-label">Min Age</label>
-                <input type="number" name="AgeMin" class="form-control" required>
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label for="AgeMax" class="form-label">Max Age</label>
-                <input type="number" name="AgeMax" class="form-control" required>
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label for="TenureMin" class="form-label">Min Tenure (Months)</label>
-                <input type="number" name="TenureMin" class="form-control" required>
-            </div>
-
-            <div class="col-md-3 mb-3">
-                <label for="TenureMax" class="form-label">Max Tenure (Months)</label>
-                <input type="number" name="TenureMax" class="form-control" required>
-            </div>
-       <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
-            <label class="form-check-label" for="primaryCheck">IsActive </label>
-        </div>
-
-        <div class="text-end">
-            <button type="submit" class="btn btn-success">💾 Save Pricing Rule</button>
-        </div>
-    </form>
+    </div>
 </div>
+
+{{-- Script --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const ProviderSelect = document.getElementById('Provider-select');
@@ -81,12 +96,9 @@
 
         ProviderSelect.addEventListener('change', function () {
             const ProviderId = this.value;
-
-            // Reset Block dropdown
-            ProductSelect.innerHTML = '<option value="">-- Select a Product--</option>';
+            ProductSelect.innerHTML = '<option value="">-- Select Product --</option>';
 
             if (ProviderId) {
-                // Construct the URL from the named route
                 const url = `{{ route('bancassurance.riders.getProductByProvider', ':Id') }}`.replace(':Id', ProviderId);
 
                 fetch(url)

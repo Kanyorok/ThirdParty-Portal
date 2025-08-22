@@ -2,30 +2,28 @@
 @section('title', 'Add Rider')
 @section('content')
 <div class="container mt-4">
-    <h4>➕ Add Rider / Add-on</h4>
-
     <form method="POST" action="{{ route('bancassurance.riders.store') }}">
         @csrf
 
         <div class="mb-3">
-            <label class="form-label">Select Provider </label>
+            <label class="form-label">Select Provider <span class="text-danger">*</span></label>
             <select name="InsuranceProviderId" id='Provider-select' class="form-select" required>
                 <option value="">-- Select --</option>
                 @foreach($providers as $provider)
-                    <option value="{{ $provider->Id }}">{{ $provider->InsuranceProviderNO }}</option>
+                    <option value="{{ $provider->Id }}">{{ $provider->Name }}</option>
                 @endforeach
               </select>
         </div> 
 
         <div class="mb-3">
-             <label class="form-label">Product</label>
+             <label class="form-label">Product <span class="text-danger">*</span></label>
             <select name="Product" id='Product-select' class="form-select" required>
                 <option value="">-- Select --</option>
             </select>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Rider Name</label>
+            <label class="form-label">Rider Name <span class="text-danger">*</span></label>
             <input type="text" name="RiderName" class="form-control" required>
         </div>
 
@@ -35,7 +33,7 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Additional Premium </label>
+            <label class="form-label">Additional Premium <span class="text-danger">*</span></label>
             <input type="number" name="AdditionalPremium" class="form-control" step="0.01" min="0">
         </div>
 
