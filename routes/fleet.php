@@ -8,7 +8,7 @@ use App\Http\Controllers\FleetManagement\FleetProcurementAndDisposalController;
 use App\Http\Controllers\FleetManagement\FuelManagementController;
 use App\Http\Controllers\FleetManagement\InventoryOfSparePartsController;
 use App\Http\Controllers\FleetManagement\LicensingController;
-use App\Http\Controllers\Fleet\ReportsController;
+use App\Http\Controllers\FleetManagement\ReportsController;
 use App\Http\Controllers\FleetManagement\ServiceTrackingController;
 use App\Http\Controllers\FleetManagement\TripManagementController;
 use App\Http\Controllers\FleetManagement\UtilizationController;
