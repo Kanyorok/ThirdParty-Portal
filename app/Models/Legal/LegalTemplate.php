@@ -41,6 +41,7 @@ class LegalTemplate extends Model
         'ApprovedOn',
         'CreatedBy',
         'ModifiedBy',
+        'CreatedOn',
         'DeletedBy',
     ];
 
