@@ -99,7 +99,6 @@ use App\Models\Inventory\UOMConversion;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\PlanLineItem;
-use App\Models\Procurement\PrequalificationPeriod;
 use App\Models\Procurement\ProcurementMethod;
 use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\Requisitions;
@@ -213,6 +212,9 @@ use App\Models\Legal\LegalIntellectualProperty;
 use App\Models\Legal\LegalObligation;
 use App\Models\Legal\LegalSearchRequest;
 use App\Models\Legal\LoanSecurity;
+use App\Models\Procurement\Section;
+use Illuminate\Support\Facades\View;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -487,7 +489,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PropertyMaintenanceRequest::class, PropertyMaintenanceRequestPolicy::class);
         Gate::policy(PropertyMaintenanceAssign::class, PropertyMaintenanceAssignPolicy::class);
         Gate::policy(PropertyMaintenanceWorkCompletion::class, PropertyMaintenanceWorkCompletionPolicy::class);
-        Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
+        // Gate::policy(PrequalificationPeriod::class, PrequalificationPeriodPolicy::class);
         Gate::Policy(PropertyNewLease::class, PropertyNewLeasePolicy::class);
         Gate::policy(PropertyLeaseTermination::class, PropertyLeaseTerminationPolicy::class);
         Gate::policy(BancAssuranceReferral::class, BancAssuranceReferralPolicy::class);
@@ -541,6 +543,12 @@ class AppServiceProvider extends ServiceProvider
          Event::listen(CampaignSubmittedEvent::class);
          Event::listen(CampaignRunEvent::class);*/
 
-
+        View::composer(
+            ['procurement.suppliers.prequalification.prequalification-rounds.create', 'procurement.suppliers.prequalification.prequalification-rounds.edit'],
+            function ($view) {
+                $masterSections = Section::with('criteria')->get();
+                $view->with('masterSections', $masterSections);
+            }
+        );
     }
 }

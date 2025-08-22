@@ -41,7 +41,7 @@ class ModuleSeeder extends Seeder
     {
         $values = collect([
             ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 101000, 'Name' => 'Parties', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 100000],
+            ['ModuleID' => 101000, 'Name' => 'Parties', 'Icon' => null, 'Description' => '', 'Route' => 'thirdparty.parties.index', 'ParentID' => 100000],
 
         ]);
         if ($fresh) {
@@ -125,12 +125,14 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],
             ['ModuleID' => 303200, 'Name' => 'Prequalification', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => null],
-            ['ModuleID' => 303210, 'Name' => 'Prequalification Periods', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqrounds.index'],
-            ['ModuleID' => 303220, 'Name' => 'Prequalification Criteria', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqcriteria.index'],
-            ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqapplications.index'],
+            ['ModuleID' => 303210, 'Name' => 'Prequalification Rounds', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.prequalification-rounds.index'],
+            // ['ModuleID' => 303210, 'Name' => 'Prequalification Periods', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqrounds.index'],
+            // ['ModuleID' => 303220, 'Name' => 'Prequalification Criteria', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqcriteria.index'],
+            ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.applications.index'],
             ['ModuleID' => 303240, 'Name' => 'Evaluation & Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqevaluation.index'],
             ['ModuleID' => 303250, 'Name' => 'Prequalified Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqsuppliers.index'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 305060, 'Name' => 'Supplier Categories', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'proc.supplier-cat.index'],
 
             // Tender Setup
             ['ModuleID' => 305100, 'Name' => 'Tender Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
@@ -303,7 +305,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
             ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
             ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
-
             //Settings
             // ['ModuleID' => 1206000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Budget Settings', 'Route' => null, 'ParentID' => 1200000],
             //['ModuleID' => 1206040, 'Name' => 'Budget Line Categories', 'Icon' => null, 'Description' => 'Budget Lines Categories', 'Route' => 'budgetlinecategories.index', 'ParentID' => 1206000],

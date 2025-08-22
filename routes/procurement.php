@@ -28,9 +28,9 @@ use App\Http\Controllers\Procurement\PlanFromNeedsController;
 use App\Http\Controllers\Procurement\PlanManualInputController;
 use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
-use App\Http\Controllers\Procurement\PrequalificationCriteriaSetupController;
-use App\Http\Controllers\Procurement\PrequalificationEvalAprovalController;
-use App\Http\Controllers\Procurement\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationCriteriaSetupController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvalAprovalController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationPeriodController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
@@ -60,7 +60,7 @@ use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\RFQSettingController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
-use App\Http\Controllers\Procurement\SupplierListingController;
+// use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\TenderAcceptController;
 use App\Http\Controllers\Procurement\TenderAssignRoleController;
 use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
@@ -228,8 +228,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
             'show' => 'procurement.criterias.show',
             'store' => 'procurement.criterias.store',
         ]);
-    Route::resource('tenderevaluations', TenderEvaluationsController::class);
-    Route::post("/store-tender-sections", [TenderEvaluationsController::class, 'tenderSections'])->name('store-tender-sections');
+    Route::resource('tenderevaluations',  TenderEvaluationsController::class);
+    Route::post("/store-tender-sections",  [TenderEvaluationsController::class,  'tenderSections'])->name('store-tender-sections');
     Route::get('/tender-criteria/{tenderId}', [TenderEvaluationsController::class, 'getTenderCriteria'])->name('tender-criteria');
     Route::post('/tender-criteria', [TenderEvaluationsController::class, 'storeTenderCriteria'])->name('tender-criteria.store');
     Route::post('/store-criteria-scores', [TenderEvaluationsController::class, 'criteriaScores'])->name('store-criteria-scores');
@@ -392,13 +392,13 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
 
 
 //Route::resource('preqrounds', PrequalificationRoundsController::class);
-Route::get('preqrounds', [PrequalificationPeriodController::class, 'index'])->name('preqrounds.index');
-Route::get('preqrounds/create', [PrequalificationPeriodController::class, 'create'])->name('preqrounds.create');
-Route::post('preqrounds', [PrequalificationPeriodController::class, 'store'])->name('preqrounds.store');
-Route::get('preqrounds/{Id}', [PrequalificationPeriodController::class, 'show'])->name('preqrounds.show');
-Route::get('preqrounds/edit/{Id}', [PrequalificationPeriodController::class, 'edit'])->name('preqrounds.edit');
-Route::put('preqrounds/{Id}', [PrequalificationPeriodController::class, 'update'])->name('preqrounds.update');
-Route::delete('preqrounds/{Id}', [PrequalificationPeriodController::class, 'destroy'])->name('preqrounds.destroy');
+// Route::get('preqrounds', [PrequalificationPeriodController::class, 'index'])->name('preqrounds.index');
+// Route::get('preqrounds/create', [PrequalificationPeriodController::class, 'create'])->name('preqrounds.create');
+// Route::post('preqrounds', [PrequalificationPeriodController::class, 'store'])->name('preqrounds.store');
+// Route::get('preqrounds/{Id}', [PrequalificationPeriodController::class, 'show'])->name('preqrounds.show');
+// Route::get('preqrounds/edit/{Id}', [PrequalificationPeriodController::class, 'edit'])->name('preqrounds.edit');
+// Route::put('preqrounds/{Id}', [PrequalificationPeriodController::class, 'update'])->name('preqrounds.update');
+// Route::delete('preqrounds/{Id}', [PrequalificationPeriodController::class, 'destroy'])->name('preqrounds.destroy');
 
 
 //Route::resource('preqcriteria', PrequalificationCriteriaSetupController::class);
@@ -411,7 +411,13 @@ Route::get('preqcriteria/edit/{Id}', [PrequalificationCriteriaSetupController::c
 Route::put('preqcriteria/update/{id}', [PrequalificationCriteriaSetupController::class, 'update'])->name('preqcriteria.update');
 Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupController::class, 'destroy'])->name('preqcriteria.destroy');
 
+// Removed this; kinda rendundant
+// Route::resource('supplierslist', SupplierListingController::class);
 
+// Route::resource('preqapplications', PrequalificationApplicationsController::class);
+Route::resource('preqevaluation', PrequalificationEvaluationController::class);
+Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
+Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
 Route::resource('supplierslist', SupplierListingController::class);
 
 Route::resource('preqapplications', PrequalificationApplicationsController::class);
@@ -484,6 +490,8 @@ Route::post('procurement/rfq/criterias', [RFQCriteriaController::class, 'store']
 Route::get('/procurement/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
 Route::get('procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
 Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
+
+
 
 //// RFQ Criteria Setup
 //Route::prefix('procurement/rfq')->group(function () {
