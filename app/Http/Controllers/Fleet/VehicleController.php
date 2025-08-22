@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Fleet;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
+use App\Policies\FleetManagement\FleetVehiclePolicy;
 use App\Models\Core\CodeDetail;
 use App\Models\Fleet\Branch;
 use App\Models\Fleet\FleetVehicleAssignment;
@@ -25,6 +26,7 @@ class VehicleController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', FleetVehicle::class);
         $vehicles = FleetVehicle::with(['vehicleType', 'fuelType', 'branch'])
             ->where('CreatedBy', Auth::id())
             ->get();
@@ -34,6 +36,7 @@ class VehicleController extends Controller
 
     public function create()
     {
+        $this->authorize('create', FleetVehicle::class);
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
         $fuelTypes = FuelType::all();
         $branches = Branch::all();
@@ -46,6 +49,7 @@ class VehicleController extends Controller
 
     public function store(VehicleManagementRequest $request)
     {
+        $this->authorize('update', FleetVehicle::class);
         $validated = $request->validated();
 
         $vehicle = $this->vehicleService->create($validated);
@@ -57,6 +61,7 @@ class VehicleController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view', FleetVehicle::class);
         $vehicle = FleetVehicle::with(['vehicleType', 'fuelType', 'branch', 'brand', 'model'])->findOrFail($id);
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
         $fuelTypes = FuelType::all();
@@ -69,6 +74,7 @@ class VehicleController extends Controller
 
     public function edit($id)
     {
+        $this->authorize('edit', FleetVehicle::class);
         $vehicle = FleetVehicle::findOrFail($id);
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
         $fuelTypes = FuelType::all();
@@ -82,6 +88,7 @@ class VehicleController extends Controller
 
     public function update(VehicleManagementRequest $request, $id)
     {
+        $this->authorize('update', FleetVehicle::class);
         $vehicle = FleetVehicle::findOrFail($id);
         $validated = $request->validated();
 
@@ -112,6 +119,7 @@ class VehicleController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('destroy', FleetVehicle::class);
         $vehicle = FleetVehicle::findOrFail($id);
         $this->vehicleService->delete($vehicle);
 

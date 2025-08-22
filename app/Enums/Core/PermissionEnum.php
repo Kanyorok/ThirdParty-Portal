@@ -567,6 +567,23 @@ enum PermissionEnum: string
     case DriverManagementUpdate = 'driverManagement-update';
     case DriverManagementDestroy = 'driverManagement-destroy';
 
+    
+    case FleetVehicleView = 'fleetVehicle-view';
+    case FleetVehicleCreate = 'fleetVehicle-create';
+    case FleetVehicleUpdate = 'fleetVehicle-update';
+    case FleetVehicleDestroy = 'fleetVehicle-destroy';
+
+        
+    case FleetInsuranceTrackerView = 'fleetinsurancetracker-view';
+    case FleetInsuranceTrackerCreate = 'fleetinsurancetracker-create';
+    case FleetInsuranceTrackerUpdate = 'fleetinsurancetracker-update';
+    case FleetInsuranceTrackerDestroy = 'fleetinsurancetracker-destroy';
+
+    case FleetInspectionScheduleView = 'fleetinspectionschedule-view';
+    case FleetInspectionScheduleCreate = 'fleetinspectionschedule-create';
+    case FleetInspectionScheduleUpdate = 'fleetinspectionschedule-update';
+    case FleetInspectionScheduleDestroy = 'fleetinspectionschedule-destroy';
+
 
 
     public static function display(): Collection
@@ -677,6 +694,15 @@ enum PermissionEnum: string
             [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
             [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
             
+            //Fleet
+            [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
+            [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
+            [self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy],
+            [self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy],
+            [self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy],
+            [self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy],
+            [self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy],
+
         ]);
     }
 
@@ -757,7 +783,10 @@ enum PermissionEnum: string
             self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy,
             self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy,
             self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy,
-            self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy
+            self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy,
+            self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy,
+            self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy,
+            self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy
             => ModulesEnum::Fleet,
 
 
@@ -885,6 +914,9 @@ enum PermissionEnum: string
             self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy => 'Fleet Make',
             self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy => 'Vehicle Registry',
             self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy => 'Driver Management',
+            self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy => 'Vehicle Management',
+            self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy => 'Fleet Insurance Tracker',
+            self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy => 'Vehicle Inspection',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',

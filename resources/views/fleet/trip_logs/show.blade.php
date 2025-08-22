@@ -67,7 +67,6 @@
         </div>
     </div>
 </div>
-
 <!-- Edit Trip Modal -->
 <div class="modal fade" id="editTripModal" tabindex="-1" aria-labelledby="editTripModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl">
@@ -81,56 +80,62 @@
         </div>
         <div class="modal-body">
           <div class="row g-3">
-            <!-- Trip Details -->
+            <!-- Trip No -->
             <div class="col-md-3">
               <label for="TripNo" class="form-label">Trip No</label>
               <input type="text" name="TripNo" class="form-control" value="{{ $tripLogs->TripNo }}" readonly>
             </div>
+
+            <!-- Start Date / Time -->
             <div class="col-md-3">
               <label for="TripStartDate" class="form-label">Start Date</label>
-              <input type="date" name="TripStartDate" class="form-control" value="{{ $tripLogs->TripStartDate }}">
+              <input type="date" name="TripStartDate" class="form-control" value="{{ \Carbon\Carbon::parse($tripLogs->TripStartDate)->format('Y-m-d') }}">
             </div>
-            <div class="col-md-6">
-                <label for="StartTime" class="form-label">Start Time</label>
-                <input type="time" name="StartTime" class="form-control" 
-                    value="{{ $tripLogs->StartTime ? \Carbon\Carbon::parse($tripLogs->StartTime)->format('H:i') : '' }}">
+            <div class="col-md-3">
+              <label for="StartTime" class="form-label">Start Time</label>
+              <input type="time" name="StartTime" class="form-control" value="{{ $tripLogs->StartTime ? \Carbon\Carbon::parse($tripLogs->StartTime)->format('H:i') : '' }}">
             </div>
 
-
+            <!-- End Date / Time -->
             <div class="col-md-3">
               <label for="TripEndDate" class="form-label">End Date</label>
-              <input type="date" name="TripEndDate" class="form-control" value="{{ $tripLogs->TripEndDate }}">
+              <input type="date" name="TripEndDate" class="form-control" value="{{ \Carbon\Carbon::parse($tripLogs->TripEndDate)->format('Y-m-d') }}">
             </div>
-            <div class="col-md-6">
-                <label for="EndTime" class="form-label">End Time</label>
-                <input type="time" name="EndTime" class="form-control" 
-                    value="{{ $tripLogs->EndTime ? \Carbon\Carbon::parse($tripLogs->EndTime)->format('H:i') : '' }}">
+            <div class="col-md-3">
+              <label for="EndTime" class="form-label">End Time</label>
+              <input type="time" name="EndTime" class="form-control" value="{{ $tripLogs->EndTime ? \Carbon\Carbon::parse($tripLogs->EndTime)->format('H:i') : '' }}">
             </div>
+
+            <!-- Vehicle -->
             <div class="col-md-3">
               <label for="VehicleID" class="form-label">Vehicle</label>
               <select name="VehicleID" class="form-select">
                 @foreach($vehicles as $vehicle)
-                  <option value="{{ $vehicle->Id }}" {{ $tripLogs->Id == $vehicle->Id ? 'selected' : '' }}>
+                  <option value="{{ $vehicle->Id }}" {{ $tripLogs->VehicleID == $vehicle->Id ? 'selected' : '' }}>
                     {{ $vehicle->RegistrationNo }}
                   </option>
                 @endforeach
               </select>
             </div>
+
+            <!-- Driver Type -->
             <div class="col-md-3">
               <label for="DriverType" class="form-label">Driver Type</label>
               <select name="DriverType" class="form-select">
                 @foreach($driverTypes as $type)
-                  <option value="{{ $type->ID }}" {{ $tripLogs->DriverType == $type->Description ? 'selected' : '' }}>
+                  <option value="{{ $type->Id }}" {{ $tripLogs->DriverType == $type->Id ? 'selected' : '' }}>
                     {{ $type->Description }}
                   </option>
                 @endforeach
               </select>
             </div>
+
+            <!-- Driver -->
             <div class="col-md-3">
               <label for="DriverID" class="form-label">Driver</label>
               <select name="DriverID" class="form-select">
                 @foreach($drivers as $driver)
-                  <option value="{{ $driver->Id }}" {{ $tripLogs->ID == $driver->Id ? 'selected' : '' }}>
+                  <option value="{{ $driver->Id }}" {{ $tripLogs->DriverID == $driver->Id ? 'selected' : '' }}>
                     {{ $driver->FullName }}
                   </option>
                 @endforeach
@@ -166,6 +171,7 @@
             </div>
           </div>
         </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -174,4 +180,5 @@
     </div>
   </div>
 </div>
+
 @endsection

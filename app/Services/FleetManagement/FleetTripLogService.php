@@ -68,41 +68,39 @@ class FleetTripLogService
      * Update an existing trip
      */
     public function updateTrip(FleetTripLog $tripLog, array $data): FleetTripLog
-    {
-        return DB::transaction(function () use ($tripLog, $data) {
+{
+    return DB::transaction(function () use ($tripLog, $data) {
+        // Resolve driver depending on type
+        $driver = $this->resolveDriver($data['DriverType'], $data['DriverID']);
 
-            $driver = $this->resolveDriver($data['DriverType'], $data['DriverID']);
+        $tripLog->update([
+            'VehicleID'       => $data['VehicleID'],
+            'DriverType'      => $driver['type_id'],   
+            'DriverID'        => $driver['driver_id'],   
+            'TripStartDate'   => $data['TripStartDate'] ?? $tripLog->TripStartDate,
+            'TripEndDate'     => $data['TripEndDate'] ?? $tripLog->TripEndDate,
+            'StartTime'       => $data['StartTime'] ?? $tripLog->StartTime,
+            'EndTime'         => $data['EndTime'] ?? $tripLog->EndTime,
+            'StartLocation'   => $data['StartLocation'] ?? $tripLog->StartLocation,
+            'EndLocation'     => $data['EndLocation'] ?? $tripLog->EndLocation,
+            'Route'           => $data['Route'] ?? $tripLog->Route,
+            'DistanceCovered' => $data['DistanceCovered'] ?? $tripLog->DistanceCovered,
+            'Purpose'         => $data['Purpose'] ?? $tripLog->Purpose,
+            'Notes'           => $data['Notes'] ?? $tripLog->Notes,
+        ]);
 
-            $tripLog->update([
-                'VehicleID' => $data['VehicleID'],
-                'DriverType' => $driver['type_id'],   
-                'DriverID' => $driver['driver_id'],   
-                'TripStartDate' => $data['TripStartDate'] ?? $tripLog->TripStartDate,
-                'TripEndDate' => $data['TripEndDate'] ?? $tripLog->TripEndDate,
-                'StartTime' => $data['StartTime'] ?? $tripLog->StartTime,
-                'EndTime' => $data['EndTime'] ?? $tripLog->EndTime,
-                'StartLocation' => $data['StartLocation'] ?? $tripLog->StartLocation,
-                'EndLocation' => $data['EndLocation'] ?? $tripLog->EndLocation,
-                'Route' => $data['Route'] ?? $tripLog->Route,
-                'DistanceCovered' => $data['DistanceCovered'] ?? $tripLog->DistanceCovered,
-                'Purpose' => $data['Purpose'] ?? $tripLog->Purpose,
-                'Notes' => $data['Notes'] ?? $tripLog->Notes,
-            ]);
+        $tripLog->ModifiedBy = Auth::id();
+        $tripLog->ModifiedOn = now();
+        $tripLog->save();
 
-            $tripLog->ModifiedBy = Auth::id();
-            $tripLog->ModifiedOn = now();
-            $tripLog->save();
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($tripLog)
+            ->log("Trip log updated for VehicleID: {$tripLog->VehicleID}");
 
-            $tripLog->delete();
-
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($tripLog)
-                ->log("Trip log updated for VehicleID: {$tripLog->VehicleID}");
-
-            return $tripLog;
-        });
-    }
+        return $tripLog;
+    });
+}
 
     /**
      * Delete a trip
@@ -127,21 +125,22 @@ class FleetTripLogService
     /**
      * Resolve driver type and ID for insertion
      */
-    private function resolveDriver($driverTypeId, $driverId): array
-    {
-        $driverType = CodeDetail::findOrFail($driverTypeId);
+    private function resolveDriver($driverTypeId, $Id)
+{
+    $type = CodeDetail::findOrFail($driverTypeId);
 
-        if ($driverType->Description === 'Permanent') {
-            $driver = FleetDriver::where('Id', $driverId)->where('IsActive', 1)->firstOrFail();
-        } elseif ($driverType->Description === 'Contracted') {
-            $driver = ContractedDriver::where('Id', $driverId)->where('IsActive', 1)->firstOrFail();
-        } else {
-            throw new \Exception('Invalid Driver Type selected.');
-        }
-
-        return [
-            'type_id' => $driverType->ID,   // pass numeric FK
-            'driver_id' => $driver->Id      // numeric driver ID
-        ];
+    if ($type->Description === 'Permanent') {
+        $driver = FleetDriver::findOrFail($Id);
+    } elseif ($type->Description === 'Contracted') {
+        $driver = ContractedDriver::findOrFail($Id);
+    } else {
+        throw new \Exception("Invalid driver type: {$type->Description}");
     }
+
+    return [
+        'type_id'   => $driverTypeId,
+        'driver_id' => $driver->Id,
+    ];
+}
+
 }

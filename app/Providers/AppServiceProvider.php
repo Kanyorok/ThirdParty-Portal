@@ -183,16 +183,19 @@ use App\Policies\PropertyManagement\PropertyTypePolicy;
 use App\Policies\PropertyManagement\PropertyUnitPolicy;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetInspectionSchedule;
+use App\Models\Fleet\FleetInsuranceTracker;
 use App\Models\FleetManagement\VehicleRegistry;
 use App\Models\FleetManagement\DriverManagement;
 use App\Policies\FleetManagement\DriverManagementPolicy;
 use App\Policies\FleetManagement\FleetMakePolicy;
 use App\Policies\FleetManagement\FleetModelPolicy;
 use App\Policies\FleetManagement\VehicleRegistryPolicy; 
+use App\Policies\FleetManagement\FleetVehiclePolicy; 
 use App\Policies\FleetManagement\DriverPolicy;
-
-
-
+use App\Policies\FleetManagement\FleetInsuranceTrackerPolicy;
+use App\Policies\FleetManagement\FleetInspectionSchedulePolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -405,6 +408,9 @@ class AppServiceProvider extends ServiceProvider
             FleetModel::getPrimaryKey() => FleetModel::class,
             VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
             DriverManagement::getPrimaryKey() => DriverManagement::class,
+            FleetVehicle::getPrimaryKey() => FleetVehicle::class,
+            FleetInsuranceTracker::getPrimaryKey() => FleetInsuranceTracker::class,
+            FleetInspectionSchedule::getPrimaryKey() => FleetInspectionSchedule::class,
 
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
@@ -502,6 +508,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(FleetModel::class, FleetModelPolicy::class);
         Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
         Gate::policy(DriverManagement::class, DriverManagementPolicy::class);
+        Gate::policy(FleetVehicle::class, FleetVehiclePolicy::class);
+        Gate::policy(FleetInsuranceTracker::class, FleetInsuranceTrackerPolicy::class);
+        Gate::policy(FleetInspectionSchedule::class, FleetInspectionSchedulePolicy::class);
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
