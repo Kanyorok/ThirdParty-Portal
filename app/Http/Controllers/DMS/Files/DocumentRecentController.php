@@ -19,7 +19,7 @@ class DocumentRecentController extends Controller
 
 
         if ($request->ajax()) {
-            $documents = Document::query()
+            $documents = Document::query()->user($request->user())
                 ->select('t_Documents.*')
                 ->join(config('activitylog.table_name') . ' as recent_activity', function ($join) use ($request) {
                     $join->on('t_Documents.Id', '=', 'recent_activity.subject_id')

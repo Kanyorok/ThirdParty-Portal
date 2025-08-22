@@ -23,8 +23,8 @@ class PropertyLeaseScheduleSeeder extends Seeder
 
         // Get payment frequency from CodeDetail
         $frequency = CodeDetail::where('CodeID', 'PaymentFrequency')
-                               ->where('Description', 'Monthly')
-                               ->first();
+            ->where('Description', 'Monthly')
+            ->first();
 
         if (!$frequency) {
             $this->command->warn('Payment frequency "Monthly" not found.');
@@ -33,20 +33,20 @@ class PropertyLeaseScheduleSeeder extends Seeder
 
         // Create lease schedule
         PropertyLeaseSchedule::create([
-            'LeaseNumber'      => $lease->Id,
-            'TenantId'         => $lease->Tenant,
-            'PropertyId'       => $lease->PropertyID,
+            'LeaseNumber' => $lease->Id,
+            'TenantId' => $lease->Tenant,
+            'PropertyId' => $lease->PropertyID,
             'PaymentFrequency' => $frequency->ID,
-            'StartDate'        => $lease->StartDate,
-            'EndDate'          => $lease->EndDate,
-            'BaseRent'         => $lease->MonthlyRent,
-            'ServiceCharge'    => 5000,
-            'ParkingFee'       => 2000,
-            'OtherCharges'     => 1500,
-            'CreatedBy'        => 2,
-            'ModifiedBy'       => 2,
-            'CreatedOn'        => $now,
-            'ModifiedOn'       => $now,
+            'StartDate' => $lease->StartDate,
+            'EndDate' => $lease->EndDate,
+            'BaseRent' => $lease->MonthlyRent,
+            'ServiceCharge' => 5000,
+            'ParkingFee' => 2000,
+            'OtherCharges' => 1500,
+            'CreatedBy' => 2,
+            'ModifiedBy' => 2,
+            'CreatedOn' => $now,
+            'ModifiedOn' => $now,
         ]);
     }
 }

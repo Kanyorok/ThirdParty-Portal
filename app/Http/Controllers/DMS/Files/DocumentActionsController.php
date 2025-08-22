@@ -16,6 +16,8 @@ class DocumentActionsController extends Controller
 
     public function preview(Document $document): View
     {
+        $this->authorize('view', $document);
+
         return view('dms.files.preview')->with('file', $document)->with('service', new DocumentService($document));
     }
 }

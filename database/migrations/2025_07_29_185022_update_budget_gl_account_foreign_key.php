@@ -10,15 +10,20 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('t_BudgetLinesGLAccounts', function (Blueprint $table) {
-            // Drop the existing foreign key
-            $table->dropForeign(['BudgetGLAccountID']);
+        Schema::table('t_BudgetLinesGLAccounts', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('BudgetGLAccountID');
+        });
 
-            // Add new foreign key constraint to t_BudgetGLMaster
-            $table->foreign('BudgetGLAccountID')
+        Schema::table('t_BudgetLinesGLAccounts', static function (Blueprint $table) {
+            $table->foreignId('BudgetGLAccountID')->nullable()
                 ->references('BudgetGLID')
                 ->on('t_BudgetGLMaster');
         });
+
+        /* @todo martin collum nullable
+         * Schema::table('t_BudgetLinesGLAccounts', static function (Blueprint $table) {
+         * $table->bigInteger('BudgetGLAccountID')->nullable(false)->change();
+         * });*/
     }
 
     /**
@@ -26,13 +31,13 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('t_BudgetLinesGLAccounts', function (Blueprint $table) {
-            // Drop the new foreign key
-            $table->dropForeign(['BudgetGLAccountID']);
+        Schema::table('t_BudgetLinesGLAccounts', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('BudgetGLAccountID');
+        });
 
-            // Restore the original foreign key to t_BudgetGLAccounts
-            $table->foreign('BudgetGLAccountID')
-                ->references('Id')
+        Schema::table('t_BudgetLinesGLAccounts', static function (Blueprint $table) {
+            $table->foreignId('BudgetGLAccountID')
+                ->references('BudgetGLID')
                 ->on('t_BudgetGLAccounts');
         });
     }

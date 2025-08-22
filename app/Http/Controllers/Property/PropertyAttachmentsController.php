@@ -9,7 +9,6 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyAttachmentsRequest;
 use App\Services\Property\PropertyRegistry\PropertyAttachmentsService;
-use Illuminate\Http\Request;
 use App\Models\PropertyManagement\PropertyAttachments;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\Core\CodeDetail;
@@ -46,7 +45,7 @@ class PropertyAttachmentsController extends Controller
             $validated['DocumentTitle'],
              $DocumentType,
             $validated['Description'] ?? '',
-            auth()->user()
+            Auth::user()
         );
         return redirect()->route('attachments.index')->with('success', 'Property attachment created successfully');
     }

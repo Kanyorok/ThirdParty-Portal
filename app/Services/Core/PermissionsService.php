@@ -5,31 +5,29 @@ namespace App\Services\Core;
 use App\Enums\Core\RoleEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
+use App\Interfaces\SpecialPermissionContract;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\Core\SpecialPermission;
 use App\Services\CRMEmailService;
 use App\Services\PartyService;
 use App\Traits\Model\SpecialPermissionTrait;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 abstract class PermissionsService
 {
 
-    protected static function copyPermissions(Model $source, Model $destination, User $actor): bool
+    protected static function copyPermissions(SpecialPermissionContract $source, SpecialPermissionContract $destination, User $actor): bool
     {
-        if (!self::checkImplementation($destination)) {
+        /*if (!self::checkImplementation($destination)) {
             throw new RuntimeException("Source does not use Special Permission Trait");
         }
 
         if (!self::checkImplementation($source)) {
             throw new RuntimeException("Destination does not use Special Permission Trait");
-        }
-
+        }*/
         $date = now();
         $permissions = $source->permissions->map(function ($permission) use ($actor, $destination, $date) {
             return [
@@ -50,7 +48,7 @@ abstract class PermissionsService
         return true;
     }
 
-    private static function checkImplementation(Model $class): bool
+    private static function checkImplementation(SpecialPermissionContract $class): bool
     {
         $traits = class_uses($class);
         if (is_array($traits)) {
@@ -68,11 +66,11 @@ abstract class PermissionsService
         return $result;
     }
 
-    protected static function userPermissions(Model $destination, array $permissions, RoleEnum $role, User $actor): bool
+    protected static function userPermissions(SpecialPermissionContract $destination, array $permissions, RoleEnum $role, User $actor): bool
     {
-        if (!self::checkImplementation($destination)) {
-            throw new RuntimeException("Destination does not use Special Permission Trait");
-        }
+        /* if (!self::checkImplementation($destination)) {
+             throw new RuntimeException("Destination does not use Special Permission Trait");
+         }*/
 
         $users = User::query()->lock('WITH(NOLOCK)')
             ->hasPermission($permissions)->get(["Id", "UserID", "Name", "Email"]);
@@ -94,12 +92,8 @@ abstract class PermissionsService
         return self::bulkInsert($roles);
     }
 
-    protected function _addPermissions(Model $destination, User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): SpecialPermission
+    protected function _addPermissions(SpecialPermissionContract $destination, User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): SpecialPermission
     {
-        if (!self::checkImplementation($destination)) {
-            throw new RuntimeException("Destination does not use Special Permission Trait");
-        }
-
         if ($assignee instanceof Team) {
             $permission = $destination->permissions()->lock('WITH(NOLOCK)')
                 ->where('Party', Team::getPrimaryKey())->where('PartyID', $assignee->TeamID)->first();
@@ -175,11 +169,6 @@ abstract class PermissionsService
      */
     protected function _trashPermissions($destination, SpecialPermission $permission, User $actor)
     {
-        if (!self::checkImplementation($destination)) {
-            throw new RuntimeException("Destination does not use Special Permission Trait");
-        }
-
-
         if (($permission->Model !== $destination->getMorphClass()) || (bccomp($permission->ModelID, $destination->{$destination->getKeyName()}) !== 0)) {
             throw new ErroredException('This permission is not part of this item.');
         }

@@ -24,21 +24,27 @@
             @foreach($leaseschedules as $leaseschedule)
                 <tr>
                     <td>{{ $loop->iteration ?? '-' }}</td>
-                    <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>       
+                    <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>
                     <td>{{ $leaseschedule->lease->tenant->TenantName ?? '-' }}</td>
                     <td>{{ $leaseschedule->lease->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
                     <td>{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}</td>
                     <td>{{ $leaseschedule->EndDate ? \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') : '-' }}</td>
                     <td>
-            <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}" class="btn btn-sm btn-info">View</a>
-            <a href="{{ route('schedulelease.print', $leaseschedule->Id) }}" target="_blank" class="btn btn-sm btn-secondary">Print</a>
-            <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-            <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}" method="POST" class="d-inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete</button>
-            </form>
+                        <a href="{{ route('schedulelease.show', $leaseschedule->Id) }}"
+                           class="btn btn-sm btn-info">View</a>
+                        <a href="{{ route('schedulelease.print', $leaseschedule->Id) }}" target="_blank"
+                           class="btn btn-sm btn-secondary">Print</a>
+                        <a href="{{ route('schedulelease.edit', $leaseschedule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('schedulelease.destroy', $leaseschedule->Id) }}" method="POST"
+                              class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Are you sure you want to delete this lease schedule?');">
+                                Delete
+                            </button>
+                        </form>
                     </td>
                 </tr>
             @endforeach

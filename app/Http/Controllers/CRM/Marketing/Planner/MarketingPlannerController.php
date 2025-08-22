@@ -147,7 +147,7 @@ class MarketingPlannerController extends Controller
      * Display the specified resource.
      * @throws AuthorizationException
      */
-   public function show(Request $request, MarketingPlanner $planner): View
+    public function show(Request $request, MarketingPlanner $planner): View
     {
         $this->authorize('view', $planner);
 

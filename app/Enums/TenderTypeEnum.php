@@ -31,13 +31,4 @@ enum TenderTypeEnum: string
             default => 'bg-light text-dark',
         };
     }
-
-    public function color(): string
-    {
-        return match ($this) {
-            self::Draft => 'info',
-            self::Published => 'success',
-            self::Closed => 'secondary',
-        };
-    }
 }
