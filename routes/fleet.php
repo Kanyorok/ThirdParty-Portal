@@ -102,8 +102,6 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::resource('fleetprocurementanddisposal', FleetProcurementAndDisposalController::class);
     Route::resource('inventoryofspareparts', InventoryOfSparePartsController::class);
     Route::resource('utilization', UtilizationController::class);
-    Route::resource('reports', ReportsController::class);
-
 
     // ==================== Fleet Vehicles ====================
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('fleet.vehicles.index');
@@ -276,4 +274,9 @@ Route::namespace('FleetManagement')->prefix('fleet')->group(function () {
     Route::get('/compliance/inspection-schedule{Id}/edit', [FleetInspectionScheduleController::class, 'edit'])->name('fleet.inspection_schedule.edit');
     Route::put('compliance/inspection-schedule/{Id}', [FleetInspectionScheduleController::class, 'update'])->name('fleet.inspection_schedule.update');
     Route::delete('compliance/inspection-schedule/{Id}', [FleetInspectionScheduleController::class, 'destroy'])->name('fleet.inspection_schedule.destroy');
+
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'fleet-reports.index',
+        'show' => 'fleet-reports.show'
+    ]);
 });
