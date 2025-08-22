@@ -726,7 +726,7 @@
                     <div class="card">
                         <div class="card-header"><h5>Emails <small>Incoming & outgoing</small></h5></div>
                         <div class="card-body">
-                            
+
                             <table id="EmailsTable"
                                    class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                                 <thead>
@@ -740,19 +740,21 @@
                                 <tbody></tbody>
                             </table>
                             {{-- Email Details Modal --}}
-<div class="modal fade" id="viewEmailModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Email Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="emailDetailsContent">
-                <div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
-            </div>
-        </div>
-    </div>
-</div>
+                            <div class="modal fade" id="viewEmailModal" tabindex="-1" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Email Details</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body" id="emailDetailsContent">
+                                            <div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -774,7 +776,7 @@
                                 </thead>
                                 <tbody></tbody>
                             </table>
-                            
+
                         </div>
                     </div>
 
@@ -1990,71 +1992,70 @@
             $("#activitiesMain").prepend(activity.html);
         }
 
-        
 
-    function loadEmailDetailsModal(id) {
-        if (!id) return;
+        function loadEmailDetailsModal(id) {
+            if (!id) return;
 
-        $('#emailDetailsContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
-        $('#viewEmailModal').modal('show');
+            $('#emailDetailsContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+            $('#viewEmailModal').modal('show');
 
-        const leadId = {{ $lead->LeadID }}; // Make sure $lead is available in the view
-        const url = "{{ route('lead-mail.show', ['lead' => ':lead_id', 'lead_mail' => ':id']) }}"
-            .replace(':lead_id', leadId)
-            .replace(':id', id);
+            const leadId = {{ $lead->LeadID }}; // Make sure $lead is available in the view
+            const url = "{{ route('lead-mail.show', ['lead' => ':lead_id', 'lead_mail' => ':id']) }}"
+                .replace(':lead_id', leadId)
+                .replace(':id', id);
 
-        $.get(url)
-            .done(function (response) {
-                $('#emailDetailsContent').html(response);
-            })
-            .fail(function (jqXHR) {
-                $('#emailDetailsContent').html('<div class="text-danger">Failed to load email details</div>');
-                codeNotify(jqXHR.status);
-            });
-    }
-
-
-function fetchMailsTable() {
-    if (EmailsTable === null) {
-        EmailsTable = $('#EmailsTable').DataTable({
-            processing: true,
-            serverSide: true,
-            responsive: true,
-            order: [[2, 'desc']],
-            ajax: {
-                url: '{{ route('lead-mail.index', [$lead->LeadID]) }}',
-                error: function (jqXHR) {
+            $.get(url)
+                .done(function (response) {
+                    $('#emailDetailsContent').html(response);
+                })
+                .fail(function (jqXHR) {
+                    $('#emailDetailsContent').html('<div class="text-danger">Failed to load email details</div>');
                     codeNotify(jqXHR.status);
-                }
-            },
-            columns: [
-                {data: "Type", name: 'Type'},
-                {data: 'Subject', name: 'Subject'},
-                {data: 'Dated', name: 'CreatedOn'},
-                {data: 'action', name: 'action', orderable: false, searchable: false},
-            ],
-            oLanguage: {
-                sEmptyTable: "<span class='text-center'>No records found</span>"
-            }
-        });
+                });
+        }
 
-        // View on double-click
-        $('#EmailsTable tbody').on('dblclick', 'tr', function () {
-            const data = EmailsTable.row(this).data();
-            if (data?.id) {
-                loadEmailDetailsModal(data.id);
-            }
-        });
 
-        // View on button click
-        $(document).on('click', '.view-email', function () {
-            const id = $(this).data('id');
-            loadEmailDetailsModal(id);
-        });
-    } else {
-        EmailsTable.ajax.reload();
-    }
-}
+        function fetchMailsTable() {
+            if (EmailsTable === null) {
+                EmailsTable = $('#EmailsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    order: [[2, 'desc']],
+                    ajax: {
+                        url: '{{ route('lead-mail.index', [$lead->LeadID]) }}',
+                        error: function (jqXHR) {
+                            codeNotify(jqXHR.status);
+                        }
+                    },
+                    columns: [
+                        {data: "Type", name: 'Type'},
+                        {data: 'Subject', name: 'Subject'},
+                        {data: 'Dated', name: 'CreatedOn'},
+                        {data: 'action', name: 'action', orderable: false, searchable: false},
+                    ],
+                    oLanguage: {
+                        sEmptyTable: "<span class='text-center'>No records found</span>"
+                    }
+                });
+
+                // View on double-click
+                $('#EmailsTable tbody').on('dblclick', 'tr', function () {
+                    const data = EmailsTable.row(this).data();
+                    if (data?.id) {
+                        loadEmailDetailsModal(data.id);
+                    }
+                });
+
+                // View on button click
+                $(document).on('click', '.view-email', function () {
+                    const id = $(this).data('id');
+                    loadEmailDetailsModal(id);
+                });
+            } else {
+                EmailsTable.ajax.reload();
+            }
+        }
 
 
         function fetchSMSTable() {

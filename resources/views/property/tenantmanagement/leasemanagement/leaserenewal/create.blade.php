@@ -2,23 +2,23 @@
 @section('title', 'Renew Lease Agreement')
 
 @section('content')
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-@if(session('error'))
-    <script>alert("{{ session('error') }}");</script>
-@endif
+    @if(session('error'))
+        <script>alert("{{ session('error') }}");</script>
+    @endif
 
-@if(session('success'))
-    <script>alert("{{ session('success') }}");</script>
-@endif
+    @if(session('success'))
+        <script>alert("{{ session('success') }}");</script>
+    @endif
 
 <div class="container mt-4">
     <h4 class="fw-bold mb-3">Renew Lease Agreement</h4>
@@ -35,7 +35,7 @@
                         <select id="lease-select" name="LeaseId" class="form-select" required>
                             <option value="">-- Select Lease --</option>
                             @foreach ($newleases as $lease)
-                                <option 
+                                <option
                                     value="{{ $lease->Id }}"
                                     data-leasenumber="{{ $lease->LeaseNumber }}"
                                     data-tenant-id="{{ $lease->Tenant }}"
@@ -113,7 +113,8 @@
                 <!-- Remarks -->
                 <div class="mb-3">
                     <label class="form-label">Remarks or Changes</label>
-                    <textarea class="form-control" name="Remarks" rows="2" placeholder="E.g. rent increased by KES 2,500"></textarea>
+                    <textarea class="form-control" name="Remarks" rows="2"
+                              placeholder="E.g. rent increased by KES 2,500"></textarea>
                 </div>
 
                 <!-- Submit -->
@@ -123,17 +124,17 @@
     </form>
 </div>
 
-<!-- Auto-fill Script -->
-<script>
-    document.getElementById('lease-select').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber');
-        document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id');
-        document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name');
-        document.getElementById('property-id').value = selected.getAttribute('data-property-id');
-        document.getElementById('property-display').value = selected.getAttribute('data-property-name');
-        document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id');
-        document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name');
-    });
-</script>
+    <!-- Auto-fill Script -->
+    <script>
+        document.getElementById('lease-select').addEventListener('change', function () {
+            const selected = this.options[this.selectedIndex];
+            document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber');
+            document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id');
+            document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name');
+            document.getElementById('property-id').value = selected.getAttribute('data-property-id');
+            document.getElementById('property-display').value = selected.getAttribute('data-property-name');
+            document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id');
+            document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name');
+        });
+    </script>
 @endsection

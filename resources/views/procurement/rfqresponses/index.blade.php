@@ -81,7 +81,8 @@
             {{-- Modals --}}
             @foreach($rfqResponses as $response)
                 {{-- View Modal --}}
-                <div class="modal fade" id="viewModal{{ $response->Id }}" tabindex="-1" aria-labelledby="viewModalLabel{{ $response->Id }}" aria-hidden="true">
+                <div class="modal fade" id="viewModal{{ $response->Id }}" tabindex="-1"
+                     aria-labelledby="viewModalLabel{{ $response->Id }}" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -90,18 +91,42 @@
                             </div>
                             <div class="modal-body">
                                 <table class="table table-borderless">
-                                    <tr><th>RFQ Response Number</th><td>{{ $response->RFQResponseNumber }}</td></tr>
-                                    <tr><th>RFQ Number</th><td>{{ $response->RFQNumber }}</td></tr>
-                                    <tr><th>Supplier Name</th><td>{{ $response->SupplierName }}</td></tr>
-                                    <tr><th>Currency</th><td>{{ $response->Currency }}</td></tr>
-                                    <tr><th>Total Payable</th><td>{{ number_format($response->TotalPayable, 2) }}</td></tr>
-                                    <tr><th>Duration (Days)</th><td>{{ $response->DurationDays }}</td></tr>
+                                    <tr>
+                                        <th>RFQ Response Number</th>
+                                        <td>{{ $response->RFQResponseNumber }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>RFQ Number</th>
+                                        <td>{{ $response->RFQNumber }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Supplier Name</th>
+                                        <td>{{ $response->SupplierName }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Currency</th>
+                                        <td>{{ $response->Currency }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total Payable</th>
+                                        <td>{{ number_format($response->TotalPayable, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Duration (Days)</th>
+                                        <td>{{ $response->DurationDays }}</td>
+                                    </tr>
                                 </table>
 
                                 <h6>Quoted Items</h6>
                                 <table class="table table-bordered">
                                     <thead>
-                                    <tr><th>Item Name</th><th>UOM</th><th>Qty</th><th>Quoted Price</th><th>Total</th></tr>
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>UOM</th>
+                                        <th>Qty</th>
+                                        <th>Quoted Price</th>
+                                        <th>Total</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
                                     @foreach ($response->items as $item)
@@ -121,9 +146,11 @@
                 </div>
 
                 {{-- Edit Modal --}}
-                <div class="modal fade" id="editModal{{ $response->Id }}" tabindex="-1" aria-labelledby="editModalLabel{{ $response->Id }}" aria-hidden="true">
+                <div class="modal fade" id="editModal{{ $response->Id }}" tabindex="-1"
+                     aria-labelledby="editModalLabel{{ $response->Id }}" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
-                        <form action="{{ route('rfqresponses.update', $response->Id) }}" method="POST" class="modal-content">
+                        <form action="{{ route('rfqresponses.update', $response->Id) }}" method="POST"
+                              class="modal-content">
                             @csrf
                             @method('PUT')
                             <div class="modal-header">
@@ -132,25 +159,62 @@
                             </div>
                             <div class="modal-body">
                                 <div class="row mb-3">
-                                    <div class="col"><label>RFQ Number</label><input type="text" name="RFQNumber" class="form-control" value="{{ $response->RFQNumber }}" readonly></div>
-                                    <div class="col"><label>Supplier Name</label><input type="text" name="SupplierName" class="form-control" value="{{ $response->SupplierName }}" readonly></div>
-                                    <div class="col"><label>Currency</label><input type="text" name="Currency" class="form-control" value="{{ $response->Currency }}" readonly></div>
-                                    <div class="col"><label>Duration (Days)</label><input type="number" name="DurationDays" class="form-control" value="{{ $response->DurationDays }}" required></div>
-                                    <div class="col"><label>Total Payable</label><input type="number" step="0.01" name="TotalPayable" class="form-control" value="{{ $response->TotalPayable }}" readonly></div>
+                                    <div class="col"><label>RFQ Number</label><input type="text" name="RFQNumber"
+                                                                                     class="form-control"
+                                                                                     value="{{ $response->RFQNumber }}"
+                                                                                     readonly></div>
+                                    <div class="col"><label>Supplier Name</label><input type="text" name="SupplierName"
+                                                                                        class="form-control"
+                                                                                        value="{{ $response->SupplierName }}"
+                                                                                        readonly></div>
+                                    <div class="col"><label>Currency</label><input type="text" name="Currency"
+                                                                                   class="form-control"
+                                                                                   value="{{ $response->Currency }}"
+                                                                                   readonly></div>
+                                    <div class="col"><label>Duration (Days)</label><input type="number"
+                                                                                          name="DurationDays"
+                                                                                          class="form-control"
+                                                                                          value="{{ $response->DurationDays }}"
+                                                                                          required></div>
+                                    <div class="col"><label>Total Payable</label><input type="number" step="0.01"
+                                                                                        name="TotalPayable"
+                                                                                        class="form-control"
+                                                                                        value="{{ $response->TotalPayable }}"
+                                                                                        readonly></div>
                                 </div>
 
                                 <h6>Items</h6>
                                 <table class="table table-bordered">
-                                    <thead><tr><th>Item Name</th><th>UOM</th><th>Qty</th><th>Quoted Price</th><th>Total</th></tr></thead>
+                                    <thead>
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>UOM</th>
+                                        <th>Qty</th>
+                                        <th>Quoted Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                    </thead>
                                     <tbody>
                                     @foreach ($response->items as $item)
                                         <tr>
-                                            <input type="hidden" name="RequisitionItems[{{ $loop->index }}][id]" value="{{ $item->Id }}">
-                                            <td><input type="text" name="RequisitionItems[{{ $loop->index }}][name]" class="form-control" value="{{ $item->ItemName }}" readonly></td>
-                                            <td><input type="text" name="RequisitionItems[{{ $loop->index }}][uom]" class="form-control" value="{{ $item->uom->Name ?? 'N/A' }}" readonly></td>
-                                            <td><input type="number" name="RequisitionItems[{{ $loop->index }}][quantity]" class="form-control" value="{{ $item->Quantity }}" readonly></td>
-                                            <td><input type="number" step="0.01" name="RequisitionItems[{{ $loop->index }}][quotedprice]" class="form-control" value="{{ $item->QuotedPrice }}" required></td>
-                                            <td><input type="number" step="0.01" name="RequisitionItems[{{ $loop->index }}][totalpayable]" class="form-control" value="{{ $item->TotalPayable }}" readonly></td>
+                                            <input type="hidden" name="RequisitionItems[{{ $loop->index }}][id]"
+                                                   value="{{ $item->Id }}">
+                                            <td><input type="text" name="RequisitionItems[{{ $loop->index }}][name]"
+                                                       class="form-control" value="{{ $item->ItemName }}" readonly></td>
+                                            <td><input type="text" name="RequisitionItems[{{ $loop->index }}][uom]"
+                                                       class="form-control" value="{{ $item->uom->Name ?? 'N/A' }}"
+                                                       readonly></td>
+                                            <td><input type="number"
+                                                       name="RequisitionItems[{{ $loop->index }}][quantity]"
+                                                       class="form-control" value="{{ $item->Quantity }}" readonly></td>
+                                            <td><input type="number" step="0.01"
+                                                       name="RequisitionItems[{{ $loop->index }}][quotedprice]"
+                                                       class="form-control" value="{{ $item->QuotedPrice }}" required>
+                                            </td>
+                                            <td><input type="number" step="0.01"
+                                                       name="RequisitionItems[{{ $loop->index }}][totalpayable]"
+                                                       class="form-control" value="{{ $item->TotalPayable }}" readonly>
+                                            </td>
                                         </tr>
                                     @endforeach
                                     </tbody>

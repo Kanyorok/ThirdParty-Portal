@@ -95,13 +95,7 @@ class DocumentTagsController extends Controller
     {
         $this->authorize('view', $document);
         $user = auth()->user();
-        $tags = DMSTags::where(static function (Builder $query) use ($user) {
-            $query->where('Visibility', VisibilityEnum::Public->value)
-                ->orWhere(function (Builder $query) use ($user) {
-                    $query->where('Visibility', VisibilityEnum::Private->value)
-                        ->where('t_DMSTags.CreatedBy', $user->Id);
-                });
-        })->get();
+        $tags = DMSTags::query()->user($user)->get();
 
         return view('dms.files.tags')
             ->with('file', $document)

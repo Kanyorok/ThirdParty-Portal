@@ -47,6 +47,7 @@ class RFQResponse extends Model
     {
         return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');
     }
+
     public function uom()
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOMId', 'Id');

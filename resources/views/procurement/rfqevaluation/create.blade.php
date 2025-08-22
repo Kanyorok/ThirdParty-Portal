@@ -172,7 +172,7 @@
                 fetch(`/procurement/rfq-responses/${rfqId}`)
                     .then(response => response.json())
                     .then(data => {
-                        const { responses, criteria } = data;
+                        const {responses, criteria} = data;
 
                         if (responses.length > 0) {
                             supplierTableBody.innerHTML = '';

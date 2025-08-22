@@ -32,6 +32,7 @@ class RFQCriteria extends Model
         'DeletedOn' => 'datetime',
         'IsActive' => 'boolean',
     ];
+
     public static function getPrimaryKey(): string
     {
         return (new self())->getRouteKeyName();
@@ -56,6 +57,7 @@ class RFQCriteria extends Model
     {
         return $this->belongsTo(RFQ::class, 'RFQID', 'Id');
     }
+
     public function weightedSection()
     {
         return $this->belongsTo(RFQSection::class, 'SectionID', 'id');

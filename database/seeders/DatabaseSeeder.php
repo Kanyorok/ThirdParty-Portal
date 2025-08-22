@@ -34,9 +34,9 @@ class DatabaseSeeder extends Seeder
         $this->call(InventoryTypeSeeder::class);
         $this->call(UnitOfMeasureSeeder::class);
         $this->call(ItemMasterListSeeder::class);
-        $this->call(DepartmentNeedsSeeder::class);
+        // $this->call(DepartmentNeedsSeeder::class);
         $this->call(SupplierSeeder::class);
-//        $this->call(BudgetMasterSeeder::class);
+       $this->call(BudgetMasterSeeder::class);
           $this->call(BudgetPeriodTypeSeeder::class);
 //        $this->call(BudgetPeriodSeeder::class);
 //        $this->call(BudgetPlanningMethodSeeder::class);

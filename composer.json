@@ -10,7 +10,6 @@
         "ext-curl": "*",
         "ext-dom": "*",
         "ext-exif": "*",
-        "ext-exif": "*",
         "ext-fileinfo": "*",
         "ext-imap": "*",
         "ext-json": "*",

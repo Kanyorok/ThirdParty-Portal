@@ -38,7 +38,8 @@ class PropertyLeaseSchedule extends Model
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');
     }
-     public function paymentFrequency()
+
+    public function paymentFrequency()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
