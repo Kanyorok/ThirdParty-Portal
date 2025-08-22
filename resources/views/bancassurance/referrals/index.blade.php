@@ -5,8 +5,7 @@
 @endsection
 
 @section('content')
-    <div class="container mt-4">
-        <h4 class="mb-3">Insurance Referrals</h4>
+<div class="container mt-4">
 
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
@@ -35,40 +34,36 @@
                 <tbody>
                 @forelse ($referrals as $referral)
                     <tr>
-                        <td>{{ $loop->iteration}}</td>
-                        <td>{{ $referral->ClientName }}</td>
-                        <td>{{ $referral->insuranceProduct->Description ?? '-' }}</td>
-                        <td>{{ $referral->preferredInsurer->Description ?? '-' }}</td>
+                        <td>{{ $loop->iteration ?? '-'}}</td>
+                        <td>{{ $referral->ClientName ?? '-'}}</td>
+                        <td>{{ $referral->insuranceProduct->Name ?? '-' }}</td>
+                        <td>{{ $referral->preferredInsurer->Name ?? '-' }}</td>
                         <td>
                             <span class="badge bg-{{ $referral->Status->badgeColor() }}">
-                                {{ $referral->Status->label() }}
+                                {{ $referral->Status->label() ?? '-'}}
                             </span>
                         </td>
                         <td>{{ $referral->assignedToUser->Name ?? '-' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') ?? '-'}}</td>
                         <td>
-                            <a href="#" class="btn btn-sm btn-info">View</a>
-                            <a href="{{ route('bancassurance.referrals.edit', $referral->Id) }}"
-                               class="btn btn-sm btn-warning">Edit</a>
-                            <form action="{{ route('bancassurance.referrals.destroy', $referral->Id) }}" method="POST"
-                                  class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Are you sure you want to delete the referrence?');">
-                                    Delete
-                                </button>
-                            </form>
+                            <a href="{{ route('bancassurance.referrals.show', $referral->Id) }}" class="btn btn-sm btn-info">View</a>
+                            <a href="{{ route('bancassurance.referrals.edit', $referral->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ route('bancassurance.referrals.destroy', $referral->Id) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Are you sure you want to delete the referrence?');">
+                                Delete
+                            </button>
+                        </form>
+                        </td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="8" class="text-center">No referrals found.</td>
-                    </tr>
-                @endforelse
-                </tbody>
-            </table>
-        </div>
+            @endforelse
+            </tbody>
+        </table>
     </div>
+</div>
 
     @section('scripts')
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

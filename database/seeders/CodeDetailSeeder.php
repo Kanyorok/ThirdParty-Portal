@@ -336,6 +336,62 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 15 days after end of month', 'Value' => 'EOM'],
             ['CodeID' => 'PaymentTerm', 'Description' => 'Based on certified project work progress', 'Value' => 'PP'],
             ['CodeID' => 'PaymentTerm', 'Description' => '90% on completion, 10% after retention period', 'Value' => 'R'],
+          
+            // // Insurance Product 
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Life Insurance', 'Value' => 'L'],
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Health Insurance', 'Value' => 'H'],
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Property Insurance', 'Value' => 'P'],
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Vehicle Insurance', 'Value' => 'V'],
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Travel Insurance', 'Value' => 'T'],
+
+            // // Insurance Provider
+            // ['CodeID' => 'InsuranceProvider', 'Description' => 'Jubilee', 'Value' => 'J'],
+            // ['CodeID' => 'InsuranceProvider', 'Description' => 'Britam', 'Value' => 'B'],
+            // ['CodeID' => 'InsuranceProvider', 'Description' => 'CIC Insurance', 'Value' => 'C'],
+
+            //Insurance Decision
+            ['CodeID' => 'Decision','Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'Decision','Description' => 'Decline', 'Value' => 'D'],
+            ['CodeID' => 'Decision','Description' => 'More Information Needed', 'Value' => 'M'],
+
+            //Insurance Claim type
+            ['CodeID' => 'ClaimType','Description' => 'Death', 'Value' => 'D'],
+            ['CodeID' => 'ClaimType','Description' => 'Accident', 'Value' => 'A'],
+            ['CodeID' => 'ClaimType','Description' => 'Loss', 'Value' => 'L'],
+            ['CodeID' => 'ClaimType','Description' => 'Medical', 'Value' => 'M'],
+            ['CodeID' => 'ClaimType','Description' => 'Other', 'Value' => 'O'],
+
+            //Insurance Claim Status
+            ['CodeID' => 'ClaimStatus','Description' => 'Initiated', 'Value' => 'I'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Under Assessment', 'Value' => 'U'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Rejected', 'Value' => 'R'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Paid', 'Value' => 'P'],
+
+            // PolicyTypeId
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Life Insurance', 'Value' => 'L'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Motor Insurance', 'Value' => 'B'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Property Insurance', 'Value' => 'P'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Travel Insurance', 'Value' => 'T'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Personal Accident Insurance', 'Value' => 'A'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Business Interruption Insurance', 'Value' => 'I'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Marine Cargo Insurance', 'Value' => 'M'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Health Insurance', 'Value' => 'H'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Education Policy', 'Value' => 'E'],
+
+
+            // AppliesTo
+            ['CodeID' => 'AppliesTo', 'Description' => 'AppliesTo', 'Value' => 'J'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Vehicle', 'Value' => 'B'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Jubilee', 'Value' => 'J'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Britam', 'Value' => 'B'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'CIC Insurance', 'Value' => 'C'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Individual ', 'Value' => 'I'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Corporate ', 'Value' => 'C'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Government ', 'Value' => 'G'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Spouse ', 'Value' => 'S'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Child ', 'Value' => 'C'],
+
 
             //Legal clauses types
             ['CodeID' => 'ClauseTypes', 'Description' => 'Specifies the responsibilities and obligations of each party.', 'Value' => 'Obligation Clause'],

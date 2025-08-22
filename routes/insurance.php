@@ -27,15 +27,17 @@ use App\Http\Controllers\Insurance\ClaimClosureController;
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
 
     Route::prefix('bancassurance/referrals')->name('bancassurance.referrals.')->group(function () {
-        Route::get('create', [BancassuranceReferralController::class, 'create'])->name('create');
-        Route::get('edit/{Id}', [BancassuranceReferralController::class, 'edit'])->name('edit');
-        Route::put('update/{Id}', [BancassuranceReferralController::class, 'update'])->name('update');
-        Route::delete('delete/{Id}', [BancassuranceReferralController::class, 'destroy'])->name('destroy');
-        Route::post('store', [BancassuranceReferralController::class, 'store'])->name('store');
-        Route::get('/', [BancassuranceReferralController::class, 'index'])->name('index');
-        Route::get('assign/list', [BancassuranceReferralController::class, 'assignList'])->name('assign.list');
-        Route::post('assign/{Id}', [BancassuranceReferralController::class, 'assign'])->name('assign');
-        Route::get('performance', [BancassuranceReferralController::class, 'performanceView'])->name('performance');
+    Route::get('create', [BancassuranceReferralController::class, 'create'])->name('create');
+    Route::get('edit/{Id}', [BancassuranceReferralController::class, 'edit'])->name('edit');
+    Route::get('show/{Id}', [BancassuranceReferralController::class, 'show'])->name('show');
+    Route::put('update/{Id}', [BancassuranceReferralController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [BancassuranceReferralController::class, 'destroy'])->name('destroy');
+    Route::post('store', [BancassuranceReferralController::class, 'store'])->name('store');
+    Route::get('/', [BancassuranceReferralController::class, 'index'])->name('index');
+    Route::get('assign/list', [BancassuranceReferralController::class, 'assignList'])->name('assign.list');
+    Route::post('assign/{Id}', [BancassuranceReferralController::class, 'assign'])->name('assign');
+    Route::get('performance', [BancassuranceReferralController::class, 'performanceView'])->name('performance');
+    Route::get('referrals/products/{insurerId}', [BancassuranceReferralController::class, 'getProductsByInsurer'])->name('referrals.products');
 
     });
 
@@ -66,27 +68,28 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::put('update/{Id}', [CustomerCommunicationController::class, 'update'])->name('update');
     });
 
-    Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(function () {
-        Route::get('/', [PolicyController::class, 'index'])->name('index');
-        Route::get('create', [PolicyController::class, 'create'])->name('create');
-        Route::post('store', [PolicyController::class, 'store'])->name('store');
-        Route::get('review', [PolicyController::class, 'reviewIndex'])->name('reviewIndex');
-        Route::get('{id}/review', [PolicyController::class, 'review'])->name('review'); // ✅ Add this
-        Route::post('{id}/submit', [PolicyController::class, 'submitForUnderwriting'])->name('submitUnderwriting');
-        Route::get('{id}/feedback', [PolicyController::class, 'feedbackForm'])->name('feedbackForm');
-        Route::get('feedback/list', [PolicyController::class, 'feedbackList'])->name('feedback.list');
-        Route::post('{id}/feedback/store', [PolicyController::class, 'storeFeedback'])->name('feedback.store');
-        Route::get('{id}/issue', [PolicyController::class, 'issueForm'])->name('issueForm');
-        Route::post('{id}/issue/store', [PolicyController::class, 'storeIssuance'])->name('storeIssuance');
-        Route::get('issuance/list', [PolicyController::class, 'issuanceList'])->name('issuance.list');
-        Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
-        Route::post('{id}/endorsement/store', [PolicyController::class, 'storeEndorsement'])->name('storeEndorsement');
-        Route::get('endorsements/list', [PolicyController::class, 'endorsementList'])->name('endorsements.list');
-        Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
-        Route::get('register', [PolicyController::class, 'register'])->name('register');
-        Route::post('{id}/renew/store', [PolicyController::class, 'storeRenewal'])->name('storeRenewal');
-        Route::get('{id}/show', [PolicyController::class, 'show'])->name('show');
-    });
+Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(function () {
+    Route::get('/', [PolicyController::class, 'index'])->name('index');
+    Route::get('create', [PolicyController::class, 'create'])->name('create');
+    Route::post('store', [PolicyController::class, 'store'])->name('store');
+    Route::get('review', [PolicyController::class, 'reviewIndex'])->name('reviewIndex');
+    Route::get('products/{insurerId}', [PolicyController::class, 'getProductsByInsurer'])->name('policy.products');
+    Route::get('{id}/review', [PolicyController::class, 'review'])->name('review'); // ✅ Add this
+    Route::post('{id}/submit', [PolicyController::class, 'submitForUnderwriting'])->name('submitUnderwriting');
+    Route::get('{id}/feedback', [PolicyController::class, 'feedbackForm'])->name('feedbackForm');
+    Route::get('feedback/list', [PolicyController::class, 'feedbackList'])->name('feedback.list');
+    Route::post('{id}/feedback/store', [PolicyController::class, 'storeFeedback'])->name('feedback.store');
+    Route::get('{id}/issue', [PolicyController::class, 'issueForm'])->name('issueForm');
+    Route::post('{id}/issue/store', [PolicyController::class, 'storeIssuance'])->name('storeIssuance');
+    Route::get('issuance/list', [PolicyController::class, 'issuanceList'])->name('issuance.list');
+    Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
+    Route::post('{id}/endorsement/store', [PolicyController::class, 'storeEndorsement'])->name('storeEndorsement');
+    Route::get('endorsements/list', [PolicyController::class, 'endorsementList'])->name('endorsements.list');
+    Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
+    Route::get('register', [PolicyController::class, 'register'])->name('register');
+    Route::post('{id}/renew/store', [PolicyController::class, 'storeRenewal'])->name('storeRenewal');
+    Route::get('{id}/show', [PolicyController::class, 'show'])->name('show');
+});
 
     Route::prefix('insurance/bancassurance/underwriting')->name('bancassurance.underwriting.')->group(function () {
         Route::get('/', [UnderwritingController::class, 'index'])->name('index');
@@ -119,18 +122,18 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('{id}/assess', [ClaimController::class, 'assessForm'])->name('assessForm');
         Route::post('{id}/assess/store', [ClaimController::class, 'storeAssessment'])->name('assess');
 
-        // ✅ Fix these two lines:
-        Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
-        Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
-        Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
-        Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
-        Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
-        Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.index');
-        Route::get('{id}/close', [ClaimController::class, 'closeForm'])->name('closeForm');
-        Route::post('{id}/close', [ClaimController::class, 'storeClosure'])->name('storeClosure');
-        Route::get('closed', [ClaimController::class, 'closedClaimsIndex'])->name('closed');
-        Route::get('initiate-closure', [ClaimController::class, 'initiateClosureForm'])->name('initiateClosureForm');
-        Route::post('initiate-closure/store', [ClaimController::class, 'storeClosureFromList'])->name('storeClosureFromList');
+    // ✅ Fix these two lines:
+    Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
+    Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
+    Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
+    Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
+    Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
+    Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.index');
+    Route::get('{id}/close', [ClaimClosureController::class, 'closeForm'])->name('closeForm');
+    Route::post('{id}/close', [ClaimClosureController::class, 'storeClosure'])->name('storeClosure');
+    Route::get('closed', [ClaimClosureController::class, 'closedClaimsIndex'])->name('closed');
+    Route::get('initiate-closure', [ClaimClosureController::class, 'initiateClosureForm'])->name('initiateClosureForm');
+    Route::post('initiate-closure/store', [ClaimClosureController::class, 'storeClosureFromList'])->name('storeClosureFromList');
 
     });
 
@@ -146,25 +149,30 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::post('{id}/close/store', [ClaimClosureController::class, 'store'])->name('close');
     });
 
-    Route::prefix('commissions/rules')->name('commissions.rules.')->group(function () {
-        Route::get('/', [CommissionRuleController::class, 'index'])->name('index');
-        Route::get('create', [CommissionRuleController::class, 'create'])->name('create');
-        Route::post('store', [CommissionRuleController::class, 'store'])->name('store');
+Route::prefix('commissions/rules')->name('commissions.rules.')->group(function () {
+    Route::get('/', [CommissionRuleController::class, 'index'])->name('index');
+    Route::get('create', [CommissionRuleController::class, 'create'])->name('create');
+    Route::post('store', [CommissionRuleController::class, 'store'])->name('store');
+    Route::get('{Id}/edit', [CommissionRuleController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [CommissionRuleController::class, 'update'])->name('update');
+    Route::delete('{Id}/destroy', [CommissionRuleController::class, 'destroy'])->name('destroy');
 });
 
-    Route::prefix('commissions/tiers')->name('bancassurance.commissions.tiers.')->group(function () {
-        Route::get('{ruleId}', [CommissionTierController::class, 'index'])->name('index');
-        Route::post('{ruleId}/store', [CommissionTierController::class, 'store'])->name('store');
-    });
-    Route::prefix('bancassurance/commissions')->name('bancassurance.commissions.')->group(function () {
-        // Earned Commissions
-        Route::get('earned', [CommissionEarnedController::class, 'index'])->name('earned.index');
-        Route::get('earned/{id}/pay', [CommissionEarnedController::class, 'payForm'])->name('earned.payForm');
-        Route::post('earned/{id}/pay', [CommissionEarnedController::class, 'storePayout'])->name('earned.storePayout');
+Route::prefix('commissions/tiers')->name('bancassurance.commissions.tiers.')->group(function () {
+    Route::get('{ruleId}', [CommissionTierController::class, 'index'])->name('index');
+    Route::post('{ruleId}/store', [CommissionTierController::class, 'store'])->name('store');
+});
+Route::prefix('bancassurance/commissions')->name('bancassurance.commissions.')->group(function () {
+    // Earned Commissions
+    Route::get('earned', [CommissionEarnedController::class, 'index'])->name('earned.index');
+    Route::get('earned/{id}/pay', [CommissionEarnedController::class, 'payForm'])->name('earned.payForm');
+    Route::post('earned/{id}/pay', [CommissionPayoutController::class, 'storePayout'])->name('earned.storePayout');
 
-        // Payout History
-        Route::get('payouts', [CommissionPayoutController::class, 'index'])->name('payouts.index');
-    });
+    // Payout History
+    Route::get('payouts', [CommissionPayoutController::class, 'index'])->name('payouts.index');
+    Route::get('payouts/{Id}/pay', [CommissionPayoutController::class, 'pay'])->name('payouts.pay');
+    Route::post('payouts/store', [CommissionPayoutController::class, 'store'])->name('payouts.store');
+});
 
     Route::prefix('bancassurance/insurers')->name('bancassurance.insurers.')->group(function () {
         Route::get('/', [InsuranceProviderController::class, 'index'])->name('index');
@@ -201,20 +209,25 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
 
     });
 
-    Route::prefix('bancassurance/riders')->name('bancassurance.riders.')->group(function () {
-        Route::get('/', [InsuranceProductRiderController::class, 'index'])->name('index');
-        Route::get('create', [InsuranceProductRiderController::class, 'create'])->name('create');
-        Route::post('store', [InsuranceProductRiderController::class, 'store'])->name('store');
-    });
+Route::prefix('bancassurance/riders')->name('bancassurance.riders.')->group(function () {
+    Route::get('/', [InsuranceProductRiderController::class, 'index'])->name('index');
+    Route::get('create', [InsuranceProductRiderController::class, 'create'])->name('create');
+    Route::post('store', [InsuranceProductRiderController::class, 'store'])->name('store');
+    Route::get('{Id}/edit', [InsuranceProductRiderController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [InsuranceProductRiderController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [InsuranceProductRiderController::class, 'destroy'])->name('destroy');
+    Route::get('/{ProductId}', [InsuranceProductRiderController::class, 'getProductByProvider'])->name('getProductByProvider');
+});
 
-    Route::prefix('bancassurance/pricing')->name('bancassurance.pricing.')->group(function () {
-        Route::get('/', [PricingRuleController::class, 'index'])->name('index');
-        Route::get('create', [PricingRuleController::class, 'create'])->name('create');
-        Route::post('store', [PricingRuleController::class, 'store'])->name('store');
-        Route::get('pricing/{id}/edit', [PricingRuleController::class, 'edit'])->name('pricing.edit');
-        Route::put('pricing/{id}', [PricingRuleController::class, 'update'])->name('pricing.update');
-        Route::delete('pricing/{id}', [PricingRuleController::class, 'destroy'])->name('pricing.destroy');
-    });
+Route::prefix('bancassurance/pricing')->name('bancassurance.pricing.')->group(function () {
+    Route::get('/', [PricingRuleController::class, 'index'])->name('index');
+    Route::get('create', [PricingRuleController::class, 'create'])->name('create');
+    Route::post('store', [PricingRuleController::class, 'store'])->name('store');
+    Route::get('{Id}/edit', [PricingRuleController::class, 'edit'])->name('edit');
+    Route::put('{Id}/update', [PricingRuleController::class, 'update'])->name('update');
+    Route::delete('delete/{Id}', [PricingRuleController::class, 'destroy'])->name('destroy');
+    Route::get('/{ProductId}', [PricingRuleController::class, 'getProductByProvider'])->name('getProductByProvider');
+});
 
     Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->group(function () {
         Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');

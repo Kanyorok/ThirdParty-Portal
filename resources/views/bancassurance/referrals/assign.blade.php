@@ -5,11 +5,9 @@
 @endsection
 
 @section('content')
-    <div class="container mt-4">
-        <h4 class="mb-3">🧭 Assign Referrals</h4>
-
-        <table class="table table-bordered" id="assignTable">
-            <thead>
+<div class="container mt-4">
+    <table class="table table-bordered" id="assignTable">
+        <thead>
             <tr>
                 <th>#</th>
                 <th>Client Name</th>
@@ -22,29 +20,27 @@
             </thead>
             <tbody>
             @foreach($referrals as $referral)
-                <tr>
-                    <form method="POST" action="{{ route('bancassurance.referrals.assign', $referral->Id) }}">
-                        @csrf
-                        <td>{{ $loop->iteration }}</td>
-                        <td>{{ $referral->ClientName }}</td>
-                        <td>{{ $referral->insuranceProduct->Description }}</td>
-                        <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') }}</td>
-                        <td><span class="badge bg-secondary">{{ $referral->Status->Label() }}</span></td>
-                        <td>
-                            <select name="AssignedTo" class="form-select" required>
-                                <option value="">-- Select Officer --</option>
-                                @foreach($employees as $emp)
-                                    <option value="{{ $emp->Id }}">{{ $emp->FirstName }} {{ $emp->LastName }}</option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td>
-                            <button type="submit" class="btn btn-sm btn-success">
-                                Assign
-                            </button>
-                        </td>
-                    </form>
-                </tr>
+            <tr>
+                <form method="POST" action="{{ route('bancassurance.referrals.assign', $referral->Id) }}">
+                    @csrf
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $referral->ClientName }}</td>
+                    <td>{{ $referral->insuranceProduct->Description }}</td>
+                    <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') }}</td>
+                    <td><span class="badge bg-secondary">{{ $referral->Status->Label() }}</span></td>
+                    <td>
+                        <select name="AssignedTo" class="form-select" required>
+                            <option value="">-- Select Officer --</option>
+                            @foreach($employees as $emp)
+                                <option value="{{ $emp->Id }}">{{ $emp->FirstName }} {{ $emp->LastName }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-sm btn-success">Assign</button>
+                    </td>
+                </form>
+            </tr>
             @endforeach
             </tbody>
         </table>

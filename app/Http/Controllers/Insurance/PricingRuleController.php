@@ -3,104 +3,133 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Insurance\InsurancePricingRule;
+use App\Enums\Core\PermissionEnum;
+use App\Models\Insurance\InsuranceProvider;
+use App\Models\Insurance\InsuranceProduct;
+use App\Http\Requests\Insurance\ProviderAndProducts\InsurancePricingRuleRequest;
+use App\Services\Insurance\ProviderAndProducts\InsurancePricingRuleService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PricingRuleController extends Controller
 {
     public function index()
     {
-        $rules = DB::table('t_InsurancePricingRules as r')
-            ->join('t_InsuranceProviderProducts as ipp', 'r.ProviderProductID', '=', 'ipp.Id')
-            ->join('t_InsuranceProviders as ip', 'ipp.InsuranceProviderID', '=', 'ip.Id')
-            ->join('t_InsuranceProducts as p', 'ipp.ProductID', '=', 'p.Id')
-            ->select(
-                'r.*',
-                'ip.Name as ProviderName',
-                'p.Name as ProductName'
-            )
-            ->orderByDesc('r.Id')
-            ->get();
-
+        $rules = InsurancePricingRule::all();
         return view('bancassurance.pricing.index', compact('rules'));
     }
 
     public function create()
     {
-        $providerProducts = DB::table('t_InsuranceProviderProducts as ipp')
-            ->join('t_InsuranceProviders as ip', 'ipp.InsuranceProviderID', '=', 'ip.Id')
-            ->join('t_InsuranceProducts as p', 'ipp.ProductID', '=', 'p.Id')
-            ->select(
-                'ipp.Id',
-                'ip.Name as ProviderName',
-                'p.Name as ProductName'
-            )
-            ->where('ipp.IsActive', 1)
-            ->get();
+      $this->authorize(PermissionEnum::InsurancePricingRuleView, InsurancePricingRule::class);
+       $providers = InsuranceProvider::all();
+       $products = InsuranceProduct::all();
+       
 
-        return view('bancassurance.pricing.create', compact('providerProducts'));
+        return view('bancassurance.pricing.create', compact('providers','products'));
     }
 
-    public function store(Request $request)
+    public function store(InsurancePricingRuleRequest $request)
+{
+    $this->authorize(PermissionEnum::InsurancePricingRuleCreate, InsurancePricingRule::class);
+    $validated = $request->validated();
+
+         $InsuranceProviderId = InsuranceProvider::findOrFail($validated['InsuranceProviderId']);
+         $Product = InsuranceProduct::findOrFail($validated['Product']);
+
+         $providers = InsurancePricingRuleService::create(
+            $InsuranceProviderId,
+                $Product,
+                $validated['RuleName'],
+                $validated['CoverageAmountMax'],
+                $validated['CoverageAmountMin'],
+                $validated['PremiumRate'],
+                $validated['AgeMin'],
+                $validated['AgeMax'],
+                $validated['TenureMin'],
+                $validated['TenureMax'],
+                $validated['IsActive'],
+                Auth::user(),
+            );
+
+    return redirect()->route('bancassurance.pricing.index')->with('success', 'Pricing rule saved successfully.');
+}
+public function getProductByProvider($providerId)
+{
+    $products = InsuranceProduct::where('InsuranceProviderID', $providerId)->get();
+    return response()->json($products);
+}
+
+ public function edit($Id)
     {
-        $request->validate([
-            'ProviderProductID' => 'required|exists:t_InsuranceProviderProducts,Id',
-            'MinCoverage' => 'required|numeric|min:0',
-            'MaxCoverage' => 'required|numeric|min:0|gte:MinCoverageAmount',
-            'MinAge' => 'required|integer|min:0',
-            'MaxAge' => 'required|integer|min:0|gte:MinAge',
-            'MinTenureMonths' => 'required|integer|min:0',
-            'MaxTenureMonths' => 'required|integer|min:0|gte:MinTenureMonths',
-            'PremiumRate' => 'required|numeric|min:0',
-            'Remarks' => 'nullable|string|max:255',
-        ]);
+       $this->authorize(PermissionEnum::InsurancePricingRuleView, InsurancePricingRule::class);
 
-        DB::table('t_InsurancePricingRules')->insert([
-            'ProviderProductID' => $request->ProviderProductID,
-            'MinCoverage' => $request->MinCoverageAmount,
-            'MaxCoverage' => $request->MaxCoverageAmount,
-            'MinAge' => $request->MinAge,
-            'MaxAge' => $request->MaxAge,
-            'MinTenureMonths' => $request->MinTenureMonths,
-            'MaxTenureMonths' => $request->MaxTenureMonths,
-            'PremiumRate' => $request->PremiumRate,
-            'Remarks' => $request->Remarks,
-            'CreatedAt' => now(),
-        ]);
-
-        return redirect()->route('bancassurance.pricing.index')->with('success', 'Pricing rule saved successfully.');
+       $rule = InsurancePricingRule::findOrFail($Id);
+       $providers = InsuranceProvider::all();
+     
+        return view('bancassurance.pricing.edit', compact('rule','providers'));
     }
 
-    public function edit($id)
+    // Update product
+    public function update (InsurancePricingRuleRequest $request, $id)
     {
-        $rule = DB::table('t_InsurancePricingRules')->where('Id', $id)->first();
-        $providerProducts = DB::table('t_InsuranceProviderProducts')->where('IsActive', 1)->get();
+       $this->authorize(PermissionEnum::InsurancePricingRuleUpdate, InsurancePricingRule::class);
+        $validated = $request->validated();
 
-        return view('bancassurance.pricing.edit', compact('rule', 'providerProducts'));
+        DB::beginTransaction();
+
+        try {
+            $rule = InsurancePricingRule::findOrFail($id);
+
+            $rule->update([
+                'InsuranceProviderId' => $validated['InsuranceProviderId'],             
+                'Product' => $validated['Product'],
+                'RuleName' => $validated['RuleName'],
+                'CoverageAmountMax' => $validated['CoverageAmountMax'], 
+                'CoverageAmountMin' => $validated['CoverageAmountMin'], 
+                'PremiumRate' => $validated['PremiumRate'], 
+                'AgeMin' => $validated['AgeMin'], 
+                'AgeMax' => $validated['AgeMax'], 
+                'TenureMin' => $validated['TenureMin'], 
+                'TenureMax' => $validated['TenureMax'], 
+                'IsActive' => $validated['IsActive'], 
+                'ModifiedBy' => Auth::Id(),
+            ]);
+
+            DB::commit();
+            activity()
+                ->performedOn($rule)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated Rule ');
+
+            return redirect()->route('bancassurance.pricing.index')->with('success', 'Rule updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update Rule:' . $th->getMessage());
+
+            return back()->withErrors(['error' => 'Failed to update Rule'])->withInput();
+        }
     }
 
-    public function update(Request $request, $id)
+    public function destroy($Id)
     {
-        DB::table('t_InsurancePricingRules')->where('Id', $id)->update([
-            'ProviderProductID' => $request->ProviderProductID,
-            'MinAge' => $request->MinAge,
-            'MaxAge' => $request->MaxAge,
-            'MinCoverage' => $request->MinCoverage,
-            'MaxCoverage' => $request->MaxCoverage,
-            'MinTenure' => $request->MinTenure,
-            'MaxTenure' => $request->MaxTenure,
-            'PremiumRate' => $request->PremiumRate,
-            'UpdatedAt' => now(),
-        ]);
+       $this->authorize(PermissionEnum::InsurancePricingRuleDelete, InsurancePricingRule::class);
+        try {
+            $rule = InsurancePricingRule::findOrFail($Id);
+            $rule->delete();
 
-        return redirect()->route('bancassurance.pricing.index')->with('success', 'Pricing rule updated.');
-    }
-
-    public function destroy($id)
-    {
-        DB::table('t_InsurancePricingRules')->where('Id', $id)->delete();
-
-        return redirect()->route('bancassurance.pricing.index')->with('success', 'Pricing rule deleted.');
+            return redirect()->route('bancassurance.pricing.index')
+                ->with('success', 'Rule Deleted Successfully!');
+        } catch (\Throwable $th) {
+            // Log the error for debugging
+            Log::error('Error deleting Rule: ' . $th->getMessage());
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete Rule. Please try again.'])
+                ->withInput();
+        }
     }
 }
 

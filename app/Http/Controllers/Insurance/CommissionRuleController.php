@@ -2,67 +2,125 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use App\Http\Requests\Insurance\CommissionRuleRequest;
+use App\Models\Core\CodeDetail;
+use App\Services\Insurance\CommissionRuleService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use App\Models\Insurance\BancassuranceCommissionRule;
+use App\Models\Insurance\InsuranceProduct;
 
 class CommissionRuleController extends Controller
 {
-    //
-    public function create()
-    {
-        $policyTypes = DB::table('t_CodeDetails')
-            ->where('CodeID', 'POLICY_TYPE')
-            ->pluck('Description', 'Id');
+public function create()
+{
+    $this->authorize(PermissionEnum::CommissionRuleView, BancassuranceCommissionRule::class);
+   $rules = BancassuranceCommissionRule::all();
+   $products = InsuranceProduct::all();
+   $policytypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
+   $assignto = CodeDetail::where('CodeID', 'AppliesTo')->get();
 
-        $providers = DB::table('t_InsuranceProviders')
-            ->where('IsActive', 1)
-            ->pluck('Name', 'Id');
-
-        return view('bancassurance.commissions.rules.create', compact('policyTypes', 'providers'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'RuleName' => 'required|string|max:100',
-            'PolicyTypeID' => 'nullable|integer',
-            'ProductID' => 'nullable|integer',
-            'CommissionRate' => 'nullable|numeric|min:0|max:100',
-            'FixedAmount' => 'nullable|numeric|min:0',
-            'AppliesTo' => 'required|in:Staff,Partner,Both',
-        ]);
-
-        DB::table('t_BancassuranceCommissionRules')->insert([
-            'RuleName' => $request->RuleName,
-            'PolicyTypeID' => $request->PolicyTypeID,
-            'ProductID' => $request->ProductID,
-            'CommissionRate' => $request->CommissionRate,
-            'FixedAmount' => $request->FixedAmount,
-            'AppliesTo' => $request->AppliesTo,
-            'CreatedBy' => auth()->id(),
-            'CreatedAt' => now(),
-            'IsActive' => 1,
-        ]);
-
-        return redirect()->route('commissions.rules.index')->with('success', 'Commission rule created.');
-    }
-
-    public function index()
-    {
-        $rules = DB::table('t_BancassuranceCommissionRules as r')
-            ->leftJoin('t_CodeDetails as pt', function ($join) {
-                $join->on('r.PolicyTypeID', '=', 'pt.Id')
-                    ->where('pt.CodeID', '=', 'POLICY_TYPE');
-            })
-            ->leftJoin('t_InsuranceProviders as p', 'r.InsuranceProviderID', '=', 'p.Id')
-            ->select('r.*', 'pt.Description as PolicyType', 'p.Name as InsuranceProvider')
-            ->orderByDesc('r.Id')
-            ->get();
-
-
-        return view('bancassurance.commissions.rules.index', compact('rules'));
-    }
+    return view('bancassurance.commissions.rules.create', compact('rules','policytypes','assignto','products'));
 }
+
+public function store(CommissionRuleRequest $request)
+{
+    $this->authorize(PermissionEnum::CommissionRuleCreate, BancassuranceCommissionRule::class);
+    $validated = $request->validated();
+
+        $ProductId = InsuranceProduct::findOrFail($validated['ProductId']);
+        $PolicyTypeId = CodeDetail::findOrFail($validated['PolicyTypeId']);
+        $AppliesTo = CodeDetail::findOrFail($validated['AppliesTo']);
+
+        $rule = CommissionRuleService::create(
+                $validated['RuleName'],
+                $ProductId,
+                $PolicyTypeId, 
+                $validated['CommissionRate'],
+                $validated['FixedAmount'],
+                $AppliesTo,
+                $validated['IsActive'],
+                Auth::user(),
+            );
+
+    return redirect()->route('commissions.rules.index')->with('success', 'Commission rule created.');
+}
+public function index()
+{
+   $rules = BancassuranceCommissionRule::all();
+   $policytypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
+   $assignto = CodeDetail::where('CodeID', 'AppliesTo')->get();
+    return view('bancassurance.commissions.rules.index', compact('rules', 'policytypes', 'assignto'));
+}
+public function edit($id)
+    {
+        $this->authorize(PermissionEnum::CommissionRuleView, BancassuranceCommissionRule::class);
+        $rule = BancassuranceCommissionRule::findOrFail($id);
+        $products = InsuranceProduct::all();
+        $policytypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
+        $assignto = CodeDetail::where('CodeID', 'AppliesTo')->get();
+        return view('bancassurance.commissions.rules.edit', compact('rule', 'products', 'policytypes', 'assignto'));
+    }
+
+    public function update(CommissionRuleRequest $request , $id)
+    {
+        $this->authorize(PermissionEnum::CommissionRuleUpdate, BancassuranceCommissionRule::class);
+        $validated = $request->validated();
+
+        DB::beginTransaction();
+
+        try {
+            $rule = BancassuranceCommissionRule::findOrFail($id);
+
+            $rule->update([
+                'RuleName' => $validated['RuleName'],
+                'ProductId' => $validated['ProductId'],
+                'PolicyTypeId' => $validated['PolicyTypeId'],
+                'CommissionRate' => $validated['CommissionRate'],
+                'FixedAmount' => $validated['FixedAmount'],
+                'AppliesTo' => $validated['AppliesTo'],
+                'IsActive' => $validated['IsActive'],
+                'ModifiedBy' => Auth::id(),
+            ]);
+
+            DB::commit();
+            activity()
+                ->performedOn($rule)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])    
+                ->log('Updated rule');
+
+            return redirect()->route('commissions.rules.index')->with('success', 'Rule updated successfully');
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update rule:' . $th->getMessage());
+
+            return back()->withErrors(['error' => 'Failed to update rule'])->withInput();
+        }
+    }
+
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::CommissionRuleDelete, BancassuranceCommissionRule::class);
+        try {
+            $rule = BancassuranceCommissionRule::findOrFail($id);
+            $rule->delete();
+
+            return redirect()->route('commissions.rules.index')
+                ->with('success', 'Rule Deleted Successfully!');
+        } catch (\Throwable $th) {
+            // Log the error for debugging
+            Log::error('Error deleting Rule: ' . $th->getMessage());
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete Rule. Please try again.'])
+                ->withInput();
+        }
+    }
+
+
+}
+

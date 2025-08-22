@@ -4,10 +4,9 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-    <div class="container mt-4">
-        <h4 class="mb-3">👥 Registered Customers</h4>
-        <table id="Customerregistry" class="table table-bordered table-hover">
-            <thead>
+<div class="container mt-4">
+    <table id="Customerregistry" class="table table-bordered table-hover">
+        <thead>
             <tr>
                 <th>#</th>
                 <th>Full Name</th>
@@ -26,20 +25,14 @@
                     <td>{{ $customer->NationalID }}</td>
                     <td>{{ $customer->PhoneNumber }}</td>
                     <td>{{ $customer->Email }}</td>
-                    <td>{{ $customer->DateOfBirth }}</td>
+                    <td>{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                     <td>
-                        <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}"
-                           class="btn btn-sm btn-info">📄 View Portfolio</a>
-                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}"
-                           class="btn btn-sm btn-secondary">🕓 Communication History</a>
-                        <a href="{{ route('bancassurance.customers.beneficiaries.create') }}"
-                           class="btn btn-sm btn-primary">➕ Add Beneficiary</a>
+                        <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" class="btn btn-sm btn-info">View Portfolio</a> 
+                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}" class="btn btn-sm btn-secondary">Communication History</a>
+                        <a href="{{ route('bancassurance.customers.beneficiaries.create') }}" class="btn btn-sm btn-primary">Add Beneficiary</a>
                     </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="7" class="text-center">No customers found.</td>
-                </tr>
             @endforelse
             </tbody>
         </table>

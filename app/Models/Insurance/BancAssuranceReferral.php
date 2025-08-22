@@ -38,12 +38,12 @@ class BancAssuranceReferral extends Model
 
     public function insuranceProduct()
     {
-        return $this->belongsTo(CodeDetail::class, 'InsuranceProductId', 'ID');
+        return $this->belongsTo(InsuranceProduct::class, 'InsuranceProductId', 'Id');
     }
 
     public function preferredInsurer()
     {
-        return $this->belongsTo(CodeDetail::class, 'PreferredInsurerId', 'ID');
+        return $this->belongsTo(InsuranceProvider::class, 'PreferredInsurerId', 'Id');
     }
 
     public function assignedToUser()
@@ -53,7 +53,7 @@ class BancAssuranceReferral extends Model
 
     public function referredByEmployee()
     {
-        return $this->belongsTo(Employee::class, 'ReferredBy', 'Id');
+        return $this->belongsTo(employee::class, 'ReferredBy', 'Id');
     }
 
 

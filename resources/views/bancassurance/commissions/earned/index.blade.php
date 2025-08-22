@@ -1,74 +1,81 @@
 @extends('layouts.app')
 @section('title', 'Commissions Earned')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 
 @section('content')
-    <div class="container mt-4">
-        <h4>💼 Commissions Earned</h4>
+<div class="container mt-4">
+    {{-- filter form remains the same --}}
 
-        <form method="GET" class="row g-3 mb-3">
-            <div class="col-md-3">
-                <label>Month</label>
-                <select name="month" class="form-select">
-                    <option value="">-- Select Month --</option>
-                    @for ($m = 1; $m <= 12; $m++)
-                        <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
-                            {{ DateTime::createFromFormat('!m', $m)->format('F') }}
-                        </option>
-                    @endfor
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label>Year</label>
-                <select name="year" class="form-select">
-                    @for ($y = now()->year; $y >= 2022; $y--)
-                        <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
-                            {{ $y }}
-                        </option>
-                    @endfor
-                </select>
-            </div>
-            <div class="col-md-3 align-self-end">
-                <button type="submit" class="btn btn-primary">🔍 Filter</button>
-            </div>
-        </form>
-
-        @if($earneds->isEmpty())
-            <p class="text-muted">No earned commissions found for the selected period.</p>
-        @else
-            <form method="POST" action="{{ route('bancassurance.commissions.earned.bulkPayout') }}">
-                @csrf
-                <input type="hidden" name="month" value="{{ $month }}">
-                <input type="hidden" name="year" value="{{ $year }}">
-
-                <div class="mb-2 text-end">
-                    <button class="btn btn-success">💰 Pay All Filtered</button>
-                </div>
-
-                <table class="table table-bordered">
-                    <thead class="table-light">
+        <table id="commissionsTable" class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Policy</th>
+                    <th>Claim Type</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($claims as $e)
                     <tr>
-                        <th>#</th>
-                        <th>Policy</th>
-                        <th>Earned By</th>
-                        <th>Amount</th>
-                        <th>Date</th>
-                        <th>Status</th>
+                        <td>{{ $e->Id }}</td>
+                        <td>{{ $e->policy->PolicyNumber }}</td>
+                        <td>{{ optional($claims->firstWhere('Id', $e->Id)?->claimtype)->Description ?? 'N/A' }}</td>
+                        <td>{{ number_format($e->ClaimAmount, 2) }}</td>
+                        <td>{{ \Carbon\Carbon::parse($e->ClaimDate)->format('d/m/Y') }}</td>
+                        <td class="status">{{ optional($claims->firstWhere('Id', $e->Id))->status->Description ?? 'N/A' }}</td>
+                        <td class="action-cell">
+                            <a href="{{ route('bancassurance.commissions.payouts.pay', $e->Id) }}" 
+                               class="btn btn-sm btn-success payout-btn">💰 Payout</a>
+                        </td>
                     </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($earneds as $e)
-                        <tr>
-                            <td>{{ $e->Id }}</td>
-                            <td>{{ $e->PolicyNumber }}</td>
-                            <td>{{ $e->EarnedByType }} #{{ $e->EarnedByID }}</td>
-                            <td>KES {{ number_format($e->EarnedAmount, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($e->EarnedDate)->format('d M Y') }}</td>
-                            <td>{{ $e->IsPaid ? 'Paid' : 'Unpaid' }}</td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </form>
-        @endif
-    </div>
+                @endforeach
+            </tbody>
+        </table>
+</div>
+
+{{-- JavaScript to control button behavior --}}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rows = document.querySelectorAll("#commissionsTable tbody tr");
+
+    rows.forEach(row => {
+        let status = row.querySelector(".status").innerText.trim();
+        let actionCell = row.querySelector(".action-cell");
+        let payoutBtn = actionCell.querySelector(".payout-btn");
+
+        if (status.toLowerCase() === "paid") {
+            // Leave payout button enabled
+            payoutBtn.style.display = "inline-block";
+        } else {
+            // Replace payout button with pending button
+            payoutBtn.remove();
+            let pendingBtn = document.createElement("button");
+            pendingBtn.className = "btn btn-sm btn-secondary";
+            pendingBtn.innerText = "⌛ Pending Payment";
+            pendingBtn.disabled = true;
+            actionCell.appendChild(pendingBtn);
+        }
+    });
+});
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#commissionsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection
