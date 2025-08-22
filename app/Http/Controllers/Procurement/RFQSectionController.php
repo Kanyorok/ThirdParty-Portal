@@ -38,31 +38,51 @@ class RFQSectionController extends Controller
             'weights' => 'required|array',
         ]);
 
+        $rfqId = $request->rfq_id;
+        $sections = $request->input('sections', []);
+        $weights = $request->input('weights', []);
+
         DB::beginTransaction();
         try {
-            foreach ($request->sections as $sectionId) {
-                // Use the sectionId as the key in weights[]
-                $weight = $request->weights[$sectionId] ?? 0;
-
-                RFQSection::create([
-                    'RFQID' => $request->rfq_id,
-                    'SectionID' => $sectionId,
-                    'Weight' => $weight,
-                    'IsActive' => true,
-                    'Comments' => null,
-                    'CreatedBy' => Auth::id(),
+            // Deactivate any previously assigned sections that are not in the current selection
+            RFQSection::where('RFQID', $rfqId)
+                ->whereNotIn('SectionID', count($sections) ? $sections : [0])
+                ->update([
+                    'IsActive' => false,
                     'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
                 ]);
+
+            foreach ($sections as $sectionId) {
+                $weight = isset($weights[$sectionId]) ? floatval($weights[$sectionId]) : 0;
+
+                RFQSection::updateOrCreate(
+                    ['RFQID' => $rfqId, 'SectionID' => $sectionId],
+                    [
+                        'Weight' => $weight,
+                        'IsActive' => true,
+                        'Comments' => null,
+                        'ModifiedBy' => Auth::id(),
+                        'CreatedBy' => Auth::id(),
+                    ]
+                );
             }
 
             activity()
                 ->performedOn(new RFQSection())
                 ->causedBy(Auth::id())
-                ->log('Assigned sections to RFQ ID: ' . $request->rfq_id);
+                ->log('Assigned sections to RFQ ID: ' . $rfqId);
 
             DB::commit();
             return back()->with('success', 'RFQ Evaluation sections saved successfully.');
         } catch (\Throwable $th) {
+            DB::rollBack();
+
+            activity()
+                ->performedOn(new RFQSection())
+                ->causedBy(Auth::id())
+                ->log('Failed to assign sections to RFQ ID: ' . $rfqId . ' Error: ' . $th->getMessage());
+
             return back()->with('error', 'Error saving RFQ Evaluation sections: ' . $th->getMessage());
         }
     }
@@ -126,13 +146,13 @@ class RFQSectionController extends Controller
 
         $section->SectionName = $request->name;
         $section->Description = $request->desc;
-        $section->ModifiedBy = auth()->id();
+        $section->ModifiedBy = Auth::id();
         $section->ModifiedOn = now();
         $section->save();
 
         activity()
             ->performedOn($section)
-            ->causedBy(auth()->user())
+            ->causedBy(Auth::user())
             ->withProperties([
                 'old' => $oldValues,
                 'new' => $section->getChanges()
@@ -150,12 +170,12 @@ class RFQSectionController extends Controller
         $section = RFQSection::findOrFail($id);
         $sectionName = $section->SectionName;
 
-        $section->DeletedBy = auth()->id();
+        $section->DeletedBy = Auth::id();
         $section->save();
 
         activity()
             ->performedOn($section)
-            ->causedBy(auth()->user())
+            ->causedBy(Auth::user())
             ->withProperties(['section_name' => $sectionName])
             ->log('Deleted RFQ section: ' . $sectionName);
 
