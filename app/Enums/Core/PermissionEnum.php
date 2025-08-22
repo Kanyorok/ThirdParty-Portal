@@ -584,6 +584,11 @@ enum PermissionEnum: string
     case FleetInspectionScheduleUpdate = 'fleetinspectionschedule-update';
     case FleetInspectionScheduleDestroy = 'fleetinspectionschedule-destroy';
 
+    case FleetDriverView = 'fleetdriver-view';
+    case FleetDriverCreate = 'fleetdriver-create';
+    case FleetDriverUpdate = 'fleetdriver-update';
+    case FleetDriverDestroy = 'fleetdriver-destroy';
+
 
 
     public static function display(): Collection
@@ -702,6 +707,7 @@ enum PermissionEnum: string
             [self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy],
             [self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy],
             [self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy],
+            [self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy],
 
         ]);
     }
@@ -786,7 +792,8 @@ enum PermissionEnum: string
             self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy,
             self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy,
             self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy,
-            self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy
+            self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy,
+            self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy,
             => ModulesEnum::Fleet,
 
 
@@ -917,6 +924,7 @@ enum PermissionEnum: string
             self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy => 'Vehicle Management',
             self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy => 'Fleet Insurance Tracker',
             self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy => 'Vehicle Inspection',
+            self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy => 'Fleet Driver',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',

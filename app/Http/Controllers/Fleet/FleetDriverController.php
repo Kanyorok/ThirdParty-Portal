@@ -26,6 +26,7 @@ class FleetDriverController extends Controller
 
      public function index()
     {
+       $this->authorize('viewAny', FleetDriver::class);
         $drivers = FleetDriver::with(['driver', 'employmentType'])
             ->where('CreatedBy', Auth::id())
             ->get();
@@ -36,6 +37,7 @@ class FleetDriverController extends Controller
 
     public function create()
     {
+        $this->authorize('create', FleetDriver::class);
         $branchId = Auth::user()->employee?->BranchId;
 
         $excludedIds = FleetDriver::pluck('StaffNumber')->toArray();
@@ -60,6 +62,7 @@ class FleetDriverController extends Controller
 
     public function store(FleetDriverRequest $request)
     {
+        $this->authorize('store', FleetDriver::class);
         $this->fleetDriverService->create($request->validated());
         return redirect()->route('fleet.drivers.index')
             ->with('success', 'Driver registered successfully.');
@@ -67,6 +70,7 @@ class FleetDriverController extends Controller
 
     public function edit($id)
     {
+        $this->authorize('edit', FleetDriver::class);
         $driver = FleetDriver::findOrFail($id);
         $branchId = Auth::user()->employee?->BranchId;
 
@@ -91,6 +95,7 @@ class FleetDriverController extends Controller
 
     public function update(FleetDriverRequest $request, $id)
     {
+        $this->authorize('update', FleetDriver::class);
         $this->fleetDriverService->update($id, $request->validated());
         return redirect()->route('fleet.drivers.index')
             ->with('success', 'Driver details updated successfully.');
@@ -98,6 +103,7 @@ class FleetDriverController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('destroy', FleetDriver::class);
         $this->fleetDriverService->delete($id);
         return redirect()->route('fleet.drivers.index')
             ->with('success', 'Driver deactivated successfully.');
@@ -105,6 +111,7 @@ class FleetDriverController extends Controller
 
       public function show($Id)
 {
+    $this->authorize('view', FleetDriver::class);
     $driver = FleetDriver::findOrFail($Id);
     $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
     $assignments = FleetDriverAssignment::where('DriverID', $Id)
