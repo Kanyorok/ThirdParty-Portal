@@ -179,7 +179,7 @@ use App\Policies\PropertyManagement\PropertyLeaseSchedulePolicy;
 use App\Policies\PropertyManagement\PropertyLeaseTerminationPolicy;
 use App\Policies\PropertyManagement\PropertyNewLeasePolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceRequestPolicy;
-Use App\Policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
+use App\Policies\PropertyManagement\PropertyMaintenanceAssignPolicy;
 use App\Policies\PropertyManagement\PropertyMaintenanceWorkCompletionPolicy;
 use App\Policies\PropertyManagement\PropertyNewTenantPolicy;
 use App\Policies\PropertyManagement\PropertyReceiptPolicy;
@@ -432,7 +432,7 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceCommissionRule::getPrimaryKey() => BancassuranceCommissionRule::class,
 
             //Third Parties
-            PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+            // PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
             //////////////  Finance  ////////////////
             FinanceGLAccounts::getPrimaryKey() => FinanceGLAccounts::class,
@@ -522,12 +522,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BancassuranceCustomerContact::class, BancassuranceCustomersContactsPolicy::class);
         Gate::policy(BancassuranceBeneficiaries::class, BancassuranceCustomersBeneficiariesPolicy::class);
         Gate::policy(BancassurancePremiumPayments::class, BancassurancePremiumPaymentsPolicy::class);
-        Gate::policy(BancassuranceUnderwriting::class,BancassuranceUnderwritingPolicy::class);
-        Gate::policy(BancassuranceClaim::class,BancassuranceClaimPolicy::class);
+        Gate::policy(BancassuranceUnderwriting::class, BancassuranceUnderwritingPolicy::class);
+        Gate::policy(BancassuranceClaim::class, BancassuranceClaimPolicy::class);
         Gate::policy(InsuranceProvider::class, InsuranceProviderPolicy::class);
         Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
         Gate::policy(InsuranceProductRider::class, InsuranceProductRiderPolicy::class);
-        Gate::policy(BancassuranceCommissionRule::class, CommissionRulePolicy::class);        Gate::policy(FleetMake::class, FleetMakePolicy::class);
+        Gate::policy(BancassuranceCommissionRule::class, CommissionRulePolicy::class);
+        Gate::policy(FleetMake::class, FleetMakePolicy::class);
         Gate::policy(FleetModel::class, FleetModelPolicy::class);
         Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
         Gate::policy(DriverManagement::class, DriverManagementPolicy::class);
