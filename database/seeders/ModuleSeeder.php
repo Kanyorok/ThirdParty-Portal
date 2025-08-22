@@ -445,6 +445,8 @@ class ModuleSeeder extends Seeder
             //Configuration
             ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
+           
+
             //Reports
             ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'reports.index'],
         ]);

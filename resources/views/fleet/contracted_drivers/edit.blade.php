@@ -77,10 +77,10 @@
         </div>
                         <div class="col-md-12">
                         <div class="form-check">
-                        <input type="hidden" name="IsActive" value="0">
-                            <input type="checkbox" name="IsActive" class="form-check-input" id="IsActive"
-                                {{ old('IsActive', $driver->IsActive) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="IsActive">Active</label>
+                            <input type="hidden" name="IsActive" value="0">
+<input type="checkbox" name="IsActive" value="1" class="form-check-input" id="IsActive"
+    {{ old('IsActive', $driver->IsActive) ? 'checked' : '' }}>
+<label class="form-check-label" for="IsActive">Active</label>
                         </div>
                         @error('IsActive')
                             <div class="text-danger">{{ $message }}</div>

@@ -3,35 +3,58 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetServiceAlert;
-use App\Models\Fleet\FleetVehicle;
+use App\Http\Requests\FleetManagement\FleetServiceAlertRequest;
+use App\Services\FleetManagement\FleetServiceAlertService;
+use App\Models\Fleet\FleetMaintenanceSchedule;
 
 class FleetServiceAlertController extends Controller
 {
-    // View alerts
+    protected FleetServiceAlertService $service;
+
+    public function __construct(FleetServiceAlertService $service)
+    {
+        $this->service = $service;
+    }
+
+    // List upcoming service alerts
     public function index()
     {
-        $alerts = FleetServiceAlert::with('vehicle')
-            ->orderByDesc('TriggerDate')
-            ->orderByDesc('TriggerMileage')
+        $schedules = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert'])
+            ->whereDate('ScheduledDate', '>=', now()->toDateString())
+            ->orderBy('CreatedOn')
             ->get();
 
-        return view('fleet.maintenance.alerts.index', compact('alerts'));
+        return view('fleet.maintenance.alerts.index', compact('schedules'));
     }
 
-    // Acknowledge alert
-    public function acknowledge($id)
+    // Store a new alert (manual creation)
+    public function store(FleetServiceAlertRequest $request)
     {
-        $alert = FleetServiceAlert::findOrFail($id);
+        $this->service->create($request->validated());
 
-        $alert->update([
-            'IsAcknowledged' => true,
-            'AcknowledgedBy' => Auth::id(),
-            'AcknowledgedOn' => now(),
-        ]);
-
-        return redirect()->route('fleet.alerts.index')->with('success', 'Alert acknowledged.');
+        return redirect()->route('fleet.alerts.index')
+            ->with('success', 'Service Alert created successfully.');
     }
+
+
+    // Complete a service alert
+    public function complete(int $id)
+    {
+        $mileage = request()->input('ScheduledMileage');
+        $this->service->complete($id, $mileage);
+
+        return redirect()->route('fleet.alerts.index')
+            ->with('success', 'Service alert marked as completed.');
+    }
+
+    
+    public function acknowledge(int $scheduleId)
+{
+    $this->service->acknowledgeFromSchedule($scheduleId);
+
+    return redirect()->route('fleet.alerts.index')
+        ->with('success', 'Service alert acknowledged successfully.');
+}
+
+
 }
