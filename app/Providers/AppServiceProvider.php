@@ -431,9 +431,6 @@ class AppServiceProvider extends ServiceProvider
             InsuranceProductRider::getPrimaryKey() => InsuranceProductRider::class,
             BancassuranceCommissionRule::getPrimaryKey() => BancassuranceCommissionRule::class,
 
-            //Third Parties
-            // PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
-
             //////////////  Finance  ////////////////
             FinanceGLAccounts::getPrimaryKey() => FinanceGLAccounts::class,
             FinanceGLSubAccountTypes::getPrimaryKey() => FinanceGLSubAccountTypes::class,
