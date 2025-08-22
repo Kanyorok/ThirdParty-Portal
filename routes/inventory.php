@@ -45,6 +45,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/get-subcategory', [ItemMasterListController::class, 'getSubcategories'])->name('get.subcategories');
 
 
+
     Route::get('/stores', [StoreController::class, 'index'])->name('stores.index');
     Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
     Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
@@ -126,7 +127,15 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/stockconsumption/{Id}', [StockConsumptionController::class, 'update'])->name('stockconsumption.update');
     Route::delete('/stockconsumption/{Id}', [StockConsumptionController::class, 'destroy'])->name('stockconsumption.destroy');
 
-    Route::resource('uomconversion', UOMConversionController::class);
+    //Route::resource('uomconversion', UOMConversionController::class);
+    Route::get('/uomconversion', [UOMConversionController::class, 'index'])->name('uomconversion.index');
+    Route::get('/uomconversion/create', [UOMConversionController::class, 'create'])->name('uomconversion.create');
+    Route::post('/uomconversion', [UOMConversionController::class, 'store'])->name('uomconversion.store');
+    Route::get('/uomconversion/{Id}', [UOMConversionController::class, 'show'])->name('uomconversion.show');
+    Route::get('/uomconversion/{Id}/edit', [UOMConversionController::class, 'edit'])->name('uomconversion.edit');
+    Route::put('/uomconversion/{Id}', [UOMConversionController::class, 'update'])->name('uomconversion.update');
+    Route::delete('/uomconversion/{Id}', [UOMConversionController::class, 'destroy'])->name('uomconversion.destroy');
+
     Route::resource('stockvaluationhistory', StockValuationHistoryController::class);
     Route::resource('expirytracking', ExpiryBatchTrackingController::class);
     //Route::resource('interbranchrequisition', InterBranchRequisitionController::class);

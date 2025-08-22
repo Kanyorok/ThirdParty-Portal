@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('t_BudgetLineProductTypes', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('BudgetLineId')->constrained('t_BudgetLines', 'Id');
-            $table->foreignId('ProductTypeId')->constrained('t_BudgetProductTypes', 'Id');
+            $table->foreignId('ProductTypeId')->constrained('t_BudgetProductTypes', 'Id');// Changed to reference t_BudgetProduct
 
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

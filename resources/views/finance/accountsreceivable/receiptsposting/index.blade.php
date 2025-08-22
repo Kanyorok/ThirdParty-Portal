@@ -1,48 +1,69 @@
 @extends('layouts.app')
-@section('title', 'Receipts Posting- Accounts Receivable')
-@section('content')
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Receipts Posting - Collections</h2>
-        <a href="{{ route('receiptsposting.create') }}" class="btn btn-primary">Post New Receipt</a>
-    </div>
+@section('title','Receipts')
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>Receipt Date</th>
-                <th>Customer</th>
-                <th>Invoice No.</th>
-                <th>Amount Received</th>
-                <th>Payment Method</th>
-                <th>Reference</th>
-                <th>Remarks</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Static sample data -->
-            <tr>
-                <td>2025-05-07</td>
-                <td>ABC Traders</td>
-                <td>INV-1001</td>
-                <td>25,000</td>
-                <td>Bank Transfer</td>
-                <td>BTX12345</td>
-                <td>Payment for April supplies</td>
-                <td><a href="#" class="btn btn-sm btn-outline-primary">View</a></td>
-            </tr>
-            <tr>
-                <td>2025-05-06</td>
-                <td>XYZ Limited</td>
-                <td>INV-0998</td>
-                <td>15,000</td>
-                <td>Mobile Money</td>
-                <td>MPESA5678</td>
-                <td>Final installment</td>
-                <td><a href="#" class="btn btn-sm btn-outline-primary">View</a></td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+@section('content')
+    <div class="container my-3">
+        <div class="card shadow-sm rounded-3">
+            <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 text-muted">
+                    <i class="fas fa-receipt text-info me-2"></i> Receipts
+                </h6>
+                <a href="{{ route('receiptsposting.create') }}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus me-1"></i> New Receipt
+                </a>
+            </div>
+
+            <div class="card-body p-3">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle text-center">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Receipt No.</th>
+                            <th>Customer</th>
+                            <th>Payment Method</th>
+                            <th>Reference No.</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>RCPT-2025-001</td>
+                            <td>ABC Properties Ltd</td>
+                            <td>Bank Transfer</td>
+                            <td>TRX-883728</td>
+                            <td>5,000,000 (KES)</td>
+                            <td>2025-08-20</td>
+                            <td><span class="badge bg-success">Confirmed</span></td>
+                            <td>
+                                <a href="{{ route('receiptsposting.show',1) }}" class="btn btn-sm btn-outline-info" title="View Receipt">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>RCPT-2025-002</td>
+                            <td>XYZ Traders Ltd</td>
+                            <td>Cheque</td>
+                            <td>CHQ-44882</td>
+                            <td>750,000 (KES)</td>
+                            <td>2025-08-21</td>
+                            <td><span class="badge bg-warning text-dark">Pending</span></td>
+                            <td>
+                                <a href="{{ route('receiptsposting.show',2) }}" class="btn btn-sm btn-outline-info" title="View Receipt">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
