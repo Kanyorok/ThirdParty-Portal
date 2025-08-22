@@ -36,7 +36,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
         $validated = $request->validated();
 
         $requestNumber = PropertyMaintenanceAssign::findOrFail($validated['RequestNumber']);
-        $finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);$finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);
+        $finalstatus = CodeDetail::findOrFail((int)$validated['FinalStatus']);
         $document = $request->file('Document');
 
         $user = Auth::user();
@@ -48,10 +48,10 @@ class PropertyMaintenanceWorkCompletionController extends Controller
             $validated['PartsUsed'],
             $validated['Cost'],
             $finalstatus,
-            auth()->user(),
+            Auth::user(),
             $document
         );
-        
+
         return redirect()->route('workcompletion.index')->with('success', 'Work completion created successfully');
 
     }
@@ -69,7 +69,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
     {
       $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionUpdate, PropertyMaintenanceWorkCompletion::class);
         $validated = $request->validated();
-        
+
             $workCompletions = PropertyMaintenanceWorkCompletion::findOrFail($Id);
 
             $document = $request->file('Document');
@@ -82,7 +82,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
                 $validated['PartsUsed'],
                 $validated['Cost'],
                 $finalstatus,
-                auth()->user(),
+                Auth::user(),
                 $document
             );
 

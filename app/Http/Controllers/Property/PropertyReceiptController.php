@@ -31,7 +31,7 @@ class PropertyReceiptController extends Controller
         return response()->json(['amount_paid' => $amountPaid]);
     }
 
-    
+
     public function create()
     {
         $this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
@@ -55,7 +55,6 @@ class PropertyReceiptController extends Controller
     }
 
     public function show($Id)
-    public function show($Id)
     {
         $this->authorize(PermissionEnum::PropertyReceiptView, PropertyReceipt::class);
         $receipt = PropertyReceipt::with('code')->find($Id);
@@ -75,7 +74,7 @@ class PropertyReceiptController extends Controller
             $ParkingFee = floatval($validated['ParkingFee']);
             $AmountPaidSoFar = floatval($validated['AmountPaidSoFar']);
             $AmountPaidNow = floatval($validated['AmountPaidNow']);
-            $PaymentMethod = CodeDetail::findOrFail($validated['PaymentMethod']); 
+            $PaymentMethod = CodeDetail::findOrFail($validated['PaymentMethod']);
             $invoice = PropertyInvoice::findOrFail($InvoiceID);
 
             // Create the receipt
@@ -87,14 +86,14 @@ class PropertyReceiptController extends Controller
                 $ServicesCharge,
                 $ParkingFee,
                 $OtherCharges,
-                $validated['TotalDue'], 
+                $validated['TotalDue'],
                 $AmountPaidSoFar,
                 $validated['Balance'],
                 $validated['PaymentDate'],
                 $AmountPaidNow,
                 $PaymentMethod,
                 $validated['ReferenceNo'],
-                $validated['Remarks'],
+                $validated['Remarks'] ?? '',
                 Auth::user()
             );
 
@@ -114,8 +113,7 @@ class PropertyReceiptController extends Controller
             return redirect()->route('rentreceipt.index')->with('success', 'Rent receipt created successfully');
         } catch (Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
-    }
-
+        }
     }
     public function edit($id)
     {
@@ -179,7 +177,7 @@ class PropertyReceiptController extends Controller
         }
     }
 
-       public function destroy($id)
+    public function destroy($id)
     {
         //Check if user has permission to delete property categories
         $this->authorize(PermissionEnum::PropertyReceiptDelete, PropertyReceipt::class);
@@ -198,5 +196,3 @@ class PropertyReceiptController extends Controller
         }
     }
 }
-
-

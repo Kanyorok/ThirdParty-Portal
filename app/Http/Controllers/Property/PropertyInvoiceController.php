@@ -53,10 +53,10 @@ class PropertyInvoiceController extends Controller
         $validated['BillingMonth'],
         $validated['InvoiceDate'],
         $validated['RentAmount'],
-        $validated['ServicesCharge'],
-        $validated['OtherCharges'],
-        $validated['ParkingFee'],
-        $validated['InvoiceNotes'],
+            $validated['ServicesCharge'] ?? 0,
+            $validated['OtherCharges'] ?? 0,
+            $validated['ParkingFee'] ?? 0,
+            $validated['InvoiceNotes'] ?? '',
         $Status,
         Auth::user()
     );
@@ -90,10 +90,10 @@ class PropertyInvoiceController extends Controller
                 'BillingMonth' => $validated['BillingMonth'],
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'RentAmount' => $validated['RentAmount'],
-                'ServicesCharge' => $validated['ServicesCharge'],
-                'ParkingFee' => $validated['ParkingFee'],
-                'OtherCharges' => $validated['OtherCharges'],
-                'InvoiceNotes' => $validated['InvoiceNotes'],
+                'ServicesCharge' => $validated['ServicesCharge'] ?? 0,
+                'ParkingFee' => $validated['ParkingFee'] ?? 0,
+                'OtherCharges' => $validated['OtherCharges'] ?? 0,
+                'InvoiceNotes' => $validated['InvoiceNotes'] ?? '',
                 'ModifiedBy' => Auth::Id(),
             ]);
 
