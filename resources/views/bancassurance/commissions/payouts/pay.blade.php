@@ -8,8 +8,8 @@
         @csrf
         
     <div class="mb-3">
-        <label class="form-label">PolicyId</label>
-            <select name="PolicyId" class="form-select">
+        <label class="form-label">PolicyId <span class="text-danger">*</span></label>
+            <select name="PolicyId" class="form-select" required>
             <option value="">--Select a policy--</option>
               @foreach ($policies as $policy)
                 <option value="{{ $policy->Id }}">
@@ -20,23 +20,23 @@
           </div>
 
         <div class="mb-3">
-            <label class="form-label">Payout Reference</label>
+            <label class="form-label">Payout Reference <span class="text-danger">*</span></label>
             <input type="text" name="PayoutReference" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Amount </label>
+            <label class="form-label">Amount <span class="text-danger">*</span></label>
             <input type="number" name="PaidAmount" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Payment Date</label>
-            <input type="date" name="PaymentDate" class="form-control" value="{{ now()->format('Y-m-d') }}" required>
+            <label class="form-label">Payment Date <span class="text-danger">*</span></label>
+            <input type="date" name="PaymentDate" class="form-control" value="{{ now()->format('d/m/Y') }}" required>
         </div>
 
         <div class="mb-3">
-         <label class="form-label">Payment Mode</label>
-            <select name="PaymentMode" class="form-select">
+         <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+            <select name="PaymentMode" class="form-select" required>
             <option value="">--Select a status--</option>
               @foreach ($paymentmodes as $paymentmode)
                 <option value="{{ $paymentmode->ID }}">
@@ -46,8 +46,8 @@
             </select>
           </div>
         <div class="mb-3">
-            <label class="form-label">Paid By</label>
-            <select name="PaidBy" class="form-select">
+            <label class="form-label">Paid By <span class="text-danger">*</span></label>
+            <select name="PaidBy" class="form-select" required>
             <option value="">--Select a user--</option>
               @foreach ($paidBy as $user)
                 <option value="{{ $user->Id }}">
@@ -57,12 +57,12 @@
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">Remarks</label>
+            <label class="form-label">Remarks <span class="text-danger">*</span></label>
             <textarea name="Remarks" class="form-control" rows="2"></textarea>
         </div>
 
         <div class="text-end">
-            <button class="btn btn-success">✅ Submit Payout</button>
+            <button class="btn btn-success">Submit Payout</button>
         </div>
     </form>
 </div>

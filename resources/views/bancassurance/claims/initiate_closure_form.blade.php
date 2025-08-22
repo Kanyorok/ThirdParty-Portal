@@ -3,7 +3,6 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>Initiate Claim Closure</h4>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -12,7 +11,7 @@
     <form method="POST" action="{{ route('bancassurance.claims.storeClosureFromList') }}">
         @csrf
         <div class="mb-3">
-            <label class="form-label">Select Claim to Close</label>
+            <label class="form-label">Select Claim to Close <span class="text-danger">*</span></label>
             <select name="ClaimId" class="form-select" required>
                 <option value="">-- Choose Claim --</option>
                 @foreach($claims as $claim)
@@ -24,7 +23,7 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Closure Status</label>
+            <label class="form-label">Closure Status <span class="text-danger">*</span></label>
             <select name="FinalStatus" class="form-select" required>
                 <option value="">-- Select Status --</option>
                 @foreach ($status as $case)
@@ -34,12 +33,12 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Closure Date</label>
+            <label class="form-label">Closure Date <span class="text-danger">*</span></label>
             <input type="date" name="ClosureDate" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Remarks</label>
+            <label class="form-label">Remarks <span class="text-danger">*</span></label>
             <textarea name="FinalRemarks" class="form-control" rows="3" placeholder="Optional notes..."></textarea>
         </div>
 

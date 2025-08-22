@@ -12,24 +12,9 @@ class CommissionEarnedController extends Controller
 {
 public function index(Request $request)
 {
-    $claims = BancassuranceClaim::with('claimtype')->get();
-    $claims = BancassuranceClaim::with('status')->get();
-    $month = $request->input('month');
-    $year = $request->input('year');
+    $claims = BancassuranceClaim::all();
 
-    $query = DB::table('t_BancassuranceClaims as e')
-        ->leftJoin('t_BancassurancePolicies as pol', 'e.PolicyID', '=', 'pol.Id')
-        ->select('e.*', 'pol.PolicyNumber');
-
-    if ($month && $year) {
-        $query->whereMonth('e.ClaimDate', $month)
-              ->whereYear('e.ClaimDate', $year);
-    }
-    
-  
-    $earneds = $query->orderBy('e.Id', 'asc')->get();
-
-    return view('bancassurance.commissions.earned.index', compact('earneds', 'month', 'year','claims'));
+    return view('bancassurance.commissions.earned.index', compact('claims'));
 }
 
 //     public function payForm($id)

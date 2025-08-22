@@ -1,14 +1,15 @@
 @extends('layouts.app')
 @section('title', 'Claim Payments')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 
 @section('content')
 <div class="container mt-4">
-    <h4>💸 Claim Payments</h4>
 
-    <a href="{{ route('bancassurance.claims.payments.initiate') }}" class="btn btn-primary mb-3">➕ Initiate Payment</a>
+    <a href="{{ route('bancassurance.claims.payments.initiate') }}" class="btn btn-primary mb-3">Initiate Payment</a>
 
-    @if($payments->count())
-    <table class="table table-bordered">
+    <table class="table table-bordered" id="claimpayment">
         <thead>
             <tr>
                 <th>#</th>
@@ -34,8 +35,19 @@
             @endforeach
         </tbody>
     </table>
-    @else
-        <p class="text-muted">No payments recorded yet.</p>
-    @endif
 </div>
+@section('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#claimpayment').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
+        });
+    </script>
+@endsection
 @endsection

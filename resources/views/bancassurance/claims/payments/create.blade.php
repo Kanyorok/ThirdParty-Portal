@@ -3,14 +3,12 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>💳 Initiate Claim Payment</h4>
-
     <form action="{{ route('bancassurance.claims.payments.store') }}" method="POST">
         @csrf
 
         
         <div class="mb-3">
-            <label class="form-label">Select Claim</label>
+            <label class="form-label">Select Claim  <span class="text-danger">*</span></label>
             <select name="ClaimId" id="ClaimId" class="form-select" required onchange="populateClaimDetails(this)">
                 <option value="">-- Choose Unpaid Claim --</option>
                 @foreach($unpaidClaims as $claim)
@@ -42,12 +40,12 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Payment Date</label>
+            <label class="form-label">Payment Date <span class="text-danger">*</span></label>
             <input type="date" name="PaymentDate" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Payment Method</label>
+            <label class="form-label">Payment Method  <span class="text-danger">*</span></label>
             <select name="PaymentMethod" class="form-select" required>
                 <option value="#">-- Select Payment --</option>
                 @foreach ($payments as $payment)
@@ -57,18 +55,18 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Payment Reference</label>
+            <label class="form-label">Payment Reference  <span class="text-danger">*</span></label>
             <input type="text" name="PaymentReference" id="PaymentReference" class="form-control" step="0.01" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Paid by</label>
+            <label class="form-label">Paid by  <span class="text-danger">*</span></label>
             <input type="text" name="PaidBy" id="PaidBy" class="form-control" step="0.01" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Note</label>
-            <input type="text" name="Note" id="Note" class="form-control" step="0.01" required>
+            <label class="form-label">Note  <span class="text-danger">*</span></label>
+            <textarea class="form-control" name="Note" id="Note" tep="0.01" required></textarea>
         </div>
 
         <div class="text-end">

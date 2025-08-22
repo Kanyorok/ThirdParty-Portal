@@ -5,13 +5,9 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4>📋 Commission Rules</h4>
 
-    <a href="{{ route('commissions.rules.create') }}" class="btn btn-primary mb-3">➕ Add Commission Rule</a>
+    <a href="{{ route('commissions.rules.create') }}" class="btn btn-primary mb-3">Add Commission Rule</a>
 
-    @if($rules->isEmpty())
-        <p class="text-muted">No commission rules found.</p>
-    @else
         <table id='commissionrules' class="table table-bordered">
             <thead class="table-light">
                 <tr>
@@ -51,7 +47,6 @@
                 @endforeach
             </tbody>
         </table>
-    @endif
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>

@@ -24,17 +24,17 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Assessed Amount</label>
+            <label class="form-label">Assessed Amount <span class="text-danger">*</span></label>
             <input type="number" name="AssessmentAmount" class="form-control" step="0.01" min="0" required>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Assessment Comments</label>
+            <label class="form-label">Assessment Comments <span class="text-danger">*</span></label>
             <textarea name="AssessmentComments" class="form-control" rows="3" required></textarea>
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Decision</label>
+            <label class="form-label">Decision <span class="text-danger">*</span></label>
             <select name="Decision" class="form-select" required>
                 <option value="">-- Select Decision --</option>
                 @foreach($decisions as $type)

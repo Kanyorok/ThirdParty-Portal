@@ -1,30 +1,22 @@
 @extends('layouts.app')
 @section('title', 'Closed Claims')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 
 @section('content')
 <div class="container mt-4">
  <div class="container mt-4">
-    <h4>Closed Claims</h4>
 
     <div class="mb-3 text-end">
-        <a href="{{ route('bancassurance.claims.initiateClosureForm') }}" class="btn btn-primary">
-            Initiate Closure
-        </a>
+        <a href="{{ route('bancassurance.claims.initiateClosureForm') }}" class="btn btn-primary">Initiate Closure</a>
     </div>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    @if($closedClaims->isEmpty())
-        <p class="text-muted">No closed claims found.</p>
-    @else
-        <table class="table table-bordered">
+        <table class="table table-bordered" id="claimclosed">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
@@ -50,6 +42,19 @@
                 @endforeach
             </tbody>
         </table>
-    @endif
 </div>
+@section('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#claimclosed').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
+        });
+    </script>
+@endsection
 @endsection

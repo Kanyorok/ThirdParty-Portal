@@ -53,7 +53,7 @@ public function store(BancassuranceClaimPaymentRequest $request)
     DB::table('t_BancassuranceClaims')
         ->where('Id', $request->ClaimId)
         ->update([
-            'Status' => 'Paid',
+            'Status' => CodeDetail::where('CodeID', 'ClaimStatus')->where('Value', 'P')->value('ID'),
             'ModifiedBy' => auth()->id(),
             'ModifiedOn' => now(),
         ]);

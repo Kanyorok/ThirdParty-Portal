@@ -1,15 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Commissions Earned')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 
 @section('content')
 <div class="container mt-4">
-    <h4>💼 Commissions Earned</h4>
-
     {{-- filter form remains the same --}}
 
-    @if($earneds->isEmpty())
-        <p class="text-muted">No earned commissions found for the selected period.</p>
-    @else
         <table id="commissionsTable" class="table table-bordered">
             <thead class="table-light">
                 <tr>
@@ -23,14 +21,14 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($earneds as $e)
+                @foreach($claims as $e)
                     <tr>
                         <td>{{ $e->Id }}</td>
-                        <td>{{ $e->PolicyNumber }}</td>
+                        <td>{{ $e->policy->PolicyNumber }}</td>
                         <td>{{ optional($claims->firstWhere('Id', $e->Id)?->claimtype)->Description ?? 'N/A' }}</td>
                         <td>{{ number_format($e->ClaimAmount, 2) }}</td>
-                        <td>{{ \Carbon\Carbon::parse($e->ClaimDate)->format('d M Y') }}</td>
-                        <td class="status">{{ optional($claims->firstWhere('Id', $e->Id)?->status)->Description ?? 'N/A' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($e->ClaimDate)->format('d/m/Y') }}</td>
+                        <td class="status">{{ optional($claims->firstWhere('Id', $e->Id))->status->Description ?? 'N/A' }}</td>
                         <td class="action-cell">
                             <a href="{{ route('bancassurance.commissions.payouts.pay', $e->Id) }}" 
                                class="btn btn-sm btn-success payout-btn">💰 Payout</a>
@@ -39,7 +37,6 @@
                 @endforeach
             </tbody>
         </table>
-    @endif
 </div>
 
 {{-- JavaScript to control button behavior --}}
@@ -66,5 +63,19 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#commissionsTable').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
 </script>
 @endsection
