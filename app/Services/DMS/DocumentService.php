@@ -18,6 +18,7 @@ use App\Models\Core\CategoryMaster;
 use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentCheckOut;
+use App\Models\DMS\DocumentRelation;
 use App\Models\DMS\Repository;
 use App\Services\Core\PermissionsService;
 use App\Services\DMS\Files\FileProperties;
@@ -32,10 +33,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class DocumentService extends PermissionsService
@@ -173,7 +174,7 @@ class DocumentService extends PermissionsService
 
                 $service = new self($document);
                 if ($repository->Visibility->value === VisibilityEnum::Public->value) {
-                    return $service->addPermission($actor, RoleEnum::Admin, $actor, false);
+                    $service->addPermission($actor, RoleEnum::Admin, $actor, false);
                 }
                 return $service->_newVersion($disk, $path, $name, $sizeInBytes, $actor, $properties, $checksum);
             });
