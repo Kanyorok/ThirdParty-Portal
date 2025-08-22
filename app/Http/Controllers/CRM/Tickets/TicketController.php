@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class TicketController extends Controller
 {
@@ -74,16 +75,17 @@ class TicketController extends Controller
             }
 
 
-            if ($request->get('_status') === 'all') {
-                $query->whereIn('t_Tickets.Status', TicketStatusEnum::values());
-            } else {
-                try {
-                    $status = TicketStatusEnum::fromValue($request->get('_status'));
-                    $query->where('t_Tickets.Status', $status->value);
-                } catch (Exception) {
-                    throw new ErroredException('Invalid Status filter given');
-                }
-            }
+            /*todo fix with code details
+             *   if ($request->get('_status') === 'all') {
+                  $query->whereIn('t_Tickets.Status', TicketStatusEnum::values());
+              } else {
+                  try {
+                      $status = TicketStatusEnum::fromValue($request->get('_status'));
+                      $query->where('t_Tickets.Status', $status->value);
+                  } catch (Exception) {
+                      throw new ErroredException('Invalid Status filter given');
+                  }
+              }*/
 
             if ($request->get('_priority') === 'all') {
                 $query->whereIn('t_Tickets.Priority', TicketPriorityEnum::values());
@@ -120,7 +122,7 @@ class TicketController extends Controller
         if ($assignee->Id === $owner->Id) {
             throw ValidationException::withMessages(['ticket_user' => 'you cannot assign yourself, your ticket.']);
         }
-        $exists = $owner->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.Status', TicketStatusEnum::Active->value)->first();
+        $exists = $owner->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.StatusId', TicketStatusEnum::Active->codeDetail()->ID)->first();
         if ($exists instanceof Ticket) {
             return $this->errored('Ticket <a href="' . route('tickets.show', [$exists->TicketID]) . '" class="fw-bold text-white">' . $exists->TicketID . '</a> of the same category already exists.');
         }
@@ -174,7 +176,7 @@ class TicketController extends Controller
 
         return view('crm.tickets.show', compact('ticket'))
             ->with('TicketCategories', StaticListsService::getList(StaticListsService::TicketCategories))
-            ->with('canApprove', (($ticket->Status->value === TicketStatusEnum::Approval->value) && ((new TicketService($ticket))->canApprove($request->user()))))
+            ->with('canApprove', true) //todo fix code details workflow (($ticket->Status->value === TicketStatusEnum::Approval->value) && ((new TicketService($ticket))->canApprove($request->user())))
             ->with('party', $ticket->party);
     }
 
@@ -233,24 +235,21 @@ class TicketController extends Controller
     {
         $this->authorize('restore', $ticket);
         $request->validate([
-                            'open_reason' => [
-                                              'required',
-                                              'string',
-                                              'min:15',
-                                              'max:250',
-                                             ],
-                           ]);
-        if (!in_array($ticket->Status->value, [TicketStatusEnum::Resolved->value, TicketStatusEnum::Cancelled->value], true)) {
+            'open_reason' => [
+                'required', 'string', 'min:15', 'max:250',
+            ],
+        ]);
+        if (!in_array($ticket->status->ID, [TicketStatusEnum::Resolved->codeDetail()->ID, TicketStatusEnum::Cancelled->codeDetail()->ID], true)) {
             return $this->errored('ticket is not closed');
         }
 
         try {
             DB::transaction(function () use ($request, $ticket) {
-                $this->service($ticket)->reopen($request->user(), $request->open_reason);
+                $this->service($ticket)->reopen($request->user(), $request->string('open_reason')->trim()->toString());
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error re open ticket ticket ' . $e->getMessage());
             return $this->errored('unexpected error , try again later');
         }

@@ -1,4 +1,4 @@
-@php use App\Enums\TicketSourceEnum;use App\Enums\TicketStatusEnum;use App\Models\BR\Client;use App\Models\CRM\Lead; @endphp
+@php use App\Enums\Core\ExtensionsEnum;use App\Enums\TicketSourceEnum;use App\Enums\TicketStatusEnum;use App\Helpers\SystemHelper;use App\Models\Auth\Team;use App\Models\Auth\User;use App\Models\BR\Client;use App\Models\CRM\Lead;use App\Services\TicketService; @endphp
 @php @endphp
 @php @endphp
 @php @endphp
@@ -24,7 +24,7 @@
             <div class="card">
                 <div class="card-body pb-0">
                     <h3 class="h3"><b> {{ $ticket->TicketID }}</b> &nbsp;-&nbsp;{{ $ticket->Title }} </h3>
-                    @if($ticket->Status->value === TicketStatusEnum::Active->value)
+                    @if($ticket->status->ID === TicketStatusEnum::Active->codeDetail()->ID)
                         <div class="w-100">
                             <button type="button" class="btn btn-secondary m-2 modal-update-ticket"><i
                                     class="fas fa-edit"></i>&nbsp; update
@@ -41,14 +41,14 @@
                                 resolve
                             </button>
                         </div>
-                    @elseif(in_array($ticket->Status->value, [TicketStatusEnum::Cancelled->value, TicketStatusEnum::Resolved->value],true))
+                    @elseif(in_array($ticket->status->ID, [TicketStatusEnum::Cancelled->codeDetail()->ID, TicketStatusEnum::Resolved->codeDetail()->ID],true))
                         <div class="w-100">
                             <button type="button" class="btn btn-secondary m-2 modal-reopen-ticket"><i
                                     class="fas fa-history"></i>&nbsp;
                                 reopen
                             </button>
                         </div>
-                    @elseif($ticket->Status->value === TicketStatusEnum::Approval->value && $canApprove)
+                    @elseif($ticket->status->ID === TicketStatusEnum::Approval->codeDetail()->ID && $canApprove)
                         <div class="w-100">
                             <button type="button" class="btn btn-primary modal-ticket-approve m-2 ">
                                 <i class="fas fa-check"></i> approve
@@ -109,7 +109,7 @@
                         <div class="tab-pane m-2 active show" id="tab-comments" role="tabpanel">
                             <div class="pb-1 mb-1 border-bottom">
                                 Comments
-                                @if($ticket->Status->value === TicketStatusEnum::Active->value)
+                                @if($ticket->status->ID === TicketStatusEnum::Active->codeDetail()->ID)
                                     <span class="float-end">
                                           <button class="btn btn-primary btn-sm new-comment" data-parent="comments"
                                                   data-route="{{  route('ticket-comment.store',[$ticket->TicketID])  }}"
@@ -179,7 +179,7 @@
                         @include('snippets.client_summary', ['client'=>$party,'show_summary'=>true])
                     @elseif($party instanceof Lead)
                         @include('snippets.lead_summary', ['lead'=>$party, 'show_summary'=>true])
-                    @elseif($party instanceof \App\Models\Auth\User)
+                    @elseif($party instanceof User)
                         @include('snippets.user_summary', ['user'=>$party, 'show_summary'=>true])
                     @else
                         <h3>Unknown party</h3>
@@ -198,7 +198,7 @@
                                             value="{{ $priority->value }}" {{ ($priority->value===$ticket->Priority->value)?'selected':'' }}>{{ $priority->name }}</option>
                                     @endforeach
 
-                                    
+
                                 </select>
                                 <p id="ticket_priority_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
@@ -210,8 +210,8 @@
                                 @csrf
                                 <span class="d-none" id="ticketAssigneeMsg"></span>@method('put')
                                 <select class="form-control " name="ticket_user" id="ticket_user" required>
-                                    @if($ticket->assignee instanceof \App\Models\Auth\User)
-                                        @if(\App\Helpers\SystemHelper::isSystem($ticket->assignee))
+                                    @if($ticket->assignee instanceof User)
+                                        @if(SystemHelper::isSystem($ticket->assignee))
                                             <option value="{{ $ticket->assignee->UserID }}" selected
                                                     id="ticketAssignee">None - Unassigned
                                             </option>
@@ -221,7 +221,7 @@
                                                 {{ $ticket->assignee->Name }} - {{ $ticket->assignee->UserID }} (user)
                                             </option>
                                         @endif
-                                    @elseif($ticket->assignee instanceof \App\Models\Auth\Team)
+                                    @elseif($ticket->assignee instanceof Team)
                                         <option value="t#{{ $ticket->assignee->TeamID }}" selected
                                                 id="ticketAssignee">{{ $ticket->assignee->Name }} (team)
                                         </option>
@@ -232,7 +232,7 @@
                             </form>
                         </li>
                         <li class="list-group-item">Source: <b
-                                class="float-end">{!! (new \App\Services\TicketService($ticket))->source() !!}</b>
+                                class="float-end">{!! (new TicketService($ticket))->source() !!}</b>
                         </li>
                         <li class="list-group-item">Start: <span
                                 class="float-end">{{ $ticket->StartDate?->format('M d, Y') }}</span></li>
@@ -257,8 +257,8 @@
                             aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @switch($ticket->Status->value)
-                        @case(TicketStatusEnum::Active->value)
+                    @switch($ticket->status->ID)
+                        @case(TicketStatusEnum::Active->codeDetail()->ID)
                             <div class="onboarding-content with-gradient d-none modal-item" id="updateTicketModal">
                                 <form action="{{ route('tickets.update',[$ticket->TicketID]) }}" method="post"
                                       id="updateTicketForm"> @csrf
@@ -417,8 +417,8 @@
                                 </form>
                             </div>
                             @break
-                        @case(TicketStatusEnum::Cancelled->value)
-                        @case(TicketStatusEnum::Resolved->value)
+                        @case(TicketStatusEnum::Cancelled->codeDetail()->ID)
+                        @case(TicketStatusEnum::Resolved->codeDetail()->ID)
                             <div class="onboarding-content with-gradient d-none modal-item" id="reopenTicketModal">
                                 <h3 class="h3">Re open ticket : <b> {{ $ticket->TicketID }}</b>
                                     &nbsp;-&nbsp;{{ $ticket->Title }}</h3>
@@ -445,7 +445,7 @@
                                 </form>
                             </div>
                             @break
-                        @case(TicketStatusEnum::Approval->value)
+                        @case(TicketStatusEnum::Approval->codeDetail()->ID)
                             <div class="onboarding-content with-gradient d-none modal-item text-center"
                                  id="approveTicketModal">
                                 <h4 class="text-success">
@@ -507,20 +507,20 @@
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
     <script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-   
+
     <script>const $Modal = $('#ticketActionsModal'), $commentsMessage = $('#commentsMessage');
         window._commentPage = '{{ route('ticket-comment.index',[$ticket->TicketID]) }}';
         Dropzone.options.uploadForm = {
             maxFilesize: 9,//Mb
-            acceptedFiles: "{{ implode(", ",\App\Enums\Core\ExtensionsEnum::getAllMimeTypes()) }}",
+            acceptedFiles: "{{ implode(", ",ExtensionsEnum::getAllMimeTypes()) }}",
             success: function (file, response) {
                 file.previewElement.remove();
                 $('#ticketsAttachementContents').append(response.html);
             }
         };
         $(function () {
-            @switch($ticket->Status->value)
-            @case(TicketStatusEnum::Active->value)
+            @switch($ticket->status->ID)
+            @case(TicketStatusEnum::Active->codeDetail()->ID)
 
             $(document).on('click', '.modal-resolve-ticket', function () {
                 $(".modal-item").addClass('d-none');
@@ -668,8 +668,8 @@
             $("#ticket_user option[id='ticketAssignee']").prop("selected", true).trigger("change");
 
             @break
-            @case(TicketStatusEnum::Cancelled->value)
-            @case(TicketStatusEnum::Resolved->value)
+            @case(TicketStatusEnum::Cancelled->codeDetail()->ID)
+            @case(TicketStatusEnum::Resolved->codeDetail()->ID)
             $(document).on('click', '.modal-reopen-ticket', function () {
                 $(".modal-item").addClass('d-none');
                 $('#reopenTicketModal').removeClass('d-none');
@@ -684,7 +684,7 @@
                 }
             });
             @break
-            @case(TicketStatusEnum::Approval->value)
+            @case(TicketStatusEnum::Approval->codeDetail()->ID)
             $(document).on('click', '.modal-ticket-approve', function () {
                 $(".modal-title").html('<b class="text-success">APPROVE</b> Ticket {{ $ticket->TicketID }} Reopen');
                 $(".modal-item").addClass('d-none');
@@ -896,5 +896,5 @@
             }
         }
     </script>
-    @include('snippets.actions.comments', ['canComment'=>($ticket->Status->value === TicketStatusEnum::Active->value)])
+    @include('snippets.actions.comments', ['canComment'=>($ticket->status->ID === TicketStatusEnum::Active->codeDetail()->ID)])
 @endsection

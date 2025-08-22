@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\CRM\Client;
 
 use App\Enums\Core\RoleEnum;
-use App\Enums\TicketStatusEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Http\Controllers\Controller;
@@ -13,7 +12,6 @@ use App\Models\Auth\User;
 use App\Models\BR\Client;
 use App\Models\Communication\Email;
 use App\Models\Communication\EmailConversation;
-use App\Models\CRM\Ticket;
 use App\Models\DMS\Image;
 use App\Traits\Controller\TicketsTrait;
 use Carbon\Carbon;
@@ -23,7 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use TypeError;
+use Throwable;
 
 class ClientTicketController extends Controller
 {
@@ -41,16 +39,17 @@ class ClientTicketController extends Controller
     public function index(Request $request, Client $client): JsonResponse
     {
         $query = $client->tickets();
-        if ($request->get('_status') === 'all') {
-            $query->whereIn('t_Tickets.Status', TicketStatusEnum::  values());
-        } else {
-            try {
-                $status = TicketStatusEnum::fromValue($request->get('_status'));
-                $query->where('t_Tickets.Status', $status->value);
-            } catch (Exception | TypeError) {
-                throw new ErroredException('Invalid Status filter given');
-            }
-        }
+        /*todo fix
+         if ($request->get('_status') === 'all') {
+             $query->whereIn('t_Tickets.Status', TicketStatusEnum::  values());
+         } else {
+             try {
+                 $status = TicketStatusEnum::fromValue($request->get('_status'));
+                 $query->where('t_Tickets.Status', $status->value);
+             } catch (Exception | TypeError) {
+                 throw new ErroredException('Invalid Status filter given');
+             }
+         }*/
 
         return $this->tickets($query);
     }
@@ -66,10 +65,11 @@ class ClientTicketController extends Controller
         $source = $request->getSource();
         $start = $request->getStart();
         $end = ($start instanceof Carbon) ? $request->getEnd($start) : null;//here because it throws validation avoid try catch.
-        $exists = $client->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.Status', TicketStatusEnum::Active->value)->first();
+        /*todo fix with code details.
+         * $exists = $client->tickets()->where('t_Tickets.CategoryID', $category->ID)->where('t_Tickets.StatusId', TicketStatusEnum::Active->value)->first();
         if ($exists instanceof Ticket) {
             return $this->errored('Ticket <a href="' . route('tickets.show', [$exists->TicketID]) . '" class="fw-bold text-white">' . $exists->TicketID . '</a> of the same category already exists.');
-        }
+        }*/
         $watchers = $request->getWatchers();
         $assignee = $request->getAssignee();
         $owner = $request->user();
@@ -109,7 +109,7 @@ class ClientTicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable|Exception $e) {
             Log::error('Error creating Client ticket ' . $e->getMessage());
             return $this->errored('unexpected error creating ticket, try again later');
         }

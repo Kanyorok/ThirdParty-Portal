@@ -13,7 +13,6 @@ use App\Services\DMS\ImageService;
 use App\Traits\Controller\ActivitiesTrait;
 use App\Traits\Controller\TicketsTrait;
 use App\Traits\Controller\WorkflowTrait;
-use ErrorException;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -118,7 +117,7 @@ class TicketActionsController extends Controller
 
 
     /**
-     * @throws AuthorizationException
+     * @throws AuthorizationException|ErroredException
      */
     public function resolved(Request $request, Ticket $ticket): JsonResponse
     {
@@ -127,7 +126,7 @@ class TicketActionsController extends Controller
 
         $comment = $request->resolve_comment ?? null;
         $actor = $request->user();
-        if ($ticket->Status->value !== TicketStatusEnum::Active->value) {
+        if ($ticket->status->ID !== TicketStatusEnum::Active->codeDetail()->ID) {
             return $this->errored('ticket is not active');
         }
 
