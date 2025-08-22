@@ -67,7 +67,7 @@ class PricingImport implements ToCollection
                 'ItemCode'      => $itemCode,
                 'EffectiveFrom' => $effectiveFrom,
                 'EffectiveTo'   => $effectiveTo,
-                //'EstimatedPrice'=> $row[2],
+                'EstimatedPrice' => $row[2],
                 'ActualPrice'   => $row[3],
                 'CurrencyCode'  => $row[6],
                 'IsDefault'     => $isDefault,
