@@ -55,7 +55,7 @@
                         </div>
 
 
-                        <div class="mb-3">
+                        {{-- <div class="mb-3">
                             <div class="form-check form-check-inline">
                                 <input type="hidden" name="Batch" value="0">
                                 <input class="form-check-input" type="checkbox" name="Batch"
@@ -90,7 +90,7 @@
                                        value="1" {{ isset($item) && $item->Purchasable ? 'checked' : '' }}>
                                 <label class="form-check-label">Is Purchasable</label>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <div class="col-md-6">
                             <label for="Branch" class="form-label">Branch</label>

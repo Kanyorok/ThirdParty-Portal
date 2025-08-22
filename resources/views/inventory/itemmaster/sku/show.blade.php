@@ -60,7 +60,7 @@
                 </div>
             </div>
 
-            <div class="row mb-3">
+            {{-- <div class="row mb-3">
                 @foreach(['Batch', 'Serial', 'Perishable', 'Saleable', 'Purchasable'] as $field)
                     <div class="col-md-4">
                         <p><strong>{{ ucfirst($field) }}
@@ -68,7 +68,7 @@
                         </p>
                     </div>
                 @endforeach
-            </div>
+            </div> --}}
 
             <div class="row mb-3">
                 <div class="col-md-4">
