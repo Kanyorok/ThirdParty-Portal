@@ -1,15 +1,16 @@
 @extends('layouts.app')
 @section('title', 'Trip Logs')
-
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
 <div class="card p-4 shadow rounded-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4>📝 Trips List</h4>
         <a href="{{ route('fleet.trip_logs.create') }}" class="btn btn-primary">➕ Log New Trip</a>
     </div>
-
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover align-middle">
+         <div class="table-responsive">
+        <table id="tripTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
@@ -61,4 +62,25 @@
 
 
 </div>
+
 @endsection
+@section('scripts')
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                @if(!$tripLogs->isEmpty())
+                $('#tripTable').DataTable({
+                    pageLength: 10,
+                    ordering: true,
+                    searching: true,
+                    lengthChange: true,
+                    language: {
+                        emptyTable: ""
+                    }
+                });
+                @endif
+            });
+        </script>
+@endsection
+

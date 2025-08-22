@@ -29,6 +29,7 @@ class FleetDriverController extends Controller
         $drivers = FleetDriver::with(['driver', 'employmentType'])
             ->where('CreatedBy', Auth::id())
             ->get();
+            
 
         return view('fleet.drivers.index', compact('drivers'));
     }
