@@ -65,6 +65,7 @@ class RFQCommittee extends Model
     {
         return (new self())->getRouteKeyName();
     }
+
     public function getRouteKeyName(): string
     {
         return 'RFQCommitteeID';

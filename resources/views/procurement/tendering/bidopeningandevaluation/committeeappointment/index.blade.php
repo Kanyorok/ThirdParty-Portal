@@ -65,7 +65,7 @@
             </div>
 
             <form id="committeeForm" action="{{ route('tendercommittee.store') }}" method="POST">
-            @csrf
+                @csrf
                 @method('POST')
 
                 <div class="modal-body">
@@ -86,7 +86,7 @@
                             </select>
                         </div>
 
-                    <div class="col-md-6">
+                        <div class="col-md-6">
                             <label for="appointmentDate" class="form-label">Appointment Date</label>
                             <input type="date" class="form-control" name="appointmentDate" id="appointmentDate">
                         </div>

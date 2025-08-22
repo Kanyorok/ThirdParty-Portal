@@ -3,6 +3,7 @@
 namespace App\Models\DMS;
 
 use App\Enums\Core\VisibilityEnum;
+use App\Interfaces\SpecialPermissionContract;
 use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -10,13 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Repository extends Model
+class Repository extends Model implements SpecialPermissionContract
 {
     use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Repositories';
     protected $primaryKey = 'Id';

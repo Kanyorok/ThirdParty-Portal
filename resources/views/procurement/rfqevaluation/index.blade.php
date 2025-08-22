@@ -111,17 +111,36 @@
                             </div>
                         </div>
 
-                        <div class="modal-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <p><strong>Committee Member:</strong> {{ $evaluation->CommitteeMemberName }}</p>
-                                    <p><strong>RFQ Number:</strong> {{ $evaluation->rfq->RFQNumber ?? 'N/A' }}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>RFQ Comment:</strong> {{ $evaluation->RFQComment ?? 'None' }}</p>
-                                    <p><strong>Confirmed:</strong> {{ $evaluation->Confirmation ? '✅ Yes' : '❌ No' }}</p>
-                                </div>
-                            </div>
+            <div class="modal-body">
+                <!-- RFQ & Committee Info -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Committee Member:</strong> {{ $evaluation->CommitteeMemberName }}</p>
+                        <p><strong>RFQ Number:</strong> {{ $evaluation->rfq->RFQNumber ?? 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>RFQ Comment:</strong> {{ $evaluation->RFQComment ?? 'None' }}</p>
+                        <p><strong>Confirmed:</strong> {{ $evaluation->Confirmation ? '✅ Yes' : '❌ No' }}</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Supplier Evaluations -->
+                @php
+                    $groupedBySupplier = $evaluation->evaluations->groupBy('SupplierId');
+                @endphp
+
+                @foreach ($groupedBySupplier as $supplierId => $evalGroup)
+                    @php
+                        $supplier = $evalGroup->first()->supplier;
+                        $response = \App\Models\Procurement\RFQResponse::with('items.uom')
+                            ->where('SupplierId', $supplierId)
+                            ->where('RFQId', $evaluation->RFQId)
+                            ->first();
+
+                        $groupedBySection = $evalGroup->groupBy(fn($e) => $e->rfqCriteria?->section?->SectionName ?? 'Uncategorized');
+                    @endphp
 
                             <div class="card mb-4">
                                 <div class="card-header bg-light fw-bold">

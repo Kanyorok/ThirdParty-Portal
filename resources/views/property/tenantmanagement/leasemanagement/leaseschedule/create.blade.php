@@ -2,14 +2,14 @@
 @section('title', 'Lease Schedule Generator')
 
 @section('content')
-@if(session('error'))
-    <script>
-        alert("{{ session('error') }}");
-    </script>
-@endif
+    @if(session('error'))
+        <script>
+            alert("{{ session('error') }}");
+        </script>
+    @endif
 
-<div class="container mt-4">
-    <h4 class="fw-bold mb-3">📆 Lease Schedule Generator</h4>
+    <div class="container mt-4">
+        <h4 class="fw-bold mb-3">📆 Lease Schedule Generator</h4>
 
     <form action="{{ route('schedulelease.store') }}" method="POST">
         @csrf
@@ -111,13 +111,13 @@
         document.getElementById('lease-select').addEventListener('change', function () {
             const selected = this.options[this.selectedIndex];
 
-        document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber') || '';
-        document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id') || '';
-        document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name') || '';
-        document.getElementById('property-id').value = selected.getAttribute('data-property-id') || '';
-        document.getElementById('property-display').value = selected.getAttribute('data-property-name') || '';
-        document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id') || '';
-        document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name') || '';
-    });
-</script>
+            document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber') || '';
+            document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id') || '';
+            document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name') || '';
+            document.getElementById('property-id').value = selected.getAttribute('data-property-id') || '';
+            document.getElementById('property-display').value = selected.getAttribute('data-property-name') || '';
+            document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id') || '';
+            document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name') || '';
+        });
+    </script>
 @endsection
