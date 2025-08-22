@@ -6,8 +6,8 @@
     <h4>Underwriting Feedback – Policy #{{ $policy->PolicyNumber }}</h4>
     <p><strong>Customer:</strong> {{ $policy->customer->FullName }}</p>
 
-    <form method="POST" action="{{ route('bancassurance.policies.feedback.store', $policy->Id) }}">
-        @csrf
+        <form method="POST" action="{{ route('bancassurance.policies.feedback.store', $policy->Id) }}">
+            @csrf
 
         {{-- Underwriter Name (optional or from auth?) --}}
         <div class="mb-3">

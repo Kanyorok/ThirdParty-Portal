@@ -4,9 +4,9 @@
 @section('content')
 <div class="container mt-4">
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
     <form method="POST" action="{{ route('bancassurance.claims.storeClosureFromList') }}">
         @csrf

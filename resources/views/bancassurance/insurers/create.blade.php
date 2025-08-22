@@ -3,8 +3,8 @@
 @section('content')
 <div class="container mt-4">
 
-    <form method="POST" action="{{ route('bancassurance.insurers.store') }}" enctype="multipart/form-data">
-        @csrf
+        <form method="POST" action="{{ route('bancassurance.insurers.store') }}" enctype="multipart/form-data">
+            @csrf
 
         <div class="mb-3">
             <label class="form-label">Name <span class="text-danger">*</span></label>
@@ -31,13 +31,13 @@
             <input name="Phone" type="text" class="form-control">
         </div>
 
-        <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
-            <label class="form-check-label" for="primaryCheck">IsActive </label>
-        </div>
+            <div class="mb-3 form-check">
+                <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
+                <label class="form-check-label" for="primaryCheck">IsActive </label>
+            </div>
 
-        <button type="submit" class="btn btn-primary">Save Provider</button>
-    </form>
-</div>
+            <button type="submit" class="btn btn-primary">Save Provider</button>
+        </form>
+    </div>
 @endsection
 

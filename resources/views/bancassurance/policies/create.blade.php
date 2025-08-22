@@ -10,21 +10,21 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <form method="POST" action="{{ route('bancassurance.policies.store') }}">
-        @csrf
+        <form method="POST" action="{{ route('bancassurance.policies.store') }}">
+            @csrf
 
-        {{-- Referral Dropdown --}}
-        <div class="mb-3">
-            <label class="form-label">Referral (optional)</label>
-            <select name="ReferralID" class="form-select">
-                <option value="">-- None --</option>
-                @foreach($referrals as $ref)
-                    <option value="{{ $ref->Id }}" {{ old('ReferralID') == $ref->Id ? 'selected' : '' }}>
-                        Referral #{{ $ref->ClientIDNumber }} – {{ $ref->ClientName ?? 'Customer' }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+            {{-- Referral Dropdown --}}
+            <div class="mb-3">
+                <label class="form-label">Referral (optional)</label>
+                <select name="ReferralID" class="form-select">
+                    <option value="">-- None --</option>
+                    @foreach($referrals as $ref)
+                        <option value="{{ $ref->Id }}" {{ old('ReferralID') == $ref->Id ? 'selected' : '' }}>
+                            Referral #{{ $ref->ClientIDNumber }} – {{ $ref->ClientName ?? 'Customer' }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
         {{-- Referral Alert (if present) --}}
         @if(isset($referral))

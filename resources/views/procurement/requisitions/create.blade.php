@@ -3,13 +3,13 @@
 @section('title', 'Requisitions')
 
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<style>
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
     .select2-container {
         width: 100% !important;
     }
-</style>
+    </style>
 @endsection
 
 @section('content')
@@ -17,7 +17,7 @@
         <div class="col-md-12 text-end">
             <button class="btn btn-primary modal-create-item" type="button">
                 <i class="fas fa-plus-circle"></i> New Requisition
-        </button>
+            </button>
     </div>
     </div>
 
@@ -27,49 +27,51 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="requisitionTable" class="table table-bordered table-striped align-middle">
-                        <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Requisition No</th>
-                            <th>Procurement Plan</th>
-                            <th>Requisition Date</th>
-                            <th>Branch</th>
-                            <th>Department</th>
-                            <th>Remarks</th>
-                            <th>Total Items</th>
-                            <th>Total Cost</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                        </thead>
-                        <tbody>
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Requisition No</th>
+                                <th>Procurement Plan</th>
+                                <th>Requisition Date</th>
+                                <th>Branch</th>
+                                <th>Department</th>
+                                <th>Remarks</th>
+                                <th>Total Items</th>
+                                <th>Total Cost</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
                             @forelse($details as $item)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $item->RequisitionNo }}</td>
-                                <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
-                                <td>{{ $item->CreatedOn ? Carbon::parse($item->CreatedOn)->format('d-m-Y') : '' }}</td>
-                                <td>{{ $item->BranchID }}</td>
-                                <td>{{ $item->DepartmentID }}</td>
-                                <td>{{ $item->Remarks }}</td>
-                                <td>{{ $item->itemcount }}</td>
-                                <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
-                                <td>{{ $item->Status }}</td>
-                                <td>
-                                    <a href="{{ route('requisition.show', [$item->Id]) }}" class="btn btn-info btn-sm">View</a>
-                                    <a href="{{ route('requisition.approval', [$item->Id]) }}" class="btn btn-success btn-sm">Approve</a>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $item->RequisitionNo }}</td>
+                                    <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
+                                    <td>{{ $item->CreatedOn ? Carbon::parse($item->CreatedOn)->format('d-m-Y') : '' }}</td>
+                                    <td>{{ $item->BranchID }}</td>
+                                    <td>{{ $item->DepartmentID }}</td>
+                                    <td>{{ $item->Remarks }}</td>
+                                    <td>{{ $item->itemcount }}</td>
+                                    <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
+                                    <td>{{ $item->Status }}</td>
+                                    <td>
+                                        <a href="{{ route('requisition.show', [$item->Id]) }}"
+                                           class="btn btn-info btn-sm">View</a>
+                                        <a href="{{ route('requisition.approval', [$item->Id]) }}"
+                                           class="btn btn-success btn-sm">Approve</a>
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="11" class="text-center">No requisition items found.</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="11" class="text-center">No requisition items found.</td>
+                                </tr>
                             @endforelse
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
     </div>
     </div>
 
@@ -86,44 +88,49 @@
                         <form action="{{ route('requisition.store') }}" method="post" id="createRequisitionForm">
                             @csrf
 
-                        <!-- Procurement Plan -->
-                        <div class="mb-3">
-                            <label class="form-label" for="ProcurementPlan">Procurement Plan</label>
-                            <select class="form-control" name="ProcurementPlan" id="ProcurementPlan">
-                                <option selected value="">Select Procurement Plan</option>
-                                @foreach ($procurementPlans as $procurementPlan)
-                                <option value="{{ $procurementPlan->PlanID }}">{{ $procurementPlan->ReferenceNumber }}</option>
-                                @endforeach
-                            </select>
-                            <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                        </div>
+                            <!-- Procurement Plan -->
+                            <div class="mb-3">
+                                <label class="form-label" for="ProcurementPlan">Procurement Plan</label>
+                                <select class="form-control" name="ProcurementPlan" id="ProcurementPlan">
+                                    <option selected value="">Select Procurement Plan</option>
+                                    @foreach ($procurementPlans as $procurementPlan)
+                                        <option value="{{ $procurementPlan->PlanID }}">
+                                            {{ $procurementPlan->ReferenceNumber }}
+                                            -{{ $procurementPlan->Title }}</option>
+                                    @endforeach
+                                </select>
+                                <p id="ProcurementPlan_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
+                            </div>
 
-                        <!-- Branch -->
-                        <div class="mb-3">
-                            <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
-                            <select class="form-control" name="Branch" id="Branch" required>
-                                @if(isset($branchId))
-                                <option value="{{ $branchId }}" selected>{{ session('LoginBranchName') }}</option>
-                                @else
-                                <option selected disabled>Select Branch</option>
-                                @endif
-                            </select>
-                            <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                        </div>
+                            <!-- Branch -->
+                            <div class="mb-3">
+                                <label class="form-label" for="Branch">Branch <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Branch" id="Branch" required>
+                                    @if (isset($branchId))
+                                        <option value="{{ $branchId }}"
+                                                selected>{{ session('LoginBranchName') }}</option>
+                                    @else
+                                        <option selected disabled>Select Branch</option>
+                                    @endif
+                                </select>
+                                <p id="Branch_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
 
-                        <!-- Department -->
-                        <div class="mb-3">
-                            <label class="form-label" for="Department">Department <span class="text-danger">*</span></label>
-                            <select class="form-control" name="Department" id="Department" required>
-                                
-                                @if(isset($departmentId))
-                                <option value="{{ $departmentId }}" selected>Department #{{ $departmentName ?? 'Department #' . $departmentId }}</option>
-                                @else
-                                <option selected disabled>Select Department</option>
-                                @endif
-                            </select>
-                            <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                        </div>
+                            <!-- Department -->
+                            <div class="mb-3">
+                                <label class="form-label" for="Department">Department <span class="text-danger">*</span></label>
+                                <select class="form-control" name="Department" id="Department" required>
+
+                                    @if (isset($departmentId))
+                                        <option value="{{ $departmentId }}" selected>Department
+                                            #{{ $departmentName ?? 'Department #' . $departmentId }}</option>
+                                    @else
+                                        <option selected disabled>Select Department</option>
+                                    @endif
+                                </select>
+                                <p id="Department_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
 
                             <!-- Remarks -->
                             <div class="mb-3">
@@ -161,7 +168,7 @@
         const $Modal = $('#RequisitionItemModal');
 
     $(function() {
-        @if(!$details->isEmpty())
+        @if (!$details->isEmpty())
         $('#requisitionTable').DataTable({
             pageLength: 10,
             ordering: true,
@@ -173,14 +180,14 @@
         });
         @endif
 
-        $(document).on('click', '.modal-create-item', function() {
+        $(document).on('click', '.modal-create-item', function () {
             $(".modal-title").html('Add Requisition');
             $(".modal-item").addClass('d-none');
             $('#createRequisition').removeClass('d-none');
             $Modal.modal('show');
         });
 
-        $('form#createRequisitionForm').submit(async function(e) {
+        $('form#createRequisitionForm').submit(async function (e) {
             e.preventDefault();
             if (await saveForm($(this), $('#createRequisitionBtn'), true, true, true)) {
                 $Modal.modal('hide');
@@ -188,37 +195,37 @@
         });
 
         // Fetch Branch and Department based on Procurement Plan
-        document.getElementById('ProcurementPlan').addEventListener('change', function() {
+        document.getElementById('ProcurementPlan').addEventListener('change', function () {
             let planId = this.value;
             if (!planId) return;
 
-                fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
-                    .then(response => response.json())
-                    .then(data => {
-                        const branchSelect = document.getElementById('Branch');
-                        const departmentSelect = document.getElementById('Department');
+            fetch("{{ route('procurement.plan.details', '__ID__') }}".replace('__ID__', planId))
+                .then(response => response.json())
+                .then(data => {
+                    const branchSelect = document.getElementById('Branch');
+                    const departmentSelect = document.getElementById('Department');
 
-                        branchSelect.innerHTML = '<option selected disabled>Select Branch</option>';
-                        departmentSelect.innerHTML = '<option selected disabled>Select Department</option>';
+                    branchSelect.innerHTML = '<option selected disabled>Select Branch</option>';
+                    departmentSelect.innerHTML = '<option selected disabled>Select Department</option>';
 
-                        data.branches.forEach(branch => {
-                            const opt = document.createElement('option');
-                            opt.value = branch.Id;
-                            opt.textContent = branch.Name;
-                            branchSelect.appendChild(opt);
-                        });
-
-                        data.departments.forEach(dept => {
-                            const opt = document.createElement('option');
-                            opt.value = dept.Id;
-                            opt.textContent = dept.Name;
-                            departmentSelect.appendChild(opt);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error fetching plan details:', error);
+                    data.branches.forEach(branch => {
+                        const opt = document.createElement('option');
+                        opt.value = branch.Id;
+                        opt.textContent = branch.Name;
+                        branchSelect.appendChild(opt);
                     });
-            });
+
+                    data.departments.forEach(dept => {
+                        const opt = document.createElement('option');
+                        opt.value = dept.Id;
+                        opt.textContent = dept.Name;
+                        departmentSelect.appendChild(opt);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching plan details:', error);
+                });
         });
+    });
     </script>
 @endsection

@@ -2,11 +2,11 @@
 @section('title', 'My Commission Statement')
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-4">💼 My Commission Statement</h4>
+    <div class="container mt-4">
+        <h4 class="mb-4">💼 My Commission Statement</h4>
 
-    <table class="table table-bordered table-striped">
-        <thead>
+        <table class="table table-bordered table-striped">
+            <thead>
             <tr>
                 <th>#</th>
                 <th>Policy No</th>
@@ -18,8 +18,8 @@
                 <th>Payment Status</th>
                 <th>Date Earned</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {{-- Static rows for now --}}
             <tr>
                 <td>1</td>
@@ -43,7 +43,7 @@
                 <td><span class="badge bg-warning text-dark">Pending</span></td>
                 <td>2025-07-11</td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

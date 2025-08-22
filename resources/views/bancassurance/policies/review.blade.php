@@ -14,11 +14,12 @@
             <span class="badge bg-{{ $policy->Status->badgeColor() }}">
                 {{ $policy->Status->label() }}
             </span>
-        </td>
-    </div>
+            </td>
+        </div>
 
-    <form action="{{ route('bancassurance.policies.submitUnderwriting', $policy->Id) }}" method="POST" enctype="multipart/form-data">
-        @csrf
+        <form action="{{ route('bancassurance.policies.submitUnderwriting', $policy->Id) }}" method="POST"
+              enctype="multipart/form-data">
+            @csrf
 
         <div class="mb-3">
             <label class="form-label">Upload Proposal Documents (PDF, Images, etc.)</label>

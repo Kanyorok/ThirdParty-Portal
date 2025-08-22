@@ -4,22 +4,21 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::create('t_InsuranceProviders', function (Blueprint $table) {
-            $table->id('Id');       
+            $table->id('Id');
             $table->string('InsuranceProviderNO');
             $table->string('Name');
             $table->string('Country');
             $table->string('ContactPerson');
             $table->string('Email')->unique();
             $table->string('Phone')->unique();
-            $table->boolean('IsActive');         
+            $table->boolean('IsActive');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

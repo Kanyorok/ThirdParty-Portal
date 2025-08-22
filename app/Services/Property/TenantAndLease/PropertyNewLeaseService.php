@@ -55,7 +55,6 @@ class PropertyNewLeaseService
         $leaseNumber = 'LEASE-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
 
-
         $newlease = PropertyNewLease::create([
             'LeaseNumber' => $leaseNumber,
             'Tenant' => $Tenant->Id,
@@ -78,25 +77,25 @@ class PropertyNewLeaseService
         ]);
 
         if ($document) {
-        $newlease->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::PropertyNewLeaseView->value],
-            $user
+            $newlease->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyNewLeaseView->value],
+                $user
             );
         }
 
         PropertyLeaseScheduleService::create(
-        leaseId: $newlease->Id,
-        paymentFrequencyId: $PaymentFrequency->ID,
-        startDate: $StartDate->format('Y-m-d'),
-        endDate: $EndDate->format('Y-m-d'),
-        baseRent: $MonthlyRent,
-        serviceCharge: $ServiceCharge,
-        parkingFee: $ParkingFee,
-        otherCharges: $OtherCharges,
-        user: $user
-    );
+            leaseId: $newlease->Id,
+            paymentFrequencyId: $PaymentFrequency->ID,
+            startDate: $StartDate->format('Y-m-d'),
+            endDate: $EndDate->format('Y-m-d'),
+            baseRent: $MonthlyRent,
+            serviceCharge: $ServiceCharge,
+            parkingFee: $ParkingFee,
+            otherCharges: $OtherCharges,
+            user: $user
+        );
 
         activity()->causedBy($user->Id)
             ->performedOn($newlease)
@@ -105,8 +104,6 @@ class PropertyNewLeaseService
 
         return new self($newlease);
     }
-
-
 
 
     //Update
@@ -148,11 +145,11 @@ class PropertyNewLeaseService
         ]);
 
         if ($document) {
-        $lease->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::PropertyNewLeaseView->value],
-            $user
+            $lease->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyNewLeaseView->value],
+                $user
             );
         }
 

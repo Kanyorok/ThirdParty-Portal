@@ -7,9 +7,9 @@
 <div class="container mt-4">
     <h4>Riders & Add-ons</h4>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
     <div class="mb-3 text-end">
         <a href="{{ route('bancassurance.riders.create') }}" class="btn btn-primary">Add Rider</a>
@@ -28,8 +28,8 @@
                     <th>Created</th>
                     <th>Action</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($riders as $rider)
                 <tr>
                     <td>{{ $rider->Id }}</td>
@@ -42,8 +42,8 @@
                         <span class="badge bg-{{ $rider->IsOptional ? 'info' : 'secondary' }}">
                             {{ $rider->IsOptional ? 'Yes' : 'No' }}
                         </span>
-                    </td>
-                    <td>
+                        </td>
+                        <td>
                         <span class="badge bg-{{ $rider->IsActive ? 'success' : 'danger' }}">
                             {{ $rider->IsActive ? 'Active' : 'Inactive' }}
                         </span>

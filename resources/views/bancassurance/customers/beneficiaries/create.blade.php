@@ -59,16 +59,16 @@
             </div>
         </div>
 
-        <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="IsPrimary" value="1" id="primaryCheck">
-            <label class="form-check-label" for="primaryCheck">Primary Beneficiary</label>
-        </div>
+            <div class="mb-3 form-check">
+                <input class="form-check-input" type="checkbox" name="IsPrimary" value="1" id="primaryCheck">
+                <label class="form-check-label" for="primaryCheck">Primary Beneficiary</label>
+            </div>
 
-        <div class="text-end">
-            <button class="btn btn-primary" type="submit">
-                <i class="fas fa-save"></i> Save Beneficiary
-            </button>
-        </div>
-    </form>
-</div>
+            <div class="text-end">
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-save"></i> Save Beneficiary
+                </button>
+            </div>
+        </form>
+    </div>
 @endsection

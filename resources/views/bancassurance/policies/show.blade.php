@@ -30,24 +30,29 @@
                     : 0;
             @endphp
 
-            <div class="row mb-3">
-                <div class="col-md-4"><strong>Total Premium:</strong><br>KES {{ number_format($policy->TotalPremium, 2) }}</div>
-                <div class="col-md-4"><strong>Paid So Far:</strong><br>KES {{ number_format($policy->AmountPaid, 2) }}</div>
-                <div class="col-md-4"><strong>Balance:</strong><br>KES {{ number_format($balance, 2) }}</div>
-            </div>
-
-            <label class="form-label">Payment Progress</label>
-            <div class="progress mb-3">
-                <div class="progress-bar bg-success" style="width: {{ $progress }}%;">
-                    {{ $progress }}%
+                <div class="row mb-3">
+                    <div class="col-md-4"><strong>Total
+                            Premium:</strong><br>KES {{ number_format($policy->TotalPremium, 2) }}</div>
+                    <div class="col-md-4"><strong>Paid So
+                            Far:</strong><br>KES {{ number_format($policy->AmountPaid, 2) }}</div>
+                    <div class="col-md-4"><strong>Balance:</strong><br>KES {{ number_format($balance, 2) }}</div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-4"><strong>Installment Amount:</strong><br>KES {{ number_format($policy->InstallmentAmount ?? 0, 2) }}</div>
-                <div class="col-md-4"><strong>Next Due Date:</strong><br>{{ $policy->NextInstallmentDueDate ? \Carbon\Carbon::parse($policy->NextInstallmentDueDate)->format('d M Y') : '-' }}</div>
-                <div class="col-md-4"><strong>Frequency:</strong><br>{{ $policy->PaymentFrequency ?? '-' }}</div>
-            </div>
+                <label class="form-label">Payment Progress</label>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-success" style="width: {{ $progress }}%;">
+                        {{ $progress }}%
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4"><strong>Installment
+                            Amount:</strong><br>KES {{ number_format($policy->InstallmentAmount ?? 0, 2) }}</div>
+                    <div class="col-md-4"><strong>Next Due
+                            Date:</strong><br>{{ $policy->NextInstallmentDueDate ? \Carbon\Carbon::parse($policy->NextInstallmentDueDate)->format('d M Y') : '-' }}
+                    </div>
+                    <div class="col-md-4"><strong>Frequency:</strong><br>{{ $policy->PaymentFrequency ?? '-' }}</div>
+                </div>
 
             @if($progress < 100 && isset($policy->NextInstallmentDueDate) && \Carbon\Carbon::parse($policy->NextInstallmentDueDate)->isPast())
                 <div class="alert alert-warning mt-3">Next installment is overdue.</div>
@@ -87,9 +92,9 @@
                             <td colspan="6" class="text-center text-muted">No premium payments found.</td>
                         </tr>
                     @endforelse
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
 @endsection

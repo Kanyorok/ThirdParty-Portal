@@ -17,8 +17,8 @@
                 <th>Assign To</th>
                 <th>Action</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach($referrals as $referral)
             <tr>
                 <form method="POST" action="{{ route('bancassurance.referrals.assign', $referral->Id) }}">
@@ -42,22 +42,22 @@
                 </form>
             </tr>
             @endforeach
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 
-@section('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#assignTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true
+    @section('scripts')
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $('#assignTable').DataTable({
+                    pageLength: 10,
+                    ordering: true,
+                    searching: true,
+                    lengthChange: true
+                });
             });
-        });
-    </script>
-@endsection
+        </script>
+    @endsection
 @endsection

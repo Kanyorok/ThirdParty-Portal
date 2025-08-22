@@ -16,8 +16,8 @@
                 <th>Date of Birth</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse ($customers as $i => $customer)
                 <tr>
                     <td>{{ $i + 1 }}</td>
@@ -34,20 +34,20 @@
                 </tr>
             @empty
             @endforelse
-        </tbody>
-    </table>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#Customerregistry').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
+    <script>
+        $(document).ready(function () {
+            $('#Customerregistry').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
         });
-    });
-</script>
+    </script>
 @endsection

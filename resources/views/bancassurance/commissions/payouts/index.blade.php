@@ -18,8 +18,8 @@
                     <th>Mode</th>
                     <th>Remarks</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($payouts as $p)
                     <tr>
                         <td>{{ $p->Id }}</td>

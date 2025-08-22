@@ -34,66 +34,66 @@ class SurveyController extends Controller
      * @throws Exception
      */
     public function index(Request $request): View|JsonResponse
-{
-    if ($request->ajax()) {
-        $actor = $request->user();
+    {
+        if ($request->ajax()) {
+            $actor = $request->user();
 
-        $query = Survey::query()
-            ->lock('WITH(NOLOCK)')
-            ->withCount('responses')
-            ->select('*')
-            ->where(function (Builder $builder) use ($actor) {
+            $query = Survey::query()
+                ->lock('WITH(NOLOCK)')
+                ->withCount('responses')
+                ->select('*')
+                ->where(function (Builder $builder) use ($actor) {
                 $builder->where('t_Surveys.CreatedBy', $actor->Id)
-                        ->where('t_Surveys.Status', SurveyStatusEnum::Draft);
+                    ->where('t_Surveys.Status', SurveyStatusEnum::Draft);
             });
 
-        $status = collect([SurveyStatusEnum::Queued, SurveyStatusEnum::Complete, SurveyStatusEnum::Active]);
+            $status = collect([SurveyStatusEnum::Queued, SurveyStatusEnum::Complete, SurveyStatusEnum::Active]);
 
-        if ($actor->hasPermissionTo(PermissionEnum::SurveyApproval->value)) {
-            $status->add(SurveyStatusEnum::Approval);
+            if ($actor->hasPermissionTo(PermissionEnum::SurveyApproval->value)) {
+                $status->add(SurveyStatusEnum::Approval);
+            }
+
+            // Allow broader visibility for approved/non-draft
+            $query->orWhereIn('t_Surveys.Status', $status->toArray());
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('action', function (Survey $survey) {
+                    return '<a href="' . route('surveys.show', $survey->SurveyID) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</a>';
+                })
+                ->editColumn('Status', function (Survey $survey) {
+                    return $survey->Status->description();
+                })
+                ->editColumn('responses_count', function ($survey) {
+                    return number_format($survey->responses_count);
+                })
+                ->editColumn('CreatedOn', function (Survey $survey) {
+                    return $survey->CreatedOn->format('d M, Y h:i A');
+                })
+                ->editColumn('Notes', function (Survey $survey) {
+                    return \Illuminate\Support\Str::limit($survey->Notes);
+                })
+                ->filter(function ($query) use ($request) {
+                    if ($search = $request->get('search')['value'] ?? null) {
+                        $query->where(function ($q) use ($search) {
+                            $q->where('Label', 'like', "%{$search}%")
+                                ->orWhere('Notes', 'like', "%{$search}%")
+                                ->orWhere('t_Surveys.Status', 'like', "%{$search}%");
+                        });
+                    }
+                })
+                ->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')
+                ->setRowData([
+                    'dbl_click_url' => function (Survey $survey) {
+                        return route('surveys.show', $survey->SurveyID);
+                    },
+                ])
+                ->rawColumns(['action'])
+                ->make();
         }
 
-        // Allow broader visibility for approved/non-draft
-        $query->orWhereIn('t_Surveys.Status', $status->toArray());
-
-        return DataTables::of($query)
-            ->addIndexColumn()
-            ->addColumn('action', function (Survey $survey) {
-                return '<a href="' . route('surveys.show', $survey->SurveyID) . '" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> details</a>';
-            })
-            ->editColumn('Status', function (Survey $survey) {
-                return $survey->Status->description();
-            })
-            ->editColumn('responses_count', function ($survey) {
-                return number_format($survey->responses_count);
-            })
-            ->editColumn('CreatedOn', function (Survey $survey) {
-                return $survey->CreatedOn->format('d M, Y h:i A');
-            })
-            ->editColumn('Notes', function (Survey $survey) {
-                return \Illuminate\Support\Str::limit($survey->Notes);
-            })
-            ->filter(function ($query) use ($request) {
-                if ($search = $request->get('search')['value'] ?? null) {
-                    $query->where(function ($q) use ($search) {
-                        $q->where('Label', 'like', "%{$search}%")
-                          ->orWhere('Notes', 'like', "%{$search}%")
-                          ->orWhere('t_Surveys.Status', 'like', "%{$search}%");
-                    });
-                }
-            })
-            ->setRowClass('mouse_pointer user-select-none dbl-click-redirect-data')
-            ->setRowData([
-                'dbl_click_url' => function (Survey $survey) {
-                    return route('surveys.show', $survey->SurveyID);
-                },
-            ])
-            ->rawColumns(['action'])
-            ->make();
+        return view('crm.feedback.surveys.index');
     }
-
-    return view('crm.feedback.surveys.index');
-}
 
 
     /**

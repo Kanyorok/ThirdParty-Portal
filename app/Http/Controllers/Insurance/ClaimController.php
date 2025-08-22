@@ -63,9 +63,9 @@ public function assessForm($id)
     $claim = BancassuranceClaim::find($id);
     $decisions = CodeDetail::where('CodeID', 'Decision')->get();
 
-    if (!$claim) {
-        return redirect()->route('bancassurance.claims.index')->with('error', 'Claim not found.');
-    }
+        if (!$claim) {
+            return redirect()->route('bancassurance.claims.index')->with('error', 'Claim not found.');
+        }
 
     return view('bancassurance.claims.assess', compact('claim','decisions'));
 }
@@ -86,8 +86,8 @@ public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $i
         $request->user(),
     );
 
-    return redirect()->route('bancassurance.claims.index')->with('success', 'Assessment submitted.');
-}
+        return redirect()->route('bancassurance.claims.index')->with('success', 'Assessment submitted.');
+    }
 
 
 // public function approvalForm($id)

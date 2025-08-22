@@ -27,10 +27,10 @@
             <input type="text" name="RiderName" class="form-control" required>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Description (optional)</label>
-            <textarea name="Description" class="form-control" rows="2"></textarea>
-        </div>
+            <div class="mb-3">
+                <label class="form-label">Description (optional)</label>
+                <textarea name="Description" class="form-control" rows="2"></textarea>
+            </div>
 
         <div class="mb-3">
             <label class="form-label">Additional Premium <span class="text-danger">*</span></label>

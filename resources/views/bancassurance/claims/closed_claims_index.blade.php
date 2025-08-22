@@ -12,9 +12,9 @@
         <a href="{{ route('bancassurance.claims.initiateClosureForm') }}" class="btn btn-primary">Initiate Closure</a>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+            @if(session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
 
         <table class="table table-bordered" id="claimclosed">
             <thead class="table-light">

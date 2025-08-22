@@ -32,8 +32,7 @@
         </div>
         <hr>
         <div class="mt-4">
-            <button type="button" class="btn btn-secondary float-start"
-                    data-bs-dismiss="modal">
+            <button type="button" class="btn btn-secondary float-start" onclick="window.bsOffcanvas.hide();">
                 cancel
             </button>
             <button class="btn btn-primary float-end" id="updateFileTagsBtn" type="submit">

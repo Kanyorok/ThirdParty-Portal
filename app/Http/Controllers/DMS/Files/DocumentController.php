@@ -22,12 +22,18 @@ use Throwable;
 
 class DocumentController extends Controller
 {
+    public function __construct()
+     {
+         $this->middleware('ajax')->except('show');
+         $this->authorizeResource(Document::class);
+     }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Repository $repository): FilesCollection
     {
-        return new FilesCollection($repository->documents()->whereHas('current')->with(['current'])->latest('t_Documents.Id')->paginate(50));
+        return new FilesCollection($repository->documents()->user(auth()->user())->whereHas('current')->with(['current'])->latest('t_Documents.ModifiedOn')->paginate(50));
     }
 
     /**
@@ -50,16 +56,27 @@ class DocumentController extends Controller
     public function show(Request $request, Repository $repository, Document $document): View
     {
         $actor = $request->user();
-        $document->load(['current', 'repository', 'creator', 'category', 'properties'])->withCount('versions');
+        $document->loadCount('versions')->load(['current', 'repository', 'creator', 'category', 'properties']);
 
         $lock = Cache::lock('view-document-' . $document->DocumentId, 100);
         if ($lock->get()) {
             activity()->causedBy($actor)->performedOn($document)->event('view')->log('viewed document  ' . $document->Name . '.');
         }
+        //
 
-        return view('dms.files.show')->with('repoService', new RepositoryService($repository))
-            ->with('tags', (new DocumentService($document))->tags($actor)->get())
-            ->with('file', $document);
+        //checked out.
+        $service = new DocumentService($document);
+        $legalHold = $service->isHold();
+        $checkedOut = ($legalHold) ? 0 : $service->isCheckedOut($actor);
+
+
+        return view('dms.files.show')
+            ->with('repoService', new RepositoryService($repository))
+            ->with('tags', $service->tags($actor)->get())
+            ->with('file', $document)
+            ->with('legalHold', $legalHold)
+            ->with('checkIn', ($checkedOut === 2))
+            ->with('checkedOut', ($checkedOut !== 0));
     }
 
     /**
@@ -78,9 +95,31 @@ class DocumentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Document $document)
+    public function update(Request $request, Repository $repository, Document $document)
     {
-        //
+        if ($document->RepositoryId !== $repository->Id) {
+            return $this->errored('file not found');
+        }
+
+        $data = $request->validate([
+            'Name' => ['required', 'string', 'min:2', 'max:200'],
+        ]);
+        $actor = $request->user();
+        try {
+            return DB::transaction(function () use ($document, $repository, $data, $actor) {
+                activity()->causedBy($actor)->performedOn($document)->event('update')->log('rename document  ' . $document->Name . ' to ' . $data['Name'] . '.');
+
+                $document->forceFill([
+                    'Name' => $data['Name'] . '.' . pathinfo($document->Name, PATHINFO_EXTENSION),
+                    'ModifiedBy' => $actor->Id,
+                ])->save();
+
+                return $this->succeeded('document renamed successfully', route('files.show', [$repository->RepositoryId, $document->DocumentId]));
+            });
+        } catch (Throwable|Exception $e) {
+            Log::error('rename file failed : ' . $e);
+        }
+        return $this->errored('rename file failed, try again later');
     }
 
     /**

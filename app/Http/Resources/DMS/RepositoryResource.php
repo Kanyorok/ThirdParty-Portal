@@ -38,7 +38,8 @@ class RepositoryResource extends JsonResource
                 ],
                 'links' => [
                     'route' => route('repo.show', $this->RepositoryId),
-                    'summary' => route('repo.edit', $this->RepositoryId)
+                    'summary' => route('repo.edit', $this->RepositoryId),
+                    'move' => route('repo-move.index', $this->RepositoryId)
                 ]
             ]);
     }

@@ -21,8 +21,8 @@
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($rules as $rule)
                 <tr>
                     <td>{{ $rule->Id }}</td>

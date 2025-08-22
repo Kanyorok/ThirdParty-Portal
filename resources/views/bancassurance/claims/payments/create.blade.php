@@ -24,15 +24,15 @@
             </select>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Customer Name</label>
-            <input type="text" id="CustomerName" class="form-control" readonly>
-        </div>
+            <div class="mb-3">
+                <label class="form-label">Customer Name</label>
+                <input type="text" id="CustomerName" class="form-control" readonly>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Policy Number</label>
-            <input type="text" id="PolicyNumber" class="form-control" readonly>
-        </div>
+            <div class="mb-3">
+                <label class="form-label">Policy Number</label>
+                <input type="text" id="PolicyNumber" class="form-control" readonly>
+            </div>
 
         <div class="mb-3">
             <label class="form-label">Amount to Pay</label>

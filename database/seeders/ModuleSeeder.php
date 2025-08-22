@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 
 class ModuleSeeder extends Seeder
 {
-
     /**
      * Run the database seeds.
      */
@@ -169,6 +168,7 @@ class ModuleSeeder extends Seeder
             //Awards
             ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index'],
 
+
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
             // ['ModuleID' => 307200, 'Name' => 'Create Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.create'],
@@ -240,8 +240,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 499000, 'Name' => 'Reports', 'Icon' => null, 'Description' => 'Inventory Reports', 'Route' => 'inventory-reports.index', 'ParentID' => 400000],
 
 
-
-
         ]);
 
         if ($fresh) {
@@ -290,22 +288,23 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1202700, 'Name' => 'Budget Consolidation', 'Icon' => null, 'Description' => 'Consolidate Budgets', 'Route' => 'budgetconsolidation.index', 'ParentID' => 1202000],
 
             // Monitoring & Execution
-//            ['ModuleID' => 1203000, 'Name' => 'Monitoring & Execution', 'Icon' => null, 'Description' => 'Monitor & Execute Budget', 'Route' => null, 'ParentID' => 1200000],
-//            ['ModuleID' => 1203100, 'Name' => 'Plan vs Actual Monitoring', 'Icon' => null, 'Description' => 'Plan vs Actual Dashboard', 'Route' => 'budgetvsactualdashboard.index', 'ParentID' => 1203000],
-//            ['ModuleID' => 1203200, 'Name' => 'Variance Analysis', 'Icon' => null, 'Description' => 'Analyse Variances', 'Route' => 'budgetvarianceanalysis.index', 'ParentID' => 1203000],
-//            ['ModuleID' => 1203300, 'Name' => 'KPI Scorecards', 'Icon' => null, 'Description' => 'KPI Dashboard', 'Route' => 'kpiscorecards.index', 'ParentID' => 1203000],
-//            ['ModuleID' => 1203400, 'Name' => 'Deviation Alerts', 'Icon' => null, 'Description' => 'Monitor Deviations', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
-//            ['ModuleID' => 1203500, 'Name' => 'Completion Rate View', 'Icon' => null, 'Description' => 'View Completion Rates', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
+            //            ['ModuleID' => 1203000, 'Name' => 'Monitoring & Execution', 'Icon' => null, 'Description' => 'Monitor & Execute Budget', 'Route' => null, 'ParentID' => 1200000],
+            //            ['ModuleID' => 1203100, 'Name' => 'Plan vs Actual Monitoring', 'Icon' => null, 'Description' => 'Plan vs Actual Dashboard', 'Route' => 'budgetvsactualdashboard.index', 'ParentID' => 1203000],
+            //            ['ModuleID' => 1203200, 'Name' => 'Variance Analysis', 'Icon' => null, 'Description' => 'Analyse Variances', 'Route' => 'budgetvarianceanalysis.index', 'ParentID' => 1203000],
+            //            ['ModuleID' => 1203300, 'Name' => 'KPI Scorecards', 'Icon' => null, 'Description' => 'KPI Dashboard', 'Route' => 'kpiscorecards.index', 'ParentID' => 1203000],
+            //            ['ModuleID' => 1203400, 'Name' => 'Deviation Alerts', 'Icon' => null, 'Description' => 'Monitor Deviations', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
+            //            ['ModuleID' => 1203500, 'Name' => 'Completion Rate View', 'Icon' => null, 'Description' => 'View Completion Rates', 'Route' => 'submitapproval.index', 'ParentID' => 1203000],
 
             // Business Intelligence & Deep Analytics
-//            ['ModuleID' => 1204000, 'Name' => 'Business Intelligence & Deep Analytics', 'Icon' => null, 'Description' => 'Performance, Risk, and Compliance Insights', 'Route' => null, 'ParentID' => 1200000],
-//            ['ModuleID' => 1204100, 'Name' => 'BI & Analytics Dashboard', 'Icon' => null, 'Description' => 'Analytics Dashboard', 'Route' => 'analyticsdashboard.index', 'ParentID' => 1204000],
+            //            ['ModuleID' => 1204000, 'Name' => 'Business Intelligence & Deep Analytics', 'Icon' => null, 'Description' => 'Performance, Risk, and Compliance Insights', 'Route' => null, 'ParentID' => 1200000],
+            //            ['ModuleID' => 1204100, 'Name' => 'BI & Analytics Dashboard', 'Icon' => null, 'Description' => 'Analytics Dashboard', 'Route' => 'analyticsdashboard.index', 'ParentID' => 1204000],
 
             // Admin & Integration
             ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
             ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
             ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
 
+            //Settings
             // ['ModuleID' => 1206000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Budget Settings', 'Route' => null, 'ParentID' => 1200000],
             //['ModuleID' => 1206040, 'Name' => 'Budget Line Categories', 'Icon' => null, 'Description' => 'Budget Lines Categories', 'Route' => 'budgetlinecategories.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206050, 'Name' => 'Activity Master', 'Icon' => null, 'Description' => 'Budget Activity Master', 'Route' => 'activitymaster.index', 'ParentID' => 1206000],
@@ -397,26 +396,59 @@ class ModuleSeeder extends Seeder
         return $data;
     }
 
+
     protected function _fleetManagement(bool $fresh): Collection
     {
         $values = collect([
             ['ModuleID' => 600000, 'Name' => ModulesEnum::Fleet->description(), 'Icon' => '<i data-feather="truck"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 601000, 'Name' => 'Driver Management', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'drivermanagement.index'],
-            ['ModuleID' => 602000, 'Name' => 'Vehicle Registry', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'vehicle-registry.index'],
-            ['ModuleID' => 603000, 'Name' => 'Trip Management', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'tripmanagement.index'],
-            ['ModuleID' => 604000, 'Name' => 'Fuel Management', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'fuelmanagement.index'],
-            ['ModuleID' => 605000, 'Name' => 'Compliance', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'complianceanddocumentation.index'],
-            ['ModuleID' => 606000, 'Name' => 'Fleet Disposal', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'fleetprocurementanddisposal.index'],
-            ['ModuleID' => 607000, 'Name' => 'Inventory Of Spare Parts', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'inventoryofspareparts.index'],
-            ['ModuleID' => 608000, 'Name' => 'Utilization & Costing', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'utilization.index'],
-            ['ModuleID' => 609000, 'Name' => 'Service Tracking', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'servicetracking.index'],
-            ['ModuleID' => 610000, 'Name' => 'GPS Integration', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'gps.index'],
+            //Fleet Management
+            ['ModuleID' => 601000, 'Name' => 'Vehicle Management', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 601100, 'Name' => 'Vehicle Master', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => 'fleet.vehicles.index'],
+            ['ModuleID' => 601200, 'Name' => 'Compliance', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => null],
+            ['ModuleID' => 601210, 'Name' => 'Insurance Tracker', 'Icon' => 'Track insurance policies, premiums, providers, and renewal dates', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.insurance_tracker.index'],
+            ['ModuleID' => 601220, 'Name' => 'License Tracker & Inspection Schedule', 'Icon' => 'Track vehicle inspection types, dates, and compliance status', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.inspection_schedule.index'],
 
-            ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 600000, 'Route' => 'reports.index'],
+            //Driver Management
+            ['ModuleID' => 602000, 'Name' => 'Driver Management', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 602100, 'Name' => 'Driver Master', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 602000, 'Route' => 'fleet.drivers.index'],
+            ['ModuleID' => 602200, 'Name' => 'Manage Contract Drivers', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 602000, 'Route' => 'fleet.contracted_drivers.index'],
 
+            //Trip Management
+            ['ModuleID' => 603000, 'Name' => 'Trip Management', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 603100, 'Name' => 'Trip Logs', 'Icon' => '', 'Description' => 'Trip and Usage Logs for Drivers and Vehicles', 'ParentID' => 603000, 'Route' => 'fleet.trip_logs.index'],
+            ['ModuleID' => 603200, 'Name' => 'Route Planner & Optimizer', 'Icon' => '', 'Description' => 'Plan optimal routes with waypoints and map previews', 'ParentID' => 603000, 'Route' => 'fleet.route_planner.index'],
+            ['ModuleID' => 603300, 'Name' => 'Vehicle Requests', 'Icon' => '', 'Description' => 'Staff requests for vehicles and approval flow', 'ParentID' => 603000, 'Route' => 'fleet.vehicle_requests.index'],
+
+            //Maintenance
+            ['ModuleID' => 604000, 'Name' => 'Maintenance', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 604100, 'Name' => 'Maintenance Schedule', 'Icon' => '', 'Description' => 'Schedule upcoming maintenance or inspections', 'ParentID' => 604000, 'Route' => 'fleet.maintenance_schedule.index'],
+            ['ModuleID' => 604200, 'Name' => 'Repair Logs', 'Icon' => '', 'Description' => 'Capture vehicle maintenance and repair records (normal/emergency)', 'ParentID' => 604000, 'Route' => 'fleet.repair_logs.index'],
+            ['ModuleID' => 604300, 'Name' => 'Service Alerts & Reminders', 'Icon' => '', 'Description' => 'View and acknowledge fleet maintenance alerts', 'ParentID' => 604000, 'Route' => 'fleet.alerts.index'],
+
+            //Fuel Management
+            ['ModuleID' => 605000, 'Name' => 'Fuel & Cost Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 605100, 'Name' => 'Fuel Logs', 'Icon' => '', 'Description' => '', 'ParentID' => 605000, 'Route' => 'fleet.fuel_logs.index'],
+            ['ModuleID' => 605200, 'Name' => 'Running Cost Entry', 'Icon' => '', 'Description' => 'Log recurring vehicle costs like tyres, insurance, oil, etc.', 'ParentID' => 605000, 'Route' => 'fleet.running_costs.index'],
+
+            //GPS Tracking
+            ['ModuleID' => 606000, 'Name' => 'GPS Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 606100, 'Name' => 'Live GPS Dashboard', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.live_dashboard'],
+            ['ModuleID' => 606200, 'Name' => 'Movement History', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.movement_history'],
+            ['ModuleID' => 606300, 'Name' => 'GPS Integration', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.telematics.index'],
+
+            //Fleet Settings
             ['ModuleID' => 680000, 'Name' => 'Fleet Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 681000, 'Name' => 'Fleet Make', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmake.index'],
             ['ModuleID' => 682000, 'Name' => 'Fleet Model', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmodel.index'],
+            ['ModuleID' => 683000, 'Name' => 'Fuel Type', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fueltypes.index'],
+
+            //Configuration
+            ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
+
+
+            //Reports
+            ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'reports.index'],
         ]);
 
         if ($fresh) {
@@ -440,6 +472,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 702000, 'Name' => 'Repository', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.index'],
             ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'file-tags.index'],
             ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'files.upload'],
+            ['ModuleID' => 705000, 'Name' => 'Legal Hold', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'legal-hold.index'],
 
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);
@@ -544,7 +577,6 @@ class ModuleSeeder extends Seeder
             //['ModuleID' => 907600, 'Name' => 'Product Lifecycle', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.lifecycle.index', 'ParentID' => 907000],
             //['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
             ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
-
 
 
             //['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 900000, 'Route' => null],
@@ -723,7 +755,6 @@ class ModuleSeeder extends Seeder
     {
         $values = collect([
             ['ModuleID' => 9900000, 'Name' => ModulesEnum::MyAccount->description(), 'Icon' => '<i class="fas fa-user"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-
             ['ModuleID' => 9900100, 'Name' => 'Schedule', 'Icon' => '<i class=" fas fa-calendar"></i>', 'Description' => '', 'ParentID' => 9900000, 'Route' => 'schedule.index'],
             ['ModuleID' => 9900200, 'Name' => 'Tickets', 'Icon' => '<i data-feather="check-square"></i>', 'Description' => '', 'ParentID' => 9900000, 'Route' => 'tickets.index'],
         ]);

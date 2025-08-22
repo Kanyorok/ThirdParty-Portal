@@ -35,7 +35,7 @@ class PropertyCategoryController extends Controller
             $validated['Name'],
             $validated['Description'],
             'PropertyCategory',
-            '500000',   
+            '500000',
             Auth::user()
         );
 

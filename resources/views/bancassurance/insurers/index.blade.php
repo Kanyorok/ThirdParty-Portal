@@ -24,7 +24,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($providers as $provider)
+            @foreach($providers as $provider)
                 <tr>
                     <td>{{ $provider->Id }}</td>
                     <td>{{$provider->InsuranceProviderNO }}</td>
@@ -51,22 +51,22 @@
                     </form>
                     </td>
                 </tr>
-                @endforeach
+            @endforeach
             </tbody>
         </table>
 
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#InsuranceProvider').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
+    <script>
+        $(document).ready(function () {
+            $('#InsuranceProvider').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
         });
-    });
-</script>
+    </script>
 @endsection

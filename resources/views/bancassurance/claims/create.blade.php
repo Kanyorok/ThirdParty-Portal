@@ -4,8 +4,8 @@
 @section('content')
 <div class="container mt-4">
 
-    <form method="POST" action="{{ route('bancassurance.claims.store') }}">
-        @csrf
+        <form method="POST" action="{{ route('bancassurance.claims.store') }}">
+            @csrf
 
         <div class="mb-3">
             <label for="PolicyId" class="form-label">Policy Number <span class="text-danger">*</span></label>

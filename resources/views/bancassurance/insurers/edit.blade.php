@@ -3,9 +3,10 @@
 @section('content')
 <div class="container mt-4">
 
-    <form method="POST" action="{{ route('bancassurance.insurers.update', $provider->Id) }}" enctype="multipart/form-data">
-        @csrf
-        @method('PUT')
+        <form method="POST" action="{{ route('bancassurance.insurers.update', $provider->Id) }}"
+              enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
 
         <div class="mb-3">
             <label class="form-label">Name <span class="text-danger">*</span></label>
@@ -38,7 +39,7 @@
             <label class="form-check-label" for="primaryCheck">Is Active</label>
         </div>
 
-        <button type="submit" class="btn btn-primary">Update Provider</button>
-    </form>
-</div>
+            <button type="submit" class="btn btn-primary">Update Provider</button>
+        </form>
+    </div>
 @endsection

@@ -80,7 +80,8 @@
 
                             <div class="mb-3">
                                 <label class="form-label" for="Notes">Notes</label>
-                                <textarea name="Notes" id="Notes" rows="3" class="form-control" maxlength="1000"></textarea>
+                                <textarea name="Notes" id="Notes" rows="3" class="form-control"
+                                          maxlength="1000"></textarea>
                                 <p id="Notes_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 

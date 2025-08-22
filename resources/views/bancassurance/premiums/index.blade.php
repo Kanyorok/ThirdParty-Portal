@@ -10,8 +10,8 @@
     <a href="{{ route('bancassurance.premiums.create') }}" class="btn btn-primary">Record Premium Payment</a>
 </div>
 
-    <table id="PremiumPaymentsTable" class="table table-striped table-bordered mt-3">
-        <thead>
+        <table id="PremiumPaymentsTable" class="table table-striped table-bordered mt-3">
+            <thead>
             <tr>
                 <th>#</th>
                 <th>Policy Number</th>
@@ -21,8 +21,8 @@
                 <th>Amount</th>
                 <th>Action</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse($payments as $payment)
             <tr>
                 <td>{{ $loop->iteration }}</td>
@@ -46,20 +46,20 @@
             </tr>
             @empty
             @endforelse
-        </tbody>
-    </table>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#PremiumPaymentsTable').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
+    <script>
+        $(document).ready(function () {
+            $('#PremiumPaymentsTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
         });
-    });
-</script>
+    </script>
 @endsection

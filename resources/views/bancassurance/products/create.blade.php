@@ -33,10 +33,10 @@
             <textarea name="Description" class="form-control" rows="3"></textarea>
         </div>
 
-        <div class="mb-3 form-check">
-            <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
-            <label class="form-check-label" for="primaryCheck">IsActive </label>
-        </div>
+            <div class="mb-3 form-check">
+                <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
+                <label class="form-check-label" for="primaryCheck">IsActive </label>
+            </div>
 
         <button type="submit" class="btn btn-primary">Save Product</button>
     </form>

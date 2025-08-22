@@ -46,16 +46,16 @@
             <input type="text" name="Summary" class="form-control" required>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Detailed Notes</label>
-            <textarea name="Notes" class="form-control" rows="4" placeholder="Additional remarks..."></textarea>
-        </div>
+            <div class="mb-3">
+                <label class="form-label">Detailed Notes</label>
+                <textarea name="Notes" class="form-control" rows="4" placeholder="Additional remarks..."></textarea>
+            </div>
 
-        <div class="text-end">
-            <button type="submit" class="btn btn-success">
-                💾 Save Log
-            </button>
-        </div>
-    </form>
-</div>
+            <div class="text-end">
+                <button type="submit" class="btn btn-success">
+                    💾 Save Log
+                </button>
+            </div>
+        </form>
+    </div>
 @endsection

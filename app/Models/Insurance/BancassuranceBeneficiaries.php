@@ -11,6 +11,7 @@ use App\Models\Insurance\BancassurancePolicy;
 class BancassuranceBeneficiaries extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_BancassuranceBeneficiaries';
     const CREATED_AT = 'CreatedOn';
@@ -32,7 +33,8 @@ class BancassuranceBeneficiaries extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-        public static function getPrimaryKey(): string
+
+    public static function getPrimaryKey(): string
     {
         return 'BancassuranceBeneficiariesId';
     }

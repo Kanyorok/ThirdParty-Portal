@@ -20,7 +20,7 @@ class BancassurancePoliciesPolicy
         return $user->can(PermissionEnum::BancassurancePolicyCreate->value);
     }
 
-    public function view(User $user, BancassurancePoliciesPolicy $bancassurancepolicy ): bool
+    public function view(User $user, BancassurancePoliciesPolicy $bancassurancepolicy): bool
     {
         return $user->can(PermissionEnum::BancassurancePolicyView->value);
     }

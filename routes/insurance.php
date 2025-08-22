@@ -39,34 +39,34 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
     Route::get('performance', [BancassuranceReferralController::class, 'performanceView'])->name('performance');
     Route::get('referrals/products/{insurerId}', [BancassuranceReferralController::class, 'getProductsByInsurer'])->name('referrals.products');
 
-});
+    });
 
-Route::prefix('bancassurance/customers')->name('bancassurance.customers.')->group(function () {
-    Route::get('/', [CustomerController::class, 'index'])->name('index');
-    Route::get('check', [CustomerController::class, 'check'])->name('check');
-    Route::get('create', [CustomerController::class, 'create'])->name('create');
-    Route::post('store', [CustomerController::class, 'store'])->name('store');
-    Route::get('show/{Id}', [CustomerController::class, 'show'])->name('show');
-    Route::delete('delete/{Id}', [CustomerController::class, 'destroy'])->name('destroy');
-    Route::get('edit/{Id}', [CustomerController::class, 'edit'])->name('edit');
-    Route::put('update/{Id}', [CustomerController::class, 'update'])->name('update');
-    Route::get('{customerId}/portfolio', [CustomerController::class, 'portfolio'])->name('portfolio');
+    Route::prefix('bancassurance/customers')->name('bancassurance.customers.')->group(function () {
+        Route::get('/', [CustomerController::class, 'index'])->name('index');
+        Route::get('check', [CustomerController::class, 'check'])->name('check');
+        Route::get('create', [CustomerController::class, 'create'])->name('create');
+        Route::post('store', [CustomerController::class, 'store'])->name('store');
+        Route::get('show/{Id}', [CustomerController::class, 'show'])->name('show');
+        Route::delete('delete/{Id}', [CustomerController::class, 'destroy'])->name('destroy');
+        Route::get('edit/{Id}', [CustomerController::class, 'edit'])->name('edit');
+        Route::put('update/{Id}', [CustomerController::class, 'update'])->name('update');
+        Route::get('{customerId}/portfolio', [CustomerController::class, 'portfolio'])->name('portfolio');
 
-});
-Route::prefix('bancassurance/customers/beneficiaries')->name('bancassurance.customers.beneficiaries.')->group(function () {
-    Route::get('create', [CustomerBeneficiaryController::class, 'create'])->name('create');
-    Route::post('store', [CustomerBeneficiaryController::class, 'store'])->name('store');
-});
+    });
+    Route::prefix('bancassurance/customers/beneficiaries')->name('bancassurance.customers.beneficiaries.')->group(function () {
+        Route::get('create', [CustomerBeneficiaryController::class, 'create'])->name('create');
+        Route::post('store', [CustomerBeneficiaryController::class, 'store'])->name('store');
+    });
 
-Route::prefix('bancassurance/customers/communication')->name('bancassurance.customers.communication.')->group(function () {
-    Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
-    Route::get('create', [CustomerCommunicationController::class, 'create'])->name('create');
-    Route::post('store', [CustomerCommunicationController::class, 'store'])->name('store');
-    Route::get('show', [CustomerCommunicationController::class, 'show'])->name('show');
-    Route::delete('delete/{Id}', [CustomerCommunicationController::class, 'destroy'])->name('destroy');
-    Route::get('edit/{Id}', [CustomerCommunicationController::class, 'edit'])->name('edit');
-    Route::put('update/{Id}', [CustomerCommunicationController::class, 'update'])->name('update');
-});
+    Route::prefix('bancassurance/customers/communication')->name('bancassurance.customers.communication.')->group(function () {
+        Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
+        Route::get('create', [CustomerCommunicationController::class, 'create'])->name('create');
+        Route::post('store', [CustomerCommunicationController::class, 'store'])->name('store');
+        Route::get('show', [CustomerCommunicationController::class, 'show'])->name('show');
+        Route::delete('delete/{Id}', [CustomerCommunicationController::class, 'destroy'])->name('destroy');
+        Route::get('edit/{Id}', [CustomerCommunicationController::class, 'edit'])->name('edit');
+        Route::put('update/{Id}', [CustomerCommunicationController::class, 'update'])->name('update');
+    });
 
 Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(function () {
     Route::get('/', [PolicyController::class, 'index'])->name('index');
@@ -91,36 +91,36 @@ Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(
     Route::get('{id}/show', [PolicyController::class, 'show'])->name('show');
 });
 
-Route::prefix('insurance/bancassurance/underwriting')->name('bancassurance.underwriting.')->group(function () {
-    Route::get('/', [UnderwritingController::class, 'index'])->name('index');
-    Route::get('/review/{id}', [UnderwritingController::class, 'review'])->name('review');
-    Route::post('/submit/{id}', [UnderwritingController::class, 'submit'])->name('submit');
-});
-Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(function () {
-    Route::get('renewals', [PolicyController::class, 'renewalIndex'])->name('renewals.index');
-    Route::get('{id}/renew', [PolicyController::class, 'initiateRenewal'])->name('renewalForm');
-    // You’ll add store/update later
-});
+    Route::prefix('insurance/bancassurance/underwriting')->name('bancassurance.underwriting.')->group(function () {
+        Route::get('/', [UnderwritingController::class, 'index'])->name('index');
+        Route::get('/review/{id}', [UnderwritingController::class, 'review'])->name('review');
+        Route::post('/submit/{id}', [UnderwritingController::class, 'submit'])->name('submit');
+    });
+    Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(function () {
+        Route::get('renewals', [PolicyController::class, 'renewalIndex'])->name('renewals.index');
+        Route::get('{id}/renew', [PolicyController::class, 'initiateRenewal'])->name('renewalForm');
+        // You’ll add store/update later
+    });
 
-Route::prefix('bancassurance/premiums')->name('bancassurance.premiums.')->group(function () {
-    Route::get('/', [PremiumController::class, 'index'])->name('index');
-    Route::get('create', [PremiumController::class, 'create'])->name('create');
-    Route::post('store', [PremiumController::class, 'store'])->name('store');
-    Route::get('show/{Id}', [PremiumController::class, 'show'])->name('show');
-    Route::delete('delete/{Id}', [PremiumController::class, 'destroy'])->name('destroy');
-    Route::get('edit/{Id}', [PremiumController::class, 'edit'])->name('edit');
-    Route::get('premiums/{id}/receipt', [PremiumController::class, 'printReceipt'])->name('printReceipt');
-    Route::put('update/{Id}', [PremiumController::class, 'update'])->name('update');
-});
+    Route::prefix('bancassurance/premiums')->name('bancassurance.premiums.')->group(function () {
+        Route::get('/', [PremiumController::class, 'index'])->name('index');
+        Route::get('create', [PremiumController::class, 'create'])->name('create');
+        Route::post('store', [PremiumController::class, 'store'])->name('store');
+        Route::get('show/{Id}', [PremiumController::class, 'show'])->name('show');
+        Route::delete('delete/{Id}', [PremiumController::class, 'destroy'])->name('destroy');
+        Route::get('edit/{Id}', [PremiumController::class, 'edit'])->name('edit');
+        Route::get('premiums/{id}/receipt', [PremiumController::class, 'printReceipt'])->name('printReceipt');
+        Route::put('update/{Id}', [PremiumController::class, 'update'])->name('update');
+    });
 
-Route::prefix('bancassurance/claims')->name('bancassurance.claims.')->group(function () {
-    Route::get('/', [ClaimController::class, 'index'])->name('index');
-    Route::get('create', [ClaimController::class, 'create'])->name('create');
-    Route::post('store', [ClaimController::class, 'store'])->name('store');
-    Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
-    Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
-    Route::get('{id}/assess', [ClaimController::class, 'assessForm'])->name('assessForm');
-    Route::post('{id}/assess/store', [ClaimController::class, 'storeAssessment'])->name('assess');
+    Route::prefix('bancassurance/claims')->name('bancassurance.claims.')->group(function () {
+        Route::get('/', [ClaimController::class, 'index'])->name('index');
+        Route::get('create', [ClaimController::class, 'create'])->name('create');
+        Route::post('store', [ClaimController::class, 'store'])->name('store');
+        Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
+        Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
+        Route::get('{id}/assess', [ClaimController::class, 'assessForm'])->name('assessForm');
+        Route::post('{id}/assess/store', [ClaimController::class, 'storeAssessment'])->name('assess');
 
     // ✅ Fix these two lines:
     Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
@@ -135,19 +135,19 @@ Route::prefix('bancassurance/claims')->name('bancassurance.claims.')->group(func
     Route::get('initiate-closure', [ClaimClosureController::class, 'initiateClosureForm'])->name('initiateClosureForm');
     Route::post('initiate-closure/store', [ClaimClosureController::class, 'storeClosureFromList'])->name('storeClosureFromList');
 
-});
+    });
 
-Route::prefix('insurance/bancassurance/claims/payments')->name('bancassurance.claims.payments.')->group(function () {
-    Route::get('/', [ClaimPaymentController::class, 'index'])->name('index');  // View all payments
-    Route::get('/initiate', [ClaimPaymentController::class, 'create'])->name('initiate'); // List unpaid approved claims
-    Route::post('/store', [ClaimPaymentController::class, 'store'])->name('store'); // Save new payment
-});
+    Route::prefix('insurance/bancassurance/claims/payments')->name('bancassurance.claims.payments.')->group(function () {
+        Route::get('/', [ClaimPaymentController::class, 'index'])->name('index');  // View all payments
+        Route::get('/initiate', [ClaimPaymentController::class, 'create'])->name('initiate'); // List unpaid approved claims
+        Route::post('/store', [ClaimPaymentController::class, 'store'])->name('store'); // Save new payment
+    });
 
-Route::prefix('bancassurance/claims')->name('bancassurance.claims.')->group(function () {
-    // ...
-    Route::get('{id}/close', [ClaimClosureController::class, 'create'])->name('closeForm');
-    Route::post('{id}/close/store', [ClaimClosureController::class, 'store'])->name('close');
-});
+    Route::prefix('bancassurance/claims')->name('bancassurance.claims.')->group(function () {
+        // ...
+        Route::get('{id}/close', [ClaimClosureController::class, 'create'])->name('closeForm');
+        Route::post('{id}/close/store', [ClaimClosureController::class, 'store'])->name('close');
+    });
 
 Route::prefix('commissions/rules')->name('commissions.rules.')->group(function () {
     Route::get('/', [CommissionRuleController::class, 'index'])->name('index');
@@ -174,40 +174,40 @@ Route::prefix('bancassurance/commissions')->name('bancassurance.commissions.')->
     Route::post('payouts/store', [CommissionPayoutController::class, 'store'])->name('payouts.store');
 });
 
-Route::prefix('bancassurance/insurers')->name('bancassurance.insurers.')->group(function () {
-    Route::get('/', [InsuranceProviderController::class, 'index'])->name('index');
-    Route::get('create', [InsuranceProviderController::class, 'create'])->name('create');
-    Route::post('store', [InsuranceProviderController::class, 'store'])->name('store');
-    Route::get('{Id}/edit', [InsuranceProviderController::class, 'edit'])->name('edit');
-    Route::put('{Id}/update', [InsuranceProviderController::class, 'update'])->name('update');
-    Route::get('{Id}/products', [InsuranceProviderController::class, 'viewProducts'])->name('products');
-    Route::delete('delete/{Id}', [InsuranceProviderController::class, 'destroy'])->name('destroy');
-    Route::post('{providerId}/products/{productId}/detach', [InsuranceProviderController::class, 'detachProduct'])->name('products.detach');
-});
+    Route::prefix('bancassurance/insurers')->name('bancassurance.insurers.')->group(function () {
+        Route::get('/', [InsuranceProviderController::class, 'index'])->name('index');
+        Route::get('create', [InsuranceProviderController::class, 'create'])->name('create');
+        Route::post('store', [InsuranceProviderController::class, 'store'])->name('store');
+        Route::get('{Id}/edit', [InsuranceProviderController::class, 'edit'])->name('edit');
+        Route::put('{Id}/update', [InsuranceProviderController::class, 'update'])->name('update');
+        Route::get('{Id}/products', [InsuranceProviderController::class, 'viewProducts'])->name('products');
+        Route::delete('delete/{Id}', [InsuranceProviderController::class, 'destroy'])->name('destroy');
+        Route::post('{providerId}/products/{productId}/detach', [InsuranceProviderController::class, 'detachProduct'])->name('products.detach');
+    });
 
 
-Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(function () {
+    Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(function () {
 
-    // Product Setup
-    Route::get('/', [InsuranceProductController::class, 'index'])->name('index');
-    Route::get('create', [InsuranceProductController::class, 'create'])->name('create');
-    Route::post('store', [InsuranceProductController::class, 'store'])->name('store');
-    Route::get('{Id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
-    Route::put('{Id}/update', [InsuranceProductController::class, 'update'])->name('update');
-    Route::delete('delete/{Id}', [InsuranceProductController::class, 'destroy'])->name('destroy');
-    // Route::get('{Id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
-    // Route::post('{Id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
+        // Product Setup
+        Route::get('/', [InsuranceProductController::class, 'index'])->name('index');
+        Route::get('create', [InsuranceProductController::class, 'create'])->name('create');
+        Route::post('store', [InsuranceProductController::class, 'store'])->name('store');
+        Route::get('{Id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
+        Route::put('{Id}/update', [InsuranceProductController::class, 'update'])->name('update');
+        Route::delete('delete/{Id}', [InsuranceProductController::class, 'destroy'])->name('destroy');
+        // Route::get('{Id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
+        // Route::post('{Id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
 
 
-});
+    });
 
-Route::prefix('bancassurance/products/mapped')->name('bancassurance.products.mapped.')->group(function () {
-    Route::get('/', [InsuranceProviderProductController::class, 'index'])->name('index');
-    Route::get('create', [InsuranceProviderProductController::class, 'create'])->name('create');
-    Route::post('store', [InsuranceProviderProductController::class, 'store'])->name('store');
-    Route::delete('mapped/{mappingId}/detach', [InsuranceProviderProductController::class, 'detach'])->name('detach');
+    Route::prefix('bancassurance/products/mapped')->name('bancassurance.products.mapped.')->group(function () {
+        Route::get('/', [InsuranceProviderProductController::class, 'index'])->name('index');
+        Route::get('create', [InsuranceProviderProductController::class, 'create'])->name('create');
+        Route::post('store', [InsuranceProviderProductController::class, 'store'])->name('store');
+        Route::delete('mapped/{mappingId}/detach', [InsuranceProviderProductController::class, 'detach'])->name('detach');
 
-});
+    });
 
 Route::prefix('bancassurance/riders')->name('bancassurance.riders.')->group(function () {
     Route::get('/', [InsuranceProductRiderController::class, 'index'])->name('index');
@@ -229,18 +229,18 @@ Route::prefix('bancassurance/pricing')->name('bancassurance.pricing.')->group(fu
     Route::get('/{ProductId}', [PricingRuleController::class, 'getProductByProvider'])->name('getProductByProvider');
 });
 
-Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->group(function () {
-    Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');
-    Route::post('toggle/{id}', [ProductLifecycleController::class, 'toggleStatus'])->name('toggle');
-});
+    Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->group(function () {
+        Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');
+        Route::post('toggle/{id}', [ProductLifecycleController::class, 'toggleStatus'])->name('toggle');
+    });
 
-Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {
-    Route::get('/', [SettingsController::class, 'index'])->name('index');
-    Route::get('/create', [SettingsController::class, 'create'])->name('create'); // ✅ Add this line
-    Route::get('/edit/{id}', [SettingsController::class, 'edit'])->name('edit');
-    Route::post('/store', [SettingsController::class, 'store'])->name('store');
-    Route::put('/update/{id}', [SettingsController::class, 'update'])->name('update');
-    Route::delete('/delete/{id}', [SettingsController::class, 'destroy'])->name('destroy');
-});
+    Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::get('/create', [SettingsController::class, 'create'])->name('create'); // ✅ Add this line
+        Route::get('/edit/{id}', [SettingsController::class, 'edit'])->name('edit');
+        Route::post('/store', [SettingsController::class, 'store'])->name('store');
+        Route::put('/update/{id}', [SettingsController::class, 'update'])->name('update');
+        Route::delete('/delete/{id}', [SettingsController::class, 'destroy'])->name('destroy');
+    });
 
 });

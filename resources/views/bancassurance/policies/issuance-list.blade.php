@@ -19,8 +19,8 @@
                 <th>Created</th>
                 <th>Action</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse($policies as $policy)
             <tr>
                 <td>{{ $loop->iteration }}</td>

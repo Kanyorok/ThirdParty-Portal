@@ -6,9 +6,9 @@
 @section('content')
 <div class="container mt-4">
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
     <div class="mb-3 text-end">
         <a href="{{ route('bancassurance.pricing.create') }}" class="btn btn-primary">Add Pricing Rule</a>
@@ -27,8 +27,8 @@
                     <th>IsActive</th>
                     <th>Created</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @foreach($rules as $rule)
                 <tr>
                     <td>{{ $rule->Id }}</td>

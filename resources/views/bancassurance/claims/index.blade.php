@@ -23,8 +23,8 @@
                 <th>Status</th>
                 <th>Actions</th> {{-- Added column --}}
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse ($claims as $claim)
             <tr>
                 <td>{{ $loop->iteration }}</td>

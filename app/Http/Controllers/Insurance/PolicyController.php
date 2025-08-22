@@ -74,22 +74,22 @@ public function store(BancassurancePolicyRequest $request)
     $Status = InsurancePolicyStatus::Proposal;
 
 
-   $policy = BancassurancePolicyService::create(
-        $CustomerId,
-        $ProductId,
-        $InsurerId,
-        $validated['SumAssured'],
-        $validated['PremiumAmount'],
-        Carbon::parse($validated['PolicyStartDate']),
-        Carbon::parse($validated['PolicyEndDate']),
-        $Paymentfrquency,
-        $referralId,
-        isset($validated['IssuedDate']) ? Carbon::parse($validated['IssuedDate']) : null,
-        isset($validated['ExpiryDate']) ? Carbon::parse($validated['ExpiryDate']) : null,
-        true,
-        $Status,
-        $request->user(),
-    );
+        $policy = BancassurancePolicyService::create(
+            $CustomerId,
+            $ProductId,
+            $InsurerId,
+            $validated['SumAssured'],
+            $validated['PremiumAmount'],
+            Carbon::parse($validated['PolicyStartDate']),
+            Carbon::parse($validated['PolicyEndDate']),
+            $Paymentfrquency,
+            $referralId,
+            isset($validated['IssuedDate']) ? Carbon::parse($validated['IssuedDate']) : null,
+            isset($validated['ExpiryDate']) ? Carbon::parse($validated['ExpiryDate']) : null,
+            true,
+            $Status,
+            $request->user(),
+        );
 
     //Optional: Update referral status
     if (
@@ -103,8 +103,8 @@ public function store(BancassurancePolicyRequest $request)
         ]);
     }
 
-    return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
-}
+        return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
+    }
 
 
 
@@ -116,8 +116,8 @@ public function reviewIndex()
     $proposals = BancassurancePolicy::with(['customer', 'product'])
         ->whereIn('Status', [InsurancePolicyStatus::Proposal,InsurancePolicyStatus::SubmittedForUnderwriting])->get();
 
-    return view('bancassurance.policies.review_index', compact('proposals'));
-}
+        return view('bancassurance.policies.review_index', compact('proposals'));
+    }
 
 public function review($id)
 {
@@ -306,12 +306,12 @@ public function endorsementForm($id)
         ->where('p.Id', $id)
         ->first();
 
-    if (!$policy) {
-        return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
-    }
+        if (!$policy) {
+            return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
+        }
 
-    return view('bancassurance.policies.endorsement', compact('policy'));
-}
+        return view('bancassurance.policies.endorsement', compact('policy'));
+    }
 
 // public function storeEndorsement(Request $request, $id)
 // {
@@ -381,8 +381,8 @@ public function renewalIndex()
         ->orderBy('p.PolicyEndDate')
         ->get();
 
-    return view('bancassurance.policies.renewals.index', compact('policies'));
-}
+        return view('bancassurance.policies.renewals.index', compact('policies'));
+    }
 
 // public function initiateRenewal($id)
 // {

@@ -87,11 +87,11 @@
             </div>
         </div>
 
-        <div class="text-end">
-            <button class="btn btn-success" type="submit">
-                <i class="fas fa-save"></i> Save Profile
-            </button>
-        </div>
-    </form>
-</div>
+            <div class="text-end">
+                <button class="btn btn-success" type="submit">
+                    <i class="fas fa-save"></i> Save Profile
+                </button>
+            </div>
+        </form>
+    </div>
 @endsection

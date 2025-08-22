@@ -5,18 +5,18 @@
 <div class="container mt-4">
     <h4>🧾 Assess Claim – #{{ $claim->policy->PolicyNumber }}</h4>
 
-    <form method="POST" action="{{ route('bancassurance.claims.assess', $claim->Id) }}">
-        @csrf
+        <form method="POST" action="{{ route('bancassurance.claims.assess', $claim->Id) }}">
+            @csrf
 
         <div class="mb-3">
             <label class="form-label">Claim Type</label>
             <input type="text" class="form-control" value="{{ $claim->claimtype->Description }}" readonly>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Claim Reason</label>
-            <textarea class="form-control" rows="2" readonly>{{ $claim->ClaimReason }}</textarea>
-        </div>
+            <div class="mb-3">
+                <label class="form-label">Claim Reason</label>
+                <textarea class="form-control" rows="2" readonly>{{ $claim->ClaimReason }}</textarea>
+            </div>
 
         <div class="mb-3">
             <label class="form-label">Claim Amount</label>
@@ -43,9 +43,9 @@
             </select>
         </div>
 
-        <div class="mb-3 text-end">
-            <button type="submit" class="btn btn-success">✅ Submit Assessment</button>
-        </div>
-    </form>
-</div>
+            <div class="mb-3 text-end">
+                <button type="submit" class="btn btn-success">✅ Submit Assessment</button>
+            </div>
+        </form>
+    </div>
 @endsection

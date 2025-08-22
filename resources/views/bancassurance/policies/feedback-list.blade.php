@@ -21,8 +21,8 @@
                 <th>Created</th>
                 <th>Action</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse($proposals as $item)
             <tr>
                 <td>{{ $loop->iteration }}</td>
@@ -38,9 +38,9 @@
                 </td>
             </tr>
             @empty
-            <tr>
-                <td colspan="8" class="text-center text-muted">No proposals awaiting feedback.</td>
-            </tr>
+                <tr>
+                    <td colspan="8" class="text-center text-muted">No proposals awaiting feedback.</td>
+                </tr>
             @endforelse
         </tbody>
     </table>

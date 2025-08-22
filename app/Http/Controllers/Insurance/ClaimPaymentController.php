@@ -28,8 +28,8 @@ public function index()
 {
     $payments = BancassuranceClaimPayment::with('payment','claim')->get();
 
-    return view('bancassurance.claims.payments.index', compact('payments'));
-}
+        return view('bancassurance.claims.payments.index', compact('payments'));
+    }
 
 public function store(BancassuranceClaimPaymentRequest $request)
 {
@@ -58,8 +58,8 @@ public function store(BancassuranceClaimPaymentRequest $request)
             'ModifiedOn' => now(),
         ]);
 
-    return redirect()->route('bancassurance.claims.payments.index')
-        ->with('success', 'Payment processed successfully.');
-}
+        return redirect()->route('bancassurance.claims.payments.index')
+            ->with('success', 'Payment processed successfully.');
+    }
 
 }

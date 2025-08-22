@@ -20,11 +20,11 @@ class BancassurancePolicyService
     /**
      * Create a new class instance.
      */
-    public function __construct( public BancassurancePolicy $bancassurancePolicy)
+    public function __construct(public BancassurancePolicy $bancassurancePolicy)
     {
         //
     }
-    
+
     public static function create(
         BancassuranceCustomer $CustomerID,
         InsuranceProduct $ProductID,
@@ -35,20 +35,21 @@ class BancassurancePolicyService
         Carbon $PolicyEndDate,
         CodeDetail $PaymentFrequency,
         ?BancAssuranceReferral $ReferralID = null,
-        ?Carbon $IssuedDate = null,
-        ?Carbon $ExpiryDate = null,
-        bool $IsActive = true,
-        InsurancePolicyStatus $Status,
-        User $user
-    ): self {
+        ?Carbon                $IssuedDate = null,
+        ?Carbon                $ExpiryDate = null,
+        bool                   $IsActive = true,
+        InsurancePolicyStatus  $Status,
+        User                   $user
+    ): self
+    {
 
         $lastPolicyNumber = BancassurancePolicy::withTrashed() // in case you're using soft deletes
-            ->selectRaw("MAX(CAST(SUBSTRING(PolicyNumber, 8, LEN(PolicyNumber)) AS INT)) as max_number")
+        ->selectRaw("MAX(CAST(SUBSTRING(PolicyNumber, 8, LEN(PolicyNumber)) AS INT)) as max_number")
             ->value('max_number');
         $nextNumber = $lastPolicyNumber ? $lastPolicyNumber + 1 : 1;
         $PolicyNumber = 'POLICY-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-           
-        
+
+
         $policy = BancassurancePolicy::create([
             'CustomerID' => $CustomerID -> Id,
             'ProductID' => $ProductID -> Id,
@@ -58,8 +59,8 @@ class BancassurancePolicyService
             'PremiumAmount' => $PremiumAmount,
             'PolicyStartDate' => $PolicyStartDate,
             'PolicyEndDate' => $PolicyEndDate,
-            'PaymentFrequency' => $PaymentFrequency -> ID,
-            'ReferralID' => $ReferralID -> Id ?? null,
+            'PaymentFrequency' => $PaymentFrequency->ID,
+            'ReferralID' => $ReferralID->Id ?? null,
             'IssuedDate' => $IssuedDate,
             'ExpiryDate' => $ExpiryDate,
             'IsActive' => $IsActive,
@@ -68,7 +69,6 @@ class BancassurancePolicyService
             'ModifiedBy' => $user->Id,
         ]);
 
-        
 
         activity()->causedBy($user->Id)->performedOn($policy)->event('create')->log("Added Policy {$policy->Id}.");
         return new self($policy);

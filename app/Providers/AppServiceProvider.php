@@ -67,6 +67,7 @@ use App\Models\DMS\DocumentRelation;
 use App\Models\DMS\DocumentTags;
 use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
+use App\Models\DMS\LegalHold;
 use App\Models\DMS\Repository;
 use App\Models\Finance\FinanceCDNotes;
 use App\Models\Finance\FinanceGLMapping;
@@ -132,6 +133,7 @@ use App\Models\ThirdParies\Competitor;
 use App\Policies\CrmBranchPolicy;
 use App\Policies\DMS\DMSTagPolicy;
 use App\Policies\DMS\DocumentPolicy;
+use App\Policies\DMS\LegalHoldPolicy;
 use App\Policies\DMS\RepositoryPolicy;
 use App\Policies\Insurance\BancassuranceClaimPolicy;
 use App\Policies\Insurance\BancassurancePoliciesPolicy;
@@ -194,7 +196,7 @@ use App\Models\FleetManagement\DriverManagement;
 use App\Policies\FleetManagement\DriverManagementPolicy;
 use App\Policies\FleetManagement\FleetMakePolicy;
 use App\Policies\FleetManagement\FleetModelPolicy;
-use App\Policies\FleetManagement\VehicleRegistryPolicy; 
+use App\Policies\FleetManagement\VehicleRegistryPolicy;
 use App\Policies\FleetManagement\DriverPolicy;
 
 
@@ -239,6 +241,8 @@ class AppServiceProvider extends ServiceProvider
 
             //Core
             SpecialPermission::getPrimaryKey() => SpecialPermission::class,
+            ModelRole::getPrimaryKey() => ModelRole::class,
+            'RoleId' => Role::class,
             APICredential::getPrimaryKey() => APICredential::class,
             Comment::getPrimaryKey() => Comment::class,
             Report::getPrimaryKey() => Report::class,
@@ -393,7 +397,18 @@ class AppServiceProvider extends ServiceProvider
             PropertyBlock::getPrimaryKey() => PropertyBlock::class,
             PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
-              //Fleet Management
+            //Insurance
+            BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
+            BancassurancePolicy::getPrimaryKey() => BancassurancePolicy::class,
+            BancassuranceCustomer::getPrimaryKey() => BancassuranceCustomer::class,
+            BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
+            BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
+            BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
+            InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
+            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,
+
+            //Third Parties
+            //Fleet Management
             FleetMake::getPrimaryKey() => FleetMake::class,
             FleetModel::getPrimaryKey() => FleetModel::class,
             VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
@@ -418,12 +433,16 @@ class AppServiceProvider extends ServiceProvider
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
             //////////////  Finance  ////////////////
-            FinanceGLAccounts::getPrimaryKey()=>FinanceGLAccounts::class,
-            FinanceGLSubAccountTypes::getPrimaryKey()=>FinanceGLSubAccountTypes::class,
-            FinanceGLTypeGroup::getPrimaryKey()=>FinanceGLTypeGroup::class,
+            FinanceGLAccounts::getPrimaryKey() => FinanceGLAccounts::class,
+            FinanceGLSubAccountTypes::getPrimaryKey() => FinanceGLSubAccountTypes::class,
+            FinanceGLTypeGroup::getPrimaryKey() => FinanceGLTypeGroup::class,
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+
+            //Fleet Management
+            FleetMake::getPrimaryKey() => FleetMake::class,
+            FleetModel::getPrimaryKey() => FleetModel::class,
             FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
             FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
             RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
@@ -433,7 +452,7 @@ class AppServiceProvider extends ServiceProvider
             FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
             FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
-            
+
             //////////////  Legal  ////////////////
             LegalDocument::getPrimaryKey() => LegalDocument::class,
             LegalClause::getPrimaryKey() => LegalClause::class,
@@ -453,6 +472,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Repository::class, RepositoryPolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(DMSTags::class, DMSTagPolicy::class);
+        Gate::policy(LegalHold::class, LegalHoldPolicy::class);
         Gate::policy(Requisitions::class, RequisitionPolicy::class);
         Gate::policy(RequisitionLine::class, RequisitionLinesPolicy::class);
         Gate::policy(ProductDevelopment::class, ProductDevelopmentPolicy::class);
