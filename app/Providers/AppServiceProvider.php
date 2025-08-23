@@ -43,6 +43,8 @@ use App\Models\CRM\Contact;
 use App\Models\Finance\FinanceGLAccounts;
 use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
+use App\Models\Finance\FinanceInvoice;
+use App\Models\Finance\FinanceInvoiceLine;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\Finance\FinanceTransaction;
@@ -70,6 +72,7 @@ use App\Models\DMS\Image;
 use App\Models\DMS\LegalHold;
 use App\Models\DMS\Repository;
 use App\Models\Finance\FinanceCDNotes;
+use App\Models\Finance\FinanceCreditManagement;
 use App\Models\Finance\FinanceGLMapping;
 use App\Models\HRM\Department;
 use App\Models\HRM\Employee;
@@ -460,6 +463,11 @@ class AppServiceProvider extends ServiceProvider
             FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
             FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
+
+            FinanceInvoice::getPrimaryKey() => FinanceInvoice::class,
+            FinanceInvoiceLine::getPrimaryKey() => FinanceInvoiceLine::class,
+            FinanceCreditManagement::getPrimaryKey() => FinanceCreditManagement::class,
+
 
             //////////////  Legal  ////////////////
             LegalDocument::getPrimaryKey() => LegalDocument::class,
