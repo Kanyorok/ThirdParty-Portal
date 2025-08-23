@@ -227,6 +227,7 @@ use App\Models\Legal\LegalDocument;
 use App\Models\Legal\LegalIntellectualProperty;
 use App\Models\Legal\LegalObligation;
 use App\Models\Legal\LegalSearchRequest;
+use App\Models\Legal\LegalTemplate;
 use App\Models\Legal\LoanSecurity;
 use App\Models\Procurement\Section;
 use Illuminate\Support\Facades\View;
@@ -480,6 +481,7 @@ class AppServiceProvider extends ServiceProvider
             LegalCaseEvidence::getPrimaryKey() => LegalCaseEvidence::class,
             LegalCaseCounsel::getPrimaryKey() => LegalCaseCounsel::class,
             LegalCaseOutcome::getPrimaryKey() => LegalCaseOutcome::class,
+            LegalTemplate::getPrimaryKey() => LegalTemplate::class,
 
         ]);
 

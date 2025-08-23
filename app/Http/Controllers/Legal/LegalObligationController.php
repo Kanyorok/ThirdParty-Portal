@@ -46,7 +46,7 @@ class LegalObligationController extends Controller
             'Title'=> $validated['Title'],
             'SourceType'=> $validated['SourceType'],
             'DueDate'=> $validated['DueDate'],
-            'Status'=> $validated['Status'] ?? 'pending',
+            'Status'=> $validated['Status'] ?? 'Pending',
             'Description'=> $validated['Description'],
             'CreatedBy' => Auth::id(),
             'ModifiedBy' => Auth::Id(),
