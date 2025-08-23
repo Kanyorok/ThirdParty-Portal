@@ -36,7 +36,7 @@ class LegalSearchRequestsSeeder extends Seeder
                 // 'EntityType' => 'Property',
                 // 'RegistrationNumber' => 'PROP98765',
                 // 'Country' => 'Kenya',
-                'Status' => 'Completed',
+                'Status' => 'Pending',
                 // 'IsActive' => 1,
                 'Remarks' => 'Search completed successfully.',
                 'Findings' => null,

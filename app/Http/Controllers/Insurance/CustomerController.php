@@ -76,7 +76,8 @@ class CustomerController extends Controller
 
     public function check()
     {
-        $customers = BancassuranceCustomer::all();
+        //check
+       $customers = BancassuranceCustomer::all();
 
         return view('bancassurance.customers.check', compact('customers'));
     }

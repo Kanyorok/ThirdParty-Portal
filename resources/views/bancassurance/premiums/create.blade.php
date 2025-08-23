@@ -2,26 +2,24 @@
 @section('title', 'Record Premium Payment')
 
 @section('content')
-    <div class="container mt-4">
-        <h4>💳 Record Premium Payment</h4>
+<div class="container mt-4">
+    <form method="POST" action="{{ route('bancassurance.premiums.store') }}">
+        @csrf
 
-        <form method="POST" action="{{ route('bancassurance.premiums.store') }}">
-            @csrf
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Select Policy</label>
-                <select id="request-select" name="PolicyID" class="form-select" required>
-                    <option value="">-- Select Policy --</option>
-                    @foreach ($policies as $policy)
-                        <option
-                            value="{{ $policy->Id }}"
-                            data-paymentfrequency="{{ $policy->paymentfrequency->Description }}"
-                            data-customerid="{{ $policy->customer->FullName }}">
-                            {{ $policy->PolicyNumber }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Select Policy</label>
+            <select id="request-select" name="PolicyID" class="form-select" required>
+                <option value="">-- Select Policy --</option>
+                @foreach ($policies as $policy)
+                    <option
+                        value="{{ $policy->Id }}"
+                        data-paymentfrequency="{{ $policy->paymentfrequency->Description}}"
+                        data-customerid="{{ $policy->customerID }}">
+                        {{ $policy->PolicyNumber }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
@@ -74,11 +72,11 @@
                 <textarea name="Notes" class="form-control" rows="2"></textarea>
             </div>
 
-            <div class="text-end">
-                <button type="submit" class="btn btn-success">💾 Record Payment</button>
-            </div>
-        </form>
-    </div>
+        <div class="text-end">
+            <button type="submit" class="btn btn-success">Record Payment</button>
+        </div>
+    </form>
+</div>
 
     {{-- JavaScript --}}
     <script>

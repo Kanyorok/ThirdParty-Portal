@@ -78,7 +78,7 @@ class ContractedDriverService
     /**
      * Soft delete a Fleet Vehicle
      */
-    public function delete(ContractedDriverSchedule $drivers): bool
+    public function delete(ContractedDriver $drivers): bool
     {
         return DB::transaction(function () use ($drivers) {
 

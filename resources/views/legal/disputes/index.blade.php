@@ -47,7 +47,7 @@
                                 data-bs-toggle="modal"
                                 data-bs-target="#customDeleteConfirmModal"
                                 data-name="{{$case->CaseTitle}}"    {{-- Pass item name --}}
-                                data-route="{{ route('taxruleconfig.destroy', $case->Id) }}">
+                                data-route="{{ route('legal.cases.destroy', $case->Id) }}">
                                 <i  class="fas fa-trash-alt"></i>
                             </button>
                         </td>
@@ -69,4 +69,5 @@
         </table>
     </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection

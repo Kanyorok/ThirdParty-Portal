@@ -41,7 +41,7 @@ class ModuleSeeder extends Seeder
     {
         $values = collect([
             ['ModuleID' => 100000, 'Name' => ModulesEnum::ThirdParty->description(), 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-            ['ModuleID' => 101000, 'Name' => 'Parties', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 100000],
+            ['ModuleID' => 101000, 'Name' => 'Parties', 'Icon' => null, 'Description' => '', 'Route' => 'thirdparty.parties.index', 'ParentID' => 100000],
 
         ]);
         if ($fresh) {
@@ -125,12 +125,14 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],
             ['ModuleID' => 303200, 'Name' => 'Prequalification', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => null],
-            ['ModuleID' => 303210, 'Name' => 'Prequalification Periods', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqrounds.index'],
-            ['ModuleID' => 303220, 'Name' => 'Prequalification Criteria', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqcriteria.index'],
-            ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqapplications.index'],
+            ['ModuleID' => 303210, 'Name' => 'Prequalification Rounds', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.prequalification-rounds.index'],
+            // ['ModuleID' => 303210, 'Name' => 'Prequalification Periods', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqrounds.index'],
+            // ['ModuleID' => 303220, 'Name' => 'Prequalification Criteria', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqcriteria.index'],
+            ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.applications.index'],
             ['ModuleID' => 303240, 'Name' => 'Evaluation & Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqevaluation.index'],
             ['ModuleID' => 303250, 'Name' => 'Prequalified Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqsuppliers.index'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 305060, 'Name' => 'Supplier Categories', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'proc.supplier-cat.index'],
 
             // Tender Setup
             ['ModuleID' => 305100, 'Name' => 'Tender Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
@@ -303,7 +305,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
             ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
             ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
-
             //Settings
             // ['ModuleID' => 1206000, 'Name' => 'Settings', 'Icon' => null, 'Description' => 'Budget Settings', 'Route' => null, 'ParentID' => 1200000],
             //['ModuleID' => 1206040, 'Name' => 'Budget Line Categories', 'Icon' => null, 'Description' => 'Budget Lines Categories', 'Route' => 'budgetlinecategories.index', 'ParentID' => 1206000],
@@ -312,6 +313,7 @@ class ModuleSeeder extends Seeder
             // ['ModuleID' => 1206200, 'Name' => 'Perod Types', 'Icon' => null, 'Description' => 'Budget Period Types', 'Route' => 'periodtypes.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206300, 'Name' => 'Planning Methods', 'Icon' => null, 'Description' => 'Budget Planning Methods', 'Route' => 'planningmethods.index', 'ParentID' => 1206000],
             //['ModuleID' => 1206400, 'Name' => 'Budget Drivers', 'Icon' => null, 'Description' => 'Budet Drivers', 'Route' => 'budgetdriverssetup.index', 'ParentID' => 1206000],
+            ['ModuleID' => 1299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 1200000, 'Route' => 'budgetline-reports.index'],
         ]);
 
         if ($fresh) {
@@ -379,7 +381,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 505100, 'Name' => 'Property Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertysettings.index'],
 
             // First level - Reports
-            ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'propertyreports.index'],
+            ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'property-reports.index'],
             /* ['ModuleID' => 50510, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' =>],
              ['ModuleID' => 50520, 'Name' => 'Analytics', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' => 'propertyanalytics.index'],*/
         ]);
@@ -425,30 +427,31 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 604200, 'Name' => 'Repair Logs', 'Icon' => '', 'Description' => 'Capture vehicle maintenance and repair records (normal/emergency)', 'ParentID' => 604000, 'Route' => 'fleet.repair_logs.index'],
             ['ModuleID' => 604300, 'Name' => 'Service Alerts & Reminders', 'Icon' => '', 'Description' => 'View and acknowledge fleet maintenance alerts', 'ParentID' => 604000, 'Route' => 'fleet.alerts.index'],
 
-            //Fuel Management
-            ['ModuleID' => 605000, 'Name' => 'Fuel & Cost Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
-            ['ModuleID' => 605100, 'Name' => 'Fuel Logs', 'Icon' => '', 'Description' => '', 'ParentID' => 605000, 'Route' => 'fleet.fuel_logs.index'],
-            ['ModuleID' => 605200, 'Name' => 'Running Cost Entry', 'Icon' => '', 'Description' => 'Log recurring vehicle costs like tyres, insurance, oil, etc.', 'ParentID' => 605000, 'Route' => 'fleet.running_costs.index'],
+            // //Fuel Management
+            // ['ModuleID' => 605000, 'Name' => 'Fuel & Cost Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            // ['ModuleID' => 605100, 'Name' => 'Fuel Logs', 'Icon' => '', 'Description' => '', 'ParentID' => 605000, 'Route' => 'fleet.fuel_logs.index'],
+            // ['ModuleID' => 605200, 'Name' => 'Running Cost Entry', 'Icon' => '', 'Description' => 'Log recurring vehicle costs like tyres, insurance, oil, etc.', 'ParentID' => 605000, 'Route' => 'fleet.running_costs.index'],
 
-            //GPS Tracking
-            ['ModuleID' => 606000, 'Name' => 'GPS Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
-            ['ModuleID' => 606100, 'Name' => 'Live GPS Dashboard', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.live_dashboard'],
-            ['ModuleID' => 606200, 'Name' => 'Movement History', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.movement_history'],
-            ['ModuleID' => 606300, 'Name' => 'GPS Integration', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.telematics.index'],
+            // //GPS Tracking
+            // ['ModuleID' => 606000, 'Name' => 'GPS Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            // ['ModuleID' => 606100, 'Name' => 'Live GPS Dashboard', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.live_dashboard'],
+            // ['ModuleID' => 606200, 'Name' => 'Movement History', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.movement_history'],
+            // ['ModuleID' => 606300, 'Name' => 'GPS Integration', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.telematics.index'],
 
-            //Fleet Settings
+        
+            // //Configuration
+            // ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            // ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
+           
+            
+                // //Fleet Settings
             ['ModuleID' => 680000, 'Name' => 'Fleet Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 681000, 'Name' => 'Fleet Make', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmake.index'],
             ['ModuleID' => 682000, 'Name' => 'Fleet Model', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmodel.index'],
             ['ModuleID' => 683000, 'Name' => 'Fuel Type', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fueltypes.index'],
 
-            //Configuration
-            ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
-            ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
-
-
             //Reports
-            ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'reports.index'],
+            ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'fleet-reports.index'],
         ]);
 
         if ($fresh) {
@@ -497,8 +500,9 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 800000, 'Name' => ModulesEnum::Legal->description(), 'Icon' => '<i data-feather="briefcase"></i>', 'Description' => '', 'ParentID' => null,   'Route' => null],
 
             // First level children
-            ['ModuleID' => 801000, 'Name' => 'Document Registry',      'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.documents.index'],
-            ['ModuleID' => 802000, 'Name' => 'Contracts',              'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => null],
+            //['ModuleID' => 801000, 'Name' => 'Document Registry',      'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.documents.index'],
+//            ['ModuleID' => 802000, 'Name' => 'Contracts',              'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => null],
+            ['ModuleID' => 802000, 'Name' => 'Document Registry',              'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => null],
             ['ModuleID' => 803000, 'Name' => 'Disputes & Litigation',  'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.cases.index'],
             ['ModuleID' => 804000, 'Name' => 'Legal Obligations',      'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.obligations.index'],
             ['ModuleID' => 805000, 'Name' => 'Legal Searches',         'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.search_requests.index'],
@@ -506,9 +510,11 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 807000, 'Name' => 'Intellectual Property',  'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal.intellectual.index'],
 
             // Second level children under Contracts
-            ['ModuleID' => 802100, 'Name' => 'Maintenance',            'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.maintenance.index'],
+            ['ModuleID' => 802100, 'Name' => 'Maintenance',            'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.documents.index'],
             ['ModuleID' => 802200, 'Name' => 'Clauses Library',        'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.clauses.index'],
             ['ModuleID' => 802300, 'Name' => 'Templates Library',      'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.templates.index'],
+
+            ['ModuleID' => 899000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal-reports.index'],
         ]);
 
         if ($fresh) {
@@ -544,12 +550,12 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 901100, 'Name' => 'Referrals & Tracking', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.referrals.index', 'ParentID' => 901000],
             ['ModuleID' => 901200, 'Name' => 'Referral Assignment', 'Icon' => 'fas fa-user-check', 'Description' => '', 'Route' => 'bancassurance.referrals.assign.list', 'ParentID' => 901000],
             ['ModuleID' => 901300, 'Name' => 'Referral Performance', 'Icon' => 'fas fa-chart-bar', 'Description' => 'View referral counts and conversion rates', 'Route' => 'bancassurance.referrals.performance', 'ParentID' => 901000],
-            ['ModuleID' => 901400, 'Name' => 'Commission Statement View', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 901000],
+            //['ModuleID' => 901400, 'Name' => 'Commission Statement View', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 901000],
             ['ModuleID' => 902000, 'Name' => 'Customers', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 902100, 'Name' => 'Customer Profile & KYC', 'Icon' => 'fas fa-user-plus', 'Description' => 'Create customer profile with KYC', 'Route' => 'bancassurance.customers.check', 'ParentID' => 902000],
             ['ModuleID' => 902300, 'Name' => 'Customer Listing', 'Icon' => 'fas fa-user-friends', 'Description' => 'Add or edit customer beneficiaries', 'Route' => 'bancassurance.customers.index', 'ParentID' => 902000],
             ['ModuleID' => 902400, 'Name' => 'Customer Communications', 'Icon' => 'fas fa-comments', 'Description' => 'Track calls, emails, visits and SMS logs', 'Route' => 'bancassurance.customers.communication.index', 'ParentID' => 902000],
-            ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => null, 'Route' => 'bancassurance.policies.create', 'ParentID' => 900000],
+            ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => null, 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 903100, 'Name' => 'Policy Proposals', 'Icon' => null, 'Description' => 'List and manage policy proposals', 'Route' => 'bancassurance.policies.index', 'ParentID' => 903000],
             ['ModuleID' => 903200, 'Name' => 'Proposal Review', 'Icon' => null, 'Description' => 'Review policy proposals and make underwriting decisions', 'Route' => 'bancassurance.policies.reviewIndex', 'ParentID' => 903000],
             ['ModuleID' => 903300, 'Name' => 'Underwriting Feedback', 'Icon' => null, 'Description' => 'Capture and track underwriter decisions and comments for submitted proposals', 'Route' => 'bancassurance.policies.feedback.list', 'ParentID' => 903000],
@@ -561,7 +567,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 905000, 'Name' => 'Claims Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 905100, 'Name' => 'Claims Register', 'Icon' => null, 'Description' => 'View all submitted claims', 'Route' => 'bancassurance.claims.index', 'ParentID' => 905000],
             ['ModuleID' => 905200, 'Name' => 'Claims Assessment', 'Icon' => null, 'Description' => 'Assess and decide on initiated claims', 'Route' => 'bancassurance.claims.index', 'ParentID' => 905000],
-            ['ModuleID' => 905300, 'Name' => 'Claims Approval', 'Icon' => null, 'Description' => 'List claims awaiting approval', 'Route' => 'bancassurance.claims.approvalQueue', 'ParentID' => 905000],
+            //['ModuleID' => 905300, 'Name' => 'Claims Approval', 'Icon' => null, 'Description' => 'List claims awaiting approval', 'Route' => 'bancassurance.claims.approvalQueue', 'ParentID' => 905000],
             ['ModuleID' => 905400, 'Name' => 'Claim Payments', 'Icon' => null, 'Description' => 'View and track settled claim payments', 'Route' => 'bancassurance.claims.payments.index', 'ParentID' => 905000],
             ['ModuleID' => 905500, 'Name' => 'Closed Claims', 'Icon' => null, 'Description' => 'View Closed Claims', 'Route' => 'bancassurance.claims.closed', 'ParentID' => 905000],
             ['ModuleID' => 906000, 'Name' => 'Commissions', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
@@ -574,12 +580,12 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 907300, 'Name' => 'Mapped Products', 'Icon' => null, 'Description' => 'Map products to providers', 'Route' => 'bancassurance.products.mapped.index', 'ParentID' => 907000],
             ['ModuleID' => 907400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 907000],
             ['ModuleID' => 907500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 907000],
-            ['ModuleID' => 907600, 'Name' => 'Product Lifecycle', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.lifecycle.index', 'ParentID' => 907000],
-            ['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
+            //['ModuleID' => 907600, 'Name' => 'Product Lifecycle', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.lifecycle.index', 'ParentID' => 907000],
+            //['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
             ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
 
 
-            //['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 900000, 'Route' => null],
+            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 900000, 'Route' => 'insurance-reports.index'],
         ]);
 
         if ($fresh) {
@@ -635,20 +641,21 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1100444, 'Name' => 'Income Statement', 'Icon' => '<i class="fas fa-file-invoice"></i>', 'Description' => '', 'Route' => 'incomestatement.index', 'ParentID' => 1100440],
 
             ['ModuleID' => 1101000, 'Name' => 'Accounts Payable', 'Icon' => '<i class="fas fa-file-invoice"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
-            ['ModuleID' => 1101100, 'Name' => 'Vendor Master', 'Icon' => null, 'Description' => '', 'Route' => 'vendormaster.index', 'ParentID' => 1101000],
+            //['ModuleID' => 1101100, 'Name' => 'Vendor Master', 'Icon' => null, 'Description' => '', 'Route' => 'vendormaster.index', 'ParentID' => 1101000],
             ['ModuleID' => 1101200, 'Name' => 'Invoice Entry', 'Icon' => null, 'Description' => '', 'Route' => 'invoiceentry.index', 'ParentID' => 1101000],
-            ['ModuleID' => 1101250, 'Name' => 'Invoice Approval', 'Icon' => null, 'Description' => '', 'Route' => 'invoiceapproval.index', 'ParentID' => 1101000],
+//            ['ModuleID' => 1101250, 'Name' => 'Invoice Approval', 'Icon' => null, 'Description' => '', 'Route' => 'invoiceapproval.index', 'ParentID' => 1101000],
             ['ModuleID' => 1101300, 'Name' => 'Credit/Debit Note', 'Icon' => null, 'Description' => '', 'Route' => 'creditnote.index', 'ParentID' => 1101000],
             ['ModuleID' => 1101400, 'Name' => 'Payment Processing', 'Icon' => null, 'Description' => '', 'Route' => 'paymentprocessing.index', 'ParentID' => 1101000],
             ['ModuleID' => 1101500, 'Name' => 'Payment Voucher', 'Icon' => null, 'Description' => '', 'Route' => 'paymentvoucher.index', 'ParentID' => 1101000],
             ['ModuleID' => 1101600, 'Name' => 'Aging Report', 'Icon' => null, 'Description' => '', 'Route' => 'agingreport.index', 'ParentID' => 1101000],
             ['ModuleID' => 1102000, 'Name' => 'Accounts Receivable', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
-            ['ModuleID' => 1102100, 'Name' => 'Customer Master', 'Icon' => null, 'Description' => '', 'Route' => 'customermaster.index', 'ParentID' => 1102000],
+//            ['ModuleID' => 1102100, 'Name' => 'Customer Master', 'Icon' => null, 'Description' => '', 'Route' => 'customermaster.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102200, 'Name' => 'Invoice Generation', 'Icon' => null, 'Description' => '', 'Route' => 'invoicegeneration.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102300, 'Name' => 'Receipts Posting', 'Icon' => null, 'Description' => '', 'Route' => 'receiptsposting.index', 'ParentID' => 1102000],
+            ['ModuleID' => 1102350, 'Name' => 'Debit Note', 'Icon' => null, 'Description' => '', 'Route' => 'creditnote.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102400, 'Name' => 'Credit Management', 'Icon' => null, 'Description' => '', 'Route' => 'creditmanagement.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102500, 'Name' => 'Aging Report', 'Icon' => null, 'Description' => '', 'Route' => 'agingreportar.index', 'ParentID' => 1102000],
-            ['ModuleID' => 1102600, 'Name' => 'Customer Statement', 'Icon' => null, 'Description' => '', 'Route' => 'customerstatement.index', 'ParentID' => 1102000],
+//            ['ModuleID' => 1102600, 'Name' => 'Customer Statement', 'Icon' => null, 'Description' => '', 'Route' => 'customerstatement.index', 'ParentID' => 1102000],
 
 
             ['ModuleID' => 1104000, 'Name' => 'Tax Management', 'Icon' => '<i class="fas fa-exchange-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
@@ -656,8 +663,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1104050, 'Name' => 'Tax Types', 'Icon' => null, 'Description' => '', 'Route' => 'taxtypes.index', 'ParentID' => 1104000],
             ['ModuleID' => 1104100, 'Name' => 'Tax Rule Configuration', 'Icon' => null, 'Description' => '', 'Route' => 'taxruleconfig.index', 'ParentID' => 1104000],
             ['ModuleID' => 1104300, 'Name' => 'Tax Summary Report', 'Icon' => null, 'Description' => '', 'Route' => 'taxsummaryreport.index', 'ParentID' => 1104000],
-            ['ModuleID' => 1104400, 'Name' => 'Tax Return Generator', 'Icon' => null, 'Description' => '', 'Route' => 'taxreturngenerator.index', 'ParentID' => 1104000],
-            ['ModuleID' => 1104500, 'Name' => 'e-Filing Integration Panel', 'Icon' => null, 'Description' => '', 'Route' => 'efiling.index', 'ParentID' => 1104000],
+//            ['ModuleID' => 1104400, 'Name' => 'Tax Return Generator', 'Icon' => null, 'Description' => '', 'Route' => 'taxreturngenerator.index', 'ParentID' => 1104000],
+//            ['ModuleID' => 1104500, 'Name' => 'e-Filing Integration Panel', 'Icon' => null, 'Description' => '', 'Route' => 'efiling.index', 'ParentID' => 1104000],
 
 
             ['ModuleID' => 1106000, 'Name' => 'Bank Reconciliation', 'Icon' => '<i class="fas fa-check-double"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
@@ -665,23 +672,23 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1106200, 'Name' => 'ReconDashboard', 'Icon' => null, 'Description' => '', 'Route' => 'recondashboard.index', 'ParentID' => 1106000],
 
 
-            ['ModuleID' => 1107000, 'Name' => 'Period Management', 'Icon' => '<i class="fas fa-calendar-alt"></i>', 'Description' => '', 'Route' => 'periodmanagement.index', 'ParentID' => 1100000],
+//            ['ModuleID' => 1107000, 'Name' => 'Period Management', 'Icon' => '<i class="fas fa-calendar-alt"></i>', 'Description' => '', 'Route' => 'periodmanagement.index', 'ParentID' => 1100000],
 
 
-            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
-            ['ModuleID' => 1108100, 'Name' => 'Account Setup', 'Icon' => null, 'Description' => '', 'Route' => 'bankaccountsetup.index', 'ParentID' => 1108000],
-            ['ModuleID' => 1108200, 'Name' => 'Cash Book', 'Icon' => null, 'Description' => '', 'Route' => 'cashbook.index', 'ParentID' => 1108000],
-            ['ModuleID' => 1108300, 'Name' => 'Cash Management', 'Icon' => null, 'Description' => '', 'Route' => 'cashmanagement.index', 'ParentID' => 1108000],
-            ['ModuleID' => 1108400, 'Name' => 'Cheque Management', 'Icon' => null, 'Description' => '', 'Route' => 'chequemanagement.index', 'ParentID' => 1108000],
-            ['ModuleID' => 1108500, 'Name' => 'Vouchers', 'Icon' => null, 'Description' => '', 'Route' => 'paymentandreceiptvouchers.index', 'ParentID' => 1108000],
+//            ['ModuleID' => 1108000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
+//            ['ModuleID' => 1108100, 'Name' => 'Account Setup', 'Icon' => null, 'Description' => '', 'Route' => 'bankaccountsetup.index', 'ParentID' => 1108000],
+//            ['ModuleID' => 1108200, 'Name' => 'Cash Book', 'Icon' => null, 'Description' => '', 'Route' => 'cashbook.index', 'ParentID' => 1108000],
+//            ['ModuleID' => 1108300, 'Name' => 'Cash Management', 'Icon' => null, 'Description' => '', 'Route' => 'cashmanagement.index', 'ParentID' => 1108000],
+//            ['ModuleID' => 1108400, 'Name' => 'Cheque Management', 'Icon' => null, 'Description' => '', 'Route' => 'chequemanagement.index', 'ParentID' => 1108000],
+//            ['ModuleID' => 1108500, 'Name' => 'Vouchers', 'Icon' => null, 'Description' => '', 'Route' => 'paymentandreceiptvouchers.index', 'ParentID' => 1108000],
 
             ['ModuleID' => 1109000, 'Name' => 'Finance Settings', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1100000],
-            ['ModuleID' => 1109100, 'Name' => 'Transaction Types', 'Icon' => '<i class="fas fa-exchange-alt"></i>', 'Description' => '', 'Route' => 'transactiontypes.index', 'ParentID' => 1109000],
+//            ['ModuleID' => 1109100, 'Name' => 'Transaction Types', 'Icon' => '<i class="fas fa-exchange-alt"></i>', 'Description' => '', 'Route' => 'transactiontypes.index', 'ParentID' => 1109000],
             ['ModuleID' => 1109200, 'Name' => 'GL Posting Map', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'glpostingmap.index', 'ParentID' => 1109000],
-            ['ModuleID' => 1109300, 'Name' => 'PO to Invoice Sync Setup', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'integration.po_invoice_sync.index', 'ParentID' => 1109000],
-            ['ModuleID' => 1109400, 'Name' => 'Salary Journal Template Setup', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'salary-journal-templates.index', 'ParentID' => 1109000],
-            ['ModuleID' => 1109500, 'Name' => 'CBS GL Mapping', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1109000],
-            ['ModuleID' => 1109600, 'Name' => 'CBS Sync Log Viewer', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1109000],
+//            ['ModuleID' => 1109300, 'Name' => 'PO to Invoice Sync Setup', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'integration.po_invoice_sync.index', 'ParentID' => 1109000],
+//            ['ModuleID' => 1109400, 'Name' => 'Salary Journal Template Setup', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'salary-journal-templates.index', 'ParentID' => 1109000],
+//            ['ModuleID' => 1109500, 'Name' => 'CBS GL Mapping', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1109000],
+//            ['ModuleID' => 1109600, 'Name' => 'CBS Sync Log Viewer', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1109000],
 
 
             ['ModuleID' => 1199000, 'Name' => 'Financial Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'balancesheet.index', 'ParentID' => 1100000],

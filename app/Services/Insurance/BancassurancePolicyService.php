@@ -2,12 +2,17 @@
 
 namespace App\Services\Insurance;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProvider;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 
 class BancassurancePolicyService
@@ -21,14 +26,14 @@ class BancassurancePolicyService
     }
 
     public static function create(
-        BancassuranceCustomer  $CustomerID,
-        CodeDetail             $ProductID,
-        ?CodeDetail            $InsurerID,
-        float                  $SumAssured,
-        float                  $PremiumAmount,
-        Carbon                 $PolicyStartDate,
-        Carbon                 $PolicyEndDate,
-        CodeDetail             $PaymentFrequency,
+        BancassuranceCustomer $CustomerID,
+        InsuranceProduct $ProductID,
+        ?InsuranceProvider $InsurerID,
+        float $SumAssured,
+        float $PremiumAmount,
+        Carbon $PolicyStartDate,
+        Carbon $PolicyEndDate,
+        CodeDetail $PaymentFrequency,
         ?BancAssuranceReferral $ReferralID = null,
         ?Carbon                $IssuedDate = null,
         ?Carbon                $ExpiryDate = null,
@@ -46,9 +51,9 @@ class BancassurancePolicyService
 
 
         $policy = BancassurancePolicy::create([
-            'CustomerID' => $CustomerID->Id,
-            'ProductID' => $ProductID->ID,
-            'InsurerID' => $InsurerID->ID ?? null,
+            'CustomerID' => $CustomerID -> Id,
+            'ProductID' => $ProductID -> Id,
+            'InsurerID' => $InsurerID -> Id ?? null,
             'PolicyNumber' => $PolicyNumber,
             'SumAssured' => $SumAssured,
             'PremiumAmount' => $PremiumAmount,
@@ -59,7 +64,7 @@ class BancassurancePolicyService
             'IssuedDate' => $IssuedDate,
             'ExpiryDate' => $ExpiryDate,
             'IsActive' => $IsActive,
-            'Status' => $Status,
+            'Status' => $Status->value,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
@@ -68,5 +73,29 @@ class BancassurancePolicyService
         activity()->causedBy($user->Id)->performedOn($policy)->event('create')->log("Added Policy {$policy->Id}.");
         return new self($policy);
     }
+    
 
+
+    public static function uploadpolicy(
+        BancassurancePolicy $policy,
+        User $user,
+        UploadedFile $document = null
+    ): self {
+        if ($document) {
+        $policy->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::BancassurancePolicyView->value],
+            $user
+            );
+        }
+
+        activity()
+            ->causedBy($user->Id)
+            ->performedOn($policy)
+            ->event('update')
+            ->log("Document uploaded on Policy {$policy->Id}.");
+
+        return new self($policy);
+    }
 }

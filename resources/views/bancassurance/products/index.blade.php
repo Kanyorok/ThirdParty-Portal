@@ -4,31 +4,31 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-    <div class="container mt-4">
-        <h4>📦 Insurance Products</h4>
+<div class="container mt-4">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        <div class="mb-3 text-end">
-            <a href="{{ route('bancassurance.products.create') }}" class="btn btn-primary">➕ New Product</a>
-        </div>
-        <table id='InsuranceProduct' class="table table-bordered">
+    <div class="mb-3 text-end">
+        <a href="{{ route('bancassurance.products.create') }}" class="btn btn-primary">New Product</a>
+    </div>
+        <table  id='InsuranceProduct' class="table table-bordered">
             <thead class="table-light">
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
+                <tr>
+                    <th>#</th>         
+                    <th>Provider</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody>
             @foreach($products as $product)
                 <tr>
                     <td>{{ $product->Id }}</td>
+                    <td>{{ $product->provider->Name }}</td>
                     <td>{{ $product->Name }}</td>
                     <td>{{ $product->Type ?? '-' }}</td>
                     <td>{{ $product->Description ?? '-' }}</td>
@@ -40,17 +40,14 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('bancassurance.products.edit', $product->Id) }}"
-                           class="btn btn-sm btn-warning">✏️ Edit</a>
-                        <form action="{{ route('bancassurance.products.destroy', $product->Id) }}" method="POST"
-                              class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Are you sure you want to delete this Insurance Product?');">
-                                Delete
-                            </button>
-                        </form>
+                        <a href="{{ route('bancassurance.products.edit', $product->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <form action="{{ route('bancassurance.products.destroy', $product->Id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this Insurance Product?');">Delete
+                        </button>
+                    </form>
                     </td>
                 </tr>
             @endforeach

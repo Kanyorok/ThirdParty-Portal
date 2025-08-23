@@ -21,13 +21,13 @@
             </thead>
             <tbody>
             @foreach($mappedProducts as $item)
-                <tr>
-                    <td>{{ $item->ProductName }}</td>
-                    <td>{{ $item->ProviderName }}</td>
-                    <td>{{ $item->PolicyTypeName }}</td>
-                    <td>{{ $item->CustomName }}</td>
-                    <td>{{ $item->CommissionType }}</td>
-                </tr>
+            <tr>     
+                <td>{{ $item->ProductName }}</td>
+                <td>{{ $item->ProviderName }}</td>
+                <td>{{ $item->PolicyTypeName }}</td>
+                <td>{{ $item->CustomName }}</td>
+                <td>{{ $item->CommissionType }}</td>
+            </tr>
             @endforeach
             </tbody>
         </table>

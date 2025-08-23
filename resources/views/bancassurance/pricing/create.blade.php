@@ -2,69 +2,118 @@
 @section('title', 'Add Pricing Rule')
 
 @section('content')
-    <div class="container mt-4">
-        <h4>➕ Add Pricing Rule</h4>
+<div class="container mt-4">
+    <div class="card shadow-lg rounded-3">
+        <div class="card-body">
+            <form method="POST" action="{{ route('bancassurance.pricing.store') }}">
+                @csrf
 
-        <form method="POST" action="{{ route('bancassurance.pricing.store') }}">
-            @csrf
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="ProviderProductID" class="form-label">Insurance Provider Product</label>
-                    <select name="ProviderProductID" id="ProviderProductID" class="form-select" required>
-                        <option value="">-- Select Provider Product --</option>
-                        @foreach($providerProducts as $mapping)
-                            <option value="{{ $mapping->Id }}">
-                                {{ $mapping->ProviderName }} – {{ $mapping->ProductName }}
-                            </option>
+                {{-- Provider --}}
+                <div class="mb-3">
+                    <label class="form-label">Select Provider <span class="text-danger">*</span></label>
+                    <select name="InsuranceProviderId" id="Provider-select" class="form-select" required>
+                        <option value="">-- Select Provider --</option>
+                        @foreach($providers as $provider)
+                            <option value="{{ $provider->Id }}">{{ $provider->Name }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="MinCoverageAmount" class="form-label">Min Coverage (KES)</label>
-                    <input type="number" name="MinCoverageAmount" class="form-control" required step="0.01">
+                {{-- Product --}}
+                <div class="mb-3">
+                    <label class="form-label">Product <span class="text-danger">*</span></label>
+                    <select name="Product" id="Product-select" class="form-select" required>
+                        <option value="">-- Select Product --</option>
+                    </select>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="MaxCoverageAmount" class="form-label">Max Coverage (KES)</label>
-                    <input type="number" name="MaxCoverageAmount" class="form-control" required step="0.01">
+                {{-- Rule Name --}}
+                <div class="mb-3">
+                    <label class="form-label">Pricing Rule Name <span class="text-danger">*</span></label>
+                    <input type="text" name="RuleName" class="form-control" maxlength="150" required>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="MinAge" class="form-label">Min Age</label>
-                    <input type="number" name="MinAge" class="form-control" required>
+                {{-- Coverage & Premium --}}
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Max Coverage <span class="text-danger">*</span></label>
+                        <input type="number" name="CoverageAmountMax" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Min Coverage <span class="text-danger">*</span></label>
+                        <input type="number" name="CoverageAmountMin" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Premium Rate (%) <span class="text-danger">*</span></label>
+                        <input type="number" name="PremiumRate" class="form-control" step="0.01" required>
+                    </div>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="MaxAge" class="form-label">Max Age</label>
-                    <input type="number" name="MaxAge" class="form-control" required>
+                {{-- Age --}}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Min Age <span class="text-danger">*</span></label>
+                        <input type="number" name="AgeMin" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Max Age <span class="text-danger">*</span></label>
+                        <input type="number" name="AgeMax" class="form-control" required>
+                    </div>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="MinTenureMonths" class="form-label">Min Tenure (Months)</label>
-                    <input type="number" name="MinTenureMonths" class="form-control" required>
+                {{-- Tenure --}}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Min Tenure (Months) <span class="text-danger">*</span></label>
+                        <input type="number" name="TenureMin" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Max Tenure (Months) <span class="text-danger">*</span></label>
+                        <input type="number" name="TenureMax" class="form-control" required>
+                    </div>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="MaxTenureMonths" class="form-label">Max Tenure (Months)</label>
-                    <input type="number" name="MaxTenureMonths" class="form-control" required>
+                {{-- Is Active --}}
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" name="IsActive" value="1" id="primaryCheck">
+                    <label class="form-check-label" for="primaryCheck">Active</label>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="PremiumRate" class="form-label">Premium Rate (%)</label>
-                    <input type="number" name="PremiumRate" class="form-control" step="0.01" required>
+                {{-- Submit --}}
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success px-4">💾 Save Pricing Rule</button>
                 </div>
-
-                <div class="col-12 mb-3">
-                    <label for="Remarks" class="form-label">Remarks</label>
-                    <textarea name="Remarks" class="form-control" rows="2"></textarea>
-                </div>
-            </div>
-
-            <div class="text-end">
-                <button type="submit" class="btn btn-success">💾 Save Pricing Rule</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
+</div>
+
+{{-- Script --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ProviderSelect = document.getElementById('Provider-select');
+        const ProductSelect = document.getElementById('Product-select');
+
+        ProviderSelect.addEventListener('change', function () {
+            const ProviderId = this.value;
+            ProductSelect.innerHTML = '<option value="">-- Select Product --</option>';
+
+            if (ProviderId) {
+                const url = `{{ route('bancassurance.riders.getProductByProvider', ':Id') }}`.replace(':Id', ProviderId);
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(products => {
+                        products.forEach(product => {
+                            const option = document.createElement('option');
+                            option.value = product.Id;
+                            option.textContent = product.Name;
+                            ProductSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error loading Product:', error));
+            }
+        });
+    });
+</script>
 @endsection

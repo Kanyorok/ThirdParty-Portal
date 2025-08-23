@@ -25,6 +25,7 @@ class FleetInsuranceTrackerController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', FleetInsuranceTracker::class);
         $records = FleetInsuranceTracker::with(['insuranceStatus', 'insurance', 'vehicle'])
             ->where('CreatedBy', Auth::id())
             ->get();
@@ -34,6 +35,7 @@ class FleetInsuranceTrackerController extends Controller
 
     public function create()
     {
+        $this->authorize('create', FleetInsuranceTracker::class);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
         $insuranceProvider = InsuranceProvider::all();
         $insuranceStatuses = CodeDetail::where('CodeID', 'InsuranceStatus')->orderBy('Value')->get();
@@ -43,6 +45,7 @@ class FleetInsuranceTrackerController extends Controller
 
     public function store(FleetInsuranceTrackerRequest $request)
     {
+        $this->authorize('create', FleetInsuranceTracker::class);
         $validated = $request->validated();
 
         if ($request->hasFile('DocumentPath')) {
@@ -56,6 +59,7 @@ class FleetInsuranceTrackerController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view', FleetInsuranceTracker::class);
         $record = FleetInsuranceTracker::with(['insuranceStatus', 'insurance', 'vehicle'])->findOrFail($id);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
         $insuranceProvider = InsuranceProvider::all();
@@ -66,6 +70,7 @@ class FleetInsuranceTrackerController extends Controller
 
     public function edit($id)
     {
+        $this->authorize('edit', FleetInsuranceTracker::class);
         $record = FleetInsuranceTracker::findOrFail($id);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
         $insuranceProvider = InsuranceProvider::all();
@@ -76,6 +81,7 @@ class FleetInsuranceTrackerController extends Controller
 
     public function update(FleetInsuranceTrackerRequest $request, $id)
     {
+        $this->authorize('update', FleetInsuranceTracker::class);
         $record = FleetInsuranceTracker::findOrFail($id);
         $validated = $request->validated();
 
@@ -90,6 +96,7 @@ class FleetInsuranceTrackerController extends Controller
 
     public function destroy($id)
     {
+         $this->authorize('destroy', FleetInsuranceTracker::class);
         $record = FleetInsuranceTracker::findOrFail($id);
         $this->records->delete($record);
 
