@@ -2,7 +2,7 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetDriver;
 use App\Models\Fleet\FleetDriverLicenseTracking;
@@ -18,14 +18,14 @@ class FleetDriverLicenseTrackingService
         return DB::transaction(function () use ($data) {
             $license = FleetDriverLicenseTracking::create([
                 'DriverID' => $data['DriverID'] ?? null,
-                'LicenseNumber'      => $data['LicenseNumber'] ?? null,
-                'LicenseCategory'    => $data['LicenseCategory'] ?? null,
-                'IssueDate'          => $data['IssueDate'] ?? null,
-                'ExpiryDate'         => $data['ExpiryDate'] ?? null,
-                'RenewalDate'         => $data['RenewalDate'] ?? null,
-                'Notes'              => $data['Notes'] ?? null,
-                'CreatedBy'        =>  $data['CreatedBy'] = Auth::id(),
-                'CreatedOn'        =>  $data['CreatedOn'] = now()
+                'LicenseNumber' => $data['LicenseNumber'] ?? null,
+                'LicenseCategory' => $data['LicenseCategory'] ?? null,
+                'IssueDate' => $data['IssueDate'] ?? null,
+                'ExpiryDate' => $data['ExpiryDate'] ?? null,
+                'RenewalDate' => $data['RenewalDate'] ?? null,
+                'Notes' => $data['Notes'] ?? null,
+                'CreatedBy' => $data['CreatedBy'] = Auth::id(),
+                'CreatedOn' => $data['CreatedOn'] = now()
             ]);
 
             activity()

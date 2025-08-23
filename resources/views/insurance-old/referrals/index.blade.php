@@ -2,13 +2,13 @@
 @section('title', 'My Insurance Referrals')
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-4">📋 My Insurance Referrals</h4>
-  <div class="mb-2 d-flex justify-content-between">
-  <a href="{{ route('referrals.create') }}"  class="btn btn-success">➕ New Referral</a>
-  </div>
-    <table class="table table-bordered table-striped">
-        <thead>
+    <div class="container mt-4">
+        <h4 class="mb-4">📋 My Insurance Referrals</h4>
+        <div class="mb-2 d-flex justify-content-between">
+            <a href="{{ route('referrals.create') }}" class="btn btn-success">➕ New Referral</a>
+        </div>
+        <table class="table table-bordered table-striped">
+            <thead>
             <tr>
                 <th>#</th>
                 <th>Client Name</th>
@@ -19,8 +19,8 @@
                 <th>Submitted On</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {{-- Sample Static Rows --}}
             <tr>
                 <td>1</td>
@@ -47,7 +47,7 @@
                     <a href="#" class="btn btn-sm btn-info">View</a>
                 </td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

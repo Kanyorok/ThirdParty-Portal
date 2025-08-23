@@ -3,6 +3,7 @@
 namespace App\Models\Insurance;
 
 use App\Models\Core\CodeDetail;
+use App\Traits\Controller\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BancassurancePolicy extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -22,7 +23,7 @@ class BancassurancePolicy extends Model
     protected $fillable = [
         'CustomerID', 'ProductID', 'InsurerID', 'PolicyNumber', 'SumAssured',
         'PremiumAmount', 'PolicyStartDate', 'PolicyEndDate', 'PaymentFrequency',
-        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive','Status', 'CreatedBy',
+        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive', 'Status', 'CreatedBy',
         'ModifiedBy', 'DeletedBy'
     ];
 
@@ -34,24 +35,25 @@ class BancassurancePolicy extends Model
     protected $casts = [
         'Status' => InsurancePolicyStatus::class,
     ];
+
     public function customer()
     {
         return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
     }
 
-    Public function product()
+    public function product()
     {
-        return $this->belongsTo(CodeDetail::class, 'ProductID', 'ID');
+        return $this->belongsTo(InsuranceProduct::class, 'ProductID', 'Id');
     }
 
     public function insurer()
     {
-        return $this->belongsTo(CodeDetail::class, 'InsurerID', 'ID');
+        return $this->belongsTo(InsuranceProvider::class, 'InsurerID', 'Id');
     }
 
     public function paymentfrequency()
     {
-        return $this->belongsTo(CodeDetail::class,'PaymentFrequency', 'ID');
+        return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
 
     public function referral()

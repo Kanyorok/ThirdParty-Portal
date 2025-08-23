@@ -37,7 +37,7 @@
 
             <div class="col-md-6">
                 <label for="StoreID" class="form-label">Store</label>
-                <select class="form-select @error('StoreID') is-invalid @enderror" name="StoreID" id="StoreID" >
+                <select class="form-select @error('StoreID') is-invalid @enderror" name="StoreID" id="StoreID">
                     <option value="">Select Store</option>
                 </select>
                 @error('StoreID')
@@ -52,9 +52,9 @@
                 <select class="form-select @error('ItemID') is-invalid @enderror" name="ItemID" id="ItemID" required>
                     <option value="">Select Item</option>
                     @foreach($items as $item)
-                        <option 
-                            value="{{ $item->Id }}" 
-                            data-uom="{{ $item->uom->Code ?? 'Not Found' }}" 
+                        <option
+                            value="{{ $item->Id }}"
+                            data-uom="{{ $item->uom->Code ?? 'Not Found' }}"
                             data-uom-id="{{ $item->UOM ?? '' }}"
                             {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
                             {{ $item->ItemName }}
@@ -105,7 +105,7 @@
                 @enderror
             </div>
         </div>
-        
+
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="IssuedBy" class="form-label">Issued By</label>
@@ -183,7 +183,7 @@
                 }
             });
         }
-        
+
         function loadIssuedToOptions(type, oldIssuedToId) {
             const recipientSelect = $('#IssuedToID');
             recipientSelect.empty().append('<option value="">Select Recipient</option>');

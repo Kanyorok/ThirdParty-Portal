@@ -22,14 +22,14 @@ class FleetRepairLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'VehicleID'         => 'required|exists:t_FleetVehicles,Id',
-        'RepairType'        => 'required|integer',
-        'RepairDate'        => 'required|date',
-        'Vendor'            => 'nullable|string|max:255',
-        'Cost'              => 'nullable|numeric|min:0',
-        'Description'       => 'nullable|string|max:1000',
-        'Notes'             => 'nullable|string',
-        'ScheduleID'        => 'nullable|exists:t_FleetMaintenanceSchedules,Id'
+            'VehicleID' => 'required|exists:t_FleetVehicles,Id',
+            'RepairType' => 'required|integer',
+            'RepairDate' => 'required|date',
+            'Vendor' => 'nullable|string|max:255',
+            'Cost' => 'nullable|numeric|min:0',
+            'Description' => 'nullable|string|max:1000',
+            'Notes' => 'nullable|string',
+            'ScheduleID' => 'nullable|exists:t_FleetMaintenanceSchedules,Id'
         ];
     }
 }

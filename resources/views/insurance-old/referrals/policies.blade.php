@@ -2,11 +2,11 @@
 @section('title', 'My Referred Client Policies')
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-4">📄 My Clients' Issued Policies</h4>
+    <div class="container mt-4">
+        <h4 class="mb-4">📄 My Clients' Issued Policies</h4>
 
-    <table class="table table-bordered table-striped">
-        <thead>
+        <table class="table table-bordered table-striped">
+            <thead>
             <tr>
                 <th>#</th>
                 <th>Client Name</th>
@@ -19,8 +19,8 @@
                 <th>Expiry</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {{-- Example row --}}
             <tr>
                 <td>1</td>
@@ -37,7 +37,7 @@
                     <a href="#" class="btn btn-sm btn-outline-secondary">Download PDF</a>
                 </td>
             </tr>
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 @endsection

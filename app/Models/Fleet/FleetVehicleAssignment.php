@@ -38,7 +38,7 @@ class FleetVehicleAssignment extends Model
     }
 
     public function assignedBy()
-{
-    return $this->belongsTo(\App\Models\User::class, 'AssignedBy');
-}
+    {
+        return $this->belongsTo(\App\Models\User::class, 'AssignedBy');
+    }
 }

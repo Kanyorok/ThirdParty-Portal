@@ -19,9 +19,7 @@ class PropertyLeaseTerminationService
     /**
      * Create a new class instance.
      */
-    public function __construct(PropertyLeaseTermination $propertyLeaseTermination)
-    {
-    }
+    public function __construct(PropertyLeaseTermination $propertyLeaseTermination) {}
 
     public static function create(
         PropertyNewLease $LeaseID,
@@ -45,11 +43,11 @@ class PropertyLeaseTerminationService
             ]);
 
             if ($document) {
-            $termination->newDocument(
-                ModulesEnum::Property,
-                $document,
-                [PermissionEnum::PropertyLeaseTerminationView->value],
-                $user
+                $termination->newDocument(
+                    ModulesEnum::Property,
+                    $document,
+                    [PermissionEnum::PropertyLeaseTerminationView->value],
+                    $user
                 );
             }
 

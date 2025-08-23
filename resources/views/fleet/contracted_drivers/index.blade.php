@@ -4,17 +4,17 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <div class="d-flex justify-content-between mb-3">
-        <h4 class="mb-0">🚐 Contracted Drivers List</h4>
-        <a href="{{ route('fleet.contracted_drivers.create') }}" class="btn btn-success">
-            + Add Contracted Driver
-        </a>
-    </div>
+    <div class="card p-4 shadow rounded-4">
+        <div class="d-flex justify-content-between mb-3">
+            <h4 class="mb-0">🚐 Contracted Drivers List</h4>
+            <a href="{{ route('fleet.contracted_drivers.create') }}" class="btn btn-success">
+                + Add Contracted Driver
+            </a>
+        </div>
 
-         <div class="table-responsive">
-        <table id="contractedDriversTable" class="table table-bordered table-striped align-middle">
-            <thead class="table-light">
+        <div class="table-responsive">
+            <table id="contractedDriversTable" class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>DriverNo</th>
@@ -27,8 +27,8 @@
                     <th>Active</th>
                     <th>Actions</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @forelse ($drivers as $driver)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
@@ -40,7 +40,7 @@
                         <td>{{ $driver->LicenseNumber ?? '—' }}</td>
                         <td>
                             @if($driver->ContractStartDate && $driver->ContractEndDate)
-                                {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d/m/Y') }} - 
+                                {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d/m/Y') }} -
                                 {{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d/m/Y') }}
                             @else
                                 —
@@ -54,7 +54,8 @@
                             @endif
                         </td>
                         <td class="text-nowrap">
-                            <a href="{{ route('fleet.contracted_drivers.show', $driver->Id) }}" class="btn btn-sm btn-info">Details</a>
+                            <a href="{{ route('fleet.contracted_drivers.show', $driver->Id) }}"
+                               class="btn btn-sm btn-info">Details</a>
                         </td>
                     </tr>
                 @empty
@@ -62,29 +63,29 @@
                         <td colspan="10" class="text-center text-muted">No contracted drivers found.</td>
                     </tr>
                 @endforelse
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
 @endsection
 @section('scripts')
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-        <script>
-            $(document).ready(function () {
-                @if(!$drivers->isEmpty())
-                $('#contractedDriversTable').DataTable({
-                    pageLength: 10,
-                    ordering: true,
-                    searching: true,
-                    lengthChange: true,
-                    language: {
-                        emptyTable: ""
-                    }
-                });
-                @endif
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            @if(!$drivers->isEmpty())
+            $('#contractedDriversTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: ""
+                }
             });
-        </script>
+            @endif
+        });
+    </script>
 @endsection
 

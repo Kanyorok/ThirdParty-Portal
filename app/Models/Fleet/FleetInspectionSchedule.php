@@ -47,6 +47,7 @@ class FleetInspectionSchedule extends Model
     {
         return 'InspectionId';
     }
+
     public function vehicle()
     {
         return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');

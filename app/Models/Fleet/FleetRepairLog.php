@@ -14,7 +14,8 @@ use App\Models\Core\CodeDetail;
 
 class FleetRepairLog extends Model
 {
-     use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes;
+
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -25,8 +26,8 @@ class FleetRepairLog extends Model
 
 
     protected $fillable = [
-        'RepairID','VehicleID', 'ScheduleID','RepairType', 'RepairDate', 'Vendor', 'Cost',
-        'Description', 'Notes',         
+        'RepairID', 'VehicleID', 'ScheduleID', 'RepairType', 'RepairDate', 'Vendor', 'Cost',
+        'Description', 'Notes',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -38,7 +39,7 @@ class FleetRepairLog extends Model
     public static function getPrimaryKey(): string
     {
         return 'RepairId';
-    
+
     }
 
 

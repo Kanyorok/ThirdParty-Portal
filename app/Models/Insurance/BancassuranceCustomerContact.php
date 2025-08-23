@@ -12,6 +12,7 @@ use App\Traits\Model\UserActorTrait;
 class BancassuranceCustomerContact extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_BancassuranceCustomersContacts';
     const CREATED_AT = 'CreatedOn';
@@ -30,18 +31,22 @@ class BancassuranceCustomerContact extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-        public static function getPrimaryKey(): string
+
+    public static function getPrimaryKey(): string
     {
         return 'BancassuranceCustomersContactsId';
     }
+
     public function contacttypes()
     {
         return $this->belongsTo(CodeDetail::class, 'ContactType', 'ID');
     }
+
     public function employees()
     {
         return $this->belongsTo(Employee::class, 'HandledBy', 'Id');
     }
+
     public function customers()
     {
         return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');

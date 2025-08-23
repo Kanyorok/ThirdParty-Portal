@@ -2,19 +2,19 @@
 @section('title', 'Running Costs')
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <div class="d-flex justify-content-between mb-3">
-        <h4 class="mb-0">🛢️ Running Cost Entries</h4>
-        <a href="{{ route('fleet.running_costs.create') }}" class="btn btn-primary">➕ New Entry</a>
-    </div>
+    <div class="card p-4 shadow rounded-4">
+        <div class="d-flex justify-content-between mb-3">
+            <h4 class="mb-0">🛢️ Running Cost Entries</h4>
+            <a href="{{ route('fleet.running_costs.create') }}" class="btn btn-primary">➕ New Entry</a>
+        </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
-            <thead class="table-light">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Vehicle</th>
@@ -24,8 +24,8 @@
                     <th>Vendor</th>
                     <th>Notes</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @forelse ($costs as $cost)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
@@ -41,8 +41,8 @@
                         <td colspan="7" class="text-center text-muted">No running cost records found.</td>
                     </tr>
                 @endforelse
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 @endsection

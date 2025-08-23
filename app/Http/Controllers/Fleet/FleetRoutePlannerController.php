@@ -33,11 +33,11 @@ class FleetRoutePlannerController extends Controller
         ]);
 
         FleetRoutePlan::create([
-            'TripName'   => $validated['TripName'],
-            'VehicleID'  => $validated['VehicleID'],
-            'Waypoints'  => json_encode($validated['Waypoints']),
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
+            'TripName' => $validated['TripName'],
+            'VehicleID' => $validated['VehicleID'],
+            'Waypoints' => json_encode($validated['Waypoints']),
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
         ]);
 
         return redirect()->route('fleet.route_planner.index')->with('success', 'Route planned successfully.');

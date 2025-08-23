@@ -47,14 +47,14 @@ class FleetServiceAlertController extends Controller
             ->with('success', 'Service alert marked as completed.');
     }
 
-    
-    public function acknowledge(int $scheduleId)
-{
-    $this->service->acknowledgeFromSchedule($scheduleId);
 
-    return redirect()->route('fleet.alerts.index')
-        ->with('success', 'Service alert acknowledged successfully.');
-}
+    public function acknowledge(int $scheduleId)
+    {
+        $this->service->acknowledgeFromSchedule($scheduleId);
+
+        return redirect()->route('fleet.alerts.index')
+            ->with('success', 'Service alert acknowledged successfully.');
+    }
 
 
 }

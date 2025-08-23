@@ -35,16 +35,14 @@ class PropertyMaintenanceService
         User    $user,
         UploadedFile $document = null
     ):self {
-        
-            $lastRequestNumber = PropertyMaintenanceRequest::withTrashed()
-                ->where('RequestNumber', 'LIKE', 'REQUEST-%')
-                ->selectRaw("MAX(CAST(SUBSTRING(RequestNumber, 8, LEN(RequestNumber)) AS INT)) as max_number")
-                ->value('max_number');
+
+       $lastRequestNumber = PropertyMaintenanceRequest::withTrashed()
+           ->selectRaw("CAST(SUBSTRING(RequestNumber, 9, 5) AS INT) as num")
+           ->orderByDesc('num')
+           ->value('num');
 
     $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
-
     $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-
         {
             $maintenancerequest = PropertyMaintenanceRequest::create([
                 'RequestNumber' => $RequestNumber,

@@ -22,12 +22,12 @@ class BancassuranceCustomersContactsRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'CustomerID'=>'required|exists:t_BancassuranceCustomers,Id',
-        'ContactDate'=>'required|date|max:100',
-        'ContactType'=>'required|exists:t_CodeDetails,ID',
-        'Summary'=>'required|string|max:100',
-        'HandledBy'=>'required|nullable|exists:t_Employees,Id',
-        'Notes'=>'required|string|max:100',
+            'CustomerID' => 'required|exists:t_BancassuranceCustomers,Id',
+            'ContactDate' => 'required|date|max:100',
+            'ContactType' => 'required|exists:t_CodeDetails,ID',
+            'Summary' => 'required|string|max:100',
+            'HandledBy' => 'required|nullable|exists:t_Employees,Id',
+            'Notes' => 'required|string|max:100',
         ];
     }
 }

@@ -17,52 +17,54 @@ use App\Http\Requests\Insurance\Customers\BancassuranceCustomersContactsRequest;
 class CustomerCommunicationController extends Controller
 {
     //
-public function create()
-{
-    $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomerContact::class);
-    $customers= BancassuranceCustomer::all();
-    $employees = Employee::all();
-    $contacttypes = CodeDetail::where('CodeID', 'ContactType')->get();
-    return view('bancassurance.customers.communication.create', compact('customers', 'employees','contacttypes'));
-}
+    public function create()
+    {
+        $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomerContact::class);
+        $customers = BancassuranceCustomer::all();
+        $employees = Employee::all();
+        $contacttypes = CodeDetail::where('CodeID', 'ContactType')->get();
+        return view('bancassurance.customers.communication.create', compact('customers', 'employees', 'contacttypes'));
+    }
 
-public function store(BancassuranceCustomersContactsRequest $request)
-{
-    $this->authorize(PermissionEnum::BancassuranceCustomersContactsCreate, BancassuranceCustomerContact::class);
-    $validated = $request->validated();
+    public function store(BancassuranceCustomersContactsRequest $request)
+    {
+        $this->authorize(PermissionEnum::BancassuranceCustomersContactsCreate, BancassuranceCustomerContact::class);
+        $validated = $request->validated();
         $CustomerID = BancassuranceCustomer::findOrFail($validated['CustomerID']);
         $ContactDate = new \DateTime($validated['ContactDate']);
         $ContactType = CodeDetail::findOrFail($validated['ContactType']);
         $HandledBy = Employee::findOrFail($validated['HandledBy']);
 
         $customer = BancassuranceCustomersContactsService::create(
-                $CustomerID,
-                $ContactDate, 
-                $ContactType,  
-                $validated['Summary'],
-                $validated['Notes'],
-                $HandledBy,               
-                Auth::user(),
-            );
+            $CustomerID,
+            $ContactDate,
+            $ContactType,
+            $validated['Summary'],
+            $validated['Notes'],
+            $HandledBy,
+            Auth::user(),
+        );
 
-         return redirect()->route('bancassurance.customers.communication.index')->with('success', 'Customer Contacts saved.');
+        return redirect()->route('bancassurance.customers.communication.index')->with('success', 'Customer Contacts saved.');
 
-}
-public function index()
-{
-   $customer = BancassuranceCustomer::all();
-   $logs = BancassuranceCustomerContact::all();
+    }
 
-    return view('bancassurance.customers.communication.index', compact('customer','logs'));
-}
-public function edit($id)
+    public function index()
+    {
+        $customer = BancassuranceCustomer::all();
+        $logs = BancassuranceCustomerContact::all();
+
+        return view('bancassurance.customers.communication.index', compact('customer', 'logs'));
+    }
+
+    public function edit($id)
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersContactsView, BancassuranceCustomerContact::class);
         $log = BancassuranceCustomerContact::findOrFail($id);
-        $customers = BancassuranceCustomer::all();   
+        $customers = BancassuranceCustomer::all();
         $employees = Employee::all();
         $contacttypes = CodeDetail::where('CodeID', 'ContactType')->get();
-        return view('bancassurance.customers.communication.edit', compact('log', 'customers','employees','contacttypes' ));
+        return view('bancassurance.customers.communication.edit', compact('log', 'customers', 'employees', 'contacttypes'));
     }
 
     public function update(BancassuranceCustomersContactsRequest $request, $id)
@@ -73,10 +75,10 @@ public function edit($id)
         DB::beginTransaction();
 
         try {
-                $validated['ContactDate'] = \Carbon\Carbon::parse($validated['ContactDate'])->format('Y-m-d');
-            } catch (\Exception $e) {
-                return back()->withErrors(['ContactDate' => 'Invalid date format.'])->withInput();
-            }
+            $validated['ContactDate'] = \Carbon\Carbon::parse($validated['ContactDate'])->format('Y-m-d');
+        } catch (\Exception $e) {
+            return back()->withErrors(['ContactDate' => 'Invalid date format.'])->withInput();
+        }
 
         try {
             $log = BancassuranceCustomerContact::findOrFail($id);
