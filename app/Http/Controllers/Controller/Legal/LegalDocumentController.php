@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Legal;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Legal\LegalDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class LegalDocumentController extends Controller
 {
@@ -22,27 +25,74 @@ class LegalDocumentController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'DocumentTitle' => 'required',
-            'DocumentType' => 'required',
-            'SourceModule' => 'required',
+        return$validated = $request->validate([
+            'DocumentTitle'   => ['required', 'string', 'max:255'],
+            'DocumentType'    => ['required', 'string', 'max:100'],
+            'SourceModule'    => ['required', 'string', 'max:100'],
+            'SourceID'        => ['nullable', 'integer'],
+            'LinkedDMSDocID'  => ['required', 'file',
+                'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
+            'Remarks'         => ['nullable', 'string'],
         ]);
 
-        LegalDocument::create([
-            'DocumentTitle' => $request->DocumentTitle,
-            'DocumentType' => $request->DocumentType,
-            'SourceModule' => $request->SourceModule,
-            'SourceID' => $request->SourceID,
-            'LinkedDMSDocID' => $request->LinkedDMSDocID,
-            'Remarks' => $request->Remarks,
-            'ReviewStatus' => 'Draft',
-            'ExecutionStatus' => 'Pending',
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-        ]);
+        $userId = Auth::id();
 
-        return redirect()->route('legal.documents.index')->with('success', 'Document registered.');
+        try {
+            DB::beginTransaction();
+
+            $doc = LegalDocument::create([
+                'DocumentTitle'   => $validated['DocumentTitle'],
+                'DocumentType'    => $validated['DocumentType'],
+                'SourceModule'    => $validated['SourceModule'],
+                'SourceID'        => $validated['SourceID'] ?? 1,  // fallback to 1 for now
+                'LinkedDMSDocID'  => 10, // Replace with real DMS ID after upload
+                'ReviewStatus'    => 'Draft',
+                'ExecutionStatus' => 'Pending',
+                'DispatchDate'    => null,
+                'SignOffDate'     => null,
+
+                'ReviewedBy'      => $userId,
+                'ReviewedOn'      => now(),
+
+                'Remarks'         => $validated['Remarks'] ?? null,
+                'IsActive'        => 1,
+
+                'CreatedBy'       => $userId,
+                'CreatedOn'       => now(),
+                'ModifiedBy'      => $userId,
+                'ModifiedOn'      => now(),
+            ]);
+
+            // Upload Evidence to E-DMS
+            if ($request->hasFile('LinkedDMSDocID')) {
+                $doc->newDocument(
+                    ModulesEnum::Legal,
+                    $request->file('LinkedDMSDocID'),
+                    [PermissionEnum::ContractCreate],
+                    Auth::user()
+                );
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('legal.documents.index')
+                ->with('success', 'Document registered.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            // log the actual DB error for debugging
+            \Log::error('Failed to save legal document', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Could not save document. DB said: ' . $e->getMessage());
+        }
     }
+
 
     public function show($id)
     {

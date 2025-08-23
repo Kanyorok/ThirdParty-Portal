@@ -349,6 +349,7 @@ enum PermissionEnum: string
     case PropertyAttachmentsView = 'propertyattachments-view';
 
 
+
         //Tenant Mentenance
     case TenantMentenanceCreate = 'tenantmentenance-create';
     case TenantMentenanceUpdate = 'tenantmentenance-update';
@@ -394,7 +395,8 @@ enum PermissionEnum: string
     case PropertyInvoiceDelete = 'propertyinvoice-delete';
     case PropertyInvoiceView = 'propertyinvoice-view';
 
-        //Property Receipt
+    //Property Receipt
+
     case PropertyReceiptCreate = 'propertyreceipt-create';
     case PropertyReceiptUpdate = 'propertyreceipt-update';
     case PropertyReceiptDelete = 'propertyreceipt-delete';
@@ -418,6 +420,7 @@ enum PermissionEnum: string
     case PropertyMaintenanceWorkCompletionUpdate = 'propertymaintenanceworkcompletion-update';
     case PropertyMaintenanceWorkCompletionDelete = 'propertymaintenanceworkcompletion-delete';
     case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
+
 
 
         /*
@@ -611,6 +614,45 @@ enum PermissionEnum: string
     case DriverManagementUpdate = 'driverManagement-update';
     case DriverManagementDestroy = 'driverManagement-destroy';
 
+    /*
+*
+* ========================================  Legal  ========================================
+*/
+    //Document Registry and Contracts Creation
+    case ContractView = 'contract-view';
+    case ContractCreate = 'contract-create';
+    case ContractUpdate = 'contract-update';
+    case ContractDelete = 'contract-delete';
+
+    //Disputes and Ltigations
+    case DisputeLitigationView='disputelitigation-view';
+    case DisputeLitigationCreate='disputelitigation-create';
+    case DisputeLitigationUpdate='disputelitigation-update';
+    case DisputeLitigationDelete='disputelitigation-delete';
+
+    //LegalObligations
+    case LegalObligationView='legalobligation-view';
+    case LegalObligationCreate='legalobligation-create';
+    case LegalObligationUpdate='legalobligation-update';
+    case LegalObligationDelete='legalobligation-delete';
+
+    //Legal Search
+    case LegalSearchView='legalsearch-view';
+    case LegalSearchCreate='legalsearch-create';
+    case LegalSearchUpdate='legalsearch-update';
+    case LegalSearchDelete='legalsearch-delete';
+
+    //LoanSecurity
+    case LoanSecurityView='loansecurity-view';
+    case LoanSecurityCreate='loansecurity-create';
+    case LoanSecurityUpdate='loansecurity-update';
+    case LoanSecurityDelete='loansecurity-delete';
+
+    //IntellectualProperty
+    case IntellectualPropertyView='intellectualproperty-view';
+    case IntellectualPropertyCreate='intellectualproperty-create';
+    case IntellectualPropertyUpdate='intellectualproperty-update';
+    case IntellectualPropertyDelete='intellectualproperty-delete';
     
     case FleetVehicleView = 'fleetVehicle-view';
     case FleetVehicleCreate = 'fleetVehicle-create';
@@ -632,7 +674,6 @@ enum PermissionEnum: string
     case FleetDriverCreate = 'fleetdriver-create';
     case FleetDriverUpdate = 'fleetdriver-update';
     case FleetDriverDestroy = 'fleetdriver-destroy';
-
 
 
     public static function display(): Collection
@@ -714,6 +755,32 @@ enum PermissionEnum: string
             [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
 
+
+            //Property Management
+            [self::PropertyCategoryView,self::PropertyCategoryCreate,self::PropertyCategoryUpdate,self::PropertyCategoryDelete],
+            [self::PropertyTypeView,self::PropertyTypeCreate,self::PropertyTypeUpdate,self::PropertyTypeDelete],
+            [self::PropertyRegistryView,self::PropertyRegistryCreate,self::PropertyRegistryUpdate,self::PropertyRegistryDelete],
+            [self::PropertyStructuralView,self::PropertyStructuralCreate,self::PropertyStructuralUpdate,self::PropertyStructuralDelete],
+            [self::PropertyAttachmentsView,self::PropertyAttachmentsCreate,self::PropertyAttachmentsUpdate,self::PropertyAttachmentsDelete],
+            [self::TenantMentenanceCreate,self::TenantMentenanceUpdate,self::TenantMentenanceDelete,self::TenantMentenanceView],
+            [self::TenantClearanceCreate,self::TenantClearanceUpdate,self::TenantClearanceDelete,self::TenantClearanceView],
+            [self::PropertyNewLeaseCreate,self::PropertyNewLeaseUpdate,self::PropertyNewLeaseDelete,self::PropertyNewLeaseView],
+            [self::PropertyLeaseTerminationCreate,self::PropertyLeaseTerminationUpdate,self::PropertyLeaseTerminationDelete,self::PropertyLeaseTerminationView],
+            [self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView],
+            [self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView],
+            [self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView],
+            [self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView],
+            [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
+            [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
+            [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
+
+              ///////////////////////  Fleet Management  /////////////////////////////////////
+            [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
+            [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
+            [self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy],
+            [self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy],
+
+
             //Property Management
             [self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete],
             [self::PropertyTypeView, self::PropertyTypeCreate, self::PropertyTypeUpdate, self::PropertyTypeDelete],
@@ -768,6 +835,21 @@ enum PermissionEnum: string
             [self::InsurancePricingRuleView, self::InsurancePricingRuleCreate, self::InsurancePricingRuleUpdate, self::InsurancePricingRuleDelete],
             [self::InsuranceClaimClosureView, self::InsuranceClaimClosureCreate, self::InsuranceClaimClosureUpdate, self::InsuranceClaimClosureDelete],
             [self::CommissionRuleView, self::CommissionRuleCreate, self::CommissionRuleUpdate, self::CommissionRuleDelete],
+
+            ///////////////////////  Fleet Management  /////////////////////////////////////
+            [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
+            [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
+            [self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy],
+            [self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy],
+          
+                      ///////////////////////  Legal  ///////////////////////////////////////
+            [self::ContractView,self::ContractCreate,self::ContractUpdate,self::ContractDelete],
+            [self::DisputeLitigationView,self::DisputeLitigationCreate,self::DisputeLitigationUpdate,self::DisputeLitigationDelete],
+            [self::LegalObligationView,self::LegalObligationCreate,self::LegalObligationUpdate,self::LegalObligationDelete],
+            [self::LegalSearchView,self::LegalSearchCreate,self::LegalSearchUpdate,self::LegalSearchDelete],
+            [self::LoanSecurityView,self::LoanSecurityCreate,self::LoanSecurityUpdate,self::LoanSecurityDelete],
+            [self::IntellectualPropertyView,self::IntellectualPropertyCreate,self::IntellectualPropertyUpdate,self::IntellectualPropertyDelete],
+
 
         ]);
     }
@@ -921,6 +1003,18 @@ enum PermissionEnum: string
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete,
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete,
             => ModulesEnum::Finance,
+
+
+            ////////////////////   Legal   ////////////////////////////
+            self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete,
+                self::DisputeLitigationView, self::DisputeLitigationCreate, self::DisputeLitigationUpdate, self::DisputeLitigationDelete,
+                self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete,
+                self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete,
+                self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete,
+                self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete,
+                => ModulesEnum::Legal,
+
+
         };
     }
 
@@ -1012,6 +1106,7 @@ enum PermissionEnum: string
             self::PropertyRegistryView, self::PropertyRegistryCreate, self::PropertyRegistryUpdate, self::PropertyRegistryDelete => 'Property Registry',
             self::PropertyStructuralView, self::PropertyStructuralCreate, self::PropertyStructuralUpdate, self::PropertyStructuralDelete => 'Property Structural Mapping',
             self::PropertyAttachmentsView, self::PropertyAttachmentsCreate, self::PropertyAttachmentsUpdate, self::PropertyAttachmentsDelete => 'Property Attachments ',
+
             self::TenantMentenanceCreate, self::TenantMentenanceUpdate, self::TenantMentenanceDelete, self::TenantMentenanceView => 'Tenant Maintenance',
             self::TenantClearanceCreate, self::TenantClearanceUpdate, self::TenantClearanceDelete, self::TenantClearanceView => 'Tenant Clearance',
             self::PropertyNewLeaseCreate, self::PropertyNewLeaseUpdate, self::PropertyNewLeaseDelete, self::PropertyNewLeaseView => 'Property New Lease',
@@ -1024,6 +1119,7 @@ enum PermissionEnum: string
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
+
             default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             //Insurance
@@ -1049,6 +1145,15 @@ enum PermissionEnum: string
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
+
+            ////////////////////////  Legal   ///////////////////////////
+            self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete => 'Legal Contract',
+            self::DisputeLitigationView, self::DisputeLitigationCreate, self::DisputeLitigationUpdate, self::DisputeLitigationDelete => 'Dispute Litigation',
+            self::LegalObligationView, self::LegalObligationCreate, self::LegalObligationUpdate, self::LegalObligationDelete => 'Legal Obligation',
+            self::LegalSearchView, self::LegalSearchCreate, self::LegalSearchUpdate, self::LegalSearchDelete => 'Legal Search',
+            self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete => 'Loan Security',
+            self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete => 'Intellectual Property',
+
         };
     }
 }
