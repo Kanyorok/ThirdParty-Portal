@@ -3,59 +3,124 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProductRider;
+use App\Models\Insurance\InsuranceProvider;
+use App\Services\Insurance\ProviderAndProducts\InsuranceProductRiderService;
+use App\Enums\Core\PermissionEnum;
+use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProductRiderRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+
 
 class InsuranceProductRiderController extends Controller
 {
     public function index()
-    {
-        $riders = DB::table('t_InsuranceProductRiders as r')
-            ->leftJoin('t_InsuranceProviderProducts as pp', 'r.ProviderProductID', '=', 'pp.Id')
-            ->leftJoin('t_InsuranceProducts as p', 'pp.ProductID', '=', 'p.Id')
-            ->leftJoin('t_InsuranceProviders as ip', 'pp.InsuranceProviderID', '=', 'ip.Id')
-            ->select('r.*', 'p.Name as ProductName', 'ip.Name as ProviderName')
-            ->orderByDesc('r.Id')
-            ->get();
+    { 
+        $riders = InsuranceProductRider::all();
 
         return view('bancassurance.riders.index', compact('riders'));
     }
 
     public function create()
     {
-        $mappedProducts = DB::table('t_InsuranceProviderProducts as pp')
-            ->leftJoin('t_InsuranceProducts as p', 'pp.ProductID', '=', 'p.Id')
-            ->leftJoin('t_InsuranceProviders as ip', 'pp.InsuranceProviderID', '=', 'ip.Id')
-            ->select(
-                'pp.Id',
-                DB::raw("CONCAT(ip.Name, ' - ', p.Name) AS MappedProduct")
-            )
-            ->where('pp.IsActive', 1)
-            ->get();
+        $this->authorize(PermissionEnum::InsuranceProductRiderView, InsuranceProductRider::class);
+         $providers = InsuranceProvider::all();
 
-        return view('bancassurance.riders.create', compact('mappedProducts'));
+        return view('bancassurance.riders.create', compact('providers'));
     }
 
-    public function store(Request $request)
+    public function getProductByProvider($providerId)
     {
-        $request->validate([
-            'ProviderProductID' => 'required|exists:t_InsuranceProviderProducts,Id',
-            'RiderName' => 'required|string|max:100',
-            'Description' => 'nullable|string|max:255',
-            'AdditionalPremium' => 'nullable|numeric|min:0',
-            'IsOptional' => 'required|boolean'
-        ]);
+        $products = InsuranceProduct::where('InsuranceProviderID', $providerId)->get();
+        return response()->json($products);
+    }
+    public function store(InsuranceProductRiderRequest $request)
+    {
+      $this->authorize(PermissionEnum::InsuranceProductRiderCreate, InsuranceProductRider::class); 
 
-        DB::table('t_InsuranceProductRiders')->insert([
-            'ProviderProductID' => $request->ProviderProductID,
-            'RiderName' => $request->RiderName,
-            'Description' => $request->Description,
-            'AdditionalPremium' => $request->AdditionalPremium ?? 0.00,
-            'IsOptional' => $request->IsOptional,
-            'IsActive' => 1,
-            'CreatedAt' => now(),
-        ]);
+        $validated = $request->validated();
+
+         $InsuranceProviderId = InsuranceProvider::findOrFail($validated['InsuranceProviderId']);
+         $Product = InsuranceProduct::findOrFail($validated['Product']);
+
+         $providers = InsuranceProductRiderService::create(
+            $InsuranceProviderId,
+                $Product,
+                $validated['RiderName'],
+                $validated['Description'],
+                $validated['AdditionalPremium'],
+                $validated['IsOptional'],
+                $validated['IsActive'],
+                Auth::user(),
+            );
 
         return redirect()->route('bancassurance.riders.index')->with('success', 'Rider added successfully.');
+    }
+    public function edit($Id)
+    {
+       $this->authorize(PermissionEnum::InsuranceProductRiderView, InsuranceProductRider::class);
+
+       $rider = InsuranceProductRider::findOrFail($Id);
+       $providers = InsuranceProvider::all();
+     
+        return view('bancassurance.riders.edit', compact('rider','providers'));
+    }
+
+    // Update product
+    public function update (InsuranceProductRiderRequest $request, $id)
+    {
+       $this->authorize(PermissionEnum::InsuranceProductRiderUpdate, InsuranceProductRider::class);
+        $validated = $request->validated();
+
+        DB::beginTransaction();
+
+        try {
+            $rider = InsuranceProductRider::findOrFail($id);
+
+            $rider->update([
+                'InsuranceProviderId' => $validated['InsuranceProviderId'],             
+                'Product' => $validated['Product'],
+                'RiderName' => $validated['RiderName'],
+                'Description' => $validated['Description'], 
+                'AdditionalPremium' => $validated['AdditionalPremium'],                                        
+                'IsOptional' => $validated['IsOptional'] ?? '',
+                'IsActive' => $validated['IsActive'] ?? '',
+                'ModifiedBy' => Auth::Id(),
+            ]);
+
+            DB::commit();
+            activity()
+                ->performedOn($rider)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'update'])
+                ->log('Updated Rider ');
+
+            return redirect()->route('bancassurance.riders.index')->with('success', 'Rider updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to Update Rider:' . $th->getMessage());
+
+            return back()->withErrors(['error' => 'Failed to update Rider'])->withInput();
+        }
+    }
+
+    public function destroy($Id)
+    {
+       $this->authorize(PermissionEnum::InsuranceProductRiderDelete, InsuranceProductRider::class);
+        try {
+            $rider = InsuranceProductRider::findOrFail($Id);
+            $rider->delete();
+
+            return redirect()->route('bancassurance.riders.index')
+                ->with('success', 'Rider Deleted Successfully!');
+        } catch (\Throwable $th) {
+            // Log the error for debugging
+            Log::error('Error deleting Rider: ' . $th->getMessage());
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete Rider. Please try again.'])
+                ->withInput();
+        }
     }
 }

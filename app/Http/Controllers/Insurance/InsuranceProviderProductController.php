@@ -8,23 +8,23 @@ use Illuminate\Support\Facades\DB;
 
 class InsuranceProviderProductController extends Controller
 {
-public function Index()
-{
-    $mappedProducts = DB::table('t_InsuranceProviderProducts as ipp')
-        ->join('t_InsuranceProviders as ip', 'ipp.InsuranceProviderID', '=', 'ip.Id')
-        ->join('t_InsuranceProducts as p', 'ipp.ProductID', '=', 'p.Id')
-        ->leftJoin('t_CodeDetails as cd', 'ipp.PolicyTypeID', '=', 'cd.Id')
-        ->select(
-            'ipp.*',
-            'ip.Name as ProviderName',
-            'p.Name as ProductName',
-            'cd.Description as PolicyTypeName'
-        )
-        ->orderByDesc('ipp.Id')
-        ->get();
+    public function Index()
+    {
+        $mappedProducts = DB::table('t_InsuranceProviderProducts as ipp')
+            ->join('t_InsuranceProviders as ip', 'ipp.InsuranceProviderID', '=', 'ip.Id')
+            ->join('t_InsuranceProducts as p', 'ipp.ProductID', '=', 'p.Id')
+            ->leftJoin('t_CodeDetails as cd', 'ipp.PolicyTypeID', '=', 'cd.Id')
+            ->select(
+                'ipp.*',
+                'ip.Name as ProviderName',
+                'p.Name as ProductName',
+                'cd.Description as PolicyTypeName'
+            )
+            ->orderByDesc('ipp.Id')
+            ->get();
 
-    return view('bancassurance.products.mapped.index', compact('mappedProducts'));
-}
+        return view('bancassurance.products.mapped.index', compact('mappedProducts'));
+    }
 
 
     public function create()
@@ -59,10 +59,10 @@ public function Index()
         return redirect()->route('bancassurance.products.mapped.index')->with('success', 'Product mapped to provider.');
     }
 
-public function detach($mappingId)
-{
-    DB::table('t_InsuranceProviderProducts')->where('Id', $mappingId)->delete();
+    public function detach($mappingId)
+    {
+        DB::table('t_InsuranceProviderProducts')->where('Id', $mappingId)->delete();
 
-    return redirect()->back()->with('success', 'Product detached successfully.');
-}
+        return redirect()->back()->with('success', 'Product detached successfully.');
+    }
 }

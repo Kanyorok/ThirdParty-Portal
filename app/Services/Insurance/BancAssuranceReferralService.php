@@ -5,10 +5,10 @@ namespace App\Services\Insurance;
 use App\Enums\Insurance\InsuranceReferralStatus;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
-use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancAssuranceReferral;
+use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProvider;
 use Carbon\Carbon;
-use Date;
 
 class BancAssuranceReferralService
 {
@@ -26,8 +26,8 @@ class BancAssuranceReferralService
         string $ClientEmail,
         ?User $ReferredBy = null,
         ?Carbon $ReferralDate = null,
-        ?CodeDetail $InsuranceProductId = null,
-        CodeDetail $PreferredInsurerId,
+        ?InsuranceProduct $InsuranceProductId = null,
+        InsuranceProvider $PreferredInsurerId,
         ?string $Remarks = null,
         InsuranceReferralStatus $Status,
         ?User $AssignedTo = null,
@@ -41,8 +41,8 @@ class BancAssuranceReferralService
                 'ClientEmail' => $ClientEmail,
                 'ReferredBy' => $ReferredBy->Id ?? null,
                 'ReferralDate' => $ReferralDate ?? null,
-                'InsuranceProductId' => $InsuranceProductId->ID ?? null,
-                'PreferredInsurerId' => $PreferredInsurerId->ID,
+                'InsuranceProductId' => $InsuranceProductId->Id ?? null,
+                'PreferredInsurerId' => $PreferredInsurerId->Id,
                 'Remarks' => $Remarks,
                 'Status' => $Status->value,
                 'AssignedTo' => $AssignedTo->Id ?? null,
@@ -68,8 +68,8 @@ class BancAssuranceReferralService
         string $ClientEmail,
         ?User $ReferredBy = null,
         ?Carbon $ReferralDate = null,
-        ?CodeDetail $InsuranceProductId = null,
-        CodeDetail $PreferredInsurerId,
+        ?InsuranceProduct $InsuranceProductId = null,
+        InsuranceProvider $PreferredInsurerId,
         ?string $Remarks = null,
         InsuranceReferralStatus $Status,
         ?User $AssignedTo = null,
@@ -83,8 +83,8 @@ class BancAssuranceReferralService
                 'ClientEmail' => $ClientEmail,
                 'ReferredBy' => $ReferredBy->Id ?? null,
                 'ReferralDate' => $ReferralDate ?? null,
-                'InsuranceProductId' => $InsuranceProductId->ID ?? null,
-                'PreferredInsurerId' => $PreferredInsurerId->ID,
+                'InsuranceProductId' => $InsuranceProductId->Id ?? null,
+                'PreferredInsurerId' => $PreferredInsurerId->Id,
                 'Remarks' => $Remarks,
                 'Status' => $Status->value,
                 'AssignedTo' => $AssignedTo->Id ?? null,

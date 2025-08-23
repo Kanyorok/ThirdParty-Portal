@@ -2,7 +2,7 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetDriver;
 
@@ -49,7 +49,7 @@ class FleetDriverService
             return 'DRV-0001';
         }
 
-        $lastId = (int) str_replace('DRV-', '', $latestDriver->DriverNo);
+        $lastId = (int)str_replace('DRV-', '', $latestDriver->DriverNo);
         $newId = $lastId + 1;
 
         return 'DRV-' . str_pad($newId, 4, '0', STR_PAD_LEFT);

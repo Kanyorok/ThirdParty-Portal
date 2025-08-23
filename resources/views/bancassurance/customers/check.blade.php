@@ -5,10 +5,8 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">👥 Registered Customers</h4>
-    <a href="{{ route('bancassurance.customers.create',) }}" class="btn btn-success mb-3">
-        ➕  Register New Customer
-    </a>
+    <h4 class="mb-3">Registered Customers</h4>
+    <a href="{{ route('bancassurance.customers.create',) }}" class="btn btn-success mb-3">Register New Customer</a>
     <table id="customerregistry" class="table table-bordered table-striped align-middle">
         <thead>
             <tr>
@@ -20,8 +18,8 @@
                 <th>Date of Birth</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @forelse ($customers as $i => $customer)
                 <tr>
                     <td>{{ $i + 1 }}</td>
@@ -29,7 +27,7 @@
                     <td>{{ $customer->NationalID }}</td>
                     <td>{{ $customer->PhoneNumber }}</td>
                     <td>{{ $customer->Email }}</td>
-                    <td>{{ $customer->DateOfBirth }}</td>
+                    <td>{{ $customer->DateOfBirth? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                      <td>
                      
                     <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
@@ -44,24 +42,21 @@
                 </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="7" class="text-center">No customers found.</td>
-                </tr>
             @endforelse
-        </tbody>
-    </table>
-</div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $('#customerregistry').DataTable({
-            pageLength: 10,
-            ordering: true,
-            searching: true,
-            lengthChange: true
+    <script>
+        $(document).ready(function () {
+            $('#customerregistry').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true
+            });
         });
-    });
-</script>
+    </script>
 @endsection

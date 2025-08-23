@@ -11,6 +11,7 @@ use App\Traits\Model\UserActorTrait;
 class BancassurancePremiumPayments extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_BancassurancePremiumPayments';
     const CREATED_AT = 'CreatedOn';
@@ -32,19 +33,23 @@ class BancassurancePremiumPayments extends Model
         'ModifiedBy',
         'DeletedBy'
     ];
-        public static function getPrimaryKey(): string
+
+    public static function getPrimaryKey(): string
     {
         return 'BancassurancePremiumPaymentsId';
     }
+
     public function policies()
     {
         return $this->belongsTo(BancassurancePolicy::class, 'PolicyID', 'ID');
     }
+
     public function paymentModes()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentMode', 'ID');
     }
-        public function customer()
+
+    public function customer()
     {
         return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
     }

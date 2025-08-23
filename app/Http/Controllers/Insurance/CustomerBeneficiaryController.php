@@ -19,12 +19,12 @@ class CustomerBeneficiaryController extends Controller
      */
     public function create()
     {
-       $this->authorize(PermissionEnum::BancassuranceCustomersBeneficiariesView, BancassuranceBeneficiaries::class);
-       $customers= BancassuranceCustomer::all();
-       $policies= BancassurancePolicy::all();
-       $relationships = CodeDetail::where('CodeID', 'Relationships')->get();
-       
-        return view('bancassurance.customers.beneficiaries.create', compact('customers','relationships','policies'));
+        $this->authorize(PermissionEnum::BancassuranceCustomersBeneficiariesView, BancassuranceBeneficiaries::class);
+        $customers = BancassuranceCustomer::all();
+        $policies = BancassurancePolicy::all();
+        $relationships = CodeDetail::where('CodeID', 'Relationships')->get();
+
+        return view('bancassurance.customers.beneficiaries.create', compact('customers', 'relationships', 'policies'));
     }
 
     /**
@@ -43,19 +43,19 @@ class CustomerBeneficiaryController extends Controller
         //     ->firstOrFail();
 
         $customer = BancassuranceCustomersBeneficiariesService::create(
-                $CustomerID,
-                $PolicyID ?? '', 
-                $validated['FullName'],
-                $Relationship,
-                $validated['IDNumber'],
-                $validated['Phone'] ?? '',
-                $validated['Email'],
-                $validated['PercentageShare'],
-                $validated['IsPrimary'],
-                Auth::user(),
-            );
+            $CustomerID,
+            $PolicyID ?? '',
+            $validated['FullName'],
+            $Relationship,
+            $validated['IDNumber'],
+            $validated['Phone'] ?? '',
+            $validated['Email'],
+            $validated['PercentageShare'],
+            $validated['IsPrimary'],
+            Auth::user(),
+        );
 
-            return redirect()->route('bancassurance.customers.beneficiaries.create')->with('success', 'ADD BENEFICIARY saved.');
+        return redirect()->route('bancassurance.customers.beneficiaries.create')->with('success', 'ADD BENEFICIARY saved.');
     }
 
 }

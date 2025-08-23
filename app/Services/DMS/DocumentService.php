@@ -18,6 +18,7 @@ use App\Models\Core\CategoryMaster;
 use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentCheckOut;
+use App\Models\DMS\DocumentRelation;
 use App\Models\DMS\Repository;
 use App\Services\Core\PermissionsService;
 use App\Services\DMS\Files\FileProperties;
@@ -32,10 +33,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class DocumentService extends PermissionsService
@@ -134,16 +135,24 @@ class DocumentService extends PermissionsService
             return $path;
         }
         throw new ErroredException('Saving file failed.');
-
     }
 
     /**
      * @throws ErroredException
      */
     private static function _create(
-        Repository     $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum,
-        CategoryMaster $category = null, bool $copyPermissions = true, Collection $properties = null): DocumentService
-    {
+        Repository     $repository,
+        User $actor,
+        DisksEnum $disk,
+        string $name,
+        ExtensionsEnum $extension,
+        string $path,
+        int $sizeInBytes,
+        string $checksum,
+        CategoryMaster $category = null,
+        bool $copyPermissions = true,
+        Collection $properties = null
+    ): DocumentService {
         try {
             return DB::transaction(static function () use ($path, $checksum, $properties, $sizeInBytes, $disk, $category, $extension, $repository, $name, $actor, $copyPermissions) {
                 $document = Document::create([
@@ -165,11 +174,11 @@ class DocumentService extends PermissionsService
 
                 $service = new self($document);
                 if ($repository->Visibility->value === VisibilityEnum::Public->value) {
-                    return $service->addPermission($actor, RoleEnum::Admin, $actor, false);
+                    $service->addPermission($actor, RoleEnum::Admin, $actor, false);
                 }
                 return $service->_newVersion($disk, $path, $name, $sizeInBytes, $actor, $properties, $checksum);
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error creating document: ');
             Log::error($e);
             throw new ErroredException('Saving file failed.');
@@ -303,8 +312,6 @@ class DocumentService extends PermissionsService
             Log::error('Error checking in document: ' . $e);
         }
         throw new ErroredException('checking in document failed');
-
-
     }
 
     public function validateToken(User $user, string $token): bool
@@ -422,7 +429,6 @@ class DocumentService extends PermissionsService
         return ($this->document->Visibility->value === VisibilityEnum::Private->value)
             ? '<i data-feather="lock" title="Private" class="text-danger icon-size"></i>'
             : '<i data-feather="globe" title="Public" class="text-primary icon-size"></i> ';
-
     }
 
     public function tags(User $user): BelongsToMany
@@ -466,7 +472,7 @@ class DocumentService extends PermissionsService
                 activity()->causedBy($actor)->performedOn($this->document)->event('update')->log('Updated file ' . $this->document->Name . ' visibility : ' . $visibility->description());
                 return $this;
             });
-        } catch (Exception|Throwable $e) {
+        } catch (Exception | Throwable $e) {
             Log::error('Error update document visibility: ');
             Log::error($e);
             throw new ErroredException();
@@ -481,5 +487,4 @@ class DocumentService extends PermissionsService
         $this->document = $this->_trashPermissions($this->document, $permission, $actor);
         return $this;
     }
-
 }

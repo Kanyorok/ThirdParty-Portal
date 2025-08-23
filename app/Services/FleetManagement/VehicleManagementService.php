@@ -2,7 +2,7 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

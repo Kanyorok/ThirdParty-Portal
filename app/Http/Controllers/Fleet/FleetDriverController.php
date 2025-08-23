@@ -24,13 +24,13 @@ class FleetDriverController extends Controller
         $this->fleetDriverService = $fleetDriverService;
     }
 
-     public function index()
+    public function index()
     {
        $this->authorize('viewAny', FleetDriver::class);
         $drivers = FleetDriver::with(['driver', 'employmentType'])
             ->where('CreatedBy', Auth::id())
             ->get();
-            
+
 
         return view('fleet.drivers.index', compact('drivers'));
     }
@@ -55,7 +55,7 @@ class FleetDriverController extends Controller
         $employmentType = CodeDetail::where('CodeID', 'EmploymentType')
             ->orderBy('Value')
             ->get();
-            
+
 
         return view('fleet.drivers.create', compact('staffNo', 'employmentType'));
     }
@@ -109,6 +109,7 @@ class FleetDriverController extends Controller
             ->with('success', 'Driver deactivated successfully.');
     }
 
+
       public function show($Id)
 {
     $this->authorize('view', FleetDriver::class);
@@ -139,6 +140,7 @@ class FleetDriverController extends Controller
     ));
 }
     
+
 
 
 }

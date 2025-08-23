@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('RegistrationNo')->unique();
             $table->foreignId('Make')->constrained('t_FleetBrands', 'Id');
             $table->foreignId('Model')->constrained('t_FleetModels', 'Id');
-            $table->foreignId('VehicleType')->constrained('t_CodeDetails', 'ID');        
+            $table->foreignId('VehicleType')->constrained('t_CodeDetails', 'ID');
             $table->integer('YearOfManufacture')->nullable();
             $table->string('ChassisNo')->unique();
             $table->string('EngineNo')->nullable();

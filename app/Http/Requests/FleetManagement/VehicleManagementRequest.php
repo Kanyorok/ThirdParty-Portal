@@ -34,7 +34,7 @@ class VehicleManagementRequest extends FormRequest
             'OdometerReading' => 'nullable|numeric',
             'Status' => 'required|integer|exists:t_CodeDetails,ID',
             'AssignedBranch' => 'required|integer|exists:t_Branches,Id',
-           // 'AssignedToUser' => 'nullable|integer|exists:t_Users,Id',
+            // 'AssignedToUser' => 'nullable|integer|exists:t_Users,Id',
             'IsActive' => 'nullable|boolean',
             //
         ];

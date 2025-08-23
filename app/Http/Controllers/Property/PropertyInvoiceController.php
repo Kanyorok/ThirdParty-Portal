@@ -53,10 +53,10 @@ class PropertyInvoiceController extends Controller
         $validated['BillingMonth'],
         $validated['InvoiceDate'],
         $validated['RentAmount'],
-        $validated['ServicesCharge'] ?? 0,
-        $validated['OtherCharges'] ?? 0,
-        $validated['ParkingFee'] ?? 0,
-        $validated['InvoiceNotes'] ?? '',
+            $validated['ServicesCharge'] ?? 0,
+            $validated['OtherCharges'] ?? 0,
+            $validated['ParkingFee'] ?? 0,
+            $validated['InvoiceNotes'] ?? '',
         $Status,
         Auth::user()
     );

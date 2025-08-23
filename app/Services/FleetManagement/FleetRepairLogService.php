@@ -2,7 +2,7 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetRepairLog;
 
@@ -48,7 +48,7 @@ class FleetRepairLogService
             return 'REP-0001';
         }
 
-        $lastId = (int) str_replace('REP-', '', $latestRepair->RepairID);
+        $lastId = (int)str_replace('REP-', '', $latestRepair->RepairID);
         $newId = $lastId + 1;
 
         return 'REP-' . str_pad($newId, 4, '0', STR_PAD_LEFT);

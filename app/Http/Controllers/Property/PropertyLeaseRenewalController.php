@@ -25,7 +25,8 @@ class PropertyLeaseRenewalController extends Controller
         return view('property.tenantmanagement.leasemanagement.leaserenewal.index', compact('leaserenewals'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
         $newleases = PropertyNewLease::with('tenant', 'property')
             ->where('isActive', true)
@@ -60,28 +61,28 @@ class PropertyLeaseRenewalController extends Controller
             $leaseId = (int)$validated['LeaseId'];
             $paymentFrequencyId = (int)$validated['PaymentFrequency'];
 
-    // Use the lease ID to get the full lease
-    $lease = PropertyNewLease::findOrFail($leaseId);
-    PropertyLeaseRenewalService::create(
-        $leaseId,                  // from DB
-        $paymentFrequencyId,
-        $validated['EndDateCurrentLease'],
-        $validated['NewStartDate'],
-        $validated['NewEndDate'],
-        $validated['NewMonthlyRent'],
-        $validated['ServiceCharge'],
-        $validated['ParkingFee'],
-        $validated['OtherCharges'],
-        $validated['Remarks'] ?? '',
-        Auth::user()
-    );
+            // Use the lease ID to get the full lease
+            $lease = PropertyNewLease::findOrFail($leaseId);
+            PropertyLeaseRenewalService::create(
+                $leaseId,                  // from DB
+                $paymentFrequencyId,
+                $validated['EndDateCurrentLease'],
+                $validated['NewStartDate'],
+                $validated['NewEndDate'],
+                $validated['NewMonthlyRent'],
+                $validated['ServiceCharge'],
+                $validated['ParkingFee'],
+                $validated['OtherCharges'],
+                $validated['Remarks'] ?? '',
+                Auth::user()
+            );
 
-    return redirect()->route('renewlease.index')->with('success', 'Lease renewal created successfully');
-    } catch (Exception $e) {
-        // Redirect back with error message
-        return redirect()->back()->with('error', $e->getMessage());
+            return redirect()->route('renewlease.index')->with('success', 'Lease renewal created successfully');
+        } catch (Exception $e) {
+            // Redirect back with error message
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
-}
     public function edit($Id)
     {
         //Check if user has permission to edit tender categories
@@ -153,5 +154,4 @@ class PropertyLeaseRenewalController extends Controller
                 ->withInput();
         }
     }
-
 }
