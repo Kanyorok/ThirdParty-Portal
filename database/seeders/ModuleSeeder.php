@@ -426,27 +426,28 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 604200, 'Name' => 'Repair Logs', 'Icon' => '', 'Description' => 'Capture vehicle maintenance and repair records (normal/emergency)', 'ParentID' => 604000, 'Route' => 'fleet.repair_logs.index'],
             ['ModuleID' => 604300, 'Name' => 'Service Alerts & Reminders', 'Icon' => '', 'Description' => 'View and acknowledge fleet maintenance alerts', 'ParentID' => 604000, 'Route' => 'fleet.alerts.index'],
 
-            //Fuel Management
-            ['ModuleID' => 605000, 'Name' => 'Fuel & Cost Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
-            ['ModuleID' => 605100, 'Name' => 'Fuel Logs', 'Icon' => '', 'Description' => '', 'ParentID' => 605000, 'Route' => 'fleet.fuel_logs.index'],
-            ['ModuleID' => 605200, 'Name' => 'Running Cost Entry', 'Icon' => '', 'Description' => 'Log recurring vehicle costs like tyres, insurance, oil, etc.', 'ParentID' => 605000, 'Route' => 'fleet.running_costs.index'],
+            // //Fuel Management
+            // ['ModuleID' => 605000, 'Name' => 'Fuel & Cost Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            // ['ModuleID' => 605100, 'Name' => 'Fuel Logs', 'Icon' => '', 'Description' => '', 'ParentID' => 605000, 'Route' => 'fleet.fuel_logs.index'],
+            // ['ModuleID' => 605200, 'Name' => 'Running Cost Entry', 'Icon' => '', 'Description' => 'Log recurring vehicle costs like tyres, insurance, oil, etc.', 'ParentID' => 605000, 'Route' => 'fleet.running_costs.index'],
 
-            //GPS Tracking
-            ['ModuleID' => 606000, 'Name' => 'GPS Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
-            ['ModuleID' => 606100, 'Name' => 'Live GPS Dashboard', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.live_dashboard'],
-            ['ModuleID' => 606200, 'Name' => 'Movement History', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.movement_history'],
-            ['ModuleID' => 606300, 'Name' => 'GPS Integration', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.telematics.index'],
+            // //GPS Tracking
+            // ['ModuleID' => 606000, 'Name' => 'GPS Tracking', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            // ['ModuleID' => 606100, 'Name' => 'Live GPS Dashboard', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.live_dashboard'],
+            // ['ModuleID' => 606200, 'Name' => 'Movement History', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.movement_history'],
+            // ['ModuleID' => 606300, 'Name' => 'GPS Integration', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.telematics.index'],
 
-            //Fleet Settings
+        
+            // //Configuration
+            // ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
+            // ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
+           
+            
+                // //Fleet Settings
             ['ModuleID' => 680000, 'Name' => 'Fleet Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 681000, 'Name' => 'Fleet Make', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmake.index'],
             ['ModuleID' => 682000, 'Name' => 'Fleet Model', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmodel.index'],
             ['ModuleID' => 683000, 'Name' => 'Fuel Type', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fueltypes.index'],
-
-            //Configuration
-            ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
-            ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
-
 
             //Reports
             ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'fleet-reports.index'],
