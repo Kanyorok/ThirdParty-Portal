@@ -1,28 +1,28 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Legal\LegalDocumentController;
-use App\Http\Controllers\Legal\LegalDispatchController;
-use App\Http\Controllers\Legal\LegalExecutionLogController;
-use App\Http\Controllers\Legal\LegalContractController;
-use App\Http\Controllers\Legal\LegalClauseController;
 use App\Http\Controllers\Legal\ContractObligationController;
-use App\Http\Controllers\Legal\LegalTemplateController;
-use App\Http\Controllers\Legal\LegalDraftController;
 use App\Http\Controllers\Legal\LegalCaseController;
 use App\Http\Controllers\Legal\LegalCaseEvidenceController;
-use App\Http\Controllers\Legal\LegalCounselController;
 use App\Http\Controllers\Legal\LegalCaseOutcomeController;
-use App\Http\Controllers\Legal\LegalObligationController;
-use App\Http\Controllers\Legal\LegalObligationAssignmentController;
-use App\Http\Controllers\Legal\LegalSearchRequestController;
-use App\Http\Controllers\Legal\LoanSecurityController;
+use App\Http\Controllers\Legal\LegalClauseController;
+use App\Http\Controllers\Legal\LegalContractController;
+use App\Http\Controllers\Legal\LegalCounselController;
+use App\Http\Controllers\Legal\LegalDispatchController;
+use App\Http\Controllers\Legal\LegalDocumentController;
+use App\Http\Controllers\Legal\LegalDraftController;
+use App\Http\Controllers\Legal\LegalExecutionLogController;
 use App\Http\Controllers\Legal\LegalIntellectualPropertyController;
 use App\Http\Controllers\Legal\LegalIPTrackingController;
+use App\Http\Controllers\Legal\LegalObligationAssignmentController;
+use App\Http\Controllers\Legal\LegalObligationController;
+use App\Http\Controllers\Legal\LegalSearchRequestController;
+use App\Http\Controllers\Legal\LegalTemplateController;
+use App\Http\Controllers\Legal\LoanSecurityController;
 use App\Http\Controllers\Legal\ReportsController;
 
-Route::prefix('legal')->name('legal.')->group(function () {
+Route::prefix('legal')->group(function () {
+    Route::name('legal.')->group(function () {
 
     // Legal Documents & nested dispatches/execution logs
     Route::resource('documents', LegalDocumentController::class);
@@ -85,4 +85,5 @@ Route::prefix('legal')->name('legal.')->group(function () {
         'index' => 'legal-reports.index',
         'show' => 'legal-reports.show'
     ]);
+    });
 });

@@ -1,27 +1,25 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Insurance\BancassuranceReferralController;
-use App\Http\Controllers\Insurance\CustomerController;
-use App\Http\Controllers\Insurance\CustomerBeneficiaryController;
-use App\Http\Controllers\Insurance\CustomerCommunicationController;
-use App\Http\Controllers\Insurance\PolicyController;
-use App\Http\Controllers\Insurance\UnderwritingController;
-use App\Http\Controllers\Insurance\PremiumController;
+use App\Http\Controllers\Insurance\ClaimClosureController;
 use App\Http\Controllers\Insurance\ClaimController;
 use App\Http\Controllers\Insurance\ClaimPaymentController;
-use App\Http\Controllers\Insurance\CommissionRuleController;
-use App\Http\Controllers\Insurance\CommissionTierController;
 use App\Http\Controllers\Insurance\CommissionEarnedController;
 use App\Http\Controllers\Insurance\CommissionPayoutController;
-use App\Http\Controllers\Insurance\InsuranceProviderController;
+use App\Http\Controllers\Insurance\CommissionRuleController;
+use App\Http\Controllers\Insurance\CommissionTierController;
+use App\Http\Controllers\Insurance\CustomerBeneficiaryController;
+use App\Http\Controllers\Insurance\CustomerCommunicationController;
+use App\Http\Controllers\Insurance\CustomerController;
 use App\Http\Controllers\Insurance\InsuranceProductController;
-use App\Http\Controllers\Insurance\InsuranceProviderProductController;
 use App\Http\Controllers\Insurance\InsuranceProductRiderController;
+use App\Http\Controllers\Insurance\InsuranceProviderController;
+use App\Http\Controllers\Insurance\InsuranceProviderProductController;
+use App\Http\Controllers\Insurance\PolicyController;
+use App\Http\Controllers\Insurance\PremiumController;
 use App\Http\Controllers\Insurance\PricingRuleController;
 use App\Http\Controllers\Insurance\ProductLifecycleController;
 use App\Http\Controllers\Insurance\SettingsController;
-use App\Http\Controllers\Insurance\ClaimClosureController;
 use App\Http\Controllers\Insurance\ReportsController;
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
