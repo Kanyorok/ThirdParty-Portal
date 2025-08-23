@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\FleetManagement;
+namespace App\Http\Controllers\Legal;
 
 use App\Enums\Core\ModulesEnum;
 use App\Http\Controllers\Controller;
@@ -13,7 +13,7 @@ class ReportsController extends Controller
 {
     use ReportsTrait;
 
-    protected const MODULE = ModulesEnum::Fleet;
+    protected const MODULE = ModulesEnum::Legal;
 
     public function index(Request $request): JsonResponse|View
     {
