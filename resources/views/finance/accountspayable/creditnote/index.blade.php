@@ -14,8 +14,7 @@
             </div>
 
             <div class="card-body pt-3">
-{{--                <p class="text-muted">Below is the list of all saved credit and debit notes with their details.</p>--}}
-
+                <p class="text-muted">Below is the list of all saved credit and debit notes with their details.</p>
                 <div class="mb-3">
                     <div class="btn-group" role="group">
                         <button type="button" class="btn btn-outline-info btn-sm" onclick="filterNotes('All')">All</button>
@@ -25,7 +24,8 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-hover table-bordered align-middle mb-0 text-center">
+                    <table class="table table-hover table-sm align-middle mb-0 text-center"
+                        style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
                         <thead class="table-light">
                         <tr>
                             <th style="width: 50px;">#</th>
@@ -35,7 +35,7 @@
                             <th>Reference Invoice</th>
                             <th class="text-end">Amount (Ksh)</th>
                             <th scope="col">Approval</th>
-{{--                            <th>Reason</th>--}}
+                            {{--<th>Reason</th>--}}
                             <th style="width: 120px;">Actions</th>
                         </tr>
                         </thead>
@@ -62,18 +62,49 @@
                                         {{ ucfirst($note->ApprovalStatus) ?? 'Pending' }}
                                     </span>
                                     </td>
-{{--                                    <td>{{ $note->Description ?? '-' }}</td>--}}
+                                    {{--<td>{{ $note->Description ?? '-' }}</td>--}}
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <a href="{{ route('creditnote.show', $note->Id) }}" class="btn btn-sm btn-outline-info me-1" title="View Note">
+                                            <a href="{{ route('creditnote.show', $note->Id) }}" class="btn btn-sm btn-info me-1" title="View Note">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#EditNotesModal">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-danger custom-delete-btn">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
+                                            @if($note->ApprovalStatus === 'draft')
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-sm btn-primary me-1" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#EditNotesModal-{{ $note->Id }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            @else
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-sm btn-primary me-1 disabled" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#EditNotesModal-{{ $note->Id }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            @endif
+
+                                            @if($note->ApprovalStatus === 'draft')
+                                                <button type="button"
+                                                    class="btn btn-sm btn-danger custom-delete-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#customDeleteConfirmModal"
+                                                    data-name="{{$note->CDNumber}}"    {{-- Pass item name --}}
+                                                    data-route="{{ route('creditnote.destroy', $note->Id) }}">
+                                                    <i  class="fas fa-trash-alt"></i>
+                                                </button>
+                                            @else
+                                                <button type="button"
+                                                    class="btn btn-sm btn-danger custom-delete-btn disabled"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#customDeleteConfirmModal"
+                                                    data-name="{{$note->CDNumber}}"    {{-- Pass item name --}}
+                                                    data-route="{{ route('creditnote.destroy', $note->Id) }}">
+                                                    <i  class="fas fa-trash-alt"></i>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -96,74 +127,89 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                {{-- Modal for Edit --}}
-                <div class="modal fade" id="EditNotesModal" tabindex="-1" aria-hidden="true" aria-labelledby="EditNotesModalLabel">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="EditNotesModalLabel">Edit Note</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+@foreach ($notes as $item)
+    <!-- Edit Notes Modal -->
+    <div class="modal fade" id="EditNotesModal-{{$item->Id}}" tabindex="-1" aria-labelledby="EditNotesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header bg-light text-info">
+                    <h5 class="modal-title text-info" id="EditNotesModalLabel">
+                    <i class="fas fa-edit me-2"></i>Edit Credit/Debit Note
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form method="POST" action="{{ route('creditnote.update', $item->Id) }}"> 
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <!-- Note Type -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Note Type</label>
+                                <select name="NoteType" class="form-select" value="{{old('NoteType', $item->NoteType)}}" required>
+                                    <option value="credit">Credit</option>
+                                    <option value="debit">Debit</option>
+                                </select>
                             </div>
-                            <div class="modal-body">
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Note Type</label>
-                                        <select class="form-control" name="NoteType" required>
-                                            <option disabled selected value="">--Select Note Type--</option>
-                                            <option value="Credit">Credit Note</option>
-                                            <option value="Debit">Debit Note</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Reference Invoice</label>
-                                        <select class="form-control" name="InvoiceRefNo" required>
-                                            <option disabled selected value="">--Select Invoice--</option>
-                                            @foreach($invoices as $invoice)
-                                                <option value="{{ $invoice->Id }}">{{ $invoice->InvoiceNumber }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
 
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Note Date</label>
-                                        <input type="date" class="form-control" name="NoteDate" value="{{ now()->format('Y-m-d') }}" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Amount (Ksh)</label>
-                                        <input type="number" min="0.00" class="form-control" name="NoteAmount" placeholder="e.g. 10,000" required>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Reason / Description</label>
-                                    <textarea class="form-control" name="Description" rows="3" placeholder="Reason for issuing the note..." required></textarea>
-                                </div>
+                            <!-- Reference Invoice -->
+                            <div class="col-md-6">
+                                <label class="form-label">Reference Invoice</label>
+                                <select name="InvoiceRefNo" class="form-select" required>
+                                    <option value="{{old('InvoiceRefNo', $item->InvoiceRefNo)}}" disabled selected>--Select Invoice--</option>
+                                    @foreach($invoices as $invoice)
+                                        <option value="{{ $invoice->Id }}" {{ $invoice->Id == $item->InvoiceRefNo ? 'selected' : '' }}>
+                                            {{ $invoice->InvoiceNumber }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-success">Save Changes</button>
+                            <!-- Note Date -->
+                            <div class="col-md-6">
+                                <label class="form-label">Note Date</label>
+                                <input type="date" name="NoteDate" class="form-control" value="{{old('NoteDate', \Carbon\Carbon::parse($item->NoteDate)->format('Y-m-d'))}}" required>
+                            </div>
+
+                            <!-- Amount -->
+                            <div class="col-md-6">
+                                <label class="form-label">Amount (Ksh)</label>
+                                <input type="number" step="0.01" name="NoteAmount" min="0.00" class="form-control" value="{{old('NoteAmount', $item->NoteAmount)}}" required>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="">
+                                <label class="form-label">Description</label>
+                                <textarea name="Description" rows="3" class="form-control" value="{{old('Description', $item->Description)}}" ></textarea>
                             </div>
                         </div>
                     </div>
-                </div>
 
-            </div> {{-- card-body --}}
-        </div> {{-- card --}}
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-outline-info" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Editing...'; this.form.submit();}"><i class="fas fa-edit"></i> Edit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+@endforeach           
 
-    <script>
-        function filterNotes(type) {
-            const rows = document.querySelectorAll('.note-row');
-            const title = document.getElementById('noteTypeTitle');
+<script>
+    function filterNotes(type) {
+        const rows = document.querySelectorAll('.note-row');
+        const title = document.getElementById('noteTypeTitle');
 
-            rows.forEach(row => {
-                const noteType = row.getAttribute('data-note-type');
-                const showRow = (type === 'All') || (noteType.toLowerCase() === type.toLowerCase());
-                row.style.display = showRow ? '' : 'none';
-            });
-        }
-    </script>
+        rows.forEach(row => {
+            const noteType = row.getAttribute('data-note-type');
+            const showRow = (type === 'All') || (noteType.toLowerCase() === type.toLowerCase());
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
+</script>
+@include('components.modals.delete-confirm')
 @endsection

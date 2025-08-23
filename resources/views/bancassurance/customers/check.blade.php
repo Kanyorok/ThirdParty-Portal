@@ -4,13 +4,11 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-    <div class="container mt-4">
-        <h4 class="mb-3">👥 Registered Customers</h4>
-        <a href="{{ route('bancassurance.customers.create',) }}" class="btn btn-success mb-3">
-            ➕ Register New Customer
-        </a>
-        <table id="customerregistry" class="table table-bordered table-striped align-middle">
-            <thead>
+<div class="container mt-4">
+    <h4 class="mb-3">Registered Customers</h4>
+    <a href="{{ route('bancassurance.customers.create',) }}" class="btn btn-success mb-3">Register New Customer</a>
+    <table id="customerregistry" class="table table-bordered table-striped align-middle">
+        <thead>
             <tr>
                 <th>#</th>
                 <th>Full Name</th>
@@ -29,27 +27,21 @@
                     <td>{{ $customer->NationalID }}</td>
                     <td>{{ $customer->PhoneNumber }}</td>
                     <td>{{ $customer->Email }}</td>
-                    <td>{{ $customer->DateOfBirth }}</td>
-                    <td>
-
-                        <a href="{{ route('bancassurance.customers.show', $customer->Id) }}"
-                           class="btn btn-sm btn-info">view</a>
-                        <a href="{{ route('bancassurance.customers.edit', $customer->Id) }}"
-                           class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" method="POST"
-                              class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Are you sure you want to delete this Customer?');">Delete
-                            </button>
-                        </form>
-                    </td>
+                    <td>{{ $customer->DateOfBirth? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
+                     <td>
+                     
+                    <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
+                    <a href="{{ route('bancassurance.customers.edit', $customer->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this Customer?');">Delete
+                        </button>
+                    </form>
+                </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="7" class="text-center">No customers found.</td>
-                </tr>
             @endforelse
             </tbody>
         </table>

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
 use App\Models\Core\Currency;
+use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\procurement\TenderItems;
@@ -47,7 +48,7 @@ class Tender extends Model
         'DeletedBy',
         'StartDate',
         'CurrencyId',
-        //'TenderCategory',
+        // 'TenderCategory',
         'ApprovalRemarks',
         'ApprovalStatus', // 1 for approved, 2 for rejected, 0 for pending
     ];
@@ -56,7 +57,7 @@ class Tender extends Model
         'TenderType' => TenderTypeEnum::class,
         'Status' => TenderStatusEnum::class,
         'ApprovalStatus' => TenderApprovalStatusEnum::class,
-        //'TenderCategory' => TenderCategoryEnum::class,
+        // 'TenderCategory' => TenderCategoryEnum::class,
         'SubmissionDeadline' => 'datetime',
         'OpeningDate' => 'datetime',
         'ModifiedOn' => 'datetime',
@@ -66,6 +67,11 @@ class Tender extends Model
     ];
 
     // Relationships
+
+    public function tenderCategoryRelation()
+    {
+        return $this->belongsTo(TenderCategory::class, 'TenderCategory', 'Id');
+    }
     public function procurementMode(): BelongsTo
     {
         return $this->belongsTo(ProcurementMode::class, 'ProcurementModeId');
@@ -76,6 +82,10 @@ class Tender extends Model
         return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'SupplierID')
             ->using(TenderVendor::class)
             ->withPivot('InvitationStatus', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
+    }
+    public function itemCategoryRelation()
+    {
+        return $this->belongsTo(ItemCategories::class, 'ItemCategoryId', 'Id');
     }
 
     //TODO: with tenderinvitations
@@ -125,10 +135,10 @@ class Tender extends Model
         return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
     }
 
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'CreatedBy');
-    }
+    // public function creator(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'CreatedBy');
+    // }
 
     public function modifier(): BelongsTo
     {
@@ -211,5 +221,4 @@ class Tender extends Model
     {
         return 'TenderID';
     }
-
 }

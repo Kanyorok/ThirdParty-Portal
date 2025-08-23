@@ -4,12 +4,9 @@
 @section('content')
     <div class="container mt-4">
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>📄 Policy Proposals</h4>
-            <a href="{{ route('bancassurance.policies.create') }}" class="btn btn-primary">
-                ➕ New Proposal
-            </a>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ route('bancassurance.policies.create') }}" class="btn btn-primary">New Proposal</a>
+    </div>
 
         <!-- 🔍 Filter Section -->
         <form method="GET" class="row g-3 mb-4">
@@ -42,15 +39,15 @@
                        placeholder="e.g. John Doe">
             </div>
 
-            <div class="col-12 text-end">
-                <button class="btn btn-secondary">🔍 Filter</button>
-                <a href="{{ route('bancassurance.policies.index') }}" class="btn btn-outline-dark">♻️ Reset</a>
-            </div>
-        </form>
+        <div class="col-12 text-end">
+            <button class="btn btn-secondary">Filter</button>
+            <a href="{{ route('bancassurance.policies.index') }}" class="btn btn-outline-dark">♻️ Reset</a>
+        </div>
+    </form>
 
-        <!-- 📋 Policy Table -->
-        <table class="table table-striped table-bordered">
-            <thead class="table-light">
+    <!-- Policy Table -->
+    <table class="table table-striped table-bordered">
+        <thead class="table-light">
             <tr>
                 <th>#</th>
                 <th>Customer</th>
@@ -68,8 +65,8 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $policy->customer->FullName }}</td>
-                    <td>{{ $policy->product->Description ?? '-'}}</td>
-                    <td>{{ $policy->insurer->Description ?? '—' }}</td>
+                    <td>{{ $policy->product->Name ?? '-'}}</td>
+                    <td>{{ $policy->insurer->Name ?? '—' }}</td>
                     <td>{{ number_format($policy->SumAssured, 2) }}</td>
                     <td>{{ number_format($policy->PremiumAmount, 2) }}</td>
                     <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>

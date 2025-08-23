@@ -16,20 +16,20 @@ use App\Models\Insurance\BancassurancePremiumPayments;
 class PremiumController extends Controller
 {
     //
-    public function create()
-    {
-        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
-        $payment = BancassurancePremiumPayments::all();
-        $policies = BancassurancePolicy::all();
-        $paymentModes = CodeDetail::where('CodeID', 'PaymentModes')->get();
+public function create()
+{
+    $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
+    $payment = BancassurancePremiumPayments::all();
+    $policies= BancassurancePolicy::all();
+    $paymentModes = CodeDetail::where('CodeID', 'PaymentModes',)->get();
 
-        return view('bancassurance.premiums.create', compact('policies', 'paymentModes', 'payment'));
-    }
+    return view('bancassurance.premiums.create', compact('policies','paymentModes','payment'));
+}
 
-    public function store(BancassurancePremiumPaymentsRequest $request)
-    {
-        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsCreate, BancassurancePremiumPayments::class);
-        $validated = $request->validated();
+public function store(BancassurancePremiumPaymentsRequest $request)
+{
+    $this->authorize(PermissionEnum::BancassurancePremiumPaymentsCreate, BancassurancePremiumPayments::class);
+     $validated = $request->validated();
 
         $PolicyID = BancassurancePolicy::findOrFail($validated['PolicyID']);
         $PaymentMode = CodeDetail::findOrFail($validated['PaymentMode']);
@@ -37,50 +37,48 @@ class PremiumController extends Controller
         $NextPaymentDate = new \DateTime($validated['NextPaymentDate']);
 
         $customer = BancassurancePremiumPaymentsService::create(
-            $PolicyID,
-            $validated['CustomerID'],
-            $validated['PaymentFrequency'],
-            $PaymentDate,
-            $NextPaymentDate,
-            $validated['Amount'],
-            $PaymentMode,
-            $validated['ReferenceNumber'],
-            $validated['Notes'],
-            Auth::user(),
-        );
-        return redirect()->route('bancassurance.premiums.index')->with('success', 'Premium payment recorded successfully.');
-    }
+                $PolicyID,
+                $validated['CustomerID'],
+                $validated['PaymentFrequency'],
+                $PaymentDate,
+                $NextPaymentDate,
+                $validated['Amount'],
+                $PaymentMode,
+                $validated['ReferenceNumber'],
+                $validated['Notes'],
+                Auth::user(),
+            );
+           return redirect()->route('bancassurance.premiums.index')->with('success', 'Premium payment recorded successfully.');
+        }
 
-    public function index()
+public function index()
+{
+    $payments = BancassurancePremiumPayments::all();
+
+    return view('bancassurance.premiums.index', compact('payments'));
+}
+
+public function show($id)
+{
+    $payment = BancassurancePremiumPayments::find($id);
+
+    return view('bancassurance.premiums.show', compact('payment'));
+}
+
+public function printReceipt($id)
+{
+    $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
+    $payment = BancassurancePremiumPayments::findOrFail($id);
+
+    return view('bancassurance.premiums.receipt', compact('payment'));
+}
+public function edit($Id)
     {
-        $payments = BancassurancePremiumPayments::all();
+        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);        $payment = BancassurancePremiumPayments::findOrFail($Id);
+        $policies= BancassurancePolicy::all();
+        $paymentModes = CodeDetail::where('CodeID', 'PaymentModes','payment')->get();
 
-        return view('bancassurance.premiums.index', compact('payments'));
-    }
-
-    public function show($id)
-    {
-        $payment = BancassurancePremiumPayments::find($id);
-
-        return view('bancassurance.premiums.show', compact('payment'));
-    }
-
-    public function printReceipt($id)
-    {
-        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
-        $payment = BancassurancePremiumPayments::findOrFail($id);
-
-        return view('bancassurance.premiums.receipt', compact('payment'));
-    }
-
-    public function edit($Id)
-    {
-        $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
-        $payment = BancassurancePremiumPayments::findOrFail($Id);
-        $policies = BancassurancePolicy::all();
-        $paymentModes = CodeDetail::where('CodeID', 'PaymentModes', 'payment')->get();
-
-        return view('bancassurance.premiums.edit', compact('policies', 'paymentModes', 'payment'));
+        return view('bancassurance.premiums.edit', compact( 'policies', 'paymentModes','payment'));
     }
 
     public function update(BancassurancePremiumPaymentsRequest $request, $id)
@@ -91,10 +89,10 @@ class PremiumController extends Controller
         DB::beginTransaction();
 
         try {
-            $validated['PaymentDate'] = \Carbon\Carbon::parse($validated['PaymentDate'])->format('Y-m-d');
-        } catch (\Exception $e) {
-            return back()->withErrors(['PaymentDate' => 'Invalid date format.'])->withInput();
-        }
+                $validated['PaymentDate'] = \Carbon\Carbon::parse($validated['PaymentDate'])->format('Y-m-d');
+            } catch (\Exception $e) {
+                return back()->withErrors(['PaymentDate' => 'Invalid date format.'])->withInput();
+            }
 
         try {
             $payment = BancassurancePremiumPayments::findOrFail($id);

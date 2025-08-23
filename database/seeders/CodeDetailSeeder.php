@@ -9,9 +9,15 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Enums\Property\PropertyNewLeaseEnum;
 use App\Enums\Property\TenantClearanceEnum;
 use App\Enums\Procurement\DepartmentNeedsEnum;
-use App\Enums\Procurement\PrequalificationPeriodEnum;
 use App\Enums\Procurement\SchedulePlanEnum;
 use App\Enums\TicketStatusEnum;
+use App\Enums\ThirdPartyTypeEnum;
+use App\Enums\ThirdPartyStatusEnum;
+use App\Enums\ThirdPartyApprovalStatusEnum;
+use App\Enums\Procurement\PrequalificationStatusEnum;
+use App\Enums\Procurement\PrequalificationRoundEnum;
+use App\Enums\Procurement\PrequalificationApplicationEnum;
+use App\Enums\BusinessTypeEnum;
 use App\Helpers\SystemHelper;
 use App\Services\StaticListsService;
 use Illuminate\Database\Seeder;
@@ -101,11 +107,66 @@ class CodeDetailSeeder extends Seeder
                 'DisplayOrder' => $index + 1,
             ]);
         }
-        foreach (PrequalificationPeriodEnum::cases() as $index => $prequalificationperiodEnum) {
+
+        foreach (ThirdPartyTypeEnum::cases() as $index => $thirdPartyTypeEnum) {
             $entries->push([
-                'CodeID' => 'PrequalificationPeriodStatus',
-                'Value' => $prequalificationperiodEnum->value,
-                'Description' => $prequalificationperiodEnum->name,
+                'CodeID' => 'ThirdPartyType',
+                'Value' => $thirdPartyTypeEnum->value,
+                'Description' => $thirdPartyTypeEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (PrequalificationStatusEnum::cases() as $index => $PrequalificationStatusEnum) {
+            $entries->push([
+                'CodeID' => 'PrequalificationStatus',
+                'Value' => $PrequalificationStatusEnum->value,
+                'Description' => $PrequalificationStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (BusinessTypeEnum::cases() as $index => $businessTypeEnum) {
+            $entries->push([
+                'CodeID' => 'BusinessType',
+                'Value' => $businessTypeEnum->value,
+                'Description' => $businessTypeEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (ThirdPartyStatusEnum::cases() as $index => $thirdPartyStatusEnum) {
+            $entries->push([
+                'CodeID' => 'ThirdPartyStatus',
+                'Value' => $thirdPartyStatusEnum->value,
+                'Description' => $thirdPartyStatusEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (PrequalificationRoundEnum::cases() as $index => $prequalificationRoundEnum) {
+            $entries->push([
+                'CodeID' => 'PrequalificationRound',
+                'Value' => $prequalificationRoundEnum->value,
+                'Description' => $prequalificationRoundEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (PrequalificationApplicationEnum::cases() as $index => $prequalificationApplicationEnum) {
+            $entries->push([
+                'CodeID' => 'PrequalificationApplication',
+                'Value' => $prequalificationApplicationEnum->value,
+                'Description' => $prequalificationApplicationEnum->name,
+                'DisplayOrder' => $index + 1,
+            ]);
+        }
+
+        foreach (ThirdPartyApprovalStatusEnum::cases() as $index => $approvalStatusEnum) {
+            $entries->push([
+                'CodeID' => 'ThirdPartyApprovalStatus',
+                'Value' => $approvalStatusEnum->value,
+                'Description' => $approvalStatusEnum->name,
                 'DisplayOrder' => $index + 1,
             ]);
         }
@@ -127,10 +188,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'SubmissionMode', 'Description' => 'Courier'],
 
             // GL Account Types
-            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A','DisplayOrder'=>0],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L','DisplayOrder'=>0],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I','DisplayOrder'=>0],
-            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E','DisplayOrder'=>0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Assets', 'Value' => 'A', 'DisplayOrder' => 0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L', 'DisplayOrder' => 0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I', 'DisplayOrder' => 0],
+            ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E', 'DisplayOrder' => 0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
@@ -228,7 +289,7 @@ class CodeDetailSeeder extends Seeder
 
 
             // Property DocumentType
-            ['CodeID' => 'DocumentType', 'Description' => 'Ownership','Value' => 'S'],
+            ['CodeID' => 'DocumentType', 'Description' => 'Ownership', 'Value' => 'S'],
             ['CodeID' => 'DocumentType', 'Description' => 'Architectural Plan', 'Value' => 'A'],
             ['CodeID' => 'DocumentType', 'Description' => 'Insurance', 'Value' => 'I'],
             ['CodeID' => 'DocumentType', 'Description' => 'Others', 'Value' => 'O'],
@@ -275,6 +336,62 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 15 days after end of month', 'Value' => 'EOM'],
             ['CodeID' => 'PaymentTerm', 'Description' => 'Based on certified project work progress', 'Value' => 'PP'],
             ['CodeID' => 'PaymentTerm', 'Description' => '90% on completion, 10% after retention period', 'Value' => 'R'],
+          
+            // // Insurance Product 
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Life Insurance', 'Value' => 'L'],
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Health Insurance', 'Value' => 'H'],
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Property Insurance', 'Value' => 'P'],
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Vehicle Insurance', 'Value' => 'V'],
+            // ['CodeID' => 'InsuranceProduct', 'Description' => 'Travel Insurance', 'Value' => 'T'],
+
+            // // Insurance Provider
+            // ['CodeID' => 'InsuranceProvider', 'Description' => 'Jubilee', 'Value' => 'J'],
+            // ['CodeID' => 'InsuranceProvider', 'Description' => 'Britam', 'Value' => 'B'],
+            // ['CodeID' => 'InsuranceProvider', 'Description' => 'CIC Insurance', 'Value' => 'C'],
+
+            //Insurance Decision
+            ['CodeID' => 'Decision','Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'Decision','Description' => 'Decline', 'Value' => 'D'],
+            ['CodeID' => 'Decision','Description' => 'More Information Needed', 'Value' => 'M'],
+
+            //Insurance Claim type
+            ['CodeID' => 'ClaimType','Description' => 'Death', 'Value' => 'D'],
+            ['CodeID' => 'ClaimType','Description' => 'Accident', 'Value' => 'A'],
+            ['CodeID' => 'ClaimType','Description' => 'Loss', 'Value' => 'L'],
+            ['CodeID' => 'ClaimType','Description' => 'Medical', 'Value' => 'M'],
+            ['CodeID' => 'ClaimType','Description' => 'Other', 'Value' => 'O'],
+
+            //Insurance Claim Status
+            ['CodeID' => 'ClaimStatus','Description' => 'Initiated', 'Value' => 'I'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Under Assessment', 'Value' => 'U'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Approved', 'Value' => 'A'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Rejected', 'Value' => 'R'],
+            ['CodeID' => 'ClaimStatus','Description' => 'Paid', 'Value' => 'P'],
+
+            // PolicyTypeId
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Life Insurance', 'Value' => 'L'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Motor Insurance', 'Value' => 'B'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Property Insurance', 'Value' => 'P'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Travel Insurance', 'Value' => 'T'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Personal Accident Insurance', 'Value' => 'A'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Business Interruption Insurance', 'Value' => 'I'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Marine Cargo Insurance', 'Value' => 'M'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Health Insurance', 'Value' => 'H'],
+            ['CodeID' => 'PolicyTypeId', 'Description' => 'Education Policy', 'Value' => 'E'],
+
+
+            // AppliesTo
+            ['CodeID' => 'AppliesTo', 'Description' => 'AppliesTo', 'Value' => 'J'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Vehicle', 'Value' => 'B'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Jubilee', 'Value' => 'J'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Britam', 'Value' => 'B'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'CIC Insurance', 'Value' => 'C'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Individual ', 'Value' => 'I'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Corporate ', 'Value' => 'C'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Government ', 'Value' => 'G'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Spouse ', 'Value' => 'S'],
+            ['CodeID' => 'AppliesTo', 'Description' => 'Child ', 'Value' => 'C'],
+
 
             //Legal clauses types
             ['CodeID' => 'ClauseTypes', 'Description' => 'Specifies the responsibilities and obligations of each party.', 'Value' => 'Obligation Clause'],

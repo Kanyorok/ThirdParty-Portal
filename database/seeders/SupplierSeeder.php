@@ -3,69 +3,79 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\ThirdParies\Supplier;
-use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
+use App\Models\ThirdParies\Supplier; // Use the Supplier model
+use App\Models\ThirdParty\ThirdPartyUser; // Import the ThirdPartyUser model
+use App\Enums\ThirdPartyTypeEnum;
+use App\Enums\BusinessTypeEnum;
+use App\Enums\ThirdPartyApprovalStatusEnum;
 
 class SupplierSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
-        $now = Carbon::now();
-        $createdBy = 1;
+        $creatorUser = ThirdPartyUser::first();
 
-        $categories = ItemCategories::all();
-
-        $suppliersData = [];
-
-        // Ensure at least 2 suppliers per category
-        foreach ($categories as $category) {
-            for ($i = 0; $i < 2; $i++) {
-                $suppliersData[] = [
-                    'SupplierName' => $this->generateSupplierName($category->Name),
-                    'ContactEmail' => Str::slug($category->Name) . "+$i@" . 'example.com',
-                    'ContactPhone' => '07' . rand(10000000, 99999999),
-                    'Address' => 'P.O. Box ' . rand(100, 999) . ', City Center',
-                    'IsPrequalified' => (bool)rand(0, 1),
-                    'CategoryId' => $category->Id,
-                    'CreatedBy' => $createdBy,
-                    'ModifiedBy' => $createdBy,
-                    'CreatedOn' => $now,
-                    'ModifiedOn' => $now,
-                ];
-            }
+        if (!$creatorUser) {
+            $this->command->error('No ThirdPartyUser found. Run ThirdPartyUserSeeder first.');
+            return;
         }
 
-        // Add extra suppliers to reach 20+
-        while (count($suppliersData) < 24) {
-            $category = $categories->random();
-            $suppliersData[] = [
-                'SupplierName' => $this->generateSupplierName($category->Name),
-                'ContactEmail' => Str::slug($category->Name) . "+x" . rand(100, 999) . '@example.com',
-                'ContactPhone' => '07' . rand(10000000, 99999999),
-                'Address' => 'Industrial Area, Plot ' . rand(1, 100),
-                'IsPrequalified' => (bool)rand(0, 1),
-                'CategoryId' => $category->Id,
-                'CreatedBy' => $createdBy,
-                'ModifiedBy' => $createdBy,
-                'CreatedOn' => $now,
-                'ModifiedOn' => $now,
-            ];
-        }
+        $creatorId = $creatorUser->Id;
 
-        foreach ($suppliersData as $supplier) {
-            Supplier::create($supplier);
-        }
-    }
+        $commonSupplierData = [
+            'ThirdPartyType' => ThirdPartyTypeEnum::Supplier,
+            'IsPrequalified' => true,
+            'ApprovalStatus' => ThirdPartyApprovalStatusEnum::Approved,
+            'CreatedBy' => $creatorId,
+            'ModifiedBy' => $creatorId,
+            'Status' => \App\Enums\ThirdPartyStatusEnum::Active,
+        ];
 
-    private function generateSupplierName($categoryName)
-    {
-        $prefixes = ['Global', 'Mega', 'Prime', 'Nova', 'Elite', 'Capital', 'Smart', 'Alpha'];
-        $suffixes = ['Suppliers', 'Distributors', 'Solutions', 'Enterprises', 'Corp', 'Traders'];
+        Supplier::create(array_merge($commonSupplierData, [
+            'ThirdPartyName' => 'Advanced Tech Solutions',
+            'TradingName' => 'ATS',
+            'BusinessType' => BusinessTypeEnum::SoleProprietorship,
+            'RegistrationNumber' => 'SUP-ATS-001',
+            'TaxPIN' => 'PIN123456789S',
+            'VATNumber' => 'VAT0011223344',
+            'Country' => 'KE',
+            'PhysicalAddress' => 'Tech Park, Nairobi, Kenya',
+            'Email' => 'contact@ats.com',
+            'Phone' => '+254701234567',
+            'Website' => 'https://www.ats.com',
+        ]));
 
-        return $prefixes[array_rand($prefixes)] . ' ' .
-            Str::title($categoryName) . ' ' .
-            $suffixes[array_rand($suffixes)];
+        Supplier::create(array_merge($commonSupplierData, [
+            'ThirdPartyName' => 'Green Energy Providers',
+            'TradingName' => 'GEP',
+            'BusinessType' => BusinessTypeEnum::Corporation,
+            'RegistrationNumber' => 'SUP-GEP-002',
+            'TaxPIN' => 'PIN987654321E',
+            'VATNumber' => 'VAT5566778899',
+            'Country' => 'TZ',
+            'PhysicalAddress' => 'Solar Farm Road, Arusha, Tanzania',
+            'Email' => 'info@greenenergy.co.tz',
+            'Phone' => '+255765432109',
+            'Website' => 'https://www.greenenergy.co.tz',
+        ]));
+
+        Supplier::create(array_merge($commonSupplierData, [
+            'ThirdPartyName' => 'Logistics Master Ltd.',
+            'TradingName' => 'LogiMaster',
+            'BusinessType' => BusinessTypeEnum::LimitedLiabilityCompany,
+            'RegistrationNumber' => 'SUP-LML-003',
+            'TaxPIN' => 'PIN112233445L',
+            'VATNumber' => 'VAT1020304050',
+            'Country' => 'UG',
+            'PhysicalAddress' => 'Warehouse District, Kampala, Uganda',
+            'Email' => 'operations@logimaster.ug',
+            'Phone' => '+256778901234',
+            'Website' => 'https://www.logimaster.ug',
+        ]));
+
+        $this->command->info('Prequalified and approved Suppliers seeded successfully!');
     }
 }

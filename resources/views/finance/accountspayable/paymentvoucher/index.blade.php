@@ -5,7 +5,7 @@
     <div class="container my-3">
         <!-- Card for Payment Vouchers -->
         <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
-            <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+            <div class="card-header border bg-light py-2 px-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 text-info"><i class="fab fa-wpforms me-1"></i> Payment Vouchers</h5>
                 <a href="{{ route('paymentvoucher.create') }}" class="btn btn-info btn-sm p-2">
                     <i class="fas fa-plus me-1"></i> Add Voucher
@@ -61,20 +61,41 @@
                                        title="View Voucher">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('paymentvoucher.edit', $item->Id) }}"
-                                       class="btn btn-sm btn-outline-primary me-1"
-                                       title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('paymentvoucher.destroy', $item->Id) }}" method="POST"
-                                          style="display:inline;"
-                                          onsubmit="return confirm('Are you sure you want to delete this voucher?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    @if($item->ApprovalStatus === 'draft')
+                                        <a href="{{ route('paymentvoucher.edit', $item->Id) }}"
+                                        class="btn btn-sm btn-outline-primary me-1"
+                                        title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @else
+                                        <a href="{{ route('paymentvoucher.edit', $item->Id) }}"
+                                            class="btn btn-sm btn-outline-primary me-1 disabled"
+                                            title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endif
+
+                                    @if($item->ApprovalStatus === 'draft')
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger custom-delete-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{$item->VoucherNo}}"    {{-- Pass item name --}}
+                                                title="Delete Voucher"
+                                                data-route="{{ route('paymentvoucher.destroy', $item->Id) }}">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
-                                    </form>
+                                    @else
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-danger custom-delete-btn disabled"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{$item->VoucherNo}}"    {{-- Pass item name --}}
+                                            title="Delete Voucher"
+                                            data-route="{{ route('paymentvoucher.destroy', $item->Id) }}">
+                                            <i  class="fas fa-trash-alt"></i>
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -98,6 +119,7 @@
             </div>
         </div>
     </div>
+@include('components.modals.delete-confirm')
 @endsection
 
 @section('styles')

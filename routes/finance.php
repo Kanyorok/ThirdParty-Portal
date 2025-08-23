@@ -183,3 +183,13 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::post('/finance/voucher/{id}/post', [PaymentProcessingController::class, 'postVoucher'])->name('voucher.post');
 
 });
+
+//Fetching Data for AR Invoice
+Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.')->group(function () {
+    Route::get('/', [ReceiptsPostingController::class, 'index'])->name('index');
+    Route::get('/create', [ReceiptsPostingController::class, 'create'])->name('create');
+    Route::post('/', [ReceiptsPostingController::class, 'store'])->name('store');
+
+    // AJAX endpoint
+    Route::get('/api/customers', [ReceiptsPostingController::class, 'findCustomer']);
+});

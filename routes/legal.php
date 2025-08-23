@@ -18,8 +18,9 @@ use App\Http\Controllers\Legal\LegalObligationController;
 use App\Http\Controllers\Legal\LegalSearchRequestController;
 use App\Http\Controllers\Legal\LegalTemplateController;
 use App\Http\Controllers\Legal\LoanSecurityController;
+use App\Http\Controllers\Legal\LegalIntellectualPropertyController;
+use App\Http\Controllers\Legal\LegalIPTrackingController;
 use App\Http\Controllers\Legal\ReportsController;
-use Illuminate\Support\Facades\Route;
 
 Route::prefix('legal')->prefix('legal')->group(function () {
     Route::name('legal.')->group(function () {
@@ -58,9 +59,9 @@ Route::prefix('legal')->prefix('legal')->group(function () {
 
     // Obligations (main list)
     Route::resource('obligations', LegalObligationController::class);
-    Route::get('/legal/obligations/{id}', [LegalObligationController::class,'getObligations'])->name('legal.getObligations');
+    Route::get('/legal/obligations/{id}', [LegalObligationController::class, 'getObligations'])->name('legal.getObligations');
     Route::patch('obligations/{id}/assignUser', [LegalObligationController::class, 'assignUser'])
-    ->name('obligations.assignUser');
+        ->name('obligations.assignUser');
 
     // Obligation Assignments (nested under obligations)
     Route::resource('obligations.assignments', LegalObligationAssignmentController::class);
@@ -79,7 +80,7 @@ Route::prefix('legal')->prefix('legal')->group(function () {
 
     // IP Tracking
     Route::resource('ip-tracking', LegalIPTrackingController::class);
-    });
+
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('legal-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'legal-reports.index',

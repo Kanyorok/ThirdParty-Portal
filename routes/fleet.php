@@ -20,7 +20,6 @@ use App\Http\Controllers\Fleet\FleetTelematicsDeviceController;
 use App\Http\Controllers\Fleet\FleetTripLogController;
 use App\Http\Controllers\Fleet\FleetVehicleAssignmentController;
 use App\Http\Controllers\Fleet\FleetVehicleRequestController;
-use App\Http\Controllers\Fleet\ReportsController;
 use App\Http\Controllers\Fleet\VehicleController;
 use App\Http\Controllers\Fleet\VehicleDocumentController;
 use App\Http\Controllers\FleetManagement\ComplianceAndDocumentationController;
@@ -40,6 +39,16 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::namespace('Fleet')->prefix('fleet')->group(function () {
+    Route::namespace('Fleet')->name('fleet.')->group(function () {
+
+        // ==================== Route Planner ====================
+        Route::resource('route_planner', FleetRoutePlannerController::class)->only(['index', 'create', 'store']);
+    });
+    /*Route::get('/r', [, 'index'])->name('fleet.route_planner.index');
+    Route::get('/route-planner/create', [FleetRoutePlannerController::class, 'create'])->name('fleet.route_planner.create');
+    Route::post('/route-planner', [FleetRoutePlannerController::class, 'store'])->name('fleet.route_planner.store');*/
+
+
     Route::resource('tripmanagement', TripManagementController::class);
     Route::resource('fuelmanagement', FuelManagementController::class);
 
@@ -99,8 +108,6 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::resource('fleetprocurementanddisposal', FleetProcurementAndDisposalController::class);
     Route::resource('inventoryofspareparts', InventoryOfSparePartsController::class);
     Route::resource('utilization', UtilizationController::class);
-    //   Route::resource('reports', ReportsController::class);
-
 
     // ==================== Fleet Vehicles ====================
     Route::get('/vehicles', [VehicleController::class, 'index'])->name('fleet.vehicles.index');
@@ -189,10 +196,6 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::put('trip-logs{Id}', [FleetTripLogController::class, 'update'])->name('fleet.trip_logs.update');
     Route::delete('trip-logs{Id}', [FleetTripLogController::class, 'destroy'])->name('fleet.trip_logs.destroy');
 
-    // ==================== Route Planner ====================
-    Route::get('/route-planner', [FleetRoutePlannerController::class, 'index'])->name('fleet.route_planner.index');
-    Route::get('/route-planner/create', [FleetRoutePlannerController::class, 'create'])->name('fleet.route_planner.create');
-    Route::post('/route-planner', [FleetRoutePlannerController::class, 'store'])->name('fleet.route_planner.store');
 
     // ==================== Fuel Logs ====================
     Route::get('/fuel-logs', [FleetFuelLogController::class, 'index'])->name('fleet.fuel_logs.index');

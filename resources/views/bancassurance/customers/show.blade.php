@@ -21,8 +21,8 @@
                     <dt class="col-sm-4">KRA PIN</dt>
                     <dd class="col-sm-8">{{ $customer->KRAPIN ?? '-' }}</dd>
 
-                    <dt class="col-sm-4">Date of Birth</dt>
-                    <dd class="col-sm-8">{{ $customer->DateOfBirth ?? '-' }}</dd>
+                <dt class="col-sm-4">Date of Birth</dt>
+                <dd class="col-sm-8">{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</dd>
 
                     <dt class="col-sm-4">Gender</dt>
                     <dd class="col-sm-8">{{ $customer->genders->Description ?? '-' }}</dd>

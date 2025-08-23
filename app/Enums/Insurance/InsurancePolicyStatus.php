@@ -12,6 +12,7 @@ enum InsurancePolicyStatus: string
 
     case SubmittedForUnderwriting = 'S';
 
+    case AwaitingIssuance  = 'A';
     case Issued = 'I';
 
     case  Rejected = 'R';
@@ -22,6 +23,7 @@ enum InsurancePolicyStatus: string
         return match ($this) {
             self::Proposal => 'Proposal',
             self::SubmittedForUnderwriting => 'Submitted For Under Writting',
+            self::AwaitingIssuance => 'Awaiting Issuance',
             self::Issued => 'Issued',
             self::Rejected => 'Rejected',
         };
@@ -32,6 +34,7 @@ enum InsurancePolicyStatus: string
         return match ($this) {
             self::Proposal => 'warning',
             self::SubmittedForUnderwriting => 'info',
+            self::AwaitingIssuance => 'primary',
             self::Issued => 'success',
             self::Rejected => 'Danger',
         };
