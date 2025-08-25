@@ -126,11 +126,12 @@ Route::prefix('procurement')->name('api.procurement.')
         Route::apiResource('supplier-cat', SupplierCategoryApiController::class);
         Route::apiResource('supp', SupplierController::class);
 
-        Route::prefix('prequalification')->group(function () {
-            Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('applications.api.index');
-            Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('applications.api.show');
-            Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
-        });
+        // Prequalification API endpoints temporarily disabled
+        // Route::prefix('prequalification')->group(function () {
+        //     Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('applications.api.index');
+        //     Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('applications.api.show');
+        //     Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+        // });
     });
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {

@@ -13,7 +13,7 @@ class PrequalifiedSuppliersController extends Controller
     {
         $prequalifiedApplications = PrequalificationApplication::where(
             'Status',
-            PrequalificationApplicationEnum::IsPrequalified
+            PrequalificationApplicationEnum::Approved
         )->with('supplier')->get();
 
         return view('procurement.suppliers.prequalification.prequalifiedsuppliers.index', [

@@ -26,7 +26,14 @@ class RFQ extends Model
     }
 
     protected $fillable = [
-        'RFQNumber', 'RequisitionId', 'Comments', 'Status', 'SubmissionDeadline', 'CreatedBy', 'ModifiedBy', 'Remarks'
+        'RFQNumber',
+        'RequisitionId',
+        'Comments',
+        'Status',
+        'SubmissionDeadline',
+        'CreatedBy',
+        'ModifiedBy',
+        'Remarks'
     ];
 
     public function rfqLines()
@@ -49,8 +56,8 @@ class RFQ extends Model
     public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
-                    ->withPivot('Status')
-                    ->withTimestamps();
+            ->withPivot('Status')
+            ->withTimestamps();
     }
 
     public function requisition()
@@ -72,6 +79,4 @@ class RFQ extends Model
     {
         return $this->hasMany(RFQCommitteeMember::class, 'RFQID', 'Id');
     }
-
-
 }

@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('t_PrequalificationRoundSections', function (Blueprint $table) {
             $table->id('Id');
-            // $table->foreignId('RoundId')->constrained('t_PrequalificationRounds', 'Id');
+            $table->foreignId('RoundId')->constrained('t_PrequalificationRounds', 'RoundID');
             $table->foreignId('SectionId')->constrained('t_Sections', 'id');
             $table->integer('Weight')->default(0);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
