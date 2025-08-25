@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
 use App\Models\Legal\LegalCase;
+use App\Models\Legal\LegalCaseCounsel;
+use App\Models\Legal\LegalCaseEvidence;
 use App\Models\Legal\LegalCaseOutcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LegalCaseController extends Controller
 {
@@ -89,11 +93,44 @@ class LegalCaseController extends Controller
 
     public function destroy($id)
     {
+        try{
+        DB::beginTransaction();
         $case = LegalCase::findOrFail($id);
-        
-        $case->delete();
+        $caseId = $case->Id;
+        $evidence = LegalCaseEvidence::where('LegalCaseID', $caseId)
+            ->update(['DeletedBy' => Auth::id()]);
+        $evidence = LegalCaseEvidence::where('LegalCaseID', $caseId)->delete();
 
-        return redirect()->route('legal.cases.index')->with('success', 'Legal case deleted successfully.');
+        $counsel = LegalCaseCounsel::where('LegalCaseID', $caseId)
+            ->update(['DeletedBy' => Auth::id()]);
+        $counsel = LegalCaseCounsel::where('LegalCaseID', $caseId)->delete();
+
+        $outcome = LegalCaseOutcome::where('LegalCaseID', $caseId)
+            ->update(['DeletedBy' => Auth::id()]);
+        $outcome = LegalCaseOutcome::where('LegalCaseID', $caseId)->delete();
+        
+        $case = LegalCase::where('Id', $caseId)
+            ->update(['DeletedBy' => Auth::id()]);
+        $case = LegalCase::where('Id', $caseId)->delete();
+            
+        activity()
+            ->performedOn(new LegalCase())
+            ->causedBy(Auth::user())
+            ->log('Legal case deleted');
+        DB::commit();
+        return back()->with('success', 'Legal case deleted successfully.');
+        }
+        catch(\Throwable $th){
+            DB::rollBack();
+            return $th->getMessage();
+            activity()
+                ->performedOn($case)
+                ->causedBy(Auth::user())
+                ->log('Error deleting legal case: ' . $th->getMessage());
+            Log::error('Error deleting legal case: ' . $th->getMessage());
+            return back()->with('error', 'Legal case not found.');
+        }
+
     }
 
 }

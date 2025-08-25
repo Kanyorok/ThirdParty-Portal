@@ -24,6 +24,7 @@ class FleetInspectionScheduleController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', FleetInspectionSchedule::class);
         $schedules = FleetInspectionSchedule::with(['inspector', 'inspectionStatus', 'vehicle'])
             ->where('CreatedBy', Auth::id())
             ->get();
@@ -33,6 +34,8 @@ class FleetInspectionScheduleController extends Controller
 
     public function create()
     {
+        $this->authorize('create', FleetInspectionSchedule::class);
+        
         $branchId = Auth::user()->employee?->BranchId;
 
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
@@ -50,6 +53,7 @@ class FleetInspectionScheduleController extends Controller
 
     public function store(FleetInspectionScheduleRequest $request)
     {
+        $this->authorize('create', FleetInspectionSchedule::class);
         $validated = $request->validated();
 
         $this->schedules->create($validated);
@@ -60,6 +64,7 @@ class FleetInspectionScheduleController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view', FleetInspectionSchedule::class);
         $schedule = FleetInspectionSchedule::with(['vehicle', 'inspectionStatus', 'inspector'])
             ->findOrFail($id);
 
@@ -68,6 +73,7 @@ class FleetInspectionScheduleController extends Controller
 
     public function edit($id)
     {
+        $this->authorize('viewAny', FleetInspectionSchedule::class);
         $schedule = FleetInspectionSchedule::findOrFail($id);
 
         $branchId = Auth::user()->employee?->BranchId;
