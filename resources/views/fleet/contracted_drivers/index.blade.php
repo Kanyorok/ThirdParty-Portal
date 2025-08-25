@@ -54,7 +54,7 @@
                             @endif
                         </td>
                         <td class="text-nowrap">
-                            <a href="{{ route('fleet.contracted_drivers.show', $driver->Id) }}" class="btn btn-sm btn-info">Details</a>
+                            <a href="{{ route('fleet.contracted_drivers.show', $driver->Id) }}" class="btn btn-sm btn-info">👁️Details</a>
                         </td>
                     </tr>
                 @empty

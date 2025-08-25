@@ -184,20 +184,30 @@ use App\Policies\PropertyManagement\PropertyUnitPolicy;
 use App\Models\FleetManagement\FleetMake;
 use App\Models\FleetManagement\FleetModel;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetRoutePlan;
+use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetRepairLog;
+use App\Models\Fleet\FleetVehicleRequest;
+use App\Models\Fleet\ContractedDriver;
+use App\Models\Fleet\FleetServiceAlert;
 use App\Models\Fleet\FleetInspectionSchedule;
 use App\Models\Fleet\FleetInsuranceTracker;
-use App\Models\FleetManagement\VehicleRegistry;
-use App\Models\FleetManagement\DriverManagement;
-use App\Policies\FleetManagement\DriverManagementPolicy;
 use App\Policies\FleetManagement\FleetMakePolicy;
 use App\Policies\FleetManagement\FleetModelPolicy;
-use App\Policies\FleetManagement\VehicleRegistryPolicy; 
 use App\Policies\FleetManagement\FleetVehiclePolicy; 
+use App\Policies\FleetManagement\FleetRepairLogPolicy; 
+use App\Policies\FleetManagement\FleetServiceAlertPolicy; 
 use App\Policies\FleetManagement\DriverPolicy;
 use App\Policies\FleetManagement\FleetInsuranceTrackerPolicy;
 use App\Policies\FleetManagement\FleetInspectionSchedulePolicy;
+use App\Policies\FleetManagement\FleetMaintenanceSchedulePolicy;
 use App\Policies\FleetManagement\FleetDriverPolicy;
+use App\Policies\FleetManagement\FleetTripLogPolicy;
+use App\Policies\FleetManagement\FleetRoutePlanPolicy;
+use App\Policies\FleetManagement\ContractedDriverPolicy;
+use App\Policies\FleetManagement\FleetVehicleRequestPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
@@ -408,12 +418,17 @@ class AppServiceProvider extends ServiceProvider
               //Fleet Management
             FleetMake::getPrimaryKey() => FleetMake::class,
             FleetModel::getPrimaryKey() => FleetModel::class,
-            VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
-            DriverManagement::getPrimaryKey() => DriverManagement::class,
             FleetVehicle::getPrimaryKey() => FleetVehicle::class,
             FleetInsuranceTracker::getPrimaryKey() => FleetInsuranceTracker::class,
             FleetInspectionSchedule::getPrimaryKey() => FleetInspectionSchedule::class,
             FleetDriver::getPrimaryKey() => FleetDriver::class,
+            ContractedDriver::getPrimaryKey() => ContractedDriver::class,
+            FleetTripLog::getPrimaryKey() => FleetTripLog::class,
+            FleetRoutePlan::getPrimaryKey() => FleetRoutePlan::class,
+            FleetVehicleRequest::getPrimaryKey() => FleetVehicleRequest::class,
+            FleetMaintenanceSchedule::getPrimaryKey() => FleetMaintenanceSchedule::class,
+            FleetRepairLog::getPrimaryKey() => FleetRepairLog::class,
+            FleetServiceAlert::getPrimaryKey() => FleetServiceAlert::class,
 
             PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
@@ -426,8 +441,8 @@ class AppServiceProvider extends ServiceProvider
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
 
             //Fleet Management
-            FleetMake::getPrimaryKey() => FleetMake::class,
-            FleetModel::getPrimaryKey() => FleetModel::class,
+
+
             FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
             FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
             RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
@@ -509,13 +524,18 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(InsuranceProduct::class, InsuranceProductPolicy::class);
         Gate::policy(FleetMake::class, FleetMakePolicy::class);
         Gate::policy(FleetModel::class, FleetModelPolicy::class);
-        Gate::policy(VehicleRegistry::class, VehicleRegistryPolicy::class);
-        Gate::policy(DriverManagement::class, DriverManagementPolicy::class);
+        Gate::policy(ContractedDriver::class, ContractedDriverPolicy::class);
+        Gate::policy(FleetVehicleRequest::class, FleetVehicleRequestPolicy::class);
         Gate::policy(FleetVehicle::class, FleetVehiclePolicy::class);
         Gate::policy(FleetInsuranceTracker::class, FleetInsuranceTrackerPolicy::class);
         Gate::policy(FleetInspectionSchedule::class, FleetInspectionSchedulePolicy::class);
         Gate::policy(FleetDriver::class, FleetDriverPolicy::class);
+        Gate::policy(FleetTripLog::class, FleetTripLogPolicy::class);
+        Gate::policy(FleetServiceAlert::class, FleetServiceAlertPolicy::class);
+        Gate::policy(FleetRoutePlan::class, FleetRoutePlanPolicy::class);
+        Gate::policy(FleetMaintenanceSchedule::class, FleetMaintenanceSchedulePolicy::class);
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
+        Gate::policy(FleetRepairLog::class, FleetRepairLogPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

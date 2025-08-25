@@ -19,6 +19,7 @@ class FleetServiceAlertController extends Controller
     // List upcoming service alerts
     public function index()
     {
+        $this->authorize('viewAny', FleetServiceAlertService::class);
         $schedules = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert'])
             ->whereDate('ScheduledDate', '>=', now()->toDateString())
             ->orderBy('CreatedOn')
@@ -50,6 +51,7 @@ class FleetServiceAlertController extends Controller
     
     public function acknowledge(int $scheduleId)
 {
+    $this->authorize('acknowledge', FleetRoutePlan::class);
     $this->service->acknowledgeFromSchedule($scheduleId);
 
     return redirect()->route('fleet.alerts.index')

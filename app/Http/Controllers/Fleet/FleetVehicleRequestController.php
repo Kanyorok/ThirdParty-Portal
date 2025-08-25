@@ -30,6 +30,7 @@ class FleetVehicleRequestController extends Controller
     // List all vehicle requests
     public function index()
     {
+        $this->authorize('viewAny', FleetVehicleRequest::class);
         $requests = FleetVehicleRequest::with(['requester', 'approver', 'trip','status','statusDetail'])
             ->orderByDesc('RequestDate')
             ->get();
@@ -40,6 +41,7 @@ class FleetVehicleRequestController extends Controller
     // Show create form
     public function create()
     {
+        $this->authorize('create', FleetVehicleRequest::class);
         $branchId = Auth::user()->employee?->BranchId;
         $vehicleType = CodeDetail::where('CodeID', 'VehicleType')
             ->orderBy('Value')
@@ -59,6 +61,7 @@ class FleetVehicleRequestController extends Controller
     // Show approve form
 public function approveForm($id)
 {
+    $this->authorize('view', FleetVehicleRequest::class);
     $vehicleRequest  = FleetVehicleRequest::with(['requester', 'approver', 'status', 'vehicle', 'statusDetail', 'department','trip'])
         ->findOrFail($id);
 
@@ -73,6 +76,7 @@ public function approveForm($id)
 
 public function store(FleetVehicleRequestsRequest $request)
 {
+    $this->authorize('create', FleetVehicleRequest::class);
     try {
         $this->service->create($request->validated()); 
         return redirect()
@@ -86,6 +90,7 @@ public function store(FleetVehicleRequestsRequest $request)
     // Update an existing request
     public function update(FleetVehicleRequestsRequest $request, FleetVehicleRequest $vehicleRequest)
     {
+        $this->authorize('update', FleetVehicleRequest::class);
         try {
             $this->service->update($vehicleRequest, $request->validated());
             return redirect()
@@ -98,6 +103,7 @@ public function store(FleetVehicleRequestsRequest $request)
 
    public function approve(Request $request, $id)
 {
+    $this->authorize('approve', FleetVehicleRequest::class);
     $request->validate([
         'ApprovedOn' => 'required|date',
         'ApprovedBy' => 'required|integer',
@@ -126,6 +132,7 @@ public function store(FleetVehicleRequestsRequest $request)
     // Delete a request
     public function destroy(FleetVehicleRequest $vehicleRequest)
     {
+        $this->authorize('destroy', FleetVehicleRequest::class);
         try {
             $this->service->delete($vehicleRequest);
             return redirect()

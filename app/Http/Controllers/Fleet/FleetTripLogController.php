@@ -23,6 +23,7 @@ class FleetTripLogController extends Controller
 
     public function index()
     {
+        $this->authorize('viewAny', FleetTripLog::class);
         $tripLogs = FleetTripLog::with(['vehicle', 'driverType', 'driverPermanent', 'driverContracted'])
             ->orderByDesc('CreatedOn')
             ->get();
@@ -32,6 +33,7 @@ class FleetTripLogController extends Controller
 
     public function create()
     {
+        $this->authorize('create', FleetTripLog::class);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
         $drivers = FleetDriver::where('IsActive', 1)->get();
         $driverTypes = CodeDetail::where('CodeID', 'DriverType')
@@ -44,6 +46,7 @@ class FleetTripLogController extends Controller
 
     public function store(FleetTripLogRequest $request)
     {
+        $this->authorize('create', FleetTripLog::class);
         $this->tripLogService->createTrip($request->validated());
 
         return redirect()
@@ -53,6 +56,7 @@ class FleetTripLogController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view', FleetTripLog::class);
         $tripLogs = FleetTripLog::with(['vehicle', 'driverType', 'driverPermanent', 'driverContracted'])
             ->findOrFail($id);
 
@@ -68,6 +72,7 @@ class FleetTripLogController extends Controller
 
     public function edit($id)
     {
+        $this->authorize('edit', FleetTripLog::class);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
         $drivers = FleetDriver::where('IsActive', 1)->get();
         $driverTypes = CodeDetail::where('CodeID', 'DriverType')
@@ -77,19 +82,21 @@ class FleetTripLogController extends Controller
         return view('fleet.vehicles.edit', compact('vehicles', 'drivers', 'contractedDrivers','driverTypes'));
     }
 
-public function update(FleetTripLogRequest $request, $id, FleetTripLogService $tripLogService)
-{
-    $tripLog = FleetTripLog::findOrFail($id);
+    public function update(FleetTripLogRequest $request, $id, FleetTripLogService $tripLogService)
+    {
+        $this->authorize('update', FleetTripLog::class);
+        $tripLog = FleetTripLog::findOrFail($id);
 
-    $tripLogService->updateTrip($tripLog, $request->validated());
+        $tripLogService->updateTrip($tripLog, $request->validated());
 
-    return redirect()->route('fleet.trip_logs.index')
-        ->with('success', 'Trip updated successfully.');
-}
+        return redirect()->route('fleet.trip_logs.index')
+            ->with('success', 'Trip updated successfully.');
+    }
 
 
     public function destroy($id)
     {
+        $this->authorize('destroy', FleetTripLog::class);
         $tripLogs = FleetTripLog::with(['vehicle', 'driverType', 'driverPermanent', 'driverContracted'])
             ->findOrFail($id);
 

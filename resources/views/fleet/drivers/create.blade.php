@@ -40,18 +40,6 @@
                 <input type="text" name="Phone" class="form-control" value="{{ old('Phone') }}">
             </div>
 
-            {{-- License Number --}}
-            <div class="col-md-6">
-                <label for="LicenseNumber" class="form-label">Driver’s License Number</label>
-                <input type="text" name="LicenseNumber" class="form-control" value="{{ old('LicenseNumber') }}" required>
-            </div>
-
-            {{-- License Expiry --}}
-            <div class="col-md-6">
-                <label for="LicenseExpiryDate" class="form-label">License Expiry</label>
-                <input type="date" name="LicenseExpiryDate" class="form-control" value="{{ old('LicenseExpiryDate') }}">
-            </div>
-
             {{-- Employment Type --}}
             <div class="col-md-6">
                 <label for="EmploymentType" class="form-label">Employment Type</label>

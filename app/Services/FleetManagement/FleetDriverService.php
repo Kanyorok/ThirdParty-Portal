@@ -19,8 +19,6 @@ class FleetDriverService
             $data['StaffNumber'] = $data['StaffNumber'] ?? null;
             $data['NationalID'] = $data['NationalID'] ?? null;
             $data['Phone'] = $data['Phone'] ?? null;
-            $data['LicenseNumber'] = $data['LicenseNumber'] ?? null;
-            $data['LicenseExpiryDate'] = $data['LicenseExpiryDate'] ?? null;
             $data['EmploymentType'] = $data['EmploymentType'] ?? null;
             $data['Notes'] = $data['Notes'] ?? null;
             $data['IsActive'] = $data['IsActive'] ?? 1;

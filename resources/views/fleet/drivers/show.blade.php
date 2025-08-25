@@ -35,22 +35,12 @@
                         <strong>Phone:</strong>
                         <p class="text-muted">{{ $driver->Phone }}</p>
                     </div>
+
                     <div class="col-md-12">
-                        <strong>Company Name:</strong>
-                        <p class="text-muted">{{ $driver->CompanyName }}</p>
+                        <strong>Employment Type:</strong>
+                        <p class="text-muted">{{ $driver->employmentType->Description }}</p>
                     </div>
-                    <div class="col-md-12">
-                        <strong>License Number:</strong>
-                        <p class="text-muted">{{ $driver->LicenseNumber }}</p>
-                    </div>
-                    <div class="col-md-12">
-                        <strong>Contract Start Date:</strong>
-                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }}</p>
-                    </div>
-                    <div class="col-md-12">
-                        <strong>Contract End Date:</strong>
-                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}</p>
-                    </div>
+
                     <div class="col-md-12">
                         <strong>Active:</strong>
                         <p class="text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</p>

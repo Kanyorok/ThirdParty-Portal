@@ -25,8 +25,7 @@ class FleetDriver extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'DriverNo','FullName', 'StaffNumber', 'NationalID', 'Phone', 'Email',
-        'LicenseNumber', 'LicenseExpiryDate', 'EmploymentType',
+        'DriverNo','FullName', 'StaffNumber', 'NationalID', 'Phone', 'Email', 'EmploymentType',
         'Status', 'Notes', 'IsActive',     'CreatedBy',
         'CreatedOn',
         'ModifiedBy',

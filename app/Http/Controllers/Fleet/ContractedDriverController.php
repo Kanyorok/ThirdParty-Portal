@@ -29,17 +29,20 @@ class ContractedDriverController extends Controller
     
     public function index()
     {
+        $this->authorize('viewAny', ContractedDriver::class);
         $drivers = ContractedDriver::all();
         return view('fleet.contracted_drivers.index', compact('drivers'));
     }
 
     public function create()
     {
+        $this->authorize('create', ContractedDriver::class);
         return view('fleet.contracted_drivers.create');
     }
 
     public function store(ContractedDriversRequest $request)
         {
+            $this->authorize('create', ContractedDriver::class);
             $validated = $request->validated();
             $this->driverService->create($validated);
 
@@ -49,6 +52,7 @@ class ContractedDriverController extends Controller
 
     public function edit($id)
     {
+        $this->authorize('edit', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
         return view('fleet.contracted_drivers.edit', compact('driver'));
     }
@@ -56,6 +60,7 @@ class ContractedDriverController extends Controller
 
     public function update(ContractedDriversRequest $request, $id)
     {
+        $this->authorize('update', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
         $validated = $request->validated();
 
@@ -81,6 +86,7 @@ class ContractedDriverController extends Controller
 
      public function destroy($id)
     {
+        $this->authorize('destroy', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
         $this->driverService->delete($driver);
 
@@ -91,6 +97,7 @@ class ContractedDriverController extends Controller
 
     public function show($Id)
 {
+    $this->authorize('view', ContractedDriver::class);
     $driver = ContractedDriver::findOrFail($Id);
     $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
     $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
