@@ -307,31 +307,9 @@ class AppServiceProvider extends ServiceProvider
             TransactionTransfer::getPrimaryKey() => TransactionTransfer::class,
             StockAdjustment::getPrimaryKey() => StockAdjustment::class,
             InventoryHoldReview::getPrimaryKey() => InventoryHoldReview::class,
-            ModelRole::getPrimaryKey() => ModelRole::class,
             UOMConversion::getPrimaryKey() => UOMConversion::class,
 
             ///////// Budget and Analytics /////////
-            BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
-            BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
-            BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
-            BudgetLine::getPrimaryKey() => BudgetLine::class,
-            BudgetPeriods::getPrimaryKey() => BudgetPeriods::class,
-            BudgetPeriodTypes::getPrimaryKey() => BudgetPeriodTypes::class,
-            BudgetScenarioPlanning::getPrimaryKey() => BudgetScenarioPlanning::class,
-            BudgetProduct::getPrimaryKey() => BudgetProduct::class,
-            BudgetProductType::getPrimaryKey() => BudgetProductType::class,
-            BudgetDriver::getPrimaryKey() => BudgetDriver::class,
-            BudgetDriverMaster::getPrimaryKey() => BudgetDriverMaster::class,
-            BudgetDriverProjections::getPrimaryKey() => BudgetDriverProjections::class,
-            BudgetTopDown::getPrimaryKey() => BudgetTopDown::class,
-            BudgetTopDownData::getPrimaryKey() => BudgetTopDownData::class,
-            BudgetActivity::getPrimaryKey() => BudgetActivity::class,
-            BudgetMonthlyAllocation::getPrimaryKey() => BudgetMonthlyAllocation::class,
-            Budget::getPrimaryKey() => Budget::class,
-            BudgetGLAccountSubType::getPrimaryKey() => BudgetGLAccountSubType::class,
-            BudgetLineProductTypes::getPrimaryKey() => BudgetLineProductTypes::class,
-
-
             BudgetActivityMaster::getPrimaryKey() => BudgetActivityMaster::class,
             BudgetLinesGLAccount::getPrimaryKey() => BudgetLinesGLAccount::class,
             BudgetGLAccount::getPrimaryKey() => BudgetGLAccount::class,
@@ -371,9 +349,6 @@ class AppServiceProvider extends ServiceProvider
             PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
             PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
             PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
-            PropertyType::getPrimaryKey() => PropertyType::class,
-            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
-            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
             PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
             //DMS
@@ -386,33 +361,12 @@ class AppServiceProvider extends ServiceProvider
             Image::getPrimaryKey() => Image::class,
             Repository::getPrimaryKey() => Repository::class,
 
-            PropertyNewTenant::getPrimaryKey() => PropertyNewTenant::class,
-            PropertyTenantClearance::getPrimaryKey() => PropertyTenantClearance::class,
-            PropertyFloor::getPrimaryKey() => PropertyFloor::class,
-            PropertyUnit::getPrimaryKey() => PropertyUnit::class,
-            PropertyNewLease::getPrimaryKey() => PropertyNewLease::class,
-            PropertyLeaseSchedule::getPrimaryKey() => PropertyLeaseSchedule::class,
-            PropertyLeaseRenewal::getPrimaryKey() => PropertyLeaseRenewal::class,
-            PropertyInvoice::getPrimaryKey() => PropertyInvoice::class,
-            PropertyType::getPrimaryKey() => PropertyType::class,
-            PropertyRegistry::getPrimaryKey() => PropertyRegistry::class,
-            PropertyBlock::getPrimaryKey() => PropertyBlock::class,
-            PropertyLeaseTermination::getPrimaryKey() => PropertyLeaseTermination::class,
 
-            //Insurance
-            BancAssuranceReferral::getPrimaryKey() => BancAssuranceReferral::class,
-            BancassurancePolicy::getPrimaryKey() => BancassurancePolicy::class,
-            BancassuranceCustomer::getPrimaryKey() => BancassuranceCustomer::class,
-            BancassuranceCustomerContact::getPrimaryKey() => BancassuranceCustomerContact::class,
-            BancassuranceBeneficiaries::getPrimaryKey() => BancassuranceBeneficiaries::class,
-            BancassurancePremiumPayments::getPrimaryKey() => BancassurancePremiumPayments::class,
-            InsuranceProvider::getPrimaryKey() => InsuranceProvider::class,
-            InsuranceProduct::getPrimaryKey() => InsuranceProduct::class,
 
             //Third Parties
             //Fleet Management
-            FleetMake::getPrimaryKey() => FleetMake::class,
-            FleetModel::getPrimaryKey() => FleetModel::class,
+            // FleetMake::getPrimaryKey() => FleetMake::class,
+            // FleetModel::getPrimaryKey() => FleetModel::class,
             VehicleRegistry::getPrimaryKey() => VehicleRegistry::class,
             DriverManagement::getPrimaryKey() => DriverManagement::class,
 
@@ -432,7 +386,7 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceCommissionRule::getPrimaryKey() => BancassuranceCommissionRule::class,
 
             //Third Parties
-            PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+            //PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
             //////////////  Finance  ////////////////
             FinanceGLAccounts::getPrimaryKey() => FinanceGLAccounts::class,
