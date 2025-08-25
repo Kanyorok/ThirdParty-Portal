@@ -21,6 +21,7 @@ use App\Http\Controllers\Insurance\PricingRuleController;
 use App\Http\Controllers\Insurance\ProductLifecycleController;
 use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\ReportsController;
+use App\Http\Controllers\Insurance\UnderwritingController;
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
 

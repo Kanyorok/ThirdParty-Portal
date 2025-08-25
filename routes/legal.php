@@ -21,69 +21,65 @@ use App\Http\Controllers\Legal\LegalTemplateController;
 use App\Http\Controllers\Legal\LoanSecurityController;
 use App\Http\Controllers\Legal\ReportsController;
 
+// Explicit route to satisfy existing references expecting this exact route name
+Route::get('legal/reports', [App\Http\Controllers\Legal\ReportsController::class, 'index'])->name('legal-reports.index');
+
 Route::prefix('legal')->group(function () {
     Route::name('legal.')->group(function () {
 
-    // Legal Documents & nested dispatches/execution logs
-    Route::resource('documents', LegalDocumentController::class);
-    Route::resource('documents.dispatches', LegalDispatchController::class);
-    Route::resource('documents.execution_logs', LegalExecutionLogController::class);
+        // Legal Documents & nested dispatches/execution logs
+        Route::resource('documents', LegalDocumentController::class);
+        Route::resource('documents.dispatches', LegalDispatchController::class);
+        Route::resource('documents.execution_logs', LegalExecutionLogController::class);
 
-    // Contracts
-    Route::resource('maintenance', LegalContractController::class);
+        // Contracts
+        Route::resource('maintenance', LegalContractController::class);
 
-    // Clauses
-    Route::resource('clauses', LegalClauseController::class);
+        // Clauses
+        Route::resource('clauses', LegalClauseController::class);
 
-    // Obligations (nested under documents)
-    Route::resource('documents.obligations', ContractObligationController::class);
+        // Obligations (nested under documents)
+        Route::resource('documents.obligations', ContractObligationController::class);
 
-    // Templates
-    Route::resource('templates', LegalTemplateController::class);
+        // Templates
+        Route::resource('templates', LegalTemplateController::class);
 
-    // Drafts
-    Route::resource('drafts', LegalDraftController::class);
+        // Drafts
+        Route::resource('drafts', LegalDraftController::class);
 
-    // Cases
-    Route::resource('cases', LegalCaseController::class);
+        // Cases
+        Route::resource('cases', LegalCaseController::class);
 
-    // Case Evidence (nested under cases)
-    Route::resource('cases.evidence', LegalCaseEvidenceController::class);
+        // Case Evidence (nested under cases)
+        Route::resource('cases.evidence', LegalCaseEvidenceController::class);
 
-    // Counsels
-    Route::resource('disputes.counsels', LegalCounselController::class);
+        // Counsels
+        Route::resource('disputes.counsels', LegalCounselController::class);
 
-    // Outcomes
-    Route::resource('disputes.outcomes', LegalCaseOutcomeController::class);
+        // Outcomes
+        Route::resource('disputes.outcomes', LegalCaseOutcomeController::class);
 
-    // Obligations (main list)
-    Route::resource('obligations', LegalObligationController::class);
-    Route::get('/legal/obligations/{id}', [LegalObligationController::class, 'getObligations'])->name('legal.getObligations');
-    Route::patch('obligations/{id}/assignUser', [LegalObligationController::class, 'assignUser'])
-        ->name('obligations.assignUser');
+        // Obligations (main list)
+        Route::resource('obligations', LegalObligationController::class);
+        Route::get('obligations/{id}', [LegalObligationController::class, 'getObligations'])->name('obligations.getObligations');
+        Route::patch('obligations/{id}/assignUser', [LegalObligationController::class, 'assignUser'])
+            ->name('obligations.assignUser');
 
-    // Obligation Assignments (nested under obligations)
-    Route::resource('obligations.assignments', LegalObligationAssignmentController::class);
+        // Obligation Assignments (nested under obligations)
+        Route::resource('obligations.assignments', LegalObligationAssignmentController::class);
 
-    // Search Requests
-    Route::resource('search_requests', LegalSearchRequestController::class);
-    Route::patch('store_findings/{id}', [LegalSearchRequestController::class, 'storeApprovalStatus'])->name('store_findings.storeApprovalStatus');
+        // Search Requests
+        Route::resource('search_requests', LegalSearchRequestController::class);
+        Route::patch('store_findings/{id}', [LegalSearchRequestController::class, 'storeApprovalStatus'])->name('store_findings.storeApprovalStatus');
 
+        // Securities
+        Route::resource('securities', LoanSecurityController::class);
 
-    // Securities
-    Route::resource('securities', LoanSecurityController::class);
+        // Intellectual Property
+        Route::resource('intellectual', LegalIntellectualPropertyController::class);
+        Route::patch('raiseDispute/{id}', [LegalIntellectualPropertyController::class, 'raiseDispute'])->name('intellectual.raiseDispute');
 
-    // Intellectual Property
-    Route::resource('intellectual', LegalIntellectualPropertyController::class);
-    Route::patch('raiseDispute/{id}', [LegalIntellectualPropertyController::class, 'raiseDispute'])->name('intellectual.raiseDispute');
-
-    // IP Tracking
-    Route::resource('ip-tracking', LegalIPTrackingController::class);
-
-    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('legal-reports.export');
-    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
-        'index' => 'legal-reports.index',
-        'show' => 'legal-reports.show'
-    ]);
+        // IP Tracking
+        Route::resource('ip-tracking', LegalIPTrackingController::class);
     });
 });
