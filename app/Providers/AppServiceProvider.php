@@ -163,7 +163,7 @@ use App\Policies\Inventory\UnitOfMeasurePolicy;
 use App\Policies\Procurement\DepartmentNeedsPolicy;
 use App\Policies\Procurement\OrderPolicy;
 use App\Policies\Procurement\PlanManualInputPolicy;
-use App\Policies\Procurement\PrequalificationPeriodPolicy;
+//use App\Policies\Procurement\PrequalificationPeriodPolicy;
 use App\Policies\Procurement\ProcurementMethodPolicy;
 use App\Policies\Procurement\ProcurementPlanMaintainPolicy;
 use App\Policies\Procurement\RequisitionLinesPolicy;
@@ -432,7 +432,7 @@ class AppServiceProvider extends ServiceProvider
             BancassuranceCommissionRule::getPrimaryKey() => BancassuranceCommissionRule::class,
 
             //Third Parties
-            PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
+            //PrequalificationPeriod::getPrimaryKey() => PrequalificationPeriod::class,
 
             //////////////  Finance  ////////////////
             FinanceGLAccounts::getPrimaryKey() => FinanceGLAccounts::class,
