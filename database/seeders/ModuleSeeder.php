@@ -569,7 +569,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 907400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 907000],
             ['ModuleID' => 907500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 907000],
             ['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
-            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            //['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             //['ModuleID' => 907600, 'Name' => 'Product Lifecycle', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.lifecycle.index', 'ParentID' => 907000],
             //['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
             // ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
