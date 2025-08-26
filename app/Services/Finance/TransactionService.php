@@ -75,6 +75,7 @@ class TransactionService
             'IsTaxable'         => (bool)($tax > 0),
             'SystemDescription' => $payload['SystemDescription'] ?? null,
             'IdempotencyKey'    => $idempotencyKey,
+            'JournalRefNo'      => null,
         ];
 
         $lines = [
@@ -118,8 +119,15 @@ class TransactionService
             'CurrencyID'      => $payload['CurrencyID'],
         ];
 
-        $this->createJournal($journalHeader, $lines);
+        $journalResult =$this->createJournal($journalHeader, $lines);
 
+        //Add The Journal Ref No
+        if (!empty($journalResult['journal_ref'])) {
+            foreach ($lines as &$line) {
+                $line['JournalRefNo'] = $journalResult['journal_ref'];
+            }
+            unset($line); // break reference
+        }
         // 9) Persist atomically
         return $this->persist($lines, ['batch' => $batch]);
     }
@@ -511,6 +519,7 @@ class TransactionService
             return [
                 'status'       => 'success',
                 'journal_id'   => $journal->Id,
+                'journal_ref'  =>$journal->RefNo,
                 'lines_count'  => count($norm),
             ];
         });
