@@ -20,10 +20,9 @@ class ContractedDriverService
         $data['FullName'] = $data['FullName'] ?? null;
         $data['NationalID'] = $data['NationalID'] ?? null;
         $data['Phone'] = $data['Phone'] ?? null;
-        $data['CompanyName'] = $data['CompanyName'] ?? null;
+        $data['Company'] = $data['Company'] ?? null;
         $data['ContractStartDate'] = $data['ContractStartDate'] ?? null;
         $data['ContractEndDate'] = $data['ContractEndDate'] ?? null;
-        $data['LicenseNumber'] = $data['LicenseNumber'] ?? null;
         $data['Notes'] = $data['Notes'] ?? null;
         $data['IsActive'] = $data['IsActive'] ?? 1;
         $data['CreatedBy'] = Auth::id();

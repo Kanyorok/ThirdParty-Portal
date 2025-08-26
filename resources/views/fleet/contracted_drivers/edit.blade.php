@@ -37,13 +37,17 @@
                 @enderror
             </div>
 
+            
             <div class="col-md-6">
-                <label class="form-label">License Number</label>
-                <input type="text" name="LicenseNumber" class="form-control @error('LicenseNumber') is-invalid @enderror"
-                    value="{{ old('LicenseNumber', $driver->LicenseNumber) }}" placeholder="Enter license number">
-                @error('LicenseNumber')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+                <label for="Company" class="form-label">Company Name</label>
+                <select name="Company" class="form-select">
+                    <option value="">Select Company</option>
+                    @foreach($companies as $company)
+                        <option value="{{ $company->Id }}" {{ old('Company') == $company->Id ? 'selected' : '' }}>
+                            {{ $company->SupplierName }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <!-- New Contract Start Date -->
@@ -78,9 +82,9 @@
                         <div class="col-md-12">
                         <div class="form-check">
                             <input type="hidden" name="IsActive" value="0">
-<input type="checkbox" name="IsActive" value="1" class="form-check-input" id="IsActive"
-    {{ old('IsActive', $driver->IsActive) ? 'checked' : '' }}>
-<label class="form-check-label" for="IsActive">Active</label>
+                            <input type="checkbox" name="IsActive" value="1" class="form-check-input" id="IsActive"
+                                {{ old('IsActive', $driver->IsActive) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="IsActive">Active</label>
                         </div>
                         @error('IsActive')
                             <div class="text-danger">{{ $message }}</div>

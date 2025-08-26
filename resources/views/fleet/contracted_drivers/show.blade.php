@@ -30,12 +30,9 @@
                     </div>
                     <div class="col-md-12">
                         <strong>Company Name:</strong>
-                        <p class="text-muted">{{ $driver->CompanyName }}</p>
+                        <p class="text-muted">{{ $driver->company->SupplierName }}</p>
                     </div>
-                    <div class="col-md-12">
-                        <strong>License Number:</strong>
-                        <p class="text-muted">{{ $driver->LicenseNumber }}</p>
-                    </div>
+
                     <div class="col-md-12">
                         <strong>Contract Start Date:</strong>
                         <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }}</p>

@@ -22,7 +22,6 @@
                     <th>ID No.</th>
                     <th>Phone</th>
                     <th>Company</th>
-                    <th>License No.</th>
                     <th>Contract Period</th>
                     <th>Active</th>
                     <th>Actions</th>
@@ -36,8 +35,7 @@
                         <td>{{ $driver->FullName }}</td>
                         <td>{{ $driver->NationalID ?? '—' }}</td>
                         <td>{{ $driver->Phone ?? '—' }}</td>
-                        <td>{{ $driver->CompanyName ?? '—' }}</td>
-                        <td>{{ $driver->LicenseNumber ?? '—' }}</td>
+                        <td>{{ $driver->company->SupplierName ?? '—' }}</td>
                         <td>
                             @if($driver->ContractStartDate && $driver->ContractEndDate)
                                 {{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d/m/Y') }} - 

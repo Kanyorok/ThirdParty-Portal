@@ -33,12 +33,17 @@
                 @enderror
             </div>
 
+
             <div class="col-md-6">
-                <label class="form-label">Company Name</label>
-                <input type="text" name="CompanyName" class="form-control @error('CompanyName') is-invalid @enderror" value="{{ old('CompanyName') }}">
-                @error('CompanyName')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
+                <label for="Company" class="form-label">Company Name</label>
+                <select name="Company" class="form-select">
+                    <option value="">Select Company</option>
+                    @foreach($companies as $company)
+                        <option value="{{ $company->Id }}" {{ old('Company') == $company->Id ? 'selected' : '' }}>
+                            {{ $company->SupplierName }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <div class="col-md-6">

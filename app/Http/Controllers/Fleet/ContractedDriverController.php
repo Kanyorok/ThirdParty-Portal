@@ -16,6 +16,7 @@ use App\Models\HRM\Employee;
 use App\Models\Fleet\FleetContractedDriverAssignment;
 use Illuminate\Support\Facades\DB;
 use App\Models\Fleet\ContractedDriver;
+use App\Models\ThirdParies\Supplier;
 
 class ContractedDriverController extends Controller
 {
@@ -30,14 +31,15 @@ class ContractedDriverController extends Controller
     public function index()
     {
         $this->authorize('viewAny', ContractedDriver::class);
-        $drivers = ContractedDriver::all();
+        $drivers = ContractedDriver::with(['company'])->get();
         return view('fleet.contracted_drivers.index', compact('drivers'));
     }
 
     public function create()
     {
         $this->authorize('create', ContractedDriver::class);
-        return view('fleet.contracted_drivers.create');
+        $companies = Supplier::all();
+        return view('fleet.contracted_drivers.create', compact('companies'));
     }
 
     public function store(ContractedDriversRequest $request)
@@ -54,7 +56,8 @@ class ContractedDriverController extends Controller
     {
         $this->authorize('edit', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
-        return view('fleet.contracted_drivers.edit', compact('driver'));
+        $companies = Supplier::all();
+        return view('fleet.contracted_drivers.edit', compact('driver','companies'));
     }
 
 
@@ -99,6 +102,7 @@ class ContractedDriverController extends Controller
 {
     $this->authorize('view', ContractedDriver::class);
     $driver = ContractedDriver::findOrFail($Id);
+    $companies = Supplier::all();
     $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
     $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
         ->with('vehicle')
@@ -121,7 +125,8 @@ class ContractedDriverController extends Controller
         'assignments',
         'vehicles',
         'assigners',
-        'trips'
+        'trips',
+        'companies'
     ));
 }
 
