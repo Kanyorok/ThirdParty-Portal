@@ -27,7 +27,6 @@ class ContractedDriver extends Model
     public $timestamps = false;
 
 
-
     protected $fillable = [
         'DriverNo',
         'FullName',

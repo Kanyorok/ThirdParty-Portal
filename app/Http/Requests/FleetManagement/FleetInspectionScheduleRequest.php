@@ -19,15 +19,15 @@ class FleetInspectionScheduleRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-     public function rules(): array
+    public function rules(): array
     {
         return [
-            
+
             'VehicleID' => 'required|integer|exists:t_FleetVehicles,Id',
             'InspectionType' => 'required|string',
             'InspectionDate' => 'required|date',
             'DueDate' => 'required|date',
-            'Inspector'=> 'required|integer|exists:t_Employees,Id',
+            'Inspector' => 'required|integer|exists:t_Employees,Id',
             'Status' => 'required|integer|exists:t_CodeDetails,ID',
             'Remarks' => 'nullable|string',
             //

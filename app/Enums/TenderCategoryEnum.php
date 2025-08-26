@@ -8,9 +8,9 @@ enum TenderCategoryEnum: string
 {
     use UsefulEnumTrait;
 
-    case Goods = 'Goods';
-    case Services = 'Services';
-    case Works = 'Works';
+    case Goods = 'G';
+    case Services = 'S';
+    case Works = 'W';
 
     public static function values(): array
     {

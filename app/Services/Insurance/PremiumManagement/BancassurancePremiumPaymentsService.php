@@ -16,17 +16,18 @@ class BancassurancePremiumPaymentsService
     public function __construct(public BancassurancePremiumPayments $payment)
     {
     }
-     public static function create(
+
+    public static function create(
         BancassurancePolicy $PolicyID,
-        string $CustomerID,
-        string $PaymentFrequency,
-        DateTime $PaymentDate,
-        DateTime $NextPaymentDate,
-        string $Amount,
-        CodeDetail $PaymentMode,
-        string $ReferenceNumber,
-        string $Notes,
-        User $user
+        string              $CustomerID,
+        string              $PaymentFrequency,
+        DateTime            $PaymentDate,
+        DateTime            $NextPaymentDate,
+        string              $Amount,
+        CodeDetail          $PaymentMode,
+        string              $ReferenceNumber,
+        string              $Notes,
+        User                $user
     ): self
     {
         $payment = BancassurancePremiumPayments::create([
@@ -46,7 +47,7 @@ class BancassurancePremiumPaymentsService
 
         activity()->causedBy($user->Id)->performedOn($payment)->event('create')->log("Added Premium Payments {$payment->Id}.");
         return new self($payment);
-        
+
 
     }
 }

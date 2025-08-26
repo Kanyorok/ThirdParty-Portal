@@ -218,7 +218,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
     //Route::resource('rentdashboard', RentDashboardController::class);
 
-   // Route::resource('unitofmeasure', UOMController::class);
+    // Route::resource('unitofmeasure', UOMController::class);
     Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');
     Route::get('/unitofmeasure/create', [UOMController::class, 'create'])->name('unitofmeasure.create');
     Route::post('/unitofmeasure', [UOMController::class, 'store'])->name('unitofmeasure.store');
@@ -256,7 +256,5 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'inventory-reports.index',
         'show' => 'inventory-reports.show'
-
-
     ]);
 });

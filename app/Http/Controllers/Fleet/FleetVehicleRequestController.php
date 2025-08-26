@@ -48,16 +48,17 @@ class FleetVehicleRequestController extends Controller
             ->get();
         $departments = Department::all();
         $trips = FleetTripLog::whereNull('EndTime')
-        ->orderByDesc('CreatedOn')
-        ->get();
+            ->orderByDesc('CreatedOn')
+            ->get();
 
         $requester = Employee::where('BranchId', $branchId)
             ->select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
 
 
-        return view('fleet.vehicle_requests.create', compact('vehicleType', 'departments', 'trips','requester'));
+        return view('fleet.vehicle_requests.create', compact('vehicleType', 'departments', 'trips', 'requester'));
     }
+
     // Show approve form
 public function approveForm($id)
 {
@@ -67,12 +68,12 @@ public function approveForm($id)
 
         
 
-    return view('fleet.vehicle_requests.approval', compact('vehicleRequest'));
-}
+        return view('fleet.vehicle_requests.approval', compact('vehicleRequest'));
+    }
 
 
     // Store new vehicle request
- // In App\Http\Controllers\Fleet\FleetVehicleRequestController.php
+    // In App\Http\Controllers\Fleet\FleetVehicleRequestController.php
 
 public function store(FleetVehicleRequestsRequest $request)
 {
@@ -111,23 +112,23 @@ public function store(FleetVehicleRequestsRequest $request)
         'RejectionReason' => 'nullable|string|max:255',
     ]);
 
-    try {
-        if ($request->Status === 'Approved') {
-            $this->service->approve($id, $request->ApprovedOn, $request->ApprovedBy);
-            $msg = 'Vehicle request approved.';
-        } else {
-            $this->service->reject($id, $request->RejectionReason, $request->ApprovedBy);
-            $msg = 'Vehicle request rejected.';
+        try {
+            if ($request->Status === 'Approved') {
+                $this->service->approve($id, $request->ApprovedOn, $request->ApprovedBy);
+                $msg = 'Vehicle request approved.';
+            } else {
+                $this->service->reject($id, $request->RejectionReason, $request->ApprovedBy);
+                $msg = 'Vehicle request rejected.';
+            }
+
+            return redirect()
+                ->route('fleet.vehicle_requests.index')
+                ->with('success', $msg);
+
+        } catch (Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
-
-        return redirect()
-            ->route('fleet.vehicle_requests.index')
-            ->with('success', $msg);
-
-    } catch (Exception $e) {
-        return back()->withErrors(['error' => $e->getMessage()]);
     }
-}
 
     // Delete a request
     public function destroy(FleetVehicleRequest $vehicleRequest)

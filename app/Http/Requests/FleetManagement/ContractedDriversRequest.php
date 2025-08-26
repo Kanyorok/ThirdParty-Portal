@@ -29,7 +29,7 @@ class ContractedDriversRequest extends FormRequest
             'ContractStartDate' => 'nullable|date',
             'ContractEndDate' => 'nullable|date|after_or_equal:ContractStartDate',
             'Notes' => 'nullable|string|max:1000',
-             'IsActive' => 'required|boolean',
+            'IsActive' => 'required|boolean',
             //
         ];
     }

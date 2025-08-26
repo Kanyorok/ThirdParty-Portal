@@ -19,11 +19,11 @@ class FleetDriverRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-     public function rules(): array
+    public function rules(): array
     {
         return [
             'FullName' => 'required|string',
-            'StaffNumber'=> 'required|integer|exists:t_Employees,Id',
+            'StaffNumber' => 'required|integer|exists:t_Employees,Id',
             'NationalID' => 'required|integer',
             'Phone' => 'required|string',
             'EmploymentType' => 'required|integer|exists:t_CodeDetails,ID',

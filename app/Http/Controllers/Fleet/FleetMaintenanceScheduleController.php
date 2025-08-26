@@ -73,15 +73,15 @@ class FleetMaintenanceScheduleController extends Controller
     $this->authorize('update', FleetMaintenanceSchedule::class);
     $data = $request->validated();
 
-    // Only handle mileage update & completion
-    if (!empty($data['ScheduledMileage'])) {
-        $this->scheduleService->updateMileage($id, $data['ScheduledMileage']);
-    }
+        // Only handle mileage update & completion
+        if (!empty($data['ScheduledMileage'])) {
+            $this->scheduleService->updateMileage($id, $data['ScheduledMileage']);
+        }
 
-    return redirect()
-        ->route('fleet.maintenance_schedule.index')
-        ->with('success', 'Maintenance schedule updated successfully.');
-}
+        return redirect()
+            ->route('fleet.maintenance_schedule.index')
+            ->with('success', 'Maintenance schedule updated successfully.');
+    }
 
 
     // Complete a maintenance schedule
@@ -111,19 +111,19 @@ class FleetMaintenanceScheduleController extends Controller
     $this->authorize('cancel', FleetMaintenanceSchedule::class);
     $schedule = FleetMaintenanceSchedule::findOrFail($id);
 
-    // Just deactivate, no change to MaintenanceStatus
-    $schedule->Status = false;
-    $schedule->ModifiedBy = Auth::id();
-    $schedule->ModifiedOn = now();
-    $schedule->save();
+        // Just deactivate, no change to MaintenanceStatus
+        $schedule->Status = false;
+        $schedule->ModifiedBy = Auth::id();
+        $schedule->ModifiedOn = now();
+        $schedule->save();
 
-    activity()
-        ->performedOn($schedule)
-        ->causedBy(Auth::user())
-        ->log('Maintenance Schedule Deactivated');
+        activity()
+            ->performedOn($schedule)
+            ->causedBy(Auth::user())
+            ->log('Maintenance Schedule Deactivated');
 
-    return redirect()->back()->with('success', 'Schedule cancelled (deactivated) successfully.');
-}
+        return redirect()->back()->with('success', 'Schedule cancelled (deactivated) successfully.');
+    }
 
 
     // Soft delete a schedule

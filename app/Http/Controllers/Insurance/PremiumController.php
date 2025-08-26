@@ -57,6 +57,7 @@ public function index()
 
     return view('bancassurance.premiums.index', compact('payments'));
 }
+
 public function show($id)
 {
     $payment = BancassurancePremiumPayments::find($id);

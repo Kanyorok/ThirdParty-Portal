@@ -22,9 +22,9 @@ class FleetTripLogRequest extends FormRequest
     public function rules(): array
     {
 
-    return [
+        return [
             'VehicleID' => 'required|exists:t_FleetVehicles,Id',
-            'DriverType' =>'required|exists:t_CodeDetails,ID',
+            'DriverType' => 'required|exists:t_CodeDetails,ID',
             'DriverID' => 'required|integer',
             'TripStartDate' => 'required|date',
             'StartTime' => 'nullable|date_format:H:i',
@@ -36,7 +36,7 @@ class FleetTripLogRequest extends FormRequest
             'Route' => 'nullable|integer|exists:t_TripLogs,Id',
             'Purpose' => 'nullable|string|max:255',
             'Notes' => 'nullable|string',
-    ];
+        ];
 
     }
 }

@@ -3,23 +3,21 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Procurement\Prequalification\PrequalificationApplication;
+use App\Enums\Procurement\PrequalificationApplicationEnum;
+use Illuminate\View\View;
 
 class PrequalifiedSuppliersController extends Controller
 {
-    //
-    public function index()
+    public function index(): View
     {
-        return view('procurement.suppliers.prequalification.prequalifiedsuppliers.index');
-    }
+        $prequalifiedApplications = PrequalificationApplication::where(
+            'Status',
+            PrequalificationApplicationEnum::Approved
+        )->with('supplier')->get();
 
-    public function create()
-    {
-        return view('procurement.suppliers.prequalification.prequalifiedsuppliers.create');
-    }
-
-    public function show()
-    {
-        return view('procurement.suppliers.prequalification.prequalifiedsuppliers.show');
+        return view('procurement.suppliers.prequalification.prequalifiedsuppliers.index', [
+            'prequalifiedApplications' => $prequalifiedApplications,
+        ]);
     }
 }

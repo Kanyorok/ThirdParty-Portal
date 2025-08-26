@@ -3,10 +3,12 @@
 @section('title', 'Route Planner')
 
 @section('head')
+
     <style>
         #map {
             height: 180px;
         }
+
     </style>
 @endsection
 
@@ -58,6 +60,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 @endsection
 @section('scripts')

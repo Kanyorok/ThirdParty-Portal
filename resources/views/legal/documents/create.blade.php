@@ -12,7 +12,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-        <form method="POST" action="{{ route('legal.documents.store') }}">
+        <form method="POST" action="{{ route('legal.documents.store') }}" enctype="multipart/form-data">
             @csrf
             <div class="row mb-3">
                 <div class=" col-md-6">
@@ -37,11 +37,13 @@
                         <option value="Procurement">Procurement</option>
                         <option value="Property">Property</option>
                         <option value="HR">HR</option>
+                        <option value="Insurance">Insurance</option>
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label for="LinkedDMSDocID" class="form-label">DMS Document ID</label>
-                    <input type="number" name="LinkedDMSDocID" class="form-control">
+                    <label for="LinkedDMSDocID" class="form-label">Upload Doc</label>
+                    <input required type="file" name="LinkedDMSDocID" class="form-control"  accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,application/pdf,image/jpeg,image/jpg,image/png,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                    <small class="form-text text-muted">Accepted formats: PDF, JPG, JPEG, PNG, DOCX, XLSX</small>
                 </div>
             </div>
             <div class="mb-3">

@@ -58,9 +58,4 @@ class RFQSection extends Model
     {
         return $this->belongsTo(RFQ::class, 'RFQID', 'Id');
     }
-
-    public function criteriaSettings()
-    {
-        return $this->hasMany(RFQCriteria::class, 'SectionID');
-    }
 }

@@ -27,7 +27,7 @@ class ContractedDriverController extends Controller
         $this->driverService = $driverService;
     }
 
-    
+
     public function index()
     {
         $this->authorize('viewAny', ContractedDriver::class);
@@ -48,9 +48,9 @@ class ContractedDriverController extends Controller
             $validated = $request->validated();
             $this->driverService->create($validated);
 
-            return redirect()->route('fleet.contracted_drivers.index')
-                ->with('success', 'Contracted driver registered successfully.');
-        }
+        return redirect()->route('fleet.contracted_drivers.index')
+            ->with('success', 'Contracted driver registered successfully.');
+    }
 
     public function edit($id)
     {
@@ -87,7 +87,7 @@ class ContractedDriverController extends Controller
             ->with('success', 'Contracted driver deactivated.');
     }
 
-     public function destroy($id)
+    public function destroy($id)
     {
         $this->authorize('destroy', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
@@ -110,13 +110,13 @@ class ContractedDriverController extends Controller
         ->get();
     $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
-    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-        ->pluck('name', 'Id');
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
 
-   $trips = FleetTripLog::with(['vehicle'])
-        ->where('DriverID', $driver->Id)
-        ->orderByDesc('TripStartDate')
-        ->get();
+        $trips = FleetTripLog::with(['vehicle'])
+            ->where('DriverID', $driver->Id)
+            ->orderByDesc('TripStartDate')
+            ->get();
 
 
     return view('fleet.contracted_drivers.show', compact(

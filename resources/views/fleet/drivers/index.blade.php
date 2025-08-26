@@ -19,9 +19,9 @@
         </p>
     </div>
 
-         <div class="table-responsive">
-        <table id="driversTable" class="table table-bordered table-striped align-middle">
-            <thead class="table-light">
+        <div class="table-responsive">
+            <table id="driversTable" class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Full Name</th>
@@ -32,8 +32,8 @@
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @forelse ($drivers as $driver)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
@@ -58,29 +58,29 @@
                         <td colspan="11" class="text-center text-muted">No drivers registered.</td>
                     </tr>
                 @endforelse
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
 @endsection
 @section('scripts')
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-        <script>
-            $(document).ready(function () {
-                @if(!$drivers->isEmpty())
-                $('#driversTable').DataTable({
-                    pageLength: 10,
-                    ordering: true,
-                    searching: true,
-                    lengthChange: true,
-                    language: {
-                        emptyTable: ""
-                    }
-                });
-                @endif
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            @if(!$drivers->isEmpty())
+            $('#driversTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: ""
+                }
             });
-        </script>
+            @endif
+        });
+    </script>
 @endsection
 

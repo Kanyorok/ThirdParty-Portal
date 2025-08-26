@@ -17,25 +17,26 @@ class BancassuranceCustomersContactsService
     public function __construct(public BancassuranceCustomerContact $log)
     {
     }
+
     public static function create(
         BancassuranceCustomer $CustomerID,
-        DateTime $ContactDate,
-        CodeDetail $ContactType,
-        string $Summary,
-        string  $Notes,
-        Employee $HandledBy,
-        User   $user
+        DateTime              $ContactDate,
+        CodeDetail            $ContactType,
+        string                $Summary,
+        string                $Notes,
+        Employee              $HandledBy,
+        User                  $user
     ): self
     {
         $log = BancassuranceCustomerContact::create([
-        'CustomerID' => $CustomerID->Id,
-        'ContactDate' => $ContactDate,
-        'ContactType' => $ContactType->ID,
-        'Summary' => $Summary,
-        'Notes' => $Notes,
-        'HandledBy' => $HandledBy->Id,
-        'CreatedBy' => $user->Id,
-        'ModifiedBy' => $user->Id,
+            'CustomerID' => $CustomerID->Id,
+            'ContactDate' => $ContactDate,
+            'ContactType' => $ContactType->ID,
+            'Summary' => $Summary,
+            'Notes' => $Notes,
+            'HandledBy' => $HandledBy->Id,
+            'CreatedBy' => $user->Id,
+            'ModifiedBy' => $user->Id,
         ]);
 
         activity()->causedBy($user->Id)->performedOn($log)->event('create')->log("Added Customer Contacts {$log->Id}.");

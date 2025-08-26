@@ -46,7 +46,7 @@ class FleetRepairLogController extends Controller
             ->orderByDesc('ScheduledDate')
             ->get();
 
-        return view('fleet.maintenance.repair_logs.create', compact('vehicles', 'schedules','repairType'));
+        return view('fleet.maintenance.repair_logs.create', compact('vehicles', 'schedules', 'repairType'));
     }
 
     /**
@@ -88,7 +88,7 @@ class FleetRepairLogController extends Controller
             ->orderByDesc('ScheduledDate')
             ->get();
 
-        return view('fleet.maintenance.repair_logs.edit', compact('repair', 'vehicles', 'schedules','repairType'));
+        return view('fleet.maintenance.repair_logs.edit', compact('repair', 'vehicles', 'schedules', 'repairType'));
     }
 
     /**

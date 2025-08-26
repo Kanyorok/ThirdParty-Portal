@@ -15,10 +15,10 @@ return new class extends Migration {
             $table->string('ReqNo')->nullable()->unique();
             $table->foreignId('FromBranch')->constrained('t_Branches', 'Id');
             $table->foreignId('ToBranch')->constrained('t_Branches', 'Id');
-            //$table->foreignId('ItemCode')->constrained('t_Items', 'Id');
-            //$table->foreignId('ItemName')->constrained('t_Items', 'Id');
-           // $table->foreignId('UOM')->constrained('t_Items', 'Id');
-            //$table->integer('Requested Qty');
+            $table->foreignId('ItemCode')->constrained('t_Items', 'Id');
+            $table->foreignId('ItemName')->constrained('t_Items', 'Id');
+            $table->foreignId('UOM')->constrained('t_Items', 'Id');
+            $table->integer('Requested Qty');
             $table->string('Remarks');
             $table->boolean('Status');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');

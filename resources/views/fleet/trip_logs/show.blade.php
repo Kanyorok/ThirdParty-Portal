@@ -2,30 +2,30 @@
 @section('title', 'Trip Log Details')
 
 @section('content')
-<div class="d-flex gap-4">
-    <!-- Side Panel -->
-    <div class="card shadow rounded-4 p-4" style="min-width: 300px; max-width: 350px;">
-        <h5 class="mb-3">📋 Trip Details</h5>
-        <ul class="list-group list-group-flush">
-            <li class="list-group-item"><strong>Trip No:</strong> {{ $tripLogs->TripNo }}</li>
-            <li class="list-group-item"><strong>Start Date:</strong> {{ $tripLogs->TripStartDate }}</li>
-            <li class="list-group-item"><strong>Start Time:</strong> {{ $tripLogs->StartTime }}</li>
-            <li class="list-group-item"><strong>End Date:</strong> {{ $tripLogs->TripEndDate }}</li>
-            <li class="list-group-item"><strong>End Time:</strong> {{ $tripLogs->EndTime }}</li>
-            <li class="list-group-item"><strong>Start Location:</strong> {{ $tripLogs->StartLocation }}</li>
-            <li class="list-group-item"><strong>End Location:</strong> {{ $tripLogs->EndLocation }}</li>
-            <li class="list-group-item"><strong>Route Used:</strong> {{ $tripLogs->Route }}</li>
-            <li class="list-group-item"><strong>Distance Covered:</strong> {{ $tripLogs->DistanceCovered }} km</li>
-            <li class="list-group-item"><strong>Purpose:</strong> {{ $tripLogs->Purpose }}</li>
-            <li class="list-group-item"><strong>Notes:</strong> {{ $tripLogs->Notes ?? 'N/A' }}</li>
-        </ul>
-    </div>
+    <div class="d-flex gap-4">
+        <!-- Side Panel -->
+        <div class="card shadow rounded-4 p-4" style="min-width: 300px; max-width: 350px;">
+            <h5 class="mb-3">📋 Trip Details</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Trip No:</strong> {{ $tripLogs->TripNo }}</li>
+                <li class="list-group-item"><strong>Start Date:</strong> {{ $tripLogs->TripStartDate }}</li>
+                <li class="list-group-item"><strong>Start Time:</strong> {{ $tripLogs->StartTime }}</li>
+                <li class="list-group-item"><strong>End Date:</strong> {{ $tripLogs->TripEndDate }}</li>
+                <li class="list-group-item"><strong>End Time:</strong> {{ $tripLogs->EndTime }}</li>
+                <li class="list-group-item"><strong>Start Location:</strong> {{ $tripLogs->StartLocation }}</li>
+                <li class="list-group-item"><strong>End Location:</strong> {{ $tripLogs->EndLocation }}</li>
+                <li class="list-group-item"><strong>Route Used:</strong> {{ $tripLogs->Route }}</li>
+                <li class="list-group-item"><strong>Distance Covered:</strong> {{ $tripLogs->DistanceCovered }} km</li>
+                <li class="list-group-item"><strong>Purpose:</strong> {{ $tripLogs->Purpose }}</li>
+                <li class="list-group-item"><strong>Notes:</strong> {{ $tripLogs->Notes ?? 'N/A' }}</li>
+            </ul>
+        </div>
 
-    <!-- Table Panel -->
-    <div class="flex-grow-1 card shadow rounded-4 p-4">
-        <h5 class="mb-3">👤 Other Details</h5>
-        <table class="table table-bordered">
-            <tbody>
+        <!-- Table Panel -->
+        <div class="flex-grow-1 card shadow rounded-4 p-4">
+            <h5 class="mb-3">👤 Other Details</h5>
+            <table class="table table-bordered">
+                <tbody>
                 <tr>
                     <th>Vehicle</th>
                     <td>{{ $tripLogs->vehicle->RegistrationNo ?? 'N/A' }}</td>
@@ -44,25 +44,27 @@
                         @endif
                     </td>
                 </tr>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
 
-        <div class="mt-4 d-flex justify-content-between">
-            <a href="{{ route('fleet.trip_logs.index') }}" class="btn btn-secondary">⬅ Back</a>
-            <div>
-                <!-- Button trigger modal -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editTripModal">
-                    ✏ Edit
-                </button>
-
-                <form action="{{ route('fleet.trip_logs.destroy', $tripLogs->Id) }}" method="POST" class="d-inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger" 
-                        onclick="return confirm('Are you sure you want to delete this Trip Log?')">
-                        🗑 Delete
+            <div class="mt-4 d-flex justify-content-between">
+                <a href="{{ route('fleet.trip_logs.index') }}" class="btn btn-secondary">⬅ Back</a>
+                <div>
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#editTripModal">
+                        ✏ Edit
                     </button>
-                </form>
+
+                    <form action="{{ route('fleet.trip_logs.destroy', $tripLogs->Id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this Trip Log?')">
+                            🗑 Delete
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -209,10 +211,7 @@
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Changes</button>
         </div>
-      </form>
     </div>
-  </div>
-</div>
 @endsection
 {{-- Same filtering behavior as create, but also fix selection if it points to hidden option --}}
 @section('scripts')

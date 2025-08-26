@@ -21,7 +21,7 @@ class BancAssuranceReferralPolicy
         return $user->can(PermissionEnum::BancassuranceReferralCreate->value);
     }
 
-    public function view(User $user, BancAssuranceReferral $bancAssuranceReferral ): bool
+    public function view(User $user, BancAssuranceReferral $bancAssuranceReferral): bool
     {
         return $user->can(PermissionEnum::BancassuranceReferralView->value);
     }

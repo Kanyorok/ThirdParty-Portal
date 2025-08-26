@@ -22,23 +22,23 @@ class FleetServiceAlertRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'ScheduleID'      => 'required|exists:t_FleetMaintenanceSchedules,Id',
-        'VehicleID'      => 'required|exists:t_FleetVehicles,Id',
-        'AlertType'      => 'required|exists:t_CodeDetails,Id',
-        'Description'    => 'nullable|string|max:1000',
-        'TriggerMileage' => 'nullable|numeric',
-        'TriggerDate'    => 'nullable|date',
-        'IsAcknowledged' => 'boolean',
-        'AcknowledgedOn' => 'nullable|date',
-        'AcknowledgedBy' => 'nullable|exists:t_Users,Id',
-        'CreatedBy'      => 'nullable|exists:t_Users,Id',
-        'CreatedOn'      => 'nullable|date',
-        'ModifiedBy'     => 'nullable|exists:t_Users,Id',
-        'ModifiedOn'     => 'nullable|date',
-        'DeletedBy'      => 'nullable|exists:t_Users,Id',
-        'DeletedOn'      => 'nullable|date',
-    ];
-}
+            'ScheduleID' => 'required|exists:t_FleetMaintenanceSchedules,Id',
+            'VehicleID' => 'required|exists:t_FleetVehicles,Id',
+            'AlertType' => 'required|exists:t_CodeDetails,Id',
+            'Description' => 'nullable|string|max:1000',
+            'TriggerMileage' => 'nullable|numeric',
+            'TriggerDate' => 'nullable|date',
+            'IsAcknowledged' => 'boolean',
+            'AcknowledgedOn' => 'nullable|date',
+            'AcknowledgedBy' => 'nullable|exists:t_Users,Id',
+            'CreatedBy' => 'nullable|exists:t_Users,Id',
+            'CreatedOn' => 'nullable|date',
+            'ModifiedBy' => 'nullable|exists:t_Users,Id',
+            'ModifiedOn' => 'nullable|date',
+            'DeletedBy' => 'nullable|exists:t_Users,Id',
+            'DeletedOn' => 'nullable|date',
+        ];
+    }
 
 
 }

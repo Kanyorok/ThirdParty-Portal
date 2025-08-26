@@ -14,7 +14,7 @@ use App\Models\HRM\Employee;
 
 class FleetDriver extends Model
 {
-     use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -49,5 +49,5 @@ class FleetDriver extends Model
         return $this->belongsTo(Employee::class, 'StaffNumber', 'Id');
     }
 
-    
+
 }

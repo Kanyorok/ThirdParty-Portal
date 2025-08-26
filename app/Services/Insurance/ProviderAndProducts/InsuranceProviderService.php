@@ -20,9 +20,10 @@ class InsuranceProviderService
         string $ContactPerson,
         string $Email,
         string $Phone,
-        bool $IsActive,
-        User $user
-    ): self {
+        bool   $IsActive,
+        User   $user
+    ): self
+    {
 
         // Extract only numeric part after the dash and cast to INT safely
         $lastInsuranceProviderNO = InsuranceProvider::withTrashed()
@@ -39,8 +40,8 @@ class InsuranceProviderService
         // Increment number or start from 1
         $nextNumber = $lastInsuranceProviderNO ? $lastInsuranceProviderNO + 1 : 1;
 
-        // Generate the next InsuranceProviderNO
-        $InsuranceProviderNO = 'InsuranceProviderNO-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+    // Generate the next ProviderNO
+    $InsuranceProviderNO = 'ProviderNO-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
         // Create the provider
         $provider = InsuranceProvider::create([
