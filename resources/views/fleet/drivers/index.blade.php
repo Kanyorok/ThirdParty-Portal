@@ -1,18 +1,21 @@
 @extends('layouts.app')
 @section('title', 'Drivers')
-
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
-<div class="card p-4 shadow rounded-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">🧑‍✈️ Fleet Driver Register</h4>
-        <a href="{{ route('fleet.drivers.create') }}" class="btn btn-primary">
-            + New Driver
-        </a>
-    </div>
+    <div class="card p-4 shadow rounded-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">🧑‍✈️ Fleet Driver Register</h4>
+            <a href="{{ route('fleet.drivers.create') }}" class="btn btn-primary">
+                + New Driver
+            </a>
+        </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped align-middle">
-            <thead class="table-light">
+
+        <div class="table-responsive">
+            <table id="driversTable" class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Full Name</th>
@@ -25,8 +28,8 @@
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @forelse ($drivers as $driver)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
@@ -45,12 +48,8 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('fleet.drivers.show', $driver->Id) }}" class="btn btn-sm btn-info">View</a>
-                            <a href="{{ route('fleet.drivers.edit', $driver->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <form action="{{ route('fleet.drivers.destroy', $driver->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this driver?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </form>
+                            <a href="{{ route('fleet.drivers.show', $driver->Id) }}"
+                               class="btn btn-sm btn-info">View</a>
                         </td>
                     </tr>
                 @empty
@@ -58,8 +57,29 @@
                         <td colspan="11" class="text-center text-muted">No drivers registered.</td>
                     </tr>
                 @endforelse
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
+
 @endsection
+@section('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            @if(!$drivers->isEmpty())
+            $('#driversTable').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: ""
+                }
+            });
+            @endif
+        });
+    </script>
+@endsection
+

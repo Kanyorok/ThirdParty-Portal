@@ -3,91 +3,129 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\FleetManagement\FleetMaintenanceScheduleRequest;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\Core\CodeDetail;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetMaintenanceSchedule;
+use App\Services\FleetManagement\FleetMaintenanceScheduleService;
 
 class FleetMaintenanceScheduleController extends Controller
 {
+    protected FleetMaintenanceScheduleService $scheduleService;
+
+    public function __construct(FleetMaintenanceScheduleService $scheduleService)
+    {
+        $this->scheduleService = $scheduleService;
+    }
+
     // View all maintenance schedules
     public function index()
     {
-        $schedules = FleetMaintenanceSchedule::with('vehicle')->orderByDesc('ScheduledDate')->get();
+        $schedules = FleetMaintenanceSchedule::with('vehicle', 'maintenanceStatus')
+            ->orderByDesc('ScheduleID', 'desc')
+            ->get();
+
         return view('fleet.maintenance.schedule.index', compact('schedules'));
     }
 
     // Show form to create a new schedule
     public function create()
     {
-        $vehicles = FleetVehicle::where('IsActive', 1)->orderBy('RegistrationNumber')->get();
-        return view('fleet.maintenance.schedule.create', compact('vehicles'));
+        $vehicles = FleetVehicle::all();
+        $maintenanceType = CodeDetail::where('CodeID', 'FleetMaintenanceType')
+            ->orderBy('Value')
+            ->get();
+
+        return view('fleet.maintenance.schedule.create', compact('vehicles', 'maintenanceType'));
     }
 
     // Store a new maintenance schedule
-    public function store(Request $request)
+    public function store(FleetMaintenanceScheduleRequest $request)
     {
-        $validated = $request->validate([
-            'VehicleID' => 'required|exists:t_FleetVehicles,VehicleID',
-            'MaintenanceType' => 'required|string|max:100',
-            'ScheduledDate' => 'required|date',
-            'ScheduledMileage' => 'nullable|integer|min:0',
-            'Location' => 'nullable|string|max:255',
-            'Notes' => 'nullable|string'
-        ]);
+        $data = $request->validated();
+        $this->scheduleService->create($data);
 
-        FleetMaintenanceSchedule::create([
-            ...$validated,
-            'Status' => 'Scheduled',
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now()
-        ]);
-
-        return redirect()->route('fleet.maintenance_schedule.index')->with('success', 'Maintenance schedule created.');
+        return redirect()
+            ->route('fleet.maintenance_schedule.index')
+            ->with('success', 'Maintenance schedule created successfully.');
     }
 
     // Show form to edit a schedule
     public function edit($id)
     {
         $schedule = FleetMaintenanceSchedule::findOrFail($id);
-        $vehicles = FleetVehicle::where('IsActive', 1)->orderBy('RegistrationNumber')->get();
+        $vehicles = FleetVehicle::all();
+        $maintenanceType = CodeDetail::where('CodeID', 'FleetMaintenanceType')
+            ->orderBy('Value')
+            ->get();
 
-        return view('fleet.maintenance.schedule.edit', compact('schedule', 'vehicles'));
+        return view('fleet.maintenance.schedule.edit', compact('schedule', 'vehicles', 'maintenanceType'));
     }
 
-    // Update a schedule
-    public function update(Request $request, $id)
+    // Update a schedule (acknowledge)
+    public function update(FleetMaintenanceScheduleRequest $request, $id)
     {
-        $schedule = FleetMaintenanceSchedule::findOrFail($id);
+        $data = $request->validated();
 
-        $validated = $request->validate([
-            'VehicleID' => 'required|exists:t_FleetVehicles,VehicleID',
-            'MaintenanceType' => 'required|string|max:100',
-            'ScheduledDate' => 'required|date',
-            'ScheduledMileage' => 'nullable|integer|min:0',
-            'Location' => 'nullable|string|max:255',
-            'Notes' => 'nullable|string',
-            'Status' => 'required|in:Scheduled,Completed,Cancelled'
-        ]);
+        // Only handle mileage update & completion
+        if (!empty($data['ScheduledMileage'])) {
+            $this->scheduleService->updateMileage($id, $data['ScheduledMileage']);
+        }
 
-        $schedule->update([
-            ...$validated,
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now()
-        ]);
-
-        return redirect()->route('fleet.maintenance_schedule.index')->with('success', 'Maintenance schedule updated.');
+        return redirect()
+            ->route('fleet.maintenance_schedule.index')
+            ->with('success', 'Maintenance schedule updated successfully.');
     }
 
-    // Optionally cancel a schedule
+
+    // Complete a maintenance schedule
+    public function complete($id)
+    {
+        $mileage = request()->input('ScheduledMileage');
+        $this->scheduleService->complete($id, $mileage);
+
+        return redirect()
+            ->route('fleet.maintenance_schedule.index')
+            ->with('success', 'Maintenance schedule marked as completed.');
+    }
+
+    // Show a single schedule
+    public function show($id)
+    {
+        $schedule = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert'])
+            ->findOrFail($id);
+
+        return view('fleet.maintenance.schedule.show', compact('schedule'));
+    }
+
+    // Cancel a schedule
     public function cancel($id)
     {
         $schedule = FleetMaintenanceSchedule::findOrFail($id);
-        $schedule->Status = 'Cancelled';
+
+        // Just deactivate, no change to MaintenanceStatus
+        $schedule->Status = false;
         $schedule->ModifiedBy = Auth::id();
         $schedule->ModifiedOn = now();
         $schedule->save();
 
-        return redirect()->back()->with('success', 'Schedule cancelled.');
+        activity()
+            ->performedOn($schedule)
+            ->causedBy(Auth::user())
+            ->log('Maintenance Schedule Deactivated');
+
+        return redirect()->back()->with('success', 'Schedule cancelled (deactivated) successfully.');
+    }
+
+
+    // Soft delete a schedule
+    public function destroy($id)
+    {
+        $this->scheduleService->delete($id);
+
+        return redirect()
+            ->route('fleet.maintenance_schedule.index')
+            ->with('success', 'Maintenance schedule deleted successfully.');
     }
 }

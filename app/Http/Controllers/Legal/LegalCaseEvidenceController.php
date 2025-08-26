@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Legal;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Legal\LegalCaseEvidence;
 use App\Models\Legal\LegalCase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LegalCaseEvidenceController extends Controller
 {
@@ -29,32 +33,62 @@ class LegalCaseEvidenceController extends Controller
         $validated = $request->validate([
             'EvidenceTitle' => 'required|string',
             'Description' => 'nullable|string',
-            'DMSDocumentID' => 'nullable|string',
+            'DMSDocumentID' =>  'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
             'ExternalLink' => 'nullable|url'
+        ],[
+            'DMSDocumentID.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
+            'DMSDocumentID.max'   => 'File size must not exceed 5 MB.',
         ]);
 
-        $evidence = LegalCaseEvidence::create([
-            'LegalCaseID' => $caseId,
-            'EvidenceTitle' => $validated['EvidenceTitle'],
-            'Description' => $validated['Description'],
-            'DMSDocumentID' => $validated['DMSDocumentID']?? null,
-            'ExternalLink' => $validated['ExternalLink']?? null,
-            'IsActive' => $validated['IsActive'] ?? 'Active', // Default to inactive
-            'UploadedBy' => Auth::id(),
-            'UploadedOn' => now(),
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
+        try {
+            DB::beginTransaction();
+            $evidence = LegalCaseEvidence::create([
+                'LegalCaseID' => $caseId,
+                'EvidenceTitle' => $validated['EvidenceTitle'],
+                'Description' => $validated['Description'],
+                'DMSDocumentID' => $request->hasFile('DMSDocumentID')
+                    ? $request->file('DMSDocumentID')->getClientOriginalName() : null,
+                'ExternalLink' => $validated['ExternalLink']?? null,
+                'IsActive' => $validated['IsActive'] ?? 'Active', // Default to inactive
+                'UploadedBy' => Auth::id(),
+                'UploadedOn' => now(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
-        return redirect()->route('legal.cases.evidence.index', $caseId)
-            ->with('success', 'Evidence linked successfully.');
+            //Upload Evidence to E-DMS
+            if ($request->hasFile('DMSDocumentID')) {
+                $evidence->newDocument(
+                    ModulesEnum::Legal, // or ModulesEnum::INVOICE if you have it
+                    $request->file('DMSDocumentID'),
+                    [PermissionEnum::ContractCreate], // Permissions
+                    Auth::user()
+                );
+            }
+
+            activity()
+                ->performedOn($evidence)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'create'])
+                ->log('Uploaded Evidence:' . $evidence->EvidenceTitle);
+
+            DB::commit();
+            return redirect()->route('legal.cases.evidence.index', $caseId)
+                ->with('success', 'Evidence linked successfully.');
+
+        }catch(\Throwable $th){
+            DB::rollBack();
+            return $th->getMessage();
+            Log::error('Failed to create Evidence: ' . $th->getMessage());
+            return back()->with('error', 'An Error Occurred. Please try again');
+        }
     }
 
-    public function show($id)
+    public function show($case_id,$evidence_id)
     {
-        $evidence = LegalCaseEvidence::with('case:Id,CaseTitle,CaseNumber')->findOrFail($id);
+        $evidence = LegalCaseEvidence::with('case:Id,CaseTitle,CaseNumber')->findOrFail($evidence_id);
 
         return view('legal.disputes.evidence.show', compact('evidence'));
     }

@@ -23,12 +23,12 @@ class FleetAlertRuleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'AlertName'      => 'required|string|max:100',
-            'TriggerType'    => 'required|in:Mileage,Date,Schedule',
-            'TriggerValue'   => 'nullable|integer',
-            'FrequencyDays'  => 'nullable|integer|min:1',
+            'AlertName' => 'required|string|max:100',
+            'TriggerType' => 'required|in:Mileage,Date,Schedule',
+            'TriggerValue' => 'nullable|integer',
+            'FrequencyDays' => 'nullable|integer|min:1',
             'EscalationDays' => 'nullable|integer|min:0',
-            'Description'    => 'nullable|string|max:255',
+            'Description' => 'nullable|string|max:255',
         ]);
 
         FleetAlertRule::create([
@@ -49,12 +49,12 @@ class FleetAlertRuleController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'AlertName'      => 'required|string|max:100',
-            'TriggerType'    => 'required|in:Mileage,Date,Schedule',
-            'TriggerValue'   => 'nullable|integer',
-            'FrequencyDays'  => 'nullable|integer|min:1',
+            'AlertName' => 'required|string|max:100',
+            'TriggerType' => 'required|in:Mileage,Date,Schedule',
+            'TriggerValue' => 'nullable|integer',
+            'FrequencyDays' => 'nullable|integer|min:1',
             'EscalationDays' => 'nullable|integer|min:0',
-            'Description'    => 'nullable|string|max:255',
+            'Description' => 'nullable|string|max:255',
         ]);
 
         $rule = FleetAlertRule::findOrFail($id);

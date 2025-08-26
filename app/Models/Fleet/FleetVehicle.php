@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Auth\User;
 
 
-
 class FleetVehicle extends Model
 {
     use UserActorTrait, SoftDeletes;
@@ -28,7 +27,7 @@ class FleetVehicle extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    
+
     protected $table = 't_FleetVehicles';
     protected $primaryKey = 'Id';
     public $timestamps = false;
@@ -75,6 +74,7 @@ class FleetVehicle extends Model
     {
         return $this->belongsTo(FleetMake::class, 'Make', 'Id');
     }
+
     public function model()
     {
         return $this->belongsTo(FleetModel::class, 'Model', 'Id');

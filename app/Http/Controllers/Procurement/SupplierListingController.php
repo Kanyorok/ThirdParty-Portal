@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Procurement;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class SupplierListingController extends Controller
 {
@@ -13,8 +12,8 @@ class SupplierListingController extends Controller
         return view('procurement.suppliers.supplierlist.index');
     }
 
-    public function create(){
+    public function create()
+    {
         return view('procurement.suppliers.supplierlist.create');
     }
-
 }

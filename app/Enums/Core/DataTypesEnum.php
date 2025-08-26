@@ -2,7 +2,7 @@
 
 namespace App\Enums\Core;
 
-use App\Services\DMS\FileProperties;
+use App\Services\DMS\Files\FileProperties;
 use App\Traits\UsefulEnumTrait;
 use Carbon\Carbon;
 use Exception;

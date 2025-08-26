@@ -8,32 +8,32 @@ use Illuminate\Support\Facades\DB;
 
 class SettingsController extends Controller
 {
-public function index(Request $request)
-{
-    $codeId = $request->get('codeid');
+    public function index(Request $request)
+    {
+        $codeId = $request->get('codeid');
 
-    // Fetch unique CodeID types to populate filter dropdown
-    $codeTypes = DB::table('t_CodeDetails')
-        ->select('CodeID')
-        ->distinct()
-        ->pluck('CodeID')
-        ->toArray();
+        // Fetch unique CodeID types to populate filter dropdown
+        $codeTypes = DB::table('t_CodeDetails')
+            ->select('CodeID')
+            ->distinct()
+            ->pluck('CodeID')
+            ->toArray();
 
-    // Fetch code details based on filter
-    $query = DB::table('t_CodeDetails')->orderBy('DisplayOrder');
+        // Fetch code details based on filter
+        $query = DB::table('t_CodeDetails')->orderBy('DisplayOrder');
 
-    if ($codeId) {
-        $query->where('CodeID', $codeId);
+        if ($codeId) {
+            $query->where('CodeID', $codeId);
+        }
+
+        $codeDetails = DB::table('t_CodeDetails')
+            ->select('ID', 'Description', 'DisplayOrder', 'IsActive')
+            ->when($codeId, fn($query) => $query->where('CodeID', $codeId))
+            ->orderBy('DisplayOrder')
+            ->get();
+
+        return view('bancassurance.settings.index', compact('codeDetails', 'codeTypes'));
     }
-
-    $codeDetails = DB::table('t_CodeDetails')
-    ->select('ID', 'Description', 'DisplayOrder', 'IsActive')
-    ->when($codeId, fn($query) => $query->where('CodeID', $codeId))
-    ->orderBy('DisplayOrder')
-    ->get();
-
-    return view('bancassurance.settings.index', compact('codeDetails', 'codeTypes'));
-}
 
 
     public function store(Request $request)
@@ -69,61 +69,64 @@ public function index(Request $request)
 
         return back()->with('success', 'Code detail removed.');
     }
-public function storeOrUpdate(Request $request)
-{
-    $validated = $request->validate([
-        'CodeID' => 'required|string|max:100',
-        'Description' => 'required|string|max:255',
-        'DisplayOrder' => 'nullable|integer',
-        'IsActive' => 'required|boolean',
-    ]);
 
-    $data = [
-        'CodeID' => $validated['CodeID'],
-        'Description' => $validated['Description'],
-        'DisplayOrder' => $validated['DisplayOrder'] ?? null,
-        'IsActive' => $validated['IsActive'],
-        'ModifiedBy' => auth()->id(),
-        'ModifiedOn' => now(),
-    ];
+    public function storeOrUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'CodeID' => 'required|string|max:100',
+            'Description' => 'required|string|max:255',
+            'DisplayOrder' => 'nullable|integer',
+            'IsActive' => 'required|boolean',
+        ]);
 
-    if ($request->has('id')) {
-        // Update existing
-        DB::table('t_CodeDetails')
-            ->where('ID', $request->id)
-            ->update($data);
+        $data = [
+            'CodeID' => $validated['CodeID'],
+            'Description' => $validated['Description'],
+            'DisplayOrder' => $validated['DisplayOrder'] ?? null,
+            'IsActive' => $validated['IsActive'],
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
+        ];
 
-        return redirect()->back()->with('success', 'Setting updated successfully.');
-    } else {
-        // Create new
-        $data['CreatedBy'] = auth()->id();
-        $data['CreatedOn'] = now();
+        if ($request->has('id')) {
+            // Update existing
+            DB::table('t_CodeDetails')
+                ->where('ID', $request->id)
+                ->update($data);
 
-        DB::table('t_CodeDetails')->insert($data);
+            return redirect()->back()->with('success', 'Setting updated successfully.');
+        } else {
+            // Create new
+            $data['CreatedBy'] = auth()->id();
+            $data['CreatedOn'] = now();
 
-        return redirect()->back()->with('success', 'Setting created successfully.');
-    }
-}
-public function edit($id)
-{
-    $record = DB::table('t_CodeDetails')->where('ID', $id)->first();
+            DB::table('t_CodeDetails')->insert($data);
 
-    if (!$record) {
-        return redirect()->back()->with('error', 'Record not found.');
+            return redirect()->back()->with('success', 'Setting created successfully.');
+        }
     }
 
-    $codeTypes = DB::table('t_CodeDetails')->select('CodeID')->distinct()->pluck('CodeID')->toArray();
+    public function edit($id)
+    {
+        $record = DB::table('t_CodeDetails')->where('ID', $id)->first();
 
-    return view('bancassurance.settings.edit', compact('record', 'codeTypes'));
-}
-public function create()
-{
-    $codeTypes = DB::table('t_CodeDetails')
-        ->select('CodeID')
-        ->distinct()
-        ->pluck('CodeID')
-        ->toArray();
+        if (!$record) {
+            return redirect()->back()->with('error', 'Record not found.');
+        }
 
-    return view('bancassurance.settings.create', compact('codeTypes'));
-}
+        $codeTypes = DB::table('t_CodeDetails')->select('CodeID')->distinct()->pluck('CodeID')->toArray();
+
+        return view('bancassurance.settings.edit', compact('record', 'codeTypes'));
+    }
+
+    public function create()
+    {
+        $codeTypes = DB::table('t_CodeDetails')
+            ->select('CodeID')
+            ->distinct()
+            ->pluck('CodeID')
+            ->toArray();
+
+        return view('bancassurance.settings.create', compact('codeTypes'));
+    }
 }

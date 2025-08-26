@@ -11,6 +11,11 @@
             padding: .5rem 1.5rem !important;
             opacity: 0.98;
         }
+
+        .dropdown-item {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
     </style>
     <div class="form-search" action="" method="get">
         <i class="search-icon">

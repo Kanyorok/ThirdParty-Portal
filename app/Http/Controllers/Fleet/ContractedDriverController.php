@@ -26,7 +26,7 @@ class ContractedDriverController extends Controller
         $this->driverService = $driverService;
     }
 
-    
+
     public function index()
     {
         $drivers = ContractedDriver::all();
@@ -39,13 +39,13 @@ class ContractedDriverController extends Controller
     }
 
     public function store(ContractedDriversRequest $request)
-        {
-            $validated = $request->validated();
-            $this->driverService->create($validated);
+    {
+        $validated = $request->validated();
+        $this->driverService->create($validated);
 
-            return redirect()->route('fleet.contracted_drivers.index')
-                ->with('success', 'Contracted driver registered successfully.');
-        }
+        return redirect()->route('fleet.contracted_drivers.index')
+            ->with('success', 'Contracted driver registered successfully.');
+    }
 
     public function edit($id)
     {
@@ -79,7 +79,7 @@ class ContractedDriverController extends Controller
             ->with('success', 'Contracted driver deactivated.');
     }
 
-     public function destroy($id)
+    public function destroy($id)
     {
         $driver = ContractedDriver::findOrFail($id);
         $this->driverService->delete($driver);
@@ -90,34 +90,33 @@ class ContractedDriverController extends Controller
 
 
     public function show($Id)
-{
-    $driver = ContractedDriver::findOrFail($Id);
-    $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
-    $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
-        ->with('vehicle')
-        ->orderByDesc('AssignmentDate')
-        ->get();
-    $vehicles = FleetVehicle::where('IsActive', 1)->get();
+    {
+        $driver = ContractedDriver::findOrFail($Id);
+        $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
+        $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
+            ->with('vehicle')
+            ->orderByDesc('AssignmentDate')
+            ->get();
+        $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
-    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-        ->pluck('name', 'Id');
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
 
-   $trips = FleetTripLog::with(['vehicle'])
-        ->where('DriverID', $driver->Id)
-        ->orderByDesc('TripStartDate')
-        ->get();
+        $trips = FleetTripLog::with(['vehicle'])
+            ->where('DriverID', $driver->Id)
+            ->orderByDesc('TripStartDate')
+            ->get();
 
 
-    return view('fleet.contracted_drivers.show', compact(
-        'driver',
-        'licenses',
-        'assignments',
-        'vehicles',
-        'assigners',
-        'trips'
-    ));
-}
-
+        return view('fleet.contracted_drivers.show', compact(
+            'driver',
+            'licenses',
+            'assignments',
+            'vehicles',
+            'assigners',
+            'trips'
+        ));
+    }
 
 
 }

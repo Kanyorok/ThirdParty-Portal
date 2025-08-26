@@ -16,7 +16,7 @@ use App\Models\Insurance\BancassuranceCustomer;
 
 class CustomerController extends Controller
 {
-        //
+    //
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
@@ -24,9 +24,9 @@ class CustomerController extends Controller
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
         $occupations = CodeDetail::where('CodeID', 'Occupation')->get();
-        
-        
-        return view('bancassurance.customers.create',compact('genders','maritalstatus','occupations','referrals'));
+
+
+        return view('bancassurance.customers.create', compact('genders', 'maritalstatus', 'occupations', 'referrals'));
     }
 
     public function store(BancassuranceCustomersRequest $request)
@@ -41,44 +41,47 @@ class CustomerController extends Controller
         $DateOfBirth = new \DateTime($validated['DateOfBirth']);
 
         $customer = BancassuranceCustomersService::create(
-                $ReferralID,
-                $validated['FullName'],
-                $validated['NationalID'],
-                $validated['KRAPIN'],
-                $DateOfBirth, 
-                $Gender,  
-                $MaritalStatus, 
-                $validated['PhoneNumber'],
-                $validated['Email'],
-                $validated['Address'],
-                $Occupation,
-                Auth::user(),
-            );
+            $ReferralID,
+            $validated['FullName'],
+            $validated['NationalID'],
+            $validated['KRAPIN'],
+            $DateOfBirth,
+            $Gender,
+            $MaritalStatus,
+            $validated['PhoneNumber'],
+            $validated['Email'],
+            $validated['Address'],
+            $Occupation,
+            Auth::user(),
+        );
 
         return redirect()->route('bancassurance.customers.index')->with('success', 'Customer profile saved.');
     }
+
     public function show($Id)
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
-        
-        $customer = BancassuranceCustomer::findOrFail($Id); 
+
+        $customer = BancassuranceCustomer::findOrFail($Id);
 
         return view('bancassurance.customers.show', compact('customer'));
     }
+
     public function index()
     {
-       $customers = BancassuranceCustomer::all();
+        $customers = BancassuranceCustomer::all();
 
         return view('bancassurance.customers.index', compact('customers'));
     }
 
     public function check()
     {
+        //check
        $customers = BancassuranceCustomer::all();
 
         return view('bancassurance.customers.check', compact('customers'));
     }
-    
+
 // public function portfolio($customerId)
 // {
 //     $customer = DB::table('t_BancassuranceCustomers')->where('Id', $customerId)->first();
@@ -97,17 +100,17 @@ class CustomerController extends Controller
 
 //     return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
 // }
-public function edit($id)
+    public function edit($id)
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
-        $customer = BancassuranceCustomer::findOrFail($id);  
+        $customer = BancassuranceCustomer::findOrFail($id);
         $referrals = BancAssuranceReferral::all();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
         $occupations = CodeDetail::where('CodeID', 'Occupation')->get();
-        
 
-        return view('bancassurance.customers.edit', compact('customer', 'referrals', 'genders', 'occupations','maritalstatus' ));
+
+        return view('bancassurance.customers.edit', compact('customer', 'referrals', 'genders', 'occupations', 'maritalstatus'));
     }
 
     public function update(BancassuranceCustomersRequest $request, $id)
@@ -127,8 +130,8 @@ public function edit($id)
                 'KRAPIN' => $validated['KRAPIN'],
                 'DateOfBirth' => $validated['DateOfBirth'],
                 'Gender' => $validated['Gender'] ?? '',
-                'MaritalStatus' => $validated['MaritalStatus'], 
-                'PhoneNumber' => $validated['PhoneNumber'],           
+                'MaritalStatus' => $validated['MaritalStatus'],
+                'PhoneNumber' => $validated['PhoneNumber'],
                 'Email' => $validated['Email'],
                 'Address' => $validated['Address'],
                 'Occupation' => $validated['Occupation'],

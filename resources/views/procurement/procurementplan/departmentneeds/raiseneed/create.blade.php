@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Raise Procurement Need')
 @section('content')
-<div class="card p-4 shadow rounded-4">
+    <div class="card p-4 shadow rounded-4">
     <h4 class="mb-4">📥 Raise Procurement Need</h4>
 
     <form action="{{ route('procurementdepartmentalplan.store') }}" method="POST" enctype="multipart/form-data">
@@ -16,16 +16,15 @@
             <div class="col-md-6">
                 <label for="ItemID" class="form-label">Item Name</label>
                 <select name="ItemID" id="itemDropdown" class="form-select @error('ItemID') is-invalid @enderror"
-                    required>
+                        required>
                     <option disabled selected>Select an item</option>
                     @foreach ($items as $item)
-                    <option value="{{ $item->Id }}"
-                        data-category="{{ $item->category->Name ?? '' }}"
-                        data-uom="{{ $item->uom->Name ?? 'N/A' }}"
-                        data-price="{{ $item->price->EstimatedPrice ?? '0.00' }}"
-                        {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
-                        {{ $item->ItemName }}
-                    </option>
+                        <option value="{{ $item->Id }}" data-category="{{ $item->category->Name ?? '' }}"
+                                data-uom="{{ $item->uom->Name ?? 'N/A' }}"
+                                data-price="{{ $item->price->ActualPrice ?? '0.00' }}"
+                            {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
+                            {{ $item->ItemName }}
+                        </option>
                     @endforeach
                 </select>
                 @error('ItemID')
@@ -43,8 +42,8 @@
             <div class="col-md-6">
                 <label for="RequestedQty" class="form-label">Quantity Needed</label>
                 <input type="number" name="RequestedQty" id="RequestedQty" value="{{ old('RequestedQty') }}"
-                    class="form-control @error('RequestedQty') is-invalid @enderror" placeholder="Enter quantity"
-                    required>
+                       class="form-control @error('RequestedQty') is-invalid @enderror" placeholder="Enter quantity"
+                       required>
                 @error('RequestedQty')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -59,14 +58,15 @@
         <div class="mb-3">
             <label for="EstimatedUnitCostField" class="form-label">Estimated Unit Cost</label>
             <input type="text" id="EstimatedUnitCostField" class="form-control" readonly>
-            <input type="hidden" name="EstimatedUnitCost" id="EstimatedUnitCostHidden" value="{{ old('EstimatedUnitCost') }}">
+            <input type="hidden" name="EstimatedUnitCost" id="EstimatedUnitCostHidden"
+                   value="{{ old('EstimatedUnitCost') }}">
         </div>
 
         <div class="mb-3">
             <label for="Justification" class="form-label">Justification</label>
             <textarea name="Justification" id="Justification" rows="3"
-                class="form-control @error('Justification') is-invalid @enderror"
-                placeholder="Explain the need...">{{ old('Justification') }}</textarea>
+                      class="form-control @error('Justification') is-invalid @enderror"
+                      placeholder="Explain the need...">{{ old('Justification') }}</textarea>
             @error('Justification')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -75,7 +75,7 @@
         <div class="mb-3">
             <label for="RequestedDate" class="form-label">Date Needed</label>
             <input type="date" name="RequestedDate" id="RequestedDate" value="{{ old('RequestedDate') }}"
-                class="form-control @error('RequestedDate') is-invalid @enderror" required>
+                   class="form-control @error('RequestedDate') is-invalid @enderror" required>
             @error('RequestedDate')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -88,10 +88,10 @@
             <button type="submit" class="btn btn-primary">Submit Need</button>
         </div>
     </form>
-</div>
+    </div>
 
 @section('scripts')
-<script>
+    <script>
     flatpickr("#RequestedDate", {
         dateFormat: "Y-m-d",
         altInput: true,
@@ -117,23 +117,23 @@
         if (itemDropdown.value) fillFields();
         itemDropdown.addEventListener('change', fillFields);
     });
-</script>
+    </script>
 @endsection
 
-@if(session('success'))
-<div class="alert alert-success mb-3">
+    @if (session('success'))
+        <div class="alert alert-success mb-3">
     {{ session('success') }}
-</div>
+        </div>
 @endif
 
-@if($errors->any())
-<div class="alert alert-danger mb-3">
+    @if ($errors->any())
+        <div class="alert alert-danger mb-3">
     <ul class="mb-0">
         @foreach ($errors->all() as $error)
         <li>{{ $error }}</li>
         @endforeach
     </ul>
-</div>
+        </div>
 @endif
 
 @endsection

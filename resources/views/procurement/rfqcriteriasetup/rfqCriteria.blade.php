@@ -5,7 +5,8 @@
     <div class="container mt-4">
         <h4 class="mb-3">📑 {{ $rfq->RFQNumber }} Criteria Form</h4>
 
-        <form action="{{ route('rfqcriterias.store') }}" method="POST" enctype="multipart/form-data" id="rfqCriteriaForm">
+        <form action="{{ route('rfqcriterias.store') }}" method="POST" enctype="multipart/form-data"
+              id="rfqCriteriaForm">
             @csrf
 
             <input type="hidden" name="rfq_id" value="{{ $rfq->Id }}">
@@ -24,12 +25,12 @@
                     </tr>
 
                     @foreach ($section->section->criteriaSettings as $criteria)
-                    <tr class="criteria-row">
+                        <tr class="criteria-row">
                             <td>
                                 <input type="checkbox"
                                        name="criterias[{{ $section->section->id }}][]"
                                        value="{{ $criteria->id }}"
-                                        {{ $criteria->isChecked ? 'checked' : '' }}>
+                                    {{ $criteria->isChecked ? 'checked' : '' }}>
                             </td>
                             <td colspan="2">{{ $criteria->CriteriaName }}</td>
                         </tr>

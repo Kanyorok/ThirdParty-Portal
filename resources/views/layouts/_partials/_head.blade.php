@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="{{ asset('assets/fonts/fontawesome.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/fonts/material.css') }}"><!-- [Template CSS Files] -->
 <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" id="main-style-link">
-<script src="{{ asset('assets/js/tech-stack.js') }}"></script>
+{{--<script src="{{ asset('assets/js/tech-stack.js') }}"></script> --}}
 <link rel="stylesheet" href="{{ asset('assets/css/style-preset.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/dataTables/bootstrap5.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}">

@@ -2,6 +2,8 @@
 
 namespace App\Policies\DMS;
 
+use App\Enums\Core\RoleEnum;
+use App\Enums\Core\VisibilityEnum;
 use App\Models\Auth\User;
 use App\Models\DMS\Repository;
 
@@ -12,7 +14,7 @@ class RepositoryPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return true; //root
     }
 
     /**
@@ -20,7 +22,7 @@ class RepositoryPolicy
      */
     public function view(User $user, Repository $repository): bool
     {
-        return true;
+        return Repository::query()->user($user)->where('Id', $repository->Id)->exists();
     }
 
     /**
@@ -32,11 +34,21 @@ class RepositoryPolicy
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Determine whether the user can update the model.if public creator or admin
      */
     public function update(User $user, Repository $repository): bool
     {
-        return true; //todo if public creator or admin
+        if (($repository->Visibility->value === VisibilityEnum::Public->value) && ($repository->CreatedBy === $user->Id)) {
+            return true;
+        }
+
+        return Repository::query()->userRole($user, [RoleEnum::Admin->value, RoleEnum::Share->value, RoleEnum::Write->value])->where('Id', $repository->Id)->exists();
+
+    }
+
+    public function share(User $user, Repository $repository): bool
+    {
+        return Repository::query()->userRole($user, [RoleEnum::Admin->value, RoleEnum::Share->value])->where('Id', $repository->Id)->exists();
     }
 
     /**
@@ -44,7 +56,12 @@ class RepositoryPolicy
      */
     public function delete(User $user, Repository $repository): bool
     {
-        return true;
+        return $this->admin($user, $repository);
+    }
+
+    public function admin(User $user, Repository $repository): bool
+    {
+        return Repository::query()->userRole($user, [RoleEnum::Admin->value])->where('Id', $repository->Id)->exists();
     }
 
     /**

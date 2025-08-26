@@ -6,6 +6,7 @@ use App\Enums\DMS\DisksEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentVersion extends Model
@@ -38,5 +39,10 @@ class DocumentVersion extends Model
     public function document(): BelongsTo
     {
         return $this->belongsTo(Document::class, 'DocumentId');
+    }
+
+    public function attributes(): HasMany
+    {
+        return $this->hasMany(DocumentAttribute::class, 'VersionId');
     }
 }

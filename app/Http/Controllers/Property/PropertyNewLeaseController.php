@@ -138,12 +138,12 @@ class PropertyNewLeaseController extends Controller
             StartDate: new \DateTime($data['StartDate']),
             EndDate: new \DateTime($data['EndDate']),
             PaymentFrequency: $frequency,
-            MonthlyRent: (float) $data['MonthlyRent'],
-            Deposit: (float) $data['Deposit'],
-            ServiceCharge: (float) $data['ServiceCharge'],
-            ParkingFee: (float) $data['ParkingFee'],
-            OtherCharges: (float) $data['OtherCharges'],
-            DueDay: (int) $data['DueDay'],
+            MonthlyRent: (float)$data['MonthlyRent'],
+            Deposit: (float)$data['Deposit'],
+            ServiceCharge: (float)$data['ServiceCharge'],
+            ParkingFee: (float)$data['ParkingFee'],
+            OtherCharges: (float)$data['OtherCharges'],
+            DueDay: (int)$data['DueDay'],
             SpecialTerms: $data['SpecialTerms'] ?? '',
             user: $user,
             document: $document
@@ -170,8 +170,6 @@ class PropertyNewLeaseController extends Controller
 
         return redirect()->route('addlease.index')->with('success', 'Lease deleted successfully.');
     }
-
-
 
 
 }
