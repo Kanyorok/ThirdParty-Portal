@@ -619,13 +619,13 @@ enum PermissionEnum: string
     case FleetMakeCreate = 'fleetMake-create';
     case FleetMakeUpdate = 'fleetMake-update';
     case FleetMakeDestroy = 'fleetMake-delete';
-    
+
     case FleetVehicleView = 'fleetVehicle-view';
     case FleetVehicleCreate = 'fleetVehicle-create';
     case FleetVehicleUpdate = 'fleetVehicle-update';
     case FleetVehicleDestroy = 'fleetVehicle-destroy';
 
-        
+
     case FleetInsuranceTrackerView = 'fleetInsuranceTracker-view';
     case FleetInsuranceTrackerCreate = 'fleetInsuranceTracker-create';
     case FleetInsuranceTrackerUpdate = 'fleetInsuranceTracker-update';
@@ -672,10 +672,53 @@ enum PermissionEnum: string
     case FleetRepairLogCreate = 'fleetRepairLog-create';
     case FleetRepairLogUpdate = 'fleetRepairLog-update';
     case FleetRepairLogDestroy = 'fleetRepairLog-destroy';
-    
+
     case FleetServiceAlertView = 'fleetServiceAlert-view';
     case FleetServiceAlertAcknowledge = 'fleetServiceAlert-acknowledge';
-    
+
+
+
+    /*
+*
+* ========================================  Legal  ========================================
+*/
+    //Document Registry and Contracts Creation
+    case ContractView = 'contract-view';
+    case ContractCreate = 'contract-create';
+    case ContractUpdate = 'contract-update';
+    case ContractDelete = 'contract-delete';
+
+    //Disputes and Ltigations
+    case DisputeLitigationView='disputelitigation-view';
+    case DisputeLitigationCreate='disputelitigation-create';
+    case DisputeLitigationUpdate='disputelitigation-update';
+    case DisputeLitigationDelete='disputelitigation-delete';
+
+    //LegalObligations
+    case LegalObligationView='legalobligation-view';
+    case LegalObligationCreate='legalobligation-create';
+    case LegalObligationUpdate='legalobligation-update';
+    case LegalObligationDelete='legalobligation-delete';
+
+    //Legal Search
+    case LegalSearchView='legalsearch-view';
+    case LegalSearchCreate='legalsearch-create';
+    case LegalSearchUpdate='legalsearch-update';
+    case LegalSearchDelete='legalsearch-delete';
+
+    //LoanSecurity
+    case LoanSecurityView='loansecurity-view';
+    case LoanSecurityCreate='loansecurity-create';
+    case LoanSecurityUpdate='loansecurity-update';
+    case LoanSecurityDelete='loansecurity-delete';
+
+    //IntellectualProperty
+    case IntellectualPropertyView='intellectualproperty-view';
+    case IntellectualPropertyCreate='intellectualproperty-create';
+    case IntellectualPropertyUpdate='intellectualproperty-update';
+    case IntellectualPropertyDelete='intellectualproperty-delete';
+
+
 
 
 
@@ -783,8 +826,6 @@ enum PermissionEnum: string
               ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
             [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
-            [self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy],
-            [self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy],
 
 
             //Property Management
@@ -850,8 +891,6 @@ enum PermissionEnum: string
             ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
             [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
-            [self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy],
-            [self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy],
 
                       ///////////////////////  Legal  ///////////////////////////////////////
             [self::ContractView,self::ContractCreate,self::ContractUpdate,self::ContractDelete],
