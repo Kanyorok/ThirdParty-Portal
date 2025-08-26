@@ -1,6 +1,16 @@
 @extends('layouts.app') 
 @section('title', 'Assign Driver to Vehicle')
 
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    
 @section('content')
 <div class="card p-4 shadow rounded-4">
     <h4 class="mb-4">👨‍✈️ Assign Driver to Vehicle</h4>

@@ -1,6 +1,14 @@
 @extends('layouts.app')
 @section('title', isset($rule) ? 'Edit Alert Rule' : 'New Alert Rule')
-
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 @section('content')
 <div class="card p-4 shadow rounded-4">
     <h4 class="mb-4">{{ isset($rule) ? '✏️ Edit Alert Rule' : '➕ New Alert Rule' }}</h4>

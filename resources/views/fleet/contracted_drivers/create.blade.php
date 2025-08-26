@@ -2,9 +2,22 @@
 @section('title', 'Contracted Driver Registration')
 
 @section('content')
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    
 <div class="card p-4 shadow rounded-4">
     <h4 class="mb-4">🧾 Register New Contracted Driver</h4>
-
+        <p class="mb-4" style="font-style: italic;">
+            <span class="me-2">ℹ️</span>The Company Name field is populated from Suppliers. Please ensure the contracting company is registered as a supplier.
+        </p>
     <form action="{{ route('fleet.contracted_drivers.store') }}" method="POST">
         @csrf
 

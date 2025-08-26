@@ -25,8 +25,8 @@ class FleetContractedDriverAssignmentService
                 'Purpose'          => $data['Purpose'] ?? null,
                 'AssignedBy'          => $data['AssignedBy'] ?? null,
                 'Notes'              => $data['Notes'] ?? null,
-                'CreatedBy'        =>  $data['CreatedBy'] = Auth::id(),
-                'CreatedOn'        =>  $data['CreatedOn'] = now()
+                'CreatedBy'        => Auth::id(),
+                'CreatedOn'        => now()
             ]);
 
             activity()

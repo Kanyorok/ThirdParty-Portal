@@ -62,6 +62,9 @@
         <div class="col-md-8">
             <div class="card h-100 p-3 shadow rounded-4">
                 <h5 class="card-title fw-bold">Driver Records</h5>
+            <p class="fst-italic mb-3">
+              💡  Assignments can be created manually, but are also added automatically when a trip is created. Trips are loaded automatically and cannot be added manually.
+            </p>
                 <hr>
                 <ul class="nav nav-tabs mb-3" id="driverTabs" role="tablist">
                     <li class="nav-item">
