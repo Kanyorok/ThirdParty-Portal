@@ -402,6 +402,18 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClauseTypes', 'Description' => 'Sets out the process for resolving disputes.', 'Value' => 'Dispute Resolution Clause'],
             ['CodeID' => 'ClauseTypes', 'Description' => 'Outlines penalties or remedies for breaches.', 'Value' => 'Breach Clause'],
 
+            //Legal Case types
+            ['CodeID' => 'CaseTypes', 'Value' => 'Civil Case', 'Description' => 'A case involving disputes between individuals or organizations, usually over rights, obligations, or liabilities.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Criminal Case', 'Description' => 'A case where the state prosecutes an individual or entity for violation of criminal law.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Commercial Case', 'Description' => 'A case related to business transactions, contracts, or trade disputes.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Family Case', 'Description' => 'A case concerning family-related issues such as divorce, custody, or inheritance.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Labour Case', 'Description' => 'A case involving employment disputes such as wrongful termination, workplace discrimination, or unpaid wages.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Constitutional Case', 'Description' => 'A case challenging the interpretation or application of constitutional rights and principles.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Appeal Case', 'Description' => 'A case where a higher court reviews the decision of a lower court.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Administrative Case', 'Description' => 'A case against or involving a government agency decision or regulation.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Environmental Case', 'Description' => 'A case involving environmental protection, pollution, or land use.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Intellectual Property Case', 'Description' => 'A case dealing with copyrights, patents, trademarks, or trade secrets.'],
+
             //Legal Obligations
             ['CodeID' => 'LegalSourceTypes', 'Description' => 'Obligations and tasks required under the contract.', 'Value' => 'Contract'],
             ['CodeID' => 'LegalSourceTypes', 'Description' => 'Obligations and actions required for the case.', 'Value' => 'Case'],
