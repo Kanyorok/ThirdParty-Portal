@@ -79,7 +79,7 @@
 
         <div class="p-3 bg-light rounded-3 mb-3">
             <h6 class="text-info mb-1">Remarks</h6>
-            <p class="mb-0">{{ $security->Remarks ?? '—' }}</p>
+            <p class="fw-semibold mb-0">{{ $security->Remarks ?? '—' }}</p>
         </div>
     </div>
 </div>
