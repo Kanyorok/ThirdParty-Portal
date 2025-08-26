@@ -2,235 +2,317 @@
 
 namespace App\Http\Controllers\Finance;
 
-use App\Enums\Core\ModulesEnum;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use App\Models\Core\Currency;
-use App\Models\Finance\FinanceInvoiceEntry;
-use App\Models\Finance\FinanceTransaction;
-use App\Models\Procurement\GoodsReceipt;
-use App\Models\Procurement\Order;
-use App\Models\Procurement\OrderLines;
-use App\Models\ThirdParies\Supplier;
-use App\Services\Finance\TransactionService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB as FacadesDB;
-use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Ramsey\Collection\Queue;
-
+use App\Models\Finance\FinanceInvoiceEntry;
+use Illuminate\Http\JsonResponse;
 class InvoiceEntryController extends Controller
 {
     public function index()
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
-
-        $invoices = FinanceInvoiceEntry::with('suppliers:Id,SupplierName')
-            ->get();
-
+        $invoices = FinanceInvoiceEntry::limit(50)->get();
         return view('finance.accountspayable.invoiceentry.index', compact('invoices'));
     }
 
-    public function create(){
-
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
-
-        $suppliers = Supplier::select('Id', 'SupplierName')->get();
-        $orders = Order::select('Id','AccountID','Description','OrdTotExcl','OrderNo')
-            ->get();
-        $currencies = Currency::select('Id', 'Code')->get();
-        $grns = GoodsReceipt::select('Id', 'GRNID', 'SupplierId')
-            ->get();
-        $orderLines = OrderLines::select('Id','iOrderID','fQuantity','fTaxRate','fUnitPriceExcl','LineTotal')
-            ->get();
-        return view('finance.accountspayable.invoiceentry.create',compact('suppliers', 'orders', 'currencies', 'grns', 'orderLines'));
+    public function create()
+    {
+        return view('finance.accountspayable.invoiceentry.create');
     }
 
     public function store(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
-        // return$request->all();
         $validated = $request->validate([
-            'InvoiceNumber'=> 'required|string',
-            'SupplierID'=> 'required|exists:t_Suppliers,Id',
-            'CurrencyID'=> 'required|exists:t_Currencies,Id',
-            'ExchangeRate'=> 'required|numeric|min:0',
-            'POReference'=> 'required|exists:t_Orders,OrderNo',
-            'GRNReference'=> 'required|exists:t_GoodsReceipts,GRNID',
-            'InvoiceDate'=> 'required|date',
-            'InvoiceAmount'=> 'required|numeric',
-            'Description'=> 'required|string|max:255',
-            // File upload validation
-            'file' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
-        ], [
-            'file.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
-            'file.max'   => 'File size must not exceed 5 MB.',
+            'InvoiceNumber' => 'required|string',
+            'SupplierID' => 'required|integer',
+            'CurrencyID' => 'required|integer',
+            'ExchangeRate' => 'required|numeric',
+            'POReference' => 'nullable|string',
+            'GRNReference' => 'nullable|string',
+            'InvoiceDate' => 'required|date',
+            'InvoiceAmount' => 'required|numeric',
+            'Description' => 'nullable|string',
         ]);
 
+        DB::beginTransaction();
+        try {
+            $invoice = FinanceInvoiceEntry::create([
+                'InvoiceNumber' => $validated['InvoiceNumber'],
+                'SupplierID' => $validated['SupplierID'],
+                'CurrencyID' => $validated['CurrencyID'],
+                'ExchangeRate' => $validated['ExchangeRate'],
+                'POReference' => $validated['POReference'] ?? null,
+                'GRNReference' => $validated['GRNReference'] ?? null,
+                'InvoiceDate' => $validated['InvoiceDate'],
+                'InvoiceAmount' => $validated['InvoiceAmount'],
+                'Description' => $validated['Description'] ?? null,
+                'CreatedBy' => Auth::id() ?? 1,
+                'ModifiedBy' => Auth::id() ?? 1,
+            ]);
 
-
-        //gets the selected PO and GRN from the request
-        $poOrderNo = $validated['POReference'];
-        $poId = Order::where('OrderNo', $poOrderNo)->value('Id');
-        $grnId = $validated['GRNReference'];
-
-        // $poItemsID = FacadesDB::table('t_OrderLines')
-        //     ->where('iOrderID', $poId)
-        //     ->pluck('Id') //represents the unique Orderline Ids based on
-        //     ->toArray();
-
-        try{
-
-        $grnItems = FacadesDB::table('t_GoodsReceipts')
-            ->where('GRNID', $grnId)
-            ->get();
-        $sum=0;
-        foreach($grnItems as $item) {
-            $GRN_ID = $item->id;
-            $itemID=$item->ItemNo;
-            $grnItemQty=$item->ReceivedQTY;
-            $poItemqty = $item->POQTY; //represents the unique Orderline Ids based on
-            if($grnItemQty !== $poItemqty) {
-                return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
+            // optional activity log
+            if (function_exists('activity')) {
+                activity()->performedOn($invoice)->causedBy(Auth::user())->log('Created Invoice: ' . $invoice->InvoiceNumber);
             }
 
-            $linestotal = FacadesDB::table('t_OrderLines')
-                ->where('iStockCodeID', $itemID)
-                ->where('iOrderID', $poId)
-                ->value('LineTotal'); //represents the unique Orderline Ids based on
-            $sum += $linestotal;
-            }
-            $invoiceTotAmount = $validated['InvoiceAmount'];
-
-            if($sum != $invoiceTotAmount){
-                return back()->with('error', 'Invoice amount does not match PO total amount.');
-            }
-            //Currency Exchange Rates Details
-
-
-        FacadesDB::beginTransaction();
-
-        $invoice =  FinanceInvoiceEntry::create([
-            'InvoiceNumber'=> $validated['InvoiceNumber'],
-            'SupplierID'=> $validated['SupplierID'],
-            'CurrencyID'=> $validated['CurrencyID'],
-            'ExchangeRate'=> $validated['ExchangeRate'],
-            'POReference'=> $poId,
-            'GRNReference'=> $GRN_ID,
-            'InvoiceDate'=> $validated['InvoiceDate'],
-            'InvoiceAmount'=> $validated['InvoiceAmount'],
-            'Description'=> $validated['Description'],
-            'CreatedBy'          =>Auth::Id(),
-            'ModifiedBy'         => Auth::Id(),
-        ]);
-
-        //File Upload
-        if ($request->hasFile('file')) {
-            $invoice->newDocument(
-                ModulesEnum::Finance, // or ModulesEnum::INVOICE if you have it
-                $request->file('file'),
-                [PermissionEnum::FinanceAccountsPayableCreate, PermissionEnum::FinanceAccountsPayableView], // Permissions
-                Auth::user()
-            );
-        }
-
-         activity()
-            ->performedOn($invoice)
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('Created Invoice:' . $invoice->InvoiceNumber);
-
-            FacadesDB::commit();
-
-            return redirect()->route('invoiceentry.index')->with('success','Invoice created successfully');
-    }catch(\Throwable $th){
-            FacadesDB::rollback();
-            //return $th->getMessage();
-            Log::error('Failed to Create Invoice'. $th->getMessage());
-
-            return back()->withError('error','Failed to create Invoice:' .$th->getMessage());
-
+            DB::commit();
+            return back()->with('success', 'Invoice created.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Invoice create failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to create invoice: ' . $e->getMessage());
         }
     }
 
-    public function getOrders($selectedVendor)
+    public function getOrders($selectedVendor): JsonResponse
     {
-        $orders = Order::where('AccountID', $selectedVendor)->get();
+        $orders = DB::table('t_Orders')->where('AccountID', $selectedVendor)->get();
         return response()->json($orders);
     }
 
-    public function getGRNs($selectedPO)
+    public function getGRNs($selectedPO): JsonResponse
     {
-
-       // return $selectedPO;
-        $grns = FacadesDB::table('t_GoodsReceipts')
-            ->select(FacadesDB::raw('MIN(id) as id'), 'GRNID')
+        $grns = DB::table('t_GoodsReceipts')
+            ->select(DB::raw('MIN(id) as id'), 'GRNID')
             ->where('POID', $selectedPO)
-            ->where('InspectionStatus','p') // Pick ones that are posted or approved
+            ->where('InspectionStatus', 'p')
             ->groupBy('GRNID')
             ->get();
-            return response()->json($grns);
+        return response()->json($grns);
     }
 
-
-    public function viewPOModal($selectedPO)
-        {
-            // Get PO details
-            $po = FacadesDB::table('t_Orders')->where('OrderNo', $selectedPO)->first();
-            $orderID=$po->Id;
-            if (!$po) {
-                return response()->json(['error' => 'PO not found'], 404);
-            }
-
-            // Get supplier name
-            $supplier = FacadesDB::table('t_Suppliers')->where('Id', $po->AccountID)->first();
-
-            // Get PO line items with ItemName from t_Items
-            $items = FacadesDB::table('t_OrderLines as ol')
-                ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
-                ->where('ol.iOrderID', $orderID)
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'ItemName'    => $item->ItemName ?? '',
-                        'Description' => $item->Description ?? '',
-                        'Quantity'    => $item->fQuantity ?? '',
-                        'UnitCost'    => $item->fUnitPriceExcl ?? '',
-                    ];
-                });
-
-            // Build response
-            $data = [
-                'OrderNo'      => $po->OrderNo ?? '',
-                'SupplierName' => $supplier->SupplierName ?? '',
-                'OrderDate'    => $po->OrderDate ?? '',
-                'items'        => $items,
-            ];
-
-            return response()->json($data);
+    public function viewPOModal($selectedPO): JsonResponse
+    {
+        $po = DB::table('t_Orders')->where('OrderNo', $selectedPO)->first();
+        if (!$po) {
+            return response()->json(['error' => 'PO not found'], 404);
         }
 
-    public function saveInvoice(Request $request)
-    {
-        //gets the selected PO and GRN from the request
-        $poId = $request->input('POReference');
-        $grnId = $request->input('GRNReference');
+        $supplier = DB::table('t_Suppliers')->where('Id', $po->AccountID)->first();
 
-        // $poItemsID = FacadesDB::table('t_OrderLines')
-        //     ->where('iOrderID', $poId)
-        //     ->pluck('Id') //represents the unique Orderline Ids based on
-        //     ->toArray();
+        $items = DB::table('t_OrderLines as ol')
+            ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
+            ->where('ol.iOrderID', $po->Id)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'ItemName' => $item->ItemName ?? '',
+                    'Description' => $item->Description ?? '',
+                    'Quantity' => $item->fQuantity ?? '',
+                    'UnitCost' => $item->fUnitPriceExcl ?? '',
+                <?php
 
-        FacadesDB::beginTransaction();
+                namespace App\Http\Controllers\Finance;
 
-        try {
-        $grnItems = FacadesDB::table('t_GoodsReceipts')
-            ->where('POID', $poId)
-            ->where('GRNID', $grnId)
-            ->get();
+                use App\Http\Controllers\Controller;
+                use Illuminate\Http\Request;
+                use Illuminate\Support\Facades\Auth;
+                use Illuminate\Support\Facades\DB;
+                use Illuminate\Support\Facades\Log;
+                use App\Models\Finance\FinanceInvoiceEntry;
+                use App\Models\Procurement\Order;
+                use App\Models\Procurement\GoodsReceipt;
+                use App\Models\ThirdParies\Supplier;
+                use App\Models\Core\Currency;
+                use App\Services\Finance\TransactionService;
+                use Illuminate\Http\JsonResponse;
 
+                class InvoiceEntryController extends Controller
+                {
+                    public function index()
+                    {
+                        $invoices = FinanceInvoiceEntry::limit(50)->get();
+                        return view('finance.accountspayable.invoiceentry.index', compact('invoices'));
+                    }
+
+                    public function create()
+                    {
+                        $suppliers = Supplier::select('Id', 'SupplierName')->get();
+                        $orders = Order::select('Id','AccountID','Description','OrdTotExcl','OrderNo')->get();
+                        $currencies = Currency::select('Id', 'Code')->get();
+                        $grns = GoodsReceipt::select('Id', 'GRNID', 'SupplierId')->get();
+
+                        return view('finance.accountspayable.invoiceentry.create', compact('suppliers', 'orders', 'currencies', 'grns'));
+                    }
+
+                    public function store(Request $request)
+                    {
+                        $validated = $request->validate([
+                            'InvoiceNumber' => 'required|string',
+                            'SupplierID' => 'required|integer',
+                            'CurrencyID' => 'required|integer',
+                            'ExchangeRate' => 'required|numeric',
+                            'POReference' => 'nullable|string',
+                            'GRNReference' => 'nullable|string',
+                            'InvoiceDate' => 'required|date',
+                            'InvoiceAmount' => 'required|numeric',
+                            'Description' => 'nullable|string',
+                        ]);
+
+                        DB::beginTransaction();
+                        try {
+                            $invoice = FinanceInvoiceEntry::create([
+                                'InvoiceNumber' => $validated['InvoiceNumber'],
+                                'SupplierID' => $validated['SupplierID'],
+                                'CurrencyID' => $validated['CurrencyID'],
+                                'ExchangeRate' => $validated['ExchangeRate'],
+                                'POReference' => $validated['POReference'] ?? null,
+                                'GRNReference' => $validated['GRNReference'] ?? null,
+                                'InvoiceDate' => $validated['InvoiceDate'],
+                                'InvoiceAmount' => $validated['InvoiceAmount'],
+                                'Description' => $validated['Description'] ?? null,
+                                'CreatedBy' => Auth::id() ?? 1,
+                                'ModifiedBy' => Auth::id() ?? 1,
+                            ]);
+
+                            if (function_exists('activity')) {
+                                activity()->performedOn($invoice)->causedBy(Auth::user())->log('Created Invoice: ' . $invoice->InvoiceNumber);
+                            }
+
+                            DB::commit();
+                            return back()->with('success', 'Invoice created.');
+                        } catch (\Throwable $e) {
+                            DB::rollBack();
+                            Log::error('Invoice create failed: ' . $e->getMessage());
+                            return back()->with('error', 'Failed to create invoice: ' . $e->getMessage());
+                        }
+                    }
+
+                    public function getOrders($selectedVendor): JsonResponse
+                    {
+                        $orders = DB::table('t_Orders')->where('AccountID', $selectedVendor)->get();
+                        return response()->json($orders);
+                    }
+
+                    public function getGRNs($selectedPO): JsonResponse
+                    {
+                        $grns = DB::table('t_GoodsReceipts')
+                            ->select(DB::raw('MIN(id) as id'), 'GRNID')
+                            ->where('POID', $selectedPO)
+                            ->where('InspectionStatus', 'p')
+                            ->groupBy('GRNID')
+                            ->get();
+                        return response()->json($grns);
+                    }
+
+                    public function viewPOModal($selectedPO): JsonResponse
+                    {
+                        $po = DB::table('t_Orders')->where('OrderNo', $selectedPO)->first();
+                        if (!$po) {
+                            return response()->json(['error' => 'PO not found'], 404);
+                        }
+
+                        $supplier = DB::table('t_Suppliers')->where('Id', $po->AccountID)->first();
+
+                        $items = DB::table('t_OrderLines as ol')
+                            ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
+                            ->where('ol.iOrderID', $po->Id)
+                            ->get()
+                            ->map(function ($item) {
+                                return [
+                                    'ItemName' => $item->ItemName ?? '',
+                                    'Description' => $item->Description ?? '',
+                                    'Quantity' => $item->fQuantity ?? '',
+                                    'UnitCost' => $item->fUnitPriceExcl ?? '',
+                                ];
+                            });
+
+                        $data = [
+                            'OrderNo' => $po->OrderNo ?? '',
+                            'SupplierName' => $supplier->SupplierName ?? '',
+                            'OrderDate' => $po->OrderDate ?? '',
+                            'items' => $items,
+                        ];
+
+                        return response()->json($data);
+                    }
+
+                    public function show($id)
+                    {
+                        $invoice = FinanceInvoiceEntry::findOrFail($id);
+                        return view('finance.accountspayable.invoiceentry.show', compact('invoice'));
+                    }
+
+                    public function approve(Request $request, int $id, TransactionService $svc = null)
+                    {
+                        $validated = $request->validate(['Reason' => 'required|string|max:255']);
+                        try {
+                            return DB::transaction(function () use ($id, $validated, $svc) {
+                                $invoice = FinanceInvoiceEntry::findOrFail($id);
+                                if (strtolower((string)$invoice->ApprovalStatus) === 'posted') {
+                                    return back()->with('error', "Invoice {$invoice->InvoiceNumber} is already posted.");
+                                }
+                                if ($svc) {
+                                    $payload = ['ModuleID' => 1100000, 'ThirdPartyID' => $invoice->SupplierID, 'TransactionTypeID' => 15, 'ReferenceNumber' => $invoice->InvoiceNumber, 'TransactionDate' => $invoice->InvoiceDate ?? now()->toDateString(), 'Amount' => (float)($invoice->InvoiceAmount ?? 0), 'SourceTable' => 't_FinanceInvoiceEntries'];
+                                    $result = $svc->postFromTypeMapping($payload);
+                                    if (in_array($result['status'], ['success', 'exists'], true)) {
+                                        $invoice->update(['ApprovalStatus' => 'posted', 'ApprovalReason' => $validated['Reason'], 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+                                    }
+                                } else {
+                                    $invoice->update(['ApprovalStatus' => 'posted', 'ApprovalReason' => $validated['Reason'], 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+                                }
+                                return back()->with('success', 'Invoice processed.');
+                            });
+                        } catch (\Throwable $e) {
+                            Log::error('AP approve error: ' . $e->getMessage());
+                            return back()->with('error', 'Approval/Post failed: ' . $e->getMessage());
+                        }
+                    }
+
+                    public function reject(Request $request, $id)
+                    {
+                        $validated = $request->validate(['Reason' => 'required|string|max:1000']);
+                        try {
+                            return DB::transaction(function () use ($validated, $id) {
+                                $invoice = FinanceInvoiceEntry::findOrFail($id);
+                                if (in_array($invoice->ApprovalStatus, ['posted', 'rejected'], true)) {
+                                    return back()->with('error', "Invoice {$invoice->InvoiceNumber} is already processed.");
+                                }
+                                $invoice->update(['ApprovalStatus' => 'rejected', 'ApprovalReason' => $validated['Reason'], 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+                                return back()->with('success', "Invoice {$invoice->InvoiceNumber} rejected successfully.");
+                            });
+                        } catch (\Throwable $e) {
+                            Log::error('AP reject error: ' . $e->getMessage());
+                            return back()->with('error', 'Approval/Post failed: ' . $e->getMessage());
+                        }
+                    }
+
+                    public function edit($id)
+                    {
+                        $invoice = FinanceInvoiceEntry::findOrFail($id);
+                        $suppliers = Supplier::select('Id', 'SupplierName')->get();
+                        $orders = Order::select('Id','AccountID','Description','OrdTotExcl','OrderNo')->get();
+                        $currencies = Currency::select('Id', 'Code')->get();
+                        return view('finance.accountspayable.invoiceentry.edit', compact('invoice', 'suppliers', 'orders', 'currencies'));
+                    }
+
+                    public function update(Request $request, $id)
+                    {
+                        $invoice = FinanceInvoiceEntry::findOrFail($id);
+                        $validated = $request->validate(['InvoiceNumber'=> 'required|string','SupplierID'=> 'required|integer','CurrencyID'=> 'required|integer','ExchangeRate'=> 'required|numeric|min:0','InvoiceDate'=> 'required|date','InvoiceAmount'=> 'required|numeric','Description'=> 'nullable|string|max:255',]);
+                        try {
+                            DB::beginTransaction();
+                            $invoice->update(['InvoiceNumber'=>$validated['InvoiceNumber'],'SupplierID'=>$validated['SupplierID'],'CurrencyID'=>$validated['CurrencyID'],'ExchangeRate'=>$validated['ExchangeRate'],'InvoiceDate'=>$validated['InvoiceDate'],'InvoiceAmount'=>$validated['InvoiceAmount'],'Description'=>$validated['Description'] ?? null,'ModifiedBy'=>Auth::id()]);
+                            DB::commit();
+                            return redirect()->route('invoiceentry.index')->with('success', 'Invoice updated successfully');
+                        } catch (\Throwable $th) {
+                            DB::rollback();
+                            Log::error('Failed to Update Invoice: ' . $th->getMessage());
+                            return back()->withError('error', 'Failed to update Invoice: ' . $th->getMessage());
+                        }
+                    }
+
+                    public function destroy($id)
+                    {
+                        $entries = FinanceInvoiceEntry::findOrFail($id);
+                        $entries->DeletedBy = Auth::id();
+                        $entries->save();
+                        $entries->delete();
+                        return redirect()->route('invoiceentry.index')->with('success', 'Invoice deleted successfully');
+                    }
+                }
         foreach($grnItems as $item) {
             $itemID=$item->ItemNo;
             $grnItemQty=$item->qty;
