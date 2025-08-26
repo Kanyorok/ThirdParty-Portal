@@ -2,6 +2,7 @@
 
 namespace App\Models\Legal;
 
+use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Legal\LegalCaseCounsel;
 use App\Models\Legal\LegalCaseOutcome;
@@ -46,10 +47,10 @@ class LegalCase extends Model
     /**
      * One case can have many assigned legal counsels
      */
-public function counsels()
-{
-    return $this->hasMany(LegalCaseCounsel::class, 'LegalCaseID', 'Id');
-}
+    public function counsels()
+    {
+        return $this->hasMany(LegalCaseCounsel::class, 'LegalCaseID', 'Id');
+    }
     /**
      * One case has one outcome (judgment or resolution)
      */
@@ -57,4 +58,10 @@ public function counsels()
     {
         return $this->hasOne(LegalCaseOutcome::class, 'LegalCaseID', 'Id');
     }
+
+    public function cases()
+    {
+        return $this->belongsTo(CodeDetail::class, 'CaseType', 'Value');
+    }
+
 }

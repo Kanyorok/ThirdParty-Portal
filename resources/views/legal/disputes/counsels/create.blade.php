@@ -5,6 +5,12 @@
 <div class="container">
     <div class="card p-2 shadow rounded-4 mb-0">
         <div class="card-body mb-0">
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
             <p class="text-muted">
                 Fill out the form below to assign a new legal counsel to the case: 
                 <strong>{{ $case->CaseTitle }}</strong>.
@@ -62,13 +68,13 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mb-3">
+                    <a href="{{ route('legal.disputes.counsels.index', $case->Id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-long-arrow-alt-left"></i> Back
+                    </a>
                     <button type="submit" class="btn btn-info" 
                         onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">
                         <i class="fas fa-save"></i> Save Counsel
                     </button>
-                    <a href="{{ route('legal.disputes.counsels.index', $case->Id) }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-long-arrow-alt-left"></i> Back
-                    </a>
                 </div>
             </form>
         </div>

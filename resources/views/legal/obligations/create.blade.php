@@ -7,11 +7,11 @@
     <div class="card-body">
         <p class="text-muted">Record a new legal obligation, including its details, deadlines, and responsible parties, to ensure proper monitoring and compliance.</p>
          @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <form action="{{ route('legal.obligations.store') }}" method="POST">
             @csrf
             <div class="row mb-3">

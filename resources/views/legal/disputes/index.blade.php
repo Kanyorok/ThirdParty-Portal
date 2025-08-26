@@ -37,7 +37,19 @@
                         <td>{{ $case->CourtName }}</td>
                         <td>{{ \Carbon\Carbon::parse($case->FilingDate)->format('d m Y') }}</td>
                         <td>{{ $case->OpposingParty }}</td>
-                        <td>{{ $case->Status }}</td>
+                        <td>
+                            @if($case->Status == 'Open')
+                                <span class="badge bg-warning">{{ $case->Status }}</span>
+                            @elseif($case->Status == 'Closed')
+                                <span class="badge bg-secondary">{{ $case->Status }}</span>
+                            @elseif($case->Status == 'Appealed')
+                                <span class="badge bg-success text-dark">{{ $case->Status }}</span>
+                            @elseif($case->Status == 'Dismissed')
+                                <span class="badge bg-danger">{{ $case->Status }}</span>
+                            @else
+                                <span class="badge bg-light text-dark">{{ $case->Status }}</span>
+                            @endif
+                        </td>
                         <td>
                             <a href="{{ route('legal.cases.evidence.index', $case->Id) }}" class="btn btn-sm btn-dark">📂 Evidence</a>
                             <a href="{{ route('legal.cases.show', $case->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
