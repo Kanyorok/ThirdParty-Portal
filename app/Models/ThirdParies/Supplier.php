@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Supplier extends ThirdParties
 {
-    protected $table = 't_ThirdParties';
+    protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
     protected $fillable = [

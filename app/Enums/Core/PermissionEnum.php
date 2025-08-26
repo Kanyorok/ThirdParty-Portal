@@ -589,6 +589,22 @@ enum PermissionEnum: string
     case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
 
+    //Credit Management
+    case FinanceCreditManagementView='financeCreditManagement-view';
+    case FinanceCreditManagementCreate='financeCreditManagement-create';
+    case FinanceCreditManagementUpdate='financeCreditManagement-update';
+    case FinanceCreditManagementDelete='financeCreditManagement-delete';
+
+    //Posting
+    case FinanceJournalPosting='financeJournal-posting';
+    case FinanceAPInvoicePosting='financeAPInvoice-posting';
+    case FinanceARInvoicePosting='financeARInvoice-posting';// AR Account Receivables
+    case FinanceCreditNotePosting='financeCreditNote-posting';
+    case FinanceDebitNotePosting='financeDebitNote-posting';
+    case FinanceVoucherPosting='financeVoucher-posting';
+    case FinancePaymentProcessingPosting='financePaymentProcessing-posting';
+    case FinanceReceiptPosting='financeReceipt-posting';
+
 
         /*
     *
@@ -653,13 +669,13 @@ enum PermissionEnum: string
     case IntellectualPropertyCreate='intellectualproperty-create';
     case IntellectualPropertyUpdate='intellectualproperty-update';
     case IntellectualPropertyDelete='intellectualproperty-delete';
-    
+
     case FleetVehicleView = 'fleetVehicle-view';
     case FleetVehicleCreate = 'fleetVehicle-create';
     case FleetVehicleUpdate = 'fleetVehicle-update';
     case FleetVehicleDestroy = 'fleetVehicle-destroy';
 
-        
+
     case FleetInsuranceTrackerView = 'fleetinsurancetracker-view';
     case FleetInsuranceTrackerCreate = 'fleetinsurancetracker-create';
     case FleetInsuranceTrackerUpdate = 'fleetinsurancetracker-update';
@@ -754,6 +770,9 @@ enum PermissionEnum: string
             [self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete],
             [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
+            [self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete],
+            [self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting],
+
 
 
             //Property Management
@@ -808,8 +827,8 @@ enum PermissionEnum: string
             [self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete],
             [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
             [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
-            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
-            
+            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],
+
             //Fleet
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
             [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
@@ -841,7 +860,7 @@ enum PermissionEnum: string
             [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
             [self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy],
             [self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy],
-          
+
                       ///////////////////////  Legal  ///////////////////////////////////////
             [self::ContractView,self::ContractCreate,self::ContractUpdate,self::ContractDelete],
             [self::DisputeLitigationView,self::DisputeLitigationCreate,self::DisputeLitigationUpdate,self::DisputeLitigationDelete],
@@ -1002,6 +1021,8 @@ enum PermissionEnum: string
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete,
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete,
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete,
+            self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete,
+            self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting,
             => ModulesEnum::Finance,
 
 
@@ -1145,6 +1166,8 @@ enum PermissionEnum: string
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
+            self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete=> 'Credit Management',
+            self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting=> 'Transaction Postings',
 
             ////////////////////////  Legal   ///////////////////////////
             self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete => 'Legal Contract',
