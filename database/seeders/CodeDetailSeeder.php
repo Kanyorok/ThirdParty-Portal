@@ -505,7 +505,7 @@ class CodeDetailSeeder extends Seeder
             //Driver Employment Type
             ['CodeID' => 'EmploymentType', 'Description' => 'Permanent', 'Value' => 'PR'],
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
-            ['CodeID' => 'EmploymentType', 'Description' => 'Hired', 'Value' => 'HR'],
+           
 
             //Vehicle Request Status
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
