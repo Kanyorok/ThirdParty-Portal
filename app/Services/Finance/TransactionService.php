@@ -62,6 +62,7 @@ class TransactionService
 
         $base = [
             'TransactionDate'   => $payload['TransactionDate'] ?? Carbon::now()->toDateString(),
+            'ThirdPartyID'      =>$payload['ThirdPartyID'] ?? null,
             'ReferenceNumber'   => $payload['ReferenceNumber'] ?? uniqid('REF-'),
             'TransactionType'   => (string)($payload['TransactionType'] ?? 'External'),
             'ModuleID'          => (int)$payload['ModuleID'],

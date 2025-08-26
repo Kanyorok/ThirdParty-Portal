@@ -200,14 +200,16 @@
                     <h5 class="modal-title">Generate/Approve {{ $invoice->InvoiceNumber }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form>
+                <form action="{{ route('ar.invoice.approve', $invoice->Id ?? $invoice->id) }}" method="POST" id="approveForm">
+                    @csrf
+                    @method('POST')
                     <div class="modal-body">
                         <div class="alert alert-info small">
                             You’re about to approve this invoice. Amount: {{ $invoice->currency->Symbol }} {{ number_format($invoice->TotalAmount,2) }}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Approval Note <span class="text-danger">*</span></label>
-                            <textarea class="form-control" rows="3" required></textarea>
+                            <textarea class="form-control" name="Reason" rows="3" required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -227,7 +229,9 @@
                     <h5 class="modal-title">Reject {{ $invoice->InvoiceNumber }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form>
+                <form action="{{ route('ar.invoice.reject', $invoice->Id ?? $invoice->id) }}" method="POST" id="approveForm">
+                    @csrf
+                    @method('POST')
                     <div class="modal-body">
                         <div class="alert alert-warning small">
                             You’re about to reject this invoice. Amount: {{ $invoice->currency->Symbol }} {{ number_format($invoice->TotalAmount,2) }}
