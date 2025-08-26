@@ -6,6 +6,9 @@
 
 @section('content')
 <div class="container mt-4">
+    <div>
+        <p>The list below consist of insurance referrals pending an assigned person.</p>
+    </div>
     <table class="table table-bordered" id="assignTable">
         <thead>
             <tr>

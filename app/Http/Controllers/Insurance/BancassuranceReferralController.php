@@ -142,8 +142,7 @@ public function update(BancAssuranceReferralRequest $request, $Id)
 public function show($Id)
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referral = BancAssuranceReferral::findOrFail($Id);
-
+    $referral = BancAssuranceReferral::with('referredByEmployee')->findOrFail($Id);
     return view('bancassurance.referrals.show', compact('referral'));
 }
 

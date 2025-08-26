@@ -8,14 +8,17 @@
 
         <div class="mb-3">
             <label class="form-label">Select Provider <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" value="{{ optional($providers->firstWhere('Id', $rider->InsuranceProviderId))->InsuranceProviderNO ?? 'N/A' }}" readonly>
+            <input type="text" class="form-control" value="{{ optional($providers->firstWhere('Id', $rider->InsuranceProviderId))->Name ?? 'N/A' }}" readonly>
             <input type="hidden" name="InsuranceProviderId" value="{{ $rider->InsuranceProviderId }}">
         </div>
 
         <div class="mb-3">
-             <label class="form-label">Product <span class="text-danger">*</span></label>
-            <select name="Product" id='Product-select' class="form-select" required>
+            <label class="form-label">Product <span class="text-danger">*</span></label>
+            <select name="Product" class="form-select" required>
                 <option value="">-- Select --</option>
+                @foreach($products as $product)
+                    <option value="{{ $product->Id }}" {{ $product->Id == $rider->Product ? 'selected' : '' }}>{{ $product->Name }}</option>
+                @endforeach
             </select>
         </div>
 
@@ -45,45 +48,10 @@
         </div>
 
         <div class="text-end">
-            <button type="submit" class="btn btn-primary">💾 Update Rider</button>
+            <button type="submit" class="btn btn-primary">Update Rider</button>
         </div>
     </form>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const ProviderSelect = document.getElementById('Provider-select');
-        const ProductSelect = document.getElementById('Product-select');
-        const selectedProductId = "{{ $rider->Product }}";
-
-        ProviderSelect.addEventListener('change', function () {
-            const ProviderId = this.value;
-            ProductSelect.innerHTML = '<option value="">-- Select a Product--</option>';
-
-            if (ProviderId) {
-                const url = `{{ route('bancassurance.riders.getProductByProvider', ':Id') }}`.replace(':Id', ProviderId);
-
-                fetch(url)
-                    .then(response => response.json())
-                    .then(products => {
-                        products.forEach(product => {
-                            const option = document.createElement('option');
-                            option.value = product.Id;
-                            option.textContent = product.Name;
-                            if (product.Id == selectedProductId) {
-                                option.selected = true;
-                            }
-                            ProductSelect.appendChild(option);
-                        });
-                    })
-                    .catch(error => console.error('Error loading Product:', error));
-            }
-        });
-
-        // Trigger change if editing to load products immediately
-        if (ProviderSelect.value) {
-            ProviderSelect.dispatchEvent(new Event('change'));
-        }
-    });
-</script>
+<!-- No JS needed: provider and product are now static in edit mode -->
 @endsection

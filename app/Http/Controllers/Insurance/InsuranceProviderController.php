@@ -36,7 +36,7 @@ class InsuranceProviderController extends Controller
             $validated['ContactPerson'],
             $validated['Email'],
             $validated['Phone'],
-            $validated['IsActive'],
+            $validated['IsActive'] ?? null,
             Auth::user(),
         );
         return redirect()->route('bancassurance.insurers.index')->with('success', 'Insurance Provider registered.');
@@ -125,15 +125,15 @@ class InsuranceProviderController extends Controller
     }
 
 
-    public function detachProduct($providerId, $productId)
-    {
-        DB::table('t_InsuranceProviderProducts')
-            ->where('InsuranceProviderID', $providerId)
-            ->where('ProductID', $productId)
-            ->update(['IsActive' => 0]);
+    // public function detachProduct($providerId, $productId)
+    // {
+    //     DB::table('t_InsuranceProviderProducts')
+    //         ->where('InsuranceProviderID', $providerId)
+    //         ->where('ProductID', $productId)
+    //         ->update(['IsActive' => 0]);
 
-        return redirect()->route('bancassurance.insurers.products', $providerId)->with('success', 'Product detached successfully.');
-    }
+    //     return redirect()->route('bancassurance.insurers.products', $providerId)->with('success', 'Product detached successfully.');
+    // }
 
 
 }

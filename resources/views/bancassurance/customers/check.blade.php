@@ -5,8 +5,12 @@
 @endsection
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">Registered Customers</h4>
-    <a href="{{ route('bancassurance.customers.create',) }}" class="btn btn-success mb-3">Register New Customer</a>
+
+    <div class="mb-3 text-end">
+        <a href="{{ route('bancassurance.customers.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Register New Customer</a>
+    </div>
+    <div><p>The list of registered customers below:</p></div>
     <table id="customerregistry" class="table table-bordered table-striped align-middle">
         <thead>
             <tr>
