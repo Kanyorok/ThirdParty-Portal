@@ -20,13 +20,13 @@ class FleetContractedDriverAssignmentService
             $assignment = FleetContractedDriverAssignment::create([
                 'DriverID' => $data['DriverID'] ?? null,
                 'VehicleID' => $data['VehicleID'] ?? null,
-                'AssignmentDate' => $data['AssignmentDate'] ?? null,
-                'UnassignmentDate' => $data['UnassignmentDate'] ?? null,
-                'Purpose' => $data['Purpose'] ?? null,
-                'AssignedBy' => $data['AssignedBy'] ?? null,
-                'Notes' => $data['Notes'] ?? null,
-                'CreatedBy' => $data['CreatedBy'] = Auth::id(),
-                'CreatedOn' => $data['CreatedOn'] = now()
+                'AssignmentDate'      => $data['AssignmentDate'] ?? null,
+                'UnassignmentDate'    => $data['UnassignmentDate'] ?? null,
+                'Purpose'          => $data['Purpose'] ?? null,
+                'AssignedBy'          => $data['AssignedBy'] ?? null,
+                'Notes'              => $data['Notes'] ?? null,
+                'CreatedBy'        => Auth::id(),
+                'CreatedOn'        => now()
             ]);
 
             activity()

@@ -21,7 +21,7 @@ class FleetMaintenanceScheduleService
         return DB::transaction(function () use ($data) {
             $statusId = $this->getStatusId('Scheduled');
 
-            // 1️⃣ Create schedule
+            // Create schedule
             $schedule = FleetMaintenanceSchedule::create([
                 'ScheduleID' => $this->generateScheduleID(),
                 'VehicleID' => $data['VehicleID'],
@@ -38,15 +38,15 @@ class FleetMaintenanceScheduleService
                 'ModifiedOn' => now(),
             ]);
 
-            // 2️⃣ Create corresponding alert (ack fields null)
+            //Create corresponding alert (ack fields null)
             $alertService = app(FleetServiceAlertService::class);
             $alert = $alertService->createFromSchedule($schedule->Id, $statusId);
 
-            // 3️⃣ Log workflows for both
+            // Log workflows for both
             $this->logWorkflow('MaintenanceSchedule', $schedule->Id, $statusId, 'Schedule created');
             $this->logWorkflow('ServiceAlert', $alert->Id, $statusId, 'Alert created for schedule');
 
-            // 4️⃣ Activity log
+            // Activity log
             activity()
                 ->performedOn($schedule)
                 ->causedBy(Auth::user())
