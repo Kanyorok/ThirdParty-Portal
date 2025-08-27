@@ -20,57 +20,39 @@
             <div class="row g-3">
 
                 <div class="col-md-6">
-                    <div class="p-3 border rounded bg-light">
+                    <div class="p-3 border rounded bg-light text-info">
                         <strong>Name:</strong>
-                        <div>{{ $counsel->CounselName }}</div>
+                        <div class="text-dark fw-semibold">{{ $counsel->CounselName }}</div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
-                    <div class="p-3 border rounded bg-light">
+                    <div class="p-3 border rounded bg-light text-info">
                         <strong>Firm:</strong>
-                        <div>{{ $counsel->FirmName ?? '—' }}</div>
+                        <div class="text-dark fw-semibold">{{ $counsel->FirmName ?? '—' }}</div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
-                    <div class="p-3 border rounded bg-light">
+                    <div class="p-3 border rounded bg-light text-info">
                         <strong>Email:</strong>
-                        <div>{{ $counsel->Email ?? '—' }}</div>
+                        <div class="text-dark fw-semibold">{{ $counsel->Email ?? '—' }}</div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
-                    <div class="p-3 border rounded bg-light">
+                    <div class="p-3 border rounded bg-light text-info">
                         <strong>Phone:</strong>
-                        <div>{{ $counsel->Phone ?? '—' }}</div>
+                        <div class="text-dark fw-semibold">{{ $counsel->Phone ?? '—' }}</div>
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="p-3 border rounded bg-light">
+                <div class="col-md-12">
+                    <div class="p-3 border rounded bg-light text-info">
                         <strong>Role:</strong>
-                        <div>{{ $counsel->Role ?? '—' }}</div>
+                        <div class="text-dark fw-semibold">{{ $counsel->Role ?? '—' }}</div>
                     </div>
                 </div>
-
-                <div class="col-md-6">
-                    <div class="p-3 border rounded bg-light">
-                        <strong>Assigned On:</strong>
-                        <div>
-                            {{ $counsel->AssignedOn ? \Carbon\Carbon::parse($counsel->AssignedOn)->format('d M Y') : '—' }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Remarks --}}
-            <div class="border rounded p-3 bg-light mt-4">
-                <h6 class="text-info fw-bold mb-1">
-                    <i class="fas fa-sticky-note"></i> Remarks:
-                </h6>
-                <p class="mb-0 fw-semibold">{{ $counsel->Remarks ?? '—' }}</p>
-            </div>
         </div>
     </div>
 </div>

@@ -28,7 +28,7 @@
 
             <div class="col-md-6 mb-3">
                 <div class=" p-3 bg-light rounded-3">
-                    <h6 class="text-info mb-1">Requested By;</h6>
+                    <h6 class="text-info mb-1">Requested By:</h6>
                     <p class="mb-0 fw-semibold">{{ $request->RequestedBy ?? '—' }}</p>
                 </div>
             </div>
@@ -49,7 +49,30 @@
                 </div>
             </div>
         </div>
-        
+
+        {{-- ✅ Display Current Status --}}
+        @if($request->Status)
+        <div class="mb-4">
+            <div class="p-3 rounded-3 
+                {{ $request->Status == 'Approved' ? 'bg-light' : 'bg-light' }}">
+                
+                @if($request->Status == 'Approved')
+                <h6 class="mb-1">Current Status: 
+                </h6>
+                    <span class="badge bg-success fw-bold">{{ $request->Status }}</span>
+                    <p class="mb-0"><strong>Findings:</strong> {{ $request->Findings ?? '—' }}</p>
+                @elseif($request->Status == 'Rejected')
+                <h6 class="text-info mb-1">Current Status: 
+                </h6>
+                    <span class="badge bg-danger fw-bold">{{ $request->Status }}</span>
+                    <p class="mb-0"><strong>Reason for Rejection:</strong> {{ $request->ApprovalReason ?? '—' }}</p>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        {{-- ✅ Only show the form if status is still pending --}}
+        @if(!in_array($request->Status, ['Approved', 'Rejected']))
         <form method="POST" action="{{ route('legal.store_findings.storeApprovalStatus', $request->Id) }}">
             @csrf
             @method('PATCH')
@@ -60,8 +83,8 @@
                     <label for="Status" class="form-label">Status</label>
                     <select class="form-select" name="Status" id="Status" onchange="toggleSearchRequests()" required>
                         <option value="" disabled {{ !$request->Status ? 'selected' : '' }}>-- Select Status --</option>
-                        <option value="Approved" {{ $request->Status == 'Approved' ? 'selected' : '' }}>Approve</option>
-                        <option value="Rejected" {{ $request->Status == 'Rejected' ? 'selected' : '' }}>Reject</option>
+                        <option value="Approved">Approve</option>
+                        <option value="Rejected">Reject</option>
                     </select>
                 </div>
             </div>
@@ -105,6 +128,7 @@
                 </div>
             </div>
         </form>
+        @endif
     </div>
 </div>
 
@@ -119,14 +143,12 @@ function toggleSearchRequests(){
     if(status === 'Approved'){
         findingsSection.style.display = 'block';
         findingsInput.required = true;
-
         reasonSection.style.display = 'none';
         reasonInput.required = false;
         reasonInput.value = "";
     } else if(status === 'Rejected') {
         reasonSection.style.display = 'block';
         reasonInput.required = true;
-
         findingsSection.style.display = 'none';
         findingsInput.required = false;
         findingsInput.value = "";
@@ -134,14 +156,10 @@ function toggleSearchRequests(){
         findingsSection.style.display = 'none';
         findingsInput.required = false;
         findingsInput.value = "";
-
         reasonSection.style.display = 'none';
         reasonInput.required = false;
         reasonInput.value = "";
     }
 }
-
-// Run on page load if editing existing request
-document.addEventListener("DOMContentLoaded", toggleSearchRequests);
 </script>
 @endsection

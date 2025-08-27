@@ -47,6 +47,7 @@ use App\Http\Controllers\Finance\TaxRuleController;
 use App\Http\Controllers\Finance\TaxSummaryReportController;
 use App\Http\Controllers\Finance\TransactionTypesController;
 use App\Http\Controllers\Finance\TrialBalanceController;
+use App\Http\Controllers\Finance\ReportsController;
 use App\Http\Controllers\Finance\VendorMasterController;
 use Illuminate\Support\Facades\Route;
 
@@ -182,6 +183,11 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
 
     Route::post('/finance/voucher/{id}/post', [PaymentProcessingController::class, 'postVoucher'])->name('voucher.post');
 
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
+        Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+            'index' => 'finance-reports.index',
+            'show' => 'finance-reports.show'
+        ]);
 });
 
 //Fetching Data for AR Invoice

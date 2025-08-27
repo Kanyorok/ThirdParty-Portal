@@ -9,7 +9,7 @@
              style="background: linear-gradient(135deg, #f8fafc, #eef2ff);">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <img src="https://via.placeholder.com/120x40?text=CRAFT+SILICON" alt="Logo" style="height:38px" class="rounded bg-white p-1">
+                    <img src="{{asset('assets/img/icons/craft-logo.png')}}" alt="Logo" style="height:38px" class="rounded bg-white p-1">
                     <div>
                         <div class="fw-bold">Craft Silicon Limited</div>
                         <div class="small text-muted">Financial Technology • Core Banking • Digital Channels</div>

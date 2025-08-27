@@ -5,6 +5,12 @@
 <div class="container">
     <div class="card p-2 shadow rounded-4 mb-0">
         <div class="card-body mb-0">
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
             <p class="text-muted">
                 Update the outcome details for case: 
                 <strong class="text-dark">{{ $case->CaseTitle }}</strong>

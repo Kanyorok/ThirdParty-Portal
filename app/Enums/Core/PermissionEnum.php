@@ -589,6 +589,22 @@ enum PermissionEnum: string
     case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
 
+    //Credit Management
+    case FinanceCreditManagementView='financeCreditManagement-view';
+    case FinanceCreditManagementCreate='financeCreditManagement-create';
+    case FinanceCreditManagementUpdate='financeCreditManagement-update';
+    case FinanceCreditManagementDelete='financeCreditManagement-delete';
+
+    //Posting
+    case FinanceJournalPosting='financeJournal-posting';
+    case FinanceAPInvoicePosting='financeAPInvoice-posting';
+    case FinanceARInvoicePosting='financeARInvoice-posting';// AR Account Receivables
+    case FinanceCreditNotePosting='financeCreditNote-posting';
+    case FinanceDebitNotePosting='financeDebitNote-posting';
+    case FinanceVoucherPosting='financeVoucher-posting';
+    case FinancePaymentProcessingPosting='financePaymentProcessing-posting';
+    case FinanceReceiptPosting='financeReceipt-posting';
+
 
         /*
     *
@@ -604,15 +620,63 @@ enum PermissionEnum: string
     case FleetMakeUpdate = 'fleetMake-update';
     case FleetMakeDestroy = 'fleetMake-delete';
 
-    case VehicleRegistryView = 'vehicleRegistry-view';
-    case VehicleRegistryCreate = 'vehicleRegistry-create';
-    case VehicleRegistryUpdate = 'vehicleRegistry-update';
-    case VehicleRegistryDestroy = 'vehicleRegistry-destroy';
+    case FleetVehicleView = 'fleetVehicle-view';
+    case FleetVehicleCreate = 'fleetVehicle-create';
+    case FleetVehicleUpdate = 'fleetVehicle-update';
+    case FleetVehicleDestroy = 'fleetVehicle-destroy';
 
-    case DriverManagementView = 'driverManagement-view';
-    case DriverManagementCreate = 'driverManagement-create';
-    case DriverManagementUpdate = 'driverManagement-update';
-    case DriverManagementDestroy = 'driverManagement-destroy';
+
+    case FleetInsuranceTrackerView = 'fleetInsuranceTracker-view';
+    case FleetInsuranceTrackerCreate = 'fleetInsuranceTracker-create';
+    case FleetInsuranceTrackerUpdate = 'fleetInsuranceTracker-update';
+    case FleetInsuranceTrackerDestroy = 'fleetInsuranceTracker-destroy';
+
+    case FleetInspectionScheduleView = 'fleetInspectionSchedule-view';
+    case FleetInspectionScheduleCreate = 'fleetInspectionSchedule-create';
+    case FleetInspectionScheduleUpdate = 'fleetInspectionSchedule-update';
+    case FleetInspectionScheduleDestroy = 'fleetInspectionSchedule-destroy';
+
+    case FleetDriverView = 'fleetDriver-view';
+    case FleetDriverCreate = 'fleetDriver-create';
+    case FleetDriverUpdate = 'fleetDriver-update';
+    case FleetDriverDestroy = 'fleetDriver-destroy';
+
+    case ContractedDriverView = 'contractedDriver-view';
+    case ContractedDriverCreate = 'contractedDriver-create';
+    case ContractedDriverUpdate = 'contractedDriver-update';
+    case ContractedDriverDestroy = 'contractedDriver-destroy';
+
+    case FleetTripLogView = 'fleetTripLog-view';
+    case FleetTripLogCreate = 'fleetTripLog-create';
+    case FleetTripLogUpdate = 'fleetTripLog-update';
+    case FleetTripLogDestroy = 'fleetTripLog-destroy';
+
+    case FleetRoutePlanView = 'fleetRoutePlan-view';
+    case FleetRoutePlanCreate = 'fleetRoutePlan-create';
+    case FleetRoutePlanUpdate = 'fleetRoutePlan-update';
+    case FleetRoutePlanDestroy = 'fleetRoutePlan-destroy';
+
+    case FleetVehicleRequestView = 'fleetVehicleRequest-view';
+    case FleetVehicleRequestCreate = 'fleetVehicleRequest-create';
+    case FleetVehicleRequestUpdate = 'fleetVehicleRequest-update';
+    case FleetVehicleRequestDestroy = 'fleetVehicleRequest-destroy';
+    case FleetVehicleRequestApproval = 'fleetVehicleRequest-approval';
+
+    case FleetMaintenanceScheduleView = 'fleetMaintenanceSchedule-view';
+    case FleetMaintenanceScheduleCreate = 'fleetMaintenanceSchedule-create';
+    case FleetMaintenanceScheduleUpdate = 'fleetMaintenanceSchedule-update';
+    case FleetMaintenanceScheduleDestroy = 'fleetMaintenanceSchedule-destroy';
+    case FleetMaintenanceScheduleCancel = 'fleetMaintenanceSchedule-cancel';
+
+    case FleetRepairLogView = 'fleetRepairLog-view';
+    case FleetRepairLogCreate = 'fleetRepairLog-create';
+    case FleetRepairLogUpdate = 'fleetRepairLog-update';
+    case FleetRepairLogDestroy = 'fleetRepairLog-destroy';
+
+    case FleetServiceAlertView = 'fleetServiceAlert-view';
+    case FleetServiceAlertAcknowledge = 'fleetServiceAlert-acknowledge';
+
+
 
     /*
 *
@@ -653,27 +717,9 @@ enum PermissionEnum: string
     case IntellectualPropertyCreate='intellectualproperty-create';
     case IntellectualPropertyUpdate='intellectualproperty-update';
     case IntellectualPropertyDelete='intellectualproperty-delete';
-    
-    case FleetVehicleView = 'fleetVehicle-view';
-    case FleetVehicleCreate = 'fleetVehicle-create';
-    case FleetVehicleUpdate = 'fleetVehicle-update';
-    case FleetVehicleDestroy = 'fleetVehicle-destroy';
 
-        
-    case FleetInsuranceTrackerView = 'fleetinsurancetracker-view';
-    case FleetInsuranceTrackerCreate = 'fleetinsurancetracker-create';
-    case FleetInsuranceTrackerUpdate = 'fleetinsurancetracker-update';
-    case FleetInsuranceTrackerDestroy = 'fleetinsurancetracker-destroy';
 
-    case FleetInspectionScheduleView = 'fleetinspectionschedule-view';
-    case FleetInspectionScheduleCreate = 'fleetinspectionschedule-create';
-    case FleetInspectionScheduleUpdate = 'fleetinspectionschedule-update';
-    case FleetInspectionScheduleDestroy = 'fleetinspectionschedule-destroy';
 
-    case FleetDriverView = 'fleetdriver-view';
-    case FleetDriverCreate = 'fleetdriver-create';
-    case FleetDriverUpdate = 'fleetdriver-update';
-    case FleetDriverDestroy = 'fleetdriver-destroy';
 
 
     public static function display(): Collection
@@ -754,6 +800,9 @@ enum PermissionEnum: string
             [self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete],
             [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
+            [self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete],
+            [self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting],
+
 
 
             //Property Management
@@ -777,8 +826,6 @@ enum PermissionEnum: string
               ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
             [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
-            [self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy],
-            [self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy],
 
 
             //Property Management
@@ -808,17 +855,22 @@ enum PermissionEnum: string
             [self::BancassuranceCustomersBeneficiariesCreate,self::BancassuranceCustomersBeneficiariesView,self::BancassuranceCustomersBeneficiariesUpdate,self::BancassuranceCustomersBeneficiariesDelete],
             [self::BancassurancePremiumPaymentsView,self::BancassurancePremiumPaymentsCreate,self::BancassurancePremiumPaymentsUpdate,self::BancassurancePremiumPaymentsDelete],
             [self::InsuranceProviderView,self::InsuranceProviderCreate,self::InsuranceProviderUpdate,self::InsuranceProviderDelete],
-            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],            
-            
+            [self::InsuranceProductView,self::InsuranceProductCreate,self::InsuranceProductUpdate,self::InsuranceProductDelete],
+
             //Fleet
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
             [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
-            [self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy],
-            [self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy],
             [self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy],
             [self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy],
             [self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy],
             [self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy],
+            [self::FleetVehicleRequestView,self::FleetVehicleRequestApproval,self::FleetVehicleRequestCreate,self::FleetVehicleRequestUpdate,self::FleetVehicleRequestDestroy],
+            [self::ContractedDriverView,self::ContractedDriverCreate,self::ContractedDriverUpdate,self::ContractedDriverDestroy],
+            [self::FleetMaintenanceScheduleView,self::FleetMaintenanceScheduleCreate,self::FleetMaintenanceScheduleUpdate,self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel],
+            [self::FleetRepairLogView,self::FleetRepairLogCreate,self::FleetRepairLogUpdate,self::FleetRepairLogDestroy],
+            [self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy],
+            [self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy],
+            [self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge],
 
             [self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete],
             [self::BancassurancePolicyCreate, self::BancassurancePolicyView, self::BancassurancePolicyUpdate, self::BancassurancePolicyDelete],
@@ -839,9 +891,7 @@ enum PermissionEnum: string
             ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
             [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
-            [self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy],
-            [self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy],
-          
+
                       ///////////////////////  Legal  ///////////////////////////////////////
             [self::ContractView,self::ContractCreate,self::ContractUpdate,self::ContractDelete],
             [self::DisputeLitigationView,self::DisputeLitigationCreate,self::DisputeLitigationUpdate,self::DisputeLitigationDelete],
@@ -941,12 +991,17 @@ enum PermissionEnum: string
             //Fleet Management
             self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy,
             self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy,
-            self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy,
-            self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy,
             self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy,
             self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy,
             self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy,
-            self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy
+            self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy,
+            self::FleetVehicleRequestView,self::FleetVehicleRequestApproval,self::FleetVehicleRequestCreate,self::FleetVehicleRequestUpdate,self::FleetVehicleRequestDestroy,
+            self::FleetMaintenanceScheduleView,self::FleetMaintenanceScheduleCreate,self::FleetMaintenanceScheduleUpdate,self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel,
+            self::FleetRepairLogView,self::FleetRepairLogCreate,self::FleetRepairLogUpdate,self::FleetRepairLogDestroy,
+            self::ContractedDriverView,self::ContractedDriverCreate,self::ContractedDriverUpdate,self::ContractedDriverDestroy,
+            self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge,
+            self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy,
+            self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy,
             => ModulesEnum::Fleet,
 
 
@@ -1001,6 +1056,8 @@ enum PermissionEnum: string
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete,
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete,
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete,
+            self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete,
+            self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting,
             => ModulesEnum::Finance,
 
 
@@ -1089,12 +1146,17 @@ enum PermissionEnum: string
             //Fleet Management
             self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy => 'Fleet Model',
             self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy => 'Fleet Make',
-            self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy => 'Vehicle Registry',
-            self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy => 'Driver Management',
             self::FleetVehicleView,self::FleetVehicleCreate,self::FleetVehicleUpdate,self::FleetVehicleDestroy => 'Vehicle Management',
             self::FleetInsuranceTrackerView,self::FleetInsuranceTrackerCreate,self::FleetInsuranceTrackerUpdate,self::FleetInsuranceTrackerDestroy => 'Fleet Insurance Tracker',
             self::FleetInspectionScheduleView,self::FleetInspectionScheduleCreate,self::FleetInspectionScheduleUpdate,self::FleetInspectionScheduleDestroy => 'Vehicle Inspection',
             self::FleetDriverView,self::FleetDriverCreate,self::FleetDriverUpdate,self::FleetDriverDestroy => 'Fleet Driver',
+            self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy => 'Fleet Trip Log',
+            self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy => 'Trip Route Plan',
+            self::FleetVehicleRequestView,self::FleetVehicleRequestApproval,self::FleetVehicleRequestCreate,self::FleetVehicleRequestUpdate,self::FleetVehicleRequestDestroy => 'Fleet Vehicle Request',
+            self::FleetMaintenanceScheduleView,self::FleetMaintenanceScheduleCreate,self::FleetMaintenanceScheduleUpdate,self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel => 'Fleet Maintenance Schedule',
+            self::ContractedDriverView,self::ContractedDriverCreate,self::ContractedDriverUpdate,self::ContractedDriverDestroy => 'Contracted Driver',
+            self::FleetRepairLogView,self::FleetRepairLogCreate,self::FleetRepairLogUpdate,self::FleetRepairLogDestroy => 'Fleet Repair Log',
+            self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge => 'Fleet Service Alerts',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',
@@ -1144,6 +1206,8 @@ enum PermissionEnum: string
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
+            self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete=> 'Credit Management',
+            self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting=> 'Transaction Postings',
 
             ////////////////////////  Legal   ///////////////////////////
             self::ContractView, self::ContractCreate, self::ContractUpdate, self::ContractDelete => 'Legal Contract',

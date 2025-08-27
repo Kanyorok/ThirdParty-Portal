@@ -92,7 +92,7 @@ class PropertyInvoiceService
                     'SourceTable' => 't_RentInvoice',
 
                     'ModuleID' => 500000,
-                    'CurrencyID' => $Lease->CurrencyID ?? 1,
+                    'CurrencyID' =>56,
                     'CustomerID' => $tenantID  ?? null,
 
                     'InvoiceID' => $invoice->Id,
