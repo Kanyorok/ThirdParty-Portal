@@ -18,7 +18,18 @@
                 <div class="text-md-end">
                     <span class="badge rounded-pill text-bg-info px-3 py-2">{{ $invoice->source->Name ?? '—' }}</span>
                     <span class="badge rounded-pill text-bg-secondary px-3 py-2">{{ $invoice->currency->Code ?? '' }}</span>
-                    <span class="badge rounded-pill text-bg-warning px-3 py-2">{{ ucfirst($invoice->Status) }}</span>
+                    @php
+                        $statusClasses = [
+                            'draft'    => 'text-bg-secondary',
+                            'rejected' => 'text-bg-danger',
+                            'posted'   => 'text-bg-success',
+                        ];
+                        $status = strtolower($invoice->ApprovalStatus);
+                    @endphp
+
+                    <span class="badge rounded-pill {{ $statusClasses[$status] ?? 'text-bg-secondary' }} px-3 py-2">
+                        {{ ucfirst($status) }}
+                    </span>
                     <div class="mt-1 h5 mb-0 fw-semibold">Invoice: <span class="text-nowrap">{{ $invoice->InvoiceNumber }}</span></div>
                     <div class="small text-muted">
                         Issue: <strong>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') }}</strong> •
@@ -81,12 +92,14 @@
                                 </tbody>
                             </table>
                             <div class="mt-3 d-grid gap-2">
-                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal">
-                                    <i class="fas fa-thumbs-up me-1"></i> Generate / Approve
-                                </button>
-                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                    <i class="fas fa-thumbs-down me-1"></i> Reject
-                                </button>
+                                @if($invoice->ApprovalStatus==='draft')
+                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal">
+                                        <i class="fas fa-thumbs-up me-1"></i> Generate / Approve
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                        <i class="fas fa-thumbs-down me-1"></i> Reject
+                                    </button>
+                                @endif
                                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
                                     <i class="fas fa-print me-1"></i> Print
                                 </button>
