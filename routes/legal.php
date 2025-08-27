@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Legal\ContractObligationController;
 use App\Http\Controllers\Legal\LegalCaseController;
 use App\Http\Controllers\Legal\LegalCaseEvidenceController;
@@ -20,11 +19,15 @@ use App\Http\Controllers\Legal\LegalSearchRequestController;
 use App\Http\Controllers\Legal\LegalTemplateController;
 use App\Http\Controllers\Legal\LoanSecurityController;
 use App\Http\Controllers\Legal\ReportsController;
+use Illuminate\Support\Facades\Route;
 
-// Explicit route to satisfy existing references expecting this exact route name
-Route::get('legal/reports', [App\Http\Controllers\Legal\ReportsController::class, 'index'])->name('legal-reports.index');
 
 Route::prefix('legal')->group(function () {
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('legal-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'legal-reports.index',
+        'show' => 'legal-reports.show'
+    ]);
     Route::name('legal.')->group(function () {
 
         // Legal Documents & nested dispatches/execution logs
