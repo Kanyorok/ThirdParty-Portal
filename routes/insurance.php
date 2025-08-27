@@ -22,6 +22,17 @@ use App\Http\Controllers\Insurance\PricingRuleController;
 use App\Http\Controllers\Insurance\ProductLifecycleController;
 use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\ClaimClosureController;
+use App\Http\Controllers\Insurance\MedicalFundController;
+use App\Http\Controllers\Insurance\MedicalFundBeneficiaryController;
+use App\Http\Controllers\Insurance\MedicalFundContributionController;
+use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
+
+use App\Http\Controllers\Insurance\MedicalFundContributorController;
+use App\Http\Controllers\Insurance\ContributorBeneficiaryController; // new, see quick store below
+use App\Http\Controllers\Insurance\MedicalFundPackageController;
+
+
+
 
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
@@ -231,3 +242,49 @@ Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(
 });
 
 });
+
+Route::middleware(['web','auth'])
+    ->prefix('bancassurance')
+    ->as('bancassurance.')
+    ->group(function () {
+
+        // Medical Funds (no hyphen → clean names)
+        Route::resource('medicalfunds', MedicalFundController::class)
+            ->parameters(['medicalfunds' => 'medicalfund']);
+
+        // Nested: Beneficiaries
+        Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund','beneficiaries' => 'beneficiary']);
+
+        // Nested: Contributions
+        Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund','contributions' => 'contribution']);
+
+        // Nested: Disbursements
+        Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund','disbursements' => 'disbursement']);
+
+        // ✅ Packages (must be inside the group to get bancassurance.* names)
+        Route::resource('medicalfunds.packages', MedicalFundPackageController::class)
+            ->shallow()
+            ->parameters(['medicalfunds'=>'medical_fund','packages'=>'package']);
+
+        // Contributors under a fund
+        Route::resource('medicalfunds.contributors', MedicalFundContributorController::class)
+            ->shallow()
+            ->parameters(['medicalfunds'=>'medical_fund','contributors'=>'contributor']);
+
+        // Quick add beneficiary from contributor show
+        Route::post('contributors/{contributor}/beneficiaries', [ContributorBeneficiaryController::class, 'store'])
+            ->name('contributors.beneficiaries.store');
+            Route::get('contributors/{contributor}/coverage-remaining', [\App\Http\Controllers\Insurance\MedicalFundDisbursementController::class,'remainingLimit'])
+    ->name('coverage.remaining'); // GET params: beneficiary_id, coverage_id, on_date (Y-m-d optional)
+   
+        Route::get(
+            'medicalfunds/{medical_fund}/contributors/{contributor}/options',
+            [MedicalFundDisbursementController::class, 'options']
+        )->name('medicalfunds.contributors.options');
+    });
