@@ -17,6 +17,15 @@
 
         {{-- Body --}}
         <div class="card-body bg-white">
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            <p class="text-muted">
+                Use this form to update counsel information associated with the case. Ensure the counsel’s name, firm, contact details, and role are correctly recorded for proper case management.
+            </p>
             <form method="POST" action="{{ route('legal.disputes.counsels.update', [$case->Id, $counsel->Id]) }}" class="row g-3">
                 @csrf
                 @method('PUT')

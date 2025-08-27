@@ -3,8 +3,8 @@
 
 @section('content')
 <div class="card p-4 shadow rounded-4 border-0 mb-0">
-    <div class="card-header bg-light px-3 py-2 d-flex justify-content-between align-items-center mb-4">
-        <h4 class="text-info mb-0"><i class="fas fa-folder-open"></i> Evidence for Case: {{ $case->CaseTitle }}</h4>
+    <div class="card-header bg-light px-3 py-2 d-flex justify-content-between align-items-center mb-1">
+        <h4 class="text-info mb-0"><i class="fas fa-folder-open text-warning"></i> Evidence(s)</h4>
         <a href="{{ route('legal.cases.evidence.create', $case->Id) }}" class="btn btn-info">
             <i class="fas fa-plus me-1"></i> Link New Evidence
         </a>
@@ -56,9 +56,9 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('legal.cases.evidence.show',[$case->Id, $item->Id ]) }}" 
+                                <a href="{{ route('legal.cases.evidence.show',[$case->Id, $item->Id ]) }}"
                                    class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                                <a href="{{ route('legal.cases.evidence.edit', [$case->Id, $item->Id]) }}" 
+                                <a href="{{ route('legal.cases.evidence.edit', [$case->Id, $item->Id]) }}"
                                    class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
                                 <button type="button"
                                     class="btn btn-sm btn-danger custom-delete-btn"
@@ -73,12 +73,15 @@
                     @endforeach
                 @else
                     <tr>
-                        <td colspan="6" class="p-0">
-                            <div class="text-centre p-4 border rounded-3 bg-light">
+                        <td colspan="7" class="p-0">
+                            <div class="text-center p-4 border rounded-3 bg-light">
                                 <p class="mb-3 text-muted fs-5">
                                     <i class="fas fa-info-circle me-2 text-info"></i>
                                     <i>No evidence linked to this case yet.</i>
                                 </p>
+                                <a  href="{{ route('legal.cases.evidence.create', $case->Id) }}"  class="btn btn-info px-4 py-2">
+                                    <i class="fas fa-plus-circle me-2"></i> Link Evidence
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -87,4 +90,5 @@
         </table>
     </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection

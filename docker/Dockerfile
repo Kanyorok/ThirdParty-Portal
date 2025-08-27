@@ -7,9 +7,9 @@ RUN apt-get update && apt-get install -y \
     supervisor lsb-release libwebp-dev libzip-dev \
     libpng-dev libjpeg-dev libfreetype6-dev \
     libxml2-dev libonig-dev nodejs wget ca-certificates\
-    libssl-dev software-properties-common \
+    libssl-dev software-properties-common poppler-utils \
     libc-client-dev libkrb5-dev libgssapi-krb5-2  \
-    tesseract-ocr tesseract-ocr-eng libtesseract-dev \
+    tesseract-ocr  tesseract-ocr-eng libtesseract-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \

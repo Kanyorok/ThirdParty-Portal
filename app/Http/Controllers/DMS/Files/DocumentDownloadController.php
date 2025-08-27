@@ -5,6 +5,7 @@ namespace App\Http\Controllers\DMS\Files;
 use App\Http\Controllers\Controller;
 use App\Models\DMS\Document;
 use App\Services\DMS\DocumentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -29,10 +30,14 @@ class DocumentDownloadController extends Controller
     /**
      * Generate Download Route
      */
-    public function store(Request $request, Document $document): RedirectResponse
+    public function store(Request $request, Document $document): RedirectResponse|JsonResponse
     {
         $this->authorize('view', $document);
         activity()->causedBy($request->user())->performedOn($document)->event('download')->log('downloaded file ' . $document->Name);
+        if ($request->has('fetch_link')) {
+            return $this->succeeded('file downloaded successfully', route: route('file-download.index', ['document' => $document->DocumentId, 'token' => (new DocumentService($document))->generateToken($request->user())]));
+        }
+
         return redirect()->route('file-download.index', ['document' => $document->DocumentId, 'token' => (new DocumentService($document))->generateToken($request->user())]);
 
     }

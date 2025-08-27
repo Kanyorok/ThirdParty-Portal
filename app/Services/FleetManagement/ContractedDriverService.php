@@ -14,21 +14,20 @@ class ContractedDriverService
      */
 
     public function create(array $data): ContractedDriver
-    {
-        return DB::transaction(function () use ($data) {
-            $data['DriverNo'] = $this->generateDriverNo();
-            $data['FullName'] = $data['FullName'] ?? null;
-            $data['NationalID'] = $data['NationalID'] ?? null;
-            $data['Phone'] = $data['Phone'] ?? null;
-            $data['CompanyName'] = $data['CompanyName'] ?? null;
-            $data['ContractStartDate'] = $data['ContractStartDate'] ?? null;
-            $data['ContractEndDate'] = $data['ContractEndDate'] ?? null;
-            $data['LicenseNumber'] = $data['LicenseNumber'] ?? null;
-            $data['Notes'] = $data['Notes'] ?? null;
-            $data['IsActive'] = $data['IsActive'] ?? 1;
-            $data['CreatedBy'] = Auth::id();
-            $data['CreatedOn'] = now();
-
+{
+    return DB::transaction(function () use ($data) {
+        $data['DriverNo'] = $this->generateDriverNo();
+        $data['FullName'] = $data['FullName'] ?? null;
+        $data['NationalID'] = $data['NationalID'] ?? null;
+        $data['Phone'] = $data['Phone'] ?? null;
+        $data['Company'] = $data['Company'] ?? null;
+        $data['ContractStartDate'] = $data['ContractStartDate'] ?? null;
+        $data['ContractEndDate'] = $data['ContractEndDate'] ?? null;
+        $data['Notes'] = $data['Notes'] ?? null;
+        $data['IsActive'] = $data['IsActive'] ?? 1;
+        $data['CreatedBy'] = Auth::id();
+        $data['CreatedOn'] = now();
+        
 
             return ContractedDriver::create($data);
         });
@@ -78,7 +77,7 @@ class ContractedDriverService
     /**
      * Soft delete a Fleet Vehicle
      */
-    public function delete(ContractedDriverSchedule $drivers): bool
+    public function delete(ContractedDriver $drivers): bool
     {
         return DB::transaction(function () use ($drivers) {
 

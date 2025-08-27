@@ -849,8 +849,7 @@
                             </div>
                         </form>
                     </div>
-                    <div class="onboarding-content with-gradient d-none modal-item text-center"
-                         id="trashFileModal">
+                    <div class="onboarding-content with-gradient d-none modal-item text-center" id="trashFileModal">
                         <h4 class="text-danger">
                             Trash Document <b class="rm-file-name"></b> ?
                         </h4>

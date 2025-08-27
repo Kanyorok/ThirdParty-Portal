@@ -112,6 +112,9 @@ class COASegmentController extends Controller
             //Update the description for the gl digits
             SegmentOrder::where('SegmentType','GLDigits')->update(['Description'=>$glDigits]);
 
+            //Update GlCode
+            $this->insertGLCodes();
+
             activity()
                 ->causedBy($userId)
                 ->performedOn(new SegmentOrder())
@@ -143,6 +146,9 @@ class COASegmentController extends Controller
                 ->performedOn(new SegmentOrder())
                 ->withProperties(['segment' => $update])
                 ->log('GL Digits updated');
+            //Update GlCode
+            $this->insertGLCodes();
+
             DB::commit();
             return back()->with('success', 'GL Digits updated successfully.');
         }catch(\Throwable $th){
@@ -170,6 +176,9 @@ class COASegmentController extends Controller
                         FinanceGLAccounts::where('GLAccountTypeID',$key)->update(['GLAccountTypeValue'=>0]);
                     }
                 }
+                //Update GlCode
+                $this->insertGLCodes();
+
                 activity()
                     ->causedBy(Auth::id())
                     ->performedOn(new CodeDetail())
@@ -193,6 +202,8 @@ class COASegmentController extends Controller
                 $update=FinanceGLTypeGroup::where('Id',$request->GLTypeGroupID)->update(['SegmentValue'=>$validated['value']]);
                 //Update the Major GL Table
                 FinanceGLAccounts::where('GLTypeGroupID',$request->GLTypeGroupID)->update(['GLTypeGroupIDValue'=>$validated['value']]);
+                //Update GlCode
+                $this->insertGLCodes();
                 activity()
                     ->causedBy(Auth::id())
                     ->performedOn(new FinanceGLTypeGroup())
@@ -217,6 +228,8 @@ class COASegmentController extends Controller
             $update=FinanceGLSubAccountTypes::where('Id',$request->GLSubAccountTypeID)->update(['SegmentValue'=>$validated['value']]);
             //Update the Major GL Table
             FinanceGLAccounts::where('GLSubAccountTypeID',$request->GLSubAccountTypeID)->update(['GLSubAccountTypeIDValue'=>$validated['value']]);
+            //Update GlCode
+            $this->insertGLCodes();
             activity()
                 ->causedBy(Auth::id())
                 ->performedOn(new FinanceGLTypeGroup())
@@ -230,5 +243,43 @@ class COASegmentController extends Controller
             return back()->with('error', 'Something went wrong. Please try again.');
         }
     }
+
+    public function insertGLCodes(): void
+    {
+        // Pull segment order once (order by something deterministic)
+        $segments = SegmentOrder::select('Id','SegmentType','Description')
+            ->orderBy('Id')
+            ->get();
+
+        // Process accounts in chunks if table is large
+        FinanceGLAccounts::query()->orderBy('Id')->chunkById(500, function ($accounts) use ($segments) {
+            foreach ($accounts as $glAccount) {
+                $parts = []; // reset per account
+
+                foreach ($segments as $segment) {
+                    if ($segment->SegmentType === 'GLDigits') {
+                        // Pad account Id to the digits specified in segment Description (fallback to account->GLDigits if you keep it)
+                        $digits = (int)($segment->Description ?? $glAccount->GLDigits ?? 1);
+                        $digits = max($digits, 1);
+                        $parts[] = str_pad((string)$glAccount->Id, $digits, '0', STR_PAD_LEFT);
+                    } else {
+                        // Use the segment name as a column on FinanceGLAccounts
+                        $column = $segment->SegmentType;             // e.g. 'BranchCode', 'Major', etc.
+                        $value  = data_get($glAccount, $column, ''); // safe accessor
+                        $parts[] = (string) $value;
+                    }
+                }
+
+                // Join with dashes; drop empty parts
+                $parts = array_values(array_filter($parts, fn ($v) => $v !== null && $v !== ''));
+                $glCode = implode('-', $parts);
+
+                // Save the final GL code
+                $glAccount->GLCode = $glCode;
+                $glAccount->save();
+            }
+        });
+    }
+
 
 }

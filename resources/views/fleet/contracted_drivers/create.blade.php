@@ -2,11 +2,24 @@
 @section('title', 'Contracted Driver Registration')
 
 @section('content')
-    <div class="card p-4 shadow rounded-4">
-        <h4 class="mb-4">🧾 Register New Contracted Driver</h4>
 
-        <form action="{{ route('fleet.contracted_drivers.store') }}" method="POST">
-            @csrf
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    
+<div class="card p-4 shadow rounded-4">
+    <h4 class="mb-4">🧾 Register New Contracted Driver</h4>
+        <p class="mb-4" style="font-style: italic;">
+            <span class="me-2">ℹ️</span>The Company Name field is populated from Suppliers. Please ensure the contracting company is registered as a supplier.
+        </p>
+    <form action="{{ route('fleet.contracted_drivers.store') }}" method="POST">
+        @csrf
 
             <div class="row g-3">
                 <div class="col-md-6">
@@ -33,18 +46,21 @@
                            value="{{ old('Phone') }}">
                     @error('Phone')
                     <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+                @enderror
+            </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Company Name</label>
-                    <input type="text" name="CompanyName"
-                           class="form-control @error('CompanyName') is-invalid @enderror"
-                           value="{{ old('CompanyName') }}">
-                    @error('CompanyName')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+
+            <div class="col-md-6">
+                <label for="Company" class="form-label">Company Name</label>
+                <select name="Company" class="form-select">
+                    <option value="">Select Company</option>
+                    @foreach($companies as $company)
+                        <option value="{{ $company->Id }}" {{ old('Company') == $company->Id ? 'selected' : '' }}>
+                            {{ $company->SupplierName }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Contract Start Date</label>
@@ -66,15 +82,6 @@
                     @enderror
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">License Number</label>
-                    <input type="text" name="LicenseNumber"
-                           class="form-control @error('LicenseNumber') is-invalid @enderror"
-                           value="{{ old('LicenseNumber') }}">
-                    @error('LicenseNumber')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Notes</label>

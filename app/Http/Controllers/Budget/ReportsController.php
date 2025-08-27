@@ -13,7 +13,7 @@ class ReportsController extends Controller
 {
     use ReportsTrait;
 
-    protected const MODULE = ModulesEnum::BudgetLine;
+    protected const ModulesEnum MODULE = ModulesEnum::BudgetLine;
 
     public function index(Request $request): JsonResponse|View
     {

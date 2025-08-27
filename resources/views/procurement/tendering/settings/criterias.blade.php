@@ -3,51 +3,60 @@
 @section('title', 'Criteria for ' . $section->SectionName)
 
 @section('content')
-<div class="container-fluid py-4">
-    <h4 class="text-primary">Criteria for {{ $section->SectionName }}</h4>
+    <div class="container-fluid py-4">
 
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createCriteriaModal">
-        <i class="fa fa-plus-circle me-2"></i> Add Criteria
-    </button>
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createCriteriaModal">
+            <i class="fa fa-plus-circle me-2"></i> Add Criteria
+        </button>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Criteria Name</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($section->criteria as $criterion)
-            <tr>
-                <td>{{ $criterion->CriteriaName }}</td>
-                <td>{{ $criterion->Description ?? '-' }}</td>
-                <td>
-                    @if($criterion->IsActive)
-                    <span class="badge bg-success">Active</span>
-                    @else
-                    <span class="badge bg-secondary">Inactive</span>
-                    @endif
-                </td>
-                <td>
-                    <a href="{{ route('prequalification.sections.criteria.edit', ['section' => $section->Id, 'criteria' => $criterion->Id]) }}" class="btn btn-warning btn-sm">Edit</a>
-                    <form action="{{ route('prequalification.sections.criteria.destroy', ['section' => $section->Id, 'criteria' => $criterion->Id]) }}" method="POST" class="d-inline-block">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-danger btn-sm">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Criteria Names</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($section->criteria as $criterion)
+                    <tr>
+                        <td>{{ $criterion->CriteriaName }}</td>
+                        <td>{{ $criterion->Description ?? '-' }}</td>
+                        <td>
+                            @if ($criterion->IsActive)
+                                <span class="badge bg-success">Active</span>
+                            @else
+                                <span class="badge bg-secondary">Inactive</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if (isset($section) && isset($criterion))
+                                <a href="{{ route('prequalification.sections.criteria.edit', [$section->Id, $criterion->Id]) }}"
+                                    class="btn btn-warning btn-sm">Edit</a>
+                                <form
+                                    action="{{ route('prequalification.sections.criteria.destroy', [$section->Id, $criterion->Id]) }}"
+                                    method="POST" class="d-inline-block">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 
-<div class="modal fade" id="createCriteriaModal" tabindex="-1" aria-labelledby="createCriteriaLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form action="{{ route('prequalification.sections.criteria.store', ['section' => $section->Id]) }}" method="POST">
+    <div class="modal fade" id="createCriteriaModal" tabindex="-1" aria-labelledby="createCriteriaLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+                @if (isset($section))
+                <form action="{{ route('prequalification.sections.criteria.store', $section->Id) }}" method="POST">
+                @else
+                    <form action="#" method="POST">
+            @endif
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -76,7 +85,7 @@
                     <button type="submit" class="btn btn-primary">Create Criteria</button>
                 </div>
             </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 @endsection

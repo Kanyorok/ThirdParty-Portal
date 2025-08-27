@@ -57,27 +57,39 @@
                                        title="View Invoice">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @if($item->ApprovalStatus === 'Draft')
+                                    @if(strtolower($item->ApprovalStatus) === 'draft')
                                         <a href="{{ route('invoiceentry.edit', $item->Id) }}"
                                         class="btn btn-sm btn-outline-primary me-1"
                                         title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     @else
-                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"
-                                        class="btn btn-sm btn-outline-primary me-1"
-                                        title="Edit">
-                                            <i class="fas fa-edit" disabled></i>
+                                        <a href="#"
+                                        class="btn btn-sm btn-outline-primary me-1 disabled"
+                                        title="Edit (disabled)">
+                                            <i class="fas fa-edit"></i>
                                         </a>
                                     @endif
-                                    <button type="button"
-                                        class="btn btn-sm btn-outline-danger custom-delete-btn"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#customDeleteConfirmModal"
-                                        data-name="{{$item->InvoiceNumber}}"    {{-- Pass item name --}}
-                                        data-route="{{ route('invoiceentry.destroy', $item->Id) }}">
-                                        <i  class="fas fa-trash-alt"></i>
-                                    </button>
+
+                                    @if(strtolower($item->ApprovalStatus) === 'draft')
+                                        <button type="button"
+                                            class="btn btn-sm btn-danger custom-delete-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{$item->InvoiceNumber}}"    {{-- Pass item name --}}
+                                            data-route="{{ route('invoiceentry.destroy', $item->Id) }}">
+                                            <i  class="fas fa-trash-alt"></i>
+                                        </button>
+                                    @else
+                                        <button type="button"
+                                            class="btn btn-sm btn-danger custom-delete-btn disabled"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{$item->InvoiceNumber}}"    {{-- Pass item name --}}
+                                            data-route="{{ route('invoiceentry.destroy', $item->Id) }}">
+                                            <i  class="fas fa-trash-alt"></i>
+                                        </button>
+                                    @endif
                                     {{-- <form action="{{ route('invoiceentry.destroy', $item->Id) }}" method="POST"
                                           style="display:inline;"
                                           onsubmit="return confirm('Are you sure you want to delete this invoice?')">
