@@ -1,4 +1,4 @@
-alter PROCEDURE p_AddRequisition
+create or alter PROCEDURE p_AddRequisition
     @Branch nvarchar(2),
     @Department nvarchar(2),
     @Remarks nvarchar(max),

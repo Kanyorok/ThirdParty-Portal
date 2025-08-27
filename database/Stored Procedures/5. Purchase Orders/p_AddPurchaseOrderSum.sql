@@ -1,4 +1,4 @@
-CREATE PROCEDURE p_AddPurchaseOrderSum @OrderId BIGINT
+CREATE or ALTER PROCEDURE p_AddPurchaseOrderSum @OrderId BIGINT
 AS
 BEGIN
     SET NOCOUNT ON;

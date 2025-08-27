@@ -1,4 +1,4 @@
-alter PROCEDURE p_AddPurchaseOrder @Supplier bigint,
+CREATE or alter PROCEDURE p_AddPurchaseOrder @Supplier bigint,
                                    @OrderDate date,
                                    @RfqNo varchar(20),
                                    @Priority varchar(20),

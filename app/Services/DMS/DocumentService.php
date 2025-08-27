@@ -19,6 +19,7 @@ use App\Models\Core\SpecialPermission;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentCheckOut;
 use App\Models\DMS\DocumentRelation;
+use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Repository;
 use App\Services\Core\PermissionsService;
 use App\Services\DMS\Files\FileProperties;
@@ -141,18 +142,9 @@ class DocumentService extends PermissionsService
      * @throws ErroredException
      */
     private static function _create(
-        Repository     $repository,
-        User $actor,
-        DisksEnum $disk,
-        string $name,
-        ExtensionsEnum $extension,
-        string $path,
-        int $sizeInBytes,
-        string $checksum,
-        CategoryMaster $category = null,
-        bool $copyPermissions = true,
-        Collection $properties = null
-    ): DocumentService {
+        Repository     $repository, User $actor, DisksEnum $disk, string $name, ExtensionsEnum $extension, string $path, int $sizeInBytes, string $checksum,
+        CategoryMaster $category = null, bool $copyPermissions = true, Collection $properties = null): DocumentService
+    {
         try {
             return DB::transaction(static function () use ($path, $checksum, $properties, $sizeInBytes, $disk, $category, $extension, $repository, $name, $actor, $copyPermissions) {
                 $document = Document::create([
@@ -235,8 +227,6 @@ class DocumentService extends PermissionsService
                     'ModifiedBy' => $actor->Id,
                     'CheckOutRemark' => $remark,
                     'Dated' => $date,
-                    'CreatedOn' => $date,
-                    'ModifiedOn' => $date,
                 ]);
                 activity()->causedBy($actor)->performedOn($this->document)->event('checked-out')->log('document checked out');
                 return $this;
@@ -344,6 +334,9 @@ class DocumentService extends PermissionsService
         return $encryptedKey;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function preview(string $attr): string
     {
         if (!$this->isPrevieable()) {
@@ -375,9 +368,15 @@ class DocumentService extends PermissionsService
         return $this->type->isPreview();
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function getFileContent(bool $base64 = true): string
     {
         $currentVersion = $this->document->current;
+        if (!$currentVersion instanceof DocumentVersion) {
+            throw new ErroredException('No file found, decrypting the file.');
+        }
         $content = (new EncryptionService())->decrypt(Storage::disk($currentVersion->Disk->value)->get($currentVersion->Path));
         return ($base64) ? base64_encode($content) : $content;
     }

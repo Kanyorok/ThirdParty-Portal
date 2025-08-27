@@ -105,13 +105,11 @@ abstract class PermissionsService
                     'Party' => Team::getPrimaryKey(),
                     'PartyID' => $assignee->TeamID,
                     'CreatedBy' => $actor->Id,
-                    'CreatedOn' => now(),
                 ]);
             }
             $permission->fill([
                 'Permission' => $role->value,
                 'ModifiedBy' => $actor->Id,
-                'ModifiedOn' => now(),
             ])->save();
 
             if ($notify) {
@@ -143,13 +141,11 @@ abstract class PermissionsService
                 'Party' => User::getPrimaryKey(),
                 'PartyID' => $assignee->Id,
                 'CreatedBy' => $actor->Id,
-                'CreatedOn' => now(),
             ]);
         }
         $permission->fill([
             'Permission' => $role->value,
             'ModifiedBy' => $actor->Id,
-            'ModifiedOn' => now(),
         ])->save();
 
         if ($notify) {

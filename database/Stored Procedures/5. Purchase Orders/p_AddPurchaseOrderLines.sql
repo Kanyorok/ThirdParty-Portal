@@ -1,4 +1,4 @@
-alter PROCEDURE p_AddPurchaseOrderLines @Item bigint,
+CREATE or alter PROCEDURE p_AddPurchaseOrderLines @Item bigint,
                                         @Quantity float = 0,
                                         @Price float = 0,
                                         @Tax float = 0,
