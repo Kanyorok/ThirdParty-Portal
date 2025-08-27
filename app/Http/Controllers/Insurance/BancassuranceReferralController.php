@@ -22,7 +22,8 @@ class BancassuranceReferralController extends Controller
 public function index()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])->get();
+    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])
+    ->orderByDesc('Id')->get();
 
     return view('bancassurance.referrals.index', compact('referrals'));
 }
@@ -152,7 +153,7 @@ public function assignList()
     $referrals = BancAssuranceReferral::with('insuranceProduct')
         ->whereNull('AssignedTo')
         ->where('Status',InsuranceReferralStatus::Pending->value) // Assuming 'P' stands for 'Pending'
-        ->get();
+        ->orderByDesc('Id')->get();
 
         $employees = Employee::whereNull('DeletedOn')
             ->select('Id', 'FirstName', 'LastName')

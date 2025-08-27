@@ -91,20 +91,8 @@ public function store(BancassurancePolicyRequest $request)
             $request->user(),
         );
 
-    //Optional: Update referral status
-    if (
-        $request->filled('ReferralID') &&
-        in_array($Status, [InsurancePolicyStatus::Issued])
-    ) {
-        DB::table('t_BancassuranceReferrals')->where('Id', $request->ReferralID)->update([
-            'Status' => InsuranceReferralStatus::Converted->value,
-            'ModifiedBy' => auth()->id(),
-            'ModifiedOn' => now()
-        ]);
-    }
-
-        return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
-    }
+    return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
+}
 
 
 
@@ -130,6 +118,7 @@ public function review($id)
     
     return view('bancassurance.policies.review', compact('policy'));
 }
+
 public function submitForUnderwriting(Request $request, $id)
 {
     $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
@@ -288,11 +277,22 @@ public function issuanceList()
 public function storeIssuance($id)
 {
     $Policy = BancassurancePolicy::find($id);
-        $Policy->update([
-            'Status'     => InsurancePolicyStatus::Issued->value,
-            'ModifiedBy' => auth()->id(),
-            'ModifiedOn' => now()
-        ]);
+    $Policy->update([
+        'Status'     => InsurancePolicyStatus::Issued->value,
+        'ModifiedBy' => auth()->id(),
+        'ModifiedOn' => now()
+    ]);
+
+    // Update related referral status to Converted
+    if ($Policy->ReferralID) {
+        $referral = BancAssuranceReferral::find($Policy->ReferralID);
+        if ($referral) {
+            $referral->Status = InsuranceReferralStatus::Converted->value;
+            $referral->ModifiedBy = auth()->id();
+            $referral->ModifiedOn = now();
+            $referral->save();
+        }
+    }
 
     return redirect()->route('bancassurance.policies.index')->with('success', 'Policy issued successfully.');
 }

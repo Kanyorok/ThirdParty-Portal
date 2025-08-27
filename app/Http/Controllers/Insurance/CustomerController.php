@@ -20,7 +20,8 @@ class CustomerController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
-        $referrals = BancAssuranceReferral::all();
+        $usedReferralIds = BancassuranceCustomer::pluck('ReferralID')->toArray();
+        $referrals = BancAssuranceReferral::whereNotIn('Id', $usedReferralIds)->get();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
         $occupations = CodeDetail::where('CodeID', 'Occupation')->get();
@@ -152,6 +153,25 @@ class CustomerController extends Controller
                 ->withErrors(['error' => 'Failed to delete Customer. Please try again.'])
                 ->withInput();
         }
+    }
+
+    public function portfolio($customerId)
+    {
+        $customer = DB::table('t_BancassuranceCustomers')->where('Id', $customerId)->first();
+
+        $policies = DB::table('t_BancassurancePolicies as p')
+            ->join('t_InsuranceProducts as prod', 'p.ProductID', '=', 'prod.Id')
+            ->join('t_InsuranceProviders as ins', 'p.InsurerID', '=', 'ins.Id')
+            ->where('p.CustomerID', $customerId)
+            ->select(
+                'p.*',
+                'prod.Name as ProductName',
+                'ins.Name as InsurerName'
+            )
+            ->orderByDesc('p.PolicyStartDate')
+            ->get();
+
+        return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
     }
 
 
