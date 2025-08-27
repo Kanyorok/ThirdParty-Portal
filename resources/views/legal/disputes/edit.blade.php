@@ -5,6 +5,12 @@
 <div class="container">
     <div class="card p-2 shadow rounded-4 mb-0">
         <div class="card-body mb-0">
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
             <p class="text-muted">Update the details of the legal case below.</p>
             <form action="{{ route('legal.cases.update', $case->Id) }}" method="POST">
                 @csrf
@@ -39,7 +45,12 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Case Type</label>
-                        <input type="text" name="CaseType" value="{{ old('CaseType', $case->CaseType) }}" class="form-control">
+                        <select class="form-select" name="CaseType" id="CaseType">
+                            <option value="{{old('CaseType', $case->CaseType)}}" disabled selected>{{old('CaseType', $case->CaseType)}}</option>
+                            @foreach($caseTypes as $type)
+                                <option value="{{ $type->Value }}">{{ $type->Value }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
@@ -48,10 +59,8 @@
                     <div class="col-md-6">
                         <label class="form-label">Status</label>
                         <select name="Status" class="form-control">
-                            <option value="">{{$case->Status}}</option>
                             <option value="Open" {{ old('Status', $case->Status) == 'Open' ? 'selected' : '' }}>Open</option>
                             <option value="Closed" {{ old('Status', $case->Status) == 'Closed' ? 'selected' : '' }}>Closed</option>
-                            <option value="Pending" {{ old('Status', $case->Status) == 'Pending' ? 'selected' : '' }}>Pending</option>
                             <option value="Appealed" {{ old('Status', $case->Status) == 'Appealed' ? 'selected' : '' }}>Appealed</option>
                             <option value="Dismissed" {{ old('Status', $case->Status) == 'Dismissed' ? 'selected' : '' }}>Dismissed</option>
                         </select>

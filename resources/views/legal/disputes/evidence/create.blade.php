@@ -39,7 +39,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Description (optional)</label>
-                    <textarea name="Description" class="form-control" rows="3">{{ old('Description') }}</textarea>
+                    <textarea name="Description" class="form-control" rows="3" required>{{ old('Description') }}</textarea>
                 </div>
 
 

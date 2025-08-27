@@ -5,7 +5,6 @@ namespace App\Enums\Core;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use LogicException;
 
 enum PermissionEnum: string
 {
@@ -619,13 +618,13 @@ enum PermissionEnum: string
     case FleetMakeCreate = 'fleetMake-create';
     case FleetMakeUpdate = 'fleetMake-update';
     case FleetMakeDestroy = 'fleetMake-delete';
-    
+
     case FleetVehicleView = 'fleetVehicle-view';
     case FleetVehicleCreate = 'fleetVehicle-create';
     case FleetVehicleUpdate = 'fleetVehicle-update';
     case FleetVehicleDestroy = 'fleetVehicle-destroy';
 
-        
+
     case FleetInsuranceTrackerView = 'fleetInsuranceTracker-view';
     case FleetInsuranceTrackerCreate = 'fleetInsuranceTracker-create';
     case FleetInsuranceTrackerUpdate = 'fleetInsuranceTracker-update';
@@ -672,10 +671,53 @@ enum PermissionEnum: string
     case FleetRepairLogCreate = 'fleetRepairLog-create';
     case FleetRepairLogUpdate = 'fleetRepairLog-update';
     case FleetRepairLogDestroy = 'fleetRepairLog-destroy';
-    
+
     case FleetServiceAlertView = 'fleetServiceAlert-view';
     case FleetServiceAlertAcknowledge = 'fleetServiceAlert-acknowledge';
-    
+
+
+
+    /*
+*
+* ========================================  Legal  ========================================
+*/
+    //Document Registry and Contracts Creation
+    case ContractView = 'contract-view';
+    case ContractCreate = 'contract-create';
+    case ContractUpdate = 'contract-update';
+    case ContractDelete = 'contract-delete';
+
+    //Disputes and Ltigations
+    case DisputeLitigationView='disputelitigation-view';
+    case DisputeLitigationCreate='disputelitigation-create';
+    case DisputeLitigationUpdate='disputelitigation-update';
+    case DisputeLitigationDelete='disputelitigation-delete';
+
+    //LegalObligations
+    case LegalObligationView='legalobligation-view';
+    case LegalObligationCreate='legalobligation-create';
+    case LegalObligationUpdate='legalobligation-update';
+    case LegalObligationDelete='legalobligation-delete';
+
+    //Legal Search
+    case LegalSearchView='legalsearch-view';
+    case LegalSearchCreate='legalsearch-create';
+    case LegalSearchUpdate='legalsearch-update';
+    case LegalSearchDelete='legalsearch-delete';
+
+    //LoanSecurity
+    case LoanSecurityView='loansecurity-view';
+    case LoanSecurityCreate='loansecurity-create';
+    case LoanSecurityUpdate='loansecurity-update';
+    case LoanSecurityDelete='loansecurity-delete';
+
+    //IntellectualProperty
+    case IntellectualPropertyView='intellectualproperty-view';
+    case IntellectualPropertyCreate='intellectualproperty-create';
+    case IntellectualPropertyUpdate='intellectualproperty-update';
+    case IntellectualPropertyDelete='intellectualproperty-delete';
+
+
 
 
 
@@ -783,8 +825,6 @@ enum PermissionEnum: string
               ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
             [self::FleetMakeView,self::FleetMakeCreate,self::FleetMakeUpdate,self::FleetMakeDestroy],
-            [self::VehicleRegistryView,self::VehicleRegistryCreate,self::VehicleRegistryUpdate,self::VehicleRegistryDestroy],
-            [self::DriverManagementView,self::DriverManagementCreate,self::DriverManagementUpdate,self::DriverManagementDestroy],
 
 
             //Property Management
@@ -850,8 +890,6 @@ enum PermissionEnum: string
             ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView, self::FleetModelCreate, self::FleetModelUpdate, self::FleetModelDestroy],
             [self::FleetMakeView, self::FleetMakeCreate, self::FleetMakeUpdate, self::FleetMakeDestroy],
-            [self::VehicleRegistryView, self::VehicleRegistryCreate, self::VehicleRegistryUpdate, self::VehicleRegistryDestroy],
-            [self::DriverManagementView, self::DriverManagementCreate, self::DriverManagementUpdate, self::DriverManagementDestroy],
 
                       ///////////////////////  Legal  ///////////////////////////////////////
             [self::ContractView,self::ContractCreate,self::ContractUpdate,self::ContractDelete],
@@ -905,12 +943,11 @@ enum PermissionEnum: string
             self::DebtNotificationView, self::DebtNotificationSend,
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
-
-            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
-
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
             => ModulesEnum::Settings,
+
+            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
 
             //Procurement
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval,
@@ -985,7 +1022,7 @@ enum PermissionEnum: string
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView,
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView
             => ModulesEnum::Property,
-            default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+           // default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             //Insurance
             self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete,
@@ -1141,9 +1178,9 @@ enum PermissionEnum: string
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
-            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
 
-            default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+            //dms
+            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
 
             //Insurance
             self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete => 'Referral',
