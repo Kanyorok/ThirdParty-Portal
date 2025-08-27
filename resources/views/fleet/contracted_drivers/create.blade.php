@@ -82,15 +82,6 @@
                     @enderror
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">License Number</label>
-                    <input type="text" name="LicenseNumber"
-                           class="form-control @error('LicenseNumber') is-invalid @enderror"
-                           value="{{ old('LicenseNumber') }}">
-                    @error('LicenseNumber')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Notes</label>

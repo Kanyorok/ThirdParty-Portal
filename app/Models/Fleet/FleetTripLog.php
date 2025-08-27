@@ -81,4 +81,6 @@ class FleetTripLog extends Model
     return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
 }
 
+
+
 }
