@@ -114,6 +114,24 @@
                         </li>
                     </ul>
                 </div>
+                <div class="card-footer">
+                    <div class="row">
+                        @if(!$file->ext()->canCheckOut())
+                            <div class="col-sm-6 col-12">
+                                <button class="btn btn-secondary w-100 action-download-file" type="button"><i
+                                        class="fas fa-download"></i> Download
+                                </button>
+                            </div>
+                        @endif
+                        @can('delete', $file)
+                            <div class="col-sm-6 col-12">
+                                <button class="btn btn-secondary w-100 file-action-trash" type="button"><i
+                                        class="fas fa-trash"></i> delete
+                                </button>
+                            </div>
+                        @endcan
+                    </div>
+                </div>
             </div>
             <div class="card">
                 <div class="card-header py-3">
@@ -383,7 +401,62 @@
                                 </div>
                             </form>
                         </div>
+                    @else
+                        <div class="onboarding-content with-gradient d-none modal-item" id="fileDownloadModal">
+                            <form action="{{ route('file-download.store',[$file->DocumentId]) }}" method="post"
+                                  id="fileDownloadForm"> @csrf
+                                <input type="hidden" name="fetch_link" value="{{ $file->Name }}" class="d-none">
+                                <h3 class="text-center">Download the file {{ $file->Name }}</h3>
+                                <hr>
+                                <div class="mt-4">
+                                    <button type="button" class="btn btn-secondary float-start"
+                                            data-bs-dismiss="modal">
+                                        cancel
+                                    </button>
+                                    <button class="btn btn-primary float-end" id="fileDownloadBtn" type="submit">
+                                        <i class="fas fa-file-download"></i> download
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     @endif
+                        <div class="onboarding-content with-gradient d-none modal-item text-center" id="trashFileModal">
+                            <h4 class="text-danger">
+                                Trash Document <b class="rm-file-name">{{ $file->Name }}</b> ?
+                            </h4>
+                            <div class="alert alert-warning" role="alert">
+                                <b>Note</b>This file will be deleted permanently
+                            </div>
+                            @if($checkedOut)
+                                <div class="alert alert-info d-flex align-items-center" role="alert">
+                                    <i data-feather="alert-triangle"></i>
+                                    <div>This document has been checkout, cannot be deleted</div>
+                                </div>
+                                <div class="mt-4">
+                                    <button type="button" class="btn btn-secondary float-end"
+                                            data-bs-dismiss="modal">
+                                        close
+                                    </button>
+                                </div>
+                            @else
+                                <form id="trashFileForm" method="post"
+                                      action="{{  route('files.destroy', [$file->repository->RepositoryId, $file->DocumentId]), }}"> @csrf
+                                    <div class="mt-4">@method('delete')
+                                        <button type="button" class="btn btn-secondary float-start"
+                                                data-bs-dismiss="modal">
+                                            no, cancel
+                                        </button>
+
+                                        <button class="btn btn-danger float-end" id="trashFileBtn"
+                                                type="submit"><i
+                                                class="fas fa-trash"></i> yes, delete
+                                        </button>
+
+                                    </div>
+                                </form>
+                            @endif
+
+                        </div>
                     <div class="onboarding-content with-gradient d-none modal-item" id="updateFileVisibilityModal">
                         <form action="{{ route('file.visibility',[$file->DocumentId]) }}" method="post"
                               id="updateFileVisibilityForm"> @csrf
@@ -505,8 +578,11 @@
     <script> const $Modal = $('#fileActionModal');
         $(function () {
             fetchFilePreview();
+            @if($file->ext()->canCheckOut())
             fetchCheckOutsTable();
-
+            @else
+            fetchFilePermissionsTableTable();
+            @endif
             $(document).on('click', '.edit-file-name', function () {
                 $(".modal-item").addClass('d-none');
                 $('#updateFileNameModal').removeClass('d-none');
@@ -517,6 +593,22 @@
                 e.preventDefault();
                 if (await saveForm($(this), $('#updateFileNameBtn'), true, true, true)) {
                     $Modal.modal('hide');
+                }
+            });
+
+            $(document).on('click', '.file-action-trash', function () {
+                $(".modal-title").html('<b class="text-danger">Delete</b>  : ' + $(this).data('title'));
+                $(".modal-item").addClass('d-none');
+                $('#trashFileModal').removeClass('d-none');
+                $Modal.modal('show');
+            });
+
+            $('form#trashFileForm').submit(async function (e) {
+                e.preventDefault();
+                const response = await saveForm($(this), $('#trashFileBtn'), true, true, true);
+                if (response) {
+                    $Modal.modal('hide');
+                    $('#' + response.data.id).remove();
                 }
             });
 
@@ -541,13 +633,27 @@
                 }
             });
 
+            $(document).on('click', '.action-download-file', function () {
+                $(".modal-item").addClass('d-none');
+                $('#fileDownloadModal').removeClass('d-none');
+                $('.modal-title').html('Download : {{ $file->Name }}.');
+                $Modal.modal('show');
+            });
+            $('form#fileDownloadForm').submit(async function (e) {
+                e.preventDefault();
+                const data = await saveForm($(this), $('#fileDownloadBtn'), false, true, true);
+                if (data) {
+                    $Modal.modal('hide');
+                    window.open(data.route, '_blank', 'noopener,noreferrer');
+                }
+            });
+
             $(document).on('click', '.action-checkin-file', function () {
                 $(".modal-item").addClass('d-none');
                 $('#fileCheckInModal').removeClass('d-none');
                 $('.modal-title').html('Check In : {{ $file->Name }}.');
                 $Modal.modal('show');
             });
-
             $(document).on('click', '.action-checkout-file', function () {
                 $(".modal-item").addClass('d-none');
                 $('#fileCheckOutModal').removeClass('d-none');

@@ -944,12 +944,11 @@ enum PermissionEnum: string
             self::DebtNotificationView, self::DebtNotificationSend,
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
-
-            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
-
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
             => ModulesEnum::Settings,
+          
+             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS=> ModulesEnum::DMS,
 
             //Procurement
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval,
@@ -1024,7 +1023,7 @@ enum PermissionEnum: string
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView,
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView
             => ModulesEnum::Property,
-            default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+           // default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             //Insurance
             self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete,
@@ -1180,9 +1179,9 @@ enum PermissionEnum: string
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
-            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
 
-            default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+            //dms
+            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
 
             //Insurance
             self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete => 'Referral',
