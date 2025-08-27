@@ -31,8 +31,8 @@
                             <tbody>
 
                             @if ($taxJurisdictions->count())
-                            <tr>
                                 @foreach($taxJurisdictions as $item)
+                            <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $item->JurisdictionName ?? '-' }}</td>
                                     <td>{{ $item->currency->Code ?? '-' }}</td>
