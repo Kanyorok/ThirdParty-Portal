@@ -15,7 +15,6 @@ return new class extends Migration {
             $table->string('SectionName', 100)->unique();
             $table->text('Description')->nullable();
             $table->boolean('IsActive')->default(true);
-
             $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn')->useCurrent();
             $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');
