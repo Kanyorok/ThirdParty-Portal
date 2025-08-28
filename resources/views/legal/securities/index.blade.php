@@ -9,6 +9,7 @@
     </div>
     <div class="card-body">
         <p class="text-muted">List of registered loan securities and collateral items.</p>
+        <div class=" table-responsive">
         <table class="table table-hover table-sm align-middle text-centre"
                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
             <thead>
@@ -72,6 +73,7 @@
                 @endif
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @include('components.modals.delete-confirm')
