@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\CRM;
 
+use App\Enums\Core\ExtensionsEnum;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\TicketPriorityEnum;
 use App\Enums\TicketStatusEnum;
@@ -15,27 +18,29 @@ use App\Models\BR\Client;
 use App\Models\Communication\Comment;
 use App\Models\Communication\Email;
 use App\Models\Core\CodeDetail;
+use App\Models\Core\SpecialPermission;
 use App\Models\Core\Workflow;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Ticket;
-use App\Models\CRM\TicketUsers;
-use App\Models\DMS\Image;
+use App\Models\DMS\Document;
 use App\Services\BR\ClientService;
-use App\Services\DMS\ImageService;
+use App\Services\CommentService;
+use App\Services\Core\PermissionsService;
+use App\Services\CRMEmailService;
 use App\Services\HRM\UserService;
-use Carbon\Carbon;
+use App\Services\LeadService;
+use App\Services\PartyService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Yajra\DataTables\DataTables;
 
-class TicketService
+class TicketService extends PermissionsService
 {
-    public const ALL = 'all';
+    public const string ALL = 'all';
 
     public function __construct(public Ticket $ticket)
     {
@@ -48,6 +53,9 @@ class TicketService
         return $service;
     }
 
+    /**
+     * @throws ErroredException
+     */
     private static function _create(string $PartyID, string $Party, CodeDetail $category, string $title, string $description, User $actor, string $Source, string $SourceID, TicketPriorityEnum $priority, $start = null, $end = null, $SourceTicketID = null): TicketService
     {
         $ticket = new Ticket();
@@ -86,84 +94,21 @@ class TicketService
         return $slug;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public static function user(CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', $start = null, $end = null): TicketService
     {
         //  $service->sendMessage('New ticket (Ticket ID: #' . $service->ticket->TicketID . ') has been created for your issue, you will receive updates', $actor, $lead);
         return self::_create($actor->Id, User::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end);
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function addWatcher(User|Team $watcher, RoleEnum $role, User $actor, bool $notify = true): static
     {
-        if ($watcher instanceof Team) {
-            $ticketUser = $this->ticket->watchers()->lock('WITH(NOLOCK)')
-                ->where('Party', Team::getPrimaryKey())->where('PartyID', $watcher->TeamID)->first();
-            if (!$ticketUser instanceof TicketUsers) {
-                $ticketUser = new TicketUsers();
-                $ticketUser->fill([
-                    'Party' => Team::getPrimaryKey(),
-                    'CreatedBy' => $actor->Id,
-                    'TicketID' => $this->ticket->Id,
-                    'PartyID' => $watcher->TeamID,
-                    'CreatedOn' => now(),
-                ]);
-            }
-            $ticketUser->fill([
-                'Role' => $role->value,
-                'ModifiedBy' => $actor->Id,
-                'ModifiedOn' => now(),
-            ])->save();
-
-            if ($notify) {
-                $users = $watcher->users()->lock('WITH(NOLOCK)')->select(['Email', 'Name'])->lock('WITH(NOLOCK)')->inRandomOrder()->limit(15)->get(['Email', 'Name']);
-                $cc = $users->map(function ($user) {
-                    return [$user->Name => $user->Email];
-                });
-
-                CRMEmailService::createTeam(
-                    $watcher,
-                    'Notification: Added as Watchers to Ticket ' . $this->ticket->TicketID,
-                    '<p>You have been added as watchers to <a  href="' . route('tickets.show', $this->ticket->TicketID) . '">Ticket ID: #' . $this->ticket->TicketID . '</a>.</p>
-                       <p>As watchers, you will receive updates and notifications about any changes, comments, or progress related to this ticket. </p>
-                        <p>Please feel free to review the details and provide any necessary input to ensure a smooth resolution.</p>',
-                    SystemHelper::user(),
-                    $cc->toArray()
-                );
-            }
-
-            return $this;
-        }
-
-
-        $ticketUser = $this->ticket->watchers()->lock('WITH(NOLOCK)')
-            ->where('Party', User::getPrimaryKey())->where('PartyID', $watcher->Id)->first();
-
-        if (!$ticketUser instanceof TicketUsers) {
-            $ticketUser = new TicketUsers();
-            $ticketUser->fill([
-                'TicketID' => $this->ticket->Id,
-                'Party' => User::getPrimaryKey(),
-                'PartyID' => $watcher->Id,
-                'CreatedBy' => $actor->Id,
-                'CreatedOn' => now(),
-            ]);
-        }
-        $ticketUser->fill([
-            'Role' => $role->value,
-            'ModifiedBy' => $actor->Id,
-            'ModifiedOn' => now(),
-        ])->save();
-
-
-        if ($notify) {
-            CRMEmailService::createUser(
-                user: $watcher,
-                subject: 'Notification: Added as a Watcher to Ticket ' . $this->ticket->TicketID,
-                body: '<p>You have been added as watcher to <a  href="' . route('tickets.show', $this->ticket->TicketID) . '">Ticket ID: #' . $this->ticket->TicketID . '</a>.</p>
-                       <p>As watchers, you will receive updates and notifications about any changes, comments, or progress related to this ticket. </p>
-                        <p>Please feel free to review the details and provide any necessary input to ensure a smooth resolution.</p>',
-                actor: SystemHelper::user()
-            );
-        }
+        $this->_addPermissions($this->ticket, $watcher, $role, $actor, $notify);
         return $this;
     }
 
@@ -192,6 +137,9 @@ class TicketService
         }
     }
 
+    /**
+     * @throws ErroredException
+     */
     public static function lead(Lead $lead, CodeDetail $category, string $title, string $description, User $actor, string $Source, TicketPriorityEnum $priority, string $SourceID = '0', $start = null, $end = null): TicketService
     {
         $service = self::_create($lead->LeadID, Lead::getPrimaryKey(), $category, $title, $description, $actor, $Source, $SourceID, $priority, $start, $end);
@@ -252,9 +200,9 @@ class TicketService
     public function assign(User|Team $owner): static
     {
         //check a previous owner as read.
-        $this->ticket->watchers()->lock('WITH(NOLOCK)')->where('t_TicketUsers.Party', $this->ticket->Owner)
-            ->where('t_TicketUsers.PartyID', $this->ticket->OwnerID)->update([
-                'Role' => RoleEnum::Read->value,
+        $this->ticket->permissions()->lock('WITH(NOLOCK)')->where('t_SpecialPermissions.Party', $this->ticket->Owner)
+            ->where('t_SpecialPermissions.PartyID', $this->ticket->OwnerID)->update([
+                'Permission' => RoleEnum::Read->value,
             ]);
 
         $this->addWatcher($owner, RoleEnum::Admin, SystemHelper::user(), false);
@@ -283,7 +231,7 @@ class TicketService
             return $this;
         }
 
-        if ($this->ticket->Party === User::getPrimaryKey() && $this->ticket->PartyID === $owner->Id) {
+        if ($this->ticket->PartyID === $owner->Id && $this->ticket->Party === User::getPrimaryKey()) {
             throw new ErroredException('Cannot assign ticket to ' . $owner->Name);
         }
 
@@ -323,33 +271,16 @@ class TicketService
     /**
      * @throws ErroredException
      */
-    public function deleteWatcher(TicketUsers $ticketUser, User $actor): static
+    public function deleteWatcher(SpecialPermission $permission, User $actor): static
     {
-        if ($this->ticket->Id !== $ticketUser->TicketID) {
-            throw new ErroredException('This ticket does not belong to you.');
-        }
-
-        if (($ticketUser->PartyID === $this->ticket->CreatedBy) && ($ticketUser->Party === User::getPrimaryKey())) {//check creator
+        if (($permission->PartyID === $this->ticket->CreatedBy) && ($permission->Party === User::getPrimaryKey())) {//check creator
             throw new ErroredException('cannot remove creator.');
         }
 
-        if (($ticketUser->PartyID === $this->ticket->OwnerID) && ($ticketUser->Party === $this->ticket->Owner)) {//check assigned
+        if (($permission->PartyID === $this->ticket->OwnerID) && ($permission->Party === $this->ticket->Owner)) {//check assigned
             throw new ErroredException('cannot remove assigned.');
         }
-
-        $service = new PartyService($ticketUser->party);
-        activity()->causedBy($actor)->performedOn($this->ticket)->event('delete')->log('Removed ' . $service->getName() . ' as a ticket (' . $this->ticket->TicketID . ') watcher.');
-
-        $ticketUser->forceFill([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id,
-        ])->save();
-
-        $service->sendEmail(
-            'Notification: Removed as Watchers from Ticket ' . $this->ticket->TicketID,
-            '<p>You have been removed as watchers from Ticket ' . $this->ticket->TicketID . '. As a result, you will no longer receive updates or notifications related to this ticket.</p>
-                <p>Thank you for your continued support and collaboration.</p>'
-        );
+        $this->_trashPermissions($this->ticket, $permission, $actor);
         return $this;
     }
 
@@ -524,25 +455,26 @@ class TicketService
         return $this;
     }
 
-    public function checkOwnership(User $user): bool
+    /**
+     * @throws ErroredException
+     */
+    public function document(UploadedFile $file, User $actor): Document
     {
-        if ($this->ticket->Owner === User::getPrimaryKey()) {
-            return ($this->ticket->OwnerID === $user->Id);
-        }
-
-        return $user->teamUser()->where('t_TeamUser.TeamId', $this->ticket->OwnerID)->exists();
-    }
-
-    public function document(UploadedFile $file, User $actor): Image
-    {
-        $document = ImageService::createUpload($file, Ticket::getPrimaryKey(), $this->ticket->Id, $actor)->image;
+        $document = $this->ticket->newDocument(ModulesEnum::CRM, $file, [PermissionEnum::TicketUpdate, PermissionEnum::TicketDelete], $actor);
+        self::copyPermissions($this->ticket, $document, $actor);
+        // $document = ImageService::createUpload($file, Ticket::getPrimaryKey(), $this->ticket->Id, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->ticket)->event('document')->log('added a document  ' . $document->Name . ' to ticket ' . Str::upper($this->ticket->TicketID));
         return $document;
     }
 
-    public function documentContent(string $content, string $MimeType, string $Name, User $actor): Image
+    /**
+     * @throws ErroredException
+     */
+    public function documentContent(string $content, ExtensionsEnum $extension, string $Name, User $actor): Document
     {
-        $document = ImageService::create(Ticket::getPrimaryKey(), $this->ticket->Id, $content, $MimeType, $Name, $actor)->image;
+        $document = $this->ticket->newDocumentFromContent(ModulesEnum::CRM, $extension, $Name, $content, $actor, []);
+        self::copyPermissions($this->ticket, $document, $actor);
+        //$document = ImageService::create(Ticket::getPrimaryKey(), $this->ticket->Id, $content, $MimeType, $Name, $actor)->image;
         activity()->causedBy($actor)->performedOn($this->ticket)->event('document')->log('added a document  ' . $document->Name . ' to ticket ' . Str::upper($this->ticket->TicketID));
         return $document;
     }

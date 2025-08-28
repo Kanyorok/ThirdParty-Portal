@@ -2,29 +2,31 @@
 
 namespace App\Models\CRM;
 
+use App\Enums\Core\VisibilityEnum;
 use App\Enums\TicketPriorityEnum;
 use App\Enums\TicketStatusEnum;
+use App\Interfaces\SpecialPermissionContract;
 use App\Models\Communication\Comment;
 use App\Models\Core\CodeDetail;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
-use App\Models\DMS\Image;
 use App\Services\StaticListsService;
+use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Ticket extends Model
+class Ticket extends Model implements SpecialPermissionContract
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait, SpecialPermissionTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Tickets';
     protected $primaryKey = 'Id';
@@ -33,28 +35,12 @@ class Ticket extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'TicketID',
-        'Title',
-        'CategoryID',
-        'Notes',
-        'Party',
-        'PartyID',
-        'Source',
-        'SourceID',
-        'Status',
-        'Priority',
-        'Owner',
-        'OwnerID',
-        'ClosedOn',
-        'SourceTicketID',
-        'StartDate',
-        'EndDate',
-        'CreatedBy',
-        'ModifiedBy',
-        'DeletedBy',
+        'TicketID', 'Title', 'CategoryID', 'Notes', 'Party', 'PartyID', 'Source', 'SourceID', 'Status', 'Priority', 'Owner', 'OwnerID',
+        'Visibility', 'ClosedOn', 'SourceTicketID', 'StartDate', 'EndDate', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
+        'Visibility' => VisibilityEnum::class,
         'Status' => TicketStatusEnum::class,
         'Priority' => TicketPriorityEnum::class,
         'ClosedOn' => 'datetime',
@@ -64,7 +50,7 @@ class Ticket extends Model
 
     public static function getPrimaryKey(): string
     {
-        return (new self())->getRouteKeyName();
+        return 'TicketID';
     }
 
     /**
@@ -72,7 +58,7 @@ class Ticket extends Model
      */
     public function getRouteKeyName(): string
     {
-        return 'TicketID';
+        return self::getPrimaryKey();
     }
 
     public function category(): BelongsTo
@@ -96,21 +82,21 @@ class Ticket extends Model
         return $this->morphTo(__FUNCTION__, 'Owner', 'OwnerID')->withTrashed();
     }
 
-    public function watchers(): HasMany
-    {
-        return $this->hasMany(TicketUsers::class, 'TicketID', 'Id');
-    }
+    //t_TicketUsers
+    /*  public function watchers(): HasMany//todo rm using special permissions
+      {
+          return $this->hasMany(TicketUsers::class, 'TicketID', 'Id');
+      }*/
 
     public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'type', 'CommentType', 'CommentTypeID', 'Id');
     }
 
-    public function documents(): MorphMany
-    {
-        return $this->morphMany(Image::class, __FUNCTION__, "ImageType", "ImageTypeID", 'Id');
-    }
-
+    /* public function documents(): MorphMany
+     {
+         return $this->morphMany(Image::class, __FUNCTION__, "ImageType", "ImageTypeID", 'Id');
+     }*/
 
     public function workflows(): MorphMany
     {
@@ -120,5 +106,15 @@ class Ticket extends Model
     public function pendingWorkflows(): MorphMany
     {
         return $this->morphMany(PendingWorkflow::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
+    }
+
+    public function getShareEmailSubject(): string
+    {
+        return 'Notification: #permission permission to Ticket #' . $this->TicketID;
+    }
+
+    public function getSharedName(): string
+    {
+        return "#" . $this->TicketID;
     }
 }

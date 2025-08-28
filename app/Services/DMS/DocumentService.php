@@ -42,6 +42,7 @@ use Throwable;
 
 class DocumentService extends PermissionsService
 {
+    protected const string CHECKSUM = 'sha256';
     public ExtensionsEnum $type;
 
     public function __construct(public Document $document)
@@ -54,6 +55,7 @@ class DocumentService extends PermissionsService
         try {
             $type = ExtensionsEnum::fromMimeType($this->document->MimeType);
         } catch (ErroredException $e) {
+
             $type = ExtensionsEnum::None;
         }
         $this->type = $type;
@@ -65,7 +67,24 @@ class DocumentService extends PermissionsService
     public static function createInternal(ModulesEnum $module, UploadedFile $file, User $actor, array|string $permissions, string $Related, string|int $RelatedId): self
     {
         $service = self::createUpload(RepositoryService::module($module), $file, $actor, false)
-            ->addPermission($actor, RoleEnum::Admin, $actor, false)->attach($Related, $RelatedId, $actor);
+            ->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false)->attach($Related, $RelatedId, $actor);
+
+        if (empty($permissions)) {
+            if (is_string($permissions)) {
+                $permissions = explode(',', $permissions);
+            }
+            self::userPermissions($service->document, $permissions, RoleEnum::Read, $actor);
+        }
+        return $service;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public static function createInternalFileContent(ModulesEnum $module, ExtensionsEnum $extension, string $fileName, string $content, User $actor, array|string $permissions, string $Related, string|int $RelatedId): self
+    {
+        $service = self::createContent(RepositoryService::module($module), $extension, $fileName, $content, $actor, false)
+            ->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false)->attach($Related, $RelatedId, $actor);
 
         if (empty($permissions)) {
             if (is_string($permissions)) {
@@ -86,7 +105,7 @@ class DocumentService extends PermissionsService
         }
         DocumentRelation::create([
             'Related' => $Related,
-            'RelatedId' => $RelatedId,
+            'RelatedID' => $RelatedId,
             'DocumentId' => $this->document->Id,
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
@@ -97,6 +116,9 @@ class DocumentService extends PermissionsService
         return $this;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function addPermission(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
     {
         $this->_addPermissions($this->document, $assignee, $role, $actor, $notify);
@@ -111,15 +133,33 @@ class DocumentService extends PermissionsService
     /**
      * @throws ErroredException
      */
+    public static function createContent(Repository $repository, ExtensionsEnum $extension, string $fileName, string $content, User $actor, bool $copyRepoPermissions = true): self
+    {
+        $disk = self::getDisk();
+        $checksum1 = hash(self::CHECKSUM, $content);
+        $path = self::_saveFile($disk, $content);
+
+        $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
+        $checksum = base64_encode($checksum1 . '|' . $checksum2);
+
+        if (!str_ends_with(strtolower($fileName), '.' . strtolower($extension->value))) {
+            $fileName .= '.' . $extension->value;
+        }
+        return self::_create($repository, $actor, $disk, $fileName, $extension, $path, Storage::disk($disk->value)->size($path), $checksum, copyPermissions: $copyRepoPermissions);
+    }
+
+    /**
+     * @throws ErroredException
+     */
     public static function createUpload(Repository $repository, UploadedFile $file, User $actor, bool $copyRepoPermissions = true): self
     {
         $extension = ExtensionsEnum::fromMimeType($file->getMimeType() ?? $file->getClientMimeType());
         $disk = self::getDisk();
 
-        $checksum1 = hash_file('sha256', $file->getRealPath());
+        $checksum1 = hash_file(self::CHECKSUM, $file->getRealPath());
         $path = self::_saveFile($disk, $file->getContent());
         $properties = (new UploadFileProperties($file, $extension))->getProperties();
-        $checksum2 = hash_file('sha256', Storage::disk($disk->value)->path($path));
+        $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
         $checksum = base64_encode($checksum1 . '|' . $checksum2);
 
         return self::_create($repository, $actor, $disk, $file->getClientOriginalName(), $extension, $path, $file->getSize(), $checksum, copyPermissions: $copyRepoPermissions, properties: $properties);
@@ -166,7 +206,7 @@ class DocumentService extends PermissionsService
 
                 $service = new self($document);
                 if ($repository->Visibility->value === VisibilityEnum::Public->value) {
-                    $service->addPermission($actor, RoleEnum::Admin, $actor, false);
+                    $service->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false);
                 }
                 return $service->_newVersion($disk, $path, $name, $sizeInBytes, $actor, $properties, $checksum);
             });
@@ -282,9 +322,9 @@ class DocumentService extends PermissionsService
         }
         $extension = ExtensionsEnum::fromMimeType($file->getMimeType() ?? $file->getClientMimeType());
         $disk = self::getDisk();
-        $checksum1 = hash_file('sha256', $file->getRealPath());
+        $checksum1 = hash_file(self::CHECKSUM, $file->getRealPath());
         $path = self::_saveFile($disk, $file->getContent());
-        $checksum2 = hash_file('sha256', Storage::disk($disk->value)->path($path));
+        $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
         try {
             return DB::transaction(function () use ($file, $actor, $remark, $checkOut, $path, $checksum1, $checksum2, $extension, $disk) {
                 $checkOut->update([
@@ -355,7 +395,6 @@ class DocumentService extends PermissionsService
             return '<iframe src="data:application/pdf;base64,' . $this->getFileContent() . '" ' . $attr . '></iframe>';
             //return '<embed width="100%" height="100%" "data:application/pdf;base64,'.$this->image->Image.' type="application/pdf" />';
         }
-
 
         if ($this->type->value === ExtensionsEnum::Txt->value) {
             return '<textarea readonly disabled ' . $attr . '>' . $this->getFileContent(false) . '</textarea>';
@@ -485,5 +524,12 @@ class DocumentService extends PermissionsService
     {
         $this->document = $this->_trashPermissions($this->document, $permission, $actor);
         return $this;
+    }
+
+    public function summaryList(): string
+    {
+        return '<span class="btn btn-outline-info modal-preview-document" title="' . $this->document->Name . '"
+                        data-url="' . route('file.embed-preview', [$this->document->DocumentId]) . '" id="document-' . $this->document->DocumentId . '">
+                    ' . $this->document->ext()?->getIcon() . "&nbsp;" . Str::limit(explode(".", $this->document->Name)[0], 10) . '.' . $this->document->ext()?->value . '</span>';
     }
 }

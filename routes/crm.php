@@ -249,7 +249,7 @@ Route::namespace('CRM')->prefix('crm')->group(function () {
 
     Route::namespace('Base')->prefix('base')->group(function () {
         Route::get('fetch-products', 'ProductSelectController')->name('products.select2');
-        Route::resource('documents', 'DocumentController')->parameters(['documents' => 'image'])->only(['show', 'edit', 'destroy']);
+        Route::resource('documents', 'DocumentController')->parameters(['documents' => 'image'])->only(['show', 'edit', 'destroy']);//@deprecated
         Route::resource('tasks', 'TaskController')->except(['create', 'store', 'edit']);
         Route::resource('notes', 'NotesController')->only(['index', 'show']);
         Route::resource('discussions', 'DiscussionController')->only(['index', 'show']);

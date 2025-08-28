@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
 abstract class PermissionsService
 {
 
-    protected static function copyPermissions(SpecialPermissionContract $source, SpecialPermissionContract $destination, User $actor): bool
+    public static function copyPermissions(SpecialPermissionContract $source, SpecialPermissionContract $destination, User $actor): bool
     {
         /*if (!self::checkImplementation($destination)) {
             throw new RuntimeException("Source does not use Special Permission Trait");
@@ -92,8 +92,14 @@ abstract class PermissionsService
         return self::bulkInsert($roles);
     }
 
+    /**
+     * @throws ErroredException
+     */
     protected function _addPermissions(SpecialPermissionContract $destination, User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): SpecialPermission
     {
+        if (!$this->_checkPermissions($destination, $actor, $role)) {
+            throw new ErroredException('You do not have permission to add this permission.');
+        }
         if ($assignee instanceof Team) {
             $permission = $destination->permissions()->lock('WITH(NOLOCK)')
                 ->where('Party', Team::getPrimaryKey())->where('PartyID', $assignee->TeamID)->first();
@@ -160,6 +166,35 @@ abstract class PermissionsService
         return $permission;
     }
 
+    protected function _checkPermissions(SpecialPermissionContract $destination, User $actor, RoleEnum $role = null): bool
+    {
+        if (SystemHelper::isSystem($actor)) {
+            return true;
+        }
+
+        if (!$role instanceof RoleEnum) {
+            return $destination->permissions()->lock('WITH(NOLOCK)')
+                ->where('Party', User::getPrimaryKey())->where('PartyID', $actor->Id)
+                ->whereIn('Permission', [RoleEnum::Share->value, RoleEnum::Admin->value])
+                ->exists();
+        }
+        $permission = $destination->permissions()->lock('WITH(NOLOCK)')
+            ->where('Party', User::getPrimaryKey())->where('PartyID', $actor->Id)->first();
+
+        if (!$permission instanceof SpecialPermission) {
+            return false;
+        }
+
+        if (!in_array($permission->Permission->value, [RoleEnum::Admin->value, RoleEnum::Share->value], true)) {
+            return false;
+        }
+        if ($permission->Permission->value !== RoleEnum::Admin->value && $role->value === RoleEnum::Admin->value) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * @throws ErroredException
      */
@@ -168,6 +203,11 @@ abstract class PermissionsService
         if (($permission->Model !== $destination->getMorphClass()) || (bccomp($permission->ModelID, $destination->{$destination->getKeyName()}) !== 0)) {
             throw new ErroredException('This permission is not part of this item.');
         }
+
+        if (!$this->_checkPermissions($destination, $actor)) {
+            throw new ErroredException('You do not have permission to modify this permission.');
+        }
+
         $service = new PartyService($permission->party);
         activity()->causedBy($actor)->performedOn($destination)->event('delete')->log('Removed ' . $service->getName() . ' ' . $permission->Permission->name . ' permission from ' . $destination->getSharedName());
 

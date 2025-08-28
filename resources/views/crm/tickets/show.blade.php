@@ -1,4 +1,4 @@
-@php use App\Enums\TicketSourceEnum;use App\Enums\TicketStatusEnum;use App\Models\BR\Client;use App\Models\CRM\Lead; @endphp
+@php use App\Enums\Core\ExtensionsEnum;use App\Enums\TicketSourceEnum;use App\Enums\TicketStatusEnum;use App\Helpers\SystemHelper;use App\Models\Auth\Team;use App\Models\Auth\User;use App\Models\BR\Client;use App\Models\CRM\Lead;use App\Services\CRM\TicketService;use App\Services\DMS\DocumentService; @endphp
 @php @endphp
 @php @endphp
 @php @endphp
@@ -63,12 +63,8 @@
                     </div>
                 </div>
                 <div class="card-footer" id="ticketsAttachementContents">
-                    @foreach($ticket->documents()->get(['ImageID','MIMEType','Name']) as $document)
-                        <span class="btn btn-outline-info modal-preview-document" title="{{ $document->Name }}"
-                              data-url="{{ route('documents.show',[$document->ImageID]) }}"
-                              id="document-{{ $document->ImageID }}">
-                                {!! $document->ext()?->getIcon() !!} {{ \Illuminate\Support\Str::limit(explode(".",$document->Name)[0],10,'...') }} {!! $document->ext()?->value !!}
-                            </span>
+                    @foreach($ticket->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                        {!! (new DocumentService($document))->summaryList() !!}
                     @endforeach
                 </div>
             </div>
@@ -179,7 +175,7 @@
                         @include('snippets.client_summary', ['client'=>$party,'show_summary'=>true])
                     @elseif($party instanceof Lead)
                         @include('snippets.lead_summary', ['lead'=>$party, 'show_summary'=>true])
-                    @elseif($party instanceof \App\Models\Auth\User)
+                    @elseif($party instanceof User)
                         @include('snippets.user_summary', ['user'=>$party, 'show_summary'=>true])
                     @else
                         <h3>Unknown party</h3>
@@ -198,7 +194,7 @@
                                             value="{{ $priority->value }}" {{ ($priority->value===$ticket->Priority->value)?'selected':'' }}>{{ $priority->name }}</option>
                                     @endforeach
 
-                                    
+
                                 </select>
                                 <p id="ticket_priority_error" class="invalid-feedback d-none error col-12"
                                    role="alert"></p>
@@ -210,8 +206,8 @@
                                 @csrf
                                 <span class="d-none" id="ticketAssigneeMsg"></span>@method('put')
                                 <select class="form-control " name="ticket_user" id="ticket_user" required>
-                                    @if($ticket->assignee instanceof \App\Models\Auth\User)
-                                        @if(\App\Helpers\SystemHelper::isSystem($ticket->assignee))
+                                    @if($ticket->assignee instanceof User)
+                                        @if(SystemHelper::isSystem($ticket->assignee))
                                             <option value="{{ $ticket->assignee->UserID }}" selected
                                                     id="ticketAssignee">None - Unassigned
                                             </option>
@@ -221,7 +217,7 @@
                                                 {{ $ticket->assignee->Name }} - {{ $ticket->assignee->UserID }} (user)
                                             </option>
                                         @endif
-                                    @elseif($ticket->assignee instanceof \App\Models\Auth\Team)
+                                    @elseif($ticket->assignee instanceof Team)
                                         <option value="t#{{ $ticket->assignee->TeamID }}" selected
                                                 id="ticketAssignee">{{ $ticket->assignee->Name }} (team)
                                         </option>
@@ -232,7 +228,7 @@
                             </form>
                         </li>
                         <li class="list-group-item">Source: <b
-                                class="float-end">{!! (new \App\Services\TicketService($ticket))->source() !!}</b>
+                                class="float-end">{!! (new TicketService($ticket))->source() !!}</b>
                         </li>
                         <li class="list-group-item">Start: <span
                                 class="float-end">{{ $ticket->StartDate?->format('M d, Y') }}</span></li>
@@ -497,22 +493,22 @@
                             </div>
                             @break
                     @endswitch
-                    <div class="onboarding-content with-gradient d-none modal-item" id="previewDocumentModal"></div>
                 </div>
             </div>
         </div>
     </div>
 @endsection
 @section('scripts')
+    @include('snippets.actions.preview-files')
     <script src="{{ asset('assets/libs/dropzone/dropzone.min.js') }}"></script>
     <script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-   
+
     <script>const $Modal = $('#ticketActionsModal'), $commentsMessage = $('#commentsMessage');
         window._commentPage = '{{ route('ticket-comment.index',[$ticket->TicketID]) }}';
         Dropzone.options.uploadForm = {
             maxFilesize: 9,//Mb
-            acceptedFiles: "{{ implode(", ",\App\Enums\Core\ExtensionsEnum::getAllMimeTypes()) }}",
+            acceptedFiles: "{{ implode(", ",ExtensionsEnum::getAllMimeTypes()) }}",
             success: function (file, response) {
                 file.previewElement.remove();
                 $('#ticketsAttachementContents').append(response.html);
@@ -725,24 +721,6 @@
                 $("#action-file-upload").removeClass('d-none');
 
             });
-
-
-            $(document).on('click', '.modal-preview-document', function () {
-                $('.modal-title').html('File: ' + $(this).attr('title'));
-                $(".modal-item").addClass('d-none');
-                $('#previewDocumentModal').removeClass('d-none')
-                    .html('<div class="text-center my-4"><div class="spinner-grow text-secondary me-2" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-                $Modal.children().first().addClass('modal-lg');
-                $Modal.modal('show');
-                $.get($(this).data('url'), function (data) {
-                    $('#previewDocumentModal').html(data);
-                }).fail(function (jqXHR) {
-                    nError(jqXHR.responseJSON.message);
-                    $Modal.modal('hide');
-                });
-            });
-
-
             /* $(document).on('click', '.fetch-more-comments', function () {
                  fetchComments();
              });
