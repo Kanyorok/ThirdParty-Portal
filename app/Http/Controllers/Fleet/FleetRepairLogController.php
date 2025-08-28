@@ -24,6 +24,7 @@ class FleetRepairLogController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', FleetRepairLog::class);
         $repairs = FleetRepairLog::with(['vehicle'])
             ->orderByDesc('RepairDate')
             ->get();
@@ -36,6 +37,7 @@ class FleetRepairLogController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', FleetRepairLog::class);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
         $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
             ->orderBy('Value')
@@ -52,6 +54,7 @@ class FleetRepairLogController extends Controller
      */
     public function store(FleetRepairLogRequest $request)
     {
+        $this->authorize('create', FleetRepairLog::class);
         $this->repairLogService->create($request->validated());
 
         return redirect()
@@ -64,6 +67,7 @@ class FleetRepairLogController extends Controller
      */
     public function show(int $id)
     {
+        $this->authorize('index', FleetRepairLog::class);
         $repair = FleetRepairLog::with(['vehicle'])->findOrFail($id);
 
         return view('fleet.maintenance.repair_logs.show', compact('repair'));
@@ -74,6 +78,7 @@ class FleetRepairLogController extends Controller
      */
     public function edit(int $id)
     {
+        $this->authorize('edit', FleetRepairLog::class);
         $repair = FleetRepairLog::with(['vehicle'])->findOrFail($id);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
         $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
@@ -91,6 +96,7 @@ class FleetRepairLogController extends Controller
      */
     public function update(FleetRepairLogRequest $request, int $id)
     {
+        $this->authorize('update', FleetRepairLog::class);
         $this->repairLogService->update($id, $request->validated());
 
         return redirect()
@@ -103,6 +109,7 @@ class FleetRepairLogController extends Controller
      */
     public function destroy(int $id)
     {
+        $this->authorize('destroy', FleetRepairLog::class);
         $this->repairLogService->delete($id);
 
         return redirect()

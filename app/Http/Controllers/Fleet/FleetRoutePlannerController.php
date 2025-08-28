@@ -12,18 +12,21 @@ class FleetRoutePlannerController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', FleetRoutePlan::class);
         $routes = FleetRoutePlan::with(['vehicle'])->orderByDesc('CreatedOn')->get();
         return view('fleet.route_planner.index', compact('routes'));
     }
 
     public function create()
     {
+        $this->authorize('create', FleetRoutePlan::class);
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
         return view('fleet.route_planner.create', compact('vehicles'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', FleetRoutePlan::class);
         $validated = $request->validate([
             'VehicleID'  => 'required|exists:t_FleetVehicles,Id',
             'TripName'   => 'required|string|max:255',

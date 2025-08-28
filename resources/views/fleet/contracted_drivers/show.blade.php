@@ -11,75 +11,72 @@
                     <h5 class="card-title fw-bold">{{ $driver->FullName }} Details</h5>
                     <hr>
 
-                    <div class="row g-2">
-                        <div class="col-md-12">
-                            <strong>Driver No:</strong>
-                            <p class="text-muted">{{ $driver->DriverNo }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>Full Name:</strong>
-                            <p class="text-muted">{{ $driver->FullName }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>National ID:</strong>
-                            <p class="text-muted">{{ $driver->NationalID }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>Phone:</strong>
-                            <p class="text-muted">{{ $driver->Phone }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>Company Name:</strong>
-                            <p class="text-muted">{{ $driver->CompanyName }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>License Number:</strong>
-                            <p class="text-muted">{{ $driver->LicenseNumber }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>Contract Start Date:</strong>
-                            <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>Contract End Date:</strong>
-                            <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>Active:</strong>
-                            <p class="text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</p>
-                        </div>
-                        <div class="col-md-12">
-                            <strong>Notes:</strong>
-                            <p class="text-muted">{{ $driver->Notes ?: '—' }}</p>
-                        </div>
+                <div class="row g-2">
+                    <div class="col-md-12">
+                        <strong>Driver No:</strong>
+                        <p class="text-muted">{{ $driver->DriverNo }}</p>
                     </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mt-auto">
-                        <a href="{{ route('fleet.contracted_drivers.edit', $driver->Id) }}"
-                           class="btn btn-warning me-2">✏️ Edit Details</a>
-                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDriverModal">🗑️
-                            Delete Driver
-                        </button>
+                    <div class="col-md-12">
+                        <strong>Full Name:</strong>
+                        <p class="text-muted">{{ $driver->FullName }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>National ID:</strong>
+                        <p class="text-muted">{{ $driver->NationalID }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Phone:</strong>
+                        <p class="text-muted">{{ $driver->Phone }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Company Name:</strong>
+                        <p class="text-muted">{{ $driver->company->SupplierName }}</p>
+                    </div>
+
+                    <div class="col-md-12">
+                        <strong>Contract Start Date:</strong>
+                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Contract End Date:</strong>
+                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Active:</strong>
+                        <p class="text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</p>
+                    </div>
+                    <div class="col-md-12">
+                        <strong>Notes:</strong>
+                        <p class="text-muted">{{ $driver->Notes ?: '—' }}</p>
                     </div>
                 </div>
+                <hr>
+                <div class="d-flex justify-content-between mt-auto">
+                    <a href="{{ route('fleet.contracted_drivers.edit', $driver->Id) }}" class="btn btn-warning me-2">✏️ Edit Details</a>
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDriverModal">🗑️ Delete Driver</button>
+                </div>
             </div>
+        </div>
 
-            {{-- Right Side Panel: Tabs for Licenses, Assignments, and Trips --}}
-            <div class="col-md-8">
-                <div class="card h-100 p-3 shadow rounded-4">
-                    <h5 class="card-title fw-bold">Driver Records</h5>
-                    <hr>
-                    <ul class="nav nav-tabs mb-3" id="driverTabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-bs-toggle="tab" href="#licenses">👤 Licenses</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#assignments">🚚 Assignments</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#trips">🗺️ Trips</a>
-                        </li>
-                    </ul>
+        {{-- Right Side Panel: Tabs for Licenses, Assignments, and Trips --}}
+        <div class="col-md-8">
+            <div class="card h-100 p-3 shadow rounded-4">
+                <h5 class="card-title fw-bold">Driver Records</h5>
+            <p class="fst-italic mb-3">
+              💡  Assignments can be created manually, but are also added automatically when a trip is created. Trips are loaded automatically and cannot be added manually.
+            </p>
+                <hr>
+                <ul class="nav nav-tabs mb-3" id="driverTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#licenses">👤 Licenses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#assignments">🚚 Assignments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#trips">🗺️ Trips</a>
+                    </li>
+                </ul>
 
                     <div class="tab-content">
                         {{-- Licenses Tab Content --}}

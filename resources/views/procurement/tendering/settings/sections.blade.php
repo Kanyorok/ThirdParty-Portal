@@ -5,7 +5,6 @@
 @section('content')
   <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="text-primary">Sections</h4>
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSectionModal">
         <i class="fa fa-plus-circle me-2"></i> Add Section
       </button>
@@ -33,15 +32,15 @@
               @endif
             </td>
             <td>
-              @if (isset($section) && $section instanceof \App\Models\Procurement\Section)
-                <a href="{{ route('prequalification.sections.edit', $section) }}" class="btn btn-warning btn-sm">Edit</a>
-                <form action="{{ route('prequalification.sections.destroy', $section) }}" method="POST"
+                @if (isset($section) && $section instanceof \App\Models\Procurement\Section)
+                <a href="{{ route('prequalification.sections.edit', $section->Id) }}" class="btn btn-warning btn-sm">Edit</a>
+                <form action="{{ route('prequalification.sections.destroy', $section->Id) }}" method="POST"
                   class="d-inline-block">
                   @csrf
                   @method('DELETE')
                   <button class="btn btn-danger btn-sm">Delete</button>
                 </form>
-                <a href="{{ route('prequalification.sections.show', $section) }}" class="btn btn-info btn-sm">Criteria</a>
+                <a href="{{ route('prequalification.sections.show', $section->Id) }}" class="btn btn-info btn-sm">Criteria</a>
               @else
                 <!-- Section model missing or invalid; hide actions -->
               @endif

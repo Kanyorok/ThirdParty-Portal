@@ -22,14 +22,14 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <div class="p-3 bg-light rounded-3">
-                    <h6 class="text-muted mb-1">Title</h6>
+                    <h6 class="text-info mb-1">Title:   </h6>
                     <p class="mb-0 fw-semibold">{{ $obligation->Title }}</p>
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="p-3 bg-light rounded-3">
-                    <h6 class="text-muted mb-1">Source Type</h6>
+                    <h6 class="text-info mb-1">Source Type:</h6>
                     <p class="mb-0 fw-semibold">{{ $obligation->SourceType ?? '—' }}</p>
                 </div>
             </div>
@@ -38,7 +38,7 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <div class="p-3 bg-light rounded-3">
-                    <h6 class="text-muted mb-1">Due Date</h6>
+                    <h6 class="text-info mb-1">Due Date:</h6>
                     <p class="mb-0 fw-semibold">
                         {{ $obligation->DueDate ? \Carbon\Carbon::parse($obligation->DueDate)->format('d M Y') : '—' }}
                     </p>
@@ -47,12 +47,14 @@
 
             <div class="col-md-6">
                 <div class="p-3 bg-light rounded-3">
-                    <h6 class="text-muted mb-1">Status</h6>
+                    <h6 class="text-info mb-1">Status:</h6>
                     <p class="mb-0 fw-semibold">
-                        @if($obligation->DueDate && \Carbon\Carbon::parse($obligation->DueDate)->isPast())
-                            <span class="text-danger">Overdue</span>
-                        @else
-                            <span class="text-success">On Track</span>
+                        @if($obligation->Status === 'Overdue')
+                            <span class="badge bg-danger">Overdue</span>
+                        @elseif($obligation->Status === 'Pending')
+                            <span class="badge bg-warning">Pending</span>
+                        @elseif($obligation->Status === 'Completed')
+                            <span class="badge bg-success">Completed</span>
                         @endif
                     </p>
                 </div>
@@ -60,14 +62,14 @@
         </div>
 
         <div class="p-3 bg-light rounded-3 mb-3">
-            <h6 class="text-muted mb-1">Description</h6>
+            <h6 class="text-info mb-1">Description:</h6>
             <p class="mb-0">{{ $obligation->Description ?? '—' }}</p>
         </div>
 
         {{-- ✅ Show Assignee only if exists --}}
         @if($obligation->AssignedTo)
             <div class="p-3 bg-light rounded-3 mb-3">
-                <h6 class="text-muted mb-1">Assigned To</h6>
+                <h6 class="text-info mb-1">Assigned To:</h6>
                 <p class="mb-0 fw-semibold">
                     {{ $obligation->users->Name }} ({{ $obligation->users->Email }})
                 </p>

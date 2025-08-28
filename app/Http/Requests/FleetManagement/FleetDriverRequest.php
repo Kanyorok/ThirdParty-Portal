@@ -26,8 +26,6 @@ class FleetDriverRequest extends FormRequest
             'StaffNumber' => 'required|integer|exists:t_Employees,Id',
             'NationalID' => 'required|integer',
             'Phone' => 'required|string',
-            'LicenseNumber' => 'required|string',
-            'LicenseExpiryDate' => 'required|date',
             'EmploymentType' => 'required|integer|exists:t_CodeDetails,ID',
             'Notes' => 'required|string',
             'IsActive' => 'required|boolean',

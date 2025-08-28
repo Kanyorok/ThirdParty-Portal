@@ -30,7 +30,8 @@ class FleetVehicleRequestController extends Controller
     // List all vehicle requests
     public function index()
     {
-        $requests = FleetVehicleRequest::with(['requester', 'approver', 'trip', 'status', 'statusDetail'])
+        $this->authorize('viewAny', FleetVehicleRequest::class);
+        $requests = FleetVehicleRequest::with(['requester', 'approver', 'trip','status','statusDetail'])
             ->orderByDesc('RequestDate')
             ->get();
 
@@ -40,6 +41,7 @@ class FleetVehicleRequestController extends Controller
     // Show create form
     public function create()
     {
+        $this->authorize('create', FleetVehicleRequest::class);
         $branchId = Auth::user()->employee?->BranchId;
         $vehicleType = CodeDetail::where('CodeID', 'VehicleType')
             ->orderBy('Value')
@@ -58,11 +60,13 @@ class FleetVehicleRequestController extends Controller
     }
 
     // Show approve form
-    public function approveForm($id)
-    {
-        $vehicleRequest = FleetVehicleRequest::with(['requester', 'approver', 'status', 'vehicle', 'statusDetail', 'department', 'trip'])
-            ->findOrFail($id);
+public function approveForm($id)
+{
+    $this->authorize('view', FleetVehicleRequest::class);
+    $vehicleRequest  = FleetVehicleRequest::with(['requester', 'approver', 'status', 'vehicle', 'statusDetail', 'department','trip'])
+        ->findOrFail($id);
 
+        
 
         return view('fleet.vehicle_requests.approval', compact('vehicleRequest'));
     }
@@ -71,21 +75,23 @@ class FleetVehicleRequestController extends Controller
     // Store new vehicle request
     // In App\Http\Controllers\Fleet\FleetVehicleRequestController.php
 
-    public function store(FleetVehicleRequestsRequest $request)
-    {
-        try {
-            $this->service->create($request->validated());
-            return redirect()
-                ->route('fleet.vehicle_requests.index')
-                ->with('success', 'Vehicle request submitted successfully.');
-        } catch (Exception $e) {
-            return back()->withErrors(['error' => $e->getMessage()]);
-        }
+public function store(FleetVehicleRequestsRequest $request)
+{
+    $this->authorize('create', FleetVehicleRequest::class);
+    try {
+        $this->service->create($request->validated()); 
+        return redirect()
+            ->route('fleet.vehicle_requests.index')
+            ->with('success', 'Vehicle request submitted successfully.');
+    } catch (Exception $e) {
+        return back()->withErrors(['error' => $e->getMessage()]);
     }
+}
 
     // Update an existing request
     public function update(FleetVehicleRequestsRequest $request, FleetVehicleRequest $vehicleRequest)
     {
+        $this->authorize('update', FleetVehicleRequest::class);
         try {
             $this->service->update($vehicleRequest, $request->validated());
             return redirect()
@@ -96,14 +102,15 @@ class FleetVehicleRequestController extends Controller
         }
     }
 
-    public function approve(Request $request, $id)
-    {
-        $request->validate([
-            'ApprovedOn' => 'required|date',
-            'ApprovedBy' => 'required|integer',
-            'Status' => 'required|in:Approved,Rejected',
-            'RejectionReason' => 'nullable|string|max:255',
-        ]);
+   public function approve(Request $request, $id)
+{
+    $this->authorize('approve', FleetVehicleRequest::class);
+    $request->validate([
+        'ApprovedOn' => 'required|date',
+        'ApprovedBy' => 'required|integer',
+        'Status'     => 'required|in:Approved,Rejected',
+        'RejectionReason' => 'nullable|string|max:255',
+    ]);
 
         try {
             if ($request->Status === 'Approved') {
@@ -126,6 +133,7 @@ class FleetVehicleRequestController extends Controller
     // Delete a request
     public function destroy(FleetVehicleRequest $vehicleRequest)
     {
+        $this->authorize('destroy', FleetVehicleRequest::class);
         try {
             $this->service->delete($vehicleRequest);
             return redirect()

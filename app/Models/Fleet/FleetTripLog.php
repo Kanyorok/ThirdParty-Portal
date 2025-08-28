@@ -75,4 +75,12 @@ class FleetTripLog extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }
+
+   public function employee()
+{
+    return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
+}
+
+
+
 }

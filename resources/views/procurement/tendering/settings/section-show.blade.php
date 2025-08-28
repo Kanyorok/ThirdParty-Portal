@@ -4,8 +4,6 @@
 
 @section('content')
   <div class="container-fluid py-4">
-    <h4 class="text-primary">Criteria for {{ $section->SectionName }}</h4>
-
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createCriteriaModal">
       <i class="fa fa-plus-circle me-2"></i> Add Criteria
     </button>
@@ -23,7 +21,7 @@
         @foreach ($section->criteria as $criterion)
           <tr>
             @if (isset($section) && isset($criterion))
-              <form action="{{ route('prequalification.sections.criteria.update', [$section, $criterion]) }}"
+              <form action="{{ route('prequalification.sections.criteria.update', [$section->Id, $criterion->Id]) }}"
                 method="POST">
                 @csrf
                 @method('PUT')
@@ -46,7 +44,7 @@
                 <td class="text-end align-middle">
                   <button type="submit" class="btn btn-warning btn-sm me-1">Update</button>
               </form>
-              <form action="{{ route('prequalification.sections.criteria.destroy', [$section, $criterion]) }}"
+              <form action="{{ route('prequalification.sections.criteria.destroy', [$section->Id, $criterion->Id]) }}"
                 method="POST" class="d-inline-block">
                 @csrf
                 @method('DELETE')
@@ -64,7 +62,7 @@
     aria-hidden="true">
     <div class="modal-dialog">
       @if (isset($section))
-        <form action="{{ route('prequalification.sections.criteria.store', $section) }}" method="POST">
+        <form action="{{ route('prequalification.sections.criteria.store', $section->Id) }}" method="POST">
         @else
           <form action="#" method="POST">
       @endif

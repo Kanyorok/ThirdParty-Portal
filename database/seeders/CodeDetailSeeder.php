@@ -336,8 +336,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentTerm', 'Description' => 'Payment due 15 days after end of month', 'Value' => 'EOM'],
             ['CodeID' => 'PaymentTerm', 'Description' => 'Based on certified project work progress', 'Value' => 'PP'],
             ['CodeID' => 'PaymentTerm', 'Description' => '90% on completion, 10% after retention period', 'Value' => 'R'],
-          
-            // // Insurance Product 
+
+            // // Insurance Product
             // ['CodeID' => 'InsuranceProduct', 'Description' => 'Life Insurance', 'Value' => 'L'],
             // ['CodeID' => 'InsuranceProduct', 'Description' => 'Health Insurance', 'Value' => 'H'],
             // ['CodeID' => 'InsuranceProduct', 'Description' => 'Property Insurance', 'Value' => 'P'],
@@ -401,6 +401,18 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClauseTypes', 'Description' => 'Specifies confidentiality and non-disclosure obligations.', 'Value' => 'Confidentiality Clause'],
             ['CodeID' => 'ClauseTypes', 'Description' => 'Sets out the process for resolving disputes.', 'Value' => 'Dispute Resolution Clause'],
             ['CodeID' => 'ClauseTypes', 'Description' => 'Outlines penalties or remedies for breaches.', 'Value' => 'Breach Clause'],
+
+            //Legal Case types
+            ['CodeID' => 'CaseTypes', 'Value' => 'Civil Case', 'Description' => 'A case involving disputes between individuals or organizations, usually over rights, obligations, or liabilities.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Criminal Case', 'Description' => 'A case where the state prosecutes an individual or entity for violation of criminal law.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Commercial Case', 'Description' => 'A case related to business transactions, contracts, or trade disputes.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Family Case', 'Description' => 'A case concerning family-related issues such as divorce, custody, or inheritance.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Labour Case', 'Description' => 'A case involving employment disputes such as wrongful termination, workplace discrimination, or unpaid wages.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Constitutional Case', 'Description' => 'A case challenging the interpretation or application of constitutional rights and principles.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Appeal Case', 'Description' => 'A case where a higher court reviews the decision of a lower court.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Administrative Case', 'Description' => 'A case against or involving a government agency decision or regulation.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Environmental Case', 'Description' => 'A case involving environmental protection, pollution, or land use.'],
+            ['CodeID' => 'CaseTypes', 'Value' => 'Intellectual Property Case', 'Description' => 'A case dealing with copyrights, patents, trademarks, or trade secrets.'],
 
             //Legal Obligations
             ['CodeID' => 'LegalSourceTypes', 'Description' => 'Obligations and tasks required under the contract.', 'Value' => 'Contract'],
@@ -498,7 +510,7 @@ class CodeDetailSeeder extends Seeder
             //Driver Employment Type
             ['CodeID' => 'EmploymentType', 'Description' => 'Permanent', 'Value' => 'PR'],
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
-            ['CodeID' => 'EmploymentType', 'Description' => 'Hired', 'Value' => 'HR'],
+           
 
             //Vehicle Request Status
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
@@ -531,6 +543,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Acknowledged', 'Value' => 'AC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Completed', 'Value' => 'CO'],
+
+            // Recurrent Journal Payment Frequency
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Daily', 'Value' => 'd','DisplayOrder'=>0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Weekly', 'Value' => 'w','DisplayOrder'=>0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Monthly', 'Value' => 'm','DisplayOrder'=>0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Quarterly', 'Value' => 'q','DisplayOrder'=>0],
+            ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Yearly', 'Value' => 'y','DisplayOrder'=>0],
 
         ];
 

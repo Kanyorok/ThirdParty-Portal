@@ -90,4 +90,5 @@
         </table>
     </div>
 </div>
+@include('components.modals.delete-confirm')
 @endsection
