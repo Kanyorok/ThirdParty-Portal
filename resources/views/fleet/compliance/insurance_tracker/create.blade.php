@@ -3,7 +3,6 @@
 @section('content')
     <div class="card shadow p-4 rounded-4">
         <h4 class="mb-4">➕ Add Insurance Record</h4>
-        {{-- Error summary moved here --}}
         @if ($errors->any())
             <div class="alert alert-danger">
                 <strong>⚠️ Please fix the following errors:</strong>
