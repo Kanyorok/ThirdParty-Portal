@@ -100,6 +100,11 @@ class CRMEmailService
         return self::create($actor, $subject, $body, $priorityEnum, [[$user->Name => $user->Email]], User::getPrimaryKey(), $user->Id, $cc, replyTo: $replyTo);
     }
 
+     public static function createDriver(FleetDriver $driver, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $replyTo = null): CRMEmailService
+    {
+        return self::create($actor, $subject, $body, $priorityEnum, [[$driver->Full_Name => $driver->Email]], FleetDriver::getPrimaryKey(), $driver->Id, $cc, replyTo: $replyTo);
+    }
+
     public static function createBoard(Board $board, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal): CRMEmailService
     {
         return self::create($actor, $subject, $body, $priorityEnum, [[$board->Name => $board->Email]], Board::getPrimaryKey(), $board->Id, $cc);

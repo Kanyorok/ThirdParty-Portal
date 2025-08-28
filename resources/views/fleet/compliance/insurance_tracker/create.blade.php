@@ -1,11 +1,21 @@
 @extends('layouts.app')
 @section('title', 'Add Insurance Record')
-
 @section('content')
     <div class="card shadow p-4 rounded-4">
         <h4 class="mb-4">➕ Add Insurance Record</h4>
+        {{-- Error summary moved here --}}
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <strong>⚠️ Please fix the following errors:</strong>
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-        <form action="{{ route('fleet.insurance_tracker.store') }}" method="POST">
+        <form action="{{ route('fleet.insurance_tracker.store') }}" enctype="multipart/form-data" method="POST">
             @csrf
 
             <div class="mb-3">
@@ -73,11 +83,13 @@
                 <textarea name="Notes" class="form-control" rows="3"></textarea>
             </div>
 
-            <div class="mb-3">
-                <label for="DocumentPath" class="form-label">Upload Document</label>
-                <input type="file" class="form-control" name="DocumentPath" accept=".pdf,.doc,.docx,.xls,.xlsx">
-                <small class="text-muted">Max size: 5MB. Allowed formats: PDF, DOC, DOCX, XLS, XLSX</small>
-            </div>
+            <!-- Document Upload -->
+      <div class="mb-3">
+        <label class="form-label">Upload Supporting Documents</label>
+        
+        <input type="file" name="Document" class="form-control" multiple>
+        <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
+      </div>
 
             <button type="submit" class="btn btn-success">💾 Save Insurance Record</button>
         </form>

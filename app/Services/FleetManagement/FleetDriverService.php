@@ -5,15 +5,22 @@ namespace App\Services\FleetManagement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetDriver;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
+use Illuminate\Http\UploadedFile;
 
 class FleetDriverService
 {
+
+   
+
     /**
      * Create a new Driver
      */
-    public function create(array $data): FleetDriver
+
+    public function create(array $data,UploadedFile $document = null): FleetDriver
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data,$document) {
             $data['DriverNo'] = $this->generateDriverNo();
             $data['FullName'] = $data['FullName'] ?? null;
             $data['StaffNumber'] = $data['StaffNumber'] ?? null;
@@ -27,6 +34,14 @@ class FleetDriverService
 
             $driver = FleetDriver::create($data);
 
+            if ($document) {
+            $driver->newDocument(
+                ModulesEnum::Fleet,
+                $document,
+                [PermissionEnum::FleetDriverView->value],
+                Auth::user()
+            );
+        }
             activity()
                 ->performedOn($driver)
                 ->causedBy(Auth::user())

@@ -13,7 +13,7 @@
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">🧑‍✈️ Register New Driver</h4>
 
-        <form action="{{ route('fleet.drivers.store') }}" method="POST">
+        <form action="{{ route('fleet.drivers.store') }}" enctype="multipart/form-data" method="POST">
             @csrf
             <div class="row g-3">
 
@@ -76,6 +76,14 @@
                     <label for="IsActive" class="form-check-label">Active</label>
                 </div>
             </div>
+
+                   <!-- Document Upload -->
+      <div class="mb-3">
+        <label class="form-label">Upload Supporting Documents</label>
+        
+        <input type="file" name="Document" class="form-control" multiple>
+        <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
+      </div>
 
             <div class="mt-4">
                 <button class="btn btn-success" type="submit">💾 Save Driver</button>
