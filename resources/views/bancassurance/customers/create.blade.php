@@ -5,7 +5,6 @@
 <div class="container mt-4">
     <form method="POST" action="{{ route('bancassurance.customers.store') }}"enctype="multipart/form-data">
         @csrf
-
         <div class="row mb-3">
       <div class="col-md-6">
         <label class="form-label">Full Name <span class="text-danger">*</span></label>
@@ -14,7 +13,7 @@
       <div class="col-md-6">
         <label class="form-label">Referred By</label>     
         <select name="ReferralID" id="ReferralID" class="form-select">
-          <option value="">--Select a status--</option>
+          <option value="">--Select a referral--</option>
           @foreach ($referrals as $referral)
             <option value="{{ $referral->Id }}" 
               data-clientname="{{ $referral->ClientName }}"

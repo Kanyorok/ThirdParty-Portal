@@ -20,7 +20,7 @@ class CustomerController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
-        $usedReferralIds = BancassuranceCustomer::pluck('ReferralID')->toArray();
+        $usedReferralIds = BancassuranceCustomer::whereNotNull('ReferralID')->pluck('ReferralID')->toArray();
         $referrals = BancAssuranceReferral::whereNotIn('Id', $usedReferralIds)->get();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
@@ -35,7 +35,8 @@ class CustomerController extends Controller
         $this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
         $validated = $request->validated();
 
-        $ReferralID = BancAssuranceReferral::findOrFail($validated['ReferralID']);
+
+        $ReferralID = !empty($validated['ReferralID']) ? BancAssuranceReferral::findOrFail($validated['ReferralID']) : null;
         $Gender = CodeDetail::findOrFail($validated['Gender']);
         $MaritalStatus = CodeDetail::findOrFail($validated['MaritalStatus']);
         $Occupation = CodeDetail::findOrFail($validated['Occupation']);
