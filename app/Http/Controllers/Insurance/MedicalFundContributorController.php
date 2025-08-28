@@ -99,6 +99,11 @@ public function show(MedicalFundContributor $contributor)
         compact('contributor','totals','relationships'));
 }
 
+public function edit($id)
+{
+    $contributor = MedicalFundContributor::findOrFail($id);
+    return view('insurance.medicalfundcontributors.edit', compact('contributor'));
+}
     public function update(Request $request, MedicalFundContributor $contributor)
     {
         $data = $request->validate([

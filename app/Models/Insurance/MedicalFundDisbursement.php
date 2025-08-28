@@ -19,8 +19,16 @@ class MedicalFundDisbursement extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FundID','BeneficiaryID','DisbursementDate','Amount','Purpose','ApprovedBy','ApprovedOn',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'FundID',
+        'ContributorID',
+        'BeneficiaryID',
+        'CoverageID',
+        'PackageID',          // NEW (after you add the column)
+        'DisbursementDate',
+        'Amount',
+        'Purpose',
+        'CreatedBy',
+        'ModifiedBy',
     ];
 
     protected $casts = [
@@ -53,4 +61,13 @@ class MedicalFundDisbursement extends Model
     { 
         return $this->belongsTo(MedicalFundContributor::class, 'ContributorID','ID'); 
     }
+    public function coverage()    
+    { 
+        return $this->belongsTo(Coverage::class, 'CoverageID', 'ID'); 
+    }
+    public function package()     
+    { 
+        return $this->belongsTo(MedicalFundPackage::class, 'PackageID', 'ID'); 
+    }
 }
+

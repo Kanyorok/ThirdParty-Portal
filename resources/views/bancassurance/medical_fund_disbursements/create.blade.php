@@ -123,36 +123,43 @@
 <script>
 (function(){
   function fmt(n){ if(n===null || n==='' || isNaN(n)) return '—'; return parseFloat(n).toFixed(2); }
-  function getVal(id){ const el = document.getElementById(id); return el ? el.value : ''; }
+  function getEl(id){ return document.getElementById(id); }
+  function getVal(id){ const el = getEl(id); return el ? el.value : ''; }
 
-  const $contrib = document.getElementById('ContributorID');
-  const $benef   = document.getElementById('BeneficiaryID');
-  const $cov     = document.getElementById('CoverageID');
-  const $amt     = document.getElementById('Amount');
+  const $contrib = getEl('ContributorID');
+  const $benef   = getEl('BeneficiaryID');
+  const $cov     = getEl('CoverageID');
+  const $amt     = getEl('Amount');
+  const $date    = getEl('DisbursementDate');
 
-  // Populate beneficiaries + coverages for a contributor
+  const $annual  = getEl('limitAnnual');
+  const $used    = getEl('limitUsed');
+  const $remain  = getEl('limitRemain');
+  const $note    = getEl('limitNote');
+
   async function loadOptionsForContributor(cid){
     if(!$benef || !$cov) return;
 
+    // reset lists
     $benef.innerHTML = '<option value="">-- select beneficiary --</option>';
     $cov.innerHTML   = '<option value="">-- select coverage --</option>';
-    if(!cid) { refreshLimits(); return; }
+    if(!cid){ setDisplay(); return; }
 
-    // ✅ Use the new named route with both medical_fund & contributor
     const url = `{{ route('bancassurance.medicalfunds.contributors.options', ['medical_fund' => $medical_fund->ID, 'contributor' => ':cid']) }}`
                   .replace(':cid', cid);
-
     try{
-      const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const res = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
       const json = await res.json();
-      if(!json.ok) { refreshLimits(); return; }
+      if(!json.ok){ setDisplay(null, 'Could not load contributor options.'); return; }
 
+      // beneficiaries
       (json.beneficiaries || []).forEach(b => {
         const o = document.createElement('option');
         o.value = b.ID; o.textContent = b.FullName;
         $benef.appendChild(o);
       });
 
+      // coverages with pivot hints as data-*
       (json.coverages || []).forEach(cv => {
         const o = document.createElement('option');
         o.value = cv.ID; o.textContent = cv.Name;
@@ -163,35 +170,41 @@
         $cov.appendChild(o);
       });
 
-      refreshLimits();
+      setDisplay(); // clear figures until user picks a coverage
     }catch(e){
-      console.warn('Failed loading contributor options', e);
-      refreshLimits();
+      setDisplay(null, 'Failed to load options.');
     }
   }
 
-  // Compute remaining limits via backend endpoint
+  function setDisplay(payload, err){
+    $annual.textContent = payload ? fmt(payload.annual)    : '—';
+    $used.textContent   = payload ? fmt(payload.used)      : '—';
+    $remain.textContent = payload ? fmt(payload.remaining) : '—';
+    $note.textContent   = payload
+      ? (payload.waitingOk ? '' : (payload.waitingMsg || ''))
+      : (err || '');
+  }
+
+  // When user picks a coverage, pre-fill Annual from option's data-*,
+  // then call backend to compute Used/Remaining (and waiting period/per-visit note).
+  async function onCoverageChange(){
+    const opt = $cov.options[$cov.selectedIndex];
+    if(!opt || !opt.value){ setDisplay(); return; }
+
+    // pre-fill annual from pivot data for instant feedback
+    const preAnnual = opt.dataset.annual ? parseFloat(opt.dataset.annual) : null;
+    setDisplay({ annual: preAnnual, used: null, remaining: null, waitingOk: true });
+
+    await refreshLimits(); // fetch Used YTD & Remaining from backend
+  }
+
   async function refreshLimits(){
     const cid = getVal('ContributorID');
     const bid = getVal('BeneficiaryID');
     const cov = getVal('CoverageID');
     const dt  = getVal('DisbursementDate');
 
-    const a = document.getElementById('limitAnnual');
-    const u = document.getElementById('limitUsed');
-    const r = document.getElementById('limitRemain');
-    const note = document.getElementById('limitNote');
-
-    function setDisplay(payload, err){
-      a.textContent = payload ? fmt(payload.annual)    : '—';
-      u.textContent = payload ? fmt(payload.used)      : '—';
-      r.textContent = payload ? fmt(payload.remaining) : '—';
-      note.textContent = payload
-        ? (payload.waitingOk ? '' : (payload.waitingMsg || ''))
-        : (err || '');
-    }
-
-    if(!cid || !cov){ setDisplay(null); return; }
+    if(!cid || !cov){ setDisplay(); return; }
 
     const url = `{{ route('bancassurance.coverage.remaining', ':cid') }}`
       .replace(':cid', cid)
@@ -200,7 +213,7 @@
       + (dt ? `&on_date=${encodeURIComponent(dt)}` : '');
 
     try{
-      const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const res = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
       const data = await res.json();
       if(!data.ok){ setDisplay(null, data.message || 'Not available'); return; }
 
@@ -217,14 +230,14 @@
         $amt.oninput = function(){
           const amt = parseFloat(this.value || '0');
           if(data.per_visit_limit && amt > data.per_visit_limit){
-            note.textContent = `Warning: amount exceeds Per-Visit limit (${data.per_visit_limit}).`;
+            $note.textContent = `Warning: amount exceeds Per-Visit limit (${data.per_visit_limit}).`;
           } else {
-            note.textContent = data.waiting_ok ? '' : (data.waiting_message || '');
+            $note.textContent = data.waiting_ok ? '' : (data.waiting_message || '');
           }
         };
       }
     }catch(e){
-      setDisplay(null, 'Could not load limits.');
+      setDisplay(null,'Could not load limits.');
     }
   }
 
@@ -234,14 +247,14 @@
       await loadOptionsForContributor(this.value);
     });
   }
-  ['BeneficiaryID','CoverageID','DisbursementDate'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el){ el.addEventListener('change', refreshLimits); }
-  });
+  if($cov){ $cov.addEventListener('change', onCoverageChange); }
+  if($benef){ $benef.addEventListener('change', refreshLimits); }
+  if($date){ $date.addEventListener('change', refreshLimits); }
 
-  // Initial boot
+  // Initial boot:
+  // If contributor is pre-locked (hidden input), we must load options via AJAX now.
   @if(isset($contributor) && $contributor)
-    refreshLimits(); // pre-locked contributor: compute limits immediately
+    loadOptionsForContributor('{{ $contributor->ID }}');
   @endif
 })();
 </script>

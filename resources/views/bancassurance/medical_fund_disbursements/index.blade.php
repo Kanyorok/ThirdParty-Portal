@@ -50,11 +50,12 @@
                                 <td>{{ optional($d->ApprovedOn)->format('Y-m-d H:i') ?? '—' }}</td>
                                 <td class="text-end">
                                     <div class="btn-group">
-                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('bancassurance.medicalfunds.disbursements.edit',$d->ID) }}">Edit</a>
-                                        <form action="{{ route('bancassurance.medicalfunds.disbursements.destroy',$d->ID) }}" method="POST" onsubmit="return confirm('Delete this disbursement?');">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                        </form>
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('bancassurance.disbursements.edit', $d->ID) }}">Edit </a>
+                                        <form action="{{ route('bancassurance.disbursements.destroy', $d->ID) }}" method="POST" onsubmit="return confirm('Delete this disbursement?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger">Delete</button>
+</form>
                                     </div>
                                 </td>
                             </tr>

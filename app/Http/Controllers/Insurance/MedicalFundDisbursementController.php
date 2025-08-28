@@ -84,17 +84,23 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
         'Purpose'          => ['nullable','string','max:500'],
     ]);
 
-    $contributor = \App\Models\Insurance\MedicalFundContributor::where('FundID',$medical_fund->ID)
+    // Ensure contributor belongs to this fund
+    $contributor = \App\Models\Insurance\MedicalFundContributor::where('FundID', $medical_fund->ID)
         ->findOrFail($data['ContributorID']);
 
-    // (Optional) ensure beneficiary belongs to contributor
-    \App\Models\Insurance\MedicalFundBeneficiary::where('ContributorID',$contributor->ID)
+    // Ensure beneficiary belongs to contributor
+    \App\Models\Insurance\MedicalFundBeneficiary::where('ContributorID', $contributor->ID)
         ->findOrFail($data['BeneficiaryID']);
 
-    // (Optional) ensure coverage is allowed by contributor's packages
-    // (Use the validation we added previously.)
+    // Figure out which package (of this contributor) contains the chosen coverage
+    $contributor->load(['packages.coverages']);
+    $package = $contributor->packages
+        ->first(function($p) use ($data) {
+            return $p->coverages->firstWhere('ID', (int)$data['CoverageID']);
+        });
 
-    $data['FundID'] = $medical_fund->ID;
+    $data['PackageID'] = $package?->ID;        // may be null if not found
+    $data['FundID']    = $medical_fund->ID;
 
     \App\Models\Insurance\MedicalFundDisbursement::create($data);
 
@@ -103,6 +109,7 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
         ->with('success','Disbursement recorded.')
         ->with('filter_contributor', $contributor->ID);
 }
+
     public function edit(MedicalFundDisbursement $disbursement)
     {
         $medical_fund = $disbursement->fund;
@@ -171,7 +178,11 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
             $waitingMsg = 'Waiting period not satisfied until '.$wpEnd->toDateString().'.';
         }
     }
+$pkgWithCoverage = $contributor->packages->first(function($p) use ($coverageId){
+    return $p->coverages->firstWhere('ID', $coverageId);
+});
 
+$subscribedOn = optional($pkgWithCoverage?->pivot)->SubscribedOn ?? $contributor->CreatedOn;
     // Calculate used YTD
     $yearStart = $onDate->copy()->startOfYear();
     $yearEnd   = $onDate->copy()->endOfYear();
