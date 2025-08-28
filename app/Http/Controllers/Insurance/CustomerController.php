@@ -19,7 +19,7 @@ class CustomerController extends Controller
     //
     public function create()
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
+        //$this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
         $referrals = BancAssuranceReferral::all();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
@@ -31,7 +31,7 @@ class CustomerController extends Controller
 
     public function store(BancassuranceCustomersRequest $request)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
+        //$this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
         $validated = $request->validated();
 
         $ReferralID = BancAssuranceReferral::findOrFail($validated['ReferralID']);

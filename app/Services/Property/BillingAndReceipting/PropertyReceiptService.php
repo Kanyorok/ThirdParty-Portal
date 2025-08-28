@@ -26,7 +26,7 @@ class PropertyReceiptService
         int  $AmountPaidNow,
         CodeDetail $PaymentMethod,
         string $ReferenceNo,
-        string $Remarks,
+        string $Remarks = null,
         User $user
     ): PropertyReceipt
     {
@@ -46,7 +46,7 @@ class PropertyReceiptService
             'AmountPaidNow' => $AmountPaidNow,
             'PaymentMethod' => $PaymentMethod->ID,
             'ReferenceNo' => $ReferenceNo,
-            'Remarks' => $Remarks = null,
+            'Remarks' => $Remarks,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

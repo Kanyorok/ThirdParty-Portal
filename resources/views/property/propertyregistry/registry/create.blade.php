@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Property Management')
+@section('title', 'Add New Property')
 @section('content')
 @if ($errors->any())
         <div class="alert alert-danger">
@@ -11,7 +11,6 @@
         </div>
     @endif
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">🏢 Add New Property</h4>
 <form action="{{ route('propertyregistry.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
   <div class="card shadow">

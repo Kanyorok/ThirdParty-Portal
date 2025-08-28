@@ -23,9 +23,9 @@ class MaintenanceRequest extends FormRequest
     {
         return [
             'Property' => 'required|exists:t_PropertyRegistry,Id',
-            'Block' => 'required|exists:t_PropertyBlock,Id',
-            'Floor' => 'required|exists:t_PropertyFloor,Id',
-            'Unit' => 'required|exists:t_PropertyUnit,Id',
+            'Block' => 'nullable|exists:t_PropertyBlock,Id',
+            'Floor' => 'nullable|exists:t_PropertyFloor,Id',
+            'Unit' => 'nullable|exists:t_PropertyUnit,Id',
             'ReportedBy' => 'required|string|max:50',
             'IssueType' => 'required|exists:t_CodeDetails,ID',
             'Priority' => 'required|exists:t_CodeDetails,ID',
@@ -33,4 +33,5 @@ class MaintenanceRequest extends FormRequest
             'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ];
     }
+    
 }

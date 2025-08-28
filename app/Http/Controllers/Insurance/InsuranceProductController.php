@@ -26,7 +26,7 @@ class InsuranceProductController extends Controller
     // Show create form
     public function create()
     {
-        $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
+      //  $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
 
         $providers = InsuranceProvider::all();
 
@@ -37,7 +37,7 @@ class InsuranceProductController extends Controller
     // Store product
     public function store(InsuranceProductRequest $request)
     {
-        $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
+       // $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
 
         $validated = $request->validated();
 

@@ -18,7 +18,7 @@ class InsuranceProviderController extends Controller
     //
     public function create()
     {
-        $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
+        //$this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
         $providers = InsuranceProvider::all();
 
         return view('bancassurance.insurers.create', compact('providers'));
@@ -26,7 +26,7 @@ class InsuranceProviderController extends Controller
 
     public function store(InsuranceProviderRequest $request)
     {
-        $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
+       // $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
         $validated = $request->validated();
 
 

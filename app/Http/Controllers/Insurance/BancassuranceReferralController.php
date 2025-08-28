@@ -21,14 +21,14 @@ class BancassuranceReferralController extends Controller
 
 public function index()
 {
-    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+    //$this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
     $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])->get();
 
     return view('bancassurance.referrals.index', compact('referrals'));
 }
 public function create()
 {
-    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+    //$this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
     $insurers = InsuranceProvider::all();
     $users = User::with('employee')->get();
     return view('bancassurance.referrals.create', compact('users', 'insurers'));
@@ -44,7 +44,7 @@ public function getProductsByInsurer($insurerId)
 
 public function store(BancAssuranceReferralRequest $request)
 {
-    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
+//$this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
     $user = auth()->user();
     $validated = $request->validated();
 
