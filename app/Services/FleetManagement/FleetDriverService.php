@@ -12,8 +12,6 @@ use Illuminate\Http\UploadedFile;
 class FleetDriverService
 {
 
-   
-
     /**
      * Create a new Driver
      */
@@ -26,6 +24,7 @@ class FleetDriverService
             $data['StaffNumber'] = $data['StaffNumber'] ?? null;
             $data['NationalID'] = $data['NationalID'] ?? null;
             $data['Phone'] = $data['Phone'] ?? null;
+            $data['Email'] = $data['Email'] ?? null;
             $data['EmploymentType'] = $data['EmploymentType'] ?? null;
             $data['Notes'] = $data['Notes'] ?? null;
             $data['IsActive'] = $data['IsActive'] ?? 1;
