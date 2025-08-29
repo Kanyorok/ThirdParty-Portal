@@ -751,6 +751,8 @@ enum PermissionEnum: string
             [self::Integrations],
             [self::Roles],
 
+            [self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease],
+
             [self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,],
             [self::ProcurementMethodRead, self::ProcurementMethodWrite,],
 

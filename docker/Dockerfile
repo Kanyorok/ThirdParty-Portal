@@ -32,7 +32,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 RUN apt-get update && apt-get install -y \
     chromium chromium-driver \
     --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -51,7 +51,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 
 # Copy Laravel source code
+
 COPY . .
+#COPY --chown=www-data:www-data . .
+RUN rm -rf database/
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
@@ -69,6 +72,7 @@ RUN chown -R www-data:www-data /var/www && \
 RUN cd /var/www && composer install --no-interaction --optimize-autoloader --no-dev
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # Install Node.js dependencies
 RUN npm install --prefix /var/www
 

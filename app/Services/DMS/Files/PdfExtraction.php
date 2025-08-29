@@ -3,6 +3,7 @@
 namespace App\Services\DMS\Files;
 
 use App\Enums\Core\ExtensionsEnum;
+use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\DMS\Document;
 use Illuminate\Support\Facades\Storage;
@@ -12,15 +13,18 @@ use Ramsey\Uuid\Uuid;
 
 class PdfExtraction extends FileExtraction
 {
+    /**
+     * @throws ErroredException
+     */
     public function processContent(): bool
     {
         if ($this->type->value !== ExtensionsEnum::Pdf->value) {
             return false;
         }
         $name = $this->createTempFile();
-        $content = $this->simpleExtractText(storage_path('app/temp') . '/' . $name);
+        $content = $this->simpleExtractText(Storage::disk('temp')->path($name));
         if ($content === '') {
-            $content = $this->ocr(storage_path('app/temp') . '/' . $name);
+            $content = $this->ocr(Storage::disk('temp')->path($name));
         }
         $this->trashTempFile($name);
         if ($content !== '') {

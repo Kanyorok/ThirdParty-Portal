@@ -34,7 +34,7 @@ Route::namespace('CRM')->prefix('crm')->group(function () {
     Route::namespace('Tickets')->group(function () {
         Route::prefix('tickets/{ticket}')->group(function () {
             Route::resource('ticket-comment', 'TicketCommentController')->only(['index', 'store', 'destroy']);
-            Route::resource('ticket-watchers', 'TicketUsersController')->only(['index', 'destroy']);
+            Route::resource('ticket-watchers', 'TicketPermissionController')/*->parameters(['ticket-watchers' => 'ticket'])*/ ->only(['index', 'store', 'destroy']);
 
             Route::get('workflows', 'TicketActionsController@workflow')->name('ticket.workflows');
             Route::get('activities', 'TicketActionsController@activity')->name('ticket.activities');
@@ -249,7 +249,7 @@ Route::namespace('CRM')->prefix('crm')->group(function () {
 
     Route::namespace('Base')->prefix('base')->group(function () {
         Route::get('fetch-products', 'ProductSelectController')->name('products.select2');
-        Route::resource('documents', 'DocumentController')->parameters(['documents' => 'image'])->only(['show', 'edit', 'destroy']);
+        Route::resource('documents', 'DocumentController')->parameters(['documents' => 'image'])->only(['show', 'edit', 'destroy']);//@deprecated
         Route::resource('tasks', 'TaskController')->except(['create', 'store', 'edit']);
         Route::resource('notes', 'NotesController')->only(['index', 'show']);
         Route::resource('discussions', 'DiscussionController')->only(['index', 'show']);

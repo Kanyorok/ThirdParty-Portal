@@ -1,6 +1,5 @@
 <?php
 
-
 use App\Http\Controllers\DMS\Files\DocumentActionsController;
 use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentCheckOutController;
@@ -8,6 +7,7 @@ use App\Http\Controllers\DMS\Files\DocumentController;
 use App\Http\Controllers\DMS\Files\DocumentDownloadController;
 use App\Http\Controllers\DMS\Files\DocumentMoveController;
 use App\Http\Controllers\DMS\Files\DocumentPermissionController;
+use App\Http\Controllers\DMS\Files\DocumentPreviewController;
 use App\Http\Controllers\DMS\Files\DocumentRecentController;
 use App\Http\Controllers\DMS\Files\DocumentTagsController;
 use App\Http\Controllers\DMS\Files\DocumentUploadController;
@@ -23,13 +23,13 @@ use App\Http\Controllers\DMS\Tags\TagController;
 use App\Http\Controllers\DMS\Tags\TaggingRuleController;
 use Illuminate\Support\Facades\Route;
 
-
 Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::get('search', SearchController::class)->name('dms.search');
     Route::get('recent', DocumentRecentController::class)->name('repo.recent');
     Route::get('bulk-upload', DocumentUploadController::class)->name('files.upload');
     Route::prefix('document/{document}')->group(function () {
         Route::get('activities', DocumentActivityController::class)->name('file.activities');
+        Route::get('embed-preview', DocumentPreviewController::class)->name('file.embed-preview');
         Route::get('preview', [DocumentActionsController::class, 'preview'])->name('file.preview');
         Route::put('file-visibility', [DocumentPermissionController::class, 'visibility'])->name('file.visibility');
         Route::resource('file-move', DocumentMoveController::class)->only(['index', 'store']);
