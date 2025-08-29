@@ -46,7 +46,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Case Type</label>
                         <select class="form-select" name="CaseType" id="CaseType" required>
-                            <option value="{{old('CaseType', $case->CaseType)}}" disabled selected>{{old('CaseType', $case->CaseType)}}</option>
+                            <option value="{{old('CaseType', $case->CaseType)}}" selected>{{old('CaseType', $case->CaseType)}}</option>
                             @foreach($caseTypes as $type)
                                 <option value="{{ $type->Value }}">{{ $type->Value }}</option>
                             @endforeach
@@ -54,21 +54,23 @@
                     </div>
                 </div>
 
-                
+
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <label class="form-label">Status</label>
                         <select name="Status" class="form-control">
-                            <option value="Open" {{ old('Status', $case->Status) == 'Open' ? 'selected' : '' }}>Open</option>
-                            <option value="Closed" {{ old('Status', $case->Status) == 'Closed' ? 'selected' : '' }}>Closed</option>
-                            <option value="Appealed" {{ old('Status', $case->Status) == 'Appealed' ? 'selected' : '' }}>Appealed</option>
-                            <option value="Dismissed" {{ old('Status', $case->Status) == 'Dismissed' ? 'selected' : '' }}>Dismissed</option>
+                            @foreach($caseStatus as $status)
+                                <option value="{{ $status->Description }}"
+                                    {{ old('Status', $case->Status) == $status->Description ? 'selected' : '' }}>
+                                    {{ $status->Description }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">DMS Document ID(Optional)</label>
-                        <input type="text" name="DMSDocID" value="{{ old('DMSDocID', $case->DMSDocID) }}" class="form-control">
-                    </div>
+{{--                    <div class="col-md-6">--}}
+{{--                        <label class="form-label">DMS Document ID(Optional)</label>--}}
+{{--                        <input type="text" name="DMSDocID" value="{{ old('DMSDocID', $case->DMSDocID) }}" class="form-control">--}}
+{{--                    </div>--}}
                 </div>
 
                 <div class="mb-3">
