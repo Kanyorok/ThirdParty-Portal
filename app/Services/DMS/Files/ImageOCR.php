@@ -3,6 +3,7 @@
 namespace App\Services\DMS\Files;
 
 use Exception;
+use Illuminate\Support\Facades\Storage;
 use thiagoalessio\TesseractOCR\TesseractOCR;
 use thiagoalessio\TesseractOCR\TesseractOcrException;
 
@@ -14,7 +15,7 @@ class ImageOCR extends FileExtraction
             return false;
         }
         $name = $this->createTempFile();
-        $content = $this->ocr(storage_path('app/temp') . '/' . $name);
+        $content = $this->ocr(Storage::disk('temp')->path($name));
         $this->trashTempFile($name);
         if ($content !== '') {
             return $this->handleContent($content);
