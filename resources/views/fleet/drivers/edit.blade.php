@@ -67,6 +67,13 @@
                     <textarea name="Notes" class="form-control" rows="2">{{ old('Notes', $driver->Notes) }}</textarea>
                 </div>
 
+                <!-- Document Upload -->
+                <div class="mb-3 mt-3">
+                    <label class="form-label">Upload Supporting Documents</label>
+                    <input type="file" name="Document" class="form-control" multiple>
+                    <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
+                </div>
+
                 {{-- Is Active --}}
                 <div class="col-md-4 mt-3">
                     <input type="hidden" name="IsActive" value="0">
