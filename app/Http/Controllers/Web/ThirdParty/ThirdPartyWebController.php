@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Web\ThirdParty;
 
 use App\Enums\BusinessTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
+use App\Enums\ThirdPartyStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -105,6 +107,12 @@ class ThirdPartyWebController extends Controller
             $data['ModifiedBy'] = Auth::id();
 
             $party->update($data);
+
+            // If the party status was set to Active, ensure linked users are activated
+            if (array_key_exists('Status', $data) && $data['Status'] === ThirdPartyStatusEnum::Active->value) {
+                ThirdPartyUser::where('ThirdPartyId', $party->Id)
+                    ->update(['IsActive' => 1, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+            }
 
             return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
                 ->with('success', 'Third party information updated successfully.');
