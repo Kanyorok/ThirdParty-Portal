@@ -66,30 +66,30 @@ public function store(BancassurancePolicyRequest $request)
     $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
     $validated = $request->validated();
 
+
     $CustomerId = BancassuranceCustomer::findOrFail($validated['CustomerID']);
-    $referralId = isset($validated['ReferralID']) ? BancAssuranceReferral::find($validated['ReferralID']) : null;
+    $ReferralID = isset($validated['ReferralID']) && $validated['ReferralID'] ? $validated['ReferralID'] : null; // Use null or a valid default
     $ProductId = InsuranceProduct::findOrFail($validated['ProductID'] ?? null);
     $InsurerId = InsuranceProvider::findOrFail($validated['InsurerID'] ?? null);
     $Paymentfrquency = CodeDetail::findOrFail($validated['PaymentFrequency'] ?? null);
     $Status = InsurancePolicyStatus::Proposal;
 
-
-        $policy = BancassurancePolicyService::create(
-            $CustomerId,
-            $ProductId,
-            $InsurerId,
-            $validated['SumAssured'],
-            $validated['PremiumAmount'],
-            Carbon::parse($validated['PolicyStartDate']),
-            Carbon::parse($validated['PolicyEndDate']),
-            $Paymentfrquency,
-            $referralId,
-            isset($validated['IssuedDate']) ? Carbon::parse($validated['IssuedDate']) : null,
-            isset($validated['ExpiryDate']) ? Carbon::parse($validated['ExpiryDate']) : null,
-            true,
-            $Status,
-            $request->user(),
-        );
+    $policy = BancassurancePolicyService::create(
+        $CustomerId,
+        $ProductId,
+        $InsurerId,
+        $validated['SumAssured'],
+        $validated['PremiumAmount'],
+        Carbon::parse($validated['PolicyStartDate']),
+        Carbon::parse($validated['PolicyEndDate']),
+        $Paymentfrquency,
+        $ReferralID,
+        isset($validated['IssuedDate']) ? Carbon::parse($validated['IssuedDate']) : null,
+        isset($validated['ExpiryDate']) ? Carbon::parse($validated['ExpiryDate']) : null,
+        true,
+        $Status,
+        $request->user(),
+    );
 
     return redirect()->route('bancassurance.policies.index')->with('success', 'Policy proposal submitted.');
 }

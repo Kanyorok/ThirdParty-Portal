@@ -40,15 +40,16 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
     });
 
     Route::prefix('bancassurance/customers')->name('bancassurance.customers.')->group(function () {
-        Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('check', [CustomerController::class, 'check'])->name('check');
-        Route::get('create', [CustomerController::class, 'create'])->name('create');
-        Route::post('store', [CustomerController::class, 'store'])->name('store');
-        Route::get('show/{Id}', [CustomerController::class, 'show'])->name('show');
-        Route::delete('delete/{Id}', [CustomerController::class, 'destroy'])->name('destroy');
-        Route::get('edit/{Id}', [CustomerController::class, 'edit'])->name('edit');
-        Route::put('update/{Id}', [CustomerController::class, 'update'])->name('update');
-        Route::get('{customerId}/portfolio', [CustomerController::class, 'portfolio'])->name('portfolio');
+    Route::get('/', [CustomerController::class, 'index'])->name('index');
+    Route::get('check', [CustomerController::class, 'check'])->name('check');
+    Route::get('create', [CustomerController::class, 'create'])->name('create');
+    Route::post('store', [CustomerController::class, 'store'])->name('store');
+    Route::get('show/{Id}', [CustomerController::class, 'show'])->name('show');
+    Route::delete('delete/{Id}', [CustomerController::class, 'destroy'])->name('destroy');
+    Route::get('edit/{Id}', [CustomerController::class, 'edit'])->name('edit');
+    Route::put('update/{Id}', [CustomerController::class, 'update'])->name('update');
+    Route::get('{customerId}/portfolio', [CustomerController::class, 'portfolio'])->name('portfolio');
+    Route::get('{customerId}/referral-defaults', [CustomerController::class, 'getReferralAndDefaults'])->name('referral-defaults');
     });
     Route::prefix('bancassurance/customers/beneficiaries')->name('bancassurance.customers.beneficiaries.')->group(function () {
         Route::get('create', [CustomerBeneficiaryController::class, 'create'])->name('create');

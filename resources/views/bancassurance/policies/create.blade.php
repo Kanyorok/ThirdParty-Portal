@@ -39,7 +39,7 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Customer <span class="text-danger">*</span></label>
-                <select name="CustomerID" class="form-select" required>
+                <select name="CustomerID" id="customer-select" class="form-select" required>
                     <option value="">-- Select Customer --</option>
                     @foreach($customers as $cust)
                         <option value="{{ $cust->Id }}" {{ old('CustomerID') == $cust->Id ? 'selected' : '' }}>
@@ -84,7 +84,7 @@
                 <select name="PaymentFrequency" class="form-select" required>
                     <option value="">-- Select --</option>
                     @foreach($paymentfrequencys as $freq)
-                        <option value="{{ $freq->ID }}" {{ old('PaymentFrequency') == $freq->Id ? 'selected' : '' }}>
+                        <option value="{{ $freq->ID }}">
                             {{ $freq->Description }}
                         </option>
                     @endforeach
@@ -93,17 +93,21 @@
         </div>
 
         {{-- Dates --}}
+
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Policy Start Date <span class="text-danger">*</span></label>
                 <input type="date" name="PolicyStartDate" class="form-control" value="{{ old('PolicyStartDate') }}" required>
+                <div class="invalid-feedback" id="error-PolicyStartDate"></div>
             </div>
 
             <div class="col-md-6">
                 <label class="form-label">Policy End Date <span class="text-danger">*</span></label>
                 <input type="date" name="PolicyEndDate" class="form-control" value="{{ old('PolicyEndDate') }}" required>
+                <div class="invalid-feedback" id="error-PolicyEndDate"></div>
             </div>
         </div>
+
 
         <div class="row mb-3">
             <div class="col-md-6">
@@ -111,6 +115,7 @@
                     Issued Date <span class="text-danger">*</span>
                 </label>
                 <input type="date" name="IssuedDate" class="form-control" value="{{ old('IssuedDate') }}" required>
+                <div class="invalid-feedback" id="error-IssuedDate"></div>
             </div>
 
             <div class="col-md-6">
@@ -118,6 +123,7 @@
                     Expiry Date <span class="text-danger">*</span>
                 </label>
                 <input type="date" name="ExpiryDate" class="form-control" value="{{ old('ExpiryDate') }}" required>
+                <div class="invalid-feedback" id="error-ExpiryDate"></div>
             </div>
         </div>
 
@@ -133,7 +139,37 @@
 document.addEventListener('DOMContentLoaded', function () {
     const insurerSelect = document.getElementById('insurer-select');
     const productSelect = document.getElementById('product-select');
+    const customerSelect = document.getElementById('customer-select');
+    const referralSelect = document.querySelector('select[name="ReferralID"]');
     const productsRoute = @json(route('bancassurance.referrals.referrals.products', ['insurerId' => 'INSURER_ID']));
+    const referralDefaultsRoute = @json(route('bancassurance.customers.referral-defaults', ['customerId' => 'CUSTOMER_ID']));
+
+    // Store intended product to select after loading
+    let intendedProductId = null;
+
+    customerSelect.addEventListener('change', function () {
+        const customerId = this.value;
+        if (!customerId) return;
+        const url = referralDefaultsRoute.replace('CUSTOMER_ID', customerId);
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Set referral
+                if (data.referral && referralSelect) {
+                    referralSelect.value = data.referral.Id;
+                } else if (referralSelect) {
+                    referralSelect.value = '';
+                }
+                // Always set insurer and trigger change
+                if (insurerSelect) {
+                    insurerSelect.value = data.preferredInsurer || '';
+                    intendedProductId = data.product || null;
+                    insurerSelect.dispatchEvent(new Event('change'));
+                } else {
+                    intendedProductId = null;
+                }
+            });
+    });
 
     insurerSelect.addEventListener('change', function () {
         const insurerId = this.value;
@@ -149,11 +185,61 @@ document.addEventListener('DOMContentLoaded', function () {
                         options += `<option value="${product.Id}">${product.Name}</option>`;
                     });
                     productSelect.innerHTML = options;
+                    // If we have an intended product to select, do it now
+                    if (intendedProductId) {
+                        productSelect.value = intendedProductId;
+                        intendedProductId = null;
+                    }
                 });
         } else {
             productSelect.innerHTML = '<option value="">-- Select Product --</option>';
         }
     });
+
+
+    // Date validation with inline error display
+    const form = document.querySelector('form[action*="bancassurance.policies.store"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Clear previous errors
+            ['PolicyStartDate','PolicyEndDate','IssuedDate','ExpiryDate'].forEach(function(name) {
+                const input = document.querySelector('input[name="'+name+'"]');
+                const errorDiv = document.getElementById('error-'+name);
+                if (input) input.classList.remove('is-invalid');
+                if (errorDiv) errorDiv.textContent = '';
+            });
+
+            const start = document.querySelector('input[name="PolicyStartDate"]');
+            const end = document.querySelector('input[name="PolicyEndDate"]');
+            const issued = document.querySelector('input[name="IssuedDate"]');
+            const expiry = document.querySelector('input[name="ExpiryDate"]');
+
+            let hasError = false;
+            const startVal = start.value;
+            const endVal = end.value;
+            const issuedVal = issued.value;
+            const expiryVal = expiry.value;
+
+            if (startVal && endVal && endVal <= startVal) {
+                hasError = true;
+                end.classList.add('is-invalid');
+                document.getElementById('error-PolicyEndDate').textContent = 'The policy end date field must be a date after policy start date.';
+            }
+            if (issuedVal && startVal && issuedVal > startVal) {
+                hasError = true;
+                issued.classList.add('is-invalid');
+                document.getElementById('error-IssuedDate').textContent = 'The issued date field must be a date before or equal to policy start date.';
+            }
+            if (expiryVal && endVal && expiryVal < endVal) {
+                hasError = true;
+                expiry.classList.add('is-invalid');
+                document.getElementById('error-ExpiryDate').textContent = 'The expiry date field must be a date after or equal to policy end date.';
+            }
+            if (hasError) {
+                e.preventDefault();
+            }
+        });
+    }
 
     @if(old('InsurerID'))
         insurerSelect.value = "{{ old('InsurerID') }}";

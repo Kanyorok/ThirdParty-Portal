@@ -35,9 +35,9 @@ class BancassurancePolicyService
         Carbon $PolicyEndDate,
         CodeDetail $PaymentFrequency,
         ?BancAssuranceReferral $ReferralID = null,
-        ?Carbon                $IssuedDate = null,
-        ?Carbon                $ExpiryDate = null,
-        bool                   $IsActive = true,
+        ?Carbon $IssuedDate = null,
+        ?Carbon $ExpiryDate = null,
+        bool    $IsActive = true,
         InsurancePolicyStatus  $Status,
         User                   $user
     ): self

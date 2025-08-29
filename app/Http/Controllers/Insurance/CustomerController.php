@@ -17,6 +17,37 @@ use App\Models\Insurance\BancassuranceCustomer;
 class CustomerController extends Controller
 {
     //
+        // API endpoint to get referral, preferred insurer, and product for a customer
+    public function getReferralAndDefaults($customerId)
+        {
+            $customer = BancassuranceCustomer::find($customerId);
+            if (!$customer) {
+                return response()->json(['error' => 'Customer not found'], 404);
+            }
+
+            $referral = null;
+            $preferredInsurer = null;
+            $product = null;
+
+            if ($customer->ReferralID) {
+                $referral = BancAssuranceReferral::find($customer->ReferralID);
+                if ($referral) {
+                    $preferredInsurer = $referral->PreferredInsurerId ?? null;
+                    $product = $referral->InsuranceProductId ?? null;
+                }
+            }
+
+            return response()->json([
+                'referral' => $referral ? [
+                    'Id' => $referral->Id,
+                    'ClientIDNumber' => $referral->ClientIDNumber,
+                    'ClientName' => $referral->ClientName,
+                ] : null,
+                'preferredInsurer' => $preferredInsurer,
+                'product' => $product,
+            ]);
+        }
+
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
