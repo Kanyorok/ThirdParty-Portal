@@ -82,6 +82,11 @@
                                     <dd class="col-7">
                                         {{ $doc->SignOffDate ? \Carbon\Carbon::parse($doc->SignOffDate)->format('d/m/Y H:i') : '—' }}
                                     </dd>
+
+                                    <dt class="col-5">View DMS Document</dt>
+                                    <dd class="col-7">
+                                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                                    </dd>
                                 </dl>
                             </div>
                         </div>

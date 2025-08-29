@@ -50,7 +50,16 @@
                 <label for="Remarks" class="form-label">Remarks</label>
                 <textarea name="Remarks" class="form-control"></textarea>
             </div>
-            <button type="submit" class="btn btn-success">Save Document</button>
+            <div class="d-flex justify-content-end gap-2">
+                <a class="btn btn-secondary" href="{{ route('legal.documents.index') }}">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <button 
+                    type="submit" class="btn btn-info"
+                    onclick="if(this.form.checkValidity()){this.disabled = true; this.innerText = 'Saving...'; this.form.submit();}"
+                    ><i class="fas fa-save"></i> Save Document
+                </button>
+            </div>
         </form>
     </div>
 </div>

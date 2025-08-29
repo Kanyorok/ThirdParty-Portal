@@ -9,6 +9,7 @@
     </div>
     <div class="card-body">
         <p class="text-muted">Browse, manage, and update standard legal clauses and templates for quick inclusion in contracts and legal documents.</p>
+        <div class="table-reponsive">
         <table class="table table-hover table-sm align-middle text-centre"
             style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
             <thead>
@@ -63,6 +64,7 @@
                 @endif
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @include('components.modals.delete-confirm')

@@ -43,7 +43,18 @@
                 <div class="col-md-6">
                     <div class="p-2 bg-light rounded-3">
                         <strong class="text-info">DMS Document ID:</strong>
-                        <p>{{ $evidence->DMSDocumentID ?? 'N/A' }}</p>
+                        <div class="d-flex justify-content-between">
+                            @if($evidence->DMSDocumentID)
+                                <p>{{ $evidence->DMSDocumentID ?? 'N/A' }}</p>
+                                <p>
+                                    <a href="#" class="btn btn-sm btn-primary">
+                                        View Document
+                                    </a>
+                                </p>
+                            @else
+                                <p>N/A</p>
+                            @endif
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-6">

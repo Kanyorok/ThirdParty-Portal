@@ -79,7 +79,7 @@
                             <th>Review</th>
                             <th>Execution</th>
                             <th>Created</th>
-                            <th class="text-end">Actions</th>
+                            <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -119,7 +119,7 @@
                                         —
                                     @endif
                                 </td>
-                                <td class="text-end">
+                                <td>
                                     <a href="{{ route('legal.documents.show', $doc->Id) }}" class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
