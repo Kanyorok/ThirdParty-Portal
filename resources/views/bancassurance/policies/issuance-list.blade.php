@@ -25,11 +25,11 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $policy->PolicyNumber ?? '—' }}</td>
-                <td>{{ $policy->customer->FullName }}</td>
-                <td>{{ $policy->product->Name }}</td>
-                <td>{{ $policy->insurer->Name }}</td>
-                <td>{{ $policy->Status->label() }}</td>
-                <td>{{ \Carbon\Carbon::parse($policy->CreatedAt)->format('d/m/Y') }}</td>
+                <td>{{ $policy->customer->FullName ?? '-' }}</td>
+                <td>{{ $policy->product->Name ?? '-' }}</td>
+                <td>{{ $policy->insurer->Name ?? '-' }}</td>
+                <td>{{ $policy->Status->label() ?? '-' }}</td>
+                <td>{{ \Carbon\Carbon::parse($policy->CreatedAt)->format('d/m/Y') ?? '-' }}</td>
                 <td>
                     <form action="{{ route('bancassurance.policies.storeIssuance', $policy->Id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
