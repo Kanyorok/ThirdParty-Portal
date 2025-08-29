@@ -43,7 +43,7 @@
         <div class="p-3 p-md-4">
             <div class="row g-3">
                 <!-- Bill To -->
-                <div class="col-lg-5">
+                <div class="col-lg-4">
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">Bill To</h6>
@@ -75,7 +75,7 @@
                 </div>
 
                 <!-- Summary -->
-                <div class="col-lg-3">
+                <div class="col-lg-4">
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">Summary</h6>
