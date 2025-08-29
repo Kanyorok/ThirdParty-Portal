@@ -146,7 +146,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
 
     //Added Individual Routes
     Route::post('/segment-order/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
-    Route::post('/gl/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
+    Route::post('/gl/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.gl.save');
     Route::post('/glDigits/save', [COASegmentController::class, 'editGlDigit'])->name('glDigits.save');
     Route::post('/glTypeSegmentValue/save', [COASegmentController::class, 'saveGLTypeSegment'])->name('glTypeSegmentValue.save');
     Route::post('/glAccountTypeSegmentValue/save', [COASegmentController::class, 'saveGLAccountTypeSegment'])->name('glAccountTypeSegmentValue.save');
@@ -191,7 +191,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
 });
 
 //Fetching Data for AR Invoice
-Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.')->group(function () {
+Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.ar.')->group(function () {
     Route::get('/', [ReceiptsPostingController::class, 'index'])->name('index');
     Route::get('/create', [ReceiptsPostingController::class, 'create'])->name('create');
     Route::post('/', [ReceiptsPostingController::class, 'store'])->name('store');
