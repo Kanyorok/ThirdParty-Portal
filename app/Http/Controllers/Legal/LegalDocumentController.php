@@ -132,13 +132,18 @@ class LegalDocumentController extends Controller
 
             // Upload Evidence to E-DMS
             if ($request->hasFile('LinkedDMSDocID')) {
-                $doc->newDocument(
+                $uploadedDocument = $doc->newDocument(
                     ModulesEnum::Legal,
                     $request->file('LinkedDMSDocID'),
                     [PermissionEnum::ContractCreate],
                     Auth::user()
                 );
+
+                // Post teh doc id into Legal
+                $doc->LinkedDMSDocID = $uploadedDocument->Id; // DMS Document PK
+                $doc->save();
             }
+
 
             DB::commit();
 
@@ -150,7 +155,7 @@ class LegalDocumentController extends Controller
             DB::rollBack();
             return $e->getMessage();
             // log the actual DB error for debugging
-            \Log::error('Failed to save legal document', [
+            Log::error('Failed to save legal document', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

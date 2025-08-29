@@ -24,7 +24,7 @@ class LegalCasesSeeder extends Seeder
                 'FilingDate'       => '2025-01-15',
                 'OpposingParty'    => 'ABC Corporation',
                 'CaseType'         => 'Civil Case',
-                'Status'           => 'Ongoing',
+                'Status'           => 'Open',
                 'Summary'          => 'A civil dispute regarding breach of contract.',
                 'AssignedCounselID'=> 1,
                 'CaseDMSDocID'         => 101,

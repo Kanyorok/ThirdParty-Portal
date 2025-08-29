@@ -46,7 +46,7 @@ class LegalObligationController extends Controller
             'Title' => 'required|string|max:255',
             'SourceType' => 'required|exists:t_CodeDetails,Value',
             'DueDate' => 'required|date',
-            'Description' => 'nullable|string',
+            'Description' => 'required|string',
         ]);
 
         $duplicate = LegalObligation::where('Title', $validated['Title'])
@@ -112,7 +112,7 @@ class LegalObligationController extends Controller
             'SourceType' => 'required|in:Contract,Case',
             'DueDate' => 'required|date',
             'Status' => 'required|string',
-            'Description' => 'nullable|string',
+            'Description' => 'required|string',
         ]);
 
         try{
