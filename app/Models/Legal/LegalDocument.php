@@ -46,10 +46,6 @@ class LegalDocument extends Model
         return 'LegalDocumentId';
     }
 
-    public function documents()
-    {
-        return $this->morphMany(Document::class, 'documentable')->latest();
-    }
 
     public function createdBy()
     {
