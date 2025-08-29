@@ -48,7 +48,7 @@ class ModuleService
             } elseif (is_string($module['route']) && request()->route()?->named($module['route'])) {
                 $menu .= ' active';
             }
-            $menu .= '"><a href="' . $module['route'] . '" class="pc-link">';
+            $menu .= '"><a href="' . $module['route'] . '" class="pc-link" data-ajax="1">';
             $menu .= '<span class="pc-micon">';
             $menu .= $module['icon'] ?? '<i data-feather="box"></i>';
             $menu .= '</span>';
@@ -77,7 +77,7 @@ class ModuleService
             } elseif (is_string($child['route']) && request()->route()?->named($child['route'])) {
                 $menu .= ' active';
             }
-            $menu .= '"><a href="' . $child['route'] . '" class="pc-link">';
+            $menu .= '"><a href="' . $child['route'] . '" class="pc-link" data-ajax="1">';
             $menu .= '<span>' . $child['name'] . '</span>';
             if (!empty($child['children'])) {
                 $menu .= '<span class="pc-arrow"><i data-feather="chevron-right"></i></span>';
@@ -139,5 +139,4 @@ class ModuleService
 
         return $item;
     }
-
 }

@@ -1,0 +1,184 @@
+<?php
+
+namespace App\Http\Controllers\Finance;
+
+use App\Enums\Core\PermissionEnum;
+use App\Http\Controllers\Controller;
+use App\Models\Finance\FinanceJournalEntry;
+use App\Models\Finance\FinanceTransaction;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Database\QueryException;
+
+class PostingController extends Controller
+{
+    /**
+     * Approve or reject a journal entry and post to the transaction table if approved.
+     */
+    public function journalApproval(Request $request)
+    {
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceTransaction::class);
+
+        $validated = $request->validate([
+            'action_type' => 'required|in:approve,reject',
+            'journalID' => 'required|integer|exists:t_FinanceJournalEntries,Id',
+            'Reason' => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $journal = FinanceJournalEntry::findOrFail($validated['journalID']);
+
+            if ($validated['action_type'] === 'reject') {
+                $journal->update([
+                    'ApprovalStatus' => 'rejected',
+                    'ApprovalReason' => $validated['Reason'],
+                ]);
+
+                activity('Journal Entry Approval')
+                    ->performedOn($journal)
+                    ->causedBy(Auth::id())
+                    ->withProperties(['action' => 'rejected', 'journal_id' => $journal->Id])
+                    ->log('Rejected Journal Entry #' . $journal->RefNo);
+
+                DB::commit();
+                return back()->with('success', 'Journal Entry #' . $journal->RefNo . ' rejected successfully.');
+            } elseif ($validated['action_type'] === 'approve') {
+                $journal->update([
+                    'ApprovalStatus' => 'posted',
+                    'ApprovalReason' => $validated['Reason'],
+                ]);
+
+                activity('Journal Entry Approval')
+                    ->performedOn($journal)
+                    ->causedBy(Auth::id())
+                    ->withProperties(['action' => 'approved', 'journal_id' => $journal->Id])
+                    ->log('Approved Journal Entry #' . $journal->RefNo);
+
+                // Proceed to posting
+                $result = $this->journalPosting($validated['journalID']);
+                DB::commit();
+                return $result;
+            }
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error('Journal Approval Database Error: ' . $e->getMessage(), [
+                'journalID' => $validated['journalID'],
+                'action_type' => $validated['action_type'],
+                'sql_error' => $e->getSql(),
+            ]);
+            return back()->with('error', 'Database Error: ' . $e->getMessage());
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Journal Approval Failed: ' . $th->getMessage(), [
+                'journalID' => $validated['journalID'],
+                'action_type' => $validated['action_type'],
+            ]);
+            return back()->with('error', 'Journal Approval Failed: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Collect journal info and prepare data for posting to the transaction table.
+     */
+    public function journalPosting($journalId)
+    {
+        $journal = FinanceJournalEntry::with('journalLines')->findOrFail($journalId);
+        $data = [];
+
+        foreach ($journal->journalLines as $line) {
+            $data[] = [
+                'TransactionDate' => $journal->Date,
+                'ReferenceNumber' => $journal->RefNo,
+                'TransactionType' => 'Journal',
+                'ModuleID' => 1100000,
+                'SourceTable' => 't_FinanceJournalEntries',
+                'GLAccountID' => $line->GLAccountID,
+                'BranchID' => session('LoginBranchId', 1), // Fallback to 1 if unset
+                'DepartmentID' => $line->DepartmentID,
+                'DRCR' => $line->IsDebit ? 'DR' : 'CR',
+                'Amount' => $line->Amount,
+                'CurrencyID' => 1,
+                'CurrencyCode' => 'KES',
+                'ExchangeRate' => 1,
+                'Narration' => $line->Narration,
+                'BatchNumber' => null,
+                'IsTaxable' => false,
+                'SystemDescription' => 'Journal Entry #' . $journal->RefNo,
+                'CreatedBy' => Auth::id(),
+                'ModifiedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
+            ];
+        }
+
+        return $this->postTransaction($data);
+    }
+
+    /**
+     * Post transactions to the transaction table.
+     */
+    public function postTransaction(array $data)
+    {
+        $rules = [
+            '*.TransactionDate' => 'required|date',
+            '*.ReferenceNumber' => 'required|string|max:255',
+            '*.TransactionType' => 'required|string|max:255',
+            '*.ModuleID' => 'required|integer',
+            '*.SourceTable' => 'nullable|string|max:255',
+            '*.GLAccountID' => 'nullable|integer|exists:t_FinanceGLAccounts,Id',
+            '*.BranchID' => 'required|integer|exists:t_Branches,Id',
+            '*.DepartmentID' => 'required|integer|exists:t_Departments,Id',
+            '*.Amount' => 'required|numeric|min:0',
+//            '*.CurrencyID' => 'required|integer|exists:t_Currencies,Id',
+//            '*.CurrencyCode' => 'required|string|max:3',
+//            '*.ExchangeRate' => 'required|numeric|min:0',
+//            '*.Narration' => 'nullable|string|max:255',
+//            '*.BatchNumber' => 'nullable|string|max:255',
+//            '*.IsTaxable' => 'required|boolean',
+//            '*.SystemDescription' => 'nullable|string|max:255',
+//            '*.CreatedBy' => 'required|integer|exists:t_Users,Id',
+//            '*.ModifiedBy' => 'required|integer|exists:t_Users,Id',
+//            '*.CreatedOn' => 'required|date',
+//            '*.ModifiedOn' => 'required|date',
+        ];
+
+        $validator = Validator::make($data, $rules);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            Log::error('Transaction Validation Failed: ' . implode(', ', $errors), ['data' => $data]);
+            return back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            foreach ($data as $index => $transaction) {
+                try {
+                    $trx = FinanceTransaction::create($transaction);
+                    activity('Transaction Posting')
+                        ->performedOn($trx)
+                        ->causedBy(Auth::id())
+                        ->withProperties(['transaction_id' => $trx->id, 'reference' => $transaction['ReferenceNumber']])
+                        ->log('Posted Transaction #' . $transaction['ReferenceNumber']);
+                } catch (QueryException $e) {
+                    Log::error('Transaction Posting Database Error at index ' . $index . ': ' . $e->getMessage(), [
+                        'transaction' => $transaction,
+                        'sql_error' => $e->getSql(),
+                    ]);
+                    throw new \Exception('Failed to post transaction #' . ($index + 1) . ': ' . $e->getMessage());
+                }
+            }
+
+            return back()->with('success', 'Transactions posted successfully.');
+        } catch (\Throwable $th) {
+            Log::error('Transaction Posting Failed: ' . $th->getMessage(), [
+                'data' => $data,
+                'trace' => $th->getTraceAsString(),
+            ]);
+            return back()->with('error', 'Transaction Posting Failed: ' . $th->getMessage());
+        }
+    }
+}

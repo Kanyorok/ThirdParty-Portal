@@ -17,7 +17,7 @@
             background: #fff;
             padding: 40px;
             border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
         }
 
         .header {
@@ -80,7 +80,8 @@
                 box-shadow: none;
                 padding: 20px;
             }
-        @page {
+
+            @page {
                 margin: 1cm;
                 size: auto;
             }
@@ -88,54 +89,54 @@
     </style>
 </head>
 <body onload="window.print()">
-    <div class="container">
-        <div class="header">
-            <h2 class="h2 mb-0 text-decoration-none">{{ config('app.name') }}</h2>
-            <h2>Lease Schedule Summary</h2>
-            <p>Generated on {{ now()->format('d/m/Y') }}</p>
-            <button class="btn-print no-print" onclick="window.print()">Print Again</button>
-        </div>
-
-        <div class="form-row">
-            <div class="form-label">Lease Number</div>
-            <div class="form-value">{{ $leaseschedule->lease->LeaseNumber }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">Tenant Name</div>
-            <div class="form-value">{{ $leaseschedule->lease->tenant->TenantName }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">Property</div>
-            <div class="form-value">{{ $leaseschedule->lease->property->PropertyName }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">Payment Frequency</div>
-            <div class="form-value">{{ $leaseschedule->paymentFrequency->Description }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">Start Date</div>
-            <div class="form-value">{{ \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">End Date</div>
-            <div class="form-value">{{ \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">Base Rent</div>
-            <div class="form-value">KES {{ number_format($leaseschedule->BaseRent) }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">Service Charge</div>
-            <div class="form-value">KES {{ number_format($leaseschedule->ServiceCharge) }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">Parking Fee</div>
-            <div class="form-value">KES {{ number_format($leaseschedule->ParkingFee) }}</div>
-        </div>
-        <div class="form-row">
-            <div class="form-label">Other Charges</div>
-            <div class="form-value">KES {{ number_format($leaseschedule->OtherCharges) }}</div>
-        </div>
+<div class="container">
+    <div class="header">
+        <h2 class="h2 mb-0 text-decoration-none">{{ config('app.name') }}</h2>
+        <h2>Lease Schedule Summary</h2>
+        <p>Generated on {{ now()->format('d/m/Y') }}</p>
+        <button class="btn-print no-print" onclick="window.print()">Print Again</button>
     </div>
+
+    <div class="form-row">
+        <div class="form-label">Lease Number</div>
+        <div class="form-value">{{ $leaseschedule->lease->LeaseNumber }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">Tenant Name</div>
+        <div class="form-value">{{ $leaseschedule->lease->tenant->TenantName }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">Property</div>
+        <div class="form-value">{{ $leaseschedule->lease->property->PropertyName }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">Payment Frequency</div>
+        <div class="form-value">{{ $leaseschedule->paymentFrequency->Description }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">Start Date</div>
+        <div class="form-value">{{ \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">End Date</div>
+        <div class="form-value">{{ \Carbon\Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">Base Rent</div>
+        <div class="form-value">KES {{ number_format($leaseschedule->BaseRent) }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">Service Charge</div>
+        <div class="form-value">KES {{ number_format($leaseschedule->ServiceCharge) }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">Parking Fee</div>
+        <div class="form-value">KES {{ number_format($leaseschedule->ParkingFee) }}</div>
+    </div>
+    <div class="form-row">
+        <div class="form-label">Other Charges</div>
+        <div class="form-value">KES {{ number_format($leaseschedule->OtherCharges) }}</div>
+    </div>
+</div>
 </body>
 </html>

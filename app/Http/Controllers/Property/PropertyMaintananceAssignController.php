@@ -9,6 +9,7 @@ use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceAssignReq
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceAssignService;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
+use Illuminate\Support\Facades\Auth;
 use App\Models\HRM\Employee;
 use App\Models\ThirdParies\Supplier;
 use App\Models\Core\CodeDetail;
@@ -68,7 +69,7 @@ class PropertyMaintananceAssignController extends Controller
             $expectedCompletion,
             $PriorityLevel,
             $validated['InstructionNotes'],
-            auth()->user()
+            Auth::user()
         );
 
         return redirect()->route('assignrequest.index')->with('success', 'Assignment created successfully');
@@ -117,7 +118,7 @@ class PropertyMaintananceAssignController extends Controller
             $expectedCompletion,
             $priorityLevel,
             $validated['InstructionNotes'] ?? '',
-            auth()->user()
+            Auth::user()
         );
 
         return redirect()->route('assignrequest.index')->with('success', 'Assignment updated successfully.');

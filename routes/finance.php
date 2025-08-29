@@ -47,6 +47,7 @@ use App\Http\Controllers\Finance\TaxRuleController;
 use App\Http\Controllers\Finance\TaxSummaryReportController;
 use App\Http\Controllers\Finance\TransactionTypesController;
 use App\Http\Controllers\Finance\TrialBalanceController;
+use App\Http\Controllers\Finance\ReportsController;
 use App\Http\Controllers\Finance\VendorMasterController;
 use Illuminate\Support\Facades\Route;
 
@@ -155,5 +156,46 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::get('/finance/pos/{selectedVendor}', [InvoiceEntryController::class, 'getOrders'])->name('finance.orders');
     // Route for getting GRNS
     Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
+    // Route for viewingPOModal
+    Route::get('/finance/viewpo/{selectedPO}', [InvoiceEntryController::class, 'viewPOModal'])->name('finance.viewPOModal');
+    // Route for sAVING INVOICE
+    Route::post('/finance/invoice/save', [InvoiceEntryController::class, 'saveInvoice'])->name('invoiceentry.save');
+    //Route for gettng suppliers from invoices
+    Route::get('/finance/supplier/{selectedInvoice}', [PaymentVoucherController::class, 'getSuppliers'])->name('finance.getSuppliers');
+    //Route for getting Transaction Types
+    Route::get('/finance/transactions/{selectedModule}', [GLMappingController::class, 'fetchTransactionTypes'])->name('glpostingmap.fetchTransactionTypes');
+    //Route for getting GLAccounts
+    Route::get('/glaccounts/list', [GLMappingController::class, 'list'])->name('glpostingmap.list');
 
+    Route::post('/paymentvoucher/{id}/approve', [PaymentVoucherController::class, 'approve'])->name('paymentvoucher.approve');
+    Route::post('/paymentvoucher/{id}/reject', [PaymentVoucherController::class, 'reject'])->name('paymentvoucher.reject');
+
+    //Approval Routes For simulations
+    //Route::patch('/journalentry/{id}/action', [FinanceJournalEntryController::class, 'action'])->name('journalentry.action');
+
+    //////// Posting Routes ///////////
+    Route::post('/journalApproval/{id}',[\App\Http\Controllers\Finance\PostingController::class,'journalApproval'])->name('journalApproval');
+    Route::post('/finance/ap/invoices/{id}/approve', [InvoiceEntryController::class, 'approve'])->name('ap.invoice.approve');
+    Route::post('/finance/ap/invoices/{id}/reject', [InvoiceEntryController::class, 'reject'])->name('ap.invoice.reject');
+
+    Route::post('/finance/cd/note/{id}/approve', [CreditNoteController::class, 'approve'])->name('cdnote.approve');
+    Route::post('/finance/cd/note/{id}/reject', [CreditNoteController::class, 'reject'])->name('cdnote.reject');
+
+    Route::post('/finance/voucher/{id}/post', [PaymentProcessingController::class, 'postVoucher'])->name('voucher.post');
+
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
+        Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+            'index' => 'finance-reports.index',
+            'show' => 'finance-reports.show'
+        ]);
+});
+
+//Fetching Data for AR Invoice
+Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.')->group(function () {
+    Route::get('/', [ReceiptsPostingController::class, 'index'])->name('index');
+    Route::get('/create', [ReceiptsPostingController::class, 'create'])->name('create');
+    Route::post('/', [ReceiptsPostingController::class, 'store'])->name('store');
+
+    // AJAX endpoint
+    Route::get('/api/customers', [ReceiptsPostingController::class, 'findCustomer']);
 });

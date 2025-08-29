@@ -6,24 +6,24 @@
     @else
         <table class="table table-bordered table-striped">
             <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>User ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                </tr>
+            <tr>
+                <th>#</th>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+            </tr>
             </thead>
             <tbody>
-                @foreach ($role->users as $index => $user)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $user->UserID }}</td>
-                        <td>{{ $user->Name }}</td>
-                        <td>{{ $user->Email }}</td>
-                        <td>{{ $user->Phone }}</td>
-                    </tr>
-                @endforeach
+            @foreach ($role->users as $index => $user)
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $user->UserID }}</td>
+                    <td>{{ $user->Name }}</td>
+                    <td>{{ $user->Email }}</td>
+                    <td>{{ $user->Phone }}</td>
+                </tr>
+            @endforeach
             </tbody>
         </table>
     @endif

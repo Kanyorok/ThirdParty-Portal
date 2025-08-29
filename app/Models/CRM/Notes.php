@@ -11,30 +11,22 @@ class Notes extends Model
 {
     use UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
 
     protected $table = 't_Notes';
     protected $primaryKey = 'NoteID';
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'DiscussionID', "Party", "PartyID", 'Notes', 'CreatedOn', 'CreatedBy', 'ModifiedOn', 'ModifiedBy',
+    ];
 
     public static function getPrimaryKey(): string
     {
         return 'NoteID';
     }
-
-    /**
-     * The attributes that are mass assignable.
-     */
-    protected $fillable = [
-                           'DiscussionID',
-                           "Party",
-                           "PartyID",
-                           'Notes',
-                           'CreatedOn',
-                           'CreatedBy',
-                           'ModifiedOn',
-                           'ModifiedBy',
-                          ];
 
     public function discussion(): BelongsTo
     {

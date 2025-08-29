@@ -44,7 +44,7 @@
                                 class="btn btn-sm btn-danger custom-delete-btn"
                                 data-bs-toggle="modal"
                                 data-bs-target="#customDeleteConfirmModal"
-                                data-name="{{ $item['Name'] }} ALL Projections"    {{-- Pass item name --}}
+                                data-name="{{ $item['Name'] }} ALL Projections" {{-- Pass item name --}}
                                 data-route="{{ route('budgetprojections.destroy', $item['Id']) }}"> {{-- Pass delete route --}}
                             Delete
                         </button>

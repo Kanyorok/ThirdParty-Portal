@@ -442,7 +442,7 @@
     <script src="{{ asset('assets/libs/summernote/summernote-bs5.min.js') }}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 
-    @include('snippets.actions.preview-files')
+    @include('snippets.actions.preview-files'){{-- TODO FIX TO WORK WITH DMS  --}}
     @include('snippets.actions.tickets',['source'=>TicketSourceEnum::Email,'hidden'=> '<input type="hidden" name="conversation" class="d-none" value="'. $conversation->Id.'">', 'content' => $conversation->email?->Body])
     <script>const $Modal = $('#emailConversationModel');
 

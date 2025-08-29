@@ -93,9 +93,9 @@ class ProductDevelopmentController extends Controller
         ]);
 
         try {
-    $product = DB::transaction(static function () use ($data, $request) {
-        return ProductDevService::create($data['Name'], $data['TargetGroup'], $data['Notes'] ?? "", $request->user())->product;
-    });
+            $product = DB::transaction(static function () use ($data, $request) {
+                return ProductDevService::create($data['Name'], $data['TargetGroup'], $data['Notes'] ?? "", $request->user())->product;
+            });
         } catch (ErroredException $e) {
             Log::error('Error adding product dev: ' . $e->getMessage());
             return $this->errored($e->getMessage());

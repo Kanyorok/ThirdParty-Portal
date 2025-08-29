@@ -7,9 +7,9 @@ RUN apt-get update && apt-get install -y \
     supervisor lsb-release libwebp-dev libzip-dev \
     libpng-dev libjpeg-dev libfreetype6-dev \
     libxml2-dev libonig-dev nodejs wget ca-certificates\
-    libssl-dev software-properties-common \
+    libssl-dev software-properties-common poppler-utils \
     libc-client-dev libkrb5-dev libgssapi-krb5-2  \
-    tesseract-ocr tesseract-ocr-eng libtesseract-dev \
+    tesseract-ocr  tesseract-ocr-eng libtesseract-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -32,7 +32,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 RUN apt-get update && apt-get install -y \
     chromium chromium-driver \
     --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -51,7 +51,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 
 # Copy Laravel source code
+
 COPY . .
+#COPY --chown=www-data:www-data . .
+RUN rm -rf database/
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
@@ -69,6 +72,7 @@ RUN chown -R www-data:www-data /var/www && \
 RUN cd /var/www && composer install --no-interaction --optimize-autoloader --no-dev
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # Install Node.js dependencies
 RUN npm install --prefix /var/www
 

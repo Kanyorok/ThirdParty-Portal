@@ -38,19 +38,20 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $item->GLName ?? '-'}}</td>
                                     <td>
-                                    @foreach($glOrders as $glOrder)
-                                            @if($glOrder->SegmentType == 'GLDigits')
-                                                @php
-                                                    $digits = $item->{$glOrder->SegmentType} ?? 0;
-                                                    $formattedId = strlen($item->Id) >= $digits
-                                                        ? $item->Id
-                                                        : str_pad($item->Id, $digits, '0', STR_PAD_LEFT);
-                                                @endphp
-                                                {{ $formattedId }} @if (!$loop->last) - @endif
-                                            @else
-                                            {{ $item->{$glOrder->SegmentType} ?? '-' }} @if (!$loop->last) - @endif
-                                          @endif
-                                    @endforeach
+                                        {{$item->GLCode}}
+{{--                                    @foreach($glOrders as $glOrder)--}}
+{{--                                            @if($glOrder->SegmentType == 'GLDigits')--}}
+{{--                                                @php--}}
+{{--                                                    $digits = $item->{$glOrder->SegmentType} ?? 0;--}}
+{{--                                                    $formattedId = strlen($item->Id) >= $digits--}}
+{{--                                                        ? $item->Id--}}
+{{--                                                        : str_pad($item->Id, $digits, '0', STR_PAD_LEFT);--}}
+{{--                                                @endphp--}}
+{{--                                                {{ $formattedId }} @if (!$loop->last) - @endif--}}
+{{--                                            @else--}}
+{{--                                            {{ $item->{$glOrder->SegmentType} ?? '-' }} @if (!$loop->last) - @endif--}}
+{{--                                          @endif--}}
+{{--                                    @endforeach--}}
                                     </td>
                                     <td>{{ $item->GLAccountTypeID ?? '-'}}</td>
                                     <td>{{ $item->typeGroup->Description ?? '-'}}</td>
