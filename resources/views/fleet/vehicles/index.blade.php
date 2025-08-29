@@ -4,11 +4,22 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-    <div class="card p-4 shadow rounded-4">
+<div class="card p-4 shadow rounded-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Fleet Vehicles List</h4>
+        <a href="{{ route('fleet.vehicles.create') }}" class="btn btn-primary">
+            ➕ Add Vehicle
+        </a>
+    </div>
 
-        <div class="d-flex justify-content-end mb-3">
-            <a href="{{ route('fleet.vehicles.create') }}" class="btn btn-primary">➕ Add Vehicle</a>
-        </div>
+    <div class="mb-3">
+        <p class="mb-0" style="font-style: italic;">
+            <span class="me-2">💡</span>
+            Click the <strong>Details</strong> button to view complete vehicle information including trips, inspections, maintenance, repairs, and assignments.<br>
+            <strong><span class="me-1">ℹ️</span>Note:</strong> These records are automatically retrieved from their respective modules. They cannot be added here; please use the appropriate menus to manage them.
+        </p>
+    </div>
+
 
         <div class="table-responsive">
             <table id="vehicleRegistryTable" class="table table-bordered table-striped align-middle">
@@ -23,7 +34,8 @@
                     <th>Status</th>
                     <th>Branch</th>
                     <th>Active</th>
-                    <th>Actions</th>
+                    <th>Action</th>
+                   
                 </tr>
                 </thead>
                 <tbody>
@@ -47,14 +59,7 @@
 
                         <td>
                             <a href="{{ route('fleet.vehicles.show', $vehicle->Id) }}"
-                               class="btn btn-info btn-sm">View</a>
-                            <a href="{{ route('fleet.vehicles.edit', $vehicle->Id) }}" class="btn btn-warning btn-sm">Edit</a>
-                            <form action="{{ route('fleet.vehicles.destroy', $vehicle->Id) }}" method="POST"
-                                  class="d-inline" onsubmit="return confirm('Delete this Vehicle?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                            </form>
+                               class="btn btn-info btn-sm">👁️Details</a>
                         </td>
                         </td>
 

@@ -41,7 +41,7 @@ class FileProperties extends FileExtraction
         if (is_null($name)) {
             throw new ErroredException('Failed to create temporary file for file properties extraction.');
         }
-        $this->filePath = storage_path('app/temp') . '/' . $name;
+        $this->filePath = Storage::disk('temp')->path($name);
     }
 
     /**

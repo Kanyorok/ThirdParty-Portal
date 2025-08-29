@@ -10,7 +10,7 @@ use App\Models\BR\Client;
 use App\Models\Core\CodeDetail;
 use App\Models\CRM\Lead;
 use App\Models\CRM\Ticket;
-use App\Services\TicketService;
+use App\Services\CRM\TicketService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;

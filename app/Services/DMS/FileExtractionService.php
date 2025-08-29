@@ -3,6 +3,7 @@
 namespace App\Services\DMS;
 
 use App\Enums\Core\ExtensionsEnum;
+use App\Exceptions\ErroredException;
 use App\Models\DMS\Document;
 use App\Services\DMS\Files\ImageOCR;
 use App\Services\DMS\Files\PdfExtraction;
@@ -25,6 +26,9 @@ class FileExtractionService
         $this->extension = $ex;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function searchAndTags(): bool
     {
         if ($this->extension->isText()) {
