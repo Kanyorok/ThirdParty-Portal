@@ -50,6 +50,7 @@
                         <p class="text-muted">{{ $driver->Notes ?: '—' }}</p>
                     </div>
                 </div>
+                
                 <hr>
                 <div class="d-flex justify-content-between mt-auto">
                     <a href="{{ route('fleet.contracted_drivers.edit', $driver->Id) }}" class="btn btn-warning me-2">✏️ Edit Details</a>

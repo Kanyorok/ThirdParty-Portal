@@ -1,6 +1,9 @@
 @extends('layouts.app')
 @section('title', 'Request a Vehicle')
 
+
+@section('content')
+
 @if($errors->any())
     <div class="alert alert-danger">
         <ul>
@@ -10,8 +13,6 @@
         </ul>
     </div>
 @endif
-
-@section('content')
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">🚗 Vehicle Request Form</h4>
 

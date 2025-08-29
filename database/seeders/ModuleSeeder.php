@@ -408,7 +408,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 601100, 'Name' => 'Vehicle Master', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => 'fleet.vehicles.index'],
             ['ModuleID' => 601200, 'Name' => 'Compliance', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 601000, 'Route' => null],
             ['ModuleID' => 601210, 'Name' => 'Insurance Tracker', 'Icon' => 'Track insurance policies, premiums, providers, and renewal dates', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.insurance_tracker.index'],
-            ['ModuleID' => 601220, 'Name' => 'License Tracker & Inspection Schedule', 'Icon' => 'Track vehicle inspection types, dates, and compliance status', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.inspection_schedule.index'],
+            ['ModuleID' => 601220, 'Name' => 'Inspection Schedule', 'Icon' => 'Track vehicle inspection types, dates, and compliance status', 'Description' => '', 'ParentID' => 601200, 'Route' => 'fleet.inspection_schedule.index'],
 
             //Driver Management
             ['ModuleID' => 602000, 'Name' => 'Driver Management', 'Icon' => 'Vehicle Management', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
@@ -420,6 +420,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 603100, 'Name' => 'Trip Logs', 'Icon' => '', 'Description' => 'Trip and Usage Logs for Drivers and Vehicles', 'ParentID' => 603000, 'Route' => 'fleet.trip_logs.index'],
             ['ModuleID' => 603200, 'Name' => 'Route Planner & Optimizer', 'Icon' => '', 'Description' => 'Plan optimal routes with waypoints and map previews', 'ParentID' => 603000, 'Route' => 'fleet.route_planner.index'],
             ['ModuleID' => 603300, 'Name' => 'Vehicle Requests', 'Icon' => '', 'Description' => 'Staff requests for vehicles and approval flow', 'ParentID' => 603000, 'Route' => 'fleet.vehicle_requests.index'],
+            ['ModuleID' => 603400, 'Name' => 'Vehicle Check-Out/Check-In', 'Icon' => '', 'Description' => 'Vehicle Inspection, Pre and Post Trip', 'ParentID' => 603000, 'Route' => 'fleet.vehicle_inspection.index'],
 
             //Maintenance
             ['ModuleID' => 604000, 'Name' => 'Maintenance', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
