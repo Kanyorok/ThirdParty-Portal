@@ -1,6 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Add License Entry')
-    @if ($errors->any())
+
+@section('content')
+  @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
                 @foreach($errors->all() as $error)
@@ -9,7 +11,6 @@
             </ul>
         </div>
     @endif
-@section('content')
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">📝 Add License Entry – {{ $driver->FullName }}</h4>
 

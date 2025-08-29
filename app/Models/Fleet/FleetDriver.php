@@ -10,11 +10,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Core\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
 use App\Models\HRM\Employee;
 
 class FleetDriver extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

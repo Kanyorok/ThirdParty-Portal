@@ -20,6 +20,7 @@ use App\Models\Communication\Email;
 use App\Models\Communication\EmailConversation;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
+use App\Models\Fleet\FleetDriver;
 use App\Models\CRM\Contact;
 use App\Models\CRM\Lead;
 use App\Models\DMS\Image;
@@ -99,6 +100,13 @@ class CRMEmailService
     {
         return self::create($actor, $subject, $body, $priorityEnum, [[$user->Name => $user->Email]], User::getPrimaryKey(), $user->Id, $cc, replyTo: $replyTo);
     }
+
+     public static function createDriver(FleetDriver $driver, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $replyTo = null): CRMEmailService
+    {
+        return self::create($actor, $subject, $body, $priorityEnum, [[$driver->FullName => $driver->Email]], FleetDriver::getPrimaryKey(), $driver->Id, $cc, replyTo: $replyTo);
+    }
+
+    
 
     public static function createBoard(Board $board, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal): CRMEmailService
     {
