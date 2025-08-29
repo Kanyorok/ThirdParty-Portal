@@ -33,7 +33,13 @@
                             <td>{{ $record->IPType }}</td>
                             <td>{{ $record->Title }}</td>
                             <td>{{ $record->Owner }}</td>
-                            <td>{{ $record->Status }}</td>
+                            <td>
+                                @if($record->Status === 'Active')
+                                    <span class="badge bg-success">Active</span>
+                                @else
+                                    <span class="badge  bg-danger">Inactive</span>
+                                @endif
+                            </td>
                             <td>{{ $record->RegistrationNumber }}</td>
                             <td>{{ $record->ExpiryDate }}</td>
                             <td>
@@ -123,8 +129,8 @@
                     
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-danger">
-                            {{ $record->IsDisputed ? 'Update Dispute' : 'Submit Dispute' }}
+                        <button type="submit" class="btn btn-danger" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Submitting...'; this.form.submit();}">
+                            {{ $record->IsDisputed ? 'Submit Dispute' : 'Submit Dispute' }}
                         </button>
                     </div>
                 </div>

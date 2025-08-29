@@ -22,8 +22,9 @@ class FleetMaintenanceScheduleController extends Controller
     // View all maintenance schedules
     public function index()
     {
-        $schedules = FleetMaintenanceSchedule::with('vehicle', 'maintenanceStatus')
-            ->orderByDesc('ScheduleID', 'desc')
+        $this->authorize('viewAny', FleetMaintenanceSchedule::class);
+        $schedules = FleetMaintenanceSchedule::with('vehicle','maintenanceStatus')
+            ->orderByDesc('ScheduleID','desc')
             ->get();
 
         return view('fleet.maintenance.schedule.index', compact('schedules'));
@@ -32,6 +33,7 @@ class FleetMaintenanceScheduleController extends Controller
     // Show form to create a new schedule
     public function create()
     {
+        $this->authorize('create', FleetMaintenanceSchedule::class);
         $vehicles = FleetVehicle::all();
         $maintenanceType = CodeDetail::where('CodeID', 'FleetMaintenanceType')
             ->orderBy('Value')
@@ -43,6 +45,7 @@ class FleetMaintenanceScheduleController extends Controller
     // Store a new maintenance schedule
     public function store(FleetMaintenanceScheduleRequest $request)
     {
+        $this->authorize('create', FleetMaintenanceSchedule::class);
         $data = $request->validated();
         $this->scheduleService->create($data);
 
@@ -54,6 +57,7 @@ class FleetMaintenanceScheduleController extends Controller
     // Show form to edit a schedule
     public function edit($id)
     {
+        $this->authorize('edit', FleetMaintenanceSchedule::class);
         $schedule = FleetMaintenanceSchedule::findOrFail($id);
         $vehicles = FleetVehicle::all();
         $maintenanceType = CodeDetail::where('CodeID', 'FleetMaintenanceType')
@@ -65,8 +69,9 @@ class FleetMaintenanceScheduleController extends Controller
 
     // Update a schedule (acknowledge)
     public function update(FleetMaintenanceScheduleRequest $request, $id)
-    {
-        $data = $request->validated();
+{
+    $this->authorize('update', FleetMaintenanceSchedule::class);
+    $data = $request->validated();
 
         // Only handle mileage update & completion
         if (!empty($data['ScheduledMileage'])) {
@@ -93,6 +98,7 @@ class FleetMaintenanceScheduleController extends Controller
     // Show a single schedule
     public function show($id)
     {
+        $this->authorize('view', FleetMaintenanceSchedule::class);
         $schedule = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert'])
             ->findOrFail($id);
 
@@ -100,9 +106,10 @@ class FleetMaintenanceScheduleController extends Controller
     }
 
     // Cancel a schedule
-    public function cancel($id)
-    {
-        $schedule = FleetMaintenanceSchedule::findOrFail($id);
+   public function cancel($id)
+{
+    $this->authorize('cancel', FleetMaintenanceSchedule::class);
+    $schedule = FleetMaintenanceSchedule::findOrFail($id);
 
         // Just deactivate, no change to MaintenanceStatus
         $schedule->Status = false;
@@ -122,6 +129,7 @@ class FleetMaintenanceScheduleController extends Controller
     // Soft delete a schedule
     public function destroy($id)
     {
+        $this->authorize('destroy', FleetMaintenanceSchedule::class);
         $this->scheduleService->delete($id);
 
         return redirect()

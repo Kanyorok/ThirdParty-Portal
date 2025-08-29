@@ -72,6 +72,14 @@
             <h6 class="text-info mb-1">Remarks:</h6>
             <p class="mb-0">{{ $record->Remarks ?? '—' }}</p>
         </div>
+
+        @if($record->IsDisputed == 1)
+            <div class="p-3 bg-light rounded-3 mb-3">
+                <h6 class="text-danger mb-1"><i class="fas fa-exclamation-triangle"></i> Disputed Reason:</h6>
+                <p class="mb-0 fw-semibold">{{ $record->DisputeReason ?? 'No reason provided' }}</p>
+            </div>
+        @endif
+
     </div>
 </div>
 @endsection

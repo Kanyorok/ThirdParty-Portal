@@ -56,6 +56,39 @@ class FleetTripLogService
                 'CreatedOn' => now(),
             ]);
 
+            $type = \App\Models\Core\CodeDetail::findOrFail($data['DriverType']);
+
+            if ($type->Description === 'Contracted') {
+                $assignmentData = [
+                    'DriverID'         => $driver['driver_id'],
+                    'VehicleID'        => $data['VehicleID'],
+                    'AssignmentDate'   => $data['TripStartDate'],
+                    'UnassignmentDate' => $data['TripEndDate'],
+                    'Purpose'          => $data['Purpose'] ?? null,
+                    'AssignedBy'       => Auth::user()->employee->Id,
+                    'Notes'            => $data['Notes'] ?? null,
+                    'CreatedBy'        => Auth::id(),
+                    'CreatedOn'        => now(),
+                ];
+                (new \App\Services\FleetManagement\FleetContractedDriverAssignmentService())->create($assignmentData);
+            }
+
+            if ($type->Description === 'Permanent') {
+                $assignmentData = [
+                    'DriverID'         => $driver['driver_id'],
+                    'VehicleID'        => $data['VehicleID'],
+                    'AssignmentDate'   => $data['TripStartDate'],
+                    'UnassignmentDate' => $data['TripEndDate'],
+                    'Purpose'          => $data['Purpose'] ?? null,
+                    'AssignedBy'       => Auth::user()->employee->Id,
+                    'Notes'            => $data['Notes'] ?? null,
+                    'CreatedBy'        => Auth::id(),
+                    'CreatedOn'        => now(),
+                ];
+                // Use the service to create permanent driver assignment
+                (new \App\Services\FleetManagement\FleetDriverAssignmentService())->create($assignmentData);
+            }
+
             activity()
                 ->causedBy(Auth::user())
                 ->performedOn($tripLog)

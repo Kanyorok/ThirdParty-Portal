@@ -16,6 +16,7 @@ use App\Models\HRM\Employee;
 use App\Models\Fleet\FleetContractedDriverAssignment;
 use Illuminate\Support\Facades\DB;
 use App\Models\Fleet\ContractedDriver;
+use App\Models\ThirdParies\Supplier;
 
 class ContractedDriverController extends Controller
 {
@@ -29,19 +30,23 @@ class ContractedDriverController extends Controller
 
     public function index()
     {
-        $drivers = ContractedDriver::all();
+        $this->authorize('viewAny', ContractedDriver::class);
+        $drivers = ContractedDriver::with(['company'])->get();
         return view('fleet.contracted_drivers.index', compact('drivers'));
     }
 
     public function create()
     {
-        return view('fleet.contracted_drivers.create');
+        $this->authorize('create', ContractedDriver::class);
+        $companies = Supplier::all();
+        return view('fleet.contracted_drivers.create', compact('companies'));
     }
 
     public function store(ContractedDriversRequest $request)
-    {
-        $validated = $request->validated();
-        $this->driverService->create($validated);
+        {
+            $this->authorize('create', ContractedDriver::class);
+            $validated = $request->validated();
+            $this->driverService->create($validated);
 
         return redirect()->route('fleet.contracted_drivers.index')
             ->with('success', 'Contracted driver registered successfully.');
@@ -49,13 +54,16 @@ class ContractedDriverController extends Controller
 
     public function edit($id)
     {
+        $this->authorize('edit', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
-        return view('fleet.contracted_drivers.edit', compact('driver'));
+        $companies = Supplier::all();
+        return view('fleet.contracted_drivers.edit', compact('driver','companies'));
     }
 
 
     public function update(ContractedDriversRequest $request, $id)
     {
+        $this->authorize('update', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
         $validated = $request->validated();
 
@@ -81,6 +89,7 @@ class ContractedDriverController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('destroy', ContractedDriver::class);
         $driver = ContractedDriver::findOrFail($id);
         $this->driverService->delete($driver);
 
@@ -90,14 +99,16 @@ class ContractedDriverController extends Controller
 
 
     public function show($Id)
-    {
-        $driver = ContractedDriver::findOrFail($Id);
-        $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
-        $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
-            ->with('vehicle')
-            ->orderByDesc('AssignmentDate')
-            ->get();
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+{
+    $this->authorize('view', ContractedDriver::class);
+    $driver = ContractedDriver::findOrFail($Id);
+    $companies = Supplier::all();
+    $licenses = FleetContractedDriverLicense::where('ContractedDriverID', $Id)->get();
+    $assignments = FleetContractedDriverAssignment::where('DriverID', $Id)
+        ->with('vehicle')
+        ->orderByDesc('AssignmentDate')
+        ->get();
+    $vehicles = FleetVehicle::where('IsActive', 1)->get();
 
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
@@ -108,15 +119,17 @@ class ContractedDriverController extends Controller
             ->get();
 
 
-        return view('fleet.contracted_drivers.show', compact(
-            'driver',
-            'licenses',
-            'assignments',
-            'vehicles',
-            'assigners',
-            'trips'
-        ));
-    }
+    return view('fleet.contracted_drivers.show', compact(
+        'driver',
+        'licenses',
+        'assignments',
+        'vehicles',
+        'assigners',
+        'trips',
+        'companies'
+    ));
+}
+
 
 
 }

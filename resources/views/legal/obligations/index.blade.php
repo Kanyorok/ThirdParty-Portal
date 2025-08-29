@@ -35,7 +35,7 @@
                                 <span class="badge bg-warning text-dark">Pending</span>
                             @elseif($obligation->Status == 'Completed')
                                 <span class="badge bg-success">Completed</span>
-                            @else
+                            @elseif($obligation->Status == 'Overdue')
                                 <span class="badge bg-danger">Overdue</span>
                             @endif
                         </td>

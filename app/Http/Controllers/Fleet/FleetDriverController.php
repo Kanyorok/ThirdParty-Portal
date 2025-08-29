@@ -62,7 +62,7 @@ class FleetDriverController extends Controller
 
     public function store(FleetDriverRequest $request)
     {
-        $this->authorize('store', FleetDriver::class);
+        $this->authorize('create', FleetDriver::class);
         $this->fleetDriverService->create($request->validated());
         return redirect()->route('fleet.drivers.index')
             ->with('success', 'Driver registered successfully.');

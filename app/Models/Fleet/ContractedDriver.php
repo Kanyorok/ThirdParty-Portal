@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Core\CodeDetail;
+use App\Models\ThirdParies\Supplier;
 
 
 class ContractedDriver extends Model
@@ -31,12 +32,9 @@ class ContractedDriver extends Model
         'FullName',
         'NationalID',
         'Phone',
-        'CompanyName',
+        'Company',
         'ContractStartDate',
         'ContractEndDate',
-        'LicenseNumber',
-        'LicenseExpiryDate',
-        'LicenseCategory',
         'IsActive',
         'Notes',
         'CreatedBy',
@@ -45,13 +43,16 @@ class ContractedDriver extends Model
         'ModifiedOn',
         'DeletedBy',
         'DeletedOn',
-        'IsActive',
     ];
 
     public static function getPrimaryKey(): string
     {
         return 'DriverId';
     }
-
-
+    
+    public function company()
+    {
+        return $this->belongsTo(Supplier::class, 'Company', 'Id');
+    }
+    
 }

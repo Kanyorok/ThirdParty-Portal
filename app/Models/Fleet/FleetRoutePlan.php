@@ -24,6 +24,12 @@ class FleetRoutePlan extends Model
         'Waypoints' => 'array', // JSON cast for convenience
     ];
 
+    public static function getPrimaryKey(): string
+    {
+        return 'RouteId';
+    
+    }
+
     public function vehicle()
     {
         return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');

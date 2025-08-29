@@ -64,7 +64,7 @@ class LegalIntellectualPropertiesSeeder extends Seeder
                 'RegistrationNumber' => 'PT-54321',
                 'RegistrationDate' => '2015-11-05',
                 'ExpiryDate' => '2025-11-05',
-                'Status' => 'Pending Renewal',
+                'Status' => 'Active',
                 'Owner' => 'FinTech Africa Ltd',
                 // 'Jurisdiction' => 'Kenya',
                 'DMSDocID' => 1004,
