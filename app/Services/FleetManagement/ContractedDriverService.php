@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\ContractedDriver;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
+use Illuminate\Http\UploadedFile;
 
 class ContractedDriverService
 {
@@ -13,9 +16,9 @@ class ContractedDriverService
      * Create a new Inspection
      */
 
-    public function create(array $data): ContractedDriver
+    public function create(array $data, UploadedFile $document = null): ContractedDriver
 {
-    return DB::transaction(function () use ($data) {
+    return DB::transaction(function () use ($data,$document) {
         $data['DriverNo'] = $this->generateDriverNo();
         $data['FullName'] = $data['FullName'] ?? null;
         $data['NationalID'] = $data['NationalID'] ?? null;
@@ -29,12 +32,23 @@ class ContractedDriverService
         $data['CreatedOn'] = now();
         
 
-            return ContractedDriver::create($data);
-        });
+        $drivers = ContractedDriver::create($data);
+
+            if ($document) {
+            $drivers->newDocument(
+                ModulesEnum::Fleet,
+                $document,
+                [PermissionEnum::ContractedDriverView->value],
+                Auth::user()
+            );
+        }   
         activity()
             ->performedOn($driver)
             ->causedBy(Auth::user())
             ->log('Contracted Driver Created');
+
+             return $drivers;
+        });
     }
 
     private function generateDriverNo(): string

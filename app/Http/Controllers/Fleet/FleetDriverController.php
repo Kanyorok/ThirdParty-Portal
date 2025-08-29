@@ -60,13 +60,20 @@ class FleetDriverController extends Controller
         return view('fleet.drivers.create', compact('staffNo', 'employmentType'));
     }
 
-    public function store(FleetDriverRequest $request)
-    {
-        $this->authorize('create', FleetDriver::class);
-        $this->fleetDriverService->create($request->validated());
-        return redirect()->route('fleet.drivers.index')
-            ->with('success', 'Driver registered successfully.');
-    }
+
+        public function store(FleetDriverRequest $request)
+        {
+            $this->authorize('create', FleetDriver::class);
+
+            $validated = $request->validated();
+            $document = $request->file('Document');
+
+            $this->fleetDriverService->create($validated, $document);
+
+            return redirect()->route('fleet.drivers.index')
+                ->with('success', 'Driver registered successfully.');
+        }
+
 
     public function edit($id)
     {

@@ -35,11 +35,11 @@
 
                     <div class="col-md-12">
                         <strong>Contract Start Date:</strong>
-                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d M Y') }}</p>
+                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractStartDate)->format('d/m/Y') }}</p>
                     </div>
                     <div class="col-md-12">
                         <strong>Contract End Date:</strong>
-                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d M Y') }}</p>
+                        <p class="text-muted">{{ \Carbon\Carbon::parse($driver->ContractEndDate)->format('d/m/Y') }}</p>
                     </div>
                     <div class="col-md-12">
                         <strong>Active:</strong>
@@ -151,8 +151,8 @@
                                         <tr data-id="{{ $assignment->Id }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $assignment->vehicle?->RegistrationNo?? '' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d M Y') }}</td>
-                                            <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d M Y') : '—' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') }}</td>
+                                            <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—' }}</td>
                                             <td>{{ $assignment->Purpose ?: '—' }}</td>
                                             <td>{{ $assignment->assignedBy?->LastName ?? '—' }}</td>
                                             <td>{{ $assignment->Notes ?: '—' }}</td>
@@ -198,8 +198,8 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $trip->TripNo }}</td>
                                             <td>{{ $trip->vehicle?->RegistrationNo ?? 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d M Y') }}</td>
-                                            <td>{{ $trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d M Y') : '—' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') }}</td>
+                                            <td>{{ $trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') : '—' }}</td>
                                             <td>{{ $trip->StartTime }}</td>
                                             <td>{{ $trip->EndTime }}</td>
                                             <td>{{ $trip->StartLocation }}</td>

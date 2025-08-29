@@ -26,9 +26,11 @@ class FleetDriverRequest extends FormRequest
             'StaffNumber' => 'required|integer|exists:t_Employees,Id',
             'NationalID' => 'required|integer',
             'Phone' => 'required|string',
+            'Email' => 'required|string',
             'EmploymentType' => 'required|integer|exists:t_CodeDetails,ID',
             'Notes' => 'required|string',
             'IsActive' => 'required|boolean',
+            'Document' => 'nullable|file|max:2048',
         ];
     }
 

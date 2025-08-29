@@ -11,12 +11,13 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Core\CodeDetail;
 use App\Models\ThirdParies\Supplier;
+use App\Traits\Model\DocumentsTrait;
 
 
 class ContractedDriver extends Model
 {
 
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

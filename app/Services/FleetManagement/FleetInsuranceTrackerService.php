@@ -5,6 +5,9 @@ namespace App\Services\FleetManagement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetInsuranceTracker;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class FleetInsuranceTrackerService
@@ -13,29 +16,45 @@ class FleetInsuranceTrackerService
      * Create a new Fleet Vehicle
      */
 
-    public function create(array $data): FleetInsuranceTracker
-    {
-        return DB::transaction(function () use ($data) {
-            $data['InsuranceNo'] = $this->generateInsuranceNo();
-            $data['VehicleID'] = $data['VehicleID'] ?? null;
-            $data['InsuranceProvider'] = $data['InsuranceProvider'] ?? null;
-            $data['PolicyNumber'] = $data['PolicyNumber'] ?? null;
-            $data['CoverageStartDate'] = $data['CoverageStartDate'] ?? null;
-            $data['PremiumAmount'] = $data['PremiumAmount'] ?? null;
-            $data['RenewalReminderDate'] = $data['RenewalReminderDate'] ?? null;
-            $data['Notes'] = $data['Notes'] ?? null;
-            $data['DocumentPath'] = $data['DocumentPath'] ?? null;
-            $data['Status'] = $data['Status'] ?? null;
-            $data['CreatedBy'] = Auth::id();
-            $data['CreatedOn'] = now();
+  public function create(array $data,UploadedFile $document = null): FleetInsuranceTracker
+{
+    return DB::transaction(function () use ($data, $document) {
+        $data['InsuranceNo'] = $this->generateInsuranceNo();
+        $data['VehicleID'] = $data['VehicleID'] ?? null;
+        $data['InsuranceProvider'] = $data['InsuranceProvider'] ?? null;
+        $data['PolicyNumber'] = $data['PolicyNumber'] ?? null;
+        $data['CoverageStartDate'] = $data['CoverageStartDate'] ?? null;
+        $data['PremiumAmount'] = $data['PremiumAmount'] ?? null;
+        $data['RenewalReminderDate'] = $data['RenewalReminderDate'] ?? null;
+        $data['Notes'] = $data['Notes'] ?? null;
+        $data['Status'] = $data['Status'] ?? null;
+        $data['CreatedBy'] = Auth::id();
+        $data['CreatedOn'] = now();
+        
 
-            return FleetInsuranceTracker::create($data);
-        });
+        
+        $insurance = FleetInsuranceTracker::create($data);
+
+        // If you still want to attach via newDocument service
+        if ($document) {
+            $insurance->newDocument(
+                ModulesEnum::Fleet,
+                $document,
+                [PermissionEnum::FleetInsuranceTrackerView->value],
+                Auth::user()
+            );
+        }
+
+        // Activity log
         activity()
-            ->performedOn($driver)
+            ->performedOn($insurance)
             ->causedBy(Auth::user())
             ->log('Insurance Created');
-    }
+
+        return $insurance;
+    });
+}
+
 
     private function generateInsuranceNo(): string
     {
