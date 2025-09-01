@@ -202,6 +202,7 @@ use App\Models\Fleet\FleetRepairLog;
 use App\Models\Fleet\FleetVehicleRequest;
 use App\Models\Fleet\ContractedDriver;
 use App\Models\Fleet\FleetServiceAlert;
+use App\Models\Fleet\FleetVehicleInspection;
 use App\Models\Fleet\FleetInspectionSchedule;
 use App\Models\Fleet\FleetInsuranceTracker;
 use App\Policies\FleetManagement\FleetMakePolicy;
@@ -209,6 +210,7 @@ use App\Policies\FleetManagement\FleetModelPolicy;
 use App\Policies\FleetManagement\FleetVehiclePolicy; 
 use App\Policies\FleetManagement\FleetRepairLogPolicy; 
 use App\Policies\FleetManagement\FleetServiceAlertPolicy; 
+use App\Policies\FleetManagement\FleetVehicleInspectionPolicy; 
 use App\Policies\FleetManagement\DriverPolicy;
 use App\Policies\FleetManagement\FleetInsuranceTrackerPolicy;
 use App\Policies\FleetManagement\FleetInspectionSchedulePolicy;
@@ -443,6 +445,7 @@ class AppServiceProvider extends ServiceProvider
             FleetMaintenanceSchedule::getPrimaryKey() => FleetMaintenanceSchedule::class,
             FleetRepairLog::getPrimaryKey() => FleetRepairLog::class,
             FleetServiceAlert::getPrimaryKey() => FleetServiceAlert::class,
+            FleetVehicleInspection::getPrimaryKey() => FleetVehicleInspection::class,
 
 
             //Insurance
@@ -573,6 +576,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(FleetMaintenanceSchedule::class, FleetMaintenanceSchedulePolicy::class);
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
         Gate::policy(FleetRepairLog::class, FleetRepairLogPolicy::class);
+        Gate::policy(FleetVehicleInspection::class, FleetVehicleInspectionPolicy::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

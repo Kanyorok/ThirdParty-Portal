@@ -4,6 +4,8 @@ namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FuelType;
+use App\Models\Fleet\FleetDriver;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Support\Facades\Auth;
@@ -21,12 +23,12 @@ class FleetVehicleInspection extends Model
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_FleetDrivers';
+    protected $table = 't_FleetVehicleInspections';
     protected $primaryKey = 'Id';
     public $timestamps = false;
 
     protected $fillable = [
-        'InspectionID','VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil',
+        'InspectionID','ParentInspectionID','VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil', 'Fuel',
         'Speedometer', 'Coolant', 'Reflector', 'FireExtinguisher' ,'FirstAidKit','SpareTyre', 'Spanner', 'Jack' ,'4XFloorMats' ,
         'CreatedBy',
         'CreatedOn',
@@ -41,15 +43,30 @@ class FleetVehicleInspection extends Model
         return 'InspId';
     }
 
-    public function employmentType()
+    public function vehicle()
     {
-        return $this->belongsTo(CodeDetail::class, 'EmploymentType', 'ID');
+        return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
+    }
+
+    public function postTrips()
+    {
+        return $this->hasMany(FleetVehicleInspection::class, 'ParentInspectionID');
+    }
+
+    public function parentInspection()
+    {
+        return $this->belongsTo(FleetVehicleInspection::class, 'ParentInspectionID');
     }
 
     public function driver()
     {
-        return $this->belongsTo(Employee::class, 'StaffNumber', 'Id');
+        return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
     }
 
+    public function fuel()
+    {
+        return $this->belongsTo(FuelType::class, 'FuelType', 'Id');
+    }
 
+    
 }

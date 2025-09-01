@@ -202,12 +202,13 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
 
      // ==================== Vehicle Inspections====================
     Route::get('/vehicle_inspection', [FleetVehicleInspectionController::class, 'index'])->name('fleet.vehicle_inspection.index');
-    Route::get('/vehicle_inspection/create', [FleetTripLogController::class, 'create'])->name('fleet.vehicle_inspection.create');
+    Route::get('/vehicle_inspection/create', [FleetVehicleInspectionController::class, 'create'])->name('fleet.vehicle_inspection.create');
     Route::post('/vehicle_inspection', [FleetVehicleInspectionController::class, 'store'])->name('fleet.vehicle_inspection.store');
     Route::get('/vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'show'])->name('fleet.vehicle_inspection.show');
     Route::get('/vehicle_inspection{Id}/edit', [FleetVehicleInspectionController::class, 'edit'])->name('fleet.vehicle_inspection.edit');
     Route::put('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'update'])->name('fleet.vehicle_inspection.update');
     Route::delete('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'destroy'])->name('fleet.vehicle_inspection.destroy');
+    Route::get('/vehicle_inspection/{Id}/posttrip', [FleetVehicleInspectionController::class, 'createPostTrip'])->name('fleet.vehicle_inspection.posttrip.create');
 
 
 

@@ -15,10 +15,11 @@ return new class extends Migration
 
             $table->id('Id');
             $table->string('InspectionID')->unique();
+            $table->foreignId('ParentInspectionID')->nullable()->constrained('t_FleetVehicleInspections');
             $table->foreignId('VehicleID')->constrained('t_FleetVehicles', 'Id');
             $table->foreignId('FuelType')->constrained('t_FuelTypes', 'Id');
             $table->foreignId('DriverID')->constrained('t_FleetDrivers', 'Id');
-            $table->dateTime('InspectionDate');
+            $table->date('InspectionDate');
             $table->bigInteger('Mileage')->default(0);      
             $table->decimal('Fuel', 10, 2)->default(0);      
             $table->decimal('EngineOil', 10, 2)->default(0); 
