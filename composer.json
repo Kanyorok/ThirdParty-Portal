@@ -30,6 +30,7 @@
         "laravel/tinker": "^2.9",
         "noweh/twitter-api-v2-php": "^3.6",
         "php-imap/php-imap": "^5.0",
+        "phpoffice/phpword": "^1.4",
         "roach-php/core": "^3.2",
         "roach-php/laravel": "^3.1",
         "shuchkin/simplexlsxgen": "^1.4",
