@@ -1,19 +1,14 @@
 @extends('layouts.app')
 @section('title', 'Mapped Products – ' . $provider->Name)
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 
 @section('content')
 <div class="container mt-4">
     <h4>Products for {{ $provider->Name }}</h4>
-
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        @if($products->isEmpty())
-            <p class="text-muted">No products currently mapped.</p>
-        @else
-            <table class="table table-bordered">
-                <thead class="table-light">
+        <table  id='productlist' class="table table-bordered">
+            <thead class="table-light">
                 <tr>
                     <th>#</th>
                     <th>Product</th>
@@ -21,8 +16,8 @@
                     <th>Description</th>
                     <th>Is Active</th>
                 </tr>
-                </thead>
-                <tbody>
+            </thead>
+            <tbody>
                 @foreach($products as $product)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
@@ -32,8 +27,19 @@
                         <td>{{ $product->IsActive ? 'Yes' : 'No' }}</td>
                     </tr>
                 @endforeach
-                </tbody>
-            </table>
-        @endif
+            </tbody>
+        </table>
     </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#productlist').DataTable({
+            pageLength: 10,
+            ordering: true,
+            searching: true,
+            lengthChange: true
+        });
+    });
+</script>
 @endsection

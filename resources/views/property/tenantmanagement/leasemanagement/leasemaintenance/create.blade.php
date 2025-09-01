@@ -31,11 +31,7 @@
                 @endforeach
               </select>
             </div>
-          </div>
-
-          <!-- Property Hierarchy -->
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label">Select Property<span class="text-danger">*</span></label>
               <select name="PropertyID" id="property-select" class="form-select" required>
                 <option value="">-- Select Property --</option>
@@ -44,7 +40,10 @@
                 @endforeach
               </select>
             </div>
+          </div>
 
+          <!-- Property Hierarchy -->
+          <div class="row g-3 mb-3">
             <div class="col-md-4">
               <label class="form-label">Select Block<span class="text-danger">*</span></label>
               <select name="BlockID" id="block-select" class="form-select" required>
@@ -59,7 +58,7 @@
               </select>
             </div>
 
-            <div class="col-md-6 mt-3">
+            <div class="col-md-4">
               <label class="form-label">Select Unit<span class="text-danger">*</span></label>
               <select name="Unit" id="unit-select" class="form-select" required>
                 <option value="">-- Select Unit --</option>
@@ -110,11 +109,18 @@
               <label class="form-label">Other charges (KES)<span class="text-danger">*</span></label>
               <input type="number" class="form-control" placeholder="e.g. 250" name="OtherCharges" required>
             </div>
-            <div class="col-md-4">
-              <label class="form-label">Due Day<span class="text-danger">*</span></label>
-              <input type="number" class="form-control" placeholder="e.g. 5" name="DueDay" required>
-            </div>
+          <div class="col-md-4">
+            <label class="form-label">Due Day<span class="text-danger">*</span></label>
+            <input type="number" 
+                  class="form-control" 
+                  placeholder="due should be between 1 and 28" 
+                  name="DueDay" 
+                  min="1" 
+                  max="28" 
+                  required>
+            <small class="text-muted">Must be between 1 and 28</small>
           </div>
+
 
           <!-- Terms and Document -->
           <div class="mb-3">

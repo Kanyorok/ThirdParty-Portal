@@ -26,7 +26,7 @@
                 <div class="col-md-6">
                     <label class="form-label">Lease</label>
                     <input type="text" class="form-control" 
-                           value="LSno: {{ $invoices->lease->InvoiceNumber }} — Name: {{ $invoices->lease->tenant->TenantName }}" 
+                           value="LSno: {{ $invoices->lease->LeaseNumber }} — Name: {{ $invoices->lease->tenant->TenantName }}" 
                            readonly>
                     <input type="hidden" name="Lease" value="{{ $invoices->Lease }}">
                 </div>
@@ -41,7 +41,7 @@
                 </div>
 
                 <!-- Billing Month -->
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">Billing Month</label>
                     <input type="month" class="form-control" name="BillingMonth"
                            value="{{ old('BillingMonth', $invoices->BillingMonth ? Carbon::parse($invoices->BillingMonth)->format('Y-m') : '') }}">
@@ -53,15 +53,15 @@
                     <input type="date" class="form-control" name="InvoiceDate"
                            value="{{ old('InvoiceDate', $invoices->InvoiceDate ? Carbon::parse($invoices->InvoiceDate)->format('Y-m-d') : '') }}">
                 </div>
-            </div>
-
-            <!-- Charges Summary -->
-            <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label class="form-label">Rent Amount</label>
                     <input type="number" class="form-control" name="RentAmount"
                            value="{{ old('RentAmount', $invoices->RentAmount) }}">
                 </div>
+            </div>
+
+            <!-- Charges Summary -->
+            <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label class="form-label">Service Charge</label>
                     <input type="number" class="form-control" name="ServicesCharge"

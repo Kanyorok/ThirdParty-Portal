@@ -23,12 +23,12 @@ class CommissionRuleRequest extends FormRequest
     {
         return [
         'RuleName' => 'required|string',
-        'ProductId'   => 'nullable|exists:t_InsuranceProducts,Id',
+        'ProductId'   => 'required|exists:t_InsuranceProducts,Id',
         'PolicyTypeId'   => 'nullable|exists:t_CodeDetails,ID',
         'CommissionRate'   => 'required|numeric',
         'FixedAmount'   => 'required|numeric',
         'AppliesTo' => 'nullable|exists:t_CodeDetails,ID',
-        'IsActive' => 'required|boolean',
+        'IsActive' => 'nullable|boolean',
         ];
     }
 }
