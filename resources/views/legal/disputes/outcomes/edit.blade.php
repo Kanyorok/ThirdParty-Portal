@@ -46,7 +46,7 @@
                         <label class="form-label">Penalty Amount</label>
                         <input type="number" step="0.01" name="PenaltyAmount" 
                             value="{{ old('PenaltyAmount', $outcome->PenaltyAmount) }}" 
-                            class="form-control" placeholder="0.00" required>
+                            class="form-control" placeholder="0.00">
                     </div>
                 </div>
 

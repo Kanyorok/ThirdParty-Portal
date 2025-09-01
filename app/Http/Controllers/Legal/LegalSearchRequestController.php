@@ -42,7 +42,7 @@ class LegalSearchRequestController extends Controller
                 // 'RegistrationNumber' => 'nullable|string',
                 // 'Country' => 'nullable|string',
                 // 'RequestDate' => 'required|date',
-                'Remarks' => 'nullable|string',
+                'Remarks' => 'required|string',
             ]);
 
         $duplicate = LegalSearchRequest::where('RequestType', $validated['RequestType'])
@@ -122,8 +122,7 @@ class LegalSearchRequestController extends Controller
         $data = $request->validate([
             'RequestType' => 'required|string',
             'EntityName' => 'required|string',
-            'EntityType' => 'nullable|string',
-            'Remarks' => 'nullable|string',
+            'Remarks' => 'required|string',
             'Status' => 'nullable|string',
         ]);
 

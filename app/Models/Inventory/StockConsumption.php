@@ -7,6 +7,7 @@ use App\Models\Core\Branch;
 use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Traits\Model\UserActorTrait;
@@ -16,8 +17,7 @@ use App\Models\HRM\Employee;
 
 class StockConsumption extends Model
 {
-    use SoftDeletes;
-
+     use UserActorTrait, SoftDeletes;
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';

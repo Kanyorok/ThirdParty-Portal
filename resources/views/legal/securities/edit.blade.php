@@ -88,7 +88,7 @@
             
             <div class="mb-3">
                 <label for="SecurityStatus" class="form-label">Security Status</label>
-                <select name="SecurityStatus" class="form-select">{{ old('SecurityStatus', $security->SecurityStatus)}}
+                <select name="SecurityStatus" class="form-select" required>{{ old('SecurityStatus', $security->SecurityStatus)}}
                     <option value="Held">Held</option>
                     <option value="Released">Released</option>
                     <option value="Discharged">Discharged</option>
@@ -98,7 +98,7 @@
 
             <div class="mb-3">
                 <label>Remarks</label>
-                <textarea name="Remarks" class="form-control" rows="2">{{ old('Remarks', $security->Remarks) }}</textarea>
+                <textarea name="Remarks" class="form-control" rows="2" required>{{ old('Remarks', $security->Remarks) }}</textarea>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mb-3">

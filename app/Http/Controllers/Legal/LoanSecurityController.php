@@ -66,7 +66,7 @@ class LoanSecurityController extends Controller
             $securities = LoanSecurity::create([
                 'SecurityType'=> $validated['SecurityType'],
                 'OwnerName'=> $validated['OwnerName'],
-                'OwnerIDNumber'=> $validated['SecurityTypeOwnerIDNumber'],
+                'OwnerIDNumber'=> $validated['OwnerIDNumber'],
                 'LoanAccountNumber'=> $validated['LoanAccountNumber'],
                 'Value'=> $validated['Value'],
                 'Institution'=> $validated['Institution'],

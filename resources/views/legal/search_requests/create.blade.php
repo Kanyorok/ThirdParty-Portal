@@ -43,7 +43,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Remarks</label>
-                <textarea name="Remarks" rows="3" class="form-control"></textarea>
+                <textarea name="Remarks" rows="3" class="form-control" required></textarea>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mb-3">
