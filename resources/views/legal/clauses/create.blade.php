@@ -22,7 +22,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Clause Type</label>
-                    <select class="form-select" name="ClauseType" id="ClauseType">\
+                    <select class="form-select" name="ClauseType" id="ClauseType" required>
                         <option selected disabled value="">-- Select Clause Type --</option>
                             @foreach( $details as $item)
                                 <option value="{{ $item->Value}}">{{ $item->Value}}</option>

@@ -42,7 +42,7 @@ class LegalCaseOutcomeController extends Controller
             'JudgmentDate' => 'required|date|before_or_equal:today',
             'JudgeName' => 'required|string|max:255',
             'CourtDecision' => 'required|string',
-            'PenaltyAmount' => 'required|numeric',
+            'PenaltyAmount' => 'nullable|numeric',
             'Remarks' => 'required|string',
         ]);
 
@@ -62,7 +62,7 @@ class LegalCaseOutcomeController extends Controller
                 'JudgmentDate' => $validated['JudgmentDate'] ?? now(),
                 'JudgeName' => $validated['JudgeName'],
                 'CourtDecision' => $validated['CourtDecision'],
-                'PenaltyAmount' => $validated['PenaltyAmount'],
+                'PenaltyAmount' => $validated['PenaltyAmount'] ?? 0.00,
                 'Remarks' => $validated['Remarks'],
                 'CreatedBy' => Auth::id(),
                 'CreatedOn' => now(),
@@ -113,17 +113,22 @@ class LegalCaseOutcomeController extends Controller
             'JudgmentDate' => 'required|date',
             'JudgeName' => 'required|string|max:255',
             'CourtDecision' => 'required|string',
-            'PenaltyAmount' => 'required|numeric',
+            'PenaltyAmount' => 'nullable|numeric',
             'Remarks' => 'required|string',
         ]);
 
         try{
             DB::beginTransaction();
 
-            $data['ModifiedBy'] = Auth::id();
-            $data['ModifiedOn'] = now();
-
-            $outcome->update($data);
+            $outcome->update([
+                'Outcome' => $data['Outcome'],
+                'JudgmentDate' => $data['JudgmentDate'] ?? now(),
+                'JudgeName' => $data['JudgeName'],
+                'CourtDecision' => $data['CourtDecision'],
+                'PenaltyAmount' => $data['PenaltyAmount'] ?? 0.00,
+                'Remarks' => $data['Remarks'],
+                'ModifiedBy' => Auth::id(),
+            ]);
 
             activity()
             ->performedOn(new LegalCaseOutcome())
@@ -167,7 +172,7 @@ class LegalCaseOutcomeController extends Controller
             $outcome->DeletedBy = Auth::id();
             $outcome->save();
             $outcome->delete();
-            
+
             activity()
                 ->performedOn(new LegalCaseOutcome())
                 ->causedBy(Auth::user())

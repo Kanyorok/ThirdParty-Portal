@@ -75,14 +75,17 @@ class StockConsumptionController extends Controller
 
     public function edit($id)
     {
-        $stockConsumption = StockConsumption::findOrFail($id);
+        $stockConsumption = StockConsumption::with(['item', 'store', 'uom', 'creator'])->findOrFail($id);
         //$this->authorize('update', $stockConsumption);
 
         $branches = Branch::all();
+        $users = User::all();
+        $stores = Store::all();
         $items = ItemMasterList::all();
-        $issuedToTypes = CodeDetail::where('CodeID', 'IssuedToType')->get();
+        $uoms = UnitOfMeasure::all();
+        $types = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
 
-        return view('inventory.stockmanagement.stockconsumption.edit', compact('stockConsumption', 'branches', 'items', 'issuedToTypes'));
+        return view('inventory.stockmanagement.stockconsumption.edit', compact('branches', 'items', 'uoms', 'types', 'stockConsumption','users'));
     }
 
     public function update(StockConsumptionRequest $request, $id)

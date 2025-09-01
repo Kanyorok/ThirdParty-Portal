@@ -54,11 +54,26 @@
                 <td>{{ $consumption->issued_to_name }}</td>
                 <td>{{ optional($consumption->issuedBy)->Name }}</td>
                 <td>{{ \Carbon\Carbon::parse($consumption->IssuedOn)->format('m/d/Y') }}</td>
-                <td>
-                    {{-- Add edit/delete if needed --}}
-                    <a href="#" class="btn btn-sm btn-info disabled">View</a>
-                </td>
-            </tr>
+                 <td>{{ $consumption->Actions }}
+                                <a href="{{ route('stockconsumption.show', $consumption->Id) }}"
+                                   class="btn btn-secondary btn-sm">View</a>
+                                <a href="{{ route('stockconsumption.edit', $consumption->Id) }}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $consumption->Id }}')">Delete</a>
+                                <form id="delete-form-{{ $consumption->Id }}"
+                                      action="{{ route('stockconsumption.destroy', $consumption->Id) }}" method="POST"
+                                      style="display:none;">
+                                    @csrf
+                                    @method('DELETE')
+                                </form>
+
+                                <script>
+                                    function confirmDelete(Id) {
+                                        if (confirm('⚠️ Are you sure you want to delete this store?')) {
+                                            document.getElementById('delete-form-' + Id).submit();
+                                        }
+                                    }
+                                </script>
+                        </tr>
             @endforeach
         </tbody>
     </table>

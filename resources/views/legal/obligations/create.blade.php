@@ -22,7 +22,7 @@
 
                 <div class="col-md-6">
                     <label for="SourceType" class="form-label">Source Type</label>
-                    <select name="SourceType" class="form-select">
+                    <select name="SourceType" class="form-select" required>
                         <option selected disabled value="">-- Select Source Type --</option>
                             @foreach($details as $item)
                                 <option value="{{$item->Value}}">{{$item->Value}}</option>
@@ -37,7 +37,7 @@
 
             <div class="mb-3">
                 <label for="Description" class="form-label">Description</label>
-                <textarea name="Description" class="form-control" rows="3"></textarea>
+                <textarea name="Description" class="form-control" rows="3" required></textarea>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mb-3">

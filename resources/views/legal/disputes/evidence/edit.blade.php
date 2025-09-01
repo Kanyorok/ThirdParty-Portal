@@ -31,8 +31,8 @@
                 </div>
                 
                 <div class="mb-3">
-                    <label class="form-label">Description (optional)</label>
-                    <textarea name="Description" class="form-control" rows="3">{{ old('Description', $evidence->Description) }}</textarea>
+                    <label class="form-label">Description</label>
+                    <textarea name="Description" class="form-control" rows="3" required>{{ old('Description', $evidence->Description) }}</textarea>
                 </div>
 
                 <div class="form-check mb-3">                   

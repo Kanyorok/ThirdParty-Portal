@@ -39,10 +39,13 @@ class LegalCounselController extends Controller
         $validated = $request->validate([
             'LegalCaseID' => 'required|exists:t_LegalCases,Id',
             'CounselName' => 'required|string|max:255',
-            'FirmName' => 'nullable|string|max:255',
-            'Email' => 'nullable|email|max:255',
-            'Phone' => 'nullable|string|max:50',
-            'Role' => 'nullable|string|max:100',
+            'FirmName' => 'required|string|max:255',
+            'Email' => 'required|email|max:255',
+            'Phone' => [
+                'required',
+                'regex:/^\+2547\d{8}$/', // must be +2547xxxxxxxx
+            ],
+            'Role' => 'required|string|max:100',
             // 'Remarks' => 'nullable|string',
         ]);
 
@@ -59,7 +62,7 @@ class LegalCounselController extends Controller
             $counsel =  LegalCaseCounsel::create([
                 'LegalCaseID' => $caseId,
                 'CounselName' => $validated['CounselName'],
-                'FirmName' => $validated['FirmName'],
+                'FirmName' => $validated['FirmName'] ?? null,
                 'Email' => $validated['Email'],
                 'Phone' => $validated['Phone'],
                 'Role' => $validated['Role'],
@@ -114,20 +117,28 @@ class LegalCounselController extends Controller
 
         $data = $request->validate([
             'CounselName' => 'required|string|max:255',
-            'FirmName'    => 'nullable|string|max:255',
-            'Email'       => 'nullable|email|max:255',
-            'Phone'       => 'nullable|string|max:50',
-            'Role'        => 'nullable|string|max:100',
-            'Remarks'     => 'nullable|string',
+            'FirmName'    => 'required|string|max:255',
+            'Email'       => 'required|email|max:255',
+            'Phone' => [
+                'required',
+                'regex:/^\+2547\d{8}$/', // must be +2547xxxxxxxx
+            ],
+            'Role'        => 'required|string|max:100',
+            'Remarks'     => 'required|string',
         ]);
         try{
 
             DB::beginTransaction();
 
-            $data['ModifiedBy'] = Auth::id();
-            $data['ModifiedOn'] = now();
 
-            $counsel->update($data);
+            $counsel->update([
+                'CounselName' => $data['CounselName'],
+                'FirmName' => $data['FirmName'] ?? null,
+                'Email' => $data['Email'],
+                'Phone' => $data['Phone'],
+                'Role' => $data['Role'],
+                'ModifiedBy' => Auth::id(),
+            ]);
 
             activity()
                 ->performedOn(new LegalCaseCounsel)
@@ -150,7 +161,7 @@ class LegalCounselController extends Controller
                     ->log('Error editing legal councel: ' . $th->getMessage());
 
                 Log::error('Error editing legal councel: ' . $th->getMessage());
-                return back()->with('error', 'Error creating legal councel: ' . $th->getMessage());            
+                return back()->with('error', 'Error creating legal councel: ' . $th->getMessage());
         }
     }
 
@@ -195,7 +206,7 @@ class LegalCounselController extends Controller
                     ->causedBy(Auth::user())
                     ->withProperties(['action' => 'delete'])
                     ->log('Error deleting legal councel: ' . $th->getMessage());
-                
+
             return back()->with('error', 'Error deleting Assigned counsel');
         }
 
