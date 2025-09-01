@@ -14,7 +14,7 @@
                     <option
                         value="{{ $policy->Id }}"
                         data-paymentfrequency="{{ $policy->paymentfrequency->Description}}"
-                        data-customerid="{{ $policy->customerID }}">
+                        data-customerid="{{ $policy->customer->FullName }}">
                         {{ $policy->PolicyNumber }}
                     </option>
                 @endforeach

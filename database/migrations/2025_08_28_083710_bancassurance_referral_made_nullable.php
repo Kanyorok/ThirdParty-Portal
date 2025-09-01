@@ -31,6 +31,7 @@ public function up(): void
     Schema::table('t_BancassurancePolicies', function (Blueprint $table) {
         // Recreate as nullable with foreign key
         $table->foreignId('ReferralID')->nullable()->constrained('t_BancassuranceReferrals', 'Id');
+        $table->foreignId('RiderAddOnId')->nullable()->constrained('t_InsuranceProductRiders', 'Id');
     });
 }
 
@@ -42,8 +43,8 @@ public function down(): void
     });
 
     Schema::table('t_BancassurancePolicies', function (Blueprint $table) {
-        $table->dropForeign(['ReferralID']);
-        $table->dropColumn('ReferralID');
+        $table->dropForeign(['ReferralID','RiderAddOnId']);
+        $table->dropColumn('ReferralID','RiderAddOnId');
     });
 
     Schema::table('t_BancassuranceCustomers', function (Blueprint $table) {

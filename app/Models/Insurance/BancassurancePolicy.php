@@ -3,7 +3,7 @@
 namespace App\Models\Insurance;
 
 use App\Models\Core\CodeDetail;
-use App\Traits\Controller\DocumentsTrait;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +23,7 @@ class BancassurancePolicy extends Model
     protected $fillable = [
         'CustomerID', 'ProductID', 'InsurerID', 'PolicyNumber', 'SumAssured',
         'PremiumAmount', 'PolicyStartDate', 'PolicyEndDate', 'PaymentFrequency',
-        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive', 'Status', 'CreatedBy',
+        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive', 'Status','RiderAddOnId', 'CreatedBy',
         'ModifiedBy', 'DeletedBy'
     ];
 
@@ -59,5 +59,10 @@ class BancassurancePolicy extends Model
     public function referral()
     {
         return $this->belongsTo(BancAssuranceReferral::class, 'ReferralID', 'Id');
+    }
+
+    public function rideraddon()
+    {
+        return $this->belongsTo(InsuranceProductRider::class, 'RiderAddOnId', 'Id');
     }
 }

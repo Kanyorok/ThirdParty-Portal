@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Insurance\PremiumManagement\BancassurancePremiumPaymentsRequest;
@@ -20,7 +21,7 @@ public function create()
 {
     $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
     $payment = BancassurancePremiumPayments::all();
-    $policies= BancassurancePolicy::all();
+    $policies = BancassurancePolicy::where('Status', InsurancePolicyStatus::Issued)->get();
     $paymentModes = CodeDetail::where('CodeID', 'PaymentModes',)->get();
 
     return view('bancassurance.premiums.create', compact('policies','paymentModes','payment'));

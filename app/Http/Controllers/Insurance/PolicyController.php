@@ -6,13 +6,16 @@ use App\Enums\Core\PermissionEnum;
 use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Enums\Insurance\InsuranceReferralStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Http\Requests\Insurance\BancassurancePolicyRequest;
 use App\Http\Requests\Insurance\BancassuranceUnderwritingRequest;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
+use App\Models\Insurance\BancassurancePremiumPayments;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Insurance\InsuranceProvider;
 use App\Services\Insurance\BancassurancePolicyService;
 use App\Services\Insurance\BancassuranceUnderwritingService;
@@ -60,6 +63,11 @@ public function getProductsByInsurer($insurerId)
     return response()->json($products);
 }
 
+public function getRiderAddOnsByProduct($productId)
+{
+    $rideraddons = InsuranceProductRider::where('Product', $productId)->get();
+    return response()->json($rideraddons);
+}
 
 public function store(BancassurancePolicyRequest $request)
 {
@@ -71,6 +79,7 @@ public function store(BancassurancePolicyRequest $request)
     $ReferralID = isset($validated['ReferralID']) && $validated['ReferralID'] ? $validated['ReferralID'] : null; // Use null or a valid default
     $ProductId = InsuranceProduct::findOrFail($validated['ProductID'] ?? null);
     $InsurerId = InsuranceProvider::findOrFail($validated['InsurerID'] ?? null);
+    $RiderAddOn = isset($validated['RiderAddOn']) && $validated['RiderAddOn'] ? $validated['RiderAddOn'] : null;
     $Paymentfrquency = CodeDetail::findOrFail($validated['PaymentFrequency'] ?? null);
     $Status = InsurancePolicyStatus::Proposal;
 
@@ -84,6 +93,7 @@ public function store(BancassurancePolicyRequest $request)
         Carbon::parse($validated['PolicyEndDate']),
         $Paymentfrquency,
         $ReferralID,
+        $RiderAddOn,
         isset($validated['IssuedDate']) ? Carbon::parse($validated['IssuedDate']) : null,
         isset($validated['ExpiryDate']) ? Carbon::parse($validated['ExpiryDate']) : null,
         true,
@@ -119,41 +129,73 @@ public function review($id)
     return view('bancassurance.policies.review', compact('policy'));
 }
 
-public function submitForUnderwriting(Request $request, $id)
-{
-    $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
+// public function submitForUnderwriting(Request $request, $id)
+// {
+//     $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
 
-    $validated = $request->validate([
-        'Document' => 'nullable|file|max:2048'
-    ]);
+//     $validated = $request->validate([
+//         'Document' => 'nullable|file|max:2048'
+//     ]);
 
-    $document = $request->file('Document');
+//     $document = $request->file('Document');
 
-    // Get policy as Eloquent model
-    $policy = BancassurancePolicy::find($id);
+//     // Get policy as Eloquent model
+//     $policy = BancassurancePolicy::find($id);
 
-    if (!$policy) {
-        return redirect()->back()->with('error', 'Policy not found.');
-    }
+//     if (!$policy) {
+//         return redirect()->back()->with('error', 'Policy not found.');
+//     }
 
-    // Upload file + update ModifiedBy
-    $upload = BancassurancePolicyService::uploadpolicy(
-        $policy,
-        $request->user(),
-        $document
-    );
+//     // Upload file + update ModifiedBy
+//     $upload = BancassurancePolicyService::uploadpolicy(
+//         $policy,
+//         $request->user(),
+//         $document
+//     );
 
-    // Update policy status
-    $policy->update([
-        'Status'     => InsurancePolicyStatus::SubmittedForUnderwriting->value,
-        'ModifiedBy' => auth()->id(),
-        'ModifiedOn' => now()
-    ]);
+//     // Update policy status
+//     $policy->update([
+//         'Status'     => InsurancePolicyStatus::SubmittedForUnderwriting->value,
+//         'ModifiedBy' => auth()->id(),
+//         'ModifiedOn' => now()
+//     ]);
+
+//     return redirect()->route('bancassurance.policies.index')
+//         ->with('success', 'Proposal submitted to underwriter.');
+// }
+
+public function submitForUnderwriting(UploadDocumentRequest $request, $id)
+    {
+        $this->authorize(PermissionEnum::BancassurancePolicyCreate, BancassurancePolicy::class);
+
+        try {
+            $policy = BancassurancePolicy::find($id);
+            if (!$policy) {
+                return response()->json(['error' => 'Policy not found.'], 404);
+            }
+
+            $document = DB::transaction(function () use ($request, $policy) {
+                return BancassurancePolicyService::uploadpolicy(
+                    $policy,
+                    $request->user(),
+                    $request->file('file')
+                );
+            });
+
+            $policy->update([
+                'Status'     => InsurancePolicyStatus::SubmittedForUnderwriting->value,
+                'ModifiedBy' => auth()->id(),
+                'ModifiedOn' => now()
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error submitting policy for underwriting: ' . $e->getMessage());
+            return response()->json(['error' => 'Unexpected error, try again later.'], 500);
+        }
 
     return redirect()->route('bancassurance.policies.index')
-        ->with('success', 'Proposal submitted to underwriter.');
-}
-
+    ->with('success', 'Proposal submitted to underwriter.');
+        // Optionally add document summary if needed
+    }
 
 
 
@@ -298,20 +340,20 @@ public function storeIssuance($id)
 }
 
 
-public function endorsementForm($id)
-{
-    $policy = DB::table('t_BancassurancePolicies as p')
-        ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-        ->select('p.Id', 'p.PolicyNumber', 'c.FullName as CustomerName')
-        ->where('p.Id', $id)
-        ->first();
+// public function endorsementForm($id)
+// {
+//     $policy = DB::table('t_BancassurancePolicies as p')
+//         ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
+//         ->select('p.Id', 'p.PolicyNumber', 'c.FullName as CustomerName')
+//         ->where('p.Id', $id)
+//         ->first();
 
-        if (!$policy) {
-            return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
-        }
+//         if (!$policy) {
+//             return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
+//         }
 
-        return view('bancassurance.policies.endorsement', compact('policy'));
-    }
+//         return view('bancassurance.policies.endorsement', compact('policy'));
+//     }
 
 // public function storeEndorsement(Request $request, $id)
 // {
@@ -415,9 +457,8 @@ public function renewalIndex()
 public function show($id)
 {
     $policy = BancassurancePolicy::with(['customer','insurer'])->findOrFail($id);
+    $installments = BancassurancePremiumPayments::where('PolicyID', $id)->get();
 
-    return view('bancassurance.policies.show', ['policy' => $policy,'installments' => $policy]);
+    return view('bancassurance.policies.show', compact('policy','installments'));
 }
-
-
 }

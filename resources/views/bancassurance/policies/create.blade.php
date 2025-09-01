@@ -65,6 +65,13 @@
                     <option value="">-- Select Product --</option>
                 </select>
             </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Rider AddOns <span class="text-danger">*</span></label>
+                <select id="rideraddon-select" name="RiderAddOn" class="form-select" required>
+                    <option value="">-- Select Rider AddOns --</option>
+                </select>
+            </div>
         </div>
 
         {{-- Financials & Frequency --}}
@@ -143,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const referralSelect = document.querySelector('select[name="ReferralID"]');
     const productsRoute = @json(route('bancassurance.referrals.referrals.products', ['insurerId' => 'INSURER_ID']));
     const referralDefaultsRoute = @json(route('bancassurance.customers.referral-defaults', ['customerId' => 'CUSTOMER_ID']));
+    const riderAddOnsRoute = @json(route('bancassurance.policies.policy.rideraddons', ['productId' => 'PRODUCT_ID']));
 
     // Store intended product to select after loading
     let intendedProductId = null;
@@ -174,6 +182,8 @@ document.addEventListener('DOMContentLoaded', function () {
     insurerSelect.addEventListener('change', function () {
         const insurerId = this.value;
         productSelect.innerHTML = '<option value="">Loading...</option>';
+        // Clear Rider AddOns
+        document.getElementById('rideraddon-select').innerHTML = '<option value="">-- Select Rider AddOns --</option>';
 
         if (insurerId) {
             const url = productsRoute.replace('INSURER_ID', insurerId);
@@ -188,11 +198,35 @@ document.addEventListener('DOMContentLoaded', function () {
                     // If we have an intended product to select, do it now
                     if (intendedProductId) {
                         productSelect.value = intendedProductId;
+                        productSelect.dispatchEvent(new Event('change'));
                         intendedProductId = null;
                     }
                 });
         } else {
             productSelect.innerHTML = '<option value="">-- Select Product --</option>';
+        }
+    });
+
+    // Rider AddOns: Load and sort when product changes
+    productSelect.addEventListener('change', function () {
+        const productId = this.value;
+        const riderAddOnSelect = document.getElementById('rideraddon-select');
+        riderAddOnSelect.innerHTML = '<option value="">Loading...</option>';
+        if (productId) {
+            const url = riderAddOnsRoute.replace('PRODUCT_ID', productId);
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Sort alphabetically by Name
+                    data.sort((a, b) => a.Name.localeCompare(b.Name));
+                    let options = '<option value="">-- Select Rider AddOns --</option>';
+                    data.forEach(rider => {
+                        options += `<option value="${rider.Id}">${rider.RiderName}</option>`;
+                    });
+                    riderAddOnSelect.innerHTML = options;
+                });
+        } else {
+            riderAddOnSelect.innerHTML = '<option value="">-- Select Rider AddOns --</option>';
         }
     });
 

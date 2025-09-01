@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 @section('title', 'Review Proposal')
 
@@ -16,6 +17,11 @@
             </span>
             </td>
         </div>
+               <div class="card-footer" id="ticketsAttachementContents">
+                    @foreach($policy->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                        {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                    @endforeach
+                </div>        
 
         <form action="{{ route('bancassurance.policies.submitUnderwriting', $policy->Id) }}" method="POST"
               enctype="multipart/form-data">
@@ -23,7 +29,7 @@
 
         <div class="mb-3">
             <label class="form-label">Upload Proposal Documents (PDF, Images, etc.)</label>
-            <input type="file" name="Document" class="form-control" multiple required>
+            <input type="file" name="file" class="form-control" multiple required>
         </div>
 
         <div class="text-end">
@@ -32,3 +38,7 @@
     </form>
 </div>
 @endsection
+@section('scripts')
+ @include('snippets.actions.preview-files')
+@endsection   
+
