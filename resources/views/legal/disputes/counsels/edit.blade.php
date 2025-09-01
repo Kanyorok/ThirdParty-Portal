@@ -47,7 +47,13 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Phone</label>
-                    <input type="text" name="Phone" value="{{ $counsel->Phone }}" class="form-control shadow-sm" required>
+                    <input type="tel" name="Phone"
+                           value="{{ old('Phone') }}"
+                           class="form-control"
+                           placeholder="+254 700 000000"
+                           required
+                           pattern="^\+254\s?[17]\d{2}\s?\d{6}$"
+                           title="Enter a valid Kenyan phone number e.g. +254 712 345678">
                 </div>
 
                 <div class="col-md-12">

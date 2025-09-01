@@ -76,7 +76,7 @@
                             <th>Title</th>
                             <th>Type</th>
                             <th>Source</th>
-                            <th>Review</th>
+{{--                            <th>Review</th>--}}
                             <th>Execution</th>
                             <th>Created</th>
                             <th>Actions</th>
@@ -88,18 +88,18 @@
                                 <td class="fw-semibold">{{ $doc->DocumentTitle }}</td>
                                 <td>{{ $doc->DocumentType }}</td>
                                 <td>{{ $doc->SourceModule }}</td>
-                                <td>
-                                    @php
-                                        $review = $doc->ReviewStatus;
-                                        $reviewClass = match($review) {
-                                            'Approved' => 'success',
-                                            'In Review' => 'warning',
-                                            'Rejected' => 'danger',
-                                            default => 'secondary'
-                                        };
-                                    @endphp
-                                    <span class="badge bg-{{ $reviewClass }}">{{ $review ?: '—' }}</span>
-                                </td>
+{{--                                <td>--}}
+{{--                                    @php--}}
+{{--                                        $review = $doc->ReviewStatus;--}}
+{{--                                        $reviewClass = match($review) {--}}
+{{--                                            'Approved' => 'success',--}}
+{{--                                            'In Review' => 'warning',--}}
+{{--                                            'Rejected' => 'danger',--}}
+{{--                                            default => 'secondary'--}}
+{{--                                        };--}}
+{{--                                    @endphp--}}
+{{--                                    <span class="badge bg-{{ $reviewClass }}">{{ $review ?: '—' }}</span>--}}
+{{--                                </td>--}}
                                 <td>
                                     @php
                                         $exec = $doc->ExecutionStatus;
@@ -120,20 +120,37 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('legal.documents.show', $doc->Id) }}" class="btn btn-sm btn-outline-info">
+                                    {{-- Always allow view --}}
+                                    <a href="{{ route('legal.documents.show', $doc->Id) }}"
+                                       class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('legal.documents.edit', $doc->Id) }}" class="btn btn-sm btn-outline-warning">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('legal.documents.destroy', $doc->Id) }}" method="POST" class="d-inline"
-                                          onsubmit="return confirm('Delete this document?');">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
+
+                                    @if($doc->ExecutionStatus === 'Pending')
+                                        {{-- Only show edit/delete if NOT pending --}}
+                                        <a href="{{ route('legal.documents.edit', $doc->Id) }}"
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger custom-delete-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{ $doc->DocumentTitle }}"
+                                                data-route="{{ route('legal.documents.destroy', $doc->Id) }}">
+                                            <i class="fas fa-trash-alt"></i>
                                         </button>
-                                    </form>
+                                    @else
+                                        {{-- Disabled buttons for Pending --}}
+                                        <button class="btn btn-sm btn-outline-warning" disabled>
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" disabled>
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    @endif
                                 </td>
+
                             </tr>
                         @empty
                             <tr>
@@ -148,4 +165,7 @@
             </div>
         </div>
     </div>
+
+
+    @include('components.modals.delete-confirm')
 @endsection

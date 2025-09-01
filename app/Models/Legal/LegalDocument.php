@@ -3,6 +3,7 @@
 namespace App\Models\Legal;
 
 use App\Models\Auth\User;
+use App\Models\Core\Module;
 use App\Models\DMS\Document;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
@@ -50,6 +51,11 @@ class LegalDocument extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function modules()
+    {
+        return $this->belongsTo(Module::class,'ModuleID','SourceID');
     }
 
     public function modifiedBy()

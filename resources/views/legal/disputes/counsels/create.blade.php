@@ -12,7 +12,7 @@
                 </div>
             @endif
             <p class="text-muted">
-                Fill out the form below to assign a new legal counsel to the case: 
+                Fill out the form below to assign a new legal counsel to the case:
                 <strong>{{ $case->CaseTitle }}</strong>.
             </p>
 
@@ -23,42 +23,45 @@
                     <input type="hidden" name="LegalCaseID" value="{{ $case->Id }}">
                     <div class="col-md-6">
                         <label class="form-label">Counsel Name</label>
-                        <input type="text" name="CounselName" 
-                               value="{{ old('CounselName') }}" 
-                               class="form-control" 
+                        <input type="text" name="CounselName"
+                               value="{{ old('CounselName') }}"
+                               class="form-control"
                                placeholder="Enter full name of counsel" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Law Firm</label>
-                        <input type="text" name="FirmName" 
-                               value="{{ old('FirmName') }}" 
-                               class="form-control" 
-                               placeholder="e.g. XYZ & Co. Advocates" required> 
+                        <input type="text" name="FirmName"
+                               value="{{ old('FirmName') }}"
+                               class="form-control"
+                               placeholder="e.g. XYZ & Co. Advocates" required>
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Email</label>
-                        <input type="email" name="Email" 
-                               value="{{ old('Email') }}" 
-                               class="form-control" 
+                        <input type="email" name="Email"
+                               value="{{ old('Email') }}"
+                               class="form-control"
                                placeholder="example@lawfirm.com" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Phone</label>
-                        <input type="text" name="Phone" 
-                               value="{{ old('Phone') }}" 
-                               class="form-control" 
-                               placeholder="+254 700 000000" required>
+                        <input type="tel" name="Phone"
+                               value="{{ old('Phone') }}"
+                               class="form-control"
+                               placeholder="+254 700 000000"
+                               required
+                               pattern="^\+254\s?[17]\d{2}\s?\d{6}$"
+                               title="Enter a valid Kenyan phone number e.g. +254 712 345678">
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Role in Case</label>
-                    <input type="text" name="Role" 
-                           value="{{ old('Role') }}" 
-                           class="form-control" 
+                    <input type="text" name="Role"
+                           value="{{ old('Role') }}"
+                           class="form-control"
                            placeholder="e.g. Lead Counsel, Assistant Counsel" required>
                 </div>
 
@@ -71,7 +74,7 @@
                     <a href="{{ route('legal.disputes.counsels.index', $case->Id) }}" class="btn btn-outline-secondary">
                         <i class="fas fa-long-arrow-alt-left"></i> Back
                     </a>
-                    <button type="submit" class="btn btn-info" 
+                    <button type="submit" class="btn btn-info"
                         onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit();}">
                         <i class="fas fa-save"></i> Save Counsel
                     </button>
