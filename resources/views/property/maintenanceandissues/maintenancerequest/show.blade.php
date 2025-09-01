@@ -1,69 +1,88 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
-@section('title', 'Maintenance request details')
+@section('title', 'Maintenance Request Details')
 
 @section('content')
-<div class="container mt-5" style="max-width: 800px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Lease Agreement Details</h3>
-        <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
-    </div>
+<div class="container mt-4" style="max-width: 1000px;">
+    <h4 class="mb-3">Maintenance Request Details</h4>
 
-    <form>
-        <div class="card shadow-sm border-0">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
 
-            <div class="card-body">
-                <h5 class="card-title">Maintenance Request Details</h5>
-                <div class="mb-3">
-                    <label class="form-label">Request Number</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->RequestNumber ?? '-' }}" readonly>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Property</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->property->PropertyName ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Request Number</strong>
+                    <p class="mb-1">{{ $maintenancerequest->RequestNumber ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Block</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->block->BlockName ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Property</strong>
+                    <p class="mb-1">{{ $maintenancerequest->property->PropertyName ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Floor</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->floor->FloorLabel ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Block</strong>
+                    <p class="mb-1">{{ $maintenancerequest->block->BlockName ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Unit</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->unit->UnitCode ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Floor</strong>
+                    <p class="mb-1">{{ $maintenancerequest->floor->FloorLabel ?? '-' }}</p>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">ReportedBy</label>
-                        <input type="text" class="form-control" value="{{ $maintenancerequest->ReportedBy ?? '-' }}" readonly>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label"> IssueType</label>
-                        <input type="text" class="form-control" value="{{ $maintenancerequest->issueType->Description ?? '-' }}" readonly>
-                    </div>
+                <div class="col">
+                    <strong>Unit</strong>
+                    <p class="mb-1">{{ $maintenancerequest->unit->UnitCode ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label"> Priority</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->priority->Description ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Reported By</strong>
+                    <p class="mb-1">{{ $maintenancerequest->ReportedBy ?? '-' }}</p>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label"> Issue Description</label>
-                        <input type="text" class="form-control" value="{{ $maintenancerequest->IssueDescription ?? '-' }}" readonly>
-                    </div>
-                    
-            <div class="card-footer bg-light d-flex justify-content-between">
-                <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Edit</a>
-                <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary">Back</a>
+                <div class="col">
+                    <strong>Issue Type</strong>
+                    <p class="mb-1">{{ $maintenancerequest->issueType->Description ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Priority</strong>
+                    <p class="mb-1">{{ $maintenancerequest->priority->Description ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Issue Description</strong>
+                    <p class="mb-1">{{ $maintenancerequest->IssueDescription ?? '-' }}</p>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <h6 class="mb-2">Audit Information</h6>
+            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
+                <div class="col">
+                    <strong>Created By</strong>
+                    <p class="mb-1">{{ $maintenancerequest->createdByUser->Name ?? '-' }}</p>
+                </div>
+                <div class="col">
+                    <strong>Created On</strong>
+                    <p class="mb-1">{{ $maintenancerequest->CreatedOn ? Carbon::parse($maintenancerequest->CreatedOn)->format('d M Y H:i') : '-' }}</p>
+                </div>
+                <div class="col">
+                    <strong>Modified By</strong>
+                    <p class="mb-1">{{ $maintenancerequest->modifiedByUser->Name ?? '-' }}</p>
+                </div>
+                <div class="col">
+                    <strong>Modified On</strong>
+                    <p class="mb-1">{{ $maintenancerequest->ModifiedOn ? Carbon::parse($maintenancerequest->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
+                </div>
             </div>
         </div>
-    </form>
+
+        <div class="card-footer text-end py-2">
+            <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-sm btn-primary">✏ Edit</a>
+            <a href="{{ route('maintenancerequest.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
+        </div>
+    </div>
 </div>
 @endsection

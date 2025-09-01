@@ -30,7 +30,7 @@ class PropertyLeaseScheduleController extends Controller
 
     public function create()
     {
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
+        //$this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
 
         // Get all LeaseNumber values already scheduled
         $scheduledLeaseIds = PropertyLeaseSchedule::pluck('LeaseNumber');
@@ -61,7 +61,7 @@ class PropertyLeaseScheduleController extends Controller
 
     public function show($id)
     {
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleView, PropertyLeaseSchedule::class);
+       // $this->authorize(PermissionEnum::PropertyLeaseScheduleView, PropertyLeaseSchedule::class);
         $leaseschedule = PropertyLeaseSchedule::where('isActive', true)->find($id);
         $paymentFrequencies = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leaseschedule.show', compact('leaseschedule', 'paymentFrequencies'));
@@ -98,7 +98,7 @@ class PropertyLeaseScheduleController extends Controller
     public function edit($id)
     {
         //Check if user has permission to edit tender categories
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
+       // $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
         $leaseschedules = PropertyLeaseSchedule::where('isActive', true)->findOrFail($id);
         $newtenants = PropertyNewTenant::all();
         $newleases = PropertyNewLease::all();
@@ -110,7 +110,7 @@ class PropertyLeaseScheduleController extends Controller
     public function update(Request $request, $id)
     {
 
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
+      //  $this->authorize(PermissionEnum::PropertyLeaseScheduleUpdate, PropertyLeaseSchedule::class);
         $validated = $request->validate([
             'LeaseId' => 'required|exists:t_LeaseCreation,Id',
             'PaymentFrequency' => 'required|string|max:50',
@@ -156,7 +156,7 @@ class PropertyLeaseScheduleController extends Controller
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-        $this->authorize(PermissionEnum::PropertyLeaseScheduleDelete, PropertyLeaseSchedule::class);
+       // $this->authorize(PermissionEnum::PropertyLeaseScheduleDelete, PropertyLeaseSchedule::class);
         try {
             $leaseschedules = PropertyLeaseSchedule::findOrFail($id);
             $leaseschedules->delete();

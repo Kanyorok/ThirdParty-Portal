@@ -63,7 +63,7 @@ class CustomerController extends Controller
 
     public function store(BancassuranceCustomersRequest $request)
     {
-        $this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
+        //$this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
         $validated = $request->validated();
 
 
