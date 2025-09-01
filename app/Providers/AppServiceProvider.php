@@ -50,6 +50,8 @@ use App\Models\Finance\FinanceJournalLines;
 use App\Models\Finance\FinanceTransaction;
 use App\Models\Finance\RecurrentJournal;
 use App\Models\Finance\ReverseJournalEntry;
+use App\Models\FleetManagement\DriverManagement;
+use App\Models\FleetManagement\VehicleRegistry;
 use App\Models\HRM\Committee;
 use App\Models\CRM\Discussion;
 use App\Models\CRM\Lead;

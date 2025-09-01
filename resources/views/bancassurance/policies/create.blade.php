@@ -67,8 +67,8 @@
             </div>
 
             <div class="col-md-3">
-                <label class="form-label">Rider AddOns <span class="text-danger">*</span></label>
-                <select id="rideraddon-select" name="RiderAddOn" class="form-select" required>
+                <label class="form-label">Rider AddOns </label>
+                <select id="rideraddon-select" name="RiderAddOn" class="form-select">
                     <option value="">-- Select Rider AddOns --</option>
                 </select>
             </div>
@@ -217,8 +217,8 @@ document.addEventListener('DOMContentLoaded', function () {
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    // Sort alphabetically by Name
-                    data.sort((a, b) => a.Name.localeCompare(b.Name));
+                    // Sort alphabetically by RiderName
+                    data.sort((a, b) => a.RiderName.localeCompare(b.RiderName));
                     let options = '<option value="">-- Select Rider AddOns --</option>';
                     data.forEach(rider => {
                         options += `<option value="${rider.Id}">${rider.RiderName}</option>`;

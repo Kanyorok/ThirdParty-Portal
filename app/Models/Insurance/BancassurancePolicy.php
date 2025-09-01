@@ -27,6 +27,14 @@ class BancassurancePolicy extends Model
         'ModifiedBy', 'DeletedBy'
     ];
 
+    /**
+     * Get the renewals for the policy.
+     */
+    public function renewals()
+    {
+        return $this->hasMany(PolicyRenewal::class, 'PolicyID', 'Id');
+    }
+
     public static function getPrimaryKey(): string
     {
         return 'bancassurancepolicyId';

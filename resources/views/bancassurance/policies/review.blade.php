@@ -29,7 +29,7 @@
 
         <div class="mb-3">
             <label class="form-label">Upload Proposal Documents (PDF, Images, etc.)</label>
-            <input type="file" name="file" class="form-control" multiple required>
+            <input type="file" name="file[]" class="form-control" multiple required>
         </div>
 
         <div class="text-end">

@@ -25,15 +25,18 @@
         <div class="card-body">
             @php
                 $totalPaid = $installments->sum('Amount');
-                $balance = $policy->PremiumAmount - $totalPaid;
-                $progress = $policy->PremiumAmount > 0
-                    ? round(($totalPaid / $policy->PremiumAmount) * 100)
+                $riderPremium = $policy->rideraddon->AdditionalPremium ?? 0;
+                $balance = ($policy->PremiumAmount + $riderPremium) - $totalPaid;
+                $progress = ($policy->PremiumAmount + $riderPremium) > 0
+                    ? round(($totalPaid / ($policy->PremiumAmount + $riderPremium)) * 100)
                     : 0;
             @endphp
 
                 <div class="row mb-3">
             <div class="col-md-4"><strong>Total
-                Premium:</strong><br>KES {{ number_format($policy->PremiumAmount, 2) }}</div>
+                Premium:</strong><br>{{ number_format($policy->PremiumAmount, 2) }}</div>
+            <div class="col-md-4"><strong>Total
+                Rider AddOns:</strong><br>{{ number_format($policy->rideraddon->AdditionalPremium ?? 0, 2) }}</div>
             <div class="col-md-4"><strong>Paid So
                 Far:</strong><br>KES {{ number_format($totalPaid, 2) }}</div>
             <div class="col-md-4"><strong>Balance:</strong><br>KES {{ number_format($balance, 2) }}</div>
@@ -45,12 +48,19 @@
                         {{ $progress }}%
                     </div>
                 </div>
-
                 <div class="row">
                     <div class="col-md-4"><strong>Installment
                             Amount:</strong><br>KES {{ number_format($policy->InstallmentAmount ?? 0, 2) }}</div>
+                    @php
+                        $nextInstallment = $installments->sortBy('NextPaymentDate')->first();
+                    @endphp
                     <div class="col-md-4"><strong>Next Due
-                            Date:</strong><br>{{ $policy->NextInstallmentDueDate ? \Carbon\Carbon::parse($policy->NextInstallmentDueDate)->format('d/m/Y') : '-' }}
+                            Date:</strong> <br>
+                            @if($nextInstallment && $nextInstallment->NextPaymentDate)
+                                {{ \Carbon\Carbon::parse($nextInstallment->NextPaymentDate)->format('d/m/Y') }}
+                            @else
+                                -
+                            @endif
                     </div>
                     <div class="col-md-4"><strong>Frequency:</strong><br>{{ $policy->paymentfrequency->Description ?? '-' }}</div>
                 </div>
@@ -84,9 +94,9 @@
                             <td>{{$loop->iteration}}</td>
                             <td>{{ \Carbon\Carbon::parse($row->PaymentDate)->format('d/m/Y') }}</td>
                             <td>KES {{ number_format($row->Amount, 2) }}</td>
-                            <td>{{ $row->PaymentMode }}</td>
-                            <td>{{ $row->Reference }}</td>
-                            <td>{{ $row->ReceiverName }}</td>
+                            <td>{{ $row->paymentModes->Description }}</td>
+                            <td>{{ $row->ReferenceNumber }}</td>
+                            <td>{{ $row->CustomerID }}</td>
                         </tr>
                     @empty
                         <tr>
