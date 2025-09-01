@@ -37,6 +37,7 @@
         "spatie/icalendar-generator": "^2.9",
         "spatie/laravel-activitylog": "^4.8",
         "spatie/laravel-permission": "^6.9",
+        "thiagoalessio/tesseract_ocr": "^2.13",
         "yajra/laravel-datatables": "^11.0",
         "yajra/laravel-datatables-html": "11.0"
     },
