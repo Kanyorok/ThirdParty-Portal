@@ -41,7 +41,10 @@ class LegalCounselController extends Controller
             'CounselName' => 'required|string|max:255',
             'FirmName' => 'required|string|max:255',
             'Email' => 'required|email|max:255',
-            'Phone' => 'required|string|max:50',
+            'Phone' => [
+                'required',
+                'regex:/^\+2547\d{8}$/', // must be +2547xxxxxxxx
+            ],
             'Role' => 'required|string|max:100',
             // 'Remarks' => 'nullable|string',
         ]);
@@ -116,7 +119,10 @@ class LegalCounselController extends Controller
             'CounselName' => 'required|string|max:255',
             'FirmName'    => 'required|string|max:255',
             'Email'       => 'required|email|max:255',
-            'Phone'       => 'required|string|max:50',
+            'Phone' => [
+                'required',
+                'regex:/^\+2547\d{8}$/', // must be +2547xxxxxxxx
+            ],
             'Role'        => 'required|string|max:100',
             'Remarks'     => 'required|string',
         ]);
@@ -155,7 +161,7 @@ class LegalCounselController extends Controller
                     ->log('Error editing legal councel: ' . $th->getMessage());
 
                 Log::error('Error editing legal councel: ' . $th->getMessage());
-                return back()->with('error', 'Error creating legal councel: ' . $th->getMessage());            
+                return back()->with('error', 'Error creating legal councel: ' . $th->getMessage());
         }
     }
 
@@ -200,7 +206,7 @@ class LegalCounselController extends Controller
                     ->causedBy(Auth::user())
                     ->withProperties(['action' => 'delete'])
                     ->log('Error deleting legal councel: ' . $th->getMessage());
-                
+
             return back()->with('error', 'Error deleting Assigned counsel');
         }
 
