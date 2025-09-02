@@ -33,7 +33,7 @@
                     <th>Fuel</th>
                     {{-- <th>Status</th> --}}
                     <th>Branch</th>
-                    <th>Active</th>
+                    <th>Status</th>
                     <th>Action</th>
                    
                 </tr>
@@ -47,8 +47,9 @@
                         <td>{{ $vehicle->model->ModelName }}</td>
                         <td>{{ $vehicle->vehicleType->Description }}</td>
                         <td>{{ $vehicle->fuelType->FuelName }}</td>
-                        <td>{{ $vehicle->status->Description }}</td>
                         <td>{{ $vehicle->branch->Name ?? '-' }}</td>
+                        <td>{{ $vehicle->status->Description }}</td>
+                        
                         {{-- <td>
                             @if ($vehicle->IsActive)
                                 <span class="badge bg-success">Yes</span>
