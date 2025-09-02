@@ -328,12 +328,11 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
 
     //Bid Submission
+    // Use resourceful routes for tender submissions. Custom manual view/edit URIs remain below.
     Route::resource('tendersubmission', TenderSubmissionController::class);
-    Route::get('bid-submissions', [TenderSubmissionController::class, 'index'])->name('tendersubmission.index'); //
-    Route::post('bid-submissions', [TenderSubmissionController::class, 'store'])->name('tendersubmission.store');
-    Route::get('/bid-submissions/create', [TenderSubmissionController::class, 'create'])->name('tendersubmission.create');
+    // Custom manual routes (unique names) - keep these if you need different URIs for manual submissions
     Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
-    Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.edit');
+    Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.manual.edit');
 
     //procurement Consolidation
     Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
@@ -488,7 +487,7 @@ Route::prefix('procurement/rfq')->group(function () {
 Route::get('procurement/rfq/criterias/setup/{rfqId}', [RFQCriteriaController::class, 'show'])->name('rfqcriterias.show');
 Route::post('procurement/rfq/criterias', [RFQCriteriaController::class, 'store'])->name('rfqcriterias.store');
 Route::get('/procurement/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
-Route::get('procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+Route::get('procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.manual.show');
 Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
 
 

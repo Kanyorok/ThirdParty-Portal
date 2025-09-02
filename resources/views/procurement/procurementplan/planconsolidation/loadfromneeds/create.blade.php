@@ -131,7 +131,7 @@
                                     <option selected disabled>Select Budget Line</option>
                                     @foreach($budgetLines as $budgetLine)
                                         <option
-                                            value="{{ $budgetLine->BudgetLineID }}">{{ $budgetLine->Description }}</option>
+                                            value="{{ $budgetLine->Id }}">{{ $budgetLine->LineName }}</option>
                                     @endforeach
                                 </select>
                             </td>

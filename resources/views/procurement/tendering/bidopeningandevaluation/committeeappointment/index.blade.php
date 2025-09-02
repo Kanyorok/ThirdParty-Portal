@@ -39,7 +39,7 @@
                     <td>{{ $item['members_count'] }}</td>
                     <td>{{ \Carbon\Carbon::parse($item['appointment_date'])->format('d/m/Y') }}</td>
                     <td>
-                        <a href="{{ route('tendercommittee.show', ['id' => $item['refId'], 'type' => $item['type']]) }}"
+                            <a href="{{ route('tendercommittee.manual.show', ['id' => $item['refId'], 'type' => $item['type']]) }}"
                            class="btn btn-sm btn-outline-info">View</a>
                     </td>
                 </tr>

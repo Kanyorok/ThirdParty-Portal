@@ -127,7 +127,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
         Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
         Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
-        Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.index');
+    Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.claims.index');
         Route::get('{id}/close', [ClaimClosureController::class, 'closeForm'])->name('closeForm');
         Route::post('{id}/close', [ClaimClosureController::class, 'storeClosure'])->name('storeClosure');
         Route::get('closed', [ClaimClosureController::class, 'closedClaimsIndex'])->name('closed');

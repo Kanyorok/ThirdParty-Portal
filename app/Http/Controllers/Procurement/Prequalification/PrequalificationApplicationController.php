@@ -12,6 +12,9 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Enums\Procurement\PrequalificationApplicationEnum;
+use App\Http\Resources\Procurement\PrequalificationRoundResource;
+use App\Http\Resources\Procurement\PrequalificationApplicationResource;
+use Illuminate\Support\Facades\Auth;
 
 class PrequalificationApplicationController extends Controller
 {
@@ -36,26 +39,29 @@ class PrequalificationApplicationController extends Controller
 
     public function apiIndex(): JsonResponse
     {
-        $vendorId = auth()->id();
-        $availableRounds = PrequalificationRound::where('Status', PrequalificationRoundEnum::Open)
+    $vendorId = Auth::id();
+        $availableRounds = PrequalificationRound::with(['sections.criteria', 'criteria.masterCriteria'])
+            ->where('Status', PrequalificationRoundEnum::Open)
             ->whereDoesntHave('applications', function ($query) use ($vendorId) {
                 $query->where('SupplierID', $vendorId);
-            })->get();
+            })
+            ->latest('StartDate')
+            ->paginate(10);
 
-        return response()->json($availableRounds);
+        return PrequalificationRoundResource::collection($availableRounds)->response();
     }
 
     public function apiShow(PrequalificationRound $round): JsonResponse
     {
-        $round->load('sections.masterSection', 'criteria.masterCriteria');
-        return response()->json($round);
+        $round->load(['sections.criteria.masterCriteria', 'applications']);
+        return (new PrequalificationRoundResource($round))->response();
     }
 
     public function store(StorePrequalificationApplicationRequest $request): JsonResponse
     {
-        if (!auth()->check()) return response()->json(['error' => 'User not authenticated'], 401);
+    if (!Auth::check()) return response()->json(['error' => 'User not authenticated'], 401);
 
-        $user = auth()->user();
+    $user = Auth::user();
         if (!$user->thirdParty) return response()->json(['error' => 'User not associated with a third party.'], 400);
 
         $validatedData = $request->validated();
@@ -88,13 +94,13 @@ class PrequalificationApplicationController extends Controller
             }
 
             DB::commit();
-            $application->load('supplier', 'round', 'categories');
+            $application->load('supplier', 'round.sections.criteria', 'categories');
 
-            return response()->json([
-                'message' => 'Application submitted successfully.',
-                'reference' => 'APP-' . $application->ApplicationID,
-                'application' => $application,
-            ], 201);
+            return (new PrequalificationApplicationResource($application))
+                ->additional([
+                    'message' => 'Application submitted successfully.',
+                    'reference' => 'APP-' . $application->ApplicationID,
+                ])->response()->setStatusCode(201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([

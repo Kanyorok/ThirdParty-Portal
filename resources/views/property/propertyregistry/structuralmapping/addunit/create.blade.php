@@ -105,7 +105,7 @@
         FloorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
 
         if (PropertyId) {
-          const url = `{{ route('getblockbyproperty', ':Id') }}`.replace(':Id', PropertyId);
+          const url = `{{ route('getblockbyproperty.unit', ':Id') }}`.replace(':Id', PropertyId);
 
           fetch(url)
             .then(response => response.json())
@@ -126,7 +126,7 @@
         FloorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
 
         if (BlockId) {
-          const url = `{{ route('getfloorbyblock', ':Id') }}`.replace(':Id', BlockId);
+          const url = `{{ route('getfloorbyblock.unit', ':Id') }}`.replace(':Id', BlockId);
 
           fetch(url)
             .then(response => response.json())
