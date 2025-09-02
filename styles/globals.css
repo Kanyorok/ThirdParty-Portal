@@ -134,6 +134,11 @@ html {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Ensure all anchor elements show pointer cursor for clarity */
+a, a:visited, a:hover, a:active {
+  cursor: pointer;
+}
+
 /* custom collapsible animations*/
 @keyframes collapsible-down {
   from {
