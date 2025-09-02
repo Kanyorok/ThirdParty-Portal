@@ -438,12 +438,12 @@ class ModuleSeeder extends Seeder
             // ['ModuleID' => 606200, 'Name' => 'Movement History', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.gps.movement_history'],
             // ['ModuleID' => 606300, 'Name' => 'GPS Integration', 'Icon' => '', 'Description' => '', 'ParentID' => 606000, 'Route' => 'fleet.telematics.index'],
 
-        
+
             // //Configuration
             // ['ModuleID' => 690000, 'Name' => 'Configuration', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             // ['ModuleID' => 691000, 'Name' => 'Alert Rules Configuration', 'Icon' => null, 'Description' => 'Set rules for service alerts and maintenance notifications', 'ParentID' => 690000, 'Route' => 'fleet.alert_rules.index'],
-           
-            
+
+
                 // //Fleet Settings
             ['ModuleID' => 680000, 'Name' => 'Fleet Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 681000, 'Name' => 'Fleet Make', 'Icon' => null, 'Description' => '', 'ParentID' => 680000, 'Route' => 'fleetmake.index'],
@@ -652,7 +652,7 @@ class ModuleSeeder extends Seeder
 //            ['ModuleID' => 1102100, 'Name' => 'Customer Master', 'Icon' => null, 'Description' => '', 'Route' => 'customermaster.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102200, 'Name' => 'Invoice Generation', 'Icon' => null, 'Description' => '', 'Route' => 'invoicegeneration.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102300, 'Name' => 'Receipts Posting', 'Icon' => null, 'Description' => '', 'Route' => 'receiptsposting.index', 'ParentID' => 1102000],
-            ['ModuleID' => 1102350, 'Name' => 'Debit Note', 'Icon' => null, 'Description' => '', 'Route' => 'creditnote.index', 'ParentID' => 1102000],
+            ['ModuleID' => 1102350, 'Name' => 'Debit Note', 'Icon' => null, 'Description' => '', 'Route' => 'debitnote.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102400, 'Name' => 'Credit Management', 'Icon' => null, 'Description' => '', 'Route' => 'creditmanagement.index', 'ParentID' => 1102000],
             ['ModuleID' => 1102500, 'Name' => 'Aging Report', 'Icon' => null, 'Description' => '', 'Route' => 'agingreportar.index', 'ParentID' => 1102000],
 //            ['ModuleID' => 1102600, 'Name' => 'Customer Statement', 'Icon' => null, 'Description' => '', 'Route' => 'customerstatement.index', 'ParentID' => 1102000],
