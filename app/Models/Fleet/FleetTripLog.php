@@ -4,6 +4,8 @@ namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetRepairLog;
+use App\Models\Fleet\FleetMaintenanceSchedule;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Support\Facades\Auth;
@@ -77,9 +79,24 @@ class FleetTripLog extends Model
     }
 
    public function employee()
-{
-    return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
-}
+        {
+            return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
+        }
+
+        public function tripLogs()
+        {
+            return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
+        }
+
+        public function maintenanceSchedules()
+        {
+            return $this->hasMany(FleetMaintenanceSchedule::class, 'VehicleID', 'Id');
+        }
+
+        public function repairLogs()
+        {
+            return $this->hasMany(FleetRepairLog::class, 'VehicleID', 'Id');
+        }
 
 
 

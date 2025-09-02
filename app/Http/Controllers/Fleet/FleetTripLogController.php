@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetTripLogRequest;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetRepairLog;
+use App\Models\Fleet\FleetMaintenanceSchedule;
 use App\Models\Fleet\FleetDriver;
 use App\Models\Core\CodeDetail;
 use Illuminate\Support\Facades\DB;
 use App\Models\Fleet\ContractedDriver;
 use App\Services\FleetManagement\FleetTripLogService;
+
 
 class FleetTripLogController extends Controller
 {
@@ -104,4 +107,57 @@ class FleetTripLogController extends Controller
 
         return redirect()->route('fleet.trip_logs.index')->with('success', 'Trip deleted successfully.');
     }
+
+   public function getAvailableVehicles()
+{
+    $startDate = request('start_date');
+    $endDate   = request('end_date');
+
+    if (!$startDate || !$endDate) {
+        return response()->json([]);
+    }
+
+    $availableVehicles = FleetVehicle::where('IsActive', 1)
+        ->whereDoesntHave('tripLogs', function ($q) use ($startDate, $endDate) {
+            $q->where(function ($q2) use ($startDate, $endDate) {
+                $q2->where('TripStartDate', '<', $endDate)
+                   ->where('TripEndDate', '>', $startDate);
+            });
+        })
+        ->whereDoesntHave('maintenanceSchedules', function ($q) use ($startDate, $endDate) {
+            $q->where('Status', '!=', 0)
+              ->where('ScheduledDate', '<=', $endDate)
+              ->where('ScheduledDate', '>=', $startDate);
+        })
+        ->whereDoesntHave('repairLogs', function ($q) use ($startDate, $endDate) {
+            $q->where('RepairDate', '<=', $endDate)
+              ->where('RepairDate', '>=', $startDate);
+        })
+        ->get();
+
+    return response()->json($availableVehicles);
+}
+
+
+public function getAvailablePermanentDrivers()
+{
+    $startDate = request('start_date');
+    $endDate = request('end_date');
+
+    if (!$startDate || !$endDate) {
+        return response()->json([]);
+    }
+
+    $availableDrivers = FleetDriver::where('IsActive', 1)
+        ->whereDoesntHave('tripLogs', function ($q) use ($startDate, $endDate) {
+            $q->where(function ($q2) use ($startDate, $endDate) {
+                $q2->where('TripStartDate', '<', $endDate)
+                   ->where('TripEndDate', '>', $startDate);
+            });
+        })
+        ->get();
+
+    return response()->json($availableDrivers);
+}
+
 }
