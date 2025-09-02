@@ -25,7 +25,6 @@
                     <th>Additional Premium</th>
                     <th>Optional?</th>
                     <th>Status</th>
-                    <th>Created</th>
                     <th>Action</th>
                 </tr>
                 </thead>
@@ -48,7 +47,6 @@
                             {{ $rider->IsActive ? 'Active' : 'Inactive' }}
                         </span>
                     </td>
-                    <td>{{ \Carbon\Carbon::parse($rider->CreatedAt)->format('d/m/Y') }}</td>
                     <td>
                      <a href="{{ route('bancassurance.riders.edit', $rider->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('bancassurance.riders.destroy', $rider->Id) }}" method="POST" class="d-inline">

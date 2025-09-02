@@ -24,14 +24,14 @@ class PropertyNewTenantController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyNewTenant::class);
+      //  $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyNewTenant::class);
         $tenantTypes = CodeDetail::where('CodeID', 'TenantType')->get();
         return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes'));
     }
 
     public function edit($id)
     {
-        $this->authorize(PermissionEnum::TenantMentenanceUpdate, PropertyNewTenant::class);
+      //  $this->authorize(PermissionEnum::TenantMentenanceUpdate, PropertyNewTenant::class);
 
         $newtenant = PropertyNewTenant::findOrFail($id);
         $tenantTypes = CodeDetail::where('CodeID', 'TenantType')->get();
@@ -41,14 +41,14 @@ class PropertyNewTenantController extends Controller
 
     public function show($id)
     {
-        $this->authorize(PermissionEnum::TenantMentenanceView, PropertyNewTenant::class);
+       // $this->authorize(PermissionEnum::TenantMentenanceView, PropertyNewTenant::class);
         $newtenant = PropertyNewTenant::findOrFail($id);
         return view('property.tenantmanagement.tenantmaintenance.show', compact('newtenant'));
     }
 
     public function store(PropertyNewTenantRequest $request)
     {
-        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyNewTenant::class);
+      //  $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyNewTenant::class);
 
         $data = $request->validated();
 
@@ -75,7 +75,7 @@ class PropertyNewTenantController extends Controller
 
     public function update(PropertyNewTenantRequest $request, $id)
     {
-        $this->authorize(PermissionEnum::TenantMentenanceUpdate, PropertyNewTenant::class);
+      //  $this->authorize(PermissionEnum::TenantMentenanceUpdate, PropertyNewTenant::class);
         $data = $request->validated();
 
         $newtenant = PropertyNewTenant::findOrFail($id);

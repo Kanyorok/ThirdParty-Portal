@@ -3,8 +3,6 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="fw-bold mb-3">Edit Maintenance Work Completion</h4>
-
     <form action="{{ route('workcompletion.update', $workCompletion->Id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
@@ -44,35 +42,24 @@
                     </div>
                 </div>
 
-                {{-- Completion Date --}}
+                {{-- Parts, Cost, Final Status --}}
                 <div class="row g-3 mb-3">
-                    <div class="col-md-4">
+                <div class="col-md-3">
                         <label class="form-label">Completion Date</label>
                         <input type="date" class="form-control" name="CompletionDate" value="{{ old('CompletionDate', $workCompletion->CompletionDate) }}" required>
                         @error('CompletionDate') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
-                </div>
-
-                {{-- Work Summary --}}
-                <div class="mb-3">
-                    <label class="form-label">Work Done Summary</label>
-                    <textarea class="form-control" rows="3" name="WorkDoneSummary" required>{{ old('WorkDoneSummary', $workCompletion->WorkDoneSummary) }}</textarea>
-                    @error('WorkDoneSummary') <small class="text-danger">{{ $message }}</small> @enderror
-                </div>
-
-                {{-- Parts, Cost, Final Status --}}
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Parts Used (Optional)</label>
                         <input type="text" class="form-control" name="PartsUsed" value="{{ old('PartsUsed', $workCompletion->PartsUsed) }}">
                         @error('PartsUsed') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Cost (KES)</label>
+                    <div class="col-md-3">
+                        <label class="form-label">Cost</label>
                         <input type="number" class="form-control" name="Cost" value="{{ old('Cost', $workCompletion->Cost) }}">
                         @error('Cost') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Final Status</label>
                         <select class="form-select" name="FinalStatus" required>
                             <option value="">--Select a status--</option>
@@ -85,6 +72,7 @@
                         @error('FinalStatus') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
                 </div>
+                </div>
 
                 {{-- File Upload --}}
                 <div class="mb-3">
@@ -92,7 +80,12 @@
                     <input type="file" class="form-control" name="Document">
                     @error('Document') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
-
+                {{-- Work Summary --}}
+                <div class="mb-3">
+                    <label class="form-label">Work Done Summary</label>
+                    <textarea class="form-control" rows="3" name="WorkDoneSummary" required>{{ old('WorkDoneSummary', $workCompletion->WorkDoneSummary) }}</textarea>
+                    @error('WorkDoneSummary') <small class="text-danger">{{ $message }}</small> @enderror
+                </div>
                 {{-- Submit --}}
                 <div class="text-end">
                     <button class="btn btn-primary" type="submit">Update Completion</button>

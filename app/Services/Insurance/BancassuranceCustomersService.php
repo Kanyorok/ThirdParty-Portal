@@ -19,7 +19,7 @@ class BancassuranceCustomersService
     }
 
     public static function create(
-        BancAssuranceReferral $ReferralID,
+        ?BancAssuranceReferral $ReferralID = null,
         string                $FullName,
         string                $NationalID,
         string                $KRAPIN,
@@ -34,7 +34,7 @@ class BancassuranceCustomersService
     ): self
     {
         $customer = BancassuranceCustomer::create([
-            'ReferralID' => $ReferralID->Id,
+            'ReferralID' => $ReferralID->Id ?? null,
             'FullName' => $FullName,
             'NationalID' => $NationalID,
             'KRAPIN' => $KRAPIN,

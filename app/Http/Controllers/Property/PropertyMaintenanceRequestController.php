@@ -26,14 +26,14 @@ class PropertyMaintenanceRequestController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
+        //$this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
         $properties = PropertyRegistry::all();
         $issuetypes = CodeDetail::where('CodeID', 'IssueType')->get();
         $priorities = CodeDetail::where('CodeID', 'PriorityLevel')->get();
         return view('property.maintenanceandissues.maintenancerequest.create', compact('properties','issuetypes','priorities'));
     }
         public function show($Id){
-        $this->authorize(PermissionEnum::PropertyMaintenanceRequestView, PropertyMaintenanceRequest::class);
+       // $this->authorize(PermissionEnum::PropertyMaintenanceRequestView, PropertyMaintenanceRequest::class);
         $maintenancerequest = PropertyMaintenanceRequest::with('issueType','priority')->get()->find($Id);
         return view('property.maintenanceandissues.maintenancerequest.show',compact('maintenancerequest'));
     }
@@ -57,14 +57,14 @@ class PropertyMaintenanceRequestController extends Controller
 
     public function store(MaintenanceRequest $request)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceRequestCreate, PropertyMaintenanceRequest::class);
+       // $this->authorize(PermissionEnum::PropertyMaintenanceRequestCreate, PropertyMaintenanceRequest::class);
         //dd($request->all());
         $validated = $request->validated();
 
         $Property = PropertyRegistry::findOrFail($validated['Property']);
-        $Block    = PropertyBlock::findOrFail($validated['Block']);
-        $Floor    = PropertyFloor::findOrFail($validated['Floor']);
-        $Unit     = PropertyUnit::findOrFail($validated['Unit']);
+        $Block    = !empty($validated['Block']) ? PropertyBlock::find($validated['Block']) : null;
+        $Floor    = !empty($validated['Floor']) ? PropertyFloor::find($validated['Floor']) : null;
+        $Unit     = !empty($validated['Unit']) ? PropertyUnit::find($validated['Unit']) : null;
         $IssueType = CodeDetail::findOrFail($validated['IssueType']);
         $Priority  = CodeDetail::findOrFail($validated['Priority']);
         $document = $request->file('Document');
@@ -78,7 +78,7 @@ class PropertyMaintenanceRequestController extends Controller
                     $IssueType,
                     $Priority,
                     $validated['IssueDescription']?? '--',
-            Auth::user(),
+                    Auth::user(),
                     $document
         );
 
@@ -87,7 +87,7 @@ class PropertyMaintenanceRequestController extends Controller
     }
     public function edit($Id)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
+      //  $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
         $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
         $properties = PropertyRegistry::all();
         $issuetypes = CodeDetail::where('CodeID', 'IssueType')->get();
@@ -97,7 +97,7 @@ class PropertyMaintenanceRequestController extends Controller
 
     public function update(MaintenanceRequest $request, $Id)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
+      //  $this->authorize(PermissionEnum::PropertyMaintenanceRequestUpdate, PropertyMaintenanceRequest::class);
         // Validate the request data
         $validated = $request->validated();
         DB::beginTransaction();
@@ -106,9 +106,9 @@ class PropertyMaintenanceRequestController extends Controller
 
             $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
             $Property = PropertyRegistry::findOrFail($validated['Property']);
-            $Block    = PropertyBlock::findOrFail($validated['Block']);
-            $Floor    = PropertyFloor::findOrFail($validated['Floor']);
-            $Unit     = PropertyUnit::findOrFail($validated['Unit']);
+            $Block    = !empty($validated['Block']) ? PropertyBlock::find($validated['Block']) : null;
+            $Floor    = !empty($validated['Floor']) ? PropertyFloor::find($validated['Floor']) : null;
+            $Unit     = !empty($validated['Unit']) ? PropertyUnit::find($validated['Unit']) : null;
             $IssueType = CodeDetail::findOrFail($validated['IssueType']);
             $Priority  = CodeDetail::findOrFail($validated['Priority']);
             $document = $request->file('Document');
@@ -146,7 +146,7 @@ class PropertyMaintenanceRequestController extends Controller
 
     public function destroy($Id)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceRequestDelete, PropertyMaintenanceRequest::class);
+       // $this->authorize(PermissionEnum::PropertyMaintenanceRequestDelete, PropertyMaintenanceRequest::class);
         try {
             $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
             $maintenancerequest->delete();
