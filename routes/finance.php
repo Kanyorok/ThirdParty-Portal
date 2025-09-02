@@ -14,6 +14,7 @@ use App\Http\Controllers\Finance\COASegmentController;
 use App\Http\Controllers\Finance\ConsolidationReportsController;
 use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditNoteController;
+use App\Http\Controllers\Finance\DebitNoteController;
 use App\Http\Controllers\Finance\CustomerMasterController;
 use App\Http\Controllers\Finance\CustomerStatementController;
 use App\Http\Controllers\Finance\FinanceTaxTypeController;
@@ -64,6 +65,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('customermaster', CustomerMasterController::class);
     Route::resource('invoicegeneration', InvoiceGenerationController::class);
     Route::resource('creditnote', CreditNoteController::class);
+    Route::resource('debitnote', DebitNoteController::class);
     Route::resource('paymentprocessing', PaymentProcessingController::class);
     Route::resource('agingreport', AgingReportController::class);
     Route::resource('receiptsposting', ReceiptsPostingController::class);
