@@ -26,8 +26,8 @@ class InsuranceProductRiderRequest extends FormRequest
             'Product'=>'required|exists:t_InsuranceProducts,Id',
             'RiderName' => 'required|string|max:100',
             'Description' => 'nullable|string|max:255',
-            'AdditionalPremium' => 'nullable|numeric|min:0',
-            'IsOptional' => 'required|boolean',
+            'AdditionalPremium' => 'required|numeric|min:0',
+            'IsOptional' => 'nullable|boolean',
             'IsActive' => 'nullable|boolean',
         ];
     }

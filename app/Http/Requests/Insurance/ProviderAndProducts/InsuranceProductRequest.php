@@ -25,7 +25,7 @@ class InsuranceProductRequest extends FormRequest
             'InsuranceProviderID' => 'required|exists:t_InsuranceProviders,Id',
             'Name' => 'required|string|max:50',
             'Type' => 'required|string|max:100',
-            'Description' => 'required|string|max:100',
+            'Description' => 'nullable|string|max:100',
             'IsActive' => 'nullable|boolean',
         ];
     }

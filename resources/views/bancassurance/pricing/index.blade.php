@@ -32,8 +32,8 @@
                 @foreach($rules as $rule)
                 <tr>
                     <td>{{ $rule->Id }}</td>
-                    <td>{{ $rule->provider->Name}}</td>
-                    <td>{{ $rule->product->Name }}</td>
+                    <td>{{ $rule->provider->Name ?? '-'}}</td>
+                    <td>{{ $rule->product->Name ?? '-'}}</td>
                     <td>
                        {{ number_format($rule->CoverageAmountMax, 2) }} -
                         {{ number_format($rule->CoverageAmountMin, 2) }}

@@ -256,7 +256,7 @@ class LegalCaseController extends Controller
 
         try{
             DB::beginTransaction();
-        
+
         LegalCase::create([
             'CaseTitle' => $validated['CaseTitle'],
             'CaseNumber' => $validated['CaseNumber'],
@@ -302,7 +302,9 @@ class LegalCaseController extends Controller
             ->where('CodeID', 'CaseTypes')
             ->get();
 
-        return view('legal.disputes.edit', compact('case', 'caseTypes'));
+        $caseStatus=CodeDetail::select('CodeID', 'Value', 'Description')->where('CodeID','LegalCaseStatus')->get();
+
+        return view('legal.disputes.edit', compact('case', 'caseTypes','caseStatus'));
     }
 
     public function update(Request $request, $id)
@@ -391,11 +393,11 @@ class LegalCaseController extends Controller
         $outcome = LegalCaseOutcome::where('LegalCaseID', $caseId)
             ->update(['DeletedBy' => Auth::id()]);
         $outcome = LegalCaseOutcome::where('LegalCaseID', $caseId)->delete();
-        
+
         $case = LegalCase::where('Id', $caseId)
             ->update(['DeletedBy' => Auth::id()]);
         $case = LegalCase::where('Id', $caseId)->delete();
-            
+
         activity()
             ->performedOn(new LegalCase())
             ->causedBy(Auth::user())

@@ -3,7 +3,6 @@
 namespace App\Models\Insurance;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
 use App\Models\HRM\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -56,5 +55,17 @@ class BancAssuranceReferral extends Model
         return $this->belongsTo(employee::class, 'ReferredBy', 'Id');
     }
 
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
 
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+    public function employee()
+    {
+        return $this->belongsTo(user::class, 'ReferredBy', 'Id');
+    }
 }

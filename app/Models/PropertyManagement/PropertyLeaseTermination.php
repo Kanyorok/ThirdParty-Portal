@@ -7,6 +7,8 @@ use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
+
 
 class PropertyLeaseTermination extends Model
 {
@@ -42,4 +44,13 @@ class PropertyLeaseTermination extends Model
         return $this->belongsTo(CodeDetail::class, 'TerminationReason', 'ID');
     }
 
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
+    }
 }

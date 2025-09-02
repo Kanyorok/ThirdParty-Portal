@@ -18,7 +18,18 @@
                 <div class="text-md-end">
                     <span class="badge rounded-pill text-bg-info px-3 py-2">{{ $invoice->source->Name ?? '—' }}</span>
                     <span class="badge rounded-pill text-bg-secondary px-3 py-2">{{ $invoice->currency->Code ?? '' }}</span>
-                    <span class="badge rounded-pill text-bg-warning px-3 py-2">{{ ucfirst($invoice->Status) }}</span>
+                    @php
+                        $statusClasses = [
+                            'draft'    => 'text-bg-secondary',
+                            'rejected' => 'text-bg-danger',
+                            'posted'   => 'text-bg-success',
+                        ];
+                        $status = strtolower($invoice->ApprovalStatus);
+                    @endphp
+
+                    <span class="badge rounded-pill {{ $statusClasses[$status] ?? 'text-bg-secondary' }} px-3 py-2">
+                        {{ ucfirst($status) }}
+                    </span>
                     <div class="mt-1 h5 mb-0 fw-semibold">Invoice: <span class="text-nowrap">{{ $invoice->InvoiceNumber }}</span></div>
                     <div class="small text-muted">
                         Issue: <strong>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') }}</strong> •
@@ -32,7 +43,7 @@
         <div class="p-3 p-md-4">
             <div class="row g-3">
                 <!-- Bill To -->
-                <div class="col-lg-5">
+                <div class="col-lg-4">
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">Bill To</h6>
@@ -64,7 +75,7 @@
                 </div>
 
                 <!-- Summary -->
-                <div class="col-lg-3">
+                <div class="col-lg-4">
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">Summary</h6>
@@ -81,12 +92,14 @@
                                 </tbody>
                             </table>
                             <div class="mt-3 d-grid gap-2">
-                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal">
-                                    <i class="fas fa-thumbs-up me-1"></i> Generate / Approve
-                                </button>
-                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                    <i class="fas fa-thumbs-down me-1"></i> Reject
-                                </button>
+                                @if($invoice->ApprovalStatus==='draft')
+                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal">
+                                        <i class="fas fa-thumbs-up me-1"></i> Generate / Approve
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                                        <i class="fas fa-thumbs-down me-1"></i> Reject
+                                    </button>
+                                @endif
                                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
                                     <i class="fas fa-print me-1"></i> Print
                                 </button>
@@ -200,14 +213,16 @@
                     <h5 class="modal-title">Generate/Approve {{ $invoice->InvoiceNumber }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form>
+                <form action="{{ route('ar.invoice.approve', $invoice->Id ?? $invoice->id) }}" method="POST" id="approveForm">
+                    @csrf
+                    @method('POST')
                     <div class="modal-body">
                         <div class="alert alert-info small">
                             You’re about to approve this invoice. Amount: {{ $invoice->currency->Symbol }} {{ number_format($invoice->TotalAmount,2) }}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Approval Note <span class="text-danger">*</span></label>
-                            <textarea class="form-control" rows="3" required></textarea>
+                            <textarea class="form-control" name="Reason" rows="3" required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -227,7 +242,9 @@
                     <h5 class="modal-title">Reject {{ $invoice->InvoiceNumber }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form>
+                <form action="{{ route('ar.invoice.reject', $invoice->Id ?? $invoice->id) }}" method="POST" id="approveForm">
+                    @csrf
+                    @method('POST')
                     <div class="modal-body">
                         <div class="alert alert-warning small">
                             You’re about to reject this invoice. Amount: {{ $invoice->currency->Symbol }} {{ number_format($invoice->TotalAmount,2) }}

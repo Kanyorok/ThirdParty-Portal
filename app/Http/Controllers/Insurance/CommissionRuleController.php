@@ -32,8 +32,8 @@ public function store(CommissionRuleRequest $request)
     $validated = $request->validated();
 
         $ProductId = InsuranceProduct::findOrFail($validated['ProductId']);
-        $PolicyTypeId = CodeDetail::findOrFail($validated['PolicyTypeId']);
-        $AppliesTo = CodeDetail::findOrFail($validated['AppliesTo']);
+        $PolicyTypeId = CodeDetail::findOrFail($validated['PolicyTypeId']) ?? null;
+        $AppliesTo = CodeDetail::findOrFail($validated['AppliesTo']) ?? null;
 
         $rule = CommissionRuleService::create(
                 $validated['RuleName'],
@@ -42,7 +42,7 @@ public function store(CommissionRuleRequest $request)
                 $validated['CommissionRate'],
                 $validated['FixedAmount'],
                 $AppliesTo,
-                $validated['IsActive'],
+                $validated['IsActive'] ?? '',
                 Auth::user(),
             );
 
@@ -82,7 +82,7 @@ public function edit($id)
                 'CommissionRate' => $validated['CommissionRate'],
                 'FixedAmount' => $validated['FixedAmount'],
                 'AppliesTo' => $validated['AppliesTo'],
-                'IsActive' => $validated['IsActive'],
+                'IsActive' => $validated['IsActive'] ?? '',
                 'ModifiedBy' => Auth::id(),
             ]);
 

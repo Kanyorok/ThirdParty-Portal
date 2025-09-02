@@ -22,13 +22,14 @@ class BancassuranceReferralController extends Controller
 public function index()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])->get();
+    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])
+    ->orderByDesc('Id')->get();
 
     return view('bancassurance.referrals.index', compact('referrals'));
 }
 public function create()
 {
-    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+    //$this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
     $insurers = InsuranceProvider::all();
     $users = User::with('employee')->get();
     return view('bancassurance.referrals.create', compact('users', 'insurers'));
@@ -44,7 +45,7 @@ public function getProductsByInsurer($insurerId)
 
 public function store(BancAssuranceReferralRequest $request)
 {
-    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
+//$this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
     $user = auth()->user();
     $validated = $request->validated();
 
@@ -142,8 +143,7 @@ public function update(BancAssuranceReferralRequest $request, $Id)
 public function show($Id)
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referral = BancAssuranceReferral::findOrFail($Id);
-
+    $referral = BancAssuranceReferral::with('employee')->findOrFail($Id);
     return view('bancassurance.referrals.show', compact('referral'));
 }
 
@@ -153,7 +153,7 @@ public function assignList()
     $referrals = BancAssuranceReferral::with('insuranceProduct')
         ->whereNull('AssignedTo')
         ->where('Status',InsuranceReferralStatus::Pending->value) // Assuming 'P' stands for 'Pending'
-        ->get();
+        ->orderByDesc('Id')->get();
 
         $employees = Employee::whereNull('DeletedOn')
             ->select('Id', 'FirstName', 'LastName')

@@ -28,14 +28,14 @@
             @forelse ($claims as $claim)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $claim->policy->PolicyNumber }}</td>
-                <td>{{ $claim->claimtype->Description }}</td>
-                <td>{{ $claim->ClaimReason }}</td>
+                <td>{{ $claim->policy->PolicyNumber ?? '-'}}</td>
+                <td>{{ $claim->claimtype->Description ?? '-'}}</td>
+                <td>{{ $claim->ClaimReason ?? '-'}}</td>
                 <td>{{ number_format($claim->ClaimAmount, 2) }}</td>
                 <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d/m/Y') }}</td>
                 <td>
                     <span class="#">
-                        {{ $claim->status->Description}}
+                        {{ $claim->status->Description ?? '-'}}
                     </span>
                 </td>
                 <td><a href="{{ route('bancassurance.claims.assessForm', $claim->Id) }}" class="btn btn-sm btn-outline-info">Assess</a></td>

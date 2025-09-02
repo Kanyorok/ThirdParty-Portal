@@ -14,49 +14,50 @@
 
             {{-- Left Side Panel: Driver Details --}}
             <div class="col-md-4">
-                <div class="card h-100 p-3 shadow rounded-4">
-                    <h5 class="card-title fw-bold">{{ $driver->FullName }} Details</h5>
-                    <hr>
+    <div class="card h-100 shadow rounded-4">
+        <div class="card-body p-3">
+            <h5 class="card-title fw-bold mb-3">{{ $driver->FullName }} Details</h5>
+            <hr>
 
-                <div class="row g-2">
-                    <div class="col-md-12">
-                        <strong>Driver No:</strong>
-                        <p class="text-muted">{{ $driver->DriverNo }}</p>
-                    </div>
-                    <div class="col-md-12">
-                        <strong>Full Name:</strong>
-                        <p class="text-muted">{{ $driver->FullName }}</p>
-                    </div>
-                    <div class="col-md-12">
-                        <strong>National ID:</strong>
-                        <p class="text-muted">{{ $driver->NationalID }}</p>
-                    </div>
-                    <div class="col-md-12">
-                        <strong>Phone:</strong>
-                        <p class="text-muted">{{ $driver->Phone }}</p>
-                    </div>
+            <dl class="row g-2">
+                <dt class="col-md-5">Driver No:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->DriverNo }}</dd>
 
-                    <div class="col-md-12">
-                        <strong>Employment Type:</strong>
-                        <p class="text-muted">{{ $driver->employmentType->Description }}</p>
-                    </div>
+                <dt class="col-md-5">Full Name:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->FullName }}</dd>
 
-                    <div class="col-md-12">
-                        <strong>Active:</strong>
-                        <p class="text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</p>
-                    </div>
-                    <div class="col-md-12">
-                        <strong>Notes:</strong>
-                        <p class="text-muted">{{ $driver->Notes ?: '—' }}</p>
-                    </div>
-                </div>
-                <hr>
-                <div class="d-flex justify-content-between mt-auto">
-                    <a href="{{ route('fleet.contracted_drivers.edit', $driver->Id) }}" class="btn btn-warning me-2">✏️ Edit Details</a>
-                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDriverModal">🗑️ Delete Driver</button>
-                </div>
-            </div>
+                <dt class="col-md-5">National ID:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->NationalID }}</dd>
+
+                <dt class="col-md-5">Phone:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->Phone }}</dd>
+
+                <dt class="col-md-5">Employment Type:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->employmentType->Description }}</dd>
+
+                <dt class="col-md-5">Active:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</dd>
+
+                <dt class="col-md-5">Notes:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->Notes ?: '—' }}</dd>
+            </dl>
         </div>
+
+        <div class="card-footer bg-light">
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+            @forelse($driver->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
+        </div>
+
+        <div class="card-footer d-flex justify-content-between">
+            <a href="{{ route('fleet.drivers.edit', $driver->Id) }}" class="btn btn-warning">✏️ Edit</a>
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDriverModal">🗑️ Delete</button>
+        </div>
+    </div>
+</div>
 
         {{-- Right Side Panel: Tabs for Licenses, Assignments, and Trips --}}
         <div class="col-md-8">
@@ -445,6 +446,7 @@
 @endsection
 
 @section('scripts')
+ @include('snippets.actions.preview-files')
     <script>
         let storeLicenseUrl = "{{ route('fleet.licenses.store') }}";
         let updateLicenseUrl = "{{ url('fleet/driver-licenses') }}/";

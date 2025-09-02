@@ -3,9 +3,11 @@
 namespace App\Models\PropertyManagement;
 
 use App\Models\Core\CodeDetail;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
 
 class PropertyReceipt extends Model
 {
@@ -46,6 +48,10 @@ class PropertyReceipt extends Model
     {
         return $this->belongsTo(PropertyInvoice::class, 'InvoiceID', 'Id');
     }
+    public function tenant()
+    {
+        return $this->belongsTo(PropertyNewTenant::class, 'TenantId', 'Id');
+    }
     public function paymentmethod()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentMethod', 'ID');
@@ -58,5 +64,15 @@ class PropertyReceipt extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentMethod', 'ID');
     }
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+
 
 }

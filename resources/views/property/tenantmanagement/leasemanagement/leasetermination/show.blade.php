@@ -4,57 +4,74 @@
 @section('title', 'Lease Termination Details')
 
 @section('content')
-    <div class="container mt-5" style="max-width: 800px;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold">Lease Termination Details</h3>
-            <a href="{{ route('terminatelease.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
-        </div>
+<div class="container mt-4" style="max-width: 1000px;">
+    <h4 class="mb-3">📄 Lease Termination Details</h4>
 
-        <form>
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label">Lease Number</label>
-                        <input type="text" class="form-control"
-                               value="{{ $leasetermination->lease->LeaseNumber ?? '-' }}" readonly>
-                    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
 
-                    <div class="mb-3">
-                        <label class="form-label">Termination Date</label>
-                        <input type="text" class="form-control"
-                               value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}"
-                               readonly>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Termination Reason</label>
-                        <input type="text" class="form-control"
-                               value="{{ $leasetermination->code->Description ?? '-' }}" readonly>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Remarks</label>
-                        <textarea class="form-control" rows="3"
-                                  readonly>{{ $leasetermination->Remarks ?? '—' }}</textarea>
-                    </div>
-
-                    @if($leasetermination->ClearanceDocument)
-                        <div class="mb-3">
-                            <label class="form-label">Clearance Document</label>
-                            <div>
-                                <a href="{{ asset('storage/' . $leasetermination->ClearanceDocument) }}" target="_blank"
-                                   class="btn btn-outline-info btn-sm">
-                                    View Uploaded Document
-                                </a>
-                            </div>
-                        </div>
-                    @endif
+                <div class="col">
+                    <strong>Lease Number</strong>
+                    <p class="mb-1">{{ $leasetermination->lease->LeaseNumber ?? '-' }}</p>
                 </div>
 
-                <div class="card-footer bg-light d-flex justify-content-end">
-                    <a href="{{ route('terminatelease.index') }}" class="btn btn-outline-secondary">Back</a>
+                <div class="col">
+                    <strong>Termination Date</strong>
+                    <p class="mb-1">{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Termination Reason</strong>
+                    <p class="mb-1">{{ $leasetermination->code->Description ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Remarks</strong>
+                    <p class="mb-1">{{ $leasetermination->Remarks ?? '—' }}</p>
+                </div>
+
+                @if($leasetermination->ClearanceDocument)
+                <div class="col">
+                    <strong>Clearance Document</strong>
+                    <p class="mb-1">
+                        <a href="{{ asset('storage/' . $leasetermination->ClearanceDocument) }}" target="_blank" class="btn btn-outline-info btn-sm">
+                            View Uploaded Document
+                        </a>
+                    </p>
+                </div>
+                @endif
+            </div>
+
+            <hr class="my-3">
+
+            <h6 class="mb-2">Audit Information</h6>
+            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
+                <div class="col">
+                    <strong>Created By</strong>
+                    <p class="mb-1">{{ $leasetermination->createdByUser->Name ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Created On</strong>
+                    <p class="mb-1">{{ $leasetermination->CreatedOn ? Carbon::parse($leasetermination->CreatedOn)->format('d M Y H:i') : '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Modified By</strong>
+                    <p class="mb-1">{{ $leasetermination->modifiedByUser->Name ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Modified On</strong>
+                    <p class="mb-1">{{ $leasetermination->ModifiedOn ? Carbon::parse($leasetermination->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
                 </div>
             </div>
-        </form>
+        </div>
+
+        <div class="card-footer text-end py-2">
+            <a href="{{ route('terminatelease.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
+        </div>
     </div>
+</div>
 @endsection

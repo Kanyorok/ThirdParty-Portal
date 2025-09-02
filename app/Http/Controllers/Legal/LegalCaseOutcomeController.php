@@ -172,7 +172,7 @@ class LegalCaseOutcomeController extends Controller
             $outcome->DeletedBy = Auth::id();
             $outcome->save();
             $outcome->delete();
-            
+
             activity()
                 ->performedOn(new LegalCaseOutcome())
                 ->causedBy(Auth::user())

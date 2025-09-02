@@ -183,6 +183,10 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
 
     Route::post('/finance/voucher/{id}/post', [PaymentProcessingController::class, 'postVoucher'])->name('voucher.post');
 
+    Route::post('/finance/ar/invoices/{id}/approve', [InvoiceGenerationController::class, 'approve'])->name('ar.invoice.approve');
+    Route::post('/finance/ar/invoices/{id}/reject', [InvoiceGenerationController::class, 'reject'])->name('ar.invoice.reject');
+
+
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
         Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
             'index' => 'finance-reports.index',

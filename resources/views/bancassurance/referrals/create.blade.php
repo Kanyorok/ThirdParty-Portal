@@ -9,6 +9,7 @@
             <div class="card-body">
                 {{-- Client Info --}}
                 <h6 class="mb-3 text-secondary">Client Information</h6>
+                <hr class="text-muted">
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Client Name <span class="text-danger">*</span></label>
@@ -34,6 +35,7 @@
 
                 {{-- Insurance Details --}}
                 <h6 class="mb-3 text-secondary">Insurance Details</h6>
+                <hr class="text-muted">
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Preferred Insurer <span class="text-danger">*</span></label>
@@ -57,6 +59,7 @@
 
                 {{-- Referral & Assignment --}}
                 <h6 class="mb-3 text-secondary">Referral & Assignment</h6>
+                <hr class="text-muted">
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <label class="form-label">Referral Date</label>

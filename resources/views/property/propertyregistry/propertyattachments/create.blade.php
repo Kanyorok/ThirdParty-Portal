@@ -1,9 +1,7 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Add Property Attachment')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📂 Add Property Attachment</h4>
-
     <form action="{{ route('attachments.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
   <div class="card shadow">
