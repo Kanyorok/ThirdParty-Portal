@@ -21,14 +21,10 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $policy->PolicyNumber }}</td>
-                    <td>{{ $policy->CustomerName }}</td>
+                    <td>{{ $policy->customer->FullName }}</td>
                     <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
-                    <td>{{ $policy->Status }}</td>
-                    <td>
-                        <a href="{{ route('bancassurance.policies.renewalForm', $policy->Id) }}"
-                           class="btn btn-sm btn-outline-primary"> Renew
-                        </a>
-                    </td>
+                    <td>{{ $policy->Status->label() }}</td>
+                    <td><a href="{{ route('bancassurance.policies.renewalForm', $policy->Id) }}" class="btn btn-sm btn-outline-primary">Renew</a></td>
                 </tr>
             @empty
                 <tr>

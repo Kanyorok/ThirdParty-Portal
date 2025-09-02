@@ -6,7 +6,7 @@
 
 @section('content')
     <div class="container mt-4">
-        <h4 class="mb-3">📊 Staff & Branch Referral Performance</h4>
+        <h4 class="mb-3">Staff & Branch Referral Performance</h4>
         <table class="table table-bordered" id="performanceTable">
             <thead>
             <tr>

@@ -19,10 +19,10 @@ class InsuranceProductRiderService
         InsuranceProvider $InsuranceProviderId,
         InsuranceProduct $Product,
         string $RiderName,
-        string $Description,  
+        ?string $Description = null,  
         float  $AdditionalPremium,    
-        bool $IsOptional,
-        bool $IsActive,
+        ?bool $IsOptional = null,
+        ?bool $IsActive = null,
         User   $user
     ) : self {
          
@@ -30,10 +30,10 @@ class InsuranceProductRiderService
         'InsuranceProviderId' => $InsuranceProviderId->Id,
         'Product'=> $Product->Id,
         'RiderName' => $RiderName,
-        'Description' => $Description,
+        'Description' => $Description ?? null,
         'AdditionalPremium' => $AdditionalPremium,        
-        'IsOptional' => $IsOptional ? 1 : 0,
-        'IsActive' => $IsActive ? 1 : 0,
+        'IsOptional' => $IsOptional ? 1 : 0 ?? null,
+        'IsActive' => $IsActive ? 1 : 0 ?? null,
         'CreatedBy' => $user->Id,
         'ModifiedBy' => $user->Id,
         ]);

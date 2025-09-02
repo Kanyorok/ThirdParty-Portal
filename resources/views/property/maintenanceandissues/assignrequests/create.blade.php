@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('title', 'Assign Maintenance Task')
-
 @section('content')
 <div class="container mt-4">
     <h4 class="fw-bold mb-3">Assign Technician / Vendor</h4>
@@ -22,9 +21,9 @@
                                 <option
                                     value="{{ $maintenancerequest->Id }}"
                                     data-property="{{ $maintenancerequest->property->PropertyName ??'_' }}"
-                                    data-block="{{ $maintenancerequest->block->BlockName }}"
-                                    data-floor="{{ $maintenancerequest->floor->FloorLabel }}"
-                                    data-unit="{{ $maintenancerequest->unit->UnitCode }}"
+                                    data-block="{{ $maintenancerequest->block->BlockName ?? '' }}"
+                                    data-floor="{{ $maintenancerequest->floor->FloorLabel ?? '' }}"
+                                    data-unit="{{ $maintenancerequest->unit->UnitCode ?? ''}}"
                                     data-description="{{ $maintenancerequest->IssueDescription }}">
                                     {{ $maintenancerequest->RequestNumber }} 
                                 </option>

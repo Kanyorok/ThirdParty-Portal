@@ -38,9 +38,6 @@ class CustomerBeneficiaryController extends Controller
         $CustomerID = BancassuranceCustomer::findOrFail($validated['CustomerID']);
         $PolicyID = BancassurancePolicy::findOrFail($validated['PolicyID']);
         $Relationship = CodeDetail::findOrFail($validated['Relationship']);
-        // $Relationship = CodeDetail::where('CodeID','Relationships')
-        //     ->where('Description', $validated['Relationships'])
-        //     ->firstOrFail();
 
         $customer = BancassuranceCustomersBeneficiariesService::create(
             $CustomerID,

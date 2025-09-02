@@ -675,6 +675,11 @@ enum PermissionEnum: string
     case FleetServiceAlertView = 'fleetServiceAlert-view';
     case FleetServiceAlertAcknowledge = 'fleetServiceAlert-acknowledge';
 
+    case VehicleInspectionView = 'vehicleInspection-view';
+    case VehicleInspectionCreate = 'vehicleInspection-create';
+    case VehicleInspectionUpdate = 'vehicleInspection-update';
+    case VehicleInspectionDestroy = 'vehicleInspection-destroy';
+
 
 
     /*
@@ -872,6 +877,7 @@ enum PermissionEnum: string
             [self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy],
             [self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy],
             [self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge],
+            [self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy],
 
             [self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete],
             [self::BancassurancePolicyCreate, self::BancassurancePolicyView, self::BancassurancePolicyUpdate, self::BancassurancePolicyDelete],
@@ -1003,6 +1009,7 @@ enum PermissionEnum: string
             self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge,
             self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy,
             self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy,
+            self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy,
             => ModulesEnum::Fleet,
 
 
@@ -1157,6 +1164,7 @@ enum PermissionEnum: string
             self::FleetMaintenanceScheduleView,self::FleetMaintenanceScheduleCreate,self::FleetMaintenanceScheduleUpdate,self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel => 'Fleet Maintenance Schedule',
             self::ContractedDriverView,self::ContractedDriverCreate,self::ContractedDriverUpdate,self::ContractedDriverDestroy => 'Contracted Driver',
             self::FleetRepairLogView,self::FleetRepairLogCreate,self::FleetRepairLogUpdate,self::FleetRepairLogDestroy => 'Fleet Repair Log',
+            self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy => 'Vehicle Inspection ( Pre & Post Trip)',
             self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge => 'Fleet Service Alerts',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
