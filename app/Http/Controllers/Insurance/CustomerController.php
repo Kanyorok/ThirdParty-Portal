@@ -172,8 +172,6 @@ class CustomerController extends Controller
         }
     }
 
-<<<<<<< Updated upstream
-=======
     public function portfolio($customerId)
     {
         $customer = BancassuranceCustomer::find($customerId);
@@ -188,8 +186,6 @@ class CustomerController extends Controller
 
         return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
     }
-
->>>>>>> Stashed changes
 
 }
 
