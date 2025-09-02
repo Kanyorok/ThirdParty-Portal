@@ -37,12 +37,12 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label for="AssignmentDate" class="form-label">Assignment Date</label>
+                    <label for="AssignmentDate" class="form-label">Assigned On</label>
                     <input type="date" name="AssignmentDate" class="form-control" required>
                 </div>
 
                 <div class="col-md-4">
-                    <label for="UnassignmentDate" class="form-label">Unassignment Date</label>
+                    <label for="UnassignmentDate" class="form-label">Unassigned On</label>
                     <input type="date" name="UnassignmentDate" class="form-control">
                 </div>
 
