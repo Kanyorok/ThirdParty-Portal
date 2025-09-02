@@ -28,7 +28,7 @@
                     <td>{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                     <td>
                         <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" class="btn btn-sm btn-info">View Portfolio</a> 
-                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}" class="btn btn-sm btn-secondary">Communication History</a>
+                        <a href="{{ route('bancassurance.customers.communication.index') }}" class="btn btn-sm btn-secondary">Add Communication</a>
                         <a href="{{ route('bancassurance.customers.beneficiaries.create') }}" class="btn btn-sm btn-primary">Add Beneficiary</a>
                     </td>
                 </tr>

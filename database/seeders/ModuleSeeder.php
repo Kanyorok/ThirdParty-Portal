@@ -566,7 +566,6 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 907000, 'Name' => 'Providers & Products', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 907100, 'Name' => 'Insurance Providers', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.insurers.index', 'ParentID' => 907000],
             ['ModuleID' => 907200, 'Name' => 'Insurance Products', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.products.index', 'ParentID' => 907000],
-            ['ModuleID' => 907300, 'Name' => 'Mapped Products', 'Icon' => null, 'Description' => 'Map products to providers', 'Route' => 'bancassurance.products.mapped.index', 'ParentID' => 907000],
             ['ModuleID' => 907400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 907000],
             ['ModuleID' => 907500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 907000],
             ['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
