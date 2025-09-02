@@ -21,9 +21,9 @@
             @forelse ($customers as $i => $customer)
                 <tr>
                     <td>{{ $i + 1 }}</td>
-                    <td>{{ $customer->FullName }}</td>
-                    <td>{{ $customer->NationalID }}</td>
-                    <td>{{ $customer->PhoneNumber }}</td>
+                    <td>{{ $customer->FullName ?? '-'}}</td>
+                    <td>{{ $customer->NationalID ?? '-'}}</td>
+                    <td>{{ $customer->PhoneNumber ?? '-'}}</td>
                     <td>{{ $customer->Email }}</td>
                     <td>{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                     <td>

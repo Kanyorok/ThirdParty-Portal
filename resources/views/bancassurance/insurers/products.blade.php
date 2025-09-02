@@ -21,9 +21,9 @@
                 @foreach($products as $product)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $product->Name }}</td>
-                        <td>{{ $product->Type }}</td>
-                        <td>{{ $product->Description }}</td>
+                        <td>{{ $product->Name ?? '-'}}</td>
+                        <td>{{ $product->Type ?? '-'}}</td>
+                        <td>{{ $product->Description ?? '-'}}</td>
                         <td>{{ $product->IsActive ? 'Yes' : 'No' }}</td>
                     </tr>
                 @endforeach

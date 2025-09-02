@@ -32,9 +32,9 @@
                 @foreach($riders as $rider)
                 <tr>
                     <td>{{ $rider->Id }}</td>
-                    <td>{{ $rider->provider->Name }}</td>
-                    <td>{{ $rider->product->Name }}</td>
-                    <td>{{ $rider->RiderName }}</td>
+                    <td>{{ $rider->provider->Name ?? '-'}}</td>
+                    <td>{{ $rider->product->Name ?? '-'}}</td>
+                    <td>{{ $rider->RiderName ?? '-'}}</td>
                     <td>{{ $rider->Description ?? '-' }}</td>
                     <td>{{ number_format($rider->AdditionalPremium, 2) }}</td>
                     <td>
