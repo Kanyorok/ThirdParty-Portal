@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import React, { useEffect, useState, Suspense } from "react"
 import { Check, AlertCircle, Loader2, Sun, Moon } from "lucide-react"
+import { toast } from "sonner"
 import { signIn } from "next-auth/react"
 import { FormField } from "@/components/signin/form-fields/login-fields"
 import { PasswordField } from "@/components/signin/form-fields/pwd"
@@ -89,7 +90,12 @@ function SignInFormComponent() {
                         : "An unexpected error occurred. Please try again."
                 setError("root", { type: "manual", message: errorMessage })
             } else if (result?.ok) {
-                router.push(result.url || callbackUrl)
+                // Show toast then navigate
+                toast.success("Successfully Signed In", {
+                    description: "Redirecting to dashboard...",
+                })
+                // Allow toast to paint before navigation
+                setTimeout(() => router.push(result.url || callbackUrl), 300)
             }
         } catch (error) {
             setError("root", {

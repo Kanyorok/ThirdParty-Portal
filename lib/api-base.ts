@@ -2,7 +2,7 @@ export function getBaseUrl() {
     if (typeof window !== "undefined") {
         return process.env.NEXT_PUBLIC_EXTERNAL_API_URL || ""
     }
-    return process.env.API_BASE_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://127.0.0.1:8000"
+    return process.env.API_BASE_URL || process.env.NEXT_PUBLIC_EXTERNAL_API_URL
 }
 
 export async function apiFetch<T>(path: string, options?: RequestInit & { accessToken?: string }): Promise<T> {

@@ -298,7 +298,7 @@ export default function RegisterThirdPartyDetails() {
                 user_id: userId,
             };
 
-            const response = await fetch('http://localhost:8000/api/third-parties/register-details', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/register-details`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
