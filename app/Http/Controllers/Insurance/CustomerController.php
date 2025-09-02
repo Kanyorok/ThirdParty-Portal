@@ -172,6 +172,24 @@ class CustomerController extends Controller
         }
     }
 
+<<<<<<< Updated upstream
+=======
+    public function portfolio($customerId)
+    {
+        $customer = BancassuranceCustomer::find($customerId);
+        if (!$customer) {
+            return redirect()->back()->withErrors(['error' => 'Customer not found.']);
+        }
+
+        $policies = $customer->policies()
+            ->with(['product'])
+            ->orderByDesc('PolicyStartDate')
+            ->get();
+
+        return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
+    }
+
+>>>>>>> Stashed changes
 
 }
 

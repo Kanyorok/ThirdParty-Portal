@@ -60,4 +60,21 @@ class BancassuranceCustomer extends Model
         return $this->belongsTo(CodeDetail::class, 'Occupation', 'ID');
     }
 
+<<<<<<< Updated upstream
+=======
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function policies()
+    {
+        return $this->hasMany(BancassurancePolicy::class, 'CustomerID', 'Id');
+    }
+>>>>>>> Stashed changes
 }
