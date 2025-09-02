@@ -11,13 +11,16 @@
             + New Driver
         </a>
     </div>
+
+    @if(!$drivers->isEmpty())
     <div class="mb-3">
         <p class="mb-0" style="font-style: italic;">
             <span class="me-2">💡</span>
             To manage driver licenses and vehicle assignments, click the 'Details' button, then use the tabs to add licenses or assign vehicles.<br>
-            <strong><span class="me-1">ℹ️</span>Note:</strong> Trips are automatically linked from the trips table when a driver is assigned to a trip.
+            <strong><span class="me-1">ℹ️</span>Note:</strong> Trips are automatically loaded from the trips table when a driver is assigned a trip.
         </p>
     </div>
+    @endif
 
         <div class="table-responsive">
             <table id="driversTable" class="table table-bordered table-striped align-middle">
