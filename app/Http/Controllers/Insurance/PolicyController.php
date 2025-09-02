@@ -187,28 +187,6 @@ public function feedbackForm($id)
     return view('bancassurance.policies.feedback', compact('policy', 'decisions'));
 }
 
-// public function feedbackForm($id)
-// {
-//     $policy = DB::table('t_BancassurancePolicies as p')
-//         ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-//         ->leftJoin('t_CodeDetails as prod', 'p.ProductID', '=', 'prod.Id')
-//         ->leftJoin('t_CodeDetails as ip', 'p.InsurerID', '=', 'ip.Id')
-//         ->select(
-//             'p.Id',
-//             'p.PolicyNumber',
-//             'p.Status',
-//             'c.FullName as CustomerName',
-//         )
-//         ->where('p.Id', $id)
-//         ->first();
-
-//     if (!$policy) {
-//         return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
-//     }
-
-//     return view('bancassurance.policies.feedback', compact('policy'));
-// }
-
 public function storeFeedback(BancassuranceUnderwritingRequest $request, $id)
 {
     $validated = $request->validated();
@@ -273,17 +251,6 @@ public function issuanceList()
     return view('bancassurance.policies.issuance-list', compact('policies'));
 }
 
-
-// public function issueForm($id)
-// {
-//     $policy = BancassurancePolicy::where('Id', $id)
-//         ->where('Status', InsurancePolicyStatus::AwaitingIssuance->value)
-//         ->firstOrFail();
-
-//     return view('bancassurance.policies.issue', compact('policy'));
-// }
-
-
 // Store issuance details
 public function storeIssuance($id)
 {
@@ -313,55 +280,6 @@ public function endorsementForm($id)
         return view('bancassurance.policies.endorsement', compact('policy'));
     }
 
-// public function storeEndorsement(Request $request, $id)
-// {
-//     $request->validate([
-//         'EndorsementType' => 'required|string|max:100',
-//         'RequestDate' => 'required|date',
-//         'EffectiveDate' => 'required|date|after_or_equal:RequestDate',
-//         'Description' => 'nullable|string|max:500',
-//         'SupportingDocument' => 'nullable|file|mimes:pdf,docx,doc|max:2048',
-//     ]);
-
-//     $docPath = null;
-//     if ($request->hasFile('SupportingDocument')) {
-//         $docPath = $request->file('SupportingDocument')->store('endorsements', 'public');
-//     }
-
-//     DB::table('t_BancassurancePolicyEndorsements')->insert([
-//         'PolicyID' => $id,
-//         'EndorsementType' => $request->EndorsementType,
-//         'RequestDate' => $request->RequestDate,
-//         'EffectiveDate' => $request->EffectiveDate,
-//         'Description' => $request->Description,
-//         'SupportingDocumentPath' => $docPath,
-//         'CreatedBy' => auth()->id(),
-//         'CreatedAt' => now(),
-//     ]);
-
-//     return redirect()->route('bancassurance.policies.index')->with('success', 'Endorsement recorded successfully.');
-// }
-// public function endorsementList()
-// {
-//     $endorsements = DB::table('t_BancassurancePolicyEndorsements as e')
-//         ->leftJoin('t_BancassurancePolicies as p', 'e.PolicyID', '=', 'p.Id')
-//         ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-//         ->select(
-//             'e.Id',
-//             'p.PolicyNumber',
-//             'c.FullName as CustomerName',
-//             'e.EndorsementType',
-//             'e.RequestDate',
-//             'e.EffectiveDate',
-//             'e.Description',
-//             'e.SupportingDocumentPath',
-//             'e.CreatedAt'
-//         )
-//         ->orderByDesc('e.Id')
-//         ->get();
-
-//     return view('bancassurance.policies.endorsements.index', compact('endorsements'));
-// }
 public function register()
 {
     $policies = BancassurancePolicy::with(['customer', 'insurer'])
@@ -384,34 +302,6 @@ public function renewalIndex()
         return view('bancassurance.policies.renewals.index', compact('policies'));
     }
 
-// public function initiateRenewal($id)
-// {
-//     $policy = DB::table('t_BancassurancePolicies')->where('Id', $id)->first();
-//     return view('bancassurance.policies.renewals.create', compact('policy'));
-// }
-// public function storeRenewal(Request $request, $id)
-// {
-//     $request->validate([
-//         'RenewalDate'   => 'required|date',
-//         'NewStartDate'  => 'required|date|after_or_equal:RenewalDate',
-//         'NewEndDate'    => 'required|date|after:NewStartDate',
-//         'Notes'         => 'nullable|string|max:500',
-//     ]);
-
-//     DB::table('t_BancassurancePolicyRenewals')->insert([
-//         'PolicyID'     => $id,
-//         'RenewalDate'  => $request->RenewalDate,
-//         'NewStartDate' => $request->NewStartDate,
-//         'NewEndDate'   => $request->NewEndDate,
-//         'Status'       => 'Requested',
-//         'Notes'        => $request->Notes,
-//         'CreatedBy'    => auth()->id(),
-//         'CreatedAt'    => now()
-//     ]);
-
-//     return redirect()->route('bancassurance.policies.renewals.index')
-//         ->with('success', 'Renewal request submitted successfully.');
-// }
 public function show($id)
 {
     $policy = BancassurancePolicy::with(['customer','insurer'])->findOrFail($id);

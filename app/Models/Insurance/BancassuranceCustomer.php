@@ -2,6 +2,7 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\CodeDetail;
@@ -60,8 +61,6 @@ class BancassuranceCustomer extends Model
         return $this->belongsTo(CodeDetail::class, 'Occupation', 'ID');
     }
 
-<<<<<<< Updated upstream
-=======
     public function modifiedByUser()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
@@ -76,5 +75,4 @@ class BancassuranceCustomer extends Model
     {
         return $this->hasMany(BancassurancePolicy::class, 'CustomerID', 'Id');
     }
->>>>>>> Stashed changes
 }

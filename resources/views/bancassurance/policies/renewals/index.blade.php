@@ -3,7 +3,7 @@
 
 @section('content')
     <div class="container mt-4">
-        <h4>📅 Renewal Candidates (Expiring Soon)</h4>
+        <h4>Renewal Candidates (Expiring Soon)</h4>
 
         <table class="table table-striped mt-3">
             <thead>
@@ -22,12 +22,11 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $policy->PolicyNumber }}</td>
                     <td>{{ $policy->CustomerName }}</td>
-                    <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d M Y') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
                     <td>{{ $policy->Status }}</td>
                     <td>
                         <a href="{{ route('bancassurance.policies.renewalForm', $policy->Id) }}"
-                           class="btn btn-sm btn-outline-primary">
-                            🔁 Renew
+                           class="btn btn-sm btn-outline-primary"> Renew
                         </a>
                     </td>
                 </tr>
