@@ -82,24 +82,6 @@ class CustomerController extends Controller
         return view('bancassurance.customers.check', compact('customers'));
     }
 
-// public function portfolio($customerId)
-// {
-//     $customer = DB::table('t_BancassuranceCustomers')->where('Id', $customerId)->first();
-
-//     $policies = DB::table('t_BancassurancePolicies as p')
-//         ->join('t_InsuranceProducts as prod', 'p.ProductID', '=', 'prod.Id')
-//         ->join('t_InsuranceProviders as ins', 'p.InsurerID', '=', 'ins.Id')
-//         ->where('p.CustomerID', $customerId)
-//         ->select(
-//             'p.*',
-//             'prod.Name as ProductName',
-//             'ins.Name as InsurerName'
-//         )
-//         ->orderByDesc('p.PolicyStartDate')
-//         ->get();
-
-//     return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
-// }
     public function edit($id)
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
@@ -172,6 +154,20 @@ class CustomerController extends Controller
         }
     }
 
+    public function portfolio($customerId)
+    {
+        $customer = BancassuranceCustomer::find($customerId);
+        if (!$customer) {
+            return redirect()->back()->withErrors(['error' => 'Customer not found.']);
+        }
+
+        $policies = $customer->policies()
+            ->with(['product'])
+            ->orderByDesc('PolicyStartDate')
+            ->get();
+
+        return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
+    }
 
 }
 

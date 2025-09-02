@@ -22,7 +22,7 @@ class BancassuranceCustomersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ReferralID' => 'required|exists:t_BancassuranceReferrals,Id',
+            'ReferralID' => 'nullable|exists:t_BancassuranceReferrals,Id',
             'FullName' => 'required|string|max:100',
             'NationalID' => 'required|string|max:100',
             'KRAPIN' => 'required|string|max:100',

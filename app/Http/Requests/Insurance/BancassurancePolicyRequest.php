@@ -33,6 +33,7 @@ class BancassurancePolicyRequest extends FormRequest
             'PolicyEndDate' => 'required|date|after_or_equal:PolicyStartDate',
             'PaymentFrequency' => 'required|exists:t_CodeDetails,ID',
             'ReferralID' => 'nullable|exists:t_BancassuranceReferrals,Id',
+            'RiderAddOn' => 'nullable|exists:t_InsuranceProductRiders,Id',
             'IssuedDate' => 'nullable|date',
             'ExpiryDate' => 'nullable|date|after_or_equal:IssuedDate',
             'IsActive' => 'boolean',

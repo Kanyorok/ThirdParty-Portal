@@ -64,7 +64,7 @@
             @forelse($policies as $policy)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $policy->customer->FullName }}</td>
+                    <td>{{ $policy->customer->FullName ?? '-' }}</td>
                     <td>{{ $policy->product->Name ?? '-'}}</td>
                     <td>{{ $policy->insurer->Name ?? '—' }}</td>
                     <td>{{ number_format($policy->SumAssured, 2) }}</td>

@@ -25,7 +25,6 @@
                     <th>Additional Premium</th>
                     <th>Optional?</th>
                     <th>Status</th>
-                    <th>Created</th>
                     <th>Action</th>
                 </tr>
                 </thead>
@@ -33,9 +32,9 @@
                 @foreach($riders as $rider)
                 <tr>
                     <td>{{ $rider->Id }}</td>
-                    <td>{{ $rider->provider->Name }}</td>
-                    <td>{{ $rider->product->Name }}</td>
-                    <td>{{ $rider->RiderName }}</td>
+                    <td>{{ $rider->provider->Name ?? '-'}}</td>
+                    <td>{{ $rider->product->Name ?? '-'}}</td>
+                    <td>{{ $rider->RiderName ?? '-'}}</td>
                     <td>{{ $rider->Description ?? '-' }}</td>
                     <td>{{ number_format($rider->AdditionalPremium, 2) }}</td>
                     <td>
@@ -48,7 +47,6 @@
                             {{ $rider->IsActive ? 'Active' : 'Inactive' }}
                         </span>
                     </td>
-                    <td>{{ \Carbon\Carbon::parse($rider->CreatedAt)->format('d/m/Y') }}</td>
                     <td>
                      <a href="{{ route('bancassurance.riders.edit', $rider->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('bancassurance.riders.destroy', $rider->Id) }}" method="POST" class="d-inline">

@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ThirdPartyUser;
+use App\Models\ThirdParty\ThirdPartyUser;
 use App\Enums\ThirdPartyApprovalStatusEnum;
 
 class CheckThirdPartyApprovalStatus

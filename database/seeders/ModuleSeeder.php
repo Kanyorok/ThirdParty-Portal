@@ -536,22 +536,10 @@ class ModuleSeeder extends Seeder
         $values = collect([
             // Main module - Insurance
             ['ModuleID' => 900000, 'Name' => ModulesEnum::Insurance->description(), 'Icon' => '<i data-feather="shield"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
-
-            // First level children
-            // ['ModuleID' => 901000, 'Name' => 'Provider Management', 'Icon' => null, 'Description' => '', 'ParentID' => 900000, 'Route' => 'providermanagement.index'],
-            // ['ModuleID' => 902000, 'Name' => 'Insurance Management', 'Icon' => null, 'Description' => '', 'ParentID' => 900000, 'Route' => 'insurancetypemanagement.index'],
-            // ['ModuleID' => 903000, 'Name' => 'Policy Management', 'Icon' => null, 'Description' => '', 'ParentID' => 900000, 'Route' => 'insurancepolicymanagement.index'],
-            // ['ModuleID' => 904000, 'Name' => 'Asset Management', 'Icon' => null, 'Description' => '', 'ParentID' => 900000, 'Route' => 'coveredassetmanagement.index'],
-            // ['ModuleID' => 905000, 'Name' => 'Premium Management', 'Icon' => null, 'Description' => '', 'ParentID' => 900000, 'Route' => 'premiumpaymentmanagement.index'],
-            // ['ModuleID' => 906000, 'Name' => 'Claims Management', 'Icon' => null, 'Description' => '', 'ParentID' => 900000, 'Route' => 'claimsmanagement.index'],
-            // ['ModuleID' => 907000, 'Name' => 'Renewal Management', 'Icon' => null, 'Description' => '', 'ParentID' => 900000, 'Route' => 'renewalmanagement.index'],
-            // ['ModuleID' => 908000, 'Name' => 'Report Management', 'Icon' => null, 'Description' => '', 'ParentID' => 900000, 'Route' => 'reportmanagement.index'],
-            //['ModuleID' => 900000, 'Name' => 'Insurance', 'Icon' => '<i data-feather="shield"></i>', 'Description' => '', 'Route' => null, 'ParentID' => null],
             ['ModuleID' => 901000, 'Name' => 'Bank Staff Workspace', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 901100, 'Name' => 'Referrals & Tracking', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.referrals.index', 'ParentID' => 901000],
             ['ModuleID' => 901200, 'Name' => 'Referral Assignment', 'Icon' => 'fas fa-user-check', 'Description' => '', 'Route' => 'bancassurance.referrals.assign.list', 'ParentID' => 901000],
             ['ModuleID' => 901300, 'Name' => 'Referral Performance', 'Icon' => 'fas fa-chart-bar', 'Description' => 'View referral counts and conversion rates', 'Route' => 'bancassurance.referrals.performance', 'ParentID' => 901000],
-            //['ModuleID' => 901400, 'Name' => 'Commission Statement View', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 901000],
             ['ModuleID' => 902000, 'Name' => 'Customers', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 902100, 'Name' => 'Customer Profile & KYC', 'Icon' => 'fas fa-user-plus', 'Description' => 'Create customer profile with KYC', 'Route' => 'bancassurance.customers.check', 'ParentID' => 902000],
             ['ModuleID' => 902300, 'Name' => 'Customer Listing', 'Icon' => 'fas fa-user-friends', 'Description' => 'Add or edit customer beneficiaries', 'Route' => 'bancassurance.customers.index', 'ParentID' => 902000],
@@ -578,15 +566,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 907000, 'Name' => 'Providers & Products', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 907100, 'Name' => 'Insurance Providers', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.insurers.index', 'ParentID' => 907000],
             ['ModuleID' => 907200, 'Name' => 'Insurance Products', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.products.index', 'ParentID' => 907000],
-            ['ModuleID' => 907300, 'Name' => 'Mapped Products', 'Icon' => null, 'Description' => 'Map products to providers', 'Route' => 'bancassurance.products.mapped.index', 'ParentID' => 907000],
             ['ModuleID' => 907400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 907000],
             ['ModuleID' => 907500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 907000],
-            //['ModuleID' => 907600, 'Name' => 'Product Lifecycle', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.lifecycle.index', 'ParentID' => 907000],
-            //['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
-            // ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
-
-
-            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 900000, 'Route' => 'insurance-reports.index'],
+            ['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
+            ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
         ]);
 
         if ($fresh) {

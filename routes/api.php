@@ -126,13 +126,19 @@ Route::prefix('procurement')->name('api.procurement.')
         Route::apiResource('supplier-cat', SupplierCategoryApiController::class);
         Route::apiResource('supp', SupplierController::class);
 
-        // Prequalification API endpoints temporarily disabled
-        // Route::prefix('prequalification')->group(function () {
-        //     Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('applications.api.index');
-        //     Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('applications.api.show');
-        //     Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
-        // });
+        // Prequalification API endpoints
+        Route::prefix('prequalification')->name('prequalification.')->group(function () {
+            Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+            Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+            Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+        });
     });
+
+// Public (unauthenticated) read-only endpoints for prequalification rounds to support frontend path /api/prequalification/rounds
+Route::prefix('prequalification')->name('api.prequalification.')->group(function () {
+    Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+    Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+});
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods
