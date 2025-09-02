@@ -1,6 +1,5 @@
-CREATE PROCEDURE [dbo].[p_ProcessWorkflowPending]
-    @SystemUserId BIGINT,
-    @WorkflowStagePermission BIGINT
+CREATE Or alter PROCEDURE [dbo].[p_ProcessWorkflowPending]
+
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -11,7 +10,13 @@ BEGIN
         @SubmittedStatusId BIGINT,
         @ApprovedStatusId BIGINT,
         @RejectedStatusId BIGINT,
-        @Now DATETIME = GETDATE();
+        @Now DATETIME = GETDATE(),
+        @SystemUserId BIGINT,
+        @WorkflowStagePermission BIGINT;
+
+    --//check from t_workflowstages
+
+    select @SystemUserId = s.CreatedBy, @WorkflowStagePermission = s.PermissionId from t_workflowstages s;
 
     -- Get the permission name for the given WorkflowStagePermission
 SELECT @permissionName = [name]

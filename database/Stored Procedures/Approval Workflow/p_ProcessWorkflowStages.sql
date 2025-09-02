@@ -1,6 +1,6 @@
-CREATE PROCEDURE [dbo].[p_ProcessWorkflowStages]
-    @SystemUserId NVARCHAR(100),
-    @WorkflowStagePermission BIGINT
+CREATE or alter PROCEDURE [dbo].[p_ProcessWorkflowStages]
+    --     @SystemUserId NVARCHAR(100),
+--     @WorkflowStagePermission BIGINT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -18,7 +18,11 @@ BEGIN TRY
             @ApprovedStatusId BIGINT,
             @ActualApprovals INT,
             @RequiredApprovals INT,
-            @NextStageId BIGINT;
+            @NextStageId BIGINT,
+            @SystemUserId BIGINT,
+            @WorkflowStagePermission BIGINT;
+
+        select @SystemUserId = s.CreatedBy, @WorkflowStagePermission = s.PermissionId from t_workflowstages s;
 
         -- Lookup 'Approved' status ID
 SELECT @ApprovedStatusId = ID

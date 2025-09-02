@@ -3,7 +3,6 @@
 namespace App\Models\CRM;
 
 use App\Enums\TicketPriorityEnum;
-use App\Enums\TicketStatusEnum;
 use App\Models\Communication\Comment;
 use App\Models\Core\CodeDetail;
 use App\Models\Core\PendingWorkflow;
@@ -22,9 +21,9 @@ class Ticket extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Tickets';
     protected $primaryKey = 'Id';
@@ -33,29 +32,12 @@ class Ticket extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'TicketID',
-        'Title',
-        'CategoryID',
-        'Notes',
-        'Party',
-        'PartyID',
-        'Source',
-        'SourceID',
-        'Status',
-        'Priority',
-        'Owner',
-        'OwnerID',
-        'ClosedOn',
-        'SourceTicketID',
-        'StartDate',
-        'EndDate',
-        'CreatedBy',
-        'ModifiedBy',
-        'DeletedBy',
+        'TicketID', 'Title', 'CategoryID', 'Notes', 'Party', 'PartyID', 'Source', 'SourceID', 'StatusId', 'Priority', 'Owner', 'OwnerID', 'TicketStatusId', 'Status',//todo remove status
+        'ClosedOn', 'SourceTicketID', 'StartDate', 'EndDate', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
-        'Status' => TicketStatusEnum::class,
+        // 'Status' => TicketStatusEnum::class,
         'Priority' => TicketPriorityEnum::class,
         'ClosedOn' => 'datetime',
         'StartDate' => 'datetime',
@@ -73,6 +55,11 @@ class Ticket extends Model
     public function getRouteKeyName(): string
     {
         return 'TicketID';
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(CodeDetail::class, 'StatusId', 'ID')->where('CodeID', 'TicketStatus');
     }
 
     public function category(): BelongsTo
