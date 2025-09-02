@@ -47,7 +47,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-muted">Referred By</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->employee->FullName  ?? '-'}}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->employee->Name  ?? '-'}}" readonly>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-muted">Assigned To</label>

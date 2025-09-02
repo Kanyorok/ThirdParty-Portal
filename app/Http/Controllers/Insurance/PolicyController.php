@@ -229,28 +229,6 @@ public function feedbackForm($id)
     return view('bancassurance.policies.feedback', compact('policy', 'decisions'));
 }
 
-// public function feedbackForm($id)
-// {
-//     $policy = DB::table('t_BancassurancePolicies as p')
-//         ->leftJoin('t_BancassuranceCustomers as c', 'p.CustomerID', '=', 'c.Id')
-//         ->leftJoin('t_CodeDetails as prod', 'p.ProductID', '=', 'prod.Id')
-//         ->leftJoin('t_CodeDetails as ip', 'p.InsurerID', '=', 'ip.Id')
-//         ->select(
-//             'p.Id',
-//             'p.PolicyNumber',
-//             'p.Status',
-//             'c.FullName as CustomerName',
-//         )
-//         ->where('p.Id', $id)
-//         ->first();
-
-//     if (!$policy) {
-//         return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
-//     }
-
-//     return view('bancassurance.policies.feedback', compact('policy'));
-// }
-
 public function storeFeedback(BancassuranceUnderwritingRequest $request, $id)
 {
     $validated = $request->validated();
@@ -314,17 +292,6 @@ public function issuanceList()
 
     return view('bancassurance.policies.issuance-list', compact('policies'));
 }
-
-
-// public function issueForm($id)
-// {
-//     $policy = BancassurancePolicy::where('Id', $id)
-//         ->where('Status', InsurancePolicyStatus::AwaitingIssuance->value)
-//         ->firstOrFail();
-
-//     return view('bancassurance.policies.issue', compact('policy'));
-// }
-
 
 // Store issuance details
 public function storeIssuance($id)

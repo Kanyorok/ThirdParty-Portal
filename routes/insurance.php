@@ -60,7 +60,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
         Route::get('create', [CustomerCommunicationController::class, 'create'])->name('create');
         Route::post('store', [CustomerCommunicationController::class, 'store'])->name('store');
-        Route::get('show', [CustomerCommunicationController::class, 'show'])->name('show');
+        Route::get('show/{Id}', [CustomerCommunicationController::class, 'show'])->name('show');
         Route::delete('delete/{Id}', [CustomerCommunicationController::class, 'destroy'])->name('destroy');
         Route::get('edit/{Id}', [CustomerCommunicationController::class, 'edit'])->name('edit');
         Route::put('update/{Id}', [CustomerCommunicationController::class, 'update'])->name('update');

@@ -70,4 +70,9 @@ class BancassuranceCustomer extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
+
+    public function policies()
+    {
+        return $this->hasMany(BancassurancePolicy::class, 'CustomerID', 'Id');
+    }
 }

@@ -17,42 +17,10 @@ use App\Models\Insurance\BancassuranceCustomer;
 class CustomerController extends Controller
 {
     //
-        // API endpoint to get referral, preferred insurer, and product for a customer
-    public function getReferralAndDefaults($customerId)
-        {
-            $customer = BancassuranceCustomer::find($customerId);
-            if (!$customer) {
-                return response()->json(['error' => 'Customer not found'], 404);
-            }
-
-            $referral = null;
-            $preferredInsurer = null;
-            $product = null;
-
-            if ($customer->ReferralID) {
-                $referral = BancAssuranceReferral::find($customer->ReferralID);
-                if ($referral) {
-                    $preferredInsurer = $referral->PreferredInsurerId ?? null;
-                    $product = $referral->InsuranceProductId ?? null;
-                }
-            }
-
-            return response()->json([
-                'referral' => $referral ? [
-                    'Id' => $referral->Id,
-                    'ClientIDNumber' => $referral->ClientIDNumber,
-                    'ClientName' => $referral->ClientName,
-                ] : null,
-                'preferredInsurer' => $preferredInsurer,
-                'product' => $product,
-            ]);
-        }
-
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
-        $usedReferralIds = BancassuranceCustomer::whereNotNull('ReferralID')->pluck('ReferralID')->toArray();
-        $referrals = BancAssuranceReferral::whereNotIn('Id', $usedReferralIds)->get();
+        $referrals = BancAssuranceReferral::all();
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
         $occupations = CodeDetail::where('CodeID', 'Occupation')->get();
@@ -63,11 +31,10 @@ class CustomerController extends Controller
 
     public function store(BancassuranceCustomersRequest $request)
     {
-        //$this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
+        $this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
         $validated = $request->validated();
 
-
-        $ReferralID = !empty($validated['ReferralID']) ? BancAssuranceReferral::findOrFail($validated['ReferralID']) : null;
+        $ReferralID = BancAssuranceReferral::findOrFail($validated['ReferralID']);
         $Gender = CodeDetail::findOrFail($validated['Gender']);
         $MaritalStatus = CodeDetail::findOrFail($validated['MaritalStatus']);
         $Occupation = CodeDetail::findOrFail($validated['Occupation']);
@@ -189,23 +156,18 @@ class CustomerController extends Controller
 
     public function portfolio($customerId)
     {
-        $customer = DB::table('t_BancassuranceCustomers')->where('Id', $customerId)->first();
+        $customer = BancassuranceCustomer::find($customerId);
+        if (!$customer) {
+            return redirect()->back()->withErrors(['error' => 'Customer not found.']);
+        }
 
-        $policies = DB::table('t_BancassurancePolicies as p')
-            ->join('t_InsuranceProducts as prod', 'p.ProductID', '=', 'prod.Id')
-            ->join('t_InsuranceProviders as ins', 'p.InsurerID', '=', 'ins.Id')
-            ->where('p.CustomerID', $customerId)
-            ->select(
-                'p.*',
-                'prod.Name as ProductName',
-                'ins.Name as InsurerName'
-            )
-            ->orderByDesc('p.PolicyStartDate')
+        $policies = $customer->policies()
+            ->with(['product'])
+            ->orderByDesc('PolicyStartDate')
             ->get();
 
         return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
     }
-
 
 }
 
