@@ -27,8 +27,8 @@
                 <form method="POST" action="{{ route('bancassurance.referrals.assign', $referral->Id) }}">
                     @csrf
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $referral->ClientName }}</td>
-                    <td>{{ $referral->insuranceProduct->Description }}</td>
+                    <td>{{ $referral->ClientName ?? '-'}}</td>
+                    <td>{{ $referral->insuranceProduct->Description ?? '-'}}</td>
                     <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') }}</td>
                     <td><span class="badge bg-secondary">{{ $referral->Status->Label() }}</span></td>
                     <td>

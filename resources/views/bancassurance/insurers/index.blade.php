@@ -26,8 +26,8 @@
             @foreach($providers as $provider)
                 <tr>
                     <td>{{ $provider->Id }}</td>
-                    <td>{{$provider->InsuranceProviderNO }}</td>
-                    <td>{{ $provider->Name }}</td>
+                    <td>{{$provider->InsuranceProviderNO ?? '-'}}</td>
+                    <td>{{ $provider->Name ?? '-'}}</td>
                     <td>{{ $provider->Country ?? '-' }}</td>
                     <td>{{ $provider->ContactPerson ?? '-' }}</td>
                     <td>{{ $provider->Email ?? '-' }}</td>
