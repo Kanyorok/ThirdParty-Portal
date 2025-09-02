@@ -4,7 +4,6 @@ namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use App\Enums\BusinessTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
@@ -45,7 +44,8 @@ class UpdateThirdPartyRequest extends FormRequest
             'Website' => ['nullable', 'string', 'url', 'max:255'],
             'ApprovalStatus' => ['required', 'string', Rule::in(array_column(ThirdPartyApprovalStatusEnum::cases(), 'value'))],
             'Status' => ['required', 'string', Rule::in(array_column(ThirdPartyStatusEnum::cases(), 'value'))],
-            'ThirdPartyType' => ['required', 'string', Rule::in(array_column(ThirdPartyTypeEnum::cases(), 'value'))],
+            // Accept new numeric TypeId referencing t_ThirdPartyTypes.TypeId
+            'ThirdPartyType' => ['sometimes', 'integer', 'exists:t_ThirdPartyTypes,TypeId'],
             'IsPrequalified' => ['sometimes', 'boolean'],
         ];
     }

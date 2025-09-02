@@ -35,7 +35,7 @@ class ThirdParties extends Model
         'Phone',
         'Website',
         'Status',
-        'ThirdPartyType',
+    'ThirdPartyType', // legacy single type (nullable)
         'IsPrequalified',
         'ApprovalStatus',
         'CreatedBy',
@@ -48,7 +48,7 @@ class ThirdParties extends Model
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
         'CreatedBy' => 'integer',
-        'ThirdPartyType' => ThirdPartyTypeEnum::class,
+    'ThirdPartyType' => ThirdPartyTypeEnum::class,
         'BusinessType' => BusinessTypeEnum::class,
         'Status' => ThirdPartyStatusEnum::class,
         'ApprovalStatus' => ThirdPartyApprovalStatusEnum::class,
@@ -101,5 +101,16 @@ class ThirdParties extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(SupplierCategory::class, 't_ThirdParty_SupplierCategory', 'third_party_id', 'supplier_category_id');
+    }
+
+    // New pivot relationship to multiple types
+    public function types(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\ThirdParty\ThirdPartyType::class,
+            't_ThirdPartyType_ThirdParties',
+            'ThirdPartyId',
+            'TypeId'
+        );
     }
 }

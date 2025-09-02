@@ -198,7 +198,8 @@
         <div class="col my-1">
           <p class="m-0">@include('layouts._partials._copyright')</p>
         </div>
-        <div class="col-auto my-1">
+        <div class="col-auto my-1 d-flex align-items-center gap-3">
+          <span id="footer-datetime" class="text-muted small"></span>
           {{-- <ul class="list-inline footer-link mb-0">
                     <li class="list-inline-item"><a
                             href="../../external.html?link=https://ableproadmin.com/index.html">Home</a></li>
@@ -219,6 +220,18 @@
   @stack('scripts')
 
   <script>
+    // Footer DateTime (user timezone in browser)
+    (function updateFooterDateTime() {
+      const el = document.getElementById('footer-datetime');
+      if (!el) return;
+      const now = new Date();
+      // Format: YYYY-MM-DD HH:MM:SS (24h)
+      const pad = n => n.toString().padStart(2, '0');
+  const formatted = `${pad(now.getDate())}-${pad(now.getMonth()+1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      el.textContent = `System Time: ${formatted}`;
+      setTimeout(updateFooterDateTime, 1000);
+    })();
+
     // Keep sidebar static: load only #mainBodyContent for internal sidebar navigation
     (function() {
       const sidebar = document.querySelector('nav.pc-sidebar');
