@@ -1,4 +1,4 @@
-CREATE PROC [dbo].[sp_generate_inserts]
+CREATE or ALTER PROC [dbo].[sp_generate_inserts]
 (
     @table_name varchar(776),        -- The table/view for which the INSERT statements will be generated using the existing data
     @target_table varchar(776) = NULL,   -- Use this parameter to specify a different table name into which the data will be inserted
