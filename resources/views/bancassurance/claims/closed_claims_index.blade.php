@@ -31,10 +31,10 @@
             <tbody>
                 @foreach($closedClaims as $claim)
                 <tr>
-                    <td>{{ $claim->Id }}</td>
-                    <td>{{ $claim->claim->claimtype->Description }}</td>
-                    <td>{{ $claim->claim->policy->PolicyNumber }}</td>
-                    <td>{{ $claim->claim->policy->customer->FullName }}</td>
+                    <td>{{ $claim->Id ?? '-'}}</td>
+                    <td>{{ $claim->claim->claimtype->Description ?? '-'}}</td>
+                    <td>{{ $claim->claim->policy->PolicyNumber ?? '-'}}</td>
+                    <td>{{ $claim->claim->policy->customer->FullName ?? '-'}}</td>
                     <td>KES {{ number_format($claim->paidamount->PaymentAmount, 2) }}</td>
                     <td>{{ $claim->FinalStatus->label() }}</td>
                     <td>{{ \Carbon\Carbon::parse($claim->ClosureDate)->format('d/m/Y') }}</td>
