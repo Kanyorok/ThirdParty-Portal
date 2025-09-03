@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Credit/Debit Notes - Accounts Payable')
+@section('title', 'Credit Notes - Accounts Payable')
 
 @section('content')
     <div class="container mt-2">
         <div class="card shadow-sm rounded-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2 px-3">
                 <h6 class="mb-0 text-info" id="noteTypeTitle">
-                    <i class="fab fa-wpforms me-2"></i>Credit/Debit Notes
+                    <i class="fab fa-wpforms me-2"></i>Credit Notes
                 </h6>
                 <a href="{{ route('creditnote.create') }}" class="btn btn-info btn-sm">
                     <i class="fas fa-plus me-1"></i>Add New Note
@@ -15,13 +15,13 @@
 
             <div class="card-body pt-3">
                 <p class="text-muted">Below is the list of all saved credit and debit notes with their details.</p>
-                <div class="mb-3">
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-info btn-sm" onclick="filterNotes('All')">All</button>
-                        <button type="button" class="btn btn-outline-success btn-sm" onclick="filterNotes('Credit')">Credit Notes</button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="filterNotes('Debit')">Debit Notes</button>
-                    </div>
-                </div>
+{{--                <div class="mb-3">--}}
+{{--                    <div class="btn-group" role="group">--}}
+{{--                        <button type="button" class="btn btn-outline-info btn-sm" onclick="filterNotes('All')">All</button>--}}
+{{--                        <button type="button" class="btn btn-outline-success btn-sm" onclick="filterNotes('Credit')">Credit Notes</button>--}}
+{{--                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="filterNotes('Debit')">Debit Notes</button>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
 
                 <div class="table-responsive">
                     <table class="table table-hover table-sm align-middle mb-0 text-center"
@@ -69,18 +69,18 @@
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             @if($note->ApprovalStatus === 'draft')
-                                                <button 
-                                                    type="button" 
-                                                    class="btn btn-sm btn-primary me-1" 
-                                                    data-bs-toggle="modal" 
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-primary me-1"
+                                                    data-bs-toggle="modal"
                                                     data-bs-target="#EditNotesModal-{{ $note->Id }}">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                             @else
-                                                <button 
-                                                    type="button" 
-                                                    class="btn btn-sm btn-primary me-1 disabled" 
-                                                    data-bs-toggle="modal" 
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-primary me-1 disabled"
+                                                    data-bs-toggle="modal"
                                                     data-bs-target="#EditNotesModal-{{ $note->Id }}">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
@@ -138,27 +138,28 @@
             <div class="modal-content rounded-4 shadow">
                 <div class="modal-header bg-light text-info">
                     <h5 class="modal-title text-info" id="EditNotesModalLabel">
-                    <i class="fas fa-edit me-2"></i>Edit Credit/Debit Note
+                    <i class="fas fa-edit me-2"></i>Edit Credit Note
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <form method="POST" action="{{ route('creditnote.update', $item->Id) }}"> 
+                <form method="POST" action="{{ route('creditnote.update', $item->Id) }}">
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
                         <!-- Note Type -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Note Type</label>
-                                <select name="NoteType" class="form-select" value="{{old('NoteType', $item->NoteType)}}" required>
-                                    <option value="credit">Credit</option>
-                                    <option value="debit">Debit</option>
-                                </select>
-                            </div>
+{{--                            <div class="col-md-6">--}}
+{{--                                <label class="form-label">Note Type</label>--}}
+{{--                                <select name="NoteType" class="form-select" value="{{old('NoteType', $item->NoteType)}}" required>--}}
+{{--                                    <option value="credit">Credit</option>--}}
+{{--                                    <option value="debit">Debit</option>--}}
+{{--                                </select>--}}
+{{--                            </div>--}}
+                            <input type="hidden" name="NoteType" value="credit">
 
                             <!-- Reference Invoice -->
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label">Reference Invoice</label>
                                 <select name="InvoiceRefNo" class="form-select" required>
                                     <option value="{{old('InvoiceRefNo', $item->InvoiceRefNo)}}" disabled selected>--Select Invoice--</option>
@@ -182,7 +183,7 @@
                             </div>
 
                             <!-- Description -->
-                            <div class="">
+                            <div class="col-md-12">
                                 <label class="form-label">Description</label>
                                 <textarea name="Description" rows="3" class="form-control" value="{{old('Description', $item->Description)}}" ></textarea>
                             </div>
@@ -197,7 +198,7 @@
             </div>
         </div>
     </div>
-@endforeach           
+@endforeach
 
 <script>
     function filterNotes(type) {

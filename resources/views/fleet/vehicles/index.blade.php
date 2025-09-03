@@ -12,13 +12,16 @@
         </a>
     </div>
 
-    <div class="mb-3">
-        <p class="mb-0" style="font-style: italic;">
-            <span class="me-2">💡</span>
-            Click the <strong>Details</strong> button to view complete vehicle information including trips, inspections, maintenance, repairs, and assignments.<br>
-            <strong><span class="me-1">ℹ️</span>Note:</strong> These records are automatically retrieved from their respective modules. They cannot be added here; please use the appropriate menus to manage them.
-        </p>
-    </div>
+
+   @if(!$vehicles->isEmpty())
+        <div class="mb-3">
+            <p class="mb-0" style="font-style: italic;">
+                <span class="me-2">💡</span>
+                Click the <strong>Details</strong> button to view complete vehicle information including trips, inspections, maintenance, repairs, and assignments.<br>
+                <strong><span class="me-1">ℹ️</span>Note:</strong> Fleet Model, Make, and Fuel Type are automatically loaded from Fleet Settings where they are managed.
+            </p>
+        </div>
+    @endif
 
 
         <div class="table-responsive">
@@ -31,9 +34,8 @@
                     <th>Model</th>
                     <th>Type</th>
                     <th>Fuel</th>
-                    <th>Status</th>
                     <th>Branch</th>
-                    <th>Active</th>
+                    <th>Status</th>
                     <th>Action</th>
                    
                 </tr>
@@ -47,15 +49,16 @@
                         <td>{{ $vehicle->model->ModelName }}</td>
                         <td>{{ $vehicle->vehicleType->Description }}</td>
                         <td>{{ $vehicle->fuelType->FuelName }}</td>
-                        <td>{{ $vehicle->status->Description }}</td>
                         <td>{{ $vehicle->branch->Name ?? '-' }}</td>
-                        <td>
+                        <td>{{ $vehicle->status->Description }}</td>
+                        
+                        {{-- <td>
                             @if ($vehicle->IsActive)
                                 <span class="badge bg-success">Yes</span>
                             @else
                                 <span class="badge bg-danger">No</span>
                             @endif
-                        </td>
+                        </td> --}}
 
                         <td>
                             <a href="{{ route('fleet.vehicles.show', $vehicle->Id) }}"

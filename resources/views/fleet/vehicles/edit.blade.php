@@ -132,12 +132,12 @@
             </div>
 
             {{-- Active --}}
-            <div class="col-md-4 mt-3">
+            {{-- <div class="col-md-4 mt-3">
                 <input type="hidden" name="IsActive" value="0">
                 <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" value="1"
                     {{ old('IsActive', $vehicle->IsActive) ? 'checked' : '' }}>
                 <label for="IsActive" class="form-check-label">Active</label>
-            </div>
+            </div> --}}
 
             <div class="mt-4">
                 <button class="btn btn-primary" type="submit">💾 Update Vehicle</button>

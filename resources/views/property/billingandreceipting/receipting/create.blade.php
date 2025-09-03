@@ -23,7 +23,7 @@
               @foreach ($invoices as $invoice)
                 <option value="{{ $invoice->Id }}"
                   data-invoicenumber="{{ $invoice->InvoiceNumber ?? 'N/A' }}"
-                  data-tenantid-name="{{ $invoice->TenantName ?? 'N/A' }}"
+                  data-tenantid-name="{{ $invoice->lease->tenant->TenantName ?? 'N/A' }}"
                   data-billingmonth-name="{{ $invoice->BillingMonth ?? 'N/A' }}"
                   data-invoicedate-name="{{ $invoice->InvoiceDate ?? 'N/A' }}"
                   data-invoicedate-id="{{ $invoice->InvoiceDate ?? 'N/A' }}"

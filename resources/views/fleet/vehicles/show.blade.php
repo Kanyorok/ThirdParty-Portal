@@ -15,7 +15,7 @@
                 <div class="mb-2"><strong>Engine No:</strong> <span class="text-muted">{{ $vehicle->EngineNo }}</span></div>
                 <div class="mb-2"><strong>Capacity:</strong> <span class="text-muted">{{ $vehicle->Capacity }}</span></div>
                 <div class="mb-2"><strong>Odometer:</strong> <span class="text-muted">{{ $vehicle->OdometerReading }}</span></div>
-                <div class="mb-2"><strong>Status:</strong> <span class="text-muted">{{ $vehicle->status->Description }}</span></div>
+                {{-- <div class="mb-2"><strong>Status:</strong> <span class="text-muted">{{ $vehicle->status->Description }}</span></div> --}}
                 <div class="mb-2"><strong>Branch:</strong> <span class="text-muted">{{ $vehicle->branch->Name ?? '-' }}</span></div>
                 <div class="mb-2">
                     <strong>Is Active?:</strong>

@@ -14,6 +14,7 @@ use App\Http\Controllers\Finance\COASegmentController;
 use App\Http\Controllers\Finance\ConsolidationReportsController;
 use App\Http\Controllers\Finance\CreditManagementController;
 use App\Http\Controllers\Finance\CreditNoteController;
+use App\Http\Controllers\Finance\DebitNoteController;
 use App\Http\Controllers\Finance\CustomerMasterController;
 use App\Http\Controllers\Finance\CustomerStatementController;
 use App\Http\Controllers\Finance\FinanceTaxTypeController;
@@ -64,6 +65,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('customermaster', CustomerMasterController::class);
     Route::resource('invoicegeneration', InvoiceGenerationController::class);
     Route::resource('creditnote', CreditNoteController::class);
+    Route::resource('debitnote', DebitNoteController::class);
     Route::resource('paymentprocessing', PaymentProcessingController::class);
     Route::resource('agingreport', AgingReportController::class);
     Route::resource('receiptsposting', ReceiptsPostingController::class);
@@ -146,7 +148,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
 
     //Added Individual Routes
     Route::post('/segment-order/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
-    Route::post('/gl/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.save');
+    Route::post('/gl/save', [COASegmentController::class, 'segmentOrder'])->name('segment-order.gl.save');
     Route::post('/glDigits/save', [COASegmentController::class, 'editGlDigit'])->name('glDigits.save');
     Route::post('/glTypeSegmentValue/save', [COASegmentController::class, 'saveGLTypeSegment'])->name('glTypeSegmentValue.save');
     Route::post('/glAccountTypeSegmentValue/save', [COASegmentController::class, 'saveGLAccountTypeSegment'])->name('glAccountTypeSegmentValue.save');
@@ -183,6 +185,10 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
 
     Route::post('/finance/voucher/{id}/post', [PaymentProcessingController::class, 'postVoucher'])->name('voucher.post');
 
+    Route::post('/finance/ar/invoices/{id}/approve', [InvoiceGenerationController::class, 'approve'])->name('ar.invoice.approve');
+    Route::post('/finance/ar/invoices/{id}/reject', [InvoiceGenerationController::class, 'reject'])->name('ar.invoice.reject');
+
+
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
         Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
             'index' => 'finance-reports.index',
@@ -191,7 +197,7 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
 });
 
 //Fetching Data for AR Invoice
-Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.')->group(function () {
+Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.ar.')->group(function () {
     Route::get('/', [ReceiptsPostingController::class, 'index'])->name('index');
     Route::get('/create', [ReceiptsPostingController::class, 'create'])->name('create');
     Route::post('/', [ReceiptsPostingController::class, 'store'])->name('store');

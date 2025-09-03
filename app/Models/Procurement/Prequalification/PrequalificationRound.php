@@ -77,6 +77,22 @@ class PrequalificationRound extends Model
             ->with(['masterCriteria', 'masterSection']);
     }
 
+    /**
+     * API alias for prequalificationSections relationship (expected by existing API resource).
+     */
+    public function sections(): HasMany
+    {
+        return $this->prequalificationSections();
+    }
+
+    /**
+     * API alias for prequalificationCriteria relationship (expected by existing API resource).
+     */
+    public function criteria(): HasMany
+    {
+        return $this->prequalificationCriteria();
+    }
+
     public function supplierCategories(): BelongsToMany
     {
         return $this->belongsToMany(

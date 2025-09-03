@@ -19,7 +19,6 @@
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Status</th>
-                    <th>Created At</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -27,8 +26,8 @@
             @foreach($providers as $provider)
                 <tr>
                     <td>{{ $provider->Id }}</td>
-                    <td>{{$provider->InsuranceProviderNO }}</td>
-                    <td>{{ $provider->Name }}</td>
+                    <td>{{$provider->InsuranceProviderNO ?? '-'}}</td>
+                    <td>{{ $provider->Name ?? '-'}}</td>
                     <td>{{ $provider->Country ?? '-' }}</td>
                     <td>{{ $provider->ContactPerson ?? '-' }}</td>
                     <td>{{ $provider->Email ?? '-' }}</td>
@@ -38,7 +37,6 @@
                             {{ $provider->IsActive ? 'Active' : 'Inactive' }}
                         </span>
                     </td>
-                    <td>{{ \Carbon\Carbon::parse($provider->CreatedAt)->format('d/m/Y') }}</td>
                     <td>
                         <a href="{{ route('bancassurance.insurers.edit', $provider->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <a href="{{ route('bancassurance.insurers.products', $provider->Id) }}" class="btn btn-sm btn-info">View Products</a>

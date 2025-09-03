@@ -3,8 +3,6 @@
 
 @section('content')
     <div class="container mt-4">
-        <h4 class="mb-3">✏️ Edit Customer Profile & KYC</h4>
-
         <form method="POST" action="{{ route('bancassurance.customers.update', $customer->Id) }}"
               enctype="multipart/form-data">
             @csrf

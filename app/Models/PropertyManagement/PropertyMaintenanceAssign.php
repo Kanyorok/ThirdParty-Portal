@@ -9,6 +9,7 @@ use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
 
 class PropertyMaintenanceAssign extends Model
 {
@@ -61,5 +62,14 @@ class PropertyMaintenanceAssign extends Model
     public function priorityLevel()
     {
         return $this->belongsTo(CodeDetail::class, 'PriorityLevel', 'Id');
+    }
+        public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
     }
 }

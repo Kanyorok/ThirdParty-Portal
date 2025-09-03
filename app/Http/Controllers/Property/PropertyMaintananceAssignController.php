@@ -24,7 +24,7 @@ class PropertyMaintananceAssignController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
+       // $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
         $maintenancerequests = PropertyMaintenanceRequest::all();
         $employees = Employee::all();
         $suppliers = Supplier::all();
@@ -35,14 +35,14 @@ class PropertyMaintananceAssignController extends Controller
 
     public function show($Id)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignView, PropertyMaintenanceAssign::class);
+       // $this->authorize(PermissionEnum::PropertyMaintenanceAssignView, PropertyMaintenanceAssign::class);
         $assignment = PropertyMaintenanceAssign::with('request')->findOrFail($Id);
         return view('property.maintenanceandissues.assignrequests.show', compact('assignment'));
     }
 
     public function store(PropertyMaintenanceAssignRequest $request)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
+      //  $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
 
         $validated = $request->validated();
 
@@ -76,7 +76,7 @@ class PropertyMaintananceAssignController extends Controller
     }
     public function edit($Id)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignView, PropertyMaintenanceAssign::class);
+       // $this->authorize(PermissionEnum::PropertyMaintenanceAssignView, PropertyMaintenanceAssign::class);
         $assignment = PropertyMaintenanceAssign::with('request')->findOrFail($Id);
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
         $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
@@ -129,7 +129,7 @@ class PropertyMaintananceAssignController extends Controller
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignDelete, PropertyMaintenanceAssign::class);
+       // $this->authorize(PermissionEnum::PropertyMaintenanceAssignDelete, PropertyMaintenanceAssign::class);
         try {
             $assignment = PropertyMaintenanceAssign::findOrFail($id);
             $assignment->delete();

@@ -24,7 +24,7 @@
                 @foreach($claims as $e)
                     <tr>
                         <td>{{ $e->Id }}</td>
-                        <td>{{ $e->policy->PolicyNumber }}</td>
+                        <td>{{ $e->policy->PolicyNumber ?? '-'}}</td>
                         <td>{{ optional($claims->firstWhere('Id', $e->Id)?->claimtype)->Description ?? 'N/A' }}</td>
                         <td>{{ number_format($e->ClaimAmount, 2) }}</td>
                         <td>{{ \Carbon\Carbon::parse($e->ClaimDate)->format('d/m/Y') }}</td>

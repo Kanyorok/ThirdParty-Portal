@@ -26,12 +26,12 @@
                 @foreach($rules as $rule)
                 <tr>
                     <td>{{ $rule->Id }}</td>
-                    <td>{{ $rule->RuleName }}</td>
-                    <td>{{ $rule->product->Name}}</td>
-                    <td>{{ $rule->policytypes->Description }}</td>
-                    <td>{{ $rule->CommissionRate}}</td>
-                    <td>{{ $rule->FixedAmount }}</td>
-                    <td>{{ $rule->appliesto->Description }}</td>
+                    <td>{{ $rule->RuleName ?? '-'}}</td>
+                    <td>{{ $rule->product->Name ?? '-'}}</td>
+                    <td>{{ $rule->policytypes->Description ?? '-'}}</td>
+                    <td>{{ $rule->CommissionRate ?? '-'}}</td>
+                    <td>{{ $rule->FixedAmount ?? '-'}}</td>
+                    <td>{{ $rule->appliesto->Description ?? '-'}}</td>
                     <td>{{ $rule->IsActive ? '✅ Active' : '❌ Inactive' }}</td>
                     <td>
                     <a href="{{ route('commissions.rules.edit', $rule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
