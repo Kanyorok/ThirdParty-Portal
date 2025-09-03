@@ -44,8 +44,6 @@ class UpdateThirdPartyRequest extends FormRequest
             'Website' => ['nullable', 'string', 'url', 'max:255'],
             'ApprovalStatus' => ['required', 'string', Rule::in(array_column(ThirdPartyApprovalStatusEnum::cases(), 'value'))],
             'Status' => ['required', 'string', Rule::in(array_column(ThirdPartyStatusEnum::cases(), 'value'))],
-            // Accept new numeric TypeId referencing t_ThirdPartyTypes.TypeId
-            'ThirdPartyType' => ['sometimes', 'integer', 'exists:t_ThirdPartyTypes,TypeId'],
             'IsPrequalified' => ['sometimes', 'boolean'],
         ];
     }
