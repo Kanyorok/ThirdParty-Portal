@@ -2,10 +2,14 @@
 
 namespace App\Services\Property\PropertyRegistry;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
+use App\Models\Auth\User;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\Locality;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyType;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 
 class PropertyRegistryService
@@ -28,6 +32,7 @@ class PropertyRegistryService
         Locality       $TownCity,
         string         $AreaLocality,
         string         $PropertyDescription = null,
+        User   $user,
     ): self
     {
         $property = PropertyRegistry::create([
@@ -41,9 +46,22 @@ class PropertyRegistryService
             'TownCity' => $TownCity->ID,
             'AreaLocality' => $AreaLocality,
             'PropertyDescription' => $PropertyDescription,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
+            'CreatedBy' => $user->Id,
+            'ModifiedBy' => $user->Id,
         ]);
+
+
+        $uploadpolicy = uploadpolicy(
+        UploadedFile $file = null
+        ): self {
+        if ($file) {
+        $policy->newDocument(
+            ModulesEnum::Property,
+            $document,
+            [PermissionEnum::PropertyRegistryView->value],
+            $user
+            );
+        }
 
         activity()->causedBy(auth()->user()->Id)->performedOn($property)->event('create')->log("Added Property {$property->Id}.");
         return new self($property);

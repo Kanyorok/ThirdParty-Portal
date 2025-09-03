@@ -14,7 +14,6 @@ use App\Models\PropertyManagement\PropertyType;
 use App\Services\Property\PropertyRegistry\PropertyRegistryService;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Support\Carbon;
-use App\Models\Auth\User;
 
 
 class PropertyRegistryController extends Controller
@@ -55,21 +54,40 @@ class PropertyRegistryController extends Controller
         $propertyType = PropertyType::findOrFail($validated['PropertyType']);
         $category = CategoryMaster::findOrFail($validated['Category']);
         $townCity = Locality::findOrFail($validated['TownCity']);
+        $file = $request->file('file',[]);
 
 
         // Call the service with structured arguments
-        $property = PropertyRegistryService::create(
-            PropertyName: $validated['PropertyName'],
-            PropertyCode: $validated['PropertyCode'],
-            PropertyType: $propertyType,
-            Category: $category,
-            Owner: $validated['Owner'],
-            AcquisitionDate: $acquisitionDate,
-            Country: $validated['Country'],
-            TownCity: $townCity,
-            AreaLocality: $validated['AreaLocality'],
-            PropertyDescription: $validated['PropertyDescription'] ?? '',
-        );
+        // $property = PropertyRegistryService::create(
+        //     PropertyName: $validated['PropertyName'],
+        //     PropertyCode: $validated['PropertyCode'],
+        //     PropertyType: $propertyType,
+        //     Category: $category,
+        //     Owner: $validated['Owner'],
+        //     AcquisitionDate: $acquisitionDate,
+        //     Country: $validated['Country'],
+        //     TownCity: $townCity,
+        //     AreaLocality: $validated['AreaLocality'],
+        //     PropertyDescription: $validated['PropertyDescription'] ?? '',
+        //     user: $request->user(),
+        // );
+
+        foreach ($request->file('file', []) as $uploadedFile) {
+        PropertyRegistryService::create(
+            $validated['PropertyName'],
+            $validated['PropertyCode'],
+            $propertyType,
+            $category,
+            $validated['Owner'],
+            $acquisitionDate,
+            $validated['Country'],
+            $townCity,
+            $validated['AreaLocality'],
+            $validated['PropertyDescription'] ?? '',
+            $request->user(),
+            $uploadedFile
+            );
+        }
 
         return redirect()->route('PropertyRegistry.index')
             ->with('success', 'Property registry created successfully');

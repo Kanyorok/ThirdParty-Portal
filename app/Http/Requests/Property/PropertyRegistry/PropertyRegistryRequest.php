@@ -27,6 +27,8 @@ class PropertyRegistryRequest extends FormRequest
             'TownCity' => 'required|exists:t_Localities,ID',
             'AreaLocality' => 'required|string|max:100',
             'PropertyDescription' => 'nullable|string|max:1000',
+            'file' => 'nullable|array',
+            'file.*' => 'file|max:9000',
         ];
     }
 

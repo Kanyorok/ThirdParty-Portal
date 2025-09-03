@@ -4,13 +4,14 @@ namespace App\Models\PropertyManagement;
 
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\Locality;
+use App\Traits\Controller\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
 class PropertyRegistry extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait,DocumentsTrait;
     //
     protected $table = 't_PropertyRegistry';
     const CREATED_AT = 'CreatedOn';

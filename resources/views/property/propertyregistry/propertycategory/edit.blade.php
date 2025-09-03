@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Edit Category')
+@section('title', 'Edit Property Category')
 @section('content')
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -10,7 +10,6 @@
             </ul>
         </div>
     @endif
-    <h1>Edit Item Category</h1>
     <form action="{{ route('propertycategories.update', $category->Id) }}" method="POST">
         @csrf
         @method('PUT')
