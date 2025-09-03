@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y \
     unzip cron poppler-utils ghostscript zip curl git gnupg2 \
     apt-transport-https unixodbc unixodbc-dev imagemagick \
     supervisor lsb-release libwebp-dev libzip-dev \
-    libpng-dev libjpeg-dev libfreetype6-dev \
+    libpng-dev libjpeg-dev pdftk libfreetype6-dev \
     libxml2-dev libonig-dev nodejs wget ca-certificates\
     libssl-dev software-properties-common poppler-utils \
     libc-client-dev libkrb5-dev libgssapi-krb5-2  \
