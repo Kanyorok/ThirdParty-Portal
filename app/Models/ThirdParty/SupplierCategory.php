@@ -28,6 +28,7 @@ class SupplierCategory extends Model
         'IsActive',
         'CreatedBy',
         'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -66,7 +67,12 @@ class SupplierCategory extends Model
             'ItemCategoryID'
         )
             ->withPivot([
-                'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn'
+                'CreatedBy',
+                'CreatedOn',
+                'ModifiedBy',
+                'ModifiedOn',
+                'DeletedBy',
+                'DeletedOn'
             ])
             ->whereNull('t_SupplierCategory_ItemCategory.DeletedOn');
     }
@@ -85,7 +91,7 @@ class SupplierCategory extends Model
         $now = now();
 
         // Current active ids
-    $current = DB::table($pivotTable)
+        $current = DB::table($pivotTable)
             ->where('SupplierCategoryID', $this->getKey())
             ->whereNull('DeletedOn')
             ->pluck('ItemCategoryID');
