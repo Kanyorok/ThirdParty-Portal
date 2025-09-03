@@ -7,7 +7,7 @@
 <div class="container mt-4">
 
 <a href="{{ route('attachments.create') }}" class="btn btn-primary mb-3">Attach Document</a>
-  <h4 class="fw-bold mb-3">📋 Property Documents</h4>
+  <h4 class="fw-bold mb-3">Property Documents</h4>
     @if($propertyattachments->count())
         <table id="propertyattachment" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
@@ -23,11 +23,11 @@
     <tbody>
     @foreach($propertyattachments as $propertyattachment)
       <tr>
-          <td>{{ $propertyattachment->Id }}</td>
-          <td>{{ $propertyattachment->property->PropertyName}}</td>
-          <td>{{ $propertyattachment->DocumentTitle }}</td>
-          <td>{{ $propertyattachment->documenttype->Description }}</td>
-          <td>{{ $propertyattachment->Description}}</td>
+          <td>{{ $propertyattachment->Id ?? '-'}}</td>
+          <td>{{ $propertyattachment->property->PropertyName ?? '-'}}</td>
+          <td>{{ $propertyattachment->DocumentTitle ?? '-'}}</td>
+          <td>{{ $propertyattachment->documenttype->Description ?? '-'}}</td>
+          <td>{{ $propertyattachment->Description ?? '-'}}</td>
           <td>
           <a href="{{ route('attachments.edit', $propertyattachment->Id) }}" class="btn btn-info btn-sm">Edit</a>
           <form class="d-inline" action="{{ route('attachments.destroy', $propertyattachment->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this property attachment?');">
