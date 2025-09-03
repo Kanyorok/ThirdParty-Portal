@@ -25,7 +25,7 @@ class DebitNoteController extends Controller
 
         $notes = FinanceCDNotes::with('invoiceDebit:Id,InvoiceNumber')
             ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description','ApprovalStatus')
-            ->latest()->get();
+            ->where('NoteType','debit')->latest()->get();
         return view('finance.accountsreceivable.debitnote.index', compact('notes','invoices'));
     }
 
