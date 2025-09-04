@@ -104,7 +104,9 @@ public function create(array $data): StockConsumption
     protected function generateConsumptionNo(): string
 {
     $prefix = 'SC-' . date('ymd'); 
-    $latest = StockConsumption::where('ConsumptionNo', 'LIKE', "$prefix%")
+
+    $latest = StockConsumption::withTrashed() // Include soft deleted records
+                ->where('ConsumptionNo', 'LIKE', "$prefix%")
                 ->orderBy('ConsumptionNo', 'desc')
                 ->first();
 
@@ -123,13 +125,14 @@ public function create(array $data): StockConsumption
         return DB::transaction(function () use ($stockConsumption, $data) {
             $stockConsumption->update([
                 'ItemID'        => $data['ItemID'],
-                'SKUID'         => $data['SKUID'] ?? null,
                 'BranchID'      => $data['BranchID'],
                 'StoreID'       => $data['StoreID'],
                 'IssuedToType'  => $data['IssuedToType'],
                 'IssuedToID'    => $data['IssuedToID'],
                 'Quantity'      => $data['Quantity'],
                 'UOM'           => $data['UOM'],
+                'IssuedBy'      => $data['IssuedBy'],
+                'IssuedOn'      => $data['IssuedOn'],
                 'Remarks'       => $data['Remarks'] ?? null,
                 'ModifiedBy'    => Auth::id(),
                 'ModifiedOn'    => now(),
@@ -144,19 +147,22 @@ public function create(array $data): StockConsumption
             return $stockConsumption;
         });
     }
-    public function delete(StockConsumption $stockConsumption): bool
-    {
-        return DB::transaction(function () use ($stockConsumption) {
-            $stockConsumption->delete();
+   public function delete(StockConsumption $stockConsumption): bool
+{
+    return DB::transaction(function () use ($stockConsumption) {
+        $stockConsumption->DeletedBy = Auth::id();
+        $stockConsumption->save(); 
 
-            activity()
-                ->performedOn($stockConsumption)
-                ->causedBy(Auth::user())
-                ->log('Stock Consumption Deleted');
+        $stockConsumption->delete();
 
-            return true;
-        });
-    }
+        activity()
+            ->performedOn($stockConsumption)
+            ->causedBy(Auth::user())
+            ->log('Stock Consumption Deleted');
+
+        return true;
+    });
+}
 
 
 }

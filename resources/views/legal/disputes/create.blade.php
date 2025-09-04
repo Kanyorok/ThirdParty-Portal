@@ -52,10 +52,10 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">DMS Document ID</label>
-                    <input type="text" name="DMSDocID" value="{{ old('DMSDocID', $case->DMSDocID ?? '') }}" class="form-control">
-                </div>
+{{--                <div class="mb-3">--}}
+{{--                    <label class="form-label">DMS Document ID</label>--}}
+{{--                    <input type="text" name="DMSDocID" value="{{ old('DMSDocID', $case->DMSDocID ?? '') }}" class="form-control">--}}
+{{--                </div>--}}
 
                 <div class="mb-3">
                     <label class="form-label">Summary</label>

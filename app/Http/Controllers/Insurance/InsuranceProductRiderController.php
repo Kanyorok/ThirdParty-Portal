@@ -49,10 +49,10 @@ class InsuranceProductRiderController extends Controller
             $InsuranceProviderId,
                 $Product,
                 $validated['RiderName'],
-                $validated['Description'],
+                $validated['Description'] ?? '',
                 $validated['AdditionalPremium'],
-                $validated['IsOptional'],
-                $validated['IsActive'],
+                $validated['IsOptional'] ?? null,
+                $validated['IsActive'] ?? null,
                 Auth::user(),
             );
 
@@ -60,12 +60,11 @@ class InsuranceProductRiderController extends Controller
     }
     public function edit($Id)
     {
-       $this->authorize(PermissionEnum::InsuranceProductRiderView, InsuranceProductRider::class);
-
-       $rider = InsuranceProductRider::findOrFail($Id);
-       $providers = InsuranceProvider::all();
-     
-        return view('bancassurance.riders.edit', compact('rider','providers'));
+    $this->authorize(PermissionEnum::InsuranceProductRiderView, InsuranceProductRider::class);
+    $rider = InsuranceProductRider::findOrFail($Id);
+    $providers = InsuranceProvider::all();
+    $products = InsuranceProduct::where('InsuranceProviderID', $rider->InsuranceProviderId)->get();
+    return view('bancassurance.riders.edit', compact('rider','providers','products'));
     }
 
     // Update product
@@ -83,7 +82,7 @@ class InsuranceProductRiderController extends Controller
                 'InsuranceProviderId' => $validated['InsuranceProviderId'],             
                 'Product' => $validated['Product'],
                 'RiderName' => $validated['RiderName'],
-                'Description' => $validated['Description'], 
+                'Description' => $validated['Description'] ?? '', 
                 'AdditionalPremium' => $validated['AdditionalPremium'],                                        
                 'IsOptional' => $validated['IsOptional'] ?? '',
                 'IsActive' => $validated['IsActive'] ?? '',

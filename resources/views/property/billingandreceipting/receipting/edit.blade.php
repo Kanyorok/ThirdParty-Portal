@@ -53,7 +53,7 @@
             <div class="col-md-6">
               <label class="form-label">Tenant Name</label>
               <input type="text" id="tenantid-display" class="form-control" readonly
-                value="{{ optional($receipts->invoice)->TenantName }}">
+                value="{{ optional($receipts->invoice)->lease->tenant->TenantName }}">
             </div>
 
             <div class="col-md-6">

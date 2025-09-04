@@ -1,7 +1,9 @@
 @extends('layouts.app')
 @section('title', 'Assign Driver to Vehicle')
 
-    @if ($errors->any())
+    
+@section('content')
+  @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
                 @foreach($errors->all() as $error)
@@ -10,8 +12,6 @@
             </ul>
         </div>
     @endif
-    
-@section('content')
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">👨‍✈️ Assign Driver to Vehicle</h4>
 
@@ -37,12 +37,12 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label for="AssignmentDate" class="form-label">Assignment Date</label>
+                    <label for="AssignmentDate" class="form-label">Assigned On</label>
                     <input type="date" name="AssignmentDate" class="form-control" required>
                 </div>
 
                 <div class="col-md-4">
-                    <label for="UnassignmentDate" class="form-label">Unassignment Date</label>
+                    <label for="UnassignmentDate" class="form-label">Unassigned On</label>
                     <input type="date" name="UnassignmentDate" class="form-control">
                 </div>
 

@@ -44,10 +44,11 @@
                         </div>
 
                         <div class="mb-3 col-md-6">
-                            <label>Is Active?</label>
-                            <select name="IsActive" class="form-select" required>
-                                <option value="1" selected>Yes</option>
-                                <option value="0">No</option>
+                            <label>Currency</label>
+                            <select name="Currency" class="form-select" required>
+                                @foreach($currencies as $currency)
+                                    <option value="{{$currency->Id}}">{{$currency->Code}}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>

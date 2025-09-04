@@ -84,7 +84,7 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::post('/storeProjections', [BudgetProjectionsController::class, 'storeProjections'])->name('budgetprojections.storeProjections');
-    Route::post('/deleteProjection', [BudgetProjectionsController::class, 'deleteProjection'])->name('budgetprojections.deleteProjection');
+    Route::post('/deleteProjection', [BudgetProjectionsController::class, 'deleteProjection'])->name('budgetprojections.deleteProjection.post');
     Route::get('/budget-lines/{id}/product-types', [BudgetProjectionsController::class, 'getProductTypes'])->name('budget-lines.product-types');
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
     Route::get('/entrybyglline/glview/{budgetId}', [BudgetGLLineEntryController::class, 'glview'])->name('entrybyglline.glview');

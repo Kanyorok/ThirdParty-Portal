@@ -510,7 +510,7 @@ class CodeDetailSeeder extends Seeder
             //Driver Employment Type
             ['CodeID' => 'EmploymentType', 'Description' => 'Permanent', 'Value' => 'PR'],
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
-           
+
 
             //Vehicle Request Status
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
@@ -550,6 +550,25 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Monthly', 'Value' => 'm','DisplayOrder'=>0],
             ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Quarterly', 'Value' => 'q','DisplayOrder'=>0],
             ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Yearly', 'Value' => 'y','DisplayOrder'=>0],
+
+            // Legal Execution Status
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Pending',  'Value' => 'P'],
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Signed',   'Value' => 'S'],
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Archived', 'Value' => 'A'],
+
+            //Legal Document Type
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'Contract', 'Value' => 'C'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'Lease',    'Value' => 'L'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'NDA',      'Value' => 'N'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'MOU',      'Value' => 'M'],
+
+            //Legal Case Status
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Open',      'Value' => 'O'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Closed',    'Value' => 'C'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed',  'Value' => 'A'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Dismissed', 'Value' => 'D'],
+
+
 
         ];
 

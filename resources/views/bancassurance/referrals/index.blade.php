@@ -17,6 +17,9 @@
             </a>
         </div>
 
+        <div>
+            <p>The list below consist of insurance referrals</p>
+        </div>
         <div class="table-responsive">
             <table class="table table-bordered table-hover table-sm align-middle" id="referralTable">
                 <thead class="table-light">

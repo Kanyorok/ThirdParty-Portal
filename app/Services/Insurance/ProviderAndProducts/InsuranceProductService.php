@@ -19,8 +19,8 @@ class InsuranceProductService
         InsuranceProvider $InsuranceProviderID,
         string            $Name,
         string            $Type,
-        string            $Description,
-        bool              $IsActive,
+        ?string            $Description = null,
+        ?bool              $IsActive = null,
         User              $user
     ): self
     {
@@ -29,8 +29,8 @@ class InsuranceProductService
             'InsuranceProviderID' => $InsuranceProviderID->Id,
             'Name' => $Name,
             'Type' => $Type,
-            'Description' => $Description,
-            'IsActive' => $IsActive ? 1 : 0,
+            'Description' => $Description ?? null,
+            'IsActive' => $IsActive ? 1 : 0 ?? null,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

@@ -29,7 +29,7 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Description <span class="text-danger">*</span></label>
+            <label class="form-label">Description</label>
             <textarea name="Description" class="form-control" rows="3"></textarea>
         </div>
 

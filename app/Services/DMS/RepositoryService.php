@@ -22,9 +22,8 @@ use Throwable;
 
 class RepositoryService extends PermissionsService
 {
-    protected const ROOT = 'root';
-    protected const Internal = 'internal';
-
+    protected const string ROOT = 'root';
+    protected const string Internal = 'internal';
 
     public function __construct(public Repository $repo) {}
 
@@ -91,6 +90,7 @@ class RepositoryService extends PermissionsService
     {
         return ($this->repo->RepositoryId === self::ROOT);
     }
+
 
     /**
      * @throws ErroredException
@@ -162,9 +162,12 @@ class RepositoryService extends PermissionsService
     public static function create(Repository $repository, string $Name, User $actor, string $Description = ""): RepositoryService
     {
         return (new self(self::_create($Name, $actor, $repository, $Description)))
-            ->addPermission($actor, RoleEnum::Admin, $actor, false);
+            ->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false);
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function addPermission(User|Team $assignee, RoleEnum $role, User $actor, bool $notify = true): static
     {
         $this->_addPermissions($this->repo, $assignee, $role, $actor, $notify);

@@ -5,7 +5,6 @@ namespace App\Enums\Core;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use LogicException;
 
 enum PermissionEnum: string
 {
@@ -676,6 +675,11 @@ enum PermissionEnum: string
     case FleetServiceAlertView = 'fleetServiceAlert-view';
     case FleetServiceAlertAcknowledge = 'fleetServiceAlert-acknowledge';
 
+    case VehicleInspectionView = 'vehicleInspection-view';
+    case VehicleInspectionCreate = 'vehicleInspection-create';
+    case VehicleInspectionUpdate = 'vehicleInspection-update';
+    case VehicleInspectionDestroy = 'vehicleInspection-destroy';
+
 
 
     /*
@@ -751,6 +755,8 @@ enum PermissionEnum: string
             [self::BoardManage, self::BoardMeeting,],
             [self::Integrations],
             [self::Roles],
+
+            [self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease],
 
             [self::DepartmentNeedsRead, self::DepartmentNeedsWrite, self::DepartmentNeedsUpdate, self::DepartmentNeedsDelete, self::DepartmentNeedsApproval,],
             [self::ProcurementMethodRead, self::ProcurementMethodWrite,],
@@ -871,6 +877,7 @@ enum PermissionEnum: string
             [self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy],
             [self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy],
             [self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge],
+            [self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy],
 
             [self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete],
             [self::BancassurancePolicyCreate, self::BancassurancePolicyView, self::BancassurancePolicyUpdate, self::BancassurancePolicyDelete],
@@ -944,12 +951,11 @@ enum PermissionEnum: string
             self::DebtNotificationView, self::DebtNotificationSend,
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
-
-            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
-
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
             => ModulesEnum::Settings,
+
+            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
 
             //Procurement
             self::RequisitionRead, self::RequisitionWrite, self::RequisitionUpdate, self::RequisitionDelete, self::RequisitionApproval,
@@ -1003,6 +1009,7 @@ enum PermissionEnum: string
             self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge,
             self::FleetRoutePlanView,self::FleetRoutePlanCreate,self::FleetRoutePlanUpdate,self::FleetRoutePlanDestroy,
             self::FleetTripLogView,self::FleetTripLogCreate,self::FleetTripLogUpdate,self::FleetTripLogDestroy,
+            self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy,
             => ModulesEnum::Fleet,
 
 
@@ -1024,7 +1031,7 @@ enum PermissionEnum: string
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView,
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView
             => ModulesEnum::Property,
-            default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+           // default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
 
             //Insurance
             self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete,
@@ -1157,6 +1164,7 @@ enum PermissionEnum: string
             self::FleetMaintenanceScheduleView,self::FleetMaintenanceScheduleCreate,self::FleetMaintenanceScheduleUpdate,self::FleetMaintenanceScheduleDestroy, self::FleetMaintenanceScheduleCancel => 'Fleet Maintenance Schedule',
             self::ContractedDriverView,self::ContractedDriverCreate,self::ContractedDriverUpdate,self::ContractedDriverDestroy => 'Contracted Driver',
             self::FleetRepairLogView,self::FleetRepairLogCreate,self::FleetRepairLogUpdate,self::FleetRepairLogDestroy => 'Fleet Repair Log',
+            self::VehicleInspectionView,self::VehicleInspectionCreate,self::VehicleInspectionUpdate,self::VehicleInspectionDestroy => 'Vehicle Inspection ( Pre & Post Trip)',
             self::FleetServiceAlertView,self::FleetServiceAlertAcknowledge => 'Fleet Service Alerts',
 
             ////////////////////////// Budget and Analytics //////////////////////////////
@@ -1180,9 +1188,9 @@ enum PermissionEnum: string
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
-            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
 
-            default => throw new LogicException("Unhandled PermissionEnum case: {$this->value}"),
+            //dms
+            self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => 'Document Management System',
 
             //Insurance
             self::BancassuranceReferralCreate, self::BancassuranceReferralView, self::BancassuranceReferralUpdate, self::BancassuranceReferralDelete => 'Referral',

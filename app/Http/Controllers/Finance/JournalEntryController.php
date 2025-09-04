@@ -110,7 +110,7 @@ class JournalEntryController extends Controller
                 ->withProperties(['Create' =>$journalEntry])
                 ->log('Created Journal Entry');
             DB::commit();
-            return back()->with('success', 'Journal Entry created successfully.');
+            return back()->with('success', "Journal Entry ($journalEntry->RefNo) created successfully.");
             //return redirect()->route('journalentry.index')->with('success', 'Journal Entry created successfully.');
         }catch (\Throwable $th){
             DB::rollBack();

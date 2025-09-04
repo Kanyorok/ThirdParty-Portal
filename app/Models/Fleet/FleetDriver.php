@@ -10,11 +10,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Core\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
 use App\Models\HRM\Employee;
+use App\Models\Fleet\FleetTripLog; 
+
 
 class FleetDriver extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -47,6 +50,11 @@ class FleetDriver extends Model
     public function driver()
     {
         return $this->belongsTo(Employee::class, 'StaffNumber', 'Id');
+    }
+
+    public function tripLogs()
+    {
+        return $this->hasMany(FleetTripLog::class, 'DriverID', 'Id');
     }
 
 

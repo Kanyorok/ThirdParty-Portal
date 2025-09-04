@@ -1,45 +1,95 @@
 @extends('layouts.app')
-@section('title', 'Property Registry ')
+@section('title', '')
 @section('content')
-<div class="container mt-5" style="max-width: 700px;">
-    <h3 class="mb-4">Property Details</h3>
-  <div class="card">
-    <div class="card-body">
-      <dl class="row">
-        <dt class="col-sm-4">Property Name</dt>
-        <dd class="col-sm-8">{{ $property->PropertyName?? '-' }}</dd>
+<div class="container mt-4" style="max-width: 1000px;">
+    <h4 class="mb-3">Property Details</h4>
+  
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6"> {{-- smaller gap & font --}}
+                
+                <div class="col">
+                    <strong>Property Name</strong>
+                    <p class="mb-1">{{ $property->PropertyName ?? '-' }}</p>
+                </div>
 
-          <dt class="col-sm-4">Property Code</dt>
-          <dd class="col-sm-8">{{ $property->PropertyCode?? '-' }}</dd>
+                <div class="col">
+                    <strong>Property Code</strong>
+                    <p class="mb-1">{{ $property->PropertyCode ?? '-' }}</p>
+                </div>
 
-          <dt class="col-sm-4">Property Type</dt>
-          <dd class="col-sm-8">{{ $property->type->PropertyTypeName?? '-' }}</dd>
+                <div class="col">
+                    <strong>Property Type</strong>
+                    <p class="mb-1">{{ $property->type->PropertyTypeName ?? '-' }}</p>
+                </div>
 
-          <dt class="col-sm-4">Property Category</dt>
-          <dd class="col-sm-8">{{ $property->propertyCategory->Name?? '-' }}</dd>
+                <div class="col">
+                    <strong>Property Category</strong>
+                    <p class="mb-1">{{ $property->propertyCategory->Name ?? '-' }}</p>
+                </div>
 
-          <dt class="col-sm-4">Owner</dt>
-          <dd class="col-sm-8">{{ $property->Owner?? '-' }}</dd>
+                <div class="col">
+                    <strong>Owner</strong>
+                    <p class="mb-1">{{ $property->Owner ?? '-' }}</p>
+                </div>
 
-          <dt class="col-sm-4">Acquisition Date</dt>
-          <dd class="col-sm-8">{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d M Y') : '-' }}</dd>
+                <div class="col">
+                    <strong>Acquisition Date</strong>
+                    <p class="mb-1">{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d M Y') : '-' }}</p>
+                </div>
 
-          <dt class="col-sm-4">Country</dt>
-          <dd class="col-sm-8">{{ $property->Country?? '-' }}</dd>
+                <div class="col">
+                    <strong>Country</strong>
+                    <p class="mb-1">{{ $property->Country ?? '-' }}</p>
+                </div>
 
-          <dt class="col-sm-4">Town/City</dt>
-          <dd class="col-sm-8">{{ $property->propertyLocality->Name?? '-' }}</dd>
+                <div class="col">
+                    <strong>Town/City</strong>
+                    <p class="mb-1">{{ $property->propertyLocality->Name ?? '-' }}</p>
+                </div>
 
-        <dt class="col-sm-4">Area/Locality</dt>
-        <dd class="col-sm-8">{{ $property->AreaLocality ?? '-' }}</dd>
+                <div class="col">
+                    <strong>Area/Locality</strong>
+                    <p class="mb-1">{{ $property->AreaLocality ?? '-' }}</p>
+                </div>
 
-        <dt class="col-sm-4">Property Description</dt>
-        <dd class="col-sm-8">{{ $property->PropertyDescription?? '-' }}</dd>
-      </dl>
+                <div class="col">
+                    <strong>Property Description</strong>
+                    <p class="mb-1">{{ $property->PropertyDescription ?? '-' }}</p>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <h6 class="mb-2">Audit Information</h6>
+            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
+                <div class="col">
+                    <strong>Created By</strong>
+                    <p class="mb-1">{{ $property->createdByUser->Name ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Created On</strong>
+                    <p class="mb-1">{{ $property->CreatedOn ? \Carbon\Carbon::parse($property->CreatedOn)->format('d M Y H:i') : '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Modified By</strong>
+                    <p class="mb-1">{{ $property->modifiedByUser->Name ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Modified On</strong>
+                    <p class="mb-1">{{ $property->ModifiedOn ? \Carbon\Carbon::parse($property->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer text-end py-2">
+            <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
+        </div>
     </div>
-    <div class="card-footer">
-        <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">Back</a>
-    </div>
-  </div>
 </div>
 @endsection
+
+

@@ -83,24 +83,24 @@ class InvoiceEntryController extends Controller
 
         try{
 
-        $grnItems = FacadesDB::table('t_GoodsReceipts')
-            ->where('GRNID', $grnId)
-            ->get();
-        $sum=0;
-        foreach($grnItems as $item) {
-            $GRN_ID = $item->id;
-            $itemID=$item->ItemNo;
-            $grnItemQty=$item->ReceivedQTY;
-            $poItemqty = $item->POQTY; //represents the unique Orderline Ids based on
-            if($grnItemQty !== $poItemqty) {
-                return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
-            }
+            $grnItems = FacadesDB::table('t_GoodsReceipts')
+                ->where('GRNID', $grnId)
+                ->get();
+            $sum=0;
+            foreach($grnItems as $item) {
+                $GRN_ID = $item->id;
+                $itemID=$item->ItemNo;
+                $grnItemQty=$item->ReceivedQTY;
+                $poItemqty = $item->POQTY; //represents the unique Orderline Ids based on
+                if($grnItemQty !== $poItemqty) {
+                    return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
+                }
 
-            $linestotal = FacadesDB::table('t_OrderLines')
-                ->where('iStockCodeID', $itemID)
-                ->where('iOrderID', $poId)
-                ->value('LineTotal'); //represents the unique Orderline Ids based on
-            $sum += $linestotal;
+                $linestotal = FacadesDB::table('t_OrderLines')
+                    ->where('iStockCodeID', $itemID)
+                    ->where('iOrderID', $poId)
+                    ->value('LineTotal'); //represents the unique Orderline Ids based on
+                $sum += $linestotal;
             }
             $invoiceTotAmount = $validated['InvoiceAmount'];
 
@@ -110,42 +110,42 @@ class InvoiceEntryController extends Controller
             //Currency Exchange Rates Details
 
 
-        FacadesDB::beginTransaction();
+            FacadesDB::beginTransaction();
 
-        $invoice =  FinanceInvoiceEntry::create([
-            'InvoiceNumber'=> $validated['InvoiceNumber'],
-            'SupplierID'=> $validated['SupplierID'],
-            'CurrencyID'=> $validated['CurrencyID'],
-            'ExchangeRate'=> $validated['ExchangeRate'],
-            'POReference'=> $poId,
-            'GRNReference'=> $GRN_ID,
-            'InvoiceDate'=> $validated['InvoiceDate'],
-            'InvoiceAmount'=> $validated['InvoiceAmount'],
-            'Description'=> $validated['Description'],
-            'CreatedBy'          =>Auth::Id(),
-            'ModifiedBy'         => Auth::Id(),
-        ]);
+            $invoice =  FinanceInvoiceEntry::create([
+                'InvoiceNumber'=> $validated['InvoiceNumber'],
+                'SupplierID'=> $validated['SupplierID'],
+                'CurrencyID'=> $validated['CurrencyID'],
+                'ExchangeRate'=> $validated['ExchangeRate'],
+                'POReference'=> $poId,
+                'GRNReference'=> $GRN_ID,
+                'InvoiceDate'=> $validated['InvoiceDate'],
+                'InvoiceAmount'=> $validated['InvoiceAmount'],
+                'Description'=> $validated['Description'],
+                'CreatedBy'          =>Auth::Id(),
+                'ModifiedBy'         => Auth::Id(),
+            ]);
 
-        //File Upload
-        if ($request->hasFile('file')) {
-            $invoice->newDocument(
-                ModulesEnum::Finance, // or ModulesEnum::INVOICE if you have it
-                $request->file('file'),
-                [PermissionEnum::FinanceAccountsPayableCreate, PermissionEnum::FinanceAccountsPayableView], // Permissions
-                Auth::user()
-            );
-        }
+            //File Upload
+            if ($request->hasFile('file')) {
+                $invoice->newDocument(
+                    ModulesEnum::Finance, // or ModulesEnum::INVOICE if you have it
+                    $request->file('file'),
+                    [PermissionEnum::FinanceAccountsPayableCreate, PermissionEnum::FinanceAccountsPayableView], // Permissions
+                    Auth::user()
+                );
+            }
 
-         activity()
-            ->performedOn($invoice)
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'create'])
-            ->log('Created Invoice:' . $invoice->InvoiceNumber);
+            activity()
+                ->performedOn($invoice)
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'create'])
+                ->log('Created Invoice:' . $invoice->InvoiceNumber);
 
             FacadesDB::commit();
 
             return redirect()->route('invoiceentry.index')->with('success','Invoice created successfully');
-    }catch(\Throwable $th){
+        }catch(\Throwable $th){
             FacadesDB::rollback();
             //return $th->getMessage();
             Log::error('Failed to Create Invoice'. $th->getMessage());
@@ -164,53 +164,53 @@ class InvoiceEntryController extends Controller
     public function getGRNs($selectedPO)
     {
 
-       // return $selectedPO;
+        // return $selectedPO;
         $grns = FacadesDB::table('t_GoodsReceipts')
             ->select(FacadesDB::raw('MIN(id) as id'), 'GRNID')
             ->where('POID', $selectedPO)
             ->where('InspectionStatus','p') // Pick ones that are posted or approved
             ->groupBy('GRNID')
             ->get();
-            return response()->json($grns);
+        return response()->json($grns);
     }
 
 
     public function viewPOModal($selectedPO)
-        {
-            // Get PO details
-            $po = FacadesDB::table('t_Orders')->where('OrderNo', $selectedPO)->first();
-            $orderID=$po->Id;
-            if (!$po) {
-                return response()->json(['error' => 'PO not found'], 404);
-            }
-
-            // Get supplier name
-            $supplier = FacadesDB::table('t_Suppliers')->where('Id', $po->AccountID)->first();
-
-            // Get PO line items with ItemName from t_Items
-            $items = FacadesDB::table('t_OrderLines as ol')
-                ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
-                ->where('ol.iOrderID', $orderID)
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'ItemName'    => $item->ItemName ?? '',
-                        'Description' => $item->Description ?? '',
-                        'Quantity'    => $item->fQuantity ?? '',
-                        'UnitCost'    => $item->fUnitPriceExcl ?? '',
-                    ];
-                });
-
-            // Build response
-            $data = [
-                'OrderNo'      => $po->OrderNo ?? '',
-                'SupplierName' => $supplier->SupplierName ?? '',
-                'OrderDate'    => $po->OrderDate ?? '',
-                'items'        => $items,
-            ];
-
-            return response()->json($data);
+    {
+        // Get PO details
+        $po = FacadesDB::table('t_Orders')->where('OrderNo', $selectedPO)->first();
+        $orderID=$po->Id;
+        if (!$po) {
+            return response()->json(['error' => 'PO not found'], 404);
         }
+
+        // Get supplier name
+        $supplier = FacadesDB::table('t_Suppliers')->where('Id', $po->AccountID)->first();
+
+        // Get PO line items with ItemName from t_Items
+        $items = FacadesDB::table('t_OrderLines as ol')
+            ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
+            ->where('ol.iOrderID', $orderID)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'ItemName'    => $item->ItemName ?? '',
+                    'Description' => $item->Description ?? '',
+                    'Quantity'    => $item->fQuantity ?? '',
+                    'UnitCost'    => $item->fUnitPriceExcl ?? '',
+                ];
+            });
+
+        // Build response
+        $data = [
+            'OrderNo'      => $po->OrderNo ?? '',
+            'SupplierName' => $supplier->SupplierName ?? '',
+            'OrderDate'    => $po->OrderDate ?? '',
+            'items'        => $items,
+        ];
+
+        return response()->json($data);
+    }
 
     public function saveInvoice(Request $request)
     {
@@ -226,34 +226,34 @@ class InvoiceEntryController extends Controller
         FacadesDB::beginTransaction();
 
         try {
-        $grnItems = FacadesDB::table('t_GoodsReceipts')
-            ->where('POID', $poId)
-            ->where('GRNID', $grnId)
-            ->get();
+            $grnItems = FacadesDB::table('t_GoodsReceipts')
+                ->where('POID', $poId)
+                ->where('GRNID', $grnId)
+                ->get();
 
-        foreach($grnItems as $item) {
-            $itemID=$item->ItemNo;
-            $grnItemQty=$item->qty;
-            $poItemqty = FacadesDB::table('t_OrderLines')
-                ->where('iOrderID', $poId)
-                ->where('iStockCodeID', $itemID)
-                ->value('fQuantity');
-            if($grnItemQty !== $poItemqty) {
-                return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
+            foreach($grnItems as $item) {
+                $itemID=$item->ItemNo;
+                $grnItemQty=$item->qty;
+                $poItemqty = FacadesDB::table('t_OrderLines')
+                    ->where('iOrderID', $poId)
+                    ->where('iStockCodeID', $itemID)
+                    ->value('fQuantity');
+                if($grnItemQty !== $poItemqty) {
+                    return back()->with('error' , 'GRN quantity does not match PO quantity for item.');
+                }
+
+                $poTotAmount = FacadesDB::table('t_Orders')
+                    ->where('Id', $poId)
+                    ->value('OrdTotExcl');
+
+                $invoiceTotAmount = $request->input('InvoiceAmount');
+
+                if($poTotAmount !== $invoiceTotAmount){
+                    return back()->with('error', 'Invoice amount does not match PO total amount.');
+                }
+                FacadesDB::commit();
+                return 200;
             }
-
-            $poTotAmount = FacadesDB::table('t_Orders')
-                ->where('Id', $poId)
-                ->value('OrdTotExcl');
-
-            $invoiceTotAmount = $request->input('InvoiceAmount');
-
-            if($poTotAmount !== $invoiceTotAmount){
-                return back()->with('error', 'Invoice amount does not match PO total amount.');
-            }
-            FacadesDB::commit();
-            return 200;
-        }
         }catch (\Throwable $th) {
             FacadesDB::rollback();
 

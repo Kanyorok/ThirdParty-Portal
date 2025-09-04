@@ -96,17 +96,23 @@
 @push('scripts')
 <script>
     $(function() {
-        $('#roundsTable').DataTable({
-            pageLength: 10,
-            order: [
-                [3, 'desc']
-            ],
-            responsive: true,
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search rounds..."
-            }
-        });
+        // If the table tbody contains a single placeholder cell with a colspan (no data),
+        // skip DataTable initialization to avoid "Requested unknown parameter" errors.
+        var $roundsTable = $('#roundsTable');
+        var $firstTd = $roundsTable.find('tbody tr td').first();
+        if (!($firstTd.length && $firstTd.attr('colspan'))) {
+            $roundsTable.DataTable({
+                pageLength: 10,
+                order: [
+                    [3, 'desc']
+                ],
+                responsive: true,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search rounds..."
+                }
+            });
+        }
 
         $('[data-bs-toggle="tooltip"]').tooltip();
     });

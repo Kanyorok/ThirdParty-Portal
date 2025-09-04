@@ -2,6 +2,15 @@
 @section('title', 'Register Vehicle')
 
 @section('content')
+  @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">🚗 Register New Vehicle</h4>
 
@@ -64,11 +73,18 @@
                 </div>
 
                 {{-- Year --}}
-                <div class="col-md-4">
-                    <label class="form-label">Year</label>
-                    <input type="number" class="form-control" name="YearOfManufacture"
-                           value="{{ old('YearOfManufacture') }}">
-                </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Year</label>
+                        <select class="form-select" name="YearOfManufacture" required>
+                            <option value="">{{ now()->year }}</option>
+                            @for ($year = now()->year; $year >= 1980; $year--)
+                                <option value="{{ $year }}" {{ old('YearOfManufacture') == $year ? 'selected' : '' }}>
+                                    {{ $year }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
+
 
                 {{-- Chassis No --}}
                 <div class="col-md-4">
@@ -84,7 +100,7 @@
 
                 {{-- Capacity --}}
                 <div class="col-md-4">
-                    <label class="form-label">Capacity</label>
+                    <label class="form-label">Capacity (No. of Passengers)</label>
                     <input type="text" class="form-control" name="Capacity" value="{{ old('Capacity') }}">
                 </div>
 
@@ -123,13 +139,13 @@
                 </div>
             </div>
 
-            {{-- Active --}}
+            {{-- Active
             <div class="col-md-4 mt-3">
                 <input type="hidden" name="IsActive" value="0">
                 <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input" value="1"
                     {{ old('IsActive') ? 'checked' : '' }}>
                 <label for="IsActive" class="form-check-label">Active</label>
-            </div>
+            </div> --}}
 
             <div class="mt-4">
                 <button class="btn btn-success" type="submit">✅ Register Vehicle</button>
