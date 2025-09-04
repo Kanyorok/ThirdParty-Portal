@@ -119,34 +119,38 @@ class FleetDriverController extends Controller
 
 
       public function show($Id)
-{
-    $this->authorize('view', FleetDriver::class);
-    $driver = FleetDriver::findOrFail($Id);
-    $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
-    $assignments = FleetDriverAssignment::where('DriverID', $Id)
-        ->with('vehicle')
-        ->orderByDesc('AssignmentDate')
-        ->get();
-    $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        {
+            $this->authorize('view', FleetDriver::class);
+            $driver = FleetDriver::findOrFail($Id);
+            $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
+            $assignments = FleetDriverAssignment::where('DriverID', $Id)
+                ->with('vehicle')
+                ->orderByDesc('AssignmentDate')
+                ->get();
+            $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+                ->where('Description', 'Active')
+                ->value('Id');
 
-    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-        ->pluck('name', 'Id');
+            $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
 
-  
-      $trips = FleetTripLog::with(['vehicle'])
-        ->where('DriverID', $driver->Id)
-        ->orderByDesc('TripStartDate')
-        ->get();
+            $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+                ->pluck('name', 'Id');
 
-    return view('fleet.drivers.show', compact(
-        'driver',
-        'licenses',
-        'assignments',
-        'vehicles',
-        'assigners',
-        'trips'
-    ));
-}
+        
+            $trips = FleetTripLog::with(['vehicle'])
+                ->where('DriverID', $driver->Id)
+                ->orderByDesc('TripStartDate')
+                ->get();
+
+            return view('fleet.drivers.show', compact(
+                'driver',
+                'licenses',
+                'assignments',
+                'vehicles',
+                'assigners',
+                'trips'
+            ));
+        }
     
 
 

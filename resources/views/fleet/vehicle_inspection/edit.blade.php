@@ -22,6 +22,17 @@
 
         <!-- Row 1 -->
         <div class="row g-3">
+             <div class="col-md-4">
+            <label class="form-label">Inspection Type</label>
+            <select name="InspectionType" class="form-select" required>
+                <option value="">-- Select Inspection Type --</option>
+                @foreach($inspectionTypes as $type)
+                    <option value="{{ $type->ID }}" {{ old('InspectionTypeID') == $type->ID ? 'selected' : '' }}>
+                        {{ $type->Description }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
             <div class="col-md-4">
                 <label class="form-label">Vehicle</label>
                 <select name="VehicleID" class="form-select" required>

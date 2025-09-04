@@ -83,20 +83,7 @@ class FleetTripLog extends Model
             return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
         }
 
-        public function tripLogs()
-        {
-            return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
-        }
 
-        public function maintenanceSchedules()
-        {
-            return $this->hasMany(FleetMaintenanceSchedule::class, 'VehicleID', 'Id');
-        }
-
-        public function repairLogs()
-        {
-            return $this->hasMany(FleetRepairLog::class, 'VehicleID', 'Id');
-        }
 
 
 
