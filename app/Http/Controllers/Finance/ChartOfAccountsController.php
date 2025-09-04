@@ -101,7 +101,7 @@ class ChartOfAccountsController extends Controller
             $GLDigits = SegmentOrder::where('SegmentType', 'GLDigits')->pluck('Description')->first();
 
 
-            return$charts = FinanceGLAccounts::create([
+            $charts = FinanceGLAccounts::create([
                 //'GLCode'             => $validated['GLCode'],
                 'GLName' => $validated['GLName'],
                 'GLAccountTypeID' => $validated['GLAccountTypeID'],
@@ -120,7 +120,7 @@ class ChartOfAccountsController extends Controller
             ]);
 
             //Insert the GlCode for the created GL
-            return$GLCode = $this->insertGLCodeFor($charts->Id);
+            $GLCode = $this->insertGLCodeFor($charts->Id);
 
             //Insert and create GLs for all the branches in t_GLBranch
             $branches = Branch::select('Id', 'BranchID')->get();
