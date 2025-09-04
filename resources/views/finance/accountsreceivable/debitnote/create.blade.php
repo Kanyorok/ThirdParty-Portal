@@ -1,8 +1,7 @@
 @extends('layouts.app')
-@section('title', 'Credit Note')
+@section('title', 'Debit Note')
 @section('content')
 
-<div class="container mt-2">
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -12,6 +11,18 @@
             </ul>
         </div>
     @endif
+
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+
+<div class="container mt-2">
     <div class="card shadow rounded-4">
         <div class="card-header bg-light py-1 px-3">
             <h6 class="mb-0 text-muted"><i class="fab fa-wpforms text-info"></i></h6>
@@ -23,7 +34,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-            <form action="{{route('creditnote.store')}}" method="POST">
+            <form action="{{route('debitnote.store')}}" method="POST">
                 @csrf
                 @method('POST')
                 <div class="row mb-4">
@@ -35,13 +46,13 @@
 {{--                            <option value="Debit">Debit Note</option>--}}
 {{--                        </select>--}}
 {{--                    </div>--}}
-                    <input type="hidden" name="NoteType" value="Credit">
+                    <input type="hidden" name="NoteType" value="Debit">
                     <div class="col-md-6">
                         <label for="referenceInvoice" class="form-label">Reference Invoice</label>
                         <select class="form-control" name="InvoiceRefNo" required>
                             <option disabled selected value="">--Select Invoice--</option>
                             @forelse($invoices as $invoice)
-                                <option value="{{ $invoice->Id }}">{{ $invoice->InvoiceNumber }}</option>
+                                <option value="{{ $invoice->Id }}">{{ $invoice->InvoiceTitle }} ({{ $invoice->InvoiceNumber }})</option>
                             @empty
                                 <option disabled>No invoices found</option>
                             @endforelse

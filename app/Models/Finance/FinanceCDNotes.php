@@ -40,6 +40,12 @@ class FinanceCDNotes extends Model
                         ->where('ApprovalStatus', 'posted');
     }
 
+    public function invoiceDebit()
+    {
+        return $this->belongsTo(FinanceInvoice::class, 'InvoiceRefNo', 'Id')
+            ->where('ApprovalStatus', 'posted');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');

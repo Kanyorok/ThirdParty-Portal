@@ -16,26 +16,6 @@ use PhpOffice\PhpSpreadsheet\Calculation\Financial;
 
 class CreditNoteController extends Controller
 {
-    // ...existing code...
-}
-<?php
-
-namespace App\Http\Controllers\Finance;
-
-use App\Enums\Core\PermissionEnum;
-use App\Http\Controllers\Controller;
-use App\Models\Finance\FinanceCDNotes;
-use App\Models\Finance\FinanceInvoiceEntry;
-use App\Models\Finance\FinanceTransaction;
-use App\Services\Finance\TransactionService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\Calculation\Financial;
-
-class CreditNoteController extends Controller
-{
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceCDNotes::class);
@@ -45,7 +25,7 @@ class CreditNoteController extends Controller
 
         $notes = FinanceCDNotes::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description','ApprovalStatus')
-            ->get();
+            ->where('NoteType','credit')->latest()->get();
         return view('finance.accountspayable.creditnote.index', compact('notes','invoices'));
     }
 
