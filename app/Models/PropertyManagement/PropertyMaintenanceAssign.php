@@ -63,7 +63,7 @@ class PropertyMaintenanceAssign extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'PriorityLevel', 'Id');
     }
-        public function createdByUser()
+    public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }

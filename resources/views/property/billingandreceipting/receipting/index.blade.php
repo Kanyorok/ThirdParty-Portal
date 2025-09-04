@@ -33,8 +33,7 @@
               <td>{{ $receipt->Balance ?? '_' }}</td>
               <td>{{ $receipt->AmountPaidNow ?? '_' }}</td>
               <td>
-                <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}" class="btn btn-sm btn-outline-secondary">Print
-                  Receipt</a>
+                <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Print Receipt</a>
                 <a href="{{ route('rentreceipt.show', $receipt->Id) }}" class="btn btn-sm btn-info">View</a>
                 <a href="{{ route('rentreceipt.edit', $receipt->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                 <form action="{{ route('rentreceipt.destroy', $receipt->Id) }}" method="POST" class="d-inline">

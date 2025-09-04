@@ -1,129 +1,133 @@
 @php use Carbon\Carbon; @endphp
 @extends('layouts.app')
+
 @section('title', 'Rent Receipt Details')
+
 @section('content')
 <div class="container mt-4" style="max-width: 1000px;">
-    <h4 class="mb-3">Rent Receipt Details</h4>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
 
-                <div class="col">
-                    <strong>Tenant Name</strong>
-                    <p class="mb-1">{{ $receipt->invoice->lease->tenant->TenantName ?? '-' }}</p>
+            {{-- Receipt Information --}}
+            <h6 class="mb-3 text-dark">Rent Receipt Information</h6>
+            <hr>
+            <div class="row g-3 text-dark">
+                
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Tenant Name</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->invoice->lease->tenant->TenantName ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Invoice Number</strong>
-                    <p class="mb-1">{{ $receipt->invoice->InvoiceNumber ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Invoice Number</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->invoice->InvoiceNumber ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Billing Month</strong>
-                    <p class="mb-1">{{ $receipt->BillingMonth ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Billing Month</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->BillingMonth ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Invoice Date</strong>
-                    <p class="mb-1">{{ $receipt->InvoiceDate ? Carbon::parse($receipt->InvoiceDate)->format('d M Y') : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Invoice Date</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->InvoiceDate ? Carbon::parse($receipt->InvoiceDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Payment Date</strong>
-                    <p class="mb-1">{{ $receipt->PaymentDate ? Carbon::parse($receipt->PaymentDate)->format('d M Y') : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Payment Date</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->PaymentDate ? Carbon::parse($receipt->PaymentDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Rent Amount</strong>
-                    <p class="mb-1">{{ number_format($receipt->RentAmount ?? 0, 2) }}</p>
+                {{-- Financials --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Rent Amount</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ number_format($receipt->RentAmount ?? 0, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Service Charge</strong>
-                    <p class="mb-1">{{ number_format($receipt->ServicesCharge ?? 0, 2) }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Service Charge</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ number_format($receipt->ServicesCharge ?? 0, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Parking Fee</strong>
-                    <p class="mb-1">{{ number_format($receipt->ParkingFee ?? 0, 2) }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Parking Fee</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ number_format($receipt->ParkingFee ?? 0, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Other Charges</strong>
-                    <p class="mb-1">{{ number_format($receipt->OtherCharges ?? 0, 2) }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Other Charges</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ number_format($receipt->OtherCharges ?? 0, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Total Due</strong>
-                    <p class="mb-1">
-                        {{ number_format(
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Total Due</label>
+                    <input type="text" class="form-control bg-light text-dark fw-bold"
+                        value="{{ number_format(
                             ($receipt->RentAmount ?? 0) +
                             ($receipt->ServicesCharge ?? 0) +
                             ($receipt->ParkingFee ?? 0) +
-                            ($receipt->OtherCharges ?? 0), 2) }}
-                    </p>
+                            ($receipt->OtherCharges ?? 0), 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Amount Paid </strong>
-                    <p class="mb-1">{{ number_format($receipt->AmountPaidNow ?? 0, 2) }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Amount Paid</label>
+                    <input type="text" class="form-control bg-light text-dark fw-bold"
+                        value="{{ number_format($receipt->AmountPaidNow ?? 0, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Balance</strong>
-                    <p class="mb-1">
-                        {{ number_format(
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Balance</label>
+                    <input type="text" class="form-control bg-light text-dark fw-bold"
+                        value="{{ number_format(
                             (($receipt->RentAmount ?? 0) +
                             ($receipt->ServicesCharge ?? 0) +
                             ($receipt->ParkingFee ?? 0) +
                             ($receipt->OtherCharges ?? 0)) -
-                            ($receipt->AmountPaidNow ?? 0), 2) }}
-                    </p>
+                            ($receipt->AmountPaidNow ?? 0), 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Payment Method</strong>
-                    <p class="mb-1">{{ $receipt->code->Description ?? '-' }}</p>
+                {{-- Payment Info --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Payment Method</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->code->Description ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Reference Number</strong>
-                    <p class="mb-1">{{ $receipt->ReferenceNo ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Reference Number</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->ReferenceNo ?? '-' }}" readonly>
                 </div>
 
-                <div class="col-12">
-                    <strong>Remarks</strong>
-                    <p class="mb-1">{{ $receipt->Remarks ?? '-' }}</p>
-                </div>
-            </div>
-
-            <hr class="my-3">
-
-            <h6 class="mb-2">Audit Information</h6>
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
-                <div class="col">
-                    <strong>Created By</strong>
-                    <p class="mb-1">{{ $receipt->createdByUser->Name ?? '-' }}</p>
-                </div>
-                <div class="col">
-                    <strong>Created On</strong>
-                    <p class="mb-1">{{ $receipt->CreatedOn ? Carbon::parse($receipt->CreatedOn)->format('d M Y H:i') : '-' }}</p>
-                </div>
-                <div class="col">
-                    <strong>Modified By</strong>
-                    <p class="mb-1">{{ $receipt->modifiedByUser->Name ?? '-' }}</p>
-                </div>
-                <div class="col">
-                    <strong>Modified On</strong>
-                    <p class="mb-1">{{ $receipt->ModifiedOn ? Carbon::parse($receipt->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Remarks</label>
+                    <textarea class="form-control bg-light text-dark" rows="2" readonly>{{ $receipt->Remarks ?? '—' }}</textarea>
                 </div>
             </div>
         </div>
 
-        <div class="card-footer text-end py-2">
-            <a href="{{ route('rentreceipt.edit', $receipt->Id) }}" class="btn btn-sm btn-primary">✏ Edit</a>
-            <a href="{{ route('rentreceipt.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
+        {{-- Footer with Audit Info + Actions --}}
+        <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
+            <div>
+                Created by <strong>{{ $receipt->createdByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $receipt->CreatedOn ? Carbon::parse($receipt->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                | Modified by <strong>{{ $receipt->modifiedByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $receipt->ModifiedOn ? Carbon::parse($receipt->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+            </div>
+            <div>
+                <a href="{{ route('rentreceipt.edit', $receipt->Id) }}" class="btn btn-sm btn-dark">Edit</a>
+                <a href="{{ route('rentreceipt.index') }}" class="btn btn-sm btn-secondary">Back</a>
+            </div>
         </div>
     </div>
 </div>
