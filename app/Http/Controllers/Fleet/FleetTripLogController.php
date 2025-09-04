@@ -37,7 +37,11 @@ class FleetTripLogController extends Controller
     public function create()
     {
         $this->authorize('create', FleetTripLog::class);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+
+        $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
         $drivers = FleetDriver::where('IsActive', 1)->get();
         $driverTypes = CodeDetail::where('CodeID', 'DriverType')
             ->orderBy('Value')
@@ -63,7 +67,11 @@ class FleetTripLogController extends Controller
         $tripLogs = FleetTripLog::with(['vehicle', 'driverType', 'driverPermanent', 'driverContracted'])
             ->findOrFail($id);
 
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+
+        $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
         $drivers = FleetDriver::where('IsActive', 1)->get();
         $driverTypes = CodeDetail::where('CodeID', 'DriverType')
             ->orderBy('Value')
@@ -76,7 +84,11 @@ class FleetTripLogController extends Controller
     public function edit($id)
     {
         $this->authorize('edit', FleetTripLog::class);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+
+        $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
         $drivers = FleetDriver::where('IsActive', 1)->get();
         $driverTypes = CodeDetail::where('CodeID', 'DriverType')
             ->orderBy('Value')
@@ -108,7 +120,7 @@ class FleetTripLogController extends Controller
         return redirect()->route('fleet.trip_logs.index')->with('success', 'Trip deleted successfully.');
     }
 
-   public function getAvailableVehicles()
+public function getAvailableVehicles()
 {
     $startDate = request('start_date');
     $endDate   = request('end_date');
@@ -117,11 +129,18 @@ class FleetTripLogController extends Controller
         return response()->json([]);
     }
 
-    $availableVehicles = FleetVehicle::where('IsActive', 1)
+    $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+        ->where('Description', 'Active')
+        ->value('Id');
+
+    $vehicles = FleetVehicle::where('Status', $activeStatusId)
         ->whereDoesntHave('tripLogs', function ($q) use ($startDate, $endDate) {
             $q->where(function ($q2) use ($startDate, $endDate) {
-                $q2->where('TripStartDate', '<', $endDate)
-                   ->where('TripEndDate', '>', $startDate);
+                // Exclude vehicles with any trip that overlaps the selected period
+                $q2->where(function ($query) use ($startDate, $endDate) {
+                    $query->where('TripStartDate', '<', $endDate)
+                          ->where('TripEndDate', '>', $startDate);
+                });
             });
         })
         ->whereDoesntHave('maintenanceSchedules', function ($q) use ($startDate, $endDate) {
@@ -135,9 +154,8 @@ class FleetTripLogController extends Controller
         })
         ->get();
 
-    return response()->json($availableVehicles);
+    return response()->json($vehicles);
 }
-
 
 public function getAvailablePermanentDrivers()
 {
@@ -159,5 +177,28 @@ public function getAvailablePermanentDrivers()
 
     return response()->json($availableDrivers);
 }
+
+
+public function getAvailableContractedDrivers()
+{
+    $startDate = request('start_date');
+    $endDate   = request('end_date');
+
+    if (!$startDate || !$endDate) {
+        return response()->json([]);
+    }
+
+    $availableDrivers = ContractedDriver::where('IsActive', 1)
+        ->whereDoesntHave('tripLogs', function ($q) use ($startDate, $endDate) {
+            $q->where(function ($q2) use ($startDate, $endDate) {
+                $q2->where('TripStartDate', '<', $endDate)
+                   ->where('TripEndDate', '>', $startDate);
+            });
+        })
+        ->get();
+
+    return response()->json($availableDrivers);
+}
+
 
 }

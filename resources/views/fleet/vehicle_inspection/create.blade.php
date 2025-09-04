@@ -26,6 +26,7 @@
             <input type="hidden" name="ParentInspectionID" value="{{ $parentInspection->Id }}">
             <input type="hidden" name="VehicleID" value="{{ $parentInspection->VehicleID }}">
             <input type="hidden" name="FuelType" value="{{ $parentInspection->FuelType }}">
+            <input type="hidden" name="InspectionTypeID" value="{{ $parentInspection->InspectionTypeID }}">
 
             <div class="alert alert-info">
                 Creating a <strong>Post-Trip</strong> inspection for:
@@ -33,6 +34,7 @@
                     <li><strong>Pre-Trip ID:</strong> {{ $parentInspection->InspectionID }}</li>
                     <li><strong>Vehicle:</strong> {{ $parentInspection->vehicle?->RegistrationNo }}</li>
                     <li><strong>Fuel Type:</strong> {{ $parentInspection->fuel?->FuelName }}</li>
+                    <li><strong>Inspection Type:</strong> {{ $parentInspection->inspectionType?->Description }}</li>
                 </ul>
             </div>
         @endif
@@ -40,6 +42,17 @@
         {{-- Row 1: Vehicle & Fuel (Pre-Trip only) --}}
         @unless(isset($parentInspection))
         <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Inspection Type</label>
+            <select name="InspectionTypeID" class="form-select" required>
+                <option value="">-- Select Inspection Type --</option>
+                @foreach($inspectionTypes as $type)
+                    <option value="{{ $type->ID }}" {{ old('InspectionTypeID') == $type->ID ? 'selected' : '' }}>
+                        {{ $type->Description }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
             <div class="col-md-4">
                 <label class="form-label">Vehicle</label>
                 <select name="VehicleID" class="form-select" required>

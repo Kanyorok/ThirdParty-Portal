@@ -24,6 +24,7 @@ class FleetVehicleInspectionRequest extends FormRequest
         return [
             'ParentInspectionID' => 'nullable|exists:t_FleetVehicleInspections,Id',
             'VehicleID'      => 'required|exists:t_FleetVehicles,Id',
+            'InspectionTypeID' => 'required|exists:t_CodeDetails,Id',
             'FuelType'       => 'required|exists:t_FuelTypes,Id',
             'DriverID'       => 'required|exists:t_FleetDrivers,Id',
             'InspectionDate' => 'required|date',

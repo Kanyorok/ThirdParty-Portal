@@ -28,7 +28,7 @@ class FleetVehicleInspection extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'InspectionID','ParentInspectionID','VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil', 'Fuel',
+        'InspectionID','ParentInspectionID','InspectionTypeID','VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil', 'Fuel',
         'Speedometer', 'Coolant', 'Reflector', 'FireExtinguisher' ,'FirstAidKit','SpareTyre', 'Spanner', 'Jack' ,'4XFloorMats' ,
         'CreatedBy',
         'CreatedOn',
@@ -66,6 +66,11 @@ class FleetVehicleInspection extends Model
     public function fuel()
     {
         return $this->belongsTo(FuelType::class, 'FuelType', 'Id');
+    }
+
+    public function inspectionType()
+    {
+        return $this->belongsTo(CodeDetail::class, 'InspectionTypeID', 'Id');
     }
 
     
