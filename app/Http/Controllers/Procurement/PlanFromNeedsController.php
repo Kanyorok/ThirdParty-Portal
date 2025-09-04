@@ -9,7 +9,7 @@ use App\Http\Requests\Procurement\PlanFromNeedsRequest;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemCategories;
-use App\Models\Procurement\BudgetMaster;
+use App\Models\Budget\BudgetLine;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Procurement\PlanLineItem;
@@ -28,7 +28,7 @@ class PlanFromNeedsController extends Controller
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->select('PlanID', 'Title', 'FiscalYear')->get();
         $branches = Branch::all();
         $departments = Department::all();
-        $budgetLines = BudgetMaster::all();
+        $budgetLines = BudgetLine::all();
 
         $categoryIds = $approvedNeeds->pluck('item.Category')->filter()->unique();
         $categories = ItemCategories::whereIn('Id', $categoryIds)->orderBy('Name')->get();

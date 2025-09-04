@@ -16,7 +16,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Fleet\FleetTripLog;
 use App\Models\Auth\User;
+use App\Models\Fleet\FleetMaintenanceSchedule; 
+use App\Models\Fleet\FleetRepairLog; 
+
 
 
 class FleetVehicle extends Model
@@ -45,7 +49,6 @@ class FleetVehicle extends Model
         'OdometerReading',
         'Status',
         'AssignedBranch',
-        //'AssignedToUserID',
         'IsActive',
         'CreatedBy',
         'CreatedOn',
@@ -53,7 +56,6 @@ class FleetVehicle extends Model
         'ModifiedOn',
     ];
 
-    // Relationships
 
     public static function getPrimaryKey(): string
     {
@@ -63,6 +65,21 @@ class FleetVehicle extends Model
     public function vehicleType()
     {
         return $this->belongsTo(CodeDetail::class, 'VehicleType', 'ID');
+    }
+
+    public function tripLogs()
+    {
+        return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
+    }
+
+    public function maintenanceSchedules()
+    {
+        return $this->hasMany(FleetMaintenanceSchedule::class, 'VehicleID', 'Id');
+    }
+
+    public function repairLogs()
+    {
+        return $this->hasMany(FleetRepairLog::class, 'VehicleID', 'Id');
     }
 
     public function fuelType()

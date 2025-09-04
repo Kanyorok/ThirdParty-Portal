@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_InterBranchRequisition', function (Blueprint $table) {
-            $table->dropColumn('Requested Qty'); 
+        Schema::table('t_FinanceCDNotes', function (Blueprint $table) {
+            // drop the foreign key first
+            $table->dropForeign(['InvoiceRefNo']);
         });
     }
 
@@ -21,8 +22,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('t_InterBranchRequisition', function (Blueprint $table) {
-            $table->integer('Requested Qty')->nullable(); 
+        Schema::table('t_FinanceCDNotes', function (Blueprint $table) {
+            $table->foreign('InvoiceRefNo')
+                ->references('Id')
+                ->on('t_FinanceInvoiceEntry');
         });
     }
 };

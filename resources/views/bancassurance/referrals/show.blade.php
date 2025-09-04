@@ -13,19 +13,19 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">Client Name</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientName }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientName  ?? '-'}}" readonly>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold text-muted">ID Number</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientIDNumber }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientIDNumber ?? '-'}}" readonly>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold text-muted">Phone</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientPhone }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientPhone ?? '-'}}" readonly>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-semibold text-muted">Email</label>
-                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientEmail }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $referral->ClientEmail ?? '-'}}" readonly>
                 </div>
             </div>
 
