@@ -38,7 +38,7 @@ class FleetRepairLogController extends Controller
     public function create()
     {
         $this->authorize('create', FleetRepairLog::class);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
         $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
             ->orderBy('Value')
             ->get();
@@ -80,7 +80,7 @@ class FleetRepairLogController extends Controller
     {
         $this->authorize('edit', FleetRepairLog::class);
         $repair = FleetRepairLog::with(['vehicle'])->findOrFail($id);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
         $repairType = CodeDetail::where('CodeID', 'FleetRepairType')
             ->orderBy('Value')
             ->get();

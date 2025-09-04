@@ -36,7 +36,7 @@ class FleetInsuranceTrackerController extends Controller
     public function create()
     {
         $this->authorize('create', FleetInsuranceTracker::class);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
         $insuranceProvider = InsuranceProvider::all();
         $insuranceStatuses = CodeDetail::where('CodeID', 'InsuranceStatus')->orderBy('Value')->get();
 
@@ -60,7 +60,7 @@ class FleetInsuranceTrackerController extends Controller
     {
         $this->authorize('view', FleetInsuranceTracker::class);
         $record = FleetInsuranceTracker::with(['insuranceStatus', 'insurance', 'vehicle'])->findOrFail($id);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
         $insuranceProvider = InsuranceProvider::all();
         $insuranceStatuses = CodeDetail::where('CodeID', 'InsuranceStatus')->orderBy('Value')->get();
 
@@ -71,7 +71,7 @@ class FleetInsuranceTrackerController extends Controller
     {
         $this->authorize('edit', FleetInsuranceTracker::class);
         $record = FleetInsuranceTracker::findOrFail($id);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
         $insuranceProvider = InsuranceProvider::all();
         $insuranceStatuses = CodeDetail::where('CodeID', 'InsuranceStatus')->orderBy('Value')->get();
 
