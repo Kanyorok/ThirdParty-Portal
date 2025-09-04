@@ -32,7 +32,7 @@ class FleetDriverAssignmentController extends Controller
             abort(404, 'Driver ID is required.');
         }
 
-        $driver = ContractedDriver::findOrFail($driverId);
+        $driver = \App\Models\Fleet\FleetDriver::findOrFail($driverId); // <-- FIXED
         $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
             ->where('Description', 'Active')
             ->value('Id');

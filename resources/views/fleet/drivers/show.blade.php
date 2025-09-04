@@ -166,7 +166,7 @@
                                                         data-id="{{ $assignment->Id }}">🗑️
                                                 </button>
 
-                                            <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
+                                            {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
                                                 method="POST" 
                                                 class="d-inline"
                                                 onsubmit="return confirmUnassign(event)">
@@ -174,7 +174,7 @@
                                                 @method('POST')
                                                     <input type="hidden" name="assignment_id" value="{{ $assignment->Id }}">
                                                 <button type="submit" class="btn btn-sm btn-primary">Unassign</button>
-                                            </form>
+                                            </form> --}}
 
                                             </td>
                                         </tr>
@@ -183,19 +183,6 @@
                                 </table>
                             </div>
                         </div>
-                        @section('scripts')
-                        <script>
-                            function confirmUnassign(e) {
-                                e.preventDefault(); 
-
-                                if (confirm("Are you sure you want to unassign this vehicle?\n\n⚠️ Please first inspect the vehicle.")) {
-                                    window.location.href = "{{ route('fleet.vehicle_inspection.create') }}";
-                                }
-
-                                return false; 
-                            }
-                        </script>
-                        @endsection
 
                         {{-- Trips Tab Content --}}
                         <div class="tab-pane fade" id="trips">
@@ -282,7 +269,7 @@
     {{-- Add Assignment Modal --}}
     <div class="modal fade" id="addAssignmentModal" tabindex="-1">
         <div class="modal-dialog">
-            <form id="addAssignmentForm">
+            <form id="addAssignmentForm" action="{{ route('fleet.driver_assignments.store') }}" method="POST">
                 @csrf
                 <input type="hidden" name="DriverID" value="{{ $driver->Id }}">
                 <div class="modal-content rounded-4">
@@ -640,3 +627,4 @@
         });
     </script>
 @endsection
+  
