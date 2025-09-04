@@ -5,73 +5,66 @@
 
 @section('content')
 <div class="container mt-4" style="max-width: 1000px;">
-    <h4 class="mb-3">📄 Lease Termination Details</h4>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
 
-                <div class="col">
-                    <strong>Lease Number</strong>
-                    <p class="mb-1">{{ $leasetermination->lease->LeaseNumber ?? '-' }}</p>
+            {{-- Termination Information --}}
+            <h6 class="mb-3 text-dark">Lease Termination Information</h6>
+            <hr>
+            <div class="row g-3 text-dark">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Lease Number</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leasetermination->lease->LeaseNumber ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Termination Date</strong>
-                    <p class="mb-1">{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Termination Date</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Termination Reason</strong>
-                    <p class="mb-1">{{ $leasetermination->code->Description ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Termination Reason</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leasetermination->code->Description ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Remarks</strong>
-                    <p class="mb-1">{{ $leasetermination->Remarks ?? '—' }}</p>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Remarks</label>
+                    <textarea class="form-control bg-light text-dark" rows="3" readonly>{{ $leasetermination->Remarks ?? '—' }}</textarea>
                 </div>
 
-                @if($leasetermination->ClearanceDocument)
-                <div class="col">
-                    <strong>Clearance Document</strong>
-                    <p class="mb-1">
-                        <a href="{{ asset('storage/' . $leasetermination->ClearanceDocument) }}" target="_blank" class="btn btn-outline-info btn-sm">
-                            View Uploaded Document
-                        </a>
-                    </p>
-                </div>
-                @endif
-            </div>
-
-            <hr class="my-3">
-
-            <h6 class="mb-2">Audit Information</h6>
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
-                <div class="col">
-                    <strong>Created By</strong>
-                    <p class="mb-1">{{ $leasetermination->createdByUser->Name ?? '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Created On</strong>
-                    <p class="mb-1">{{ $leasetermination->CreatedOn ? Carbon::parse($leasetermination->CreatedOn)->format('d M Y H:i') : '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Modified By</strong>
-                    <p class="mb-1">{{ $leasetermination->modifiedByUser->Name ?? '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Modified On</strong>
-                    <p class="mb-1">{{ $leasetermination->ModifiedOn ? Carbon::parse($leasetermination->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Attached Documents</label>
+                    <div class="p-3 border rounded bg-light text-dark">
+                        @forelse($leasetermination->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                            {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted">No documents attached.</span>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card-footer text-end py-2">
-            <a href="{{ route('terminatelease.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
+        {{-- Footer with Audit Info + Back --}}
+        <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
+            <div>
+                Created by <strong>{{ $leasetermination->createdByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $leasetermination->CreatedOn ? Carbon::parse($leasetermination->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                | Modified by <strong>{{ $leasetermination->modifiedByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $leasetermination->ModifiedOn ? Carbon::parse($leasetermination->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+            </div>
+            <div>
+                <a href="{{ route('terminatelease.index') }}" class="btn btn-sm btn-dark">Back</a>
+            </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

@@ -5,7 +5,7 @@
 <form action="{{ route('addblock.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
   <div class="card shadow">
-    <div class="card-header bg-light fw-bold">➕ Block Setup</div>
+    <div class="card-header bg-light fw-bold">Block Setup</div>
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-6">

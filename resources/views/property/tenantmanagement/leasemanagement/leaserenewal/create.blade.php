@@ -25,7 +25,6 @@
   @endif
 
   <div class="container mt-4">
-    <h4 class="fw-bold mb-3">Renew Lease Agreement</h4>
 
     <form action="{{ route('renewlease.store') }}" method="POST">
       @csrf
@@ -120,7 +119,7 @@
 
           <!-- Submit -->
           <button type="submit" class="btn btn-success"
-            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">🔁 Renew Lease</button>
+            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Renew Lease</button>
         </div>
       </div>
     </form>

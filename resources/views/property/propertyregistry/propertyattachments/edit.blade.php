@@ -2,13 +2,12 @@
 @section('title', 'Edit Property Attachment')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📂 Edit Property Attachment</h4>
 
   <form action="{{ route('attachments.update', $propertyattachments->Id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
     <div class="card shadow">
-      <div class="card-header bg-light fw-bold">✏️ Update Document</div>
+      <div class="card-header bg-light fw-bold">Update Document</div>
       <div class="card-body">
         <div class="row g-3 mb-3">
           <div class="col-md-6">
@@ -40,14 +39,10 @@
               @endforeach
             </select>
           </div>
-          <div class="col-md-6">
-            <label class="form-label">Upload File</label>
-            <input type="file" class="form-control" name="DocumentFile"
-              accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
-            @if ($propertyattachments->FilePath)
-              <small class="text-muted">Current file: <a href="{{ asset('storage/' . $propertyattachments->FilePath) }}" target="_blank">View</a></small>
-            @endif
-          </div>
+        <div class="col-md-6">
+          <label class="form-label">Upload File</label>
+          <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
+        </div>
         </div>
 
         <div class="mb-3">
@@ -55,8 +50,16 @@
           <textarea class="form-control" rows="2" placeholder="Optional notes..." name="Description">{{ old('Description', $propertyattachments->Description) }}</textarea>
         </div>
 
+        <div class="p-2 border rounded bg-light mt-2">
+        @forelse($propertyattachments->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+        {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+          @empty
+          <span class="text-muted">No documents attached.</span>
+          @endforelse
+        </div>
+
         <button type="submit" class="btn btn-primary"
-          onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">💾 Update Document</button>
+          onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Document</button>
       </div>
     </div>
   </form>

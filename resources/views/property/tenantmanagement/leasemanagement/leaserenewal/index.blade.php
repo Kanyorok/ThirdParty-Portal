@@ -6,7 +6,8 @@
     @endsection
 <div class="container mt-4">
 <a href="{{ route('renewlease.create') }}" class="btn btn-primary mb-3">Renew Lease</a>
-  <h4 class="fw-bold mb-3">📋 Lease Renewals</h4>
+
+<p><small>This is a list of renewals</small></p>
 
     @if($leaserenewals->count())
         <table class="table table-bordered table-striped align-middle" id="LeaseRenewal">
