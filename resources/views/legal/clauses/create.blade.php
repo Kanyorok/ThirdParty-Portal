@@ -33,7 +33,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Version</label>
-                <input type="text" name="Version" class="form-control" placeholder="e.g. v1.0, Draft 2" required>
+                <input type="number"step="0.0001"  name="Version" class="form-control" placeholder="e.g. 1.0" required>
             </div>
 
             <div class="mb-3">
