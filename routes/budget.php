@@ -63,6 +63,8 @@ use App\Http\Controllers\Budget\TopLoansController;
 use App\Http\Controllers\Budget\TopSavingAccountsController;
 use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\YieldRateController;
+use App\Http\Controllers\Budget\BudgetLineLedgerLimitController;
+use App\Http\Controllers\Budget\BudgetReallocationController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -163,3 +165,33 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
     Route::delete('budget/delete-budget/{id}', [BudgetPeriodController::class, 'delBudget'])->name('budget.delete-budget');
 });
+
+
+Route::prefix('budgetandanalytics/limits')->name('budgetandanalytics.limits.')->group(function () {
+    Route::get('/', [BudgetLineLedgerLimitController::class, 'index'])->name('index');
+    Route::get('/create', [BudgetLineLedgerLimitController::class, 'create'])->name('create');
+    Route::post('/store', [BudgetLineLedgerLimitController::class, 'store'])->name('store');
+    // optional future routes
+    Route::get('/{id}/edit', [BudgetLineLedgerLimitController::class, 'edit'])->name('edit');
+    Route::post('/{id}/update', [BudgetLineLedgerLimitController::class, 'update'])->name('update');
+    Route::post('/{id}/delete', [BudgetLineLedgerLimitController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('budgetandanalytics/reallocation')
+    ->name('budgetandanalytics.reallocation.')
+    ->group(function () {
+        Route::get('/', [BudgetReallocationController::class, 'index'])->name('index');
+        Route::get('/create', [BudgetReallocationController::class, 'create'])->name('create');
+        Route::post('/store', [BudgetReallocationController::class, 'store'])->name('store');
+
+        // Optional future routes
+        Route::get('/{id}/review', [BudgetReallocationController::class, 'review'])->name('review');
+        Route::post('/{id}/approve', [BudgetReallocationController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [BudgetReallocationController::class, 'reject'])->name('reject');
+
+        // ✅ New AJAX routes
+        Route::get('/budget-lines/{deptId}/{branchId?}', [BudgetReallocationController::class, 'getBudgetLines'])
+            ->name('budget-lines');
+        Route::get('/budget-line/{lineId}/details/{branchId?}', [BudgetReallocationController::class, 'getBudgetLineDetails'])
+            ->name('budget-line.details');
+    });
