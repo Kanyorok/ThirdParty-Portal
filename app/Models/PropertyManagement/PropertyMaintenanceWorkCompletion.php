@@ -2,12 +2,16 @@
 
 namespace App\Models\PropertyManagement;
 
+use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
-use App\Models\DMS\Document;
+use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PropertyMaintenanceWorkCompletion extends Model
 {
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
     //
     protected $table = 't_WorkCompletion';
     public const CREATED_AT = 'CreatedOn';
@@ -37,5 +41,14 @@ class PropertyMaintenanceWorkCompletion extends Model
         public function finalstatus()
     {
         return $this->belongsTo(CodeDetail::class, 'FinalStatus', 'ID');
+    }
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
     }
 }

@@ -14,7 +14,6 @@ use App\Models\PropertyManagement\PropertyType;
 use App\Services\Property\PropertyRegistry\PropertyRegistryService;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Support\Carbon;
-use App\Models\Auth\User;
 
 
 class PropertyRegistryController extends Controller
@@ -56,20 +55,22 @@ class PropertyRegistryController extends Controller
         $category = CategoryMaster::findOrFail($validated['Category']);
         $townCity = Locality::findOrFail($validated['TownCity']);
 
-
-        // Call the service with structured arguments
-        $property = PropertyRegistryService::create(
-            PropertyName: $validated['PropertyName'],
-            PropertyCode: $validated['PropertyCode'],
-            PropertyType: $propertyType,
-            Category: $category,
-            Owner: $validated['Owner'],
-            AcquisitionDate: $acquisitionDate,
-            Country: $validated['Country'],
-            TownCity: $townCity,
-            AreaLocality: $validated['AreaLocality'],
-            PropertyDescription: $validated['PropertyDescription'] ?? '',
-        );
+        foreach ($request->file('file', []) as $uploadedFile) {
+        PropertyRegistryService::create(
+            $validated['PropertyName'],
+            $validated['PropertyCode'],
+            $propertyType,
+            $category,
+            $validated['Owner'],
+            $acquisitionDate,
+            $validated['Country'],
+            $townCity,
+            $validated['AreaLocality'],
+            $validated['PropertyDescription'] ?? '',
+            $request->user(),
+            $uploadedFile
+            );
+        }
 
         return redirect()->route('PropertyRegistry.index')
             ->with('success', 'Property registry created successfully');
@@ -88,47 +89,72 @@ class PropertyRegistryController extends Controller
         return view('property.propertyregistry.registry.edit', compact('property', 'localities', 'lineentries', 'types', 'categories'));
     }
 
-    public function update(Request $request, $id)
-    {
-        // $this->authorize(PermissionEnum::PropertyTypeUpdate , PropertyType::class);
-        $validated = $request->validate([
-            'PropertyName' => 'required|string|max:50',
-            'PropertyType' => 'required|exists:t_PropertyType,Id',
-            'Category' => 'required|exists:t_CategoryMaster,Id',
-            'TownCity' => 'required|exists:t_Localities,Id',
-            'PropertyDescription' => 'nullable|string|max:100',
+public function update(PropertyRegistryRequest $request, $id)
+{
+    $validated = $request->validated();
 
-        ]);
+    // Fetch model instances based on validated IDs
+    $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
+    $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
+    $category        = CategoryMaster::findOrFail($validated['Category']);
+    $townCity        = Locality::findOrFail($validated['TownCity']);
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            $property = PropertyRegistry::findOrFail($id);
+    try {
+        $property = PropertyRegistry::findOrFail($id);
 
-            $property->update([
-                'PropertyName' => $validated['PropertyName'],
-                'Category' => $validated['Category'],
-                'PropertyType' => $validated['PropertyType'],
-                'TownCity' => $validated['TownCity'],
-                'PropertyDescription' => $validated['PropertyDescription'] ?? '',
-                'ModifiedBy' => Auth::Id(),
-            ]);
+        // Update the main property record first (no file yet)
+        PropertyRegistryService::update(
+            $property,
+            $validated['PropertyName'],
+            $validated['PropertyCode'],
+            $propertyType,
+            $category,
+            $validated['Owner'],
+            $acquisitionDate,
+            $validated['Country'],
+            $townCity,
+            $validated['AreaLocality'],
+            $validated['PropertyDescription'] ?? '',
+            $request->user()
+        );
 
-            DB::commit();
-            activity()
-                ->performedOn($property)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Propeerty Registry');
-
-            return redirect()->route('PropertyRegistry.index')->with('success', 'property updated successfully');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to Update type:' . $th->getMessage());
-
-            return back()->withErrors(['error' => 'Failed to update type'])->withInput();
+        // Handle file uploads (loop like in store)
+        foreach ($request->file('file', []) as $uploadedFile) {
+            PropertyRegistryService::update(
+                $property,
+                $validated['PropertyName'],
+                $validated['PropertyCode'],
+                $propertyType,
+                $category,
+                $validated['Owner'],
+                $acquisitionDate,
+                $validated['Country'],
+                $townCity,
+                $validated['AreaLocality'],
+                $validated['PropertyDescription'] ?? '',
+                $request->user(),
+                $uploadedFile
+            );
         }
+
+        DB::commit();
+
+        return redirect()
+            ->route('PropertyRegistry.index')
+            ->with('success', 'Property updated successfully');
+    } catch (\Throwable $th) {
+        DB::rollBack();
+        Log::error('Failed to update property: ' . $th->getMessage());
+
+        return back()
+            ->withErrors(['error' => 'Failed to update property'])
+            ->withInput();
     }
+}
+
+
 
     public function destroy($id)
     {

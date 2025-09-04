@@ -40,13 +40,16 @@ class PropertyAttachmentsController extends Controller
         $DocumentType = CodeDetail::findOrFail($validated['DocumentType']);
         $user = Auth::user();
 
+        foreach ($request->file('file', []) as $uploadedFile) {
         $propertyattachment = PropertyAttachmentsService::create(
             $PropertyID,
             $validated['DocumentTitle'],
              $DocumentType,
             $validated['Description'] ?? '',
-            Auth::user()
+            $request->user(),
+            $uploadedFile
         );
+    }
         return redirect()->route('attachments.index')->with('success', 'Property attachment created successfully');
     }
 
@@ -61,41 +64,59 @@ class PropertyAttachmentsController extends Controller
     return view('property.propertyregistry.propertyattachments.edit', compact('propertyattachments', 'properties','documenttypes'));
     }
 
-    public function update(PropertyAttachmentsRequest $request, $Id)
-    {
-    // $this->authorize(PermissionEnum::PropertyAttachmentsUpdate, PropertyAttachments::class);
-        $validated = $request->validated();
+public function update(PropertyAttachmentsRequest $request, $id)
+{
+    $validated = $request->validated();
+
+    // Fetch model instances
+    $PropertyID   = PropertyRegistry::findOrFail($validated['PropertyID']);
+    $DocumentType = CodeDetail::findOrFail($validated['DocumentType']);
+    $user         = Auth::user();
+    
 
     DB::beginTransaction();
 
     try {
-        $propertyattachments = PropertyAttachments::findOrFail($Id);
+        // Get existing attachment
+        $attachment = PropertyAttachments::findOrFail($id);
 
-        $propertyattachments->update([
-            'PropertyID'         => $validated['PropertyID'],
-            'DocumentTitle'         => $validated['DocumentTitle'],
-            'DocumentType'         => $validated['DocumentType'],
-            'Description'         => $validated['Description'] ?? '',
-            'ModifiedBy'       => Auth::id(),
-        ]);
+        // Update base details first
+        PropertyAttachmentsService::update(
+            $attachment,
+            $PropertyID,
+            $validated['DocumentTitle'],
+            $DocumentType,
+            $validated['Description'] ?? '',
+            $user
+        );
+
+        // Handle new files (if uploaded)
+        foreach ($request->file('file', []) as $uploadedFile) {
+            PropertyAttachmentsService::update(
+                $attachment,
+                $PropertyID,
+                $validated['DocumentTitle'],
+                $DocumentType,
+                $validated['Description'] ?? '',
+                $user,
+                $uploadedFile
+            );
+        }
 
         DB::commit();
 
-        activity()
-            ->performedOn($propertyattachments)
-            ->causedBy(Auth::user())
-            ->withProperties(['action' => 'update'])
-            ->log('Updated Property Attachments');
-
         return redirect()->route('attachments.index')
-                         ->with('success', 'Property attachments updated successfully');
+            ->with('success', 'Property attachment updated successfully');
     } catch (\Throwable $th) {
         DB::rollBack();
-        Log::error('Failed to update property attachments: ' . $th->getMessage());
+        Log::error('Failed to update property attachment: ' . $th->getMessage());
 
-        return back()->withErrors(['error' => 'Failed to update property attachments'])->withInput();
+        return back()
+            ->withErrors(['error' => 'Failed to update property attachment'])
+            ->withInput();
     }
 }
+
 
 public function destroy($Id)
 {

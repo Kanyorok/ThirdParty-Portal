@@ -29,7 +29,8 @@ class PropertyNewLeaseRequest extends FormRequest
             'OtherCharges' => 'required|numeric|min:0',
             'DueDay' => 'required|integer|between:1,28',
             'SpecialTerms' => 'nullable|string|max:255',
-            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'Document' => 'nullable|array',
+            'Document.*' => 'file|max:9000',
         ];
     }
 

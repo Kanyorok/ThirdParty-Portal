@@ -8,7 +8,8 @@
 
 <a href="{{ route('addunit.create') }}" class="btn btn-primary mb-3">Add Unit</a>
 
-  <h4 class="fw-bold mb-3">📋 Property Units</h4>
+<p><small>The list below is of different units per floor</small></p>
+
     @if($units->count())
         <table id="propertyunits" class="table table-bordered table-striped align-middle">
     <thead class="table-light">

@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="fw-bold mb-3">✏ Edit Assignment</h4>
 
     <form action="{{ route('assignrequest.update', $assignment->Id) }}" method="POST">
         @csrf
@@ -136,8 +135,8 @@
             </div>
 
             <div class="card-footer text-end">
-                <button type="submit" class="btn btn-success">💾 Update Assignment</button>
-                <a href="{{ route('assignrequest.index') }}" class="btn btn-secondary">⬅ Cancel</a>
+                <button type="submit" class="btn btn-success">Update Assignment</button>
+                <a href="{{ route('assignrequest.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </div>
     </form>
