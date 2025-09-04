@@ -51,6 +51,7 @@ class FleetVehicleInspectionService
             $inspection = FleetVehicleInspection::create([
                 'InspectionID'       => $this->generateInspectionNo($parent),
                 'ParentInspectionID' => $parent?->Id,
+                'InspectionTypeID'     => $data['InspectionTypeID'],
                 'VehicleID'          => $data['VehicleID'],
                 'FuelType'           => $data['FuelType'],
                 'DriverID'           => $data['DriverID'],

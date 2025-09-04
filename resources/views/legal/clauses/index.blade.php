@@ -10,7 +10,7 @@
     <div class="card-body">
         <p class="text-muted">Browse, manage, and update standard legal clauses and templates for quick inclusion in contracts and legal documents.</p>
         <div class="table-reponsive">
-        <table class="table table-hover table-sm align-middle text-centre"
+        <table class="table table-hover table-sm align-middle text-center"
             style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
             <thead>
                 <tr>
@@ -27,7 +27,7 @@
                     <tr>
                         <td>{{ $clause->Title }}</td>
                         <td>{{ $clause->ClauseType }}</td>
-                        <td>{{ $clause->Version }}</td>
+                        <td>v {{ $clause->Version }}</td>
                         <td>
                             @if($clause->IsStandard === 'Yes')
                                 <span class="badge bg-success">Yes</span>

@@ -28,10 +28,10 @@
             <tbody>
             @forelse($payments as $p)
                 <tr>
-                    <td>{{ $p->Id }}</td>
-                    <td>{{ $p->PolicyNumber }}</td>
-                    <td>{{ $p->CustomerName }}</td>
-                    <td>{{ $p->ClaimType }}</td>
+                    <td>{{ $p->Id ?? '-'}}</td>
+                    <td>{{ $p->PolicyNumber ?? '-'}}</td>
+                    <td>{{ $p->CustomerName ?? '-'}}</td>
+                    <td>{{ $p->ClaimType ?? '-'}}</td>
                     <td>{{ number_format($p->ApprovedAmount, 2) }}</td>
                     <td>{{ number_format($p->PaymentAmount, 2) }}</td>
                     <td>{{ $p->PaymentReference }}</td>

@@ -16,12 +16,10 @@ class VehicleManagementService
     {
         return DB::transaction(function () use ($data) {
 
-            // Duplicate Registration Number check
             if (FleetVehicle::where('RegistrationNo', $data['RegistrationNo'])->exists()) {
                 throw new \Exception('The Registration Number already exists.');
             }
 
-            // Duplicate Chassis Number check
             if (!empty($data['ChassisNumber']) && FleetVehicle::where('ChassisNumber', $data['ChassisNumber'])->exists()) {
                 throw new \Exception('The Chassis Number already exists.');
             }

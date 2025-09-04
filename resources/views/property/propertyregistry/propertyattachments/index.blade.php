@@ -7,7 +7,6 @@
 <div class="container mt-4">
 
 <a href="{{ route('attachments.create') }}" class="btn btn-primary mb-3">Attach Document</a>
-
 <p><small>list of property attachments below</small></p>
     @if($propertyattachments->count())
         <table id="propertyattachment" class="table table-bordered table-striped align-middle">

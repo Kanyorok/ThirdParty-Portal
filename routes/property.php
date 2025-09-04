@@ -132,8 +132,8 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddlease/edit/{Id}', [PropertyNewLeaseController::class, 'edit'])->name('addlease.edit');
     Route::put('propertyaddlease/edit/{Id}', [PropertyNewLeaseController::class, 'update'])->name('addlease.update');
     Route::delete('propertyaddlease/delete/{Id}', [PropertyNewLeaseController::class, 'destroy'])->name('addlease.destroy');
-    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty.lease');
-    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock.lease');
+    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock');
     Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor');
 
 

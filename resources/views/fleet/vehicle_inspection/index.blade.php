@@ -20,6 +20,7 @@
                 <tr>
                     <th>Inspection ID</th>
                     <th>Inspection Date</th>
+                    <th>Inspection Type</th>
                     <th>Vehicle</th>
                     <th>Driver</th>
                     <th>Mileage</th>
@@ -33,8 +34,8 @@
                 @forelse($inspections as $inspection)
                     <tr>
                         <td>{{ $inspection->InspectionID }}</td>
-                        <td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') }}</td></th>
-
+                        <td>{{ \Carbon\Carbon::parse($inspection->InspectionDate)->format('d/m/Y') }}</td>
+                        <td>{{ $inspection->inspectionType->Description ?? 'N/A' }}</td>
                         <td>{{ $inspection->vehicle?->RegistrationNo }}</td>
                         <td>{{ $inspection->driver?->FullName }}</td>
                         <td>{{ $inspection->Mileage }} Km/h</td>
