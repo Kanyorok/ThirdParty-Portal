@@ -4,19 +4,6 @@ namespace App\Http\Controllers\Legal;
 
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-
-class LegalObligationController extends Controller
-{
-    public function index()
-    {
-        return view('legal.obligations.index');
-    }
-}
-<?php
-
-namespace App\Http\Controllers\Legal;
-
-use App\Http\Controllers\Controller;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\CRM\Schedule;
@@ -37,7 +24,7 @@ class LegalObligationController extends Controller
         $details = CodeDetail::select('Value')
             ->where('CodeID','LegalSourceTypes')
             ->get();
-            
+
         return view('legal.obligations.index', compact('obligations', 'details'));
     }
 
@@ -65,7 +52,7 @@ class LegalObligationController extends Controller
         $duplicate = LegalObligation::where('Title', $validated['Title'])
             ->where('SourceType', $validated['SourceType'])
             ->exists();
-        
+
             if($duplicate){
                 return back()->with('error', 'There is an existing record same as this');
             }
@@ -136,7 +123,7 @@ class LegalObligationController extends Controller
 
             $obligation->update($data);
 
-            
+
             activity()
                 ->performedOn(new LegalObligation())
                 ->causedBy(Auth::user())
@@ -189,12 +176,12 @@ class LegalObligationController extends Controller
                     ->log('Obligation successfully deleted');
 
             DB::commit();
-            
+
             return back()->with('success','Obligation successfully deleted');
 
         }catch(\Throwable $th){
             DB::rollBack();
-            
+
             activity()
                 ->performedOn(new LegalObligation())
                 ->causedBy(Auth::user())
