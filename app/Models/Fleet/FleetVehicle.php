@@ -81,9 +81,9 @@ class FleetVehicle extends Model
 
 
     public function tripLogs()
-{
-    return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
-}
+    {
+        return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
+    }
 
 
     public function maintenanceSchedules()
@@ -125,5 +125,10 @@ class FleetVehicle extends Model
     public function status()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
+    }
+
+    public function vehicleStatus()
+    {
+        return $this->belongsTo(CodeDetail::class, 'VehicleStatus', 'ID');
     }
 }

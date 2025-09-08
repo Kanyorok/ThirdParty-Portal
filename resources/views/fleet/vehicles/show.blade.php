@@ -37,6 +37,7 @@
         <div class="mb-2"><strong>Branch:</strong> <span class="text-muted">{{ $vehicle->branch->Name ?? '-' }}</span></div>
         <div class="mb-2"><strong>Max Load (kg):</strong> <span class="text-muted">{{ $vehicle->MaxLoad ?? '-' }}</span></div>
         <div class="mb-2"><strong>Max Passengers:</strong> <span class="text-muted">{{ $vehicle->MaxPassengers ?? '-' }}</span></div>
+        <div class="mb-2"><strong>Vehicle Availability:</strong> <span class="text-muted">{{ $vehicle->vehicleStatus->Description }}</span></div>
         <hr>
 
         <div class="d-flex justify-content-between mt-auto">
@@ -49,15 +50,14 @@
                 @csrf
                 @method('DELETE')
                 <button class="btn btn-danger">Delete</button>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-  
-        {{-- Right Panel: Tabs --}}
-        <div class="col-md-8">
-            <div class="card h-100 p-3 shadow rounded-4">
+    {{-- Right Panel: Tabs --}}
+    <div class="col-md-8">
+        <div class="card h-100 p-3 shadow rounded-4">
                 <h5 class="card-title fw-bold">Vehicle Records</h5>
                 <hr>
                 <ul class="nav nav-tabs mb-3" id="vehicleTabs" role="tablist">
