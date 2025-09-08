@@ -554,7 +554,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 904100, 'Name' => 'Premium Payments', 'Icon' => null, 'Description' => 'View all premium payments made by customers', 'Route' => 'bancassurance.premiums.index', 'ParentID' => 904000],
             ['ModuleID' => 905000, 'Name' => 'Claims Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 905100, 'Name' => 'Claims Register', 'Icon' => null, 'Description' => 'View all submitted claims', 'Route' => 'bancassurance.claims.index', 'ParentID' => 905000],
-            ['ModuleID' => 905200, 'Name' => 'Claims Assessment', 'Icon' => null, 'Description' => 'Assess and decide on initiated claims', 'Route' => 'bancassurance.claims.index', 'ParentID' => 905000],
+            ['ModuleID' => 905200, 'Name' => 'Claims Assessment', 'Icon' => null, 'Description' => 'Assess and decide on initiated claims', 'Route' => 'bancassurance.claims.assessment_list', 'ParentID' => 905000],
             //['ModuleID' => 905300, 'Name' => 'Claims Approval', 'Icon' => null, 'Description' => 'List claims awaiting approval', 'Route' => 'bancassurance.claims.approvalQueue', 'ParentID' => 905000],
             ['ModuleID' => 905400, 'Name' => 'Claim Payments', 'Icon' => null, 'Description' => 'View and track settled claim payments', 'Route' => 'bancassurance.claims.payments.index', 'ParentID' => 905000],
             ['ModuleID' => 905500, 'Name' => 'Closed Claims', 'Icon' => null, 'Description' => 'View Closed Claims', 'Route' => 'bancassurance.claims.closed', 'ParentID' => 905000],

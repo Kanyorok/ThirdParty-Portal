@@ -6,23 +6,48 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassuranceClaimPaymentRequest;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
+use App\Models\Insurance\BancassuranceClaimAssessment;
 use App\Models\Insurance\BancassuranceClaimPayment;
 use App\Services\Insurance\BancassuranceClaimPaymentService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class ClaimPaymentController extends Controller
 {
     //
-public function create()
+public function creates()
 {
     $unpaidClaims = BancassuranceClaim::all();
     $payments = CodeDetail::where('CodeID','PaymentMethod')->get();
 
     return view('bancassurance.claims.payments.create', compact('unpaidClaims','payments'));
 }
+
+public function create()
+{
+    // IDs from CodeDetail
+    $approvedDecisionId = CodeDetail::where('CodeID', 'Decision')
+        ->where('Description', 'Approved')
+        ->value('ID');
+
+    $paidStatusId = CodeDetail::where('CodeID', 'ClaimStatus')
+        ->where('Description','!=', 'Paid')
+        ->value('ID');
+
+    // Assessments where Decision = Approved AND claim Status = Paid
+    $unpaidClaims = BancassuranceClaimAssessment::with(['decision', 'claim.status'])
+        ->where('Decision', $approvedDecisionId)
+        ->whereHas('claim', function ($q) use ($paidStatusId) {
+            $q->where('Status', $paidStatusId);
+        })
+        ->get();
+
+    $payments = CodeDetail::where('CodeID', 'PaymentMethod')->get();
+
+    return view('bancassurance.claims.payments.create', compact('unpaidClaims', 'payments'));
+}
+
+
 
 public function index()
 {

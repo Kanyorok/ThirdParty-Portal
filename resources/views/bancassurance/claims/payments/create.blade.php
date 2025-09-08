@@ -14,11 +14,11 @@
                 @foreach($unpaidClaims as $claim)
                     <option 
                         value="{{ $claim->Id }}"
-                        data-amount="{{ $claim->ClaimAmount }}"
-                        data-customer="{{ $claim->policy->customer->FullName }}"
-                        data-policy="{{ $claim->policy->PolicyNumber }}"
+                        data-amount="{{ $claim->claim->ClaimAmount ?? '-'}}"
+                        data-customer="{{ $claim->claim->policy->customer->FullName ?? '-'}}"
+                        data-policy="{{ $claim->claim->policy->PolicyNumber ?? '-'}}"
                     >
-                        {{ $claim->policy->PolicyNumber }}
+                        {{ $claim->claim->policy->PolicyNumber ?? '-'}}
                     </option>
                 @endforeach
             </select>
@@ -49,7 +49,7 @@
             <select name="PaymentMethod" class="form-select" required>
                 <option value="#">-- Select Payment --</option>
                 @foreach ($payments as $payment)
-                    <option value="{{ $payment->ID }}">{{ $payment->Description }}</option>
+                    <option value="{{ $payment->ID }}">{{ $payment->Description ?? '-'}}</option>
                 @endforeach
             </select>
         </div>

@@ -6,6 +6,7 @@ use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
 use App\Models\Insurance\BancassuranceClaimAssessment;
+use Illuminate\Support\Carbon;
 
 class BancassuranceClaimAssessmentService
 {
@@ -43,4 +44,31 @@ class BancassuranceClaimAssessmentService
 
         return new self($assessment);
     }
+
+
+    public static function update(
+        BancassuranceClaimAssessment $assessment,
+        string $AssessmentComments,
+        float $AssessmentAmount,
+        CodeDetail $Decision,
+        User $user,
+    ): self {
+        $assessment->update([
+            'AssessmentComments' => $AssessmentComments,
+            'AssessmentAmount' => $AssessmentAmount,
+            'Decision' => $Decision->ID,
+            'AssessmentDate' => now(),
+            'AssessedBy' => $user->Id,
+            'ModifiedBy' => $user->Id,
+        ]);
+
+        activity()
+            ->causedBy($user->Id)
+            ->performedOn($assessment)
+            ->event('update')
+            ->log("Updated assessment {$assessment->Id}");
+
+        return new self($assessment);
+    }
+
 }

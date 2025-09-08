@@ -11,6 +11,7 @@
     <div class="mb-3 text-end">
         <a href="{{ route('bancassurance.claims.initiateClosureForm') }}" class="btn btn-primary">Initiate Closure</a>
     </div>
+    <p><small>This is a list of all closed claims</small></p>
 
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
