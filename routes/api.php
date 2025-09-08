@@ -14,6 +14,7 @@ use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
 use App\Http\Controllers\DMS\API\DocumentPreviewController;
+use App\Http\Controllers\DMS\API\DocumentVerificationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;
@@ -131,6 +132,7 @@ Route::prefix('v1')->group(function () {
     Route::prefix('dms')->middleware([DocuwareAuthMiddleware::class])->namespace('DMS/API')->group(function () {
         Route::get('preview', [DocumentPreviewController::class, '__invoke']);
 
+        Route::post('verification/data', [DocumentVerificationController::class, 'store']);
     });
 
     Route::prefix('inventory')->group(function () {
