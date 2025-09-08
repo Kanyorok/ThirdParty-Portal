@@ -1,20 +1,35 @@
 <?php
 
+use App\Http\Controllers\API\Channel\CodesController;
+use App\Http\Controllers\API\Channel\LeadController;
+use App\Http\Controllers\API\Channel\ReviewsController;
+use App\Http\Controllers\API\Channel\SurveyController;
+use App\Http\Controllers\API\Channel\TicketController;
+use App\Http\Controllers\API\ItemCategories\ItemCategoriesController;
+use App\Http\Controllers\API\PBX\CallController;
+use App\Http\Controllers\API\PBX\ContactController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
+use App\Http\Controllers\DMS\API\DocumentPreviewController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\SupplierCategoryApiController;
+use App\Http\Controllers\Procurement\SupplierCategoryController;
+use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\Procurement\TenderApiController;
+use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
+use App\Http\Middleware\ChannelAuthMiddleware;
+use App\Http\Middleware\CheckTokenAndAddToHeaderMiddleware;
+use App\Http\Middleware\DocuwareAuthMiddleware;
+use App\Http\Middleware\PBXAuthMiddleware;
+use App\Http\Middleware\WebsiteAuthMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
-use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
+
 // use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
-use App\Http\Controllers\Procurement\TenderApiController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
-use App\Http\Controllers\Procurement\SupplierCategoryController;
-use App\Http\Controllers\Procurement\SupplierCategoryApiController;
-use App\Http\Controllers\Procurement\SupplierController;
 
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
@@ -87,34 +102,39 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::prefix('v1')->group(function () {
-    Route::prefix('website')->middleware(\App\Http\Middleware\WebsiteAuthMiddleware::class)->group(function () {
+    Route::prefix('website')->middleware(WebsiteAuthMiddleware::class)->group(function () {
         Route::post('reviews', \App\Http\Controllers\API\Website\ReviewsController::class);
         Route::get('survey', [\App\Http\Controllers\API\Website\SurveyController::class, 'index']);
         Route::post('survey', [\App\Http\Controllers\API\Website\SurveyController::class, 'store']);
     });
 
-    Route::prefix('channels')->middleware(\App\Http\Middleware\ChannelAuthMiddleware::class)->group(function () {
-        Route::post('reviews', \App\Http\Controllers\API\Channel\ReviewsController::class);
-        Route::get('survey', [\App\Http\Controllers\API\Channel\SurveyController::class, 'index']);
-        Route::post('survey', [\App\Http\Controllers\API\Channel\SurveyController::class, 'store']);
-        Route::get('codes', \App\Http\Controllers\API\Channel\CodesController::class);
-        Route::post('lead/company', [\App\Http\Controllers\API\Channel\LeadController::class, 'company']);
-        Route::post('lead/individual', [\App\Http\Controllers\API\Channel\LeadController::class, 'individual']);
-        Route::get('clients/{client}/tickets', [\App\Http\Controllers\API\Channel\TicketController::class, 'index']);
-        Route::post('clients/{client}/tickets', [\App\Http\Controllers\API\Channel\TicketController::class, 'store']);
+    Route::prefix('channels')->middleware(ChannelAuthMiddleware::class)->group(function () {
+        Route::post('reviews', ReviewsController::class);
+        Route::get('survey', [SurveyController::class, 'index']);
+        Route::post('survey', [SurveyController::class, 'store']);
+        Route::get('codes', CodesController::class);
+        Route::post('lead/company', [LeadController::class, 'company']);
+        Route::post('lead/individual', [LeadController::class, 'individual']);
+        Route::get('clients/{client}/tickets', [TicketController::class, 'index']);
+        Route::post('clients/{client}/tickets', [TicketController::class, 'store']);
     });
 
-    Route::prefix('pbx')->middleware([\App\Http\Middleware\CheckTokenAndAddToHeaderMiddleware::class, \App\Http\Middleware\PBXAuthMiddleware::class])->group(function () {
-        Route::get('contacts', [\App\Http\Controllers\API\PBX\ContactController::class, 'index']);
-        Route::post('contacts/create', [\App\Http\Controllers\API\PBX\ContactController::class, 'store']);
-        Route::post('calls', [\App\Http\Controllers\API\PBX\CallController::class, 'store']);
-        Route::post('calls/missed', [\App\Http\Controllers\API\PBX\CallController::class, 'missed']);
-        Route::post('calls/create', [\App\Http\Controllers\API\PBX\CallController::class, 'outgoing']);
-        Route::post('calls/non-answer', [\App\Http\Controllers\API\PBX\CallController::class, 'noAnswer']);
+    Route::prefix('pbx')->middleware([CheckTokenAndAddToHeaderMiddleware::class, PBXAuthMiddleware::class])->group(function () {
+        Route::get('contacts', [ContactController::class, 'index']);
+        Route::post('contacts/create', [ContactController::class, 'store']);
+        Route::post('calls', [CallController::class, 'store']);
+        Route::post('calls/missed', [CallController::class, 'missed']);
+        Route::post('calls/create', [CallController::class, 'outgoing']);
+        Route::post('calls/non-answer', [CallController::class, 'noAnswer']);
+    });
+
+    Route::prefix('dms')->middleware([DocuwareAuthMiddleware::class])->namespace('DMS/API')->group(function () {
+        Route::get('preview', [DocumentPreviewController::class, '__invoke']);
+
     });
 
     Route::prefix('inventory')->group(function () {
-        Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);
+        Route::get('item-categories', [ItemCategoriesController::class, 'index']);
     });
 });
 
