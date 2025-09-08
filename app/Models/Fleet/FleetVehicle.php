@@ -3,6 +3,8 @@
 namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\DMS\Image;
+
 use App\Models\Core\Branch;
 use App\Models\Fleet\FuelType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -49,7 +51,11 @@ class FleetVehicle extends Model
         'OdometerReading',
         'Status',
         'AssignedBranch',
-        'IsActive',
+        'MaxPassengers',
+        'MaxLoad',
+        'VehicleStatus',
+        'Color',
+        'ImageId',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -61,6 +67,12 @@ class FleetVehicle extends Model
     {
         return 'VehicleId';
     }
+
+     public function image()
+{
+    return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
+}
+
 
     public function vehicleType()
     {

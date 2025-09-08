@@ -166,16 +166,24 @@
                                                         data-id="{{ $assignment->Id }}">🗑️
                                                 </button>
 
-                                            {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
-                                                method="POST" 
-                                                class="d-inline"
-                                                onsubmit="return confirmUnassign(event)">
-                                                @csrf
-                                                @method('POST')
-                                                    <input type="hidden" name="assignment_id" value="{{ $assignment->Id }}">
-                                                <button type="submit" class="btn btn-sm btn-primary">Unassign</button>
-                                            </form> --}}
+                                                {{-- Assign Inspection Button --}}
+                                                <a href="{{ route('fleet.driver_assignments.assign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-success">Assign Inspection</a>
 
+                                                {{-- Unassign Inspection Button --}}
+                                                <a href="{{ route('fleet.driver_assignments.unassign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-danger">Unassign Inspection</a>
+
+                                                {{-- Existing Unassign form (can be removed if using above buttons) --}}
+                                                {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
+                                                    method="POST" 
+                                                    class="d-inline"
+                                                    onsubmit="return confirmUnassign(event)">
+                                                    @csrf
+                                                    @method('POST')
+                                                    <input type="hidden" name="assignment_id" value="{{ $assignment->Id }}">
+                                                    <button type="submit" class="btn btn-sm btn-primary">Unassign</button>
+                                                </form> --}}
                                             </td>
                                         </tr>
                                     @endforeach
@@ -625,6 +633,17 @@
                 });
             });
         });
-    </script>
+
+    function confirmUnassign(e) {
+        e.preventDefault(); // stop form submission
+
+        if (confirm("Are you sure you want to unassign this vehicle?\n\n⚠️ Please first inspect the vehicle.")) {
+            // redirect to inspection create page instead
+            window.location.href = "{{ route('fleet.vehicle_inspection.create') }}";
+        }
+
+        return false; // always stop normal submit
+    }
+</script>
 @endsection
-  
+

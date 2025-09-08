@@ -60,8 +60,9 @@ class VehicleController extends Controller
     {
         $this->authorize('update', FleetVehicle::class);
         $validated = $request->validated();
+        $imageFile = $request->file('ImageFile');
 
-        $vehicle = $this->vehicleService->create($validated);
+        $vehicle = $this->vehicleService->create($validated, $imageFile);
 
         // Optional assignment history
 
@@ -214,8 +215,9 @@ class VehicleController extends Controller
         $this->authorize('update', FleetVehicle::class);
         $vehicle = FleetVehicle::findOrFail($id);
         $validated = $request->validated();
+        $imageFile = $request->file('ImageFile');
 
-        $this->vehicleService->update($vehicle, $validated);
+        $this->vehicleService->update($vehicle, $validated, $imageFile);
 
         return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle updated successfully.');
     }

@@ -154,6 +154,9 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::put('/driver-assignments/{Id}', [FleetDriverAssignmentController::class, 'update'])->name('fleet.driver_assignments.update');
     Route::delete('/driver-assignments/{Id}', [FleetDriverAssignmentController::class, 'destroy'])->name('fleet.driver_assignments.destroy');
 
+    Route::get('/driver-assignments/{Id}/assign-inspection', [FleetDriverAssignmentController::class, 'assignInspection'])->name('fleet.driver_assignments.assign_inspection');
+    Route::get('/driver-assignments/{Id}/unassign-inspection', [FleetDriverAssignmentController::class, 'unassignInspection'])->name('fleet.driver_assignments.unassign_inspection');
+
 
     // ==================== Fleet Driver License Tracking ====================
 

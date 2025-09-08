@@ -5,16 +5,17 @@ namespace App\Services\FleetManagement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetVehicle;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\DMS\Image;
+use Illuminate\Http\UploadedFile;
 
 class VehicleManagementService
 {
     /**
      * Create a new Fleet Vehicle
      */
-    public function create(array $data): FleetVehicle
+    public function create(array $data, ?UploadedFile $imageFile = null): FleetVehicle
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $imageFile) {
 
             if (FleetVehicle::where('RegistrationNo', $data['RegistrationNo'])->exists()) {
                 throw new \Exception('The Registration Number already exists.');
@@ -26,6 +27,12 @@ class VehicleManagementService
 
             $data['CreatedBy'] = Auth::id();
             $data['CreatedOn'] = now();
+
+            // Image upload
+            if ($imageFile) {
+                $image = $this->storeImage($imageFile);
+                $data['ImageId'] = $image->ImageID;
+            }
 
             $vehicle = FleetVehicle::create($data);
 
@@ -41,24 +48,54 @@ class VehicleManagementService
     /**
      * Update an existing Fleet Vehicle
      */
-    public function update(FleetVehicle $vehicle, array $data): FleetVehicle
-    {
-        return DB::transaction(function () use ($vehicle, $data) {
+    public function update(FleetVehicle $vehicle, array $data, ?UploadedFile $imageFile = null): FleetVehicle
+{
+    return DB::transaction(function () use ($vehicle, $data, $imageFile) {
 
-            $vehicle->fill($data);
-            $vehicle->ModifiedBy = Auth::id();
-            $vehicle->ModifiedOn = now();
-            $vehicle->save();
+        $vehicle->fill($data);
+        $vehicle->ModifiedBy = Auth::id();
+        $vehicle->ModifiedOn = now();
 
-            activity()
-                ->performedOn($vehicle)
-                ->causedBy(Auth::user())
-                ->withProperties(['attributes' => $data])
-                ->log('Fleet Vehicle Updated');
+        // ✅ Replace image if new one uploaded
+        if ($imageFile) {
+            $imageData = base64_encode(file_get_contents($imageFile->getRealPath()));
 
-            return $vehicle;
-        });
-    }
+            if ($vehicle->image) {
+                // Update existing image
+                $vehicle->image->update([
+                    'Image'      => $imageData,
+                    'MIMEType'   => $imageFile->getMimeType(),
+                    'Name'       => $imageFile->getClientOriginalName(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
+            } else {
+                // Create new image
+                $image = Image::create([
+                    'Name'       => $imageFile->getClientOriginalName(),
+                    'Image'      => $imageData,
+                    'MIMEType'   => $imageFile->getMimeType(),
+                    'CreatedBy'  => Auth::id(),
+                    'CreatedOn'  => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
+                $vehicle->ImageId = $image->ImageID;
+            }
+        }
+
+        $vehicle->save();
+
+        activity()
+            ->performedOn($vehicle)
+            ->causedBy(Auth::user())
+            ->withProperties(['attributes' => $data])
+            ->log('Fleet Vehicle Updated');
+
+        return $vehicle;
+    });
+}
+
 
     /**
      * Soft delete a Fleet Vehicle
@@ -80,5 +117,19 @@ class VehicleManagementService
 
             return true;
         });
+    }
+
+    protected function storeImage(UploadedFile $file): Image
+    {
+        $imageContent = base64_encode(file_get_contents($file->getRealPath()));
+        return Image::create([
+            'Name'       => $file->getClientOriginalName(),
+            'Image'      => $imageContent,
+            'MIMEType'   => $file->getMimeType(),
+            'CreatedBy'  => Auth::id(),
+            'CreatedOn'  => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
     }
 }
