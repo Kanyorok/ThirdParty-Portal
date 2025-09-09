@@ -95,5 +95,9 @@ class DatabaseSeeder extends Seeder
         $this->call(ComplianceIncidentsSeeder::class);
         $this->call(ComplianceFilingsSeeder::class);
         
+        $this->call(SystemBankSettingSeeder::class);
+        $this->call(BanksSeeder::class);
+        $this->call(BankBranchesSeeder::class);
+
     }
 }

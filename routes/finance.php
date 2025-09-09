@@ -50,6 +50,8 @@ use App\Http\Controllers\Finance\TransactionTypesController;
 use App\Http\Controllers\Finance\TrialBalanceController;
 use App\Http\Controllers\Finance\ReportsController;
 use App\Http\Controllers\Finance\VendorMasterController;
+use App\Http\Controllers\Finance\BankController;
+use App\Http\Controllers\Finance\BankBranchController;
 use Illuminate\Support\Facades\Route;
 
 // Newly added
@@ -204,4 +206,24 @@ Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.ar.')->group(
 
     // AJAX endpoint
     Route::get('/api/customers', [ReceiptsPostingController::class, 'findCustomer']);
+});
+
+
+// Bank Routes
+
+Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+
+    // Banks Routes (resource route for all CRUD)
+    Route::resource('bank', BankController::class);
+
+    // All Bank Branches (safe for sidebar, no params)
+    Route::get('bank-branches', [BankBranchController::class, 'listAll'])
+        ->name('bankbranch.index');
+
+    // Bank-specific branches (filtered by bankId)
+    Route::get('bank/{bankId}/branches', [BankBranchController::class, 'index'])
+        ->name('bankbranch.bybank');
+
+    // Bank Branch CRUD (exclude index as we already defined it in above routes)
+    Route::resource('bankbranch', BankBranchController::class)->except(['index']);
 });
