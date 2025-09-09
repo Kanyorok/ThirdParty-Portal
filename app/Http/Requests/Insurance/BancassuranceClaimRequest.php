@@ -27,7 +27,6 @@ class BancassuranceClaimRequest extends FormRequest
             'ClaimReason' => 'required|string',
             'ClaimAmount' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
             'ClaimDate' => 'required|date',
-            'Status' => 'required|exists:t_CodeDetails,ID',
         ];
     }
 }

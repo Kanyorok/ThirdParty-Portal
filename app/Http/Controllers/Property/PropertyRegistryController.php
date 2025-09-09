@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Property;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Requests\Property\PropertyRegistry\PropertyRegistryRequest;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\Locality;
