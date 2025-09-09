@@ -14,14 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 class ClaimPaymentController extends Controller
 {
-    //
-public function creates()
-{
-    $unpaidClaims = BancassuranceClaim::all();
-    $payments = CodeDetail::where('CodeID','PaymentMethod')->get();
-
-    return view('bancassurance.claims.payments.create', compact('unpaidClaims','payments'));
-}
 
 public function create()
 {
@@ -30,19 +22,12 @@ public function create()
         ->where('Description', 'Approved')
         ->value('ID');
 
-    $paidStatusId = CodeDetail::where('CodeID', 'ClaimStatus')
-        ->where('Description','!=', 'Paid')
-        ->value('ID');
-
-    // Assessments where Decision = Approved AND claim Status = Paid
     $unpaidClaims = BancassuranceClaimAssessment::with(['decision', 'claim.status'])
         ->where('Decision', $approvedDecisionId)
-        ->whereHas('claim', function ($q) use ($paidStatusId) {
-            $q->where('Status', $paidStatusId);
-        })
         ->get();
 
     $payments = CodeDetail::where('CodeID', 'PaymentMethod')->get();
+
 
     return view('bancassurance.claims.payments.create', compact('unpaidClaims', 'payments'));
 }

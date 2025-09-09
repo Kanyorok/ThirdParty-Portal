@@ -13,8 +13,7 @@
                 <option value="">-- Choose Unpaid Claim --</option>
                 @foreach($unpaidClaims as $claim)
                     <option 
-                        value="{{ $claim->Id }}"
-                        data-amount="{{ $claim->claim->ClaimAmount ?? '-'}}"
+                        value="{{ $claim->ClaimId ?? '-'}}"
                         data-customer="{{ $claim->claim->policy->customer->FullName ?? '-'}}"
                         data-policy="{{ $claim->claim->policy->PolicyNumber ?? '-'}}"
                     >
@@ -80,7 +79,6 @@
         const selected = select.options[select.selectedIndex];
         document.getElementById('CustomerName').value = selected.getAttribute('data-customer') || '';
         document.getElementById('PolicyNumber').value = selected.getAttribute('data-policy') || '';
-        document.getElementById('PaymentAmount').value = selected.getAttribute('data-amount') || '';
     }
 </script>
 @endsection
