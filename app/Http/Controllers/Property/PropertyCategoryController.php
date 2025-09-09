@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Property;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyCategoryRequest;
 use App\Models\Core\CategoryMaster;
@@ -55,9 +54,7 @@ class PropertyCategoryController extends Controller
     {
        // $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
         $validated = $request->validate([
-            'Name' => 'required|string|max:50',
             'Description' => 'nullable|string|max:100',
-
         ]);
 
         DB::beginTransaction();
@@ -66,7 +63,6 @@ class PropertyCategoryController extends Controller
             $category = CategoryMaster::findOrFail($id);
 
             $category->update([
-                'Name' => $validated['Name'],
                 'Description' => $validated['Description'] ?? '',
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
