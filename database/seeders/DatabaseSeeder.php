@@ -2,10 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Core\ModulesEnum;
-use App\Models\Budget\BudgetActivityMaster;
-use App\Models\Budget\BudgetGLAccountSubType;
-use App\Models\ThirdParty;
 use Illuminate\Database\Seeder;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -21,10 +17,9 @@ class DatabaseSeeder extends Seeder
         $this->call(TeamSeeder::class);
         $this->call(BranchSeeder::class);
         $this->call(CodeDetailSeeder::class);
-        // $this->call(LocalitySeeder::class);
-        $this->call(SysFilterSeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(CurrencySeeder::class);
+        $this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(CommitteeSeeder::class);

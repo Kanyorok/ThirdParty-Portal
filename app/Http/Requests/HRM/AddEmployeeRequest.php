@@ -27,8 +27,11 @@ class AddEmployeeRequest extends FormRequest
             'FirstName' => ['required', 'string', 'max:250'],
             'MiddleName' => ['nullable', 'string', 'max:250'],
             'LastName' => ['required', 'string', 'max:250'],
-            'Phone' => ['required', 'string', /*'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'*/],
-            'Email' => ['required', 'email:rfc,dns', 'max:250'],
+            'Phone' => ['required', 'string', 'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'],
+            'Email' => ['required', Rule::email()
+                ->rfcCompliant(strict: false)
+                ->validateMxRecord()
+                ->preventSpoofing(), 'max:250'],
             'Department' => ['required'],
             'Branch' => ['required'],
             'Gender' => ['required', 'string'],
