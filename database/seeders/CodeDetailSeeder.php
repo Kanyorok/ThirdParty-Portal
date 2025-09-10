@@ -554,6 +554,13 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
 
+             //Driver Availability Status
+
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
+
+
 
             // Recurrent Journal Payment Frequency
             ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Daily', 'Value' => 'd','DisplayOrder'=>0],

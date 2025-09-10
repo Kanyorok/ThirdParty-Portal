@@ -12,12 +12,29 @@
         @endif
         <div class="row">
 
+            
+
             {{-- Left Side Panel: Driver Details --}}
             <div class="col-md-4">
     <div class="card h-100 shadow rounded-4">
         <div class="card-body p-3">
             <h5 class="card-title fw-bold mb-3">{{ $driver->FullName }} Details</h5>
             <hr>
+
+
+             {{-- Vehicle Images --}}
+       @if ($driver->image) 
+    <img src="data:{{ $driver->image->MIMEType }};base64,{{ $driver->image->Image }}"
+         alt="Driver Image"
+         class="img-fluid mb-3 rounded-circle border shadow"
+         style="width: 200px; height: 200px; object-fit: cover;">
+        @else
+            <img src="{{ asset('images/vehicle-placeholder.png') }}" 
+                alt="No Image"
+                class="img-fluid mb-3 rounded-circle border shadow"
+                style="width: 200px; height: 200px; object-fit: cover;">
+        @endif
+
 
             <dl class="row g-2">
                 <dt class="col-md-5">Driver No:</dt>

@@ -37,7 +37,7 @@
         <div class="mb-2"><strong>Branch:</strong> <span class="text-muted">{{ $vehicle->branch->Name ?? '-' }}</span></div>
         <div class="mb-2"><strong>Max Load (kg):</strong> <span class="text-muted">{{ $vehicle->MaxLoad ?? '-' }}</span></div>
         <div class="mb-2"><strong>Max Passengers:</strong> <span class="text-muted">{{ $vehicle->MaxPassengers ?? '-' }}</span></div>
-        <div class="mb-2"><strong>Vehicle Availability:</strong> <span class="text-muted">{{ $vehicle->vehicleStatus->Description }}</span></div>
+        <div class="mb-2"><strong>Vehicle Availability:</strong> <span class="text-muted">{{ $vehicle->vehicleStatus->Description ?? '-' }}</span></div>
         <hr>
 
         <div class="d-flex justify-content-between mt-auto">
