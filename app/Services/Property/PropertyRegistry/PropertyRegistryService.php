@@ -76,6 +76,7 @@ public static function update(
     string           $AreaLocality,
     ?string          $PropertyDescription,
     User             $user,
+    bool            $IsActive,
     UploadedFile     $document = null
 ): self {
     $property->update([
@@ -90,6 +91,7 @@ public static function update(
         'AreaLocality'        => $AreaLocality,
         'PropertyDescription' => $PropertyDescription,
         'ModifiedBy'          => $user->Id,
+        'IsActive'            => $IsActive,
         'ModifiedOn'          => now(),
     ]);
 

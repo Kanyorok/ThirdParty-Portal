@@ -30,6 +30,7 @@ class PropertyRegistry extends Model
         'TownCity',
         'AreaLocality',
         'PropertyDescription',
+        'IsActive',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'

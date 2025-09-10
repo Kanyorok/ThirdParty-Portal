@@ -33,9 +33,15 @@
           <td>{{ $property->propertyCategory->Name?? '-' }}</td>
         <td>{{ $property->Country?? '-' }}</td>
           <td>{{ $property->propertyLocality->Name?? '-' }}</td>
-        <td><span class="badge bg-success">Active</span></td>
+        <td>
+            @if($property->IsActive)
+                <span class="badge bg-success">Active</span>
+            @else
+                <span class="badge bg-secondary">Inactive</span>
+            @endif
+        </td>
           <td>
-              <a href="{{ route('PropertyRegistry.show', $property->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+              <a href="{{ route('PropertyRegistry.show', $property->Id) }}" class="btn btn-sm btn-info">View</a>
               <a href="{{ route('PropertyRegistry.edit', $property->Id) }}" class="btn btn-sm btn-warning">Edit</a>
               <form action="{{ route('PropertyRegistry.destroy', $property->Id) }}" method="POST" class="d-inline">
                   @csrf

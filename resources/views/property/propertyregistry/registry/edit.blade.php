@@ -97,6 +97,14 @@
                 <textarea name="PropertyDescription" id="PropertyDescription" class="form-control" rows="3">{{ old('PropertyDescription', $property->PropertyDescription) }}</textarea>
             </div>
 
+            <div class="col-md-6 form-check form-switch">
+                <!-- hidden input ensures 0 is sent when unchecked -->
+                <input type="hidden" name="IsActive" value="0">
+                <input class="form-check-input" type="checkbox" id="IsActive" name="IsActive"
+                    value="1" {{ old('IsActive', $property->IsActive) ? 'checked' : '' }}>
+                <label class="form-check-label" for="IsActive">Is Active</label>
+            </div>
+
             <div class="col-12">
                 <label for="Documents" class="form-label">Attach New Documents</label>
                 <input type="file" name="file[]" class="form-control" multiple>

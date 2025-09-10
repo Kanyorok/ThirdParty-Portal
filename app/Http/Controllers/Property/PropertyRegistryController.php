@@ -115,7 +115,8 @@ public function update(PropertyRegistryRequest $request, $id)
             $townCity,
             $validated['AreaLocality'],
             $validated['PropertyDescription'] ?? '',
-            $request->user()
+            $request->user(),
+            $validated['IsActive'] ?? $property->IsActive
         );
 
         // Handle file uploads (loop like in store)
@@ -133,6 +134,7 @@ public function update(PropertyRegistryRequest $request, $id)
                 $validated['AreaLocality'],
                 $validated['PropertyDescription'] ?? '',
                 $request->user(),
+                $validated['IsActive'],
                 $uploadedFile
             );
         }
