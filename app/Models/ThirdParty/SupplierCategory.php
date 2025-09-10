@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Inventory\ItemCategories; // model representing t_ItemCategories
 use Illuminate\Support\Facades\DB;
 
@@ -45,16 +44,6 @@ class SupplierCategory extends Model
             't_ThirdParty_SupplierCategory',
             'SupplierCategoryID',
             'ThirdPartyID'
-        )->withTimestamps();
-    }
-
-    public function prequalificationApplications(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            PrequalificationApplication::class,
-            't_PrequalificationApplicationCategories',
-            'CategoryID',
-            'ApplicationID'
         )->withTimestamps();
     }
 

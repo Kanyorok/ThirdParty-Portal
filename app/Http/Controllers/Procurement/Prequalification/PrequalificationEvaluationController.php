@@ -25,7 +25,7 @@ class PrequalificationEvaluationController extends Controller
 
     public function showEvaluationForm($applicationId): View|RedirectResponse
     {
-        $application = PrequalificationApplication::with('supplier')->findOrFail($applicationId);
+        $application = PrequalificationApplication::with('supplier', 'category')->findOrFail($applicationId);
         $round = $application->round;
 
         if (!$round) {

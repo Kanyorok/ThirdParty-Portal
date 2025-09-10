@@ -49,7 +49,7 @@ class PrequalificationResultsController extends Controller
      */
     public function showResults(SupplierPrequalificationService $service, $applicationId): View
     {
-        $application = PrequalificationApplication::with(['supplier'])->findOrFail($applicationId);
+        $application = PrequalificationApplication::with(['supplier', 'category'])->findOrFail($applicationId);
 
         $evaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
             ->with(['criteria.masterCriteria', 'criteria.section.masterSection'])

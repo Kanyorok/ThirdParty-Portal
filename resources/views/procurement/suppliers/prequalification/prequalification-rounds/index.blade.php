@@ -15,15 +15,7 @@
 
     {{-- Header --}}
     <div class="card shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-            <h4 class="mb-0 text-primary">
-                <i class="bi bi-list-check me-2"></i> Prequalification Rounds
-            </h4>
-            <a href="{{ route('prequalification.prequalification-rounds.create') }}" class="btn btn-success d-flex align-items-center" data-ajax="1">
-                <i class="fa fa-plus-circle me-2"></i> Create New Round
-            </a>
-        </div>
-
+        
         {{-- Table --}}
         <div class="table-responsive">
             <table id="roundsTable" class="table table-striped table-hover mb-0 align-middle" data-datatable="auto" data-dt-opts='{"pageLength":10,"order":[[3,"desc"]],"responsive":true,"language":{"search":"_INPUT_","searchPlaceholder":"Search rounds..."}}'>
@@ -75,7 +67,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
+                        <td class="text-center text-muted py-5" style="vertical-align: middle;">
                             <div class="mb-3">
                                 <i class="bi bi-folder-x display-4 text-secondary"></i>
                             </div>
@@ -84,6 +76,12 @@
                                 <i class="fa fa-plus-circle me-1"></i> Create a New Round
                             </a>
                         </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
                     </tr>
                     @endforelse
                 </tbody>

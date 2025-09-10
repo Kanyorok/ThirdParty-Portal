@@ -88,6 +88,7 @@ class DatabaseSeeder extends Seeder
         $this->call(LegalLoanSecuritiesSeeder::class);
         $this->call(LegalCaseCounselSeeder::class);
         $this->call(LegalCaseOutcomeSeeder::class);
-    $this->call(ThirdPartyTypesSeeder::class);
+        $this->call(financeroleseeder::class);
+        $this->call(ThirdPartyTypesSeeder::class);
     }
 }
