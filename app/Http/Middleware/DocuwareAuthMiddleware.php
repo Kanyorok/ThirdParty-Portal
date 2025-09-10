@@ -7,6 +7,7 @@ use App\Models\Settings\APICredential;
 use Closure;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use PhpImap\Exceptions\ConnectionException;
 use PhpImap\Exceptions\InvalidParameterException;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +21,7 @@ class DocuwareAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        Log::info('Middleware :' . collect($request->all())->toJson());
         $authHeader = $request->header('Authorization');
         if ($authHeader && str_starts_with($authHeader, 'Basic ')) {
             $encodedCredentials = substr($authHeader, 6);
@@ -36,6 +38,7 @@ class DocuwareAuthMiddleware
                 if ($user !== $parsedUsername || $pass !== $parsedPassword) {
                     abort(Response::HTTP_UNAUTHORIZED);
                 }
+                Log::info('Passed Basic Auth Middleware: ');
                 return $next($request);
             } catch (ConnectionException|InvalidParameterException|Exception) {
             }

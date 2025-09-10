@@ -5,6 +5,7 @@ namespace App\Services\DMS;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\Core\VisibilityEnum;
+use App\Enums\DMS\DocumentValidationTypeEnum;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\Team;
@@ -24,6 +25,7 @@ class RepositoryService extends PermissionsService
 {
     protected const string ROOT = 'root';
     protected const string Internal = 'internal';
+    protected const string Validation = 'validation';
 
     public function __construct(public Repository $repo) {}
 
@@ -184,6 +186,25 @@ class RepositoryService extends PermissionsService
             return (new self(self::_create(Name: 'Internal', actor: $actor, repository: self::root(), Description: 'Internal Uploaded', RepoId: self::Internal)))
                 ->visibility(VisibilityEnum::Private, $actor)->repo;
         });
+    }
+
+    public static function validation(DocumentValidationTypeEnum $validationType = null): Repository
+    {
+        if ($validationType === null) {
+            return Repository::query()->where('RepositoryId', self::Validation)->withTrashed()->firstOr(function () {
+                $actor = SystemHelper::user();
+                return (new self(self::_create(Name: 'Document Validation', actor: $actor, repository: self::root(), Description: 'Document Validation', RepoId: self::Validation)))
+                    ->visibility(VisibilityEnum::Public, $actor)->repo;
+            });
+        }
+
+        return Repository::query()->where('RepositoryId', $validationType->value)->withTrashed()->firstOr(function () use ($validationType) {
+            $actor = SystemHelper::user();
+            return (new self(self::_create(Name: $validationType->description(), actor: $actor, repository: self::validation(), Description: $validationType->description() . ' Uploaded files', RepoId: $validationType->value)))
+                ->visibility(VisibilityEnum::Public, $actor)->repo;
+        });
+
+
     }
 
     public static function root(): Repository

@@ -10,4 +10,12 @@ enum DocumentValidationTypeEnum: string
 
     case ClientOnboarding = 'CLREG';
     case LoanApplication = 'LNAPP';
+
+    public function description(): string
+    {
+        return match ($this) {
+            self::ClientOnboarding => 'Client Onboarding',
+            self::LoanApplication => 'Loan Application',
+        };
+    }
 }

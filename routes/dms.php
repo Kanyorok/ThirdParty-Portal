@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DMS\DocumentValidationController;
 use App\Http\Controllers\DMS\Files\DocumentActionsController;
 use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentCheckOutController;
@@ -41,11 +42,20 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
 
     Route::prefix('repo/{repository}')->group(function () {
         Route::put('repo-visibility', [RepositoryPermissionController::class, 'visibility'])->name('repo.visibility');
+
         Route::resource('repo-permissions', RepositoryPermissionController::class)->only(['index', 'store', 'destroy']);
         Route::resource('repo-move', RepositoryMoveController::class)->only(['index', 'store']);
         Route::resource('files', DocumentController::class)->parameters(['files' => 'document'])->except('create');
     });
     Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository'])->except('create');
+
+    Route::put('validation/{documentValidation}/approve', [DocumentValidationController::class, 'approve'])->name('dms.validation.approve');
+    Route::resource('validation', DocumentValidationController::class)->names([
+        'index' => 'dms.validation.index',
+        'show' => 'dms.validation.show',
+        'update' => 'dms.validation.update',
+        'destroy' => 'dms.validation.destroy',
+    ])->only(['index', 'show', 'update', 'destroy']);
 
     Route::prefix('file-tags/{d_m_s_tags}')->group(function () {
         Route::get('files', DocumentTagController::class)->name('file-tags.files');

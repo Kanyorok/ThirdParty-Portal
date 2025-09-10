@@ -2,7 +2,7 @@
 
 namespace App\Models\DMS;
 
-use App\Enums\Core\DataTypesEnum;
+use App\Enums\DMS\DocumentValidationTypeEnum;
 use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -27,7 +27,7 @@ class DocumentValidation extends Model
     ];
 
     protected $casts = [
-        'DataType' => DataTypesEnum::class,
+        'Type' => DocumentValidationTypeEnum::class,
         'ApprovedOn' => 'datetime',
     ];
 
@@ -36,12 +36,18 @@ class DocumentValidation extends Model
         return 'DocumentValidationId';
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'ValidationId';
+    }
+
+
     public function document(): BelongsTo
     {
         return $this->belongsTo(Document::class, 'DocumentId');
     }
 
-    public function attributes(): HasMany
+    public function properties(): HasMany
     {
         return $this->hasMany(DocumentValidationAttributes::class, 'DocumentValidationId');
     }
