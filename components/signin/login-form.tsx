@@ -84,11 +84,37 @@ function SignInFormComponent() {
             })
 
             if (result?.error) {
-                const errorMessage =
-                    result.error === "CredentialsSignin"
-                        ? "Invalid email or password. Please try again."
-                        : "An unexpected error occurred. Please try again."
-                setError("root", { type: "manual", message: errorMessage })
+                // Expect tagged format CODE: message
+                const raw = result.error
+                let code = "UNKNOWN"
+                let message = raw
+                const idx = raw.indexOf(":")
+                if (idx > -1) {
+                    code = raw.slice(0, idx).trim()
+                    message = raw.slice(idx + 1).trim()
+                } else if (raw === "CredentialsSignin") {
+                    code = "INVALID_CREDENTIALS"
+                    message = "Invalid email or password"
+                }
+                const friendly = (() => {
+                    switch (code) {
+                        case "INVALID_CREDENTIALS":
+                            return "Invalid email or password. Please try again."
+                        case "ACCOUNT_NOT_APPROVED":
+                            return message || "Your account is pending approval."
+                        case "VALIDATION":
+                            return message || "Please correct the highlighted fields."
+                        case "NETWORK":
+                            return "Network issue. Please retry."
+                        case "SERVER_ERROR":
+                            return message || "Server error. Please try again later."
+                        case "MISSING_FIELDS":
+                            return message || "Email and password are required."
+                        default:
+                            return message || "An unexpected error occurred. Please try again."
+                    }
+                })()
+                setError("root", { type: code, message: friendly })
             } else if (result?.ok) {
                 // Show toast then navigate
                 toast.success("Successfully Signed In", {

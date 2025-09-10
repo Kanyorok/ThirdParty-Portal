@@ -10,10 +10,13 @@ type ApiRound = {
     roundId?: string;
     title?: string;
     name?: string;
-    status?: "O" | "CL" | string;
+    status?: "O" | "CL" | string | { value: string; label?: string };
     startDate?: string;
     endDate?: string;
     maxVendors?: number;
+    applicationId?: string | number;
+    hasApplied?: boolean;
+    applicationProgress?: { stage?: string; percent?: number; updatedOn?: string; label?: string };
 };
 
 type ApiResponse = {
@@ -131,13 +134,29 @@ export default async function RoundsView({
         const endDate = r.endDate ?? "";
         const maxVendors = Number(r.maxVendors ?? 0);
 
+        const rawStatus: any = (r as any).status
+        let status: any
+        if (rawStatus && typeof rawStatus === 'object') {
+            status = { value: rawStatus.value, label: rawStatus.label }
+        } else {
+            const v = (rawStatus ?? r.status)
+            status = v === 'O' || v === 'CL' ? v : (v === 'Open' ? 'O' : 'CL')
+        }
         return {
             id: uniqueId,
             title,
-            status: ((r as any)?.status?.value ?? r.status) === "O" ? "O" : "CL",
+            status,
             startDate,
             endDate,
             maxVendors,
+            hasApplied: Boolean((r as any).hasApplied) || Boolean((r as any).applicationId),
+            applicationId: (r as any).applicationId ? String((r as any).applicationId) : undefined,
+            applicationProgress: (r as any).applicationProgress ? {
+                stage: (r as any).applicationProgress.stage,
+                percent: (r as any).applicationProgress.percent,
+                updatedOn: (r as any).applicationProgress.updatedOn,
+                label: (r as any).applicationProgress.label,
+            } : undefined,
         };
     });
 

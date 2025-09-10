@@ -38,46 +38,79 @@ export const authOptions: NextAuthOptions = {
             },
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) {
-                    throw new Error("Email and password are required")
+                    throw new Error("MISSING_FIELDS: Email and password are required")
                 }
-                const response = await fetch(`${baseUrl}/api/third-party-auth/login`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json",
-                    },
-                    body: JSON.stringify({
-                        email: credentials.email,
-                        password: credentials.password,
-                    }),
-                })
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}))
-                    throw new Error(errorData.message || "Authentication failed")
+                let res: Response
+                let text: string = ""
+                try {
+                    res = await fetch(`${baseUrl}/api/third-party-auth/login`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                        },
+                        body: JSON.stringify({
+                            email: credentials.email,
+                            password: credentials.password,
+                        }),
+                    })
+                    text = await res.text()
+                } catch (e: any) {
+                    throw new Error("NETWORK: Unable to reach authentication service")
                 }
-                const { user, token } = await response.json()
-                if (!user || !token) {
-                    throw new Error("Invalid authentication response")
+                let data: any = null
+                try { data = text ? JSON.parse(text) : null } catch { /* ignore parse error */ }
+
+                // 422 validation
+                if (res.status === 422) {
+                    const msg = data?.errors?.email?.[0] || data?.errors?.password?.[0] || data?.message || "Validation failed"
+                    throw new Error(`VALIDATION: ${msg}`)
                 }
+                if (res.status === 403) {
+                    const msg = data?.message || "Account pending approval"
+                    throw new Error(`ACCOUNT_NOT_APPROVED: ${msg}`)
+                }
+                if (res.status === 401) {
+                    const msg = data?.message || "Invalid email or password"
+                    throw new Error(`INVALID_CREDENTIALS: ${msg}`)
+                }
+                if (!res.ok) {
+                    const msg = data?.message || `Login failed (${res.status})`
+                    throw new Error(`SERVER_ERROR: ${msg}`)
+                }
+                if (!data?.user || !data?.token) {
+                    throw new Error("SERVER_ERROR: Malformed login response")
+                }
+
+                const rawUser = data.user
+                const rawTypes = Array.isArray(rawUser.types) ? rawUser.types : []
+                const types = rawTypes.map((t: any) => ({
+                    id: t.id,
+                    code: t.code,
+                    categoryId: t.categoryId ?? null,
+                }))
+                const isSupplier = !!rawUser.isSupplier || types.some((t: { code?: string }) => t.code?.startsWith("SU-"))
+
                 return {
-                    id: String(user.id),
-                    userId: user.userId,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    fullName: user.fullName,
-                    email: user.email,
-                    phone: user.phone ?? null,
-                    imageId: user.imageId ?? null,
-                    gender: user.gender ?? null,
-                    thirdPartyId: user.thirdPartyId,
-                    isActive: user.isActive,
-                    isApproved: user.isApproved,
-                    isSupplier: user.isSupplier,
-                    emailVerifiedOn: user.emailVerifiedOn ?? null,
-                    createdOn: user.createdOn,
-                    modifiedOn: user.modifiedOn,
-                    thirdParty: user.thirdParty,
-                    accessToken: token,
+                    id: String(rawUser.id),
+                    userId: rawUser.userId,
+                    firstName: rawUser.firstName,
+                    lastName: rawUser.lastName,
+                    fullName: rawUser.fullName,
+                    email: rawUser.email,
+                    phone: rawUser.phone ?? null,
+                    imageId: rawUser.imageId ?? null,
+                    gender: rawUser.gender ?? null,
+                    thirdPartyId: rawUser.thirdPartyId,
+                    isActive: rawUser.isActive,
+                    isApproved: rawUser.isApproved,
+                    isSupplier,
+                    types,
+                    emailVerifiedOn: rawUser.emailVerifiedOn ?? null,
+                    createdOn: rawUser.createdOn,
+                    modifiedOn: rawUser.modifiedOn,
+                    thirdParty: rawUser.thirdParty,
+                    accessToken: data.token,
                 }
             },
         }),
@@ -92,7 +125,7 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
-                return { ...token, ...user }
+                token = { ...token, ...user }
             }
             return token
         },
@@ -111,6 +144,7 @@ export const authOptions: NextAuthOptions = {
                 isActive: token.isActive,
                 isApproved: token.isApproved,
                 isSupplier: token.isSupplier,
+                types: token.types,
                 emailVerifiedOn: token.emailVerifiedOn,
                 createdOn: token.createdOn,
                 modifiedOn: token.modifiedOn,
@@ -121,8 +155,9 @@ export const authOptions: NextAuthOptions = {
         },
     },
     pages: {
-        signIn: "/auth/signin",
-        error: "/auth/signin",
+        // Align with actual route /signin so unauthorized users are directed correctly
+        signIn: "/signin",
+        error: "/signin",
     },
     secret: NEXTAUTH_SECRET,
     debug: process.env.NODE_ENV !== "production",
