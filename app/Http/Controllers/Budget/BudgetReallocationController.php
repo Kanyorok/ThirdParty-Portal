@@ -10,6 +10,7 @@ use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetLineLedgerLimit;
+use App\Models\Budget\BudgetLinesGLAccount;
 use App\Models\Budget\BudgetMonthlyAllocation;
 use App\Models\Budget\BudgetPeriods;
 use App\Models\Budget\BudgetReallocation;
@@ -51,6 +52,7 @@ class BudgetReallocationController extends Controller
         $validated = $request->validated();
         $budgetLines=array();
         $budgetId=$validated['BudgetID'];
+        $ReallocationType=$validated['ReallocationType'];
         $branchId='';
         //Below two to be used when its across departments
         $fromLines=[];
@@ -91,7 +93,7 @@ class BudgetReallocationController extends Controller
         $msg='Re-allocate Budget: '.$budget->Name;
 
         return view('budgetandanalytics.reallocation.allocate',
-            compact('isHeadOffice','budgetLines','branchId','budget','budgetId','msg','isAccrossDepertments','fromLines','toLines'));
+            compact('isHeadOffice','budgetLines','branchId','budget','budgetId','msg','isAccrossDepertments','fromLines','toLines','ReallocationType'));
     }
 
     protected function getBudgetLinesData($budgetID, $branchID, $departmentID)
@@ -144,7 +146,7 @@ class BudgetReallocationController extends Controller
     public function store(Request $request)
     {
         // 1) Validate input
-        return$validated = $request->validate([
+        $validated = $request->validate([
             'BudgetID'         => ['required','integer','exists:t_Budgets,Id'],
             'FromBudgetLineID' => ['required','integer','exists:t_BudgetLines,Id'],
             'ToBudgetLineID'   => ['required','integer','different:FromBudgetLineID','exists:t_BudgetLines,Id'],
@@ -160,6 +162,8 @@ class BudgetReallocationController extends Controller
             'FromAllocations.*'=> ['nullable','numeric','min:0'],
             'ToAllocations.*'  => ['nullable','numeric','min:0'],
         ]);
+
+
 
         $budget    = Budget::findOrFail($validated['BudgetID']);
         $branchDbId= (int) $validated['BranchID'];
@@ -245,23 +249,15 @@ class BudgetReallocationController extends Controller
         // 5) Look up ledger ids for both lines
         $fromLine = BudgetLine::findOrFail($fromLineId);
         $toLine   = BudgetLine::findOrFail($toLineId);
-        $fromLineLedgerCBSAccID='';
-        $toLineLedgerCBSAccID='';
+        $fromGLID=BudgetLinesGLAccount::where('BudgetLineID',$fromLine->Id)->pluck('BudgetGLAccountID')->first();
+        $toGLID=BudgetLinesGLAccount::where('BudgetLineID',$toLine->Id)->pluck('BudgetGLAccountID')->first();
 
-        if (empty($fromLine->LedgerID)) {
-            throw ValidationException::withMessages(['FromBudgetLineID' => 'Selected From line has no LedgerID configured.']);
-        }else{
-            $fromLineLedgerCBSAccID=BudgetGLMaster::where('BudgetGLID',$fromLine->BudgetGLAccountID)->first()->AccountID;
-        }
-        if (empty($toLine->LedgerID)) {
-            throw ValidationException::withMessages(['ToBudgetLineID' => 'Selected To line has no LedgerID configured.']);
-        }else{
-            $toLineLedgerCBSAccID=BudgetGLMaster::where('BudgetGLID',$fromLine->BudgetGLAccountID)->first()->AccountID;
-        }
+        $fromLineLedgerCBSAccID=BudgetGLMaster::where('BudgetGLID',$fromGLID)->first()->AccountID;
+        $toLineLedgerCBSAccID=BudgetGLMaster::where('BudgetGLID',$toGLID)->first()->AccountID;
 
         // 6) Persist everything atomically
         $realloc = DB::transaction(function () use (
-            $validated, $fromMonthly, $toMonthly, $months, $fromLine, $toLine
+            $validated, $fromMonthly, $toMonthly, $months, $fromLine, $toLine,$fromLineLedgerCBSAccID,$toLineLedgerCBSAccID
         ) {
             // a) Reallocation header
             $realloc = BudgetReallocation::create([
@@ -272,7 +268,7 @@ class BudgetReallocationController extends Controller
                 'ToActivityID'     => $validated['ToActivityID'] ?? null,
                 'BranchID'         => $validated['BranchID'] ?? null,
                 'DepartmentID'     => $validated['DepartmentID'] ?? null,
-                'ReallocationType' => $validated['ReallocationType'],
+                'ReallocationType' => $validated['ReallocationType'] ?? null,
                 'Amount'           => $validated['Amount'],
                 'Justification'    => $validated['Justification'],
                 'Status'           => 'Pending',
@@ -281,7 +277,7 @@ class BudgetReallocationController extends Controller
             ]);
 
             // Helper to insert pending monthly limits
-            $insertLimits = function(array $arr, BudgetLine $line, int $reallocId) use ($validated, $months) {
+            $insertLimits = function(array $arr, BudgetLine $line, int $reallocId,$ledgerID) use ($validated, $months) {
                 foreach ($arr as $idx => $val) {
                     if ($val === null || $val === '' || (float)$val <= 0) continue;
 
@@ -294,7 +290,7 @@ class BudgetReallocationController extends Controller
                         'ReallocationID' => $reallocId,
                         'BudgetLineID'   => $line->Id, // assumes PK is Id per your schema
                         'ERPLedgerID'    => $line->BudgetGLAccountID ?? null,
-                        'LedgerID'       => BudgetGLMaster::where('BudgetGLID',$line->BudgetGLAccountID)->first()->AccountID,   // required
+                        'LedgerID'       => $ledgerID,   // required
                         'BranchID'       => $validated['BranchID'],
                         'LimitType'      => 'Monthly',
                         'LimitAmount'    => round((float)$val, 2),
@@ -306,19 +302,18 @@ class BudgetReallocationController extends Controller
                     ]);
                 }
             };
-
             // b) Pending monthly limits for FROM (post-reallocation distribution)
-            $insertLimits($fromMonthly, $fromLine, $realloc->id);
+            $insertLimits($fromMonthly, $fromLine, $realloc->id,$fromLineLedgerCBSAccID);
 
             // c) Pending monthly limits for TO (post-reallocation distribution)
-            $insertLimits($toMonthly, $toLine, $realloc->id);
+            $insertLimits($toMonthly, $toLine, $realloc->id,$toLineLedgerCBSAccID);
 
             return $realloc;
         });
 
         return redirect()
             ->route('budgetandanalytics.reallocation.index')
-            ->with('success', 'Reallocation submitted for approval. Ref #'.$realloc->id);
+            ->with('success', 'Reallocation submitted for approval.');
     }
 
     /**

@@ -5,9 +5,9 @@
     <div class="container my-3">
         <div class="card shadow-sm rounded-3">
             <div class="card-body p-4">
-                <form method="POST" action="{{ route('budgetandanalytics.reallocation.allocate') }}">
+                <form method="GET" action="{{ route('budgetandanalytics.reallocation.allocate') }}">
                     @csrf
-                    @method('POST')
+                    @method('GET')
 
                     <div class="row">
                         <!-- Budget -->

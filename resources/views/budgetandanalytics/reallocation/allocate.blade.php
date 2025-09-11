@@ -2,6 +2,15 @@
 
 @section('content')
     <div class="container my-3">
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <h4>{{ $msg }}</h4>
 
         <div class="card shadow-sm rounded-3">
@@ -13,6 +22,8 @@
                     {{-- Hidden context (ensure these are filled) --}}
                     <input type="hidden" id="BudgetID" name="BudgetID" value="{{ $BudgetID ?? ($budget['Id'] ?? ($budgetId ?? request('BudgetID'))) }}">
                     <input type="hidden" id="BranchID" name="BranchID" value="{{ $BranchID ?? ($branch['Id'] ?? ($branchId ?? request('BranchID'))) }}">
+                    <input type="hidden" id="DepartmentID" name="DepartmentID" value="{{ $DepartmentID ?? '' }}">
+                    <input type="hidden" id="ReallocationType" name="ReallocationType" value="{{ $ReallocationType }}">
 
                     {{-- Amount to Reallocate (col-12) --}}
                     <div class="row">
