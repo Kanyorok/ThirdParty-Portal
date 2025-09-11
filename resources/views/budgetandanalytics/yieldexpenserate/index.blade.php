@@ -12,7 +12,6 @@
                 <i class="fas fa-plus me-1"></i> New Rate
             </a>
         </div>
-
         {{-- Validation Errors --}}
         @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
