@@ -90,6 +90,8 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::get('/entrybyglline/glview/{budgetId}', [BudgetGLLineEntryController::class, 'glview'])->name('entrybyglline.glview');
     Route::resource('submitapproval', BudgetSubmitController::class);
     Route::resource('budgetapproval', BudgetApprovalController::class);
+    Route::post('/budgetapproval/approve', [BudgetApprovalController::class, 'approve'])->name('budgetapproval.approve');
+    Route::post('/budgetapproval/reject', [BudgetApprovalController::class, 'reject'])->name('budgetapproval.reject');
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
     Route::post('/topdownallocation/display', [BudgetTopDownAllocationController::class, 'display'])->name('topdownallocation.display');
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
@@ -171,6 +173,10 @@ Route::prefix('budgetandanalytics/limits')->name('budgetandanalytics.limits.')->
     Route::get('/', [BudgetLineLedgerLimitController::class, 'index'])->name('index');
     Route::get('/create', [BudgetLineLedgerLimitController::class, 'create'])->name('create');
     Route::post('/store', [BudgetLineLedgerLimitController::class, 'store'])->name('store');
+
+    Route::get('/showLimits', [BudgetLineLedgerLimitController::class, 'showUpdateForm'])->name('showUpdateForm');
+    Route::post('/updateLimits', [BudgetLineLedgerLimitController::class, 'runUpdate'])->name('runUpdate');
+
     // optional future routes
     Route::get('/{id}/edit', [BudgetLineLedgerLimitController::class, 'edit'])->name('edit');
     Route::post('/{id}/update', [BudgetLineLedgerLimitController::class, 'update'])->name('update');
@@ -183,15 +189,27 @@ Route::prefix('budgetandanalytics/reallocation')
         Route::get('/', [BudgetReallocationController::class, 'index'])->name('index');
         Route::get('/create', [BudgetReallocationController::class, 'create'])->name('create');
         Route::post('/store', [BudgetReallocationController::class, 'store'])->name('store');
+        Route::post('/allocate', [BudgetReallocationController::class, 'allocate'])->name('allocate');
 
         // Optional future routes
         Route::get('/{id}/review', [BudgetReallocationController::class, 'review'])->name('review');
         Route::post('/{id}/approve', [BudgetReallocationController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [BudgetReallocationController::class, 'reject'])->name('reject');
 
-        // ✅ New AJAX routes
+        // ✅ AJAX routes (unique names; paths match your JS)
         Route::get('/budget-lines/{deptId}/{branchId?}', [BudgetReallocationController::class, 'getBudgetLines'])
-            ->name('budget-lines');
+            ->name('budget-lines'); // name used ONLY here
+
         Route::get('/budget-line/{lineId}/details/{branchId?}', [BudgetReallocationController::class, 'getBudgetLineDetails'])
             ->name('budget-line.details');
+
+        // ✅ Allocations endpoint expected by your fetch()
+        Route::post('/allocations', [BudgetReallocationController::class, 'getAllocations'])
+            ->name('allocations');
     });
+
+// Budget Approvals
+Route::prefix('budgetandanalytics/budget-approvals')->name('budgetandanalytics.budget-approvals.')->group(function () {
+    Route::get('/approve', [BudgetPeriodController::class, 'approve'])->name('approve');
+    Route::get('/reject', [BudgetPeriodController::class, 'reject'])->name('reject');
+});

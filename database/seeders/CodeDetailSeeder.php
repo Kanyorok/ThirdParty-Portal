@@ -192,6 +192,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E', 'DisplayOrder' => 0],
+            //['CodeID' => 'GLAccountType', 'Description' => 'Share Capital', 'Value' => 'S', 'DisplayOrder' => 0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],

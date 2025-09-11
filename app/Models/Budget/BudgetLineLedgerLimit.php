@@ -10,7 +10,7 @@ class BudgetLineLedgerLimit extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'BudgetLineID','LedgerID','LimitType','LimitAmount',
+        'BudgetLineID','LedgerID','ERPLedgerID','ReallocationID','LimitType','LimitAmount',
         'EffectiveFrom','EffectiveTo','CreatedBy','CreatedOn',
         'ModifiedBy','ModifiedOn'
     ];
