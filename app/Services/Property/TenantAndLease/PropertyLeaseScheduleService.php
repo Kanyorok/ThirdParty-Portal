@@ -35,7 +35,7 @@ class PropertyLeaseScheduleService
 
         // Attempt to create the schedule
         $leaseSchedule = PropertyLeaseSchedule::create([
-            'LeaseNumber'      => $leaseId,
+            'LeaseNumber' => $leaseId,
             'PaymentFrequency' => $paymentFrequencyId,
             'StartDate' => $startDate,
             'EndDate' => $endDate,

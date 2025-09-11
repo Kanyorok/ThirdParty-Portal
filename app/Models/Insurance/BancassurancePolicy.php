@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Models\Insurance;
+
+use App\Models\Core\CodeDetail;
+use App\Traits\Model\DocumentsTrait;
+use App\Traits\Model\UserActorTrait;
+use App\Enums\Insurance\InsurancePolicyStatus;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class BancassurancePolicy extends Model
+{
+    use SoftDeletes, UserActorTrait,DocumentsTrait;
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_BancassurancePolicies';
+    protected $primaryKey = 'Id';
+
+    protected $fillable = [
+        'CustomerID', 'ProductID', 'InsurerID', 'PolicyNumber', 'SumAssured',
+        'PremiumAmount', 'PolicyStartDate', 'PolicyEndDate', 'PaymentFrequency',
+        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive', 'Status','RiderAddOnId', 'CreatedBy',
+        'ModifiedBy', 'DeletedBy'
+    ];
+
+    /**
+     * Get the renewals for the policy.
+     */
+    public function renewals()
+    {
+        return $this->hasMany(PolicyRenewal::class, 'PolicyID', 'Id');
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'bancassurancepolicyId';
+    }
+
+    protected $casts = [
+        'Status' => InsurancePolicyStatus::class,
+    ];
+
+    public function customer()
+    {
+        return $this->belongsTo(BancassuranceCustomer::class, 'CustomerID', 'Id');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(InsuranceProduct::class, 'ProductID', 'Id');
+    }
+
+    public function insurer()
+    {
+        return $this->belongsTo(InsuranceProvider::class, 'InsurerID', 'Id');
+    }
+
+    public function paymentfrequency()
+    {
+        return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
+    }
+
+    public function referral()
+    {
+        return $this->belongsTo(BancAssuranceReferral::class, 'ReferralID', 'Id');
+    }
+
+    public function rideraddon()
+    {
+        return $this->belongsTo(InsuranceProductRider::class, 'RiderAddOnId', 'Id');
+    }
+}

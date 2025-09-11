@@ -43,8 +43,19 @@
                                 <option value="">-- Select Item --</option>
                             </select>
                         </div>
+                        <div class="col-md-4">
+                            <label for="UOM" class="form-label">Unit of Measure</label>
+                            <input type="text" class="form-control" id="UOMName" value="" readonly>
+                            <input type="hidden" name="UOM" id="UOM">
+                        </div>
 
-                        <div class="mb-3">
+                        <div class="col-md-4">
+                            <label for="UnitCost" class="form-label">Unit Cost</label>
+                            <input type="number" class="form-control" name="UnitCost" id="UnitCost" value="" step="0.01" readonly>
+                        </div>
+
+
+                        {{-- <div class="mb-3">
                             <div class="form-check form-check-inline">
                                 <input type="hidden" name="Batch" value="0">
                                 <input class="form-check-input" type="checkbox" name="Batch"
@@ -79,7 +90,7 @@
                                        value="1" {{ isset($item) && $item->Purchasable ? 'checked' : '' }}>
                                 <label class="form-check-label">Is Purchasable</label>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <div class="col-md-6">
                             <label for="Branch" class="form-label">Branch</label>
@@ -261,7 +272,29 @@
                     }
                 }
             });
+
+          itemSelect.addEventListener('change', function () {
+    const itemId = this.value;
+
+    if (itemId) {
+        fetch("{{ route('sku.item-details') }}?item_id=" + itemId)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('UnitCost').value = data.UnitCost ?? '';
+                document.getElementById('UOM').value = data.UOM?.id ?? '';
+                document.getElementById('UOMName').value = data.UOM?.name ?? '';
+            });
+    } else {
+        document.getElementById('UnitCost').value = '';
+        document.getElementById('UOM').value = '';
+        document.getElementById('UOMName').value = '';
+    }
+});
+
+
         });
+
+       
 
         document.addEventListener('DOMContentLoaded', function () {
             const today = new Date().toISOString().split('T')[0];

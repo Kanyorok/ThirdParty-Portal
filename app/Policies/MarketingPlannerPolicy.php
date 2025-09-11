@@ -67,18 +67,18 @@ class MarketingPlannerPolicy
     /**
      * Determine whether the user can approve the model.
      */
-public function approve(User $user, MarketingPlanner $marketingPlanner): bool
-{
-    // Must have the main approval permission
-    if (!$user->can(PermissionEnum::MarketingPlannerApproval->value)) {
-        return false;
+    public function approve(User $user, MarketingPlanner $marketingPlanner): bool
+    {
+        // Must have the main approval permission
+        if (!$user->can(PermissionEnum::MarketingPlannerApproval->value)) {
+            return false;
+        }
+
+        // Must have at least one of these roles
+        $hasValidRole = $user->hasPermissionTo('marketingManager') || $user->hasPermissionTo('manager');
+
+        return $hasValidRole;
     }
-
-    // Must have at least one of these roles
-    $hasValidRole = $user->hasPermissionTo('marketingManager') || $user->hasPermissionTo('manager');
-
-    return $hasValidRole;
-}
 
 
 

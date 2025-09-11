@@ -114,8 +114,7 @@
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms</label>
-                    <input type="text" name="terms" class="form-control terms" placeholder="e.g., Net 30, 50%"
-                           value="{{$orderInfo->Terms ?? 'N/A'}}" readonly/>
+                    <input type="text" name="terms" class="form-control terms" value="{{ $orderInfo->terms_description ?? 'N/A' }}" readonly />
                 </div>
             </div>
 

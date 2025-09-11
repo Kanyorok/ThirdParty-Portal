@@ -14,23 +14,16 @@ enum WorkflowStatus: string
     case REJECTED = 'Re';
     case COMMENTED = 'Cm';
     case RETURNED = 'Dr';
-
     case Pending = 'pe';
-
     case UnderReview = 'rv';
-
     case UnderRepair = 'ur';
-
     case Disposed = 'di';
-
     case InTransit = 'it';
-
     case Delivered = 'de';
-
-
+    case Scheduled = 'SC';
+    case Acknowledged = 'AC';
+    case Completed = 'CO';
     case RejectedDelete = 'rd';
-
     case RejectedCancel = 'rc';
-
     case RejectReturn = 'rr';
 }

@@ -9,11 +9,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\DMS\UploadDocumentRequest;
 use App\Http\Requests\Ticket\NewTicketRequest;
 use App\Models\CRM\Ticket;
-use App\Services\DMS\ImageService;
+use App\Services\DMS\DocumentService;
 use App\Traits\Controller\ActivitiesTrait;
 use App\Traits\Controller\TicketsTrait;
 use App\Traits\Controller\WorkflowTrait;
-use ErrorException;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -61,7 +60,7 @@ class TicketActionsController extends Controller
      */
     public function assignee(Request $request, Ticket $ticket): JsonResponse
     {
-        $this->authorize('update', $ticket);
+        $this->authorize('assign', $ticket);
         $assignee = (new NewTicketRequest())->getAssignee($request->validate(['ticket_user' => ['required', 'string']])['ticket_user']);
 
         try {
@@ -91,8 +90,8 @@ class TicketActionsController extends Controller
     ]);
 
     try {
-        $priority = TicketPriorityEnum::from($request->get('ticket_priority'));
-    } catch (ValueError $e) {
+        $priority = TicketPriorityEnum::fromValue($request->get('ticket_priority'));
+    } catch (ErroredException $e) {
         throw ValidationException::withMessages([
             'ticket_priority' => 'Invalid priority value.',
         ]);
@@ -168,7 +167,7 @@ class TicketActionsController extends Controller
         }
 
         return $this->succeeded('document uploaded successfully', data: [
-            'html' => (new ImageService($document))->summaryList(),
+            'html' => (new DocumentService($document))->summaryList(),
         ]);
     }
 }

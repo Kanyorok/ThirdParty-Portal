@@ -3,7 +3,9 @@
 namespace App\Models\DMS;
 
 use App\Enums\Core\VisibilityEnum;
+use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,9 +15,9 @@ class DMSTags extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DMSTags';
     protected $primaryKey = 'Id';
@@ -31,7 +33,7 @@ class DMSTags extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'DMSId';
+        return 'DMSTagId';
     }
 
     public function getRouteKeyName(): string
@@ -48,5 +50,16 @@ class DMSTags extends Model
     public function rules(): HasMany|DMSTags
     {
         return $this->hasMany(DocumentTaggingRules::class, 'TagId', 'Id');
+    }
+
+    public function scopeUser(Builder $q, User $user): Builder
+    {
+        return $q->where(function (Builder $query) use ($user) {
+            $query->where($this->getTable() . '.Visibility', VisibilityEnum::Public->value)
+                ->orWhere(function (Builder $query) use ($user) {
+                    $query->where($this->getTable() . '.Visibility', VisibilityEnum::Private->value)
+                        ->where($this->getTable() . '.CreatedBy', $user->Id);
+                });
+        });
     }
 }

@@ -1,0 +1,179 @@
+<?php
+
+namespace App\Services\FleetManagement;
+
+use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetDriver;
+use App\Models\Fleet\ContractedDriver;
+use App\Models\Core\CodeDetail;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+class FleetTripLogService
+{
+    /**
+     * Generate a unique trip number
+     */
+    private function generateTripNo(): string
+    {
+        $latestTripNo = FleetTripLog::withTrashed()->latest('CreatedOn')->first();
+
+        if (!$latestTripNo || !$latestTripNo->Id) {
+            return 'TRP-0001';
+        }
+
+        $lastId = (int)str_replace('TRP-', '', $latestTripNo->Id);
+        $newId = $lastId + 1;
+
+        return 'TRP-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Create a new trip
+     */
+    public function createTrip(array $data): FleetTripLog
+    {
+        return DB::transaction(function () use ($data) {
+
+            $driver = $this->resolveDriver($data['DriverType'], $data['DriverID']);
+
+            $tripLog = FleetTripLog::create([
+                'TripNo' => $this->generateTripNo(),
+                'VehicleID' => $data['VehicleID'],
+                'DriverType' => $driver['type_id'],    // numeric FK
+                'DriverID' => $driver['driver_id'],    // numeric FK
+                'TripStartDate' => $data['TripStartDate'] ?? now(),
+                'TripEndDate' => $data['TripEndDate'] ?? $data['TripStartDate'] ?? now(),
+                'StartTime' => $data['StartTime'] ?? null,
+                'EndTime' => $data['EndTime'] ?? null,
+                'StartLocation' => $data['StartLocation'] ?? null,
+                'EndLocation' => $data['EndLocation'] ?? null,
+                'Route' => $data['Route'] ?? null,
+                'DistanceCovered' => $data['DistanceCovered'] ?? null,
+                'Purpose' => $data['Purpose'] ?? null,
+                'Notes' => $data['Notes'] ?? null,
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+            ]);
+
+            $type = \App\Models\Core\CodeDetail::findOrFail($data['DriverType']);
+
+            if ($type->Description === 'Contracted') {
+                $assignmentData = [
+                    'DriverID'         => $driver['driver_id'],
+                    'VehicleID'        => $data['VehicleID'],
+                    'AssignmentDate'   => $data['TripStartDate'],
+                    'UnassignmentDate' => $data['TripEndDate'],
+                    'Purpose'          => $data['Purpose'] ?? null,
+                    'AssignedBy'       => Auth::user()->employee->Id,
+                    'Notes'            => $data['Notes'] ?? null,
+                    'CreatedBy'        => Auth::id(),
+                    'CreatedOn'        => now(),
+                ];
+                (new \App\Services\FleetManagement\FleetContractedDriverAssignmentService())->create($assignmentData);
+            }
+
+            if ($type->Description === 'Permanent') {
+                $assignmentData = [
+                    'DriverID'         => $driver['driver_id'],
+                    'VehicleID'        => $data['VehicleID'],
+                    'AssignmentDate'   => $data['TripStartDate'],
+                    'UnassignmentDate' => $data['TripEndDate'],
+                    'Purpose'          => $data['Purpose'] ?? null,
+                    'AssignedBy'       => Auth::user()->employee->Id,
+                    'Notes'            => $data['Notes'] ?? null,
+                    'CreatedBy'        => Auth::id(),
+                    'CreatedOn'        => now(),
+                ];
+                // Use the service to create permanent driver assignment
+                (new \App\Services\FleetManagement\FleetDriverAssignmentService())->create($assignmentData);
+            }
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($tripLog)
+                ->log("Trip log created for VehicleID: {$tripLog->VehicleID}");
+
+            return $tripLog;
+        });
+    }
+
+    /**
+     * Update an existing trip
+     */
+    public function updateTrip(FleetTripLog $tripLog, array $data): FleetTripLog
+{
+    return DB::transaction(function () use ($tripLog, $data) {
+        // Resolve driver depending on type
+        $driver = $this->resolveDriver($data['DriverType'], $data['DriverID']);
+
+        $tripLog->update([
+            'VehicleID'       => $data['VehicleID'],
+            'DriverType'      => $driver['type_id'],   
+            'DriverID'        => $driver['driver_id'],   
+            'TripStartDate'   => $data['TripStartDate'] ?? $tripLog->TripStartDate,
+            'TripEndDate'     => $data['TripEndDate'] ?? $tripLog->TripEndDate,
+            'StartTime'       => $data['StartTime'] ?? $tripLog->StartTime,
+            'EndTime'         => $data['EndTime'] ?? $tripLog->EndTime,
+            'StartLocation'   => $data['StartLocation'] ?? $tripLog->StartLocation,
+            'EndLocation'     => $data['EndLocation'] ?? $tripLog->EndLocation,
+            'Route'           => $data['Route'] ?? $tripLog->Route,
+            'DistanceCovered' => $data['DistanceCovered'] ?? $tripLog->DistanceCovered,
+            'Purpose'         => $data['Purpose'] ?? $tripLog->Purpose,
+            'Notes'           => $data['Notes'] ?? $tripLog->Notes,
+        ]);
+
+        $tripLog->ModifiedBy = Auth::id();
+        $tripLog->ModifiedOn = now();
+        $tripLog->save();
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($tripLog)
+            ->log("Trip log updated for VehicleID: {$tripLog->VehicleID}");
+
+        return $tripLog;
+    });
+}
+
+    /**
+     * Delete a trip
+     */
+    public function deleteTrip(FleetTripLog $tripLog): void
+    {
+        DB::transaction(function () use ($tripLog) {
+
+            $tripLog->DeletedBy = Auth::id();
+            $tripLog->DeletedOn = now();
+            $tripLog->save();
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($tripLog)
+                ->log("Trip log deleted for VehicleID: {$tripLog->VehicleID}");
+
+            $tripLog->delete();
+        });
+    }
+
+    /**
+     * Resolve driver type and ID for insertion
+     */
+    private function resolveDriver($driverTypeId, $Id)
+{
+    $type = CodeDetail::findOrFail($driverTypeId);
+
+    if ($type->Description === 'Permanent') {
+        $driver = FleetDriver::findOrFail($Id);
+    } elseif ($type->Description === 'Contracted') {
+        $driver = ContractedDriver::findOrFail($Id);
+    } else {
+        throw new \Exception("Invalid driver type: {$type->Description}");
+    }
+
+    return [
+        'type_id'   => $driverTypeId,
+        'driver_id' => $driver->Id,
+    ];
+}
+
+}

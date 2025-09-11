@@ -1,0 +1,70 @@
+@extends('layouts.app')
+@section('title', 'Edit Clause')
+
+@section('content')
+<div class="card p-1 shadow rounded-4 mb-0">
+
+    <div class="card-body px-4 mb-0">
+        <p class="text-muted">Update the clause details below to modify it in the legal clauses registry.</p>
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        <form action="{{ route('legal.clauses.update', $clause->Id) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="Title" class="form-control" 
+                           value="{{ old('Title', $clause->Title) }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Clause Type</label>
+                    <select class="form-select" name="ClauseType" id="ClauseType">
+                        <option disabled value="">-- Select Clause Type --</option>
+                        @foreach($details as $item)
+                            <option value="{{ $item->Value }}"
+                                {{ old('ClauseType', $clause->ClauseType) == $item->Value ? 'selected' : '' }}>
+                                {{ $item->Value }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Version</label>
+                <input type="text" name="Version" class="form-control" 
+                       value="{{ old('Version', $clause->Version) }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Clause Content</label>
+                <textarea name="Content" rows="4" class="form-control" required>{{ old('Content', $clause->Content) }}</textarea>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="IsStandard" id="IsStandard"
+                       {{ old('IsStandard', $clause->IsStandard) === 'Yes' ? 'checked' : '' }}>
+                <label class="form-check-label" for="IsStandard">Mark as Standard Clause</label>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 text-end mb-3">
+                <a href="{{ route('legal.clauses.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-long-arrow-alt-left"></i> Back
+                </a>
+                <button class="btn btn-info" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText=' Updating...'; this.form.submit();}">
+                    <i class="fas fa-save"></i> Update Clause
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

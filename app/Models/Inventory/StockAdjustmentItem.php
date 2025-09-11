@@ -21,7 +21,7 @@ class StockAdjustmentItem extends Model
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
     protected $fillable = [
-        'AdjustmentId', 'Item', 'AdjustmentQty', 'Remarks',
+        'AdjustmentId', 'Item', 'AdjustmentQty', 'Remarks', 'UOM','UnitCost',
         'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
     ];
 

@@ -26,7 +26,7 @@ class PropertyReceiptService
         int  $AmountPaidNow,
         CodeDetail $PaymentMethod,
         string $ReferenceNo,
-        string $Remarks,
+        string $Remarks = null,
         User $user
     ): PropertyReceipt
     {

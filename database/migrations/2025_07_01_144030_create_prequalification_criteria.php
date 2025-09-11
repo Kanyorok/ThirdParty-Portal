@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('t_PrequalificationRoundCriteria', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('RoundId')->constrained('t_PrequalificationPeriod', 'Id');
+            $table->foreignId('RoundId')->constrained('t_PrequalificationRounds', 'RoundID');
             $table->foreignId('SectionId')->constrained('t_Sections', 'id');
             $table->foreignId('CriteriaId')->constrained('t_Criterias', 'id');
             $table->boolean('Included');

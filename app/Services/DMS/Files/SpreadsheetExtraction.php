@@ -3,6 +3,7 @@
 namespace App\Services\DMS\Files;
 
 use Exception;
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Cell\Cell;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -17,7 +18,7 @@ class SpreadsheetExtraction extends FileExtraction
             return false;
         }
         $name = $this->createTempFile();
-        $content = $this->extractTextAsString(storage_path('app/temp') . '/' . $name);
+        $content = $this->extractTextAsString(Storage::disk('temp')->path($name));
         $this->trashTempFile($name);
         if ($content !== '') {
             return $this->handleContent($content);

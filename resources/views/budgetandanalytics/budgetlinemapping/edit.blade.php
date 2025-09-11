@@ -20,17 +20,17 @@
                     @csrf
                     @method('PUT')
                     <div class="row mb-3">
-                        <div class="mb-3">
-                            <label for="BudgetLineCategoryID" class="form-label">Category <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select" name="BudgetLineCategoryID" id="BudgetLineCategoryID" required>
-                                <option value="">-- Select Category --</option>
-                                @foreach($budgetCategories as $category)
-                                    <option
-                                        value="{{ $category->Id }}" {{ $category->Id == $budgetLine->BudgetLineCategoryID ? 'selected' : '' }}>{{ $category->CategoryName }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+{{--                        <div class="mb-3">--}}
+{{--                            <label for="BudgetLineCategoryID" class="form-label">Category <span--}}
+{{--                                    class="text-danger">*</span></label>--}}
+{{--                            <select class="form-select" name="BudgetLineCategoryID" id="BudgetLineCategoryID" required>--}}
+{{--                                <option value="">-- Select Category --</option>--}}
+{{--                                @foreach($budgetCategories as $category)--}}
+{{--                                    <option--}}
+{{--                                        value="{{ $category->Id }}" {{ $category->Id == $budgetLine->BudgetLineCategoryID ? 'selected' : '' }}>{{ $category->CategoryName }}</option>--}}
+{{--                                @endforeach--}}
+{{--                            </select>--}}
+{{--                        </div>--}}
                         <div class="mb-3 col-md-6">
                             <label for="LineName" class="form-label">Line Name <span
                                     class="text-danger">*</span></label>
@@ -128,36 +128,67 @@
         </div>
     </div>
 
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const IsProductDriven = document.getElementById('IsProductDriven');
             const productTypeSection = document.getElementById('productTypeSection');
-            const productTypesSelect = document.getElementById('ProductTypesSelect');
+            const typeSelect = document.getElementById('glAccountTypeSelect');
+            const subTypeSelect = document.getElementById('glAccountSubTypeSelect');
+            const glTypesSelect = document.getElementById('glTypes');
 
             IsProductDriven.addEventListener('change', function () {
                 if (this.value === '1') {
                     productTypeSection.style.display = 'block';
-                    productTypesSelect.disabled = false;
                 } else {
                     productTypeSection.style.display = 'none';
-                    productTypesSelect.disabled = true;
                 }
             });
 
-            const typeSelect = document.getElementById('glAccountTypeSelect');
-            const subTypeSelect = document.getElementById('glAccountSubTypeSelect');
             typeSelect.addEventListener('change', function () {
                 const typeId = this.value;
                 subTypeSelect.innerHTML = '<option selected disabled>Loading...</option>';
-                fetch(`/budgetlinemapping/gl-subtypes/${typeId}`)
+                fetch(`/budget/budgetlinemapping/gl-subtypes/${typeId}`)
                     .then(response => response.json())
                     .then(data => {
                         subTypeSelect.innerHTML = '<option selected disabled>-- Select Sub-Type --</option>';
                         data.forEach(function (subType) {
-                            subTypeSelect.innerHTML += `<option value="${subType.Id}">${subType.GLAccountSubTypeName}</option>`;
+                            subTypeSelect.innerHTML += `<option data-type-id="${subType.GLSubAccountTypeID}" value="${subType.Id}">${subType.Description}</option>`;
                         });
                     });
             });
+
+            subTypeSelect.addEventListener('change', function () {
+                //const typeId = this.value;
+                const selectedOption = this.options[this.selectedIndex];
+                const typeId = selectedOption.dataset.typeId;
+
+                // Clear GL Types first
+                glTypesSelect.innerHTML = '<option disabled>Loading...</option>';
+
+                fetch(`/budget/budgetlinemapping/gl-types/${typeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Reset and populate GL Types dropdown
+                        glTypesSelect.innerHTML = '';
+                        if (data.length === 0) {
+                            glTypesSelect.innerHTML = '<option disabled>No GLs found</option>';
+                        } else {
+                            data.forEach(item => {
+                                const option = document.createElement('option');
+                                option.value = item.BudgetGLID;
+                                option.textContent = item.Description.trim(); // trim in case of extra spaces
+                                glTypesSelect.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading GL Types:', error);
+                        glTypesSelect.innerHTML = '<option disabled>Error loading GLs</option>';
+                    });
+            });
+
         });
     </script>
+
 @endsection

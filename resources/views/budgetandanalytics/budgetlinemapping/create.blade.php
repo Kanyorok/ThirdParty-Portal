@@ -25,15 +25,15 @@
                 @method('POST')
                 <div class="row">
                     <!-- 🧾 Budget Line Entry -->
-                    <div class="mb-3">
-                        <label class="form-label">Budget Line Category</label>
-                        <select class="form-select" name="BudgetLineCategoryID" required>
-                            <option selected disabled>-- Select Budget Line Category --</option>
-                            @foreach ($budgetCategories as $category)
-                                <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+{{--                    <div class="mb-3">--}}
+{{--                        <label class="form-label">Budget Line Category</label>--}}
+{{--                        <select class="form-select" name="BudgetLineCategoryID" required>--}}
+{{--                            <option selected disabled>-- Select Budget Line Category --</option>--}}
+{{--                            @foreach ($budgetCategories as $category)--}}
+{{--                                <option value="{{ $category->Id }}">{{ $category->CategoryName }}</option>--}}
+{{--                            @endforeach--}}
+{{--                        </select>--}}
+{{--                    </div>--}}
 
                     <div class="mb-3 col-md-6">
                         <label class="form-label">Budget Line Name</label>
@@ -73,13 +73,13 @@
                     </div>
 
                     <!-- 🔗 CBS GL Mapping -->
-                    <h6>🔗 CBS GL Accounts (Multiple)</h6>
+                    <h6>🔗 CBS GL Accounts</h6>
                     <div class="mb-3">
                         <label class="form-label">Select CBS GLs</label>
                         <select multiple class="form-select" id="glTypes" name="GLS[]" required size="8">
 
                         </select>
-                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
+                        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select GL.</div>
                     </div>
 
                     <div class="mb-3">
@@ -169,6 +169,7 @@
                 fetch(`/budget/budgetlinemapping/gl-subtypes/${typeId}`)
                     .then(response => response.json())
                     .then(data => {
+                        console.log(data);
                         subTypeSelect.innerHTML = '<option selected disabled>-- Select Sub-Type --</option>';
                         data.forEach(function (subType) {
                             subTypeSelect.innerHTML += `<option data-type-id="${subType.GLSubAccountTypeID}" value="${subType.Id}">${subType.Description}</option>`;

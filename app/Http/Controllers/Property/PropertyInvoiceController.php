@@ -25,7 +25,7 @@ class PropertyInvoiceController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+       // $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
         $newleases = PropertyNewLease::where('IsActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
             ->with('tenant')->get();
@@ -34,7 +34,7 @@ class PropertyInvoiceController extends Controller
 
     public function show($id)
     {
-        $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
+       // $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
         $invoice = PropertyInvoice::find($id);
         return view('property.billingandreceipting.invoicing.show', compact('invoice'));
     }
@@ -42,7 +42,7 @@ class PropertyInvoiceController extends Controller
     public function store(PropertyInvoiceRequest $request)
     {
         //dd($request->all());
-        $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+       // $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
         $validated = $request->validated();
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
@@ -53,10 +53,10 @@ class PropertyInvoiceController extends Controller
         $validated['BillingMonth'],
         $validated['InvoiceDate'],
         $validated['RentAmount'],
-        $validated['ServicesCharge'],
-        $validated['OtherCharges'],
-        $validated['ParkingFee'],
-        $validated['InvoiceNotes'],
+            $validated['ServicesCharge'] ?? 0,
+            $validated['OtherCharges'] ?? 0,
+            $validated['ParkingFee'] ?? 0,
+            $validated['InvoiceNotes'] ?? '',
         $Status,
         Auth::user()
     );
@@ -66,7 +66,7 @@ class PropertyInvoiceController extends Controller
 
     public function edit($id)
     {
-        $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
+       // $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
         $invoices = PropertyInvoice::findOrFail($id);
         $leases = PropertyInvoice::all();
 
@@ -75,7 +75,7 @@ class PropertyInvoiceController extends Controller
 
     public function update(PropertyInvoiceRequest $request, $id)
     {
-        $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
+       // $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
         $validated = $request->validated();
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
@@ -90,10 +90,10 @@ class PropertyInvoiceController extends Controller
                 'BillingMonth' => $validated['BillingMonth'],
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'RentAmount' => $validated['RentAmount'],
-                'ServicesCharge' => $validated['ServicesCharge'],
-                'ParkingFee' => $validated['ParkingFee'],
-                'OtherCharges' => $validated['OtherCharges'],
-                'InvoiceNotes' => $validated['InvoiceNotes'],
+                'ServicesCharge' => $validated['ServicesCharge'] ?? 0,
+                'ParkingFee' => $validated['ParkingFee'] ?? 0,
+                'OtherCharges' => $validated['OtherCharges'] ?? 0,
+                'InvoiceNotes' => $validated['InvoiceNotes'] ?? '',
                 'ModifiedBy' => Auth::Id(),
             ]);
 
@@ -113,7 +113,7 @@ class PropertyInvoiceController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::PropertyInvoiceDelete, PropertyInvoice::class);
+       // $this->authorize(PermissionEnum::PropertyInvoiceDelete, PropertyInvoice::class);
         try {
             $invoice = PropertyInvoice::findOrFail($id);
             $invoice->delete();

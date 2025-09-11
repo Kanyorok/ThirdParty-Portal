@@ -3,56 +3,77 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Module;
+use App\Models\Finance\FinanceGLAccounts;
+use App\Models\Finance\FinanceGLMapping;
+use App\Models\Finance\FinanceModuleTransactions;
+use App\Models\Finance\FinanceTransactionTypes;
+use Database\Seeders\FinanceModuleTransactionSeeder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class GLMappingController extends Controller
 {
     public function index()
     {
-        $mappings = DB::table('t_GLPostingMap as m')
-            ->leftJoin('t_TransactionTypes as t', 'm.TransactionTypeID', '=', 't.Id')
-            ->select(
-                'm.*',
-                't.Code as TransactionCode',
-                't.Description as TransactionDescription'
-            )
-            ->orderBy('m.Module')
-            ->get();
+        $mappings = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName', 'creditAccount:Id,GLName')
+            ->orderBy('Id','desc')->get();
 
         return view('finance.integration.glmapping.index', compact('mappings'));
     }
 
     public function create()
     {
-        $transactionTypes = DB::table('t_TransactionTypes')->where('IsActive', 1)->get();
-        return view('finance.integration.glmapping.create', compact('transactionTypes'));
+        $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
+        $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
+        $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
+            ->where('ParentID', null)
+            ->orderBy('Name', 'asc')->get();
+        $transactionTypes = FinanceModuleTransactions::all();
+        return view('finance.integration.glmapping.create', compact('transactionTypes', 'modules', 'glaccounts'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'Module' => 'required|string|max:50',
-            'SourceDocType' => 'required|string|max:50',
-            'TransactionType' => 'required|string|max:50',
-            'DebitGL' => 'required|string|max:20',
-            'CreditGL' => 'required|string|max:20',
-            'PostingNarration' => 'nullable|string|max:255',
+            'ModuleID' => 'required|string|exists:t_Modules,ModuleID',
+            'TransactionType' => 'required|string|exists:t_FinanceTransactionTypes,Id',
+            'DebitGLAccountID' => 'required|string|exists:t_FinanceGLAccounts,Id',
+            'CreditGLAccountID' => 'required|string|exists:t_FinanceGLAccounts,Id',
             'IsActive' => 'nullable|boolean',
         ]);
 
-        DB::table('t_GLPostingMap')->insert([
-            'Module' => $validated['Module'],
-            'SourceDocType' => $validated['SourceDocType'],
-            'TransactionType' => $validated['TransactionType'],
-            'DebitGL' => $validated['DebitGL'],
-            'CreditGL' => $validated['CreditGL'],
-            'PostingNarration' => $validated['PostingNarration'] ?? null,
+        $glmaps = FinanceGLMapping::create([
+            'ModuleID' => $validated['ModuleID'],
+            'TransactionTypeID' => $validated['TransactionType'],
+            'DebitGLAccountID' => $validated['DebitGLAccountID'],
+            'CreditGLAccountID' => $validated['CreditGLAccountID'],
             'IsActive' => $request->has('IsActive') ? 1 : 0,
-            'CreatedAt' => now(),
-            'UpdatedAt' => now(),
+            'CreatedBy'          =>Auth::Id(),
+            'ModifiedBy'         => Auth::Id(),
         ]);
 
         return redirect()->route('glmapping.index')->with('success', 'GL Mapping saved successfully.');
+    }
+
+    public function fetchTransactionTypes($selectedModule, Request $request)
+    {
+        $moduleId = $request->input('ModuleID');
+
+        $types = FinanceModuleTransactions::where('ModuleID', $selectedModule)
+            ->with('transactions:Id,Name')
+            ->get();
+
+        return response()->json($types);
+    }
+    public function list()
+    {
+        $accounts = DB::table('t_FinanceGLAccounts')  // Table name
+            ->select('Id', 'GLName')            // Columns we need
+            ->orderBy('GLName')                 // Sort for better UX
+            ->get();
+
+        return response()->json($accounts);   // Send data as JSON
     }
 }

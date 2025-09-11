@@ -86,7 +86,7 @@ class BudgetActivitiesMasterController extends Controller
             //'ActivityCode' => 'required|string|max:20|unique:t_BudgetActivityMaster,ActivityCode,' . $id,
             'ActivityName' => 'required|string|max:255',
             'Description' => 'nullable|string',
-            'IsActive' => 'boolean',
+            //'IsActive' => 'boolean',
         ]);
 
         DB::beginTransaction();
@@ -97,7 +97,7 @@ class BudgetActivitiesMasterController extends Controller
                 //'ActivityCode' => $validated['ActivityCode'],
                 'ActivityName' => $validated['ActivityName'],
                 'Description' => $validated['Description'],
-                'IsActive' => $validated['IsActive'] ?? true,
+                'IsActive' =>  $request->IsActive == 'on' ? true : false,
                 'ModifiedBy' => Auth::id(),
             ]);
 

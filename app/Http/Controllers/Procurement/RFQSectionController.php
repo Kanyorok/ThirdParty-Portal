@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQSection;
-use App\Models\Procurement\RFQSettingSection;
+use App\Models\Procurement\Section;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RFQSectionController extends Controller
 {
@@ -18,9 +19,10 @@ class RFQSectionController extends Controller
     public function evaluationSetup()
     {
         $rfqs = RFQ::withCount(['sections', 'criteria'])
-        ->with('sections')
+            ->with('sections')
             ->get();
-        $sections = RFQSettingSection::all();
+        // Use RFQSettingSection because t_RFQSection.SectionID references t_RFQSettingSections.id
+        $sections = Section::all();
         $rfqList = RFQ::select('Id', 'RFQNumber')->get(); // or any other fields you need
 
         return view('procurement.rfqcriteriasetup.rfqevaluations', compact('rfqs', 'sections', 'rfqList'));
@@ -32,37 +34,80 @@ class RFQSectionController extends Controller
      */
     public function saveEvaluation(Request $request)
     {
+        // log incoming payload for debugging when needed
+        Log::debug('[saveEvaluation] payload', $request->all());
         $request->validate([
             'rfq_id' => 'required|exists:t_RFQ,Id',
-            'sections' => 'required|array',
-            'weights' => 'required|array',
+            'sections' => 'required|array|min:1',
+            // weights inputs are disabled for unchecked sections and therefore
+            // may not be present in the POST payload. Treat as nullable.
+            'weights' => 'nullable|array',
         ]);
+
+        $rfqId = $request->input('rfq_id');
+        $sections = $request->input('sections', []) ?: [];
+        $weights = $request->input('weights', []) ?: [];
 
         DB::beginTransaction();
         try {
-            foreach ($request->sections as $sectionId) {
-                // Use the sectionId as the key in weights[]
-                $weight = $request->weights[$sectionId] ?? 0;
-
-                RFQSection::create([
-                    'RFQID' => $request->rfq_id,
-                    'SectionID' => $sectionId,
-                    'Weight' => $weight,
-                    'IsActive' => true,
-                    'Comments' => null,
-                    'CreatedBy' => Auth::id(),
+            // Deactivate any previously assigned sections that are not in the current selection
+            $exclude = count($sections) ? $sections : [0];
+            RFQSection::where('RFQID', $rfqId)
+                ->whereNotIn('SectionID', $exclude)
+                ->update([
+                    'IsActive' => false,
                     'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
+
+            foreach ($sections as $sectionId) {
+                $weight = isset($weights[$sectionId]) ? floatval($weights[$sectionId]) : 0.0;
+
+                // Use firstOrNew so we can set CreatedOn when inserting and always set ModifiedOn
+                $record = RFQSection::firstOrNew([
+                    'RFQID' => $rfqId,
+                    'SectionID' => $sectionId,
+                ]);
+
+                $isNew = !$record->exists;
+
+                $record->Weight = $weight;
+                $record->IsActive = true;
+                $record->Comments = null;
+                $record->ModifiedBy = Auth::id();
+                $record->ModifiedOn = now();
+
+                if ($isNew) {
+                    $record->CreatedBy = Auth::id();
+                    $record->CreatedOn = now();
+                }
+
+                $record->save();
+
+                Log::debug('[saveEvaluation] upserted RFQSection', [
+                    'RFQID' => $rfqId,
+                    'SectionID' => $sectionId,
+                    'RFQSectionID' => $record->{$record->getKeyName()},
+                    'is_new' => $isNew,
+                    'weight' => $weight,
                 ]);
             }
 
             activity()
                 ->performedOn(new RFQSection())
-                ->causedBy(Auth::id())
-                ->log('Assigned sections to RFQ ID: ' . $request->rfq_id);
+                ->causedBy(Auth::user())
+                ->log('Assigned sections to RFQ ID: ' . $rfqId);
 
             DB::commit();
             return back()->with('success', 'RFQ Evaluation sections saved successfully.');
         } catch (\Throwable $th) {
+            DB::rollBack();
+
+            activity()
+                ->performedOn(new RFQSection())
+                ->causedBy(Auth::user())
+                ->log('Failed to assign sections to RFQ ID: ' . $rfqId . ' Error: ' . $th->getMessage());
+
             return back()->with('error', 'Error saving RFQ Evaluation sections: ' . $th->getMessage());
         }
     }
@@ -126,13 +171,13 @@ class RFQSectionController extends Controller
 
         $section->SectionName = $request->name;
         $section->Description = $request->desc;
-        $section->ModifiedBy = auth()->id();
+        $section->ModifiedBy = Auth::id();
         $section->ModifiedOn = now();
         $section->save();
 
         activity()
             ->performedOn($section)
-            ->causedBy(auth()->user())
+            ->causedBy(Auth::user())
             ->withProperties([
                 'old' => $oldValues,
                 'new' => $section->getChanges()
@@ -150,12 +195,12 @@ class RFQSectionController extends Controller
         $section = RFQSection::findOrFail($id);
         $sectionName = $section->SectionName;
 
-        $section->DeletedBy = auth()->id();
+        $section->DeletedBy = Auth::id();
         $section->save();
 
         activity()
             ->performedOn($section)
-            ->causedBy(auth()->user())
+            ->causedBy(Auth::user())
             ->withProperties(['section_name' => $sectionName])
             ->log('Deleted RFQ section: ' . $sectionName);
 

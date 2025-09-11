@@ -42,6 +42,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'thirdparty' => [
+            'driver' => 'sanctum',
+            'provider' => 'thirdparties',
+        ]
     ],
 
     /*
@@ -65,6 +69,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'thirdparties' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\ThirdParty\ThirdPartyUser::class,
         ],
 
         // 'users' => [

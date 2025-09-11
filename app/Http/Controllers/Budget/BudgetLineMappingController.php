@@ -83,16 +83,19 @@ class BudgetLineMappingController extends Controller
         //Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetLine::class);
         $validated = $request->validate([
-            'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
+            //'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
             'DepartmentID' => 'required|exists:t_Departments,Id',
             'GLAccountTypeID' => 'required|string',
             'GLAccountSubTypeID' => 'required|integer',
             'Description' => 'required|string',
             'IsProductDriven' => 'required|boolean',
-            'GLS' => 'required|array|min:1',
+            'GLS' => 'required|array|min:1|max:1',
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
+        ],
+        [
+            'GLS.max' => 'You can only select one GL Account for each budget line.'
         ]);
         try {
             DB::beginTransaction();
@@ -101,7 +104,7 @@ class BudgetLineMappingController extends Controller
                 BudgetLine::where('IsDefault', 1)->update(['IsDefault' => 0]);
             }
             $budgetLine = BudgetLine::create([
-                'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
+                'BudgetLineCategoryID' => 1,
                 'LineName' => $validated['LineName'],
                 'DepartmentID' => $validated['DepartmentID'],
                 'GLAccountTypeID' => $validated['GLAccountTypeID'],
@@ -122,7 +125,6 @@ class BudgetLineMappingController extends Controller
 
                     'CreatedBy' => Auth::id(),
                     'ModifiedBy' => Auth::id(),
-                    'ModifiedBy' => Auth::id()
                 ]);
             }
             // Product Types mapping (if any)
@@ -149,7 +151,6 @@ class BudgetLineMappingController extends Controller
             return redirect()->route('budgetlinemapping.index')->with('success', 'Budget Line Mapping created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $th->getMessage();
             Log::error('Failed to store budget line mapping.', [
                 'error' => $th->getMessage(),
                 'stack' => $th->getTraceAsString()
@@ -167,7 +168,8 @@ class BudgetLineMappingController extends Controller
         $productTypes = BudgetProduct::select('Id', 'Description')->get();
         $departments = \App\Models\HRM\Department::all();
         $glAccountTypes = \App\Models\Core\CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
-        $glSubtype = \App\Models\Budget\BudgetGLAccountSubType::select('Id', 'GLAccountTypeValue', 'GLAccountSubTypeName')->get();
+        $glSubtype = BudgetGLSubType::select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID as GLAccountTypeValue', 'Description as GLAccountSubTypeName')
+            ->get();
 
         // Get currently selected GLs for this budget line
         $selectedGLs = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
@@ -196,18 +198,21 @@ class BudgetLineMappingController extends Controller
         // Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
 
-        $validated = $request->validate([
-            'BudgetLineCategoryID' => 'required|exists:t_BudgetLineCategories,Id',
+         $validated = $request->validate([
+            //'BudgetLineCategoryID' => 'nullable|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
             'DepartmentID' => 'required|exists:t_Departments,Id',
             'GLAccountTypeID' => 'required|string',
             'GLAccountSubTypeID' => 'required|integer',
             'Description' => 'required|string',
             'IsProductDriven' => 'required|boolean',
-            'GLS' => 'required|array|min:1',
-            'GLS.*' => 'required|integer|exists:t_BudgetGLAccounts,Id',
+            'GLS' => 'required|array|max:1',
+            'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
-        ]);
+        ],
+         [
+             'GLS.max' => 'You can only select one GL Account for each budget line.'
+         ]);
 
         try {
             DB::beginTransaction();
@@ -221,7 +226,7 @@ class BudgetLineMappingController extends Controller
 
             // Update BudgetLine fields
             $budgetLine->update([
-                'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
+                //'BudgetLineCategoryID' => $validated['BudgetLineCategoryID'],
                 'LineName' => $validated['LineName'],
                 'DepartmentID' => $validated['DepartmentID'],
                 'GLAccountTypeID' => $validated['GLAccountTypeID'],

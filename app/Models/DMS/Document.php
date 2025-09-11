@@ -5,6 +5,7 @@ namespace App\Models\DMS;
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Exceptions\ErroredException;
+use App\Interfaces\SpecialPermissionContract;
 use App\Models\Core\CategoryMaster;
 use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
@@ -16,13 +17,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Document extends Model
+class Document extends Model implements SpecialPermissionContract
 {
     use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Documents';
     protected $primaryKey = 'Id';
@@ -71,7 +72,13 @@ class Document extends Model
         return $this->belongsToMany(DMSTags::class, 't_DocumentTags', 'DocId', 'TagId', $this->primaryKey, 'Id')
             ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->whereNull('t_DocumentTags.DeletedOn')
             ->using(DocumentTags::class);
-        //
+    }
+
+    public function holds(): BelongsToMany
+    {
+        return $this->belongsToMany(LegalHold::class, 't_DocumentLegalHolds', 'DocId', 'LegalHoldId', $this->primaryKey, 'Id')
+            ->withPivot(['CreatedBy', 'ModifiedBy', 'DeletedBy'])->withTimestamps()->whereNull('t_DocumentLegalHolds.DeletedOn')
+            ->using(DocumentLegalHold::class);
     }
 
     public function relations(): MorphMany
@@ -82,6 +89,11 @@ class Document extends Model
     public function current(): HasOne
     {
         return $this->hasOne(DocumentVersion::class, 'DocumentId', 'Id')->latest('t_DocumentVersions.Id');
+    }
+
+    public function checkouts(): HasMany
+    {
+        return $this->hasMany(DocumentCheckOut::class, 'DocumentId', 'Id');
     }
 
     public function versions(): HasMany

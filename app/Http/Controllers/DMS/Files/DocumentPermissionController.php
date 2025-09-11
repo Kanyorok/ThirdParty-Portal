@@ -34,7 +34,7 @@ class DocumentPermissionController extends Controller
 
     public function visibility(VisibilityRequest $request, Document $document): JsonResponse
     {
-        $this->authorize('update', $document);
+        $this->authorize('share', $document);
         try {
             return $this->succeeded('file updated successfully', data: [
                 'data' => new FileResource(
@@ -51,7 +51,7 @@ class DocumentPermissionController extends Controller
      */
     public function store(SharePartyRequest $request, Document $document): JsonResponse
     {
-        $this->authorize('update', $document);
+        $this->authorize('share', $document);
         $assignee = $request->getParty();
         $permission = $request->getRole();
 
@@ -71,7 +71,7 @@ class DocumentPermissionController extends Controller
      */
     public function destroy(Request $request, Document $document, int $permission_id): JsonResponse
     {
-        $this->authorize('update', $document);
+        $this->authorize('share', $document);
         $specialPermission = $document->permissions()->where('Id', $permission_id)->first();
         if (!$specialPermission instanceof SpecialPermission) {
             return $this->errored('permission not found');

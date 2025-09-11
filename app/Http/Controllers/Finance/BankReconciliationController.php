@@ -9,12 +9,13 @@ class BankReconciliationController extends Controller
 {
     public function index()
     {
-        // Logic to display the bank reconciliation page
+        // Display bank reconciliation dashboard
         return view('finance.bankreconciliation.index');
     }
+
     public function create()
     {
-        // Logic to show the form for creating a new bank reconciliation
+        // Show form for creating a new bank reconciliation entry
         return view('finance.bankreconciliation.create');
     }
 }

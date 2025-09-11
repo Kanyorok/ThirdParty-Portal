@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Property;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\Property\PropertyRegistry\PropertyRegistryRequest;
@@ -15,6 +14,8 @@ use App\Models\PropertyManagement\PropertyType;
 use App\Services\Property\PropertyRegistry\PropertyRegistryService;
 use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Support\Carbon;
+use App\Models\Auth\User;
+
 
 class PropertyRegistryController extends Controller
 {
@@ -39,6 +40,8 @@ class PropertyRegistryController extends Controller
 
     public function show($id){
         $property = PropertyRegistry::find($id);
+        // $createdByUser = User::find($property->CreatedBy);
+        // $modifiedByUser = User::find($property->ModifiedBy);
         return view('property.propertyregistry.registry.show',compact('property'));
     }
 

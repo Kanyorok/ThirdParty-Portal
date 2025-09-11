@@ -92,9 +92,14 @@ enum ExtensionsEnum: string
         };
     }
 
+    public function canCheckOut(): bool
+    {
+        return ($this->isPresentation() || $this->isText() || $this->isSpreadsheet() || $this->isDocument());
+    }
+
     public function isPreview(): bool
     {
-        return ($this->isImage() || $this->isVideo() || ($this->value === self::Pdf->value));
+        return ($this->isImage() || $this->isVideo() || in_array($this->value, [self::Pdf->value, self::Txt->value], true));
     }
 
     /**

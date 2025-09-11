@@ -30,18 +30,35 @@ class FinanceGLSubAccountTypeSeeder extends Seeder
             // Current Liabilities
             ['CL_AP', 'CL', 'Accounts Payable'],
             ['CL_TAX', 'CL', 'Tax Payable'],
+            ['CL_LIAB', 'CL', 'Liabilities'],
+            ['CL_EXP', 'CL', 'Expense Payable'],
 
             // Revenue
             ['REV_SALES', 'REV', 'Sales Revenue'],
             ['REV_FEES', 'REV', 'Service Fees'],
+            ['RV_INCOME', 'REV', 'Income'],
 
             // Expenses
             ['OPEX_SAL', 'OPEX', 'Salaries'],
+            ['EX_EXP', 'OPEX', 'Purchases or operating expenses'],
             ['OPEX_RENT', 'OPEX', 'Rent Expense'],
             ['CAPEX_SOFT', 'CAPEX', 'Software Licenses'],
+
+            // Share and Capital
+            ['EQ_SHARECAP', 'SC', 'Share Capital'],
+            ['EQ_RETAINED', 'RE', 'Retained Earnings'],
         ];
 
         foreach ($subAccounts as [$code, $typeGroupCode, $desc]) {
+            // Check if SubAccountCode already exists
+            $exists = DB::table('t_FinanceGLSubAccountTypes')
+                ->where('SubAccountCode', $code)
+                ->exists();
+
+            if ($exists) {
+                continue; // Skip duplicates
+            }
+
             $typeGroup = DB::table('t_FinanceGLTypeGroups')
                 ->where('TypeGroupCode', $typeGroupCode)
                 ->first();

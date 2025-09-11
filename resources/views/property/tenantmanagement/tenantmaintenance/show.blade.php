@@ -1,70 +1,95 @@
 @extends('layouts.app')
-@section('title', 'Property Management')
-
+@section('title', 'Tenant Details')
 @section('content')
-    <div class="container mt-5" style="max-width: 720px;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold">Tenant Details</h3>
-            <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
-        </div>
+<div class="container mt-4" style="max-width: 1000px;">
+    <h4 class="mb-3">Tenant Details</h4>
 
-        <form>
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <div class="mb-3">
-                    <label class="form-label">Tenant Name</label>
-                    <input type="text" class="form-control" value="{{ $newtenant->TenantName ?? '-' }}" readonly>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
+
+                <div class="col">
+                    <strong>Tenant Type</strong>
+                    <p class="mb-1">{{ $newtenant->type->Description ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">ID / Registration No.</label>
-                    <input type="text" class="form-control" value="{{ $newtenant->IDRegistrationNo ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Tenant Name</strong>
+                    <p class="mb-1">{{ $newtenant->TenantName ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Phone</label>
-                    <input type="text" class="form-control" value="{{ $newtenant->PhoneNumber ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>ID / Registration No.</strong>
+                    <p class="mb-1">{{ $newtenant->IDRegistrationNo ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="text" class="form-control" value="{{ $newtenant->EmailAddress ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Phone Number</strong>
+                    <p class="mb-1">{{ $newtenant->PhoneNumber ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Nationality</label>
-                    <input type="text" class="form-control" value="{{ $newtenant->Nationality ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Email Address</strong>
+                    <p class="mb-1">{{ $newtenant->EmailAddress ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Postal Address</label>
-                    <input type="text" class="form-control" value="{{ $newtenant->PostalAddress ?? '-' }}" readonly>
+                <div class="col">
+                    <strong>Nationality</strong>
+                    <p class="mb-1">{{ $newtenant->Nationality ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Remarks</label>
-                    <textarea class="form-control" rows="3" readonly>{{ $newtenant->Remarks ?? '—' }}</textarea>
+                <div class="col">
+                    <strong>Postal Address</strong>
+                    <p class="mb-1">{{ $newtenant->PostalAddress ?? '-' }}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Status</label>
-                    <div>
+                <div class="col">
+                    <strong>Status</strong>
+                    <p class="mb-1">
                         @if($newtenant->IsActive == 1)
                             <span class="badge bg-success">Active</span>
                         @else
                             <span class="badge bg-danger">Inactive</span>
                         @endif
-                    </div>
+                    </p>
+                </div>
+
+                <div class="col-12">
+                    <strong>Remarks</strong>
+                    <p class="mb-1">{{ $newtenant->Remarks ?? '-' }}</p>
                 </div>
             </div>
 
-            <div class="card-footer bg-light d-flex justify-content-between">
-                <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-outline-primary">
-                    <i class="bi bi-pencil-square"></i> Edit
-                </a>
-                <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary">Back</a>
+            <hr class="my-3">
+
+            <h6 class="mb-2">Audit Information</h6>
+            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
+                <div class="col">
+                    <strong>Created By</strong>
+                    <p class="mb-1">{{ $newtenant->createdByUser->Name ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Created On</strong>
+                    <p class="mb-1">{{ $newtenant->CreatedOn ? \Carbon\Carbon::parse($newtenant->CreatedOn)->format('d M Y H:i') : '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Modified By</strong>
+                    <p class="mb-1">{{ $newtenant->modifiedByUser->Name ?? '-' }}</p>
+                </div>
+
+                <div class="col">
+                    <strong>Modified On</strong>
+                    <p class="mb-1">{{ $newtenant->ModifiedOn ? \Carbon\Carbon::parse($newtenant->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
+                </div>
             </div>
         </div>
-        </form>
+
+        <div class="card-footer text-end py-2">
+            <a href="{{ route('addtenant.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
+            <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-sm btn-primary">✏ Edit</a>
+        </div>
     </div>
+</div>
 @endsection

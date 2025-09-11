@@ -7,7 +7,7 @@ use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\Auth\User;
 class PropertyNewTenant extends Model
 {
     use SoftDeletes, UserActorTrait, DocumentsTrait;
@@ -41,8 +41,15 @@ class PropertyNewTenant extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'TenantType', 'ID');
     }
-    public function lease() 
+
+        public function createdByUser()
     {
-         return $this->belongsTo(PropertyNewLease::class,'LeaseNumber', 'ID');
+        return $this->belongsTo(User::class, 'CreatedBy');
     }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+
 }

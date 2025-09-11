@@ -82,7 +82,7 @@ class RFQEvaluationController extends Controller
     {
         // Load RFQs with sections and criteria
         $rfqs = RFQ::with([
-            'sections.criteriaSettings', 'rfqResponses.supplier','committeeMembers.user.employee'
+            'sections.criteriaSettings', 'rfqResponses.supplier', 'committeeMembers.user.employee'
         ])->whereHas('rfqResponses')->get();
 
         $currencies = config('app.currencies');
@@ -130,7 +130,7 @@ class RFQEvaluationController extends Controller
                         continue;
                     }
 
-                    $score = (int) $scoreData['Score'];
+                    $score = (int)$scoreData['Score'];
 
                     // Enforce max score of 10 and min score of 1
                     if ($score < 1 || $score > 10) {
@@ -174,6 +174,7 @@ class RFQEvaluationController extends Controller
             'criteria' => $criteria
         ]);
     }
+
     public function getCommitteeMemberInfo($rfqId)
     {
         $rfq = RFQ::find($rfqId);
@@ -187,10 +188,11 @@ class RFQEvaluationController extends Controller
         $member = RFQCommitteeMember::with('user.employee')
             ->where('RFQID', $rfq->Id)
             ->where('UserID', $employeeId)
+           // ->where('Response', 1)
             ->first();
 
         if (!$member) {
-            return response()->json(['error' => 'User not part of committee']);
+            return response()->json(['error' => 'User not part of committee or has not accepted the appointment']);
         }
 
         return response()->json([

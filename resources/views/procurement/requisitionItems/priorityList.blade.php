@@ -14,8 +14,8 @@
         <div class="col-12">
             <div class="card mb-3">
                 <div class="card-body">
-                    <table id="campaignTable"
-                           class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
+              <table id="campaignTable"
+                  class="table table-striped dataTable no-footer dtr-inline w-100 table-responsive">
                         <thead>
 
                         <tr>
@@ -24,16 +24,14 @@
                             <th>Requisition Date</th>
                             <th>Branch</th>
                             <th>Department</th>
-                            <th>Item</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Total Price</th>
-                            <th>Urgency</th>
-                            <th>NeededBy</th>
-                            <th>Approval Status</th>
                             <th>Requested By</th>
-                            {{-- <th>Approved By</th> --}}
-{{--                            <th>Action</th>--}}
+                            <th>Total Items</th>
+                            <th>Very High</th>
+                            <th>High</th>
+                            <th>Medium</th>
+                            <th>Low</th>
+                            <th>Score</th>
+                            <th>Action</th>
                         </tr>
 
                         </thead>
@@ -42,23 +40,21 @@
                             <tr>
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
-                                <td>{{ ($item->CreatedOn) }}</td>
+                                <td>{{ $item->RequisitionDate }}</td>
                                 <td>{{ $item->BranchID }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
-                                <td>{{ $item->Item }}</td>
-                                <td>{{ $item->Quantity }}</td>
-                                <td>{{ number_format($item->UnitPrice, 2) }}</td>
-{{--                                <td>{{ $item->UnitPrice }}</td>--}}
-                                <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
-                                <td>{{ $item->Urgency }}</td>
-                                <td>{{ $item->NeededBy }}</td>
-                                <td>{{ $item->Status }}</td>
-                                <td>{{ $item->UserName }}</td>
-{{--                                <td><a href="{{ route('requisitionItem.show',['id' => $item->Id]) }}" class="btn btn-info">View</a></td>--}}
+                                <td>{{ $item->RequestedBy }}</td>
+                                <td>{{ $item->TotalItems }}</td>
+                                <td>{{ $item->VeryHighCount }}</td>
+                                <td>{{ $item->HighCount }}</td>
+                                <td>{{ $item->MediumCount }}</td>
+                                <td>{{ $item->LowCount }}</td>
+                                <td>{{ $item->Score }}</td>
+                                <td><a href="{{ route('requisition.show', $item->Id) }}" class="btn btn-sm btn-primary">View</a></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="15" class="text-center">No requisition items found.</td>
+                                <td colspan="15" class="text-center">No requisitions found.</td>
                             </tr>
                         @endforelse
                         </tbody>
