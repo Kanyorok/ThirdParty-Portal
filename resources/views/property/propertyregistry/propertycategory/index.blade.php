@@ -60,23 +60,16 @@
                                 <td>
                                     <div class="d-flex gap-2">
                                         <a href="{{ route('propertycategories.update', $category->Id) }}" 
-                                           class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
-
+                                           class="btn btn-sm btn-warning">Edit</a>
                                         @if($category->propertytypes()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
-                                            </button>
+                                            <button class="btn btn-sm btn-secondary" disabled>In Use</button>
                                         @else
                                             <form action="{{ route('propertycategory.destroy', $category->Id) }}" 
                                                   method="POST" 
                                                   onsubmit="return confirm('Are you sure you want to delete this category?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
+                                                <button class="btn btn-sm btn-danger">Delete</button>
                                             </form>
                                         @endif
                                     </div>

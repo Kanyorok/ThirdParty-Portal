@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -19,11 +20,13 @@ class PropertyRegistryController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
         $properties = PropertyRegistry::with('type')->get();
         return view('property.propertyregistry.registry.index', compact('properties'));
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
         $lineentries = CategoryMaster::with('propertytypes')->get();
         $localities = Locality::all();
         return view('property.propertyregistry.registry.create', compact('lineentries', 'localities'));
@@ -36,18 +39,16 @@ class PropertyRegistryController extends Controller
     }
 
     public function show($id){
+        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
         $property = PropertyRegistry::find($id);
-        // $createdByUser = User::find($property->CreatedBy);
-        // $modifiedByUser = User::find($property->ModifiedBy);
         return view('property.propertyregistry.registry.show',compact('property'));
     }
 
     public function store(PropertyRegistryRequest $request)
     {
 
+        $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
         $validated = $request->validated();
-        //dd($validated);
-        // Fetch model instances based on validated IDs
         $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
         $propertyType = PropertyType::findOrFail($validated['PropertyType']);
         $category = CategoryMaster::findOrFail($validated['Category']);
@@ -76,8 +77,7 @@ class PropertyRegistryController extends Controller
 
     public function edit($id)
     {
-        //Check if user has permission to edit tender categories
-        // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
+        $this->authorize(PermissionEnum::PropertyRegistryUpdate, PropertyRegistry::class);
         $property = PropertyRegistry::findOrFail($id);
         $types = PropertyType::all();
         $categories = CategoryMaster::all();
@@ -87,40 +87,20 @@ class PropertyRegistryController extends Controller
         return view('property.propertyregistry.registry.edit', compact('property', 'localities', 'lineentries', 'types', 'categories'));
     }
 
-public function update(PropertyRegistryRequest $request, $id)
-{
-    $validated = $request->validated();
+    public function update(PropertyRegistryRequest $request, $id)
+    {
+        $this->authorize(PermissionEnum::PropertyRegistryUpdate, PropertyRegistry::class);
+        $validated = $request->validated();
+        $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
+        $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
+        $category        = CategoryMaster::findOrFail($validated['Category']);
+        $townCity        = Locality::findOrFail($validated['TownCity']);
 
-    // Fetch model instances based on validated IDs
-    $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-    $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
-    $category        = CategoryMaster::findOrFail($validated['Category']);
-    $townCity        = Locality::findOrFail($validated['TownCity']);
+        DB::beginTransaction();
 
-    DB::beginTransaction();
+        try {
+            $property = PropertyRegistry::findOrFail($id);
 
-    try {
-        $property = PropertyRegistry::findOrFail($id);
-
-        // Update the main property record first (no file yet)
-        PropertyRegistryService::update(
-            $property,
-            $validated['PropertyName'],
-            $validated['PropertyCode'],
-            $propertyType,
-            $category,
-            $validated['Owner'],
-            $acquisitionDate,
-            $validated['Country'],
-            $townCity,
-            $validated['AreaLocality'],
-            $validated['PropertyDescription'] ?? '',
-            $request->user(),
-            $validated['IsActive'] ?? $property->IsActive
-        );
-
-        // Handle file uploads (loop like in store)
-        foreach ($request->file('file', []) as $uploadedFile) {
             PropertyRegistryService::update(
                 $property,
                 $validated['PropertyName'],
@@ -134,34 +114,58 @@ public function update(PropertyRegistryRequest $request, $id)
                 $validated['AreaLocality'],
                 $validated['PropertyDescription'] ?? '',
                 $request->user(),
-                $validated['IsActive'],
-                $uploadedFile
+                $validated['IsActive'] ?? $property->IsActive
             );
+
+            foreach ($request->file('file', []) as $uploadedFile) {
+                PropertyRegistryService::update(
+                    $property,
+                    $validated['PropertyName'],
+                    $validated['PropertyCode'],
+                    $propertyType,
+                    $category,
+                    $validated['Owner'],
+                    $acquisitionDate,
+                    $validated['Country'],
+                    $townCity,
+                    $validated['AreaLocality'],
+                    $validated['PropertyDescription'] ?? '',
+                    $request->user(),
+                    $validated['IsActive'],
+                    $uploadedFile
+                );
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('PropertyRegistry.index')
+                ->with('success', 'Property updated successfully');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to update property: ' . $th->getMessage());
+
+            return back()
+                ->withErrors(['error' => 'Failed to update property'])
+                ->withInput();
         }
-
-        DB::commit();
-
-        return redirect()
-            ->route('PropertyRegistry.index')
-            ->with('success', 'Property updated successfully');
-    } catch (\Throwable $th) {
-        DB::rollBack();
-        Log::error('Failed to update property: ' . $th->getMessage());
-
-        return back()
-            ->withErrors(['error' => 'Failed to update property'])
-            ->withInput();
     }
-}
 
 
 
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-        //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
+         $this->authorize(PermissionEnum::PropertyRegistryDelete, PropertyRegistry::class);
         try {
             $property = PropertyRegistry::findOrFail($id);
+
+
+            if ($property->getBlockByProperty()->exists()) {
+                return redirect()->back()
+                ->withErrors(['error' => 'This Property is in use and cannot be deleted.']);
+            }
+
             $property->delete();
 
             return redirect()->route('PropertyRegistry.index')

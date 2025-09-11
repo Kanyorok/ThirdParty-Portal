@@ -86,7 +86,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddfloor', [PropertyFloorController::class, 'index'])->name('addfloor.index');
     Route::get('propertyaddfloor/create', [PropertyFloorController::class, 'create'])->name('addfloor.create');
     Route::post('propertyaddfloor', [PropertyFloorController::class, 'store'])->name('addfloor.store');
-    Route::get('propertyaddfloor/show/', [PropertyFloorController::class, 'show'])->name('addfloor.show');
     Route::get('/propertyaddfloor/{BlockId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblockbyproperty');
     Route::delete('propertyaddfloor/delete/{Id}', [PropertyFloorController::class, 'destroy'])->name('addfloor.destroy');
     Route::get('propertyaddfloor/edit/{Id}', [PropertyFloorController::class, 'edit'])->name('addfloor.edit');

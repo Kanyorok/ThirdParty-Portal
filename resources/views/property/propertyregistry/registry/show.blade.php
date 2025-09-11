@@ -35,7 +35,7 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Acquisition Date</label>
-                        <input type="text" class="form-control" value="{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d M Y') : '-' }}" readonly>
+                        <input type="text" class="form-control" value="{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d/m/Y') : '-' }}" readonly>
                     </div>
 
                     <div class="col-md-6">

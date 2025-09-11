@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Property;
 
-use App\Enums\Core\PermissionEnum;
-use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
 use App\Models\Core\CodeDetail;
@@ -13,7 +11,6 @@ use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
 use DateTime;
@@ -35,7 +32,7 @@ class PropertyNewLeaseController extends Controller
 
     public function create(){
       //  $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
-        $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
+        $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->where('IsActive',true)->get();
         $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
