@@ -17,6 +17,7 @@ use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\Communication\Call;
 use App\Models\Communication\EmailConversation;
+use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\CRM\Contact;
 use App\Models\CRM\Lead;
@@ -88,7 +89,6 @@ class LeadController extends Controller
             ->with('MarketingModes', $StaticLists->where('CodeID', StaticListsService::MarketingModes));
     }
 
-
     public function create(Request $request): JsonResponse|View
     {
         $this->authorize('create', Lead::class);
@@ -116,16 +116,15 @@ class LeadController extends Controller
             $view = ($request->type === LeadTypeEnum::Individual->name) ? 'crm.leads.create-individual' : 'crm.leads.create-corporate';
 
             return view($view, compact('contact', 'email'))
+                ->with('Countries', Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get())
                 ->with('conversation', $emailConversation instanceof EmailConversation ? $emailConversation->Id : 0)
                 ->with('Industries', $StaticLists->where('CodeID', StaticListsService::Industries))
                 ->with('CustomerTypes', $StaticLists->where('CodeID', StaticListsService::CustomerType))
                 ->with('MarketingModes', $StaticLists->where('CodeID', StaticListsService::MarketingModes));
         }
 
-
         return $this->errored('unknown lead type');
     }
-
 
     /**
      * Store a newly created resource in storage.
@@ -140,6 +139,8 @@ class LeadController extends Controller
         $assignee = $request->getAssignee();
         $contacted = $request->getLastContacted() ?? now();
         $gender = $request->getGender();
+        $phone = $request->getPhoneNumber();
+
         $emailConversation = null;
         if ($request->has('conversation')) {
             $emailConversation = EmailConversation::query()->where('Id', $request->conversation)->first();
@@ -150,11 +151,11 @@ class LeadController extends Controller
         }
 
         try {
-            $lead = DB::transaction(static function () use ($request, $gender, $contact, $contacted, $CustomerType, $Source, $Industry, $location, $assignee, $emailConversation) {
+            $lead = DB::transaction(static function () use ($request, $gender, $contact, $contacted, $CustomerType, $Source, $Industry, $location, $assignee, $emailConversation, $phone) {
                 if ($request->validated('Type') === LeadTypeEnum::Company->value) {
-                    $service = LeadService::company($request->validated('Name'), $request->validated('Email') ?? '', $request->validated('Phone') ?? '', $request->validated('Website') ?? '', $contacted, $assignee, $request->user(), $location, $Industry, $Source, $CustomerType, $request->validated('Notes') ?? '');
+                    $service = LeadService::company($request->validated('Name'), $request->validated('Email') ?? '', $phone, $request->validated('Website') ?? '', $contacted, $assignee, $request->user(), $location, $Industry, $Source, $CustomerType, $request->validated('Notes') ?? '');
                 } elseif ($request->validated('Type') === LeadTypeEnum::Individual->value) {
-                    $service = LeadService::individual($request->validated('Name'), $request->validated('Surname'), $request->validated('Email') ?? '', $request->validated('Phone') ?? '', $request->validated('JobTitle') ?? '', $contacted, $gender, $assignee, $request->user(), $location, $Industry, $Source, $CustomerType, $request->validated('Notes') ?? '');
+                    $service = LeadService::individual($request->validated('Name'), $request->validated('Surname'), $request->validated('Email') ?? '', $phone ?? '', $request->validated('JobTitle') ?? '', $contacted, $gender, $assignee, $request->user(), $location, $Industry, $Source, $CustomerType, $request->validated('Notes') ?? '');
                 } else {
                     throw new ErroredException();
                 }
@@ -214,7 +215,7 @@ class LeadController extends Controller
     {
         try {
             $request->save($request->user(), $lead);
-        } catch (Exception $e) {
+        } catch (Exception|Throwable$e) {
             Log::error('Error updating lead ' . $e->getMessage());
             return $this->errored('unexpected error, try again latter');
         }
@@ -227,8 +228,7 @@ class LeadController extends Controller
      */
     public function show(Request $request, $lead_id): RedirectResponse|View
     {
-
-        $lead = Lead::where('LeadID', $lead_id)->withTrashed()->first();
+        $lead = Lead::where('LeadID', $lead_id)->withTrashed()->with(['country', 'location', 'creator'])->first();
         if (!$lead instanceof Lead) {
             return redirect()->back()->with('fail', 'invalid lead.');
         }
@@ -287,6 +287,7 @@ class LeadController extends Controller
         $StaticLists = StaticListsService::getList([StaticListsService::Industries, StaticListsService::MarketingModes, StaticListsService::CustomerType, StaticListsService::LeadLossReason, StaticListsService::TicketCategories]);
         return view('crm.leads.show', compact('lead', 'schedule', 'call', 'meeting'))
             ->with('MarketingListMember', $lead->marketingLists()->where('Type', MarketingListEnum::Static->value)->select(['slug', 'Label'])->get())
+            ->with('Countries', Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get())
             ->with('location', ($lead->location instanceof Locality) ? (new LocalityService($lead->location))->getLocation() : '')
             ->with('Industries', $StaticLists->where('CodeID', StaticListsService::Industries))
             ->with('CustomerTypes', $StaticLists->where('CodeID', StaticListsService::CustomerType))

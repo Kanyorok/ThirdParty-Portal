@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class MarketingPlanManagerController extends Controller
 {
@@ -34,7 +35,7 @@ class MarketingPlanManagerController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error manager approval planner failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
@@ -65,7 +66,7 @@ class MarketingPlanManagerController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             Log::error('Error manager reject planner failed: ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
         }
