@@ -54,7 +54,7 @@ class Competitor extends Model
 
     public function country(): BelongsTo
     {
-        return $this->belongsTo(Country::class, 'CountryId', 'ID');
+        return $this->belongsTo(Country::class, 'CountryId', 'Id');
     }
 
     public function photo(): BelongsTo
