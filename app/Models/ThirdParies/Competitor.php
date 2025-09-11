@@ -3,6 +3,7 @@
 namespace App\Models\ThirdParies;
 
 use App\Models\Core\CodeDetail;
+use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\CRM\CompetitorProduct;
 use App\Models\CRM\DescriptionItem;
@@ -21,9 +22,9 @@ class Competitor extends Model
 {
     use SoftDeletes, UserActorTrait, ImageTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Competitors';
     protected $primaryKey = 'CompetitorID';
@@ -34,21 +35,9 @@ class Competitor extends Model
     }
 
     protected $fillable = [
-                           "CompetitorName",
-                           "LocationID",
-                           "Logo",
-                           "Email",
-                           "Website",
-                           "Phone",
-                           "CoreBusiness",
-                           "Clients",
-                           "MarketShare",
-                           "Processing",
-                           'Notes',
-                           'CreatedBy',
-                           'ModifiedBy',
-                           'DeletedBy',
-                          ];
+        "CompetitorName", "LocationID", 'CountryId', "Logo", "Email", "Website", "Phone", "CoreBusiness", "Clients", "MarketShare", "Processing", 'Notes',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
+    ];
 
     protected $casts = ['Processing' => 'array'];
 
@@ -61,6 +50,11 @@ class Competitor extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Locality::class, 'LocationID', 'ID');
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'CountryId', 'ID');
     }
 
     public function photo(): BelongsTo

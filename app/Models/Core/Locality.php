@@ -18,7 +18,7 @@ class Locality extends Model
     protected $table = 't_Localities';
     protected $primaryKey = 'ID';
     protected $fillable = [
-        'Name', 'LocationType', 'LocalityID', 'IsActive',
+        'Name', 'LocationType', 'LocalityID', 'IsActive', "CountryId",
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
@@ -34,5 +34,10 @@ class Locality extends Model
     public function in(): BelongsTo
     {
         return $this->belongsTo(__CLASS__, 'LocalityID', 'ID');
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'CountryId', 'Id');
     }
 }

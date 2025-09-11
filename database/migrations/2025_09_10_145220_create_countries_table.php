@@ -15,11 +15,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        $fresh = Locality::count() === 0;
         Schema::create('t_Countries', static function (Blueprint $table) {
             $table->id('Id');
             $table->string('Name')->unique();
-            $table->string('CountryCode', 3)->unique()->comment('ISO 3166-1 alpha-3');
+            $table->string('CountryCode', 2)->unique()->comment('ISO 3166-1 alpha-3');
             $table->string('PhoneCode', 4)->nullable();
             $table->string('Flag')->nullable();
             $table->foreignId('CurrencyId')->constrained('t_Currencies', 'Id');
@@ -31,73 +30,72 @@ return new class extends Migration {
             $table->softDeletes('DeletedOn');
         });
 
-        Schema::table('t_Leads', static function (Blueprint $table) use ($fresh) {
-            $table->foreignId('CountryId')->nullable(!$fresh)->constrained('t_Countries', 'Id');
-            $table->unsignedBigInteger('LocationID')->nullable(!$fresh)->change();
+        Schema::table('t_Leads', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->nullable()->constrained('t_Countries', 'Id');
+            $table->unsignedBigInteger('LocationID')->nullable()->change();
         });
 
-        Schema::table('t_Competitors', static function (Blueprint $table) use ($fresh) {
-            $table->foreignId('CountryId')->nullable(!$fresh)->constrained('t_Countries', 'Id');
-            $table->unsignedBigInteger('LocationID')->nullable(!$fresh)->change();
+        Schema::table('t_Competitors', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->nullable()->constrained('t_Countries', 'Id');
+            $table->unsignedBigInteger('LocationID')->nullable()->change();
         });
 
-        Schema::table('t_PropertyRegistry', static function (Blueprint $table) use ($fresh) {
-            $table->foreignId('CountryId')->nullable(!$fresh)->constrained('t_Countries', 'Id');
-            $table->foreignId('LocationId')->nullable(!$fresh)->constrained('t_Localities', 'Id');
+        Schema::table('t_PropertyRegistry', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->nullable()->constrained('t_Countries', 'Id');
+            $table->foreignId('LocationId')->nullable()->constrained('t_Localities', 'Id');
             $table->dropConstrainedForeignId('TownCity');
             $table->dropColumn('Country');
             $table->renameColumn('AreaLocality', 'Address');
         });
 
-        Schema::table('t_Localities', static function (Blueprint $table) use ($fresh) {
-            $table->foreignId('CountryId')->nullable(!$fresh)->constrained('t_Countries', 'Id');
+        Schema::table('t_Localities', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->nullable()->constrained('t_Countries', 'Id');
             $table->string('LocationType', 100)->change();
         });
 
         // Seed data
-        if (!$fresh) {
-            Lead::query()->update(['CountryId' => null, 'LocationID' => null]);
-            Competitor::query()->update(['CountryId' => null, 'LocationID' => null]);
-            PropertyRegistry::query()->update(['CountryId' => null, 'LocationId' => null]);
+        Lead::query()->update(['CountryId' => null, 'LocationID' => null]);
+        Competitor::query()->update(['CountryId' => null, 'LocationID' => null]);
+        PropertyRegistry::query()->update(['CountryId' => null, 'LocationId' => null]);
 
-            DB::table('t_Localities')->delete();
+        DB::table('t_Localities')->delete();
 
-            Schema::table('t_Localities', static function (Blueprint $table) {
-                $table->foreignId('CountryId')->nullable(false)->change();
-            });
+        Schema::table('t_Localities', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->nullable(false)->change();
+        });
 
-            Artisan::call('db:seed', [
-                '--class' => 'LocalitySeeder',
-                '--force' => true
-            ]);
+        Artisan::call('db:seed', [
+            '--class' => 'LocalitySeeder',
+            '--force' => true
+        ]);
 
-            $country = Country::query()->where('CountryCode', 'KEN')->first();
+        $country = Country::query()->where('CountryCode', 'KE')->first();
 
-            $location = $country->localities()->whereLike('Name', '%Nairobi%')->whereNotNull('LocalityID')->first();
-            if (!$location instanceof Locality) {
-                $location = $country->localities()->whereNotNull('LocalityID')->first();
-            }
-
-
-            Lead::query()->update(['CountryId' => $country->Id, 'LocationID' => $location->ID]);
-            Competitor::query()->update(['CountryId' => $country->Id, 'LocationID' => $location->ID]);
-            PropertyRegistry::query()->update(['CountryId' => $country->Id, 'LocationId' => $location->ID]);
-
-            Schema::table('t_Leads', static function (Blueprint $table) {
-                $table->foreignId('CountryId')->nullable(false)->change();
-                $table->unsignedBigInteger('LocationID')->nullable(false)->change();
-            });
-
-            Schema::table('t_Competitors', static function (Blueprint $table) {
-                $table->foreignId('CountryId')->nullable(false)->change();
-                $table->unsignedBigInteger('LocationID')->nullable(false)->change();
-            });
-
-            Schema::table('t_PropertyRegistry', static function (Blueprint $table) {
-                $table->foreignId('CountryId')->nullable(false)->change();
-                $table->foreignId('LocationId')->nullable(false)->change();
-            });
+        $location = $country?->localities()->whereLike('Name', '%Nairobi%')->whereNotNull('LocalityID')->first();
+        if (!$location instanceof Locality) {
+            $location = $country?->localities()->whereNotNull('LocalityID')->first();
         }
+
+
+        Lead::query()->update(['CountryId' => $country->Id, 'LocationID' => $location->ID]);
+        Competitor::query()->update(['CountryId' => $country->Id, 'LocationID' => $location->ID]);
+        PropertyRegistry::query()->update(['CountryId' => $country->Id, 'LocationId' => $location->ID]);
+
+        Schema::table('t_Leads', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->nullable(false)->change();
+            $table->unsignedBigInteger('LocationID')->nullable(false)->change();
+        });
+
+        Schema::table('t_Competitors', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->nullable(false)->change();
+            $table->unsignedBigInteger('LocationID')->nullable(false)->change();
+        });
+
+        Schema::table('t_PropertyRegistry', static function (Blueprint $table) {
+            $table->foreignId('CountryId')->nullable(false)->change();
+            $table->foreignId('LocationId')->nullable(false)->change();
+        });
+
     }
 
     /**
@@ -113,26 +111,27 @@ return new class extends Migration {
             $table->renameColumn('Address', 'AreaLocality');
         });
 
-        Schema::table('t_Localities', static function (Blueprint $table) {
-            $table->dropConstrainedForeignId('CountryId');
-            $table->string('LocationType', 10)->change();
-        });
-
         Schema::table('t_Leads', static function (Blueprint $table) {
             $table->dropConstrainedForeignId('CountryId');
             $table->unsignedBigInteger('LocationID')->nullable(true)->change();
         });
 
-        Schema::table('t_Competitors', function (Blueprint $table) {
+        Schema::table('t_Competitors', static function (Blueprint $table) {
             $table->dropConstrainedForeignId('CountryId');
             $table->unsignedBigInteger('LocationID')->nullable(true)->change();
         });
 
-        Lead::query()->update(['CountryId' => null, 'LocationID' => null]);
-        Competitor::query()->update(['CountryId' => null, 'LocationID' => null]);
-        PropertyRegistry::query()->update(['CountryId' => null, 'LocationId' => null]);
+        Lead::query()->update(['LocationID' => null]);
+        Competitor::query()->update(['LocationID' => null]);
+        // PropertyRegistry::query()->update([]);
 
         DB::table('t_Localities')->delete();
+
+        Schema::table('t_Localities', static function (Blueprint $table) {
+            $table->dropConstrainedForeignId('CountryId');
+            $table->string('LocationType', 10)->change();
+        });
+
         Schema::dropIfExists('t_Countries');
     }
 };

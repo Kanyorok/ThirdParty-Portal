@@ -54,7 +54,7 @@ class LocalitySeeder extends Seeder
             // Insert country
             $countryId = DB::table('t_Countries')->insertGetId([
                 "Name" => $countryData['name'],
-                "CountryCode" => $countryData['iso3'],
+                "CountryCode" => $countryData['iso2'],
                 "PhoneCode" => $countryData['phonecode'],
                 "Flag" => $countryData['emoji'],
                 "CurrencyId" => $currencyId,
@@ -83,7 +83,7 @@ class LocalitySeeder extends Seeder
                     if (!empty($stateData['cities'])) {
                         foreach ($stateData['cities'] as $cityData) {
                             DB::table('t_Localities')->insert([
-                                'Name' => $stateData['name'],
+                                'Name' => $cityData['name'],
                                 'LocationType' => 'city',
                                 'CountryId' => $countryId,
                                 'LocalityID' => $stateId,
