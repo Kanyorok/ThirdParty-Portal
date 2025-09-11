@@ -923,7 +923,8 @@
                                     <div class="col-sm-6 col-12">
                                         <div class="mb-3">
                                             <label class="form-label" for="Phone">Phone Number <span
-                                                    class="text-danger">*</span></label>
+                                                    class="text-danger">* &nbsp; <span id="PhonePrefix"></span></span>
+                                            </label>
                                             <input type="text" class="form-control" id="Phone" name="Phone"
                                                    placeholder="Phone Number" required value="{{ $lead->Phone }}">
                                             <p id="Phone_error" class="invalid-feedback d-none error col-12"
@@ -936,17 +937,31 @@
                                             <p id="Email_error" class="invalid-feedback d-none error col-12"
                                                role="alert"></p>
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="Location" class="form-label">Location <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-control locations" name="Location" id="Location"
-                                                    required>
-                                                <option selected
-                                                        value="{{ $lead->LocationID }}">{{ $location }}</option>
-                                            </select>
-                                            <p id="Location_error" class="invalid-feedback d-none error col-12"
-                                               role="alert"></p>
-                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-6 col-12 mb-3">
+                                        <label for="Country" class="form-label">Country <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-control" name="Country" id="Country" required>
+                                            @foreach($Countries as $Country)
+                                                <option value="{{ $Country->CountryCode }}"
+                                                        {{ ($Country->Id === $lead->CountryId)?'selected':'' }} data-phone="{{$Country->PhoneCode}}"
+                                                        data-location="{{ route('locality.select2',['country'=>$Country->CountryCode]) }}">{{ $Country->Flag}} {{ $Country->Name}}</option>
+                                            @endforeach
+                                        </select>
+                                        <p id="Country_error" class="invalid-feedback d-none error col-12"
+                                           role="alert"></p>
+                                    </div>
+                                    <div class="col-sm-6 col-12 mb-3">
+                                        <label for="Location" class="form-label">Location <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-control locations" name="Location" id="Location"
+                                                required disabled>
+                                            <option selected
+                                                    value="{{ $lead->LocationID }}">{{ $location }}</option>
+                                        </select>
+                                        <p id="Location_error" class="invalid-feedback d-none error col-12"
+                                           role="alert"></p>
                                     </div>
                                     <div class="col-sm-6 col-12 mb-3">
                                         <label class="form-label" for="Name">Name <span
@@ -1313,7 +1328,6 @@
             </div>
         </div>
     @endif
-
 @endsection
 @section('scripts')
     @if(!$won)
@@ -1453,11 +1467,41 @@
                 }
             });
 
-            $('#Location').select2({
+            $('#Country').val('{{ $lead->country->CountryCode }}').change().select2({
+                placeholder: "Select a Country",
+                dropdownParent: $Modal
+            }).on('change', function () {
+                const option = $(this).find('option:selected');
+                $('#PhonePrefix').html(option.data('phone'));
+                $('#Location').prop('disabled', false).select2('destroy').val(null).select2({
+                    placeholder: "Search for the Location",
+                    minimumInputLength: 2,
+                    dropdownParent: $Modal,
+                    ajax: {
+                        url: option.data('location'),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {q: $.trim(params.term)};
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: $.map(data, function (item) {
+                                    return {text: item.Name, id: item.ID}
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            });
+            $('#Location').select2();
+
+            {{--   $('#Location').select2({
                 placeholder: "Select a Town/City", minimumInputLength: 2,
                 dropdownParent: $Modal,
                 ajax: {
-                    url: "{{ route('locality.select2') }}?type={{ LocalityTypeEnum::City->value }}",
+                    url: "{ { route('locality.select2') }}?type={ { LocalityTypeEnum::City->value }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
@@ -1472,7 +1516,7 @@
                     },
                     cache: true
                 }
-            });
+            }); --}}
             $("#Upload_image").change(function () {
                 $('.avatar-change').removeClass('d-none');
                 $('.avatar-changed').addClass('d-none');

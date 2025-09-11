@@ -31,6 +31,7 @@
         "noweh/twitter-api-v2-php": "^3.6",
         "php-imap/php-imap": "^5.0",
         "phpoffice/phpword": "^1.4",
+        "propaganistas/laravel-phone": "^6.0",
         "roach-php/core": "^3.2",
         "roach-php/laravel": "^3.1",
         "shuchkin/simplexlsxgen": "^1.4",
@@ -38,6 +39,7 @@
         "spatie/icalendar-generator": "^2.9",
         "spatie/laravel-activitylog": "^4.8",
         "spatie/laravel-permission": "^6.9",
+        "thiagoalessio/tesseract_ocr": "^2.13",
         "yajra/laravel-datatables": "^11.0",
         "yajra/laravel-datatables-html": "11.0"
     },

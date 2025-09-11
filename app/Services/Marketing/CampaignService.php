@@ -60,6 +60,9 @@ class CampaignService
         return $slug;
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function syncFromList(User $actor): static
     {
         //remove all existing
@@ -181,39 +184,39 @@ class CampaignService
     }
 
     /*
-        public function sendPartyEmail(CampaignParty $contact, Lead|Client $party, User $actor, bool $immediate = false): void
-        {
-            $email = $party->Email;
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $contact->update([
-                    'Status' => CampaignStatusEnum::Failed->value,
-                ]);
+           public function sendPartyEmail(CampaignParty $contact, Lead|Client $party, User $actor, bool $immediate = false): void
+           {
+               $email = $party->Email;
+               if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                   $contact->update([
+                       'Status' => CampaignStatusEnum::Failed->value,
+                   ]);
 
-                return;
-            }
-            $service = ($party instanceof Lead) ?
-                CRMEmailService::createLead($contact->party, $email, $this->campaign->Label, str_replace(['#name', '#date', '#org'], [$contact->party->Name, Carbon::now()->format('M d, Y'), config('org.name')], $this->campaign->Details), $actor)
-                : CRMEmailService::createClient($contact->party, $email, $this->campaign->Label, str_replace(['#name', '#date', '#org'], [$contact->party->Name, Carbon::now()->format('M d, Y'), config('org.name')], $this->campaign->Details), $actor);
+                   return;
+               }
+               $service = ($party instanceof Lead) ?
+                   CRMEmailService::createLead($contact->party, $email, $this->campaign->Label, str_replace(['#name', '#date', '#org'], [$contact->party->Name, Carbon::now()->format('M d, Y'), config('org.name')], $this->campaign->Details), $actor)
+                   : CRMEmailService::createClient($contact->party, $email, $this->campaign->Label, str_replace(['#name', '#date', '#org'], [$contact->party->Name, Carbon::now()->format('M d, Y'), config('org.name')], $this->campaign->Details), $actor);
 
-            $service->setSource(CampaignParty::getPrimaryKey(), $contact->CampaignId)->send($immediate)->addActivity(now());
+               $service->setSource(CampaignParty::getPrimaryKey(), $contact->CampaignId)->send($immediate)->addActivity(now());
 
-            $contact->update([
-                'Status' => CampaignStatusEnum::Sending->value,
-            ]);
-        }
+               $contact->update([
+                   'Status' => CampaignStatum::Sending->value,
+               ]);
+           }
 
-        public function sendPartySMS(CampaignParty $contact, Lead|Client $party, User $actor, bool $immediate = false): void
-        {
-            $service = ($party instanceof Lead)
-                ? SMSService::createLead($contact->party, $this->campaign->Details, $actor)
-                : SMSService::createClient($contact->party, $this->campaign->Details, $actor);
+       /*    public function sendPartySMS(CampaignParty $contact, Lead|Client $party, User $actor, bool $immediate = false): void
+           {
+               $service = ($party instanceof Lead)
+                   ? SMSService::createLead($contact->party, $this->campaign->Details, $actor)
+                   : SMSService::createClient($contact->party, $this->campaign->Details, $actor);
 
-            $service->setSource(CampaignParty::getPrimaryKey(), $contact->CampaignId)->send($immediate)->addActivity(now());
+               $service->setSource(CampaignParty::getPrimaryKey(), $contact->CampaignId)->send($immediate)->addActivity(now());
 
-            $contact->update([
-                'Status' => CampaignStatusEnum::Sending->value,
-            ]);
-        }*/
+               $contact->update([
+                   'Status' => CampaignStatusEnum::Sending->value,
+               ]);
+           }*/
 
     public function workflowApprove(User $actor, bool $notify = true): static
     {
