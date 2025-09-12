@@ -1,52 +1,46 @@
-FROM php:8.3-apache-bullseye
+FROM php:8.3-apache-trixie
 
-ARG DEBIAN_FRONTEND=noninteractive
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    unzip cron poppler-utils ghostscript zip curl git gnupg2 \
+    apt-transport-https unixodbc unixodbc-dev imagemagick \
+    supervisor lsb-release libwebp-dev libzip-dev \
+    libpng-dev libjpeg-dev pdftk libfreetype6-dev \
+    libxml2-dev libonig-dev nodejs wget ca-certificates \
+    libssl-dev poppler-utils libicu-dev \
+    libkrb5-dev libgssapi-krb5-2 \
+    tesseract-ocr tesseract-ocr-eng libtesseract-dev \
+    build-essential wget
 
-# More robust APT install (handles transient hash-sum mismatch via retries)
-# - removed duplicate packages & duplicate gd configure line
-# - removed nodejs here (installed later from NodeSource 20.x)
-# - added libicu-dev required for intl extension
-# - cleans apt lists after installation to keep image smaller & avoid stale indexes
-RUN set -eux; \
-    rm -rf /var/lib/apt/lists/*; \
-    for i in 1 2 3; do apt-get update && break || (echo 'APT update failed – retrying' && sleep 8); done; \
-    apt-get install -y --no-install-recommends \
-        unzip cron ghostscript zip curl git gnupg2 \
-        apt-transport-https unixodbc unixodbc-dev imagemagick \
-        supervisor lsb-release libwebp-dev libzip-dev \
-        libpng-dev libjpeg-dev pdftk libfreetype6-dev \
-        libxml2-dev libonig-dev libicu-dev wget ca-certificates \
-        libssl-dev software-properties-common \
-        libc-client-dev libkrb5-dev libgssapi-krb5-2 \
-        poppler-utils tesseract-ocr tesseract-ocr-eng libtesseract-dev \
-    ; \
-    docker-php-ext-configure gd --with-freetype --with-jpeg; \
-    docker-php-ext-configure imap --with-kerberos --with-imap-ssl; \
-    docker-php-ext-install -j"$(nproc)" mbstring zip exif bcmath gd intl imap; \
-    rm -rf /var/lib/apt/lists/*
+# Install libc-client from Debian Bookworm (needed for PHP IMAP)
+RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.list.d/bookworm.list \
+    && apt-get update \
+    && apt-get install -y libc-client2007e-dev libkrb5-dev \
+    && rm -rf /etc/apt/sources.list.d/bookworm.list
+
+# Configure PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
 
 # Add Microsoft SQL Server repository and key
-RUN set -eux; \
-    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg; \
-    curl -fsSL https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list; \
-    for i in 1 2 3; do apt-get update && break || (echo 'APT update (mssql) failed – retrying' && sleep 8); done; \
-    ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18 mssql-tools18; \
-    pecl install pdo_sqlsrv; \
-    docker-php-ext-enable pdo_sqlsrv; \
-    rm -rf /var/lib/apt/lists/*
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
+    curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 && \
+    pecl install pdo_sqlsrv && \
+    docker-php-ext-enable pdo_sqlsrv
 
-# Install Node.js 20 (needed for Puppeteer) – isolated so failures don't invalidate earlier layer
-RUN set -eux; \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; \
-    apt-get install -y --no-install-recommends nodejs; \
-    npm install -g npm@latest; \
-    rm -rf /var/lib/apt/lists/*
+# Install Node.js 20 (needed for Puppeteer)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest
 
 # Install Chromium for headless browser testing
-RUN set -eux; \
-    for i in 1 2 3; do apt-get update && break || (echo 'APT update (chromium) failed – retrying' && sleep 8); done; \
-    apt-get install -y --no-install-recommends chromium chromium-driver; \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    chromium chromium-driver \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
