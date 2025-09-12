@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\StoreThirdPartyRequest;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyRequest;
 use App\Models\ThirdParty\ThirdParties;
+use Illuminate\Support\Facades\DB;
 use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,12 +24,12 @@ class ThirdPartyWebController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         if ($request->ajax()) {
-            $query = ThirdParties::query()
+            $query = ThirdParties::query()->with('types')
                 ->select([
                     'Id',
                     'ThirdPartyName',
                     'Country',
-                    'ThirdPartyType',
+                    'ThirdPartyType', // legacy
                     'ApprovalStatus',
                     'BusinessType',
                     'IsPrequalified',
@@ -47,7 +48,12 @@ class ThirdPartyWebController extends Controller
             }
 
             if ($request->filled('type')) {
-                $query->where('ThirdPartyType', $request->input('type'));
+                $typeFilter = $request->input('type');
+                if (is_numeric($typeFilter)) {
+                    $query->whereHas('types', fn($q) => $q->where('t_ThirdPartyTypes.TypeId', $typeFilter));
+                } else {
+                    $query->where('ThirdPartyType', $typeFilter); // legacy fallback
+                }
             }
 
             if ($request->filled('status')) {
@@ -55,7 +61,13 @@ class ThirdPartyWebController extends Controller
             }
 
             return DataTables::of($query)
-                ->addColumn('ThirdPartyType', fn(ThirdParties $thirdParty) => $thirdParty->ThirdPartyType?->label() ?? 'N/A')
+                ->addColumn('ThirdPartyType', function (ThirdParties $thirdParty) {
+                    $codes = $thirdParty->types->pluck('Code')->filter()->unique();
+                    if ($codes->isNotEmpty()) {
+                        return $codes->join(', ');
+                    }
+                    return $thirdParty->ThirdPartyType?->label() ?? 'N/A'; // legacy fallback
+                })
                 ->addColumn('BusinessType', fn(ThirdParties $thirdParty) => $thirdParty->BusinessType?->label() ?? 'N/A')
                 ->addColumn('ApprovalStatus', fn(ThirdParties $thirdParty) => $thirdParty->ApprovalStatus?->label() ?? $thirdParty->ApprovalStatus?->value ?? 'N/A')
                 ->addColumn('IsPrequalified', fn(ThirdParties $thirdParty) => $thirdParty->IsPrequalified ? 'Yes' : 'No')
@@ -77,7 +89,17 @@ class ThirdPartyWebController extends Controller
     public function store(StoreThirdPartyRequest $request): RedirectResponse
     {
         try {
-            $party = ThirdParties::create($request->validated());
+            $data = $request->validated();
+            $typeId = $data['ThirdPartyType'] ?? null; // numeric TypeId now
+            unset($data['ThirdPartyType']);
+            $party = ThirdParties::create($data);
+            if ($typeId) {
+                DB::table('t_ThirdPartyType_ThirdParties')->insert([
+                    'TypeId' => $typeId,
+                    'ThirdPartyId' => $party->Id,
+                    'CreatedOn' => now(),
+                ]);
+            }
             return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
                 ->with('success', 'Third party created successfully.');
         } catch (\Exception $e) {
@@ -90,6 +112,7 @@ class ThirdPartyWebController extends Controller
 
     public function show(ThirdParties $party): View
     {
+        $party->loadMissing('types');
         return view('thirdparty.parties.show', compact('party'));
     }
 
@@ -97,6 +120,7 @@ class ThirdPartyWebController extends Controller
     {
         $businessTypes = BusinessTypeEnum::cases();
         $approvalStatuses = ThirdPartyApprovalStatusEnum::cases();
+        $party->loadMissing('types');
         return view('thirdparty.parties.edit', compact('party', 'businessTypes', 'approvalStatuses'));
     }
 
