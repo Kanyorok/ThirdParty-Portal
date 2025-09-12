@@ -3,7 +3,11 @@ FROM php:8.3-apache-bookworm
 
 # Install system dependencies including imap + Tesseract
 RUN set -eux; \
-    apt-get update && apt-get install -y --no-install-recommends \
+    rm -rf /var/lib/apt/lists/*; \
+    apt-get clean; \
+    apt-get update -o Acquire::CompressionTypes::Order::=gz; \
+    apt-get update -o Acquire::http::No-Cache=True -o Acquire::http::Pipeline-Depth=0; \
+    apt-get install -y --no-install-recommends \
         unzip cron poppler-utils ghostscript zip curl git gnupg2 \
         apt-transport-https unixodbc unixodbc-dev imagemagick \
         supervisor lsb-release libwebp-dev libzip-dev \
@@ -12,10 +16,11 @@ RUN set -eux; \
         libssl-dev software-properties-common \
         libc-client-dev libkrb5-dev libgssapi-krb5-2 \
         tesseract-ocr tesseract-ocr-eng libtesseract-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-install -j"$(nproc)" mbstring zip exif bcmath gd intl imap \
-    && rm -rf /var/lib/apt/lists/*
+    ; \
+    docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    docker-php-ext-configure imap --with-kerberos --with-imap-ssl; \
+    docker-php-ext-install -j"$(nproc)" mbstring zip exif bcmath gd intl imap; \
+    rm -rf /var/lib/apt/lists/*
 
 # Add Microsoft SQL Server repository and key
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
