@@ -5,102 +5,102 @@
 
 @section('content')
 <div class="container mt-4" style="max-width: 1000px;">
-    <h4 class="mb-3">📄 Lease Renewal Details</h4>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
 
-                <div class="col">
-                    <strong>Lease Number</strong>
-                    <p class="mb-1">{{ $leaserenewal->lease->LeaseNumber ?? '-' }}</p>
+            {{-- Lease Renewal Information --}}
+            <h6 class="mb-3 text-dark">Lease Renewal Information</h6>
+            <hr>
+            <div class="row g-3 text-dark">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Lease Number</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->lease->LeaseNumber ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Tenant Name</strong>
-                    <p class="mb-1">{{ $leaserenewal->lease->tenant->TenantName ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Tenant</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->lease->tenant->TenantName ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Property Leased</strong>
-                    <p class="mb-1">{{ $leaserenewal->lease->property->PropertyName ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Property</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->lease->property->PropertyName ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Payment Frequency</strong>
-                    <p class="mb-1">{{ $leaserenewal->paymentFrequency->Description ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Payment Frequency</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->paymentFrequency->Description ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>End Date of Current Lease</strong>
-                    <p class="mb-1">{{ $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('d/m/Y') : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">End Date of Current Lease</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('d M Y') : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>New Start Date</strong>
-                    <p class="mb-1">{{ $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('d/m/Y') : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">New Start Date</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>New End Date</strong>
-                    <p class="mb-1">{{ $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('d/m/Y') : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">New End Date</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>New Monthly Rent</strong>
-                    <p class="mb-1">{{ $leaserenewal->NewMonthlyRent ? number_format($leaserenewal->NewMonthlyRent, 2) : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">New Monthly Rent (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->NewMonthlyRent ? number_format($leaserenewal->NewMonthlyRent, 2) : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Service Charge</strong>
-                    <p class="mb-1">{{ $leaserenewal->ServiceCharge ? number_format($leaserenewal->ServiceCharge, 2) : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Service Charge (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->ServiceCharge ? number_format($leaserenewal->ServiceCharge, 2) : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Parking Fee</strong>
-                    <p class="mb-1">{{ $leaserenewal->ParkingFee ? number_format($leaserenewal->ParkingFee, 2) : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Parking Fee (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->ParkingFee ? number_format($leaserenewal->ParkingFee, 2) : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Other Charges</strong>
-                    <p class="mb-1">{{ $leaserenewal->OtherCharges ? number_format($leaserenewal->OtherCharges, 2) : '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Remarks</strong>
-                    <p class="mb-1">{{ $leaserenewal->Remarks ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Other Charges (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                        value="{{ $leaserenewal->OtherCharges ? number_format($leaserenewal->OtherCharges, 2) : '-' }}" readonly>
                 </div>
             </div>
 
-            <hr class="my-3">
-
-            <h6 class="mb-2">Audit Information</h6>
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
-                <div class="col">
-                    <strong>Created By</strong>
-                    <p class="mb-1">{{ $leaserenewal->createdByUser->Name ?? '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Created On</strong>
-                    <p class="mb-1">{{ $leaserenewal->CreatedOn ? Carbon::parse($leaserenewal->CreatedOn)->format('d M Y H:i') : '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Modified By</strong>
-                    <p class="mb-1">{{ $leaserenewal->modifiedByUser->Name ?? '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Modified On</strong>
-                    <p class="mb-1">{{ $leaserenewal->ModifiedOn ? Carbon::parse($leaserenewal->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
-                </div>
+            {{-- Remarks --}}
+            <h6 class="mt-4 mb-2 text-dark">Remarks</h6>
+            <div class="mb-3">
+                <textarea class="form-control bg-light text-dark" rows="3" readonly>
+                    {{ $leaserenewal->Remarks ?? '—' }}
+                </textarea>
             </div>
         </div>
 
-        <div class="card-footer text-end py-2">
-            <a href="{{ route('renewlease.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
-            <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-primary">✏ Edit</a>
+        {{-- Footer with Audit Info + Actions --}}
+        <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
+            <div>
+                Created by <strong>{{ $leaserenewal->createdByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $leaserenewal->CreatedOn ? Carbon::parse($leaserenewal->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                | Modified by <strong>{{ $leaserenewal->modifiedByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $leaserenewal->ModifiedOn ? Carbon::parse($leaserenewal->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+            </div>
+            <div>
+                <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-dark">Edit</a>
+                <a href="{{ route('renewlease.index') }}" class="btn btn-sm btn-dark">Back</a>
+            </div>
         </div>
     </div>
 </div>

@@ -21,11 +21,11 @@
                                 <option
                                     value="{{ $maintenancerequest->Id }}"
                                     data-property="{{ $maintenancerequest->property->PropertyName ??'_' }}"
-                                    data-block="{{ $maintenancerequest->block->BlockName ?? '' }}"
-                                    data-floor="{{ $maintenancerequest->floor->FloorLabel ?? '' }}"
-                                    data-unit="{{ $maintenancerequest->unit->UnitCode ?? ''}}"
-                                    data-description="{{ $maintenancerequest->IssueDescription }}">
-                                    {{ $maintenancerequest->RequestNumber }} 
+                                    data-block="{{ $maintenancerequest->block->BlockName ?? '-' }}"
+                                    data-floor="{{ $maintenancerequest->floor->FloorLabel ?? '-' }}"
+                                    data-unit="{{ $maintenancerequest->unit->UnitCode ?? '-'}}"
+                                    data-description="{{ $maintenancerequest->IssueDescription ?? '-'}}">
+                                    {{ $maintenancerequest->RequestNumber ?? '-'}} 
                                 </option>
                             @endforeach
                         </select>
@@ -41,22 +41,22 @@
                     <div class="col-md-3">
                         <label class="form-label">Property</label>
                         <input type="text" id="property-display" class="form-control" readonly>
-                        <input type="hidden" name="Property" id="property-id" value="{{ old('Property', $property->Id ?? '') }}">
+                        <input type="hidden" name="Property" id="property-id" value="{{ old('Property', $property->Id ?? '-') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Block</label>
                         <input type="text" id="block-display" class="form-control" readonly>
-                        <input type="hidden" name="Block" id="block-id" value="{{ old('Block', $block->Id ?? '') }}">
+                        <input type="hidden" name="Block" id="block-id" value="{{ old('Block', $block->Id ?? '-') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Floor</label>
                         <input type="text" id="floor-display" class="form-control" readonly>
-                        <input type="hidden" name="Floor" id="floor-id" value="{{ old('Floor', $floor->Id ?? '') }}">
+                        <input type="hidden" name="Floor" id="floor-id" value="{{ old('Floor', $floor->Id ?? '-') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Unit</label>
                         <input type="text" id="unit-display" class="form-control" readonly>
-                        <input type="hidden" name="Unit" id="unit-id" value="{{ old('Unit', $unit->Id ?? '') }}">
+                        <input type="hidden" name="Unit" id="unit-id" value="{{ old('Unit', $unit->Id ?? '-') }}">
                     </div>
                 </div>
 
@@ -121,7 +121,7 @@
 
                 <!-- Submit -->
                 <div class="text-end">
-                    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">🔧 Assign Task</button>
+                    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Assign Task</button>
                 </div>
             </div>
         </div>

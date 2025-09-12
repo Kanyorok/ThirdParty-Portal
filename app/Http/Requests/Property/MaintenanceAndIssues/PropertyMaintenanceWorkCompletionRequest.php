@@ -28,7 +28,8 @@ class PropertyMaintenanceWorkCompletionRequest extends FormRequest
             'PartsUsed' => 'nullable|string|max:255',
             'Cost' => 'nullable|integer',
             'FinalStatus' => 'required|exists:t_CodeDetails,ID',
-            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'Document' => 'nullable|array',
+            'Document.*' => 'file|max:9000',
         ];
     }
 }

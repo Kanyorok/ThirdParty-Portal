@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container mt-4">
-    <h4>🧾 Assess Claim – #{{ $claim->policy->PolicyNumber }}</h4>
+    <h4>Assess Claim – #{{ $claim->policy->PolicyNumber }}</h4>
 
         <form method="POST" action="{{ route('bancassurance.claims.assess', $claim->Id) }}">
             @csrf
@@ -44,7 +44,7 @@
         </div>
 
             <div class="mb-3 text-end">
-                <button type="submit" class="btn btn-success">✅ Submit Assessment</button>
+                <button type="submit" class="btn btn-success">Submit Assessment</button>
             </div>
         </form>
     </div>

@@ -79,26 +79,27 @@ class PropertyNewLeaseController extends Controller
         $floor = PropertyFloor::findOrFail($data['FloorID']);
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $paymentFrequency = CodeDetail::findOrFail($data['PaymentFrequency']);
-        $document = $request->file('Document');
+        foreach ($request->file('Document', []) as $uploadedFile) {
         $this->service::create(
             $tenant,
             $property,
             $block,
             $floor,
             $unit,
-            $startDate = new DateTime($data['StartDate']),
-            $endDate = new DateTime($data['EndDate']),
+            new DateTime($data['StartDate']),
+            new DateTime($data['EndDate']),
             $paymentFrequency,
-            $monthlyRent = $data['MonthlyRent'],
-            $deposit = $data['Deposit'],
-            $serviceCharge = $data['ServiceCharge'],
-            $parkingFee = $data['ParkingFee'],
-            $otherCharges = $data['OtherCharges'],
-            $dueDay = $data['DueDay'],
-            $specialTerms = $data['SpecialTerms'] ?? '',
+            $data['MonthlyRent'],
+            $data['Deposit'],
+            $data['ServiceCharge'],
+            $data['ParkingFee'],
+            $data['OtherCharges'],
+            $data['DueDay'],
+            $data['SpecialTerms'] ?? '',
             $request->user(),
-            $document
+            $uploadedFile
         );
+    }
         return redirect()->route('addlease.index')->with('success', 'Lease created successfully');
     }
 
@@ -127,7 +128,6 @@ class PropertyNewLeaseController extends Controller
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $frequency = CodeDetail::findOrFail($data['PaymentFrequency']);
         $user = auth()->user();
-        $document = $request->file('Document');
 
         $this->service::update(
             lease: $lease,
@@ -145,9 +145,30 @@ class PropertyNewLeaseController extends Controller
             OtherCharges: (float)$data['OtherCharges'],
             DueDay: (int)$data['DueDay'],
             SpecialTerms: $data['SpecialTerms'] ?? '',
-            user: $user,
-            document: $document
+            user: $user
         );
+
+        foreach ($request->file('Document', []) as $uploadedFile) {
+        $this->service::update(
+            lease: $lease,
+            PropertyID: $property,
+            BlockID: $block,
+            FloorID: $floor,
+            Unit: $unit,
+            StartDate: new \DateTime($data['StartDate']),
+            EndDate: new \DateTime($data['EndDate']),
+            PaymentFrequency: $frequency,
+            MonthlyRent: (float)$data['MonthlyRent'],
+            Deposit: (float)$data['Deposit'],
+            ServiceCharge: (float)$data['ServiceCharge'],
+            ParkingFee: (float)$data['ParkingFee'],
+            OtherCharges: (float)$data['OtherCharges'],
+            DueDay: (int)$data['DueDay'],
+            SpecialTerms: $data['SpecialTerms'] ?? '',
+            user: $user,
+            document: $uploadedFile
+        );
+    }
 
         return redirect()->route('addlease.index')->with('success', 'Lease updated successfully.');
     }

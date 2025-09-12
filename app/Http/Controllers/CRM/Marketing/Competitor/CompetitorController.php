@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\CRM\Marketing\Competitor;
 
+use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Marketing\CompetitorRequest;
+use App\Models\Core\Country;
 use App\Models\ThirdParies\Competitor;
 use App\Services\LocalityService;
 use Exception;
@@ -41,7 +43,8 @@ class CompetitorController extends Controller
                 ])->rawColumns(['CompetitorName', 'photo'])->make();
         }
 
-        return view('crm.marketing.competitors.index');
+        return view('crm.marketing.competitors.index')
+            ->with('Countries', Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get());
     }
 
     /**
@@ -52,9 +55,8 @@ class CompetitorController extends Controller
         $actor = $request->user();
         try {
             $request->save($actor);
-        } catch (Exception $e) {
-            Log::error('Error adding a competitor ' . $e->getMessage());
-            return $this->errored('unexpected error adding competitor, try again latter');
+        } catch (ErroredException $e) {
+            return $e->toJson();
         }
 
         return $this->succeeded('competitor created');
@@ -65,8 +67,10 @@ class CompetitorController extends Controller
      */
     public function show(Competitor $competitor): View
     {
+        $competitor->load(['location', 'photo', 'country']);
         $location = (new LocalityService($competitor->location))->getLocation();
         return view('crm.marketing.competitors.show', compact('competitor', 'location'))
+            ->with('Countries', Country::query()->select(['Name', 'CountryCode', 'Id', 'PhoneCode', 'Flag'])->whereHas('localities')->orderBy('t_Countries.Name')->get())
             ->with('hasProgress', (is_array($competitor->Processing)));
     }
 
@@ -78,9 +82,8 @@ class CompetitorController extends Controller
         $actor = $request->user();
         try {
             $request->save($actor, $competitor);
-        } catch (Throwable|Exception $e) {
-            Log::error('Error adding a competitor ' . $e->getMessage());
-            return $this->errored('unexpected error updating competitor, try again latter');
+        } catch (ErroredException $e) {
+            return $e->toJson();
         }
 
         return $this->succeeded('competitor updated successfully.', route('competitors.show', [$competitor->CompetitorID]));

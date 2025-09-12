@@ -42,7 +42,7 @@
             <input type="date" name="ClaimDate" class="form-control" required>
         </div>
 
-        <div class="mb-3">
+        {{-- <div class="mb-3">
             <label for="Status" class="form-label">Status <span class="text-danger">*</span></label>
             <select name="Status" class="form-select" required>
                 <option value="">-- Select Status --</option>
@@ -50,9 +50,9 @@
                     <option value="{{ $status->ID }}">{{ $status->Description }}</option>
                 @endforeach
             </select>
-        </div>
+        </div> --}}
         <button type="submit" class="btn btn-primary">Submit Claim</button>
-        <a href="{{ route('bancassurance.claims.index') }}" class="btn btn-secondary">Back to Claims</a>
+        <a href="{{ route('bancassurance.claims.index') }}" class="btn btn-secondary">Back</a>
     </form>
 </div>
 @endsection

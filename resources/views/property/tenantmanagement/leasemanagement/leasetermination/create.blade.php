@@ -4,7 +4,6 @@
 
 @section('content')
     <div class="container mt-4">
-        <h4 class="fw-bold mb-3">Terminate Lease</h4>
 
         <form action="{{ route('terminatelease.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -61,7 +60,7 @@
                     <!-- Document Upload -->
                     <div class="mb-3">
                         <label class="form-label">Upload Supporting Documents</label>
-                        <input type="file" name="Document" class="form-control" multiple>
+                        <input type="file" name="Document[]" class="form-control" multiple>
                         <small class="text-muted">e.g. Lease Document, Contract Termination Documents</small>
                     </div>
 

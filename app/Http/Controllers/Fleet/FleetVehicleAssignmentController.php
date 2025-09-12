@@ -23,7 +23,7 @@ class FleetVehicleAssignmentController extends Controller
 
     public function create($id)
     {
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
         $branches = Branch::all(); // No IsActive filter
         $users = User::all(); // You may filter based on roles or branch
 

@@ -5,7 +5,7 @@
   <form action="{{ route('propertycategory.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="card shadow">
-      <div class="card-header bg-light fw-bold">➕ Property Details</div>
+      <div class="card-header bg-light fw-bold">Property Category Details</div>
       <div class="card-body">
         <div class="row g-3 mb-3">
           <div class="col-md-6">
@@ -17,9 +17,7 @@
             <textarea name="Description" class="form-control" rows="3"></textarea>
           </div>
         </div>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-            ➕ Add CATEGORY
-        </button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Add Category</button>
           <a href="{{ route('propertycategory.index') }}" class="btn btn-secondary">Cancel</a>
       </div>
   </form>

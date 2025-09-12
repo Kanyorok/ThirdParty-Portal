@@ -73,7 +73,9 @@
                         </div>
                         <div class="alert-message">
                             <strong>Note!</strong> this file must have a row with header of <code>MemberID</code> which
-                            has all the memberId
+                            has all the memberId. <a target="_blank" download=""
+                                                     href="{{ asset('assets/samples/MarketingListuploadSample.csv') }}">download
+                                sample</a>
                         </div>
                     </div>
 
@@ -236,7 +238,7 @@
                                 </button>
                                 <button class="btn btn-primary float-end" id="updateListBtn" type="submit"><i
                                         class="fas fa-save"></i>
-                                    update {{ \Illuminate\Support\Str::limit($list->Label ,20) }}
+                                    update {{ Str::limit($list->Label ,20) }}
                                 </button>
                             </div>
                         </form>

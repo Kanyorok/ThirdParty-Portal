@@ -5,7 +5,7 @@
 <div class="container mt-4">
 
 <a href="{{ route('assignrequest.create') }}" class="btn btn-primary mb-3">Assign Task</a>
-  <h4 class="fw-bold mb-3">Maintenance Assignments</h4>
+<p><small>The list below is of tasks that have been assigned</small></p>
 
     @if($assignments->count())
   <table class="table table-bordered table-striped align-middle">
@@ -34,7 +34,7 @@
           <td>
           <a href="{{ route('assignrequest.show', $assignment->Id) }}" class="btn btn-sm btn-primary">View</a>
           <a href="{{ route('assignrequest.edit', $assignment->Id) }}" class="btn btn-info btn-sm">Edit</a>
-          <a href="#" class="btn btn-success btn-sm">Complete</a>
+          <a href="{{ route('workcompletion.create') }}" class="btn btn-success btn-sm">Complete</a>
           <form action="{{ route('assignrequest.destroy', $assignment->Id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this lease?');" class="d-inline">
               @csrf
               @method('DELETE')

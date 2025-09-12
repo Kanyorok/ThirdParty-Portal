@@ -25,7 +25,7 @@ class CreditNoteController extends Controller
 
         $notes = FinanceCDNotes::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description','ApprovalStatus')
-            ->get();
+            ->where('NoteType','credit')->latest()->get();
         return view('finance.accountspayable.creditnote.index', compact('notes','invoices'));
     }
 

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Property Management')
+@section('title', 'Property Type')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
@@ -8,7 +8,7 @@
 
 <a href="{{ route('propertytype.create') }}" class="btn btn-primary mb-3">Add Type</a>
 
-  <h4 class="fw-bold mb-3">📋 Property Types</h4>
+<p><small>This is a list of property types linked to specific categories</small></p>
 @if($types->count())
     <table id="propertytype" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
@@ -24,8 +24,8 @@
         @foreach ($types as $Index => $type)
             <tr>
                 <td>{{ $Index + 1 }}</td>
-                <td>{{ $type->PropertyTypeName }}</td>
-                <td>{{ $type->propertycategory->Name ?? '--' }}</td>
+                <td>{{ $type->PropertyTypeName ?? '-' }}</td>
+                <td>{{ $type->propertycategory->Name ?? '-' }}</td>
                 <td>{{ $type->Description }}</td>
                 <td>
                     <a href="{{ route('propertytype.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>

@@ -67,10 +67,12 @@ class FleetVehicle extends Model
         return $this->belongsTo(CodeDetail::class, 'VehicleType', 'ID');
     }
 
+
     public function tripLogs()
-    {
-        return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
-    }
+{
+    return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
+}
+
 
     public function maintenanceSchedules()
     {

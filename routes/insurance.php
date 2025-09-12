@@ -116,18 +116,22 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('/', [ClaimController::class, 'index'])->name('index');
         Route::get('create', [ClaimController::class, 'create'])->name('create');
         Route::post('store', [ClaimController::class, 'store'])->name('store');
-        Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
-        Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
+        Route::get('list', [ClaimController::class, 'assessmentlist'])->name('assessment_list');
+        Route::get('list/{id}', [ClaimController::class, 'assessmentshow'])->name('assessment_show');
+        Route::get('edit/{id}', [ClaimController::class, 'assessmentedit'])->name('assessment_edit');
+        Route::put('update/{id}', [ClaimController::class, 'assessmentupdate'])->name('assessment_update');
+        // Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
+        // Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
         Route::get('{id}/assess', [ClaimController::class, 'assessForm'])->name('assessForm');
         Route::post('{id}/assess/store', [ClaimController::class, 'storeAssessment'])->name('assess');
 
         // ✅ Fix these two lines:
-        Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
-        Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
-        Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
-        Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
-        Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
-    Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.claims.index');
+        // Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
+        // Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
+        // Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
+        // Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
+        // Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
+        // Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.claims.index');
         Route::get('{id}/close', [ClaimClosureController::class, 'closeForm'])->name('closeForm');
         Route::post('{id}/close', [ClaimClosureController::class, 'storeClosure'])->name('storeClosure');
         Route::get('closed', [ClaimClosureController::class, 'closedClaimsIndex'])->name('closed');

@@ -8,7 +8,6 @@
   @endif
 
   <div class="container mt-4">
-    <h4 class="fw-bold mb-3">Edit Tenant Payment</h4>
 
     <form action="{{ route('rentreceipt.update', $receipts->Id) }}" method="POST">
       @csrf

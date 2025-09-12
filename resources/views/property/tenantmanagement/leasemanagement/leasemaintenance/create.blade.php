@@ -11,7 +11,6 @@
     </div>
   @endif
   <div class="container mt-4">
-    <h4 class="fw-bold mb-3">New Lease Agreement</h4>
 
     <form method="POST" action="{{ route('addlease.store') }}" enctype="multipart/form-data">
       @csrf
@@ -23,7 +22,7 @@
           <!-- Tenant Selection -->
           <div class="row g-3 mb-3">
             <div class="col-md-6">
-              <label class="form-label">Select Tenant</label>
+              <label class="form-label">Select Tenant<span class="text-danger">*</span></label>
               <select name="Tenant" class="form-select" required>
                 <option value="">-- Select Tenant --</option>
                 @foreach ($newtenants as $newtenant)
@@ -131,7 +130,7 @@
           <!-- Document Upload -->
           <div class="mb-3">
             <label class="form-label">Upload Lease Document</label>
-            <input type="file" name="Document" class="form-control" multiple>
+            <input type="file" name="Document[]" class="form-control" multiple>
             <small class="text-muted">e.g. upload Lease Document</small>
           </div>
 
