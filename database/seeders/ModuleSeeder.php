@@ -126,11 +126,8 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],
             ['ModuleID' => 303200, 'Name' => 'Prequalification', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => null],
             ['ModuleID' => 303210, 'Name' => 'Prequalification Rounds', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.prequalification-rounds.index'],
-            // ['ModuleID' => 303210, 'Name' => 'Prequalification Periods', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqrounds.index'],
-            // ['ModuleID' => 303220, 'Name' => 'Prequalification Criteria', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqcriteria.index'],
             ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.applications.index'],
             ['ModuleID' => 303240, 'Name' => 'Evaluation & Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqevaluation.index'],
-            ['ModuleID' => 303250, 'Name' => 'Prequalified Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqsuppliers.index'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 305060, 'Name' => 'Supplier Categories', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'proc.supplier-cat.index'],
 
@@ -420,8 +417,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 603100, 'Name' => 'Trip Logs', 'Icon' => '', 'Description' => 'Trip and Usage Logs for Drivers and Vehicles', 'ParentID' => 603000, 'Route' => 'fleet.trip_logs.index'],
             ['ModuleID' => 603200, 'Name' => 'Route Planner & Optimizer', 'Icon' => '', 'Description' => 'Plan optimal routes with waypoints and map previews', 'ParentID' => 603000, 'Route' => 'fleet.route_planner.index'],
             ['ModuleID' => 603300, 'Name' => 'Vehicle Requests', 'Icon' => '', 'Description' => 'Staff requests for vehicles and approval flow', 'ParentID' => 603000, 'Route' => 'fleet.vehicle_requests.index'],
-            ['ModuleID' => 603400, 'Name' => 'Vehicle Check-Out/Check-In', 'Icon' => '', 'Description' => 'Vehicle Inspection, Pre and Post Trip', 'ParentID' => 603000, 'Route' => 'fleet.vehicle_inspection.index'],
-
+                
             //Maintenance
             ['ModuleID' => 604000, 'Name' => 'Maintenance', 'Icon' => '', 'Description' => '', 'ParentID' => 600000, 'Route' => null],
             ['ModuleID' => 604100, 'Name' => 'Maintenance Schedule', 'Icon' => '', 'Description' => 'Schedule upcoming maintenance or inspections', 'ParentID' => 604000, 'Route' => 'fleet.maintenance_schedule.index'],
@@ -555,7 +551,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 904100, 'Name' => 'Premium Payments', 'Icon' => null, 'Description' => 'View all premium payments made by customers', 'Route' => 'bancassurance.premiums.index', 'ParentID' => 904000],
             ['ModuleID' => 905000, 'Name' => 'Claims Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
             ['ModuleID' => 905100, 'Name' => 'Claims Register', 'Icon' => null, 'Description' => 'View all submitted claims', 'Route' => 'bancassurance.claims.index', 'ParentID' => 905000],
-            ['ModuleID' => 905200, 'Name' => 'Claims Assessment', 'Icon' => null, 'Description' => 'Assess and decide on initiated claims', 'Route' => 'bancassurance.claims.index', 'ParentID' => 905000],
+            ['ModuleID' => 905200, 'Name' => 'Claims Assessment', 'Icon' => null, 'Description' => 'Assess and decide on initiated claims', 'Route' => 'bancassurance.claims.assessment_list', 'ParentID' => 905000],
             //['ModuleID' => 905300, 'Name' => 'Claims Approval', 'Icon' => null, 'Description' => 'List claims awaiting approval', 'Route' => 'bancassurance.claims.approvalQueue', 'ParentID' => 905000],
             ['ModuleID' => 905400, 'Name' => 'Claim Payments', 'Icon' => null, 'Description' => 'View and track settled claim payments', 'Route' => 'bancassurance.claims.payments.index', 'ParentID' => 905000],
             ['ModuleID' => 905500, 'Name' => 'Closed Claims', 'Icon' => null, 'Description' => 'View Closed Claims', 'Route' => 'bancassurance.claims.closed', 'ParentID' => 905000],

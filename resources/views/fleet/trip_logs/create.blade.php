@@ -33,9 +33,12 @@
 
         <div class="col-md-4">
             <label for="VehicleID" class="form-label">Select Vehicle</label>
-            <select name="VehicleID" id="VehicleID" class="form-select" required>
-                <option value="">-- Select Vehicle --</option>
-            </select>
+              <select name="VehicleID" id="VehicleID" class="form-select" required>
+                        <option value="">-- Select Vehicle --</option>
+                        @foreach($vehicles as $vehicle)
+                            <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
+                        @endforeach
+                    </select>
         </div>
 
 
@@ -158,7 +161,7 @@
         vehicles.forEach(vehicle => {
             const option = document.createElement('option');
             option.value = vehicle.Id;
-            option.textContent = `${vehicle.RegistrationNo} - ${vehicle.Make} ${vehicle.Model}`;
+            option.textContent = `${vehicle.RegistrationNo}`;
             vehicleSelect.appendChild(option);
         });
     }

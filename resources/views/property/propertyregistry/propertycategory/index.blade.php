@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Property Management')
+@section('title', 'Property Category')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
@@ -8,7 +8,7 @@
 
 <a href="{{ route('propertycategory.create') }}" class="btn btn-primary mb-3">Add Category</a>
 
-  <h4 class="fw-bold mb-3">📋 Property Categories</h4>
+<p><small>This screen displays a list of property categories</small></p>
     @if($categories->count())
         <table id="propertycategory" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
@@ -23,9 +23,9 @@
 
     @foreach ($categories as $category)
         <tr>
-            <td>{{ $loop->iteration }}</td>
-            <td>{{ $category->Name }}</td>
-            <td>{{ $category->Description }}</td>
+            <td>{{ $loop->iteration ?? '-' }}</td>
+            <td>{{ $category->Name ?? '-'}}</td>
+            <td>{{ $category->Description ?? '-' }}</td>
             <td>
                 <a href="{{ route('propertycategories.update', $category->Id) }}"
                    class="btn btn-sm btn-warning">Edit</a>

@@ -8,7 +8,7 @@
 
     <a href="{{ route('addblock.create') }}" class="btn btn-primary mb-3">Add Block</a>
 
-  <h4 class="fw-bold mb-3">📋 Property Blocks</h4>
+<p><small>List of blocks in properties</small></p>
 @if($blocks->count())
         <table id="propertyblocks" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
@@ -24,9 +24,9 @@
        @foreach($blocks as $block)
        <tr>
         <td>{{ $loop->iteration }}</td>
-           <td>{{ $block->property->PropertyName }}</td>
-        <td>{{ $block->BlockName}}</td>
-        <td>{{ $block->Description}}</td>
+           <td>{{ $block->property->PropertyName ?? '-'}}</td>
+        <td>{{ $block->BlockName ?? '-'}}</td>
+        <td>{{ $block->Description ?? '-'}}</td>
         <td>
             <a href="{{ route('addblock.edit', $block->Id) }}" class="btn btn-sm btn-warning">Edit</a>
             <form action="{{ route('addblock.destroy', $block->Id) }}" method="POST" class="d-inline">

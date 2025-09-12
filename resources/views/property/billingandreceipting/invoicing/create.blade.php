@@ -13,12 +13,12 @@
 @endif
 
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">🧾 Generate Rent Invoice</h4>
+  <h4 class="fw-bold mb-3">Generate Rent Invoice</h4>
 
   <form action="{{ route('rentinvoice.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="card shadow">
-      <div class="card-header bg-light fw-bold">📄 Lease Billing Details</div>
+      <div class="card-header bg-light fw-bold">Lease Billing Details</div>
       <div class="card-body">
 
         <!-- Lease Selection -->
@@ -29,10 +29,10 @@
               <option value="">-- Select Lease --</option>
               @foreach ($newleases as $newlease)
                 <option value="{{ $newlease->Id }}"
-                        data-rent="{{ $newlease->MonthlyRent }}"
-                        data-service="{{ $newlease->ServiceCharge }}"
-                        data-parking="{{ $newlease->ParkingFee }}"
-                        data-other="{{ $newlease->OtherCharges }}">
+                        data-rent="{{ $newlease->MonthlyRent ?? '-'}}"
+                        data-service="{{ $newlease->ServiceCharge ?? '-'}}"
+                        data-parking="{{ $newlease->ParkingFee ?? '-'}}"
+                        data-other="{{ $newlease->OtherCharges ?? '-'}}">
                   LSno: {{ $newlease->LeaseNumber }} — Name: {{ $newlease->tenant->TenantName }}
                 </option>
               @endforeach
@@ -41,12 +41,12 @@
 
           <div class="col-md-3">
               <label class="form-label">Billing Month<span class="text-danger">*</span></label>
-            <input type="month" class="form-control" value="{{ old('BillingMonth', '2025-05') }}" name="BillingMonth">
+            <input type="month" class="form-control" value="{{ old('BillingMonth', now()) }}" name="BillingMonth">
           </div>
 
           <div class="col-md-3">
               <label class="form-label">Invoice Date<span class="text-danger">*</span></label>
-            <input type="date" class="form-control" value="{{ old('InvoiceDate', '2025-05-01') }}" name="InvoiceDate">
+            <input type="date" class="form-control" value="{{ old('InvoiceDate', now()) }}" name="InvoiceDate">
           </div>
         </div>
 
@@ -86,7 +86,7 @@
                     name="InvoiceNotes">{{ old('InvoiceNotes') }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">📤 Generate Invoice</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Generate Invoice</button>
 
       </div>
     </div>

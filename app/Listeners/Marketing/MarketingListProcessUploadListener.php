@@ -9,10 +9,13 @@ use App\Models\BR\Client;
 use App\Models\CRM\MarketingList;
 use App\Services\HRM\UserService;
 use App\Services\Marketing\ListService;
+use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Shuchkin\SimpleXLSXGen;
+use Throwable;
 
 class MarketingListProcessUploadListener implements ShouldQueue
 {
@@ -37,6 +40,8 @@ class MarketingListProcessUploadListener implements ShouldQueue
 
         if ($event->Type === Client::getPrimaryKey()) {
             $this->_processClients($event->list, $event->file, $event->actor);
+            unlink($event->file);
+            return;
         }
 
         $this->_completeProcessing($event->list, $event->actor, array_map('str_getcsv', file($event->file)), 0, 'Invalid or Unsupported upload file');
@@ -46,6 +51,7 @@ class MarketingListProcessUploadListener implements ShouldQueue
     private function _completeProcessing(MarketingList $list, User $actor, array $failed, int $successRate, string $notes): void
     {
         $list->update(['Processing' => null]);
+        Log::info($notes . ' -> Failed : ' . count($failed) . ' -> Success Rate : ' . $successRate . '%');
         $service = (new UserService($actor))->sendEmail(
             subject: 'Upload Processing Complete',
             body: '<div><p>Dear ' . $actor->Name . ',</p>
@@ -63,7 +69,7 @@ class MarketingListProcessUploadListener implements ShouldQueue
                 SimpleXLSXGen::fromArray($failed, "Failed Import")->saveAs($file);
                 $service?->addAttachmentContent(file_get_contents($file), ExtensionsEnum::Xlsx->getMimeType(), $list->Label . ' Failed ' . now()->format('d M Y H:i') . '.xlsx', $actor);
                 unlink($file);
-            } catch (\Exception | \Throwable) {
+            } catch (Exception | Throwable) {
             }
         }
 
@@ -74,7 +80,6 @@ class MarketingListProcessUploadListener implements ShouldQueue
     {
 
         $failed = collect();
-
         $data = array_map('str_getcsv', file($file));
         $headers = array_shift($data);
         $requiredHeaders = ['MemberID'];
@@ -102,6 +107,10 @@ class MarketingListProcessUploadListener implements ShouldQueue
                 continue;
             }
             $failed->add($ClientID);
+            $list->update(['Processing' => ['done' => $index, 'total' => $total]]);
+        }
+        if ($ClientIDs->isNotEmpty()) {
+            $service->addClients($ClientIDs->toArray(), $actor);
             $list->update(['Processing' => ['done' => $index, 'total' => $total]]);
         }
         $this->_completeProcessing($list, $actor, $failed->toArray(), ($success / $total) * 100, 'Successfully processed');

@@ -25,6 +25,7 @@ class PrequalificationApplication extends Model
     protected $fillable = [
         'SupplierID',
         'RoundID',
+        'CategoryID',
         'SubmittedOn',
         'Status',
         'CreatedBy',
@@ -55,13 +56,8 @@ class PrequalificationApplication extends Model
         return $this->hasMany(PrequalificationEvaluation::class, 'ApplicationID', 'ApplicationID');
     }
 
-    public function categories(): BelongsToMany
+    public function category()
     {
-        return $this->belongsToMany(
-            SupplierCategory::class,
-            't_PrequalificationApplicationCategories',
-            'ApplicationID',
-            'CategoryID'
-        )->withTimestamps();
+        return $this->belongsTo(SupplierCategory::class, 'CategoryID', 'SupplierCategoryID');
     }
 }

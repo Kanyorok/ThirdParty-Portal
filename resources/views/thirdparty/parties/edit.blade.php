@@ -667,27 +667,11 @@
                         </h3>
                         <div class="form-grid cols-3">
                             <div class="form-field">
-                                <label for="ThirdPartyType" class="form-label">
-                                    Third Party Type <span class="required">*</span>
-                                </label>
-                                <select class="form-control @error('ThirdPartyType') error @enderror"
-                                    id="ThirdPartyType"
-                                    name="ThirdPartyType"
-                                    required
-                                    aria-describedby="ThirdPartyType-error">
-                                    <option value="">Select Third Party Type</option>
-                                    @foreach (\App\Enums\ThirdPartyTypeEnum::cases() as $type)
-                                    <option value="{{ $type->value }}" @selected(old('ThirdPartyType', $party->ThirdPartyType?->value) === $type->value)>
-                                        {{ $type->label() }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                                @error('ThirdPartyType')
-                                <div class="form-error" id="ThirdPartyType-error">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ $message }}
+                                <label class="form-label">Third Party Types</label>
+                                <div class="form-control" style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
+                                    @php $typeCodes = $party->types->pluck('Code')->filter()->unique(); @endphp
+                                    {{ $typeCodes->isNotEmpty() ? $typeCodes->join(', ') : 'N/A' }}
                                 </div>
-                                @enderror
                             </div>
 
                             <div class="form-field">
@@ -738,24 +722,6 @@
                                 @enderror
                             </div>
 
-                            <div class="form-field">
-                                <div class="form-checkbox">
-                                    <input id="IsPrequalified"
-                                        name="IsPrequalified"
-                                        type="checkbox"
-                                        value="1"
-                                        @checked(old('IsPrequalified', $party->IsPrequalified))
-                                    class="@error('IsPrequalified') error @enderror"
-                                    aria-describedby="IsPrequalified-error">
-                                    <label for="IsPrequalified">Is Prequalified</label>
-                                </div>
-                                @error('IsPrequalified')
-                                <div class="form-error" id="IsPrequalified-error">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ $message }}
-                                </div>
-                                @enderror
-                            </div>
                         </div>
                     </div>
 

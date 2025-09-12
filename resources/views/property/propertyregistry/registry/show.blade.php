@@ -1,95 +1,102 @@
 @extends('layouts.app')
-@section('title', '')
+@section('title', 'Property Details')
 @section('content')
-<div class="container mt-4" style="max-width: 1000px;">
-    <h4 class="mb-3">Property Details</h4>
-  
-    <div class="card shadow-sm">
+<div class="container mt-4" style="max-width: 900px;">
+      
+    <div class="card shadow-sm rounded-3">
         <div class="card-body">
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6"> {{-- smaller gap & font --}}
-                
-                <div class="col">
-                    <strong>Property Name</strong>
-                    <p class="mb-1">{{ $property->PropertyName ?? '-' }}</p>
-                </div>
+            <form>
+                <div class="row g-3">
+                    {{-- Property fields --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Property Name</label>
+                        <input type="text" class="form-control" value="{{ $property->PropertyName ?? '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Property Code</strong>
-                    <p class="mb-1">{{ $property->PropertyCode ?? '-' }}</p>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Property Code</label>
+                        <input type="text" class="form-control" value="{{ $property->PropertyCode ?? '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Property Type</strong>
-                    <p class="mb-1">{{ $property->type->PropertyTypeName ?? '-' }}</p>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Property Type</label>
+                        <input type="text" class="form-control" value="{{ $property->type->PropertyTypeName ?? '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Property Category</strong>
-                    <p class="mb-1">{{ $property->propertyCategory->Name ?? '-' }}</p>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Property Category</label>
+                        <input type="text" class="form-control" value="{{ $property->propertyCategory->Name ?? '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Owner</strong>
-                    <p class="mb-1">{{ $property->Owner ?? '-' }}</p>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Owner</label>
+                        <input type="text" class="form-control" value="{{ $property->Owner ?? '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Acquisition Date</strong>
-                    <p class="mb-1">{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d M Y') : '-' }}</p>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Acquisition Date</label>
+                        <input type="text" class="form-control" value="{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d M Y') : '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Country</strong>
-                    <p class="mb-1">{{ $property->Country ?? '-' }}</p>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Country</label>
+                        <input type="text" class="form-control" value="{{ $property->Country ?? '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Town/City</strong>
-                    <p class="mb-1">{{ $property->propertyLocality->Name ?? '-' }}</p>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Town/City</label>
+                        <input type="text" class="form-control" value="{{ $property->propertyLocality->Name ?? '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Area/Locality</strong>
-                    <p class="mb-1">{{ $property->AreaLocality ?? '-' }}</p>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Area/Locality</label>
+                        <input type="text" class="form-control" value="{{ $property->AreaLocality ?? '-' }}" readonly>
+                    </div>
 
-                <div class="col">
-                    <strong>Property Description</strong>
-                    <p class="mb-1">{{ $property->PropertyDescription ?? '-' }}</p>
-                </div>
-            </div>
+                    <div class="col-12">
+                        <label class="form-label">Property Description</label>
+                        <textarea class="form-control" rows="3" readonly>{{ $property->PropertyDescription ?? '-' }}</textarea>
+                    </div>
 
-            <hr class="my-3">
-
-            <h6 class="mb-2">Audit Information</h6>
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
-                <div class="col">
-                    <strong>Created By</strong>
-                    <p class="mb-1">{{ $property->createdByUser->Name ?? '-' }}</p>
+                    <div class="col-12">
+                        <label class="form-label">Attached Documents</label>
+                        <div class="p-2 border rounded bg-light">
+                            @forelse($property->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                            @empty
+                                <span class="text-muted">No documents attached.</span>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
-
-                <div class="col">
-                    <strong>Created On</strong>
-                    <p class="mb-1">{{ $property->CreatedOn ? \Carbon\Carbon::parse($property->CreatedOn)->format('d M Y H:i') : '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Modified By</strong>
-                    <p class="mb-1">{{ $property->modifiedByUser->Name ?? '-' }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Modified On</strong>
-                    <p class="mb-1">{{ $property->ModifiedOn ? \Carbon\Carbon::parse($property->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
-                </div>
-            </div>
+            </form>
         </div>
 
-        <div class="card-footer text-end py-2">
-            <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
+        {{-- Footer Section with Audit Info + Back Button --}}
+        <div class="card-footer small bg-light text-muted">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <strong>Created By:</strong> {{ $property->createdByUser->Name ?? '-' }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Created On:</strong> {{ $property->CreatedOn ? \Carbon\Carbon::parse($property->CreatedOn)->format('d/m/Y') : '-' }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Modified By:</strong> {{ $property->modifiedByUser->Name ?? '-' }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Modified On:</strong> {{ $property->ModifiedOn ? \Carbon\Carbon::parse($property->ModifiedOn)->format('d/m/Y') : '-' }}
+                </div>
+            </div>
+
+            <div class="text-end mt-2">
+                <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
+            </div>
         </div>
     </div>
 </div>
 @endsection
 
-
+@section('scripts')
+ @include('snippets.actions.preview-files')
+@endsection

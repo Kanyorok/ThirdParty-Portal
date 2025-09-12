@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Property;
 use App\Enums\Core\PostingEnum;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionRequest;
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionService;
@@ -37,10 +36,10 @@ class PropertyMaintenanceWorkCompletionController extends Controller
 
         $requestNumber = PropertyMaintenanceAssign::findOrFail($validated['RequestNumber']);
         $finalstatus = CodeDetail::findOrFail((int)$validated['FinalStatus']);
-        $document = $request->file('Document');
 
         $user = Auth::user();
 
+        foreach ($request->file('Document', []) as $uploadedFile) {
         $workCompletion = PropertyMaintenanceWorkCompletionService::create(
             $requestNumber,
             $validated['CompletionDate'],
@@ -49,8 +48,9 @@ class PropertyMaintenanceWorkCompletionController extends Controller
             $validated['Cost'],
             $finalstatus,
             Auth::user(),
-            $document
+            $uploadedFile
         );
+    }
 
         return redirect()->route('workcompletion.index')->with('success', 'Work completion created successfully');
 

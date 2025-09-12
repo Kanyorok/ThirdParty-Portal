@@ -10,6 +10,7 @@
         <h4>Insurance Claims Register</h4>
         <a href="{{ route('bancassurance.claims.create') }}" class="btn btn-primary">Initiate New Claim</a>
     </div>
+    <p><small>This is a list of all initiated claims</small></p>
 
     <table class="table table-bordered table-striped" id="claim">
         <thead class="table-light">
@@ -18,10 +19,10 @@
                 <th>Policy No.</th>
                 <th>Claim Type</th>
                 <th>Claim Reason</th>
-                <th>Amount (KES)</th>
+                <th>Amount</th>
                 <th>Date</th>
                 <th>Status</th>
-                <th>Actions</th> {{-- Added column --}}
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>

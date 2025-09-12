@@ -25,6 +25,8 @@ class StoreSupplierCategoryRequest extends FormRequest
             'CategoryName' => ['required', 'string', 'max:200', 'unique:t_SupplierCategories,CategoryName',],
             'Description' => ['nullable', 'string', 'max:500'],
             'IsActive' => ['boolean'],
+            'item_category_ids' => ['array'],
+            'item_category_ids.*' => ['integer', 'distinct', 'exists:t_ItemCategories,Id'],
         ];
     }
 

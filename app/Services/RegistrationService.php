@@ -47,10 +47,21 @@ class RegistrationService
                 'Email' => $thirdPartyData['Email'],
                 'Phone' => $thirdPartyData['Phone'],
                 'Website' => $thirdPartyData['Website'] ?? null,
-                'ThirdPartyType' => $thirdPartyData['ThirdPartyType'],
+                // 'ThirdPartyType' removed in favour of pivot association
                 'CreatedBy' => $user->Id,
                 'ModifiedBy' => $user->Id,
             ]);
+
+            if (!empty($thirdPartyData['ThirdPartyType'])) {
+                DB::table('t_ThirdPartyType_ThirdParties')->insert([
+                    'TypeId' => $thirdPartyData['ThirdPartyType'],
+                    'ThirdPartyId' => $thirdParty->Id,
+                    'CreatedBy' => $user->Id,
+                    'ModifiedBy' => $user->Id,
+                    'CreatedOn' => now(),
+                    'ModifiedOn' => now(),
+                ]);
+            }
 
             $user->ThirdPartyId = $thirdParty->Id;
             $user->save();

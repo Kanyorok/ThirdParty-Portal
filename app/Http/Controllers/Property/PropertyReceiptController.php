@@ -174,57 +174,69 @@ class PropertyReceiptController extends Controller
 
         return view('property.billingandreceipting.receipting.edit', compact('receipts', 'invoices', 'statuses'));
     }
-    public function update(PropertyReceiptRequest $request, $id)
-    {
-        //$this->authorize(PermissionEnum::PropertyReceiptUpdate, PropertyReceipt::class);
+public function update(PropertyReceiptRequest $request, $id)
+{
+    // $this->authorize(PermissionEnum::PropertyReceiptUpdate, PropertyReceipt::class);
 
-        $validated = $request->validated();
+    try {
+        $validated      = $request->validated();
+        $receipt        = PropertyReceipt::findOrFail($id);
+        $invoice        = PropertyInvoice::findOrFail($validated['InvoiceID']);
+        $paymentMethod  = CodeDetail::findOrFail($validated['PaymentMethod']);
 
-        DB::beginTransaction();
+        // Cast numeric fields
+        $RentAmount      = floatval($validated['RentAmount']);
+        $ServicesCharge  = floatval($validated['ServicesCharge']);
+        $ParkingFee      = floatval($validated['ParkingFee']);
+        $OtherCharges    = floatval($validated['OtherCharges']);
+        $AmountPaidSoFar = floatval($validated['AmountPaidSoFar']);
+        $AmountPaidNow   = floatval($validated['AmountPaidNow']);
 
-        try {
-            $receipts = PropertyReceipt::findOrFail($id);
-            $invoice = PropertyInvoice::findOrFail($validated['InvoiceID']);
+        // Use Service to update
+        PropertyReceiptService::update(
+            $receipt,
+            $invoice,
+            $validated['BillingMonth'],
+            $validated['InvoiceDate'],
+            $RentAmount,
+            $ServicesCharge,
+            $ParkingFee,
+            $OtherCharges,
+            $validated['TotalDue'],
+            $AmountPaidSoFar,
+            $validated['Balance'],
+            $validated['PaymentDate'],
+            $AmountPaidNow,
+            $paymentMethod,
+            $validated['ReferenceNo'],
+            $validated['Remarks'] ?? '',
+            Auth::user()
+        );
 
-            $receipts->update([
-                'InvoiceID'       => $validated['InvoiceID'],
-                'BillingMonth'    => $validated['BillingMonth'],
-                'InvoiceDate'     => $validated['InvoiceDate'],
-                'RentAmount'      => $validated['RentAmount'],
-                'ServicesCharge'  => $validated['ServicesCharge'],
-                'ParkingFee'      => $validated['ParkingFee'],
-                'OtherCharges'    => $validated['OtherCharges'],
-                'TotalDue'        => $validated['TotalDue'],
-                'AmountPaidSoFar'      => $validated['AmountPaidSoFar'],
-                'Balance'         => $validated['Balance'],
-                'PaymentDate'     => $validated['PaymentDate'],
-                'AmountPaidNow'          => $validated['AmountPaidNow'],
-                'PaymentMethod'   => $validated['PaymentMethod'],
-                'ReferenceNo'     => $validated['ReferenceNo'],
-                'Remarks'         => $validated['Remarks'] ?? '',
-                'ModifiedBy'      => Auth::id(),
-            ]);
+        // --- Update Invoice Status ---
+        $totalDue  = $RentAmount + $ServicesCharge + $ParkingFee + $OtherCharges;
+        $totalPaid = PropertyReceipt::getAmountPaidSoFar($invoice->Id);
 
-            // ✅ Update status on the invoice table
-            $invoice->Status = $validated['Status'];
-            $invoice->save();
-
-            DB::commit();
-
-            activity()
-                ->performedOn($receipts)
-                ->causedBy(Auth::user())
-                ->withProperties(properties: ['action' => 'update'])
-                ->log('Updated Rent Receipt');
-
-            return redirect()->route('rentreceipt.index')->with('success', 'Rent Receipt updated successfully');
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('Failed to Update Rent Receipt: ' . $th->getMessage());
-
-            return back()->withErrors(['error' => 'Failed to update Rent Receipt'])->withInput();
+        if ($totalPaid >= $totalDue) {
+            $invoice->Status = PropertyInvoiceEnum::FullyPaid->value;
+        } elseif ($totalPaid > 0) {
+            $invoice->Status = PropertyInvoiceEnum::PartialPaid->value;
+        } else {
+            $invoice->Status = PropertyInvoiceEnum::Pending->value;
         }
+        $invoice->save();
+
+        return redirect()
+            ->route('rentreceipt.index')
+            ->with('success', 'Rent receipt updated successfully');
+    } catch (Exception $e) {
+        return redirect()
+            ->back()
+            ->with('error', 'Failed to update receipt: ' . $e->getMessage())
+            ->withInput();
     }
+}
+
 
     public function destroy($id)
     {

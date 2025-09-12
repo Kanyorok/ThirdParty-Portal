@@ -4,7 +4,7 @@
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="card-title">{{ $fleetMake->BrandName }} Details</h4>
-        <a href="{{ route('fleetmake.index') }}" class="btn btn-secondary">Back to Fleet Make/Brand List</a>
+        <a href="{{ route('fleetmake.index') }}" class="btn btn-primary">Back to Fleet Make/Brand List</a>
     </div>
 
     <div class="card">

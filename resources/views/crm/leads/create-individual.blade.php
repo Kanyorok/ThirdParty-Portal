@@ -1,4 +1,4 @@
-@php use App\Enums\LeadTypeEnum; @endphp
+@php use App\Enums\LeadTypeEnum;use App\Models\CRM\Contact; @endphp
 <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
 <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
 <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
@@ -12,12 +12,12 @@
         <input type="hidden" name="Type" class="d-none" value="{{ LeadTypeEnum::Individual->value }}">
         <input type="hidden" name="conversation" class="d-none" value="{{ $conversation }}">
         <input type="hidden" name="contact" class="d-none"
-               value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->ContactID:0 }}">
+               value="{{ ($contact instanceof Contact)?$contact->ContactID:0 }}">
         <div class="mb-3">
             <label class="form-label" for="Name">First Name <span
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Name" name="Name" required
-                   placeholder="Name" value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->Label:'' }}">
+                   placeholder="Name" value="{{ ($contact instanceof Contact)?$contact->Label:'' }}">
             <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-3">
@@ -53,9 +53,21 @@
                role="alert"></p>
         </div>
         <div class="mb-3">
+            <label for="Country" class="form-label">Country <span class="text-danger">*</span></label>
+            <select class="form-control" name="Country" id="Country" required>
+                <option disabled selected>Select Country</option>
+                @foreach($Countries as $Country)
+                    <option value="{{ $Country->CountryCode }}" data-phone="{{$Country->PhoneCode}}"
+                            data-location="{{ route('locality.select2',['country'=>$Country->CountryCode]) }}">{{ $Country->Flag}} {{ $Country->Name}}</option>
+                @endforeach
+            </select>
+            <p id="Country_error" class="invalid-feedback d-none error col-12"
+               role="alert"></p>
+        </div>
+        <div class="mb-3">
             <label for="Location" class="form-label">Location <span class="text-danger">*</span></label>
             <select class="form-control locations" name="Location" id="Location"
-                    required></select>
+                    required disabled></select>
             <p id="Location_error" class="invalid-feedback d-none error col-12"
                role="alert"></p>
         </div>
@@ -100,7 +112,7 @@
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="Phone" name="Phone"
                    placeholder="Phone Number" required
-                   value="{{ ($contact instanceof \App\Models\CRM\Contact)?$contact->Phone:'' }}">
+                   value="{{ ($contact instanceof Contact)?$contact->Phone:'' }}">
             <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
         <div class="mb-3">
@@ -161,11 +173,41 @@
             }
         });
 
-        $('.locations').select2({
-            placeholder: "Select a Town/City", minimumInputLength: 2,
+        $('#Country').select2({
+            placeholder: "Select a Country",
+            dropdownParent: $("#offcanvasMain")
+        }).on('change', function () {
+            const option = $(this).find('option:selected');
+            $('#Phone').val(option.data('phone'));
+            $('#Location').prop('disabled', false).select2('destroy').val(null).select2({
+                placeholder: "Search for the Location",
+                minimumInputLength: 2,
+                dropdownParent: $("#offcanvasMain"),
+                ajax: {
+                    url: option.data('location'),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {q: $.trim(params.term)};
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return {text: item.Name, id: item.ID}
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+        });
+        $('#Location').select2();
+
+        /*$('#Location').select2({
+            placeholder: "Select a Location", minimumInputLength: 2,
             dropdownParent: $("#offcanvasMain"),
             ajax: {
-                url: "{{ route('locality.select2') }}?type={{  \App\Enums\LocalityTypeEnum::City->value }}",
+                url: "{ { route('locality.select2') }}?type={ {  \App\Enums\LocalityTypeEnum::City->value }}",
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -180,7 +222,7 @@
                 },
                 cache: true
             }
-        });
+        });*/
 
         flatpickr(".last-contact", {
             enableTime: true,
@@ -195,7 +237,7 @@
             const response = await saveForm($(this), $('#createIndividualLeadBtn'), false, true, true);
             if (response) {
                 window.bsOffcanvas.hide();
-                @if($contact instanceof \App\Models\CRM\Contact)
+                @if($contact instanceof Contact)
                 setTimeout(() => {
                     window.location.replace(response.route);
                 }, 3000);

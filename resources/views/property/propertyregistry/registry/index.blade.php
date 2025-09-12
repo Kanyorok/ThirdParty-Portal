@@ -7,7 +7,8 @@
 
 <a href="{{ route('PropertyRegistry.create') }}" class="btn btn-primary mb-3">Add Property</a>
 
-<h4 class="fw-bold mb-3">📋 Registered Properties</h4>
+<p><small>This screen displays a list of all registered properties</small></p>
+
 @if($properties->count())
     <div class="container mt-4">
         <table id="propertyregistry" class="table table-bordered table-striped align-middle">

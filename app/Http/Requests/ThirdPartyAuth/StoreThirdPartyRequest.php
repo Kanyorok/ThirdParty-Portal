@@ -5,7 +5,7 @@ namespace App\Http\Requests\ThirdPartyAuth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Enums\BusinessTypeEnum;
-use App\Enums\ThirdPartyTypeEnum;
+// Legacy enum no longer used for validation of ThirdPartyType; now using dynamic TypeId from t_ThirdPartyTypes
 
 class StoreThirdPartyRequest extends FormRequest
 {
@@ -29,7 +29,8 @@ class StoreThirdPartyRequest extends FormRequest
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:t_ThirdParties,Email'],
             'Phone' => ['required', 'string', 'max:20'],
             'Website' => ['nullable', 'url', 'max:255'],
-            'ThirdPartyType' => ['required', Rule::enum(ThirdPartyTypeEnum::class)],
+            // Accept new numeric TypeId referencing t_ThirdPartyTypes.TypeId
+            'ThirdPartyType' => ['required', 'integer', 'exists:t_ThirdPartyTypes,TypeId'],
         ];
     }
 

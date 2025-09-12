@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Property;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyMaintenanceRequest;
 use App\Http\Requests\Property\MaintenanceAndIssues\MaintenanceRequest;
@@ -67,7 +65,7 @@ class PropertyMaintenanceRequestController extends Controller
         $Unit     = !empty($validated['Unit']) ? PropertyUnit::find($validated['Unit']) : null;
         $IssueType = CodeDetail::findOrFail($validated['IssueType']);
         $Priority  = CodeDetail::findOrFail($validated['Priority']);
-        $document = $request->file('Document');
+        foreach ($request->file('Document', []) as $uploadedFile) {
 
         $maintenancerequest = PropertyMaintenanceService::create(
                     $Property,
@@ -79,8 +77,9 @@ class PropertyMaintenanceRequestController extends Controller
                     $Priority,
                     $validated['IssueDescription']?? '--',
                     Auth::user(),
-                    $document
+                    $uploadedFile
         );
+    }
 
         return redirect()->route('maintenancerequest.index')->with('success', 'Maintenance request created successfully');
 
@@ -111,7 +110,21 @@ class PropertyMaintenanceRequestController extends Controller
             $Unit     = !empty($validated['Unit']) ? PropertyUnit::find($validated['Unit']) : null;
             $IssueType = CodeDetail::findOrFail($validated['IssueType']);
             $Priority  = CodeDetail::findOrFail($validated['Priority']);
-            $document = $request->file('Document');
+
+            PropertyMaintenanceService::update(
+                $maintenancerequest,
+                $Property,
+                $Block,
+                $Floor,
+                $Unit,
+                $validated['ReportedBy'],
+                $IssueType,
+                $Priority,
+                $validated['IssueDescription'],
+                Auth::user(),
+            );
+
+            foreach ($request->file('Document', []) as $uploadedFile) {
             $maintenance = PropertyMaintenanceService::update(
                 $maintenancerequest,
                 $Property,
@@ -123,17 +136,11 @@ class PropertyMaintenanceRequestController extends Controller
                 $Priority,
                 $validated['IssueDescription'],
                 Auth::user(),
-                $document
+                $uploadedFile
             );
+        }
 
             DB::commit();
-
-            activity()
-                ->performedOn($maintenancerequest)
-                ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])
-                ->log('Updated Maintenance Request');
-
             return redirect()->route('maintenancerequest.index')
                             ->with('success', 'Maintenance request updated successfully');
         } catch (\Throwable $th) {

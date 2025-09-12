@@ -25,7 +25,7 @@
               <select name="PropertyID" id="property-select" class="form-select" required>
                 <option value="">-- Select Property --</option>
                 @foreach ($lineentries as $property)
-                  <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
+                  <option value="{{ $property->Id }}">{{ $property->PropertyName ?? '-'}}</option>
                 @endforeach
               </select>
             </div>

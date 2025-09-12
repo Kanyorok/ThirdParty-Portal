@@ -11,6 +11,7 @@
     <div class="mb-3 text-end">
         <a href="{{ route('bancassurance.claims.initiateClosureForm') }}" class="btn btn-primary">Initiate Closure</a>
     </div>
+    <p><small>This is a list of all closed claims</small></p>
 
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
@@ -31,10 +32,10 @@
             <tbody>
                 @foreach($closedClaims as $claim)
                 <tr>
-                    <td>{{ $claim->Id }}</td>
-                    <td>{{ $claim->claim->claimtype->Description }}</td>
-                    <td>{{ $claim->claim->policy->PolicyNumber }}</td>
-                    <td>{{ $claim->claim->policy->customer->FullName }}</td>
+                    <td>{{ $claim->Id ?? '-'}}</td>
+                    <td>{{ $claim->claim->claimtype->Description ?? '-'}}</td>
+                    <td>{{ $claim->claim->policy->PolicyNumber ?? '-'}}</td>
+                    <td>{{ $claim->claim->policy->customer->FullName ?? '-'}}</td>
                     <td>KES {{ number_format($claim->paidamount->PaymentAmount, 2) }}</td>
                     <td>{{ $claim->FinalStatus->label() }}</td>
                     <td>{{ \Carbon\Carbon::parse($claim->ClosureDate)->format('d/m/Y') }}</td>

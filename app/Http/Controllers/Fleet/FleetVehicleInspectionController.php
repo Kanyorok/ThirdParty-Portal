@@ -11,6 +11,8 @@ use App\Models\Fleet\FuelType;
 use App\Services\FleetManagement\FleetVehicleInspectionService;
 use Illuminate\Support\Facades\Auth;
 use App\Services\DMS\DocumentService;
+use App\Models\Core\CodeDetail;
+
 
 
 class FleetVehicleInspectionController extends Controller
@@ -39,8 +41,9 @@ class FleetVehicleInspectionController extends Controller
         $vehicles = FleetVehicle::all();
         $drivers  = FleetDriver::all();
         $fuels    = FuelType::all();
+        $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
 
-        return view('fleet.vehicle_inspection.create', compact('vehicles', 'drivers', 'fuels'));
+        return view('fleet.vehicle_inspection.create', compact('vehicles', 'drivers', 'fuels', 'inspectionTypes'));
     }
 
     public function createPostTrip($id)
@@ -50,11 +53,14 @@ class FleetVehicleInspectionController extends Controller
         $vehicles = FleetVehicle::all();
         $drivers  = FleetDriver::all();
         $fuels    = FuelType::all();
+        $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
+        
 
         return view('fleet.vehicle_inspection.create', [
             'vehicles'          => $vehicles,
             'drivers'           => $drivers,
             'fuels'             => $fuels,
+            'inspectionTypes'   => $inspectionTypes,
             'parentInspection'  => $parentInspection,
         ]);
     }
@@ -75,7 +81,7 @@ class FleetVehicleInspectionController extends Controller
     public function show($id)
     {
         $this->authorize('view', FleetVehicleInspection::class);
-        $inspection = FleetVehicleInspection::with(['vehicle', 'driver', 'fuel', 'postTrips'])->findOrFail($id);
+        $inspection = FleetVehicleInspection::with(['vehicle', 'driver', 'fuel', 'postTrips', 'inspectionType'])->findOrFail($id);
         return view('fleet.vehicle_inspection.show', compact('inspection'));
     }
 
@@ -86,8 +92,9 @@ class FleetVehicleInspectionController extends Controller
         $vehicles   = FleetVehicle::all();
         $drivers    = FleetDriver::all();
         $fuels      = FuelType::all();
+        $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
 
-        return view('fleet.vehicle_inspection.edit', compact('inspection', 'vehicles', 'drivers', 'fuels'));
+        return view('fleet.vehicle_inspection.edit', compact('inspection', 'vehicles', 'drivers', 'fuels', 'inspectionTypes'));
     }
 
     public function update(FleetVehicleInspectionRequest $request, $id)

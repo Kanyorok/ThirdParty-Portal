@@ -7,8 +7,8 @@
 <div class="container mt-4">
 
     <a href="{{ route('addfloor.create') }}" class="btn btn-primary mb-3">Add Floor</a>
-
-    <h4 class="fw-bold mb-3">📋 Floors per Block</h4>
+    
+    <p><small>List of floors in property blocks</small></p>
 
     @if($floors->count())
         <table id="propertyfloors" class="table table-bordered table-striped align-middle">
@@ -26,10 +26,10 @@
     @foreach($floors as $floor)
         <tr>
             <td>{{ $loop->iteration }}</td>
-            <td>{{ $floor->property->PropertyName }}</td>
-            <td>{{ $floor->block->BlockName }}</td>
-            <td>{{ $floor->FloorLabel }}</td>
-            <td>{{ $floor->FloorNotes }}</td>
+            <td>{{ $floor->property->PropertyName ?? '-'}}</td>
+            <td>{{ $floor->block->BlockName ?? '-'}}</td>
+            <td>{{ $floor->FloorLabel ?? '-'}}</td>
+            <td>{{ $floor->FloorNotes ?? '-'}}</td>
         <td>
             <a href="{{ route('addfloor.edit', $floor->Id) }}" class="btn btn-sm btn-warning">Edit</a>
             <form action="{{ route('addfloor.destroy', $floor->Id) }}" method="POST" class="d-inline">

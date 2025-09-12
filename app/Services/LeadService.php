@@ -73,18 +73,8 @@ class LeadService
     }
 
     public static function company(
-        string $name,
-        string $email,
-        string $phone,
-        string $website,
-        Carbon $last_contact,
-        User $manager,
-        User $actor,
-        Locality $location = null,
-        CodeDetail $industry = null,
-        CodeDetail $source = null,
-        CodeDetail $customerType = null,
-        string $notes = ''
+        string   $name, string $email, string $phone, string $website, Carbon $last_contact, User $manager, User $actor,
+        Locality $location, CodeDetail $industry = null, CodeDetail $source = null, CodeDetail $customerType = null, string $notes = ''
     ): self
     {
         $service = self::_create($name, '', $email, $phone, $website, '', $last_contact, LeadTypeEnum::Company, GenderEnum::Other, $actor, $notes, $location, $industry, $source, $customerType);
@@ -95,21 +85,9 @@ class LeadService
     }
 
     private static function _create(
-        string $name,
-        string $other_names,
-        string $email,
-        string $phone,
-        string $website,
-        string $job_title,
-        Carbon $last_contact,
-        LeadTypeEnum $type,
-        GenderEnum $gender,
-        User   $actor,
-        string $notes,
-        Locality $location = null,
-        CodeDetail $industry = null,
-        CodeDetail $source = null,
-        CodeDetail $customerType = null
+        string       $name, string $other_names, string $email, string $phone, string $website, string $job_title, Carbon $last_contact,
+        LeadTypeEnum $type, GenderEnum $gender, User $actor, string $notes, Locality $location, CodeDetail $industry = null,
+        CodeDetail   $source = null, CodeDetail $customerType = null
     ): self
     {
         $lead = new Lead();
@@ -121,7 +99,8 @@ class LeadService
             "Gender" => $gender->value,
             "Status" => LeadStatusEnum::Warm->value,
             "RelationshipManagerID" => $actor->Id,
-            "LocationID" => $location?->ID,
+            "LocationID" => $location->ID,
+            'CountryId' => $location->CountryId,
             "Industry" => $industry?->ID,
             "Source" => $source?->ID,
             "JobTitle" => $job_title,
@@ -136,6 +115,8 @@ class LeadService
 
         $service = (new self($lead));
         $service->activity($lead->Name . ' added by ' . $actor->UserID, now(), $actor);
+
+        activity()->causedBy($actor)->performedOn($lead)->event('create')->log('created a new lead (L.' . $lead->LeadID . ')');
 
         return $service->addWatcher($actor, RoleEnum::Admin, $actor, false);
     }
@@ -292,20 +273,9 @@ class LeadService
     }
 
     public static function individual(
-        string $name,
-        string $other_names,
-        string $email,
-        string $phone,
-        string $job_title,
-        Carbon $last_contact,
-        GenderEnum $gender,
-        User $manager,
-        User $actor,
-        Locality $location = null,
-        CodeDetail $industry = null,
-        CodeDetail $source = null,
-        CodeDetail $customerType = null,
-        string $notes = ''
+        string     $name, string $other_names, string $email, string $phone, string $job_title, Carbon $last_contact,
+        GenderEnum $gender, User $manager, User $actor, Locality $location, CodeDetail $industry = null,
+        CodeDetail $source = null, CodeDetail $customerType = null, string $notes = ''
     ): self
     {
         $service = self::_create($name, $other_names, $email, $phone, '', $job_title, $last_contact, LeadTypeEnum::Individual, $gender, $actor, $notes, $location, $industry, $source, $customerType);

@@ -12,6 +12,8 @@ use App\Services\FleetManagement\FleetDriverAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Core\CodeDetail;
+
 
 class FleetDriverAssignmentController extends Controller
 {
@@ -30,8 +32,12 @@ class FleetDriverAssignmentController extends Controller
             abort(404, 'Driver ID is required.');
         }
 
-        $driver = ContractedDriver::findOrFail($driverId);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $driver = \App\Models\Fleet\FleetDriver::findOrFail($driverId); // <-- FIXED
+        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+
+        $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
 
