@@ -2,18 +2,17 @@ FROM php:8.3-apache-bullseye
 
 # Install system dependencies including imap
 RUN apt-get update && apt-get install -y \
-    unzip cron poppler-utils ghostscript zip curl git gnupg2 \
+    unzip cron poppler-utils ghostscript zip curl git gnupg \
     apt-transport-https unixodbc unixodbc-dev imagemagick \
     supervisor lsb-release libwebp-dev libzip-dev \
     libpng-dev libjpeg-dev libfreetype6-dev \
-    libxml2-dev libonig-dev nodejs wget ca-certificates\
-    libssl-dev software-properties-common poppler-utils \
-    libc-client-dev libkrb5-dev libgssapi-krb5-2  \
-    tesseract-ocr  tesseract-ocr-eng libtesseract-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
+    libxml2-dev libonig-dev nodejs wget ca-certificates \
+    libssl-dev software-properties-common \
+    libc-client-dev libkrb5-dev libgssapi-krb5-2 \
+    tesseract-ocr tesseract-ocr-eng libtesseract-dev \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+ && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
 
 # Add Microsoft SQL Server repository and key
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
