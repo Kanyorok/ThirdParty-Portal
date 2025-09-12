@@ -1,30 +1,23 @@
-# Use Bookworm (Debian 12) for long-term support
-FROM php:8.3-apache-bookworm
+FROM php:8.3-apache-bullseye
 
-# Install system dependencies including imap + Tesseract
-RUN set -eux; \
-    rm -rf /var/lib/apt/lists/*; \
-    apt-get clean; \
-    apt-get update -o Acquire::CompressionTypes::Order::=gz; \
-    apt-get update -o Acquire::http::No-Cache=True -o Acquire::http::Pipeline-Depth=0; \
-    apt-get install -y --no-install-recommends \
-        unzip cron poppler-utils ghostscript zip curl git gnupg2 \
-        apt-transport-https unixodbc unixodbc-dev imagemagick \
-        supervisor lsb-release libwebp-dev libzip-dev \
-        libpng-dev libjpeg-dev libfreetype6-dev \
-        libxml2-dev libonig-dev wget ca-certificates \
-        libssl-dev software-properties-common \
-        libc-client-dev libkrb5-dev libgssapi-krb5-2 \
-        tesseract-ocr tesseract-ocr-eng libtesseract-dev \
-    ; \
-    docker-php-ext-configure gd --with-freetype --with-jpeg; \
-    docker-php-ext-configure imap --with-kerberos --with-imap-ssl; \
-    docker-php-ext-install -j"$(nproc)" mbstring zip exif bcmath gd intl imap; \
-    rm -rf /var/lib/apt/lists/*
+# Install system dependencies including imap
+RUN apt-get update && apt-get install -y \
+    unzip cron poppler-utils ghostscript zip curl git gnupg2 \
+    apt-transport-https unixodbc unixodbc-dev imagemagick \
+    supervisor lsb-release libwebp-dev libzip-dev \
+    libpng-dev libjpeg-dev pdftk libfreetype6-dev \
+    libxml2-dev libonig-dev nodejs wget ca-certificates\
+    libssl-dev software-properties-common poppler-utils \
+    libc-client-dev libkrb5-dev libgssapi-krb5-2  \
+    tesseract-ocr  tesseract-ocr-eng libtesseract-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
 
 # Add Microsoft SQL Server repository and key
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
-    curl https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
+    curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
     apt-get update && \
     ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 && \
     pecl install pdo_sqlsrv && \
@@ -53,27 +46,37 @@ WORKDIR /var/www
 # Install Composer from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Copy composer and install dependencies only if composer.lock changes
+#COPY composer.json composer.lock ./
+
+
 # Copy Laravel source code
+
 COPY . .
+#COPY --chown=www-data:www-data . .
 RUN rm -rf database/
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
-    chmod -R 775 /var/www/storage /var/www/bootstrap/cache && \
+    chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# ✅ Fix Laravel directory permissions
+RUN chown -R www-data:www-data /var/www && \
     find /var/www/storage -type d -exec chmod 775 {} \; && \
     find /var/www/storage -type f -exec chmod 664 {} \; && \
     find /var/www/bootstrap/cache -type d -exec chmod 775 {} \; && \
     find /var/www/bootstrap/cache -type f -exec chmod 664 {} \;
 
+
 # Install PHP dependencies using Composer
 RUN cd /var/www && composer install --no-interaction --optimize-autoloader --no-dev
 
-# Puppeteer env vars
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
 # Install Node.js dependencies
 RUN npm install --prefix /var/www
+
+#RUN php /var/www/artisan optimize
 
 # Expose HTTP port
 EXPOSE 80
@@ -86,5 +89,6 @@ RUN echo "* * * * * php /var/www/artisan schedule:run >> /var/www/storage/logs/s
     && chmod 0644 /etc/cron.d/erp-scheduler \
     && crontab /etc/cron.d/erp-scheduler
 
-# Start Apache + Supervisor + Cron
+# Start Apache
+#CMD ["apache2-foreground"]
 CMD service cron start && supervisord -c /etc/supervisor/supervisord.conf && apache2-foreground
