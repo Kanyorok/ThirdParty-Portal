@@ -31,10 +31,8 @@ Route::prefix('prequalification')
                 ->name('prequalification-evaluation.submit');
         });
 
-        // Results Routes (for generation and viewing)
+        // Results Routes (for viewing)
         Route::controller(PrequalificationResultsController::class)->group(function () {
-            Route::post('applications/{applicationId}/generate-results', 'generateResults')
-                ->name('prequalification-evaluation.generate-results');
             Route::get('applications/{applicationId}/results', 'showResults')
                 ->name('prequalification-evaluation.results');
         });

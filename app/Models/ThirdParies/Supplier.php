@@ -8,7 +8,6 @@ use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -64,7 +63,7 @@ class Supplier extends ThirdParties
     public function scopeApprovedAndPrequalified($query)
     {
         return $query
-            ->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier)
+            ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
             ->where('IsPrequalified', true)
             ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved);
     }
@@ -81,6 +80,6 @@ class Supplier extends ThirdParties
 
     public function scopeOnlySuppliers($query)
     {
-        return $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier);
+        return $query->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'));
     }
 }

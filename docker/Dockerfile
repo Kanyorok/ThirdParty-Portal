@@ -1,38 +1,52 @@
 FROM php:8.3-apache-bullseye
 
-# Install system dependencies including imap
-RUN apt-get update && apt-get install -y \
-    unzip cron poppler-utils ghostscript zip curl git gnupg2 \
-    apt-transport-https unixodbc unixodbc-dev imagemagick \
-    supervisor lsb-release libwebp-dev libzip-dev \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    libxml2-dev libonig-dev nodejs wget ca-certificates\
-    libssl-dev software-properties-common poppler-utils \
-    libc-client-dev libkrb5-dev libgssapi-krb5-2  \
-    tesseract-ocr  tesseract-ocr-eng libtesseract-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
+ARG DEBIAN_FRONTEND=noninteractive
+
+# More robust APT install (handles transient hash-sum mismatch via retries)
+# - removed duplicate packages & duplicate gd configure line
+# - removed nodejs here (installed later from NodeSource 20.x)
+# - added libicu-dev required for intl extension
+# - cleans apt lists after installation to keep image smaller & avoid stale indexes
+RUN set -eux; \
+    rm -rf /var/lib/apt/lists/*; \
+    for i in 1 2 3; do apt-get update && break || (echo 'APT update failed – retrying' && sleep 8); done; \
+    apt-get install -y --no-install-recommends \
+        unzip cron ghostscript zip curl git gnupg2 \
+        apt-transport-https unixodbc unixodbc-dev imagemagick \
+        supervisor lsb-release libwebp-dev libzip-dev \
+        libpng-dev libjpeg-dev pdftk libfreetype6-dev \
+        libxml2-dev libonig-dev libicu-dev wget ca-certificates \
+        libssl-dev software-properties-common \
+        libc-client-dev libkrb5-dev libgssapi-krb5-2 \
+        poppler-utils tesseract-ocr tesseract-ocr-eng libtesseract-dev \
+    ; \
+    docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    docker-php-ext-configure imap --with-kerberos --with-imap-ssl; \
+    docker-php-ext-install -j"$(nproc)" mbstring zip exif bcmath gd intl imap; \
+    rm -rf /var/lib/apt/lists/*
 
 # Add Microsoft SQL Server repository and key
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg && \
-    curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list && \
-    apt-get update && \
-    ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 && \
-    pecl install pdo_sqlsrv && \
-    docker-php-ext-enable pdo_sqlsrv
+RUN set -eux; \
+    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg; \
+    curl -fsSL https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list; \
+    for i in 1 2 3; do apt-get update && break || (echo 'APT update (mssql) failed – retrying' && sleep 8); done; \
+    ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18 mssql-tools18; \
+    pecl install pdo_sqlsrv; \
+    docker-php-ext-enable pdo_sqlsrv; \
+    rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20 (needed for Puppeteer)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm@latest
+# Install Node.js 20 (needed for Puppeteer) – isolated so failures don't invalidate earlier layer
+RUN set -eux; \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; \
+    apt-get install -y --no-install-recommends nodejs; \
+    npm install -g npm@latest; \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Chromium for headless browser testing
-RUN apt-get update && apt-get install -y \
-    chromium chromium-driver \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    for i in 1 2 3; do apt-get update && break || (echo 'APT update (chromium) failed – retrying' && sleep 8); done; \
+    apt-get install -y --no-install-recommends chromium chromium-driver; \
+    rm -rf /var/lib/apt/lists/*
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
