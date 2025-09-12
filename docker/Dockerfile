@@ -64,6 +64,12 @@ COPY . .
 #COPY --chown=www-data:www-data . .
 RUN rm -rf database/
 
+# Ensure Laravel storage and log paths exist
+RUN mkdir -p /var/www/storage/logs \
+    && touch /var/www/storage/logs/worker.log \
+    && mkdir -p /var/www/bootstrap/cache \
+    && chmod -R 777 /var/www/storage /var/www/bootstrap/cache
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
     chmod -R 775 /var/www/storage /var/www/bootstrap/cache
