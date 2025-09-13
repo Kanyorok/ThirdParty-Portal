@@ -8,7 +8,6 @@ use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,13 +18,28 @@ class Supplier extends ThirdParties
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
+    // Limit fillable to actual supplier table columns to avoid parent fillables bleeding in
     protected $fillable = [
+        'ThirdPartyID',
+        'RoundID',
         'IsPrequalified',
+        'Active_Status',
+        'CreatedOn',
+        'ModifiedOn',
+    'CreatedBy',
+    'ModifiedBy',
     ];
 
     protected $casts = [
         'IsPrequalified' => 'boolean',
+    'Active_Status' => 'boolean',
     ];
+
+    protected static function booted()
+    {
+        // Intentionally empty: suppress parent ThirdParties booted() logic that sets ApprovalStatus/Status
+        // because t_Suppliers does not have those columns.
+    }
 
     public function rfqEvaluations(): HasMany
     {
@@ -62,10 +76,11 @@ class Supplier extends ThirdParties
 
     public function scopeApprovedAndPrequalified($query)
     {
+        // Simplified: treat Active_Status true & IsPrequalified true as approved
         return $query
             ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
             ->where('IsPrequalified', true)
-            ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved);
+            ->where('Active_Status', 1);
     }
 
     public function categories(): BelongsToMany

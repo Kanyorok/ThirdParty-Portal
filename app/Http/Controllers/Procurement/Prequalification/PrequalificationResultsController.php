@@ -70,16 +70,37 @@ class PrequalificationResultsController extends Controller
         $grandTotal = round($grandTotal, 6);
         return ['sections' => $sectionsOut, 'grandTotal' => $grandTotal];
     }
+
+    /**
+     * Persist (create/update) a PrequalificationResult using new weighting output.
+     */
+    private function persistResults(PrequalificationApplication $application, array $calc): PrequalificationResult
+    {
+        $grandTotal = $calc['grandTotal'] ?? 0.0;
+        $passingThreshold = 70; // configurable later
+        $decision = ($grandTotal >= $passingThreshold) ? 'Passed' : 'Failed';
+
+        return PrequalificationResult::updateOrCreate(
+            ['ApplicationID' => $application->ApplicationID],
+            [
+                'TotalScore' => $grandTotal,
+                'Decision' => $decision,
+                'ApprovalBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
+            ]
+        );
+    }
     /**
      * Admin-only method to generate results for an application.
      */
     public function generateResults(SupplierPrequalificationService $service, $applicationId): \Illuminate\Http\RedirectResponse
     {
-        // Check if user is authenticated (you can add more specific admin checks later)
         if (!Auth::check()) {
             abort(403, 'Unauthorized. Only authenticated users can generate results.');
         }
 
+        $application = PrequalificationApplication::findOrFail($applicationId);
         $evaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
             ->with(['criteria', 'evaluationSection'])
             ->get();
@@ -88,22 +109,8 @@ class PrequalificationResultsController extends Controller
             return redirect()->back()->with('error', 'No evaluations found for this application.');
         }
 
-        $totalOverallScore = $service->calculateTotalScore($evaluations);
-
-        // Set a passing threshold of 70%
-        $passingThreshold = 70;
-        $decision = ($totalOverallScore >= $passingThreshold) ? 'Passed' : 'Failed';
-
-        PrequalificationResult::updateOrCreate(
-            ['ApplicationID' => $applicationId],
-            [
-                'TotalScore' => $totalOverallScore,
-                'Decision' => $decision,
-                'ApprovalBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedOn' => now(),
-            ]
-        );
+        $calc = $this->buildWeightedResults($application, $evaluations);
+        $this->persistResults($application, $calc);
 
         return redirect()->back()->with('success', 'Prequalification results generated successfully!');
     }
@@ -115,32 +122,23 @@ class PrequalificationResultsController extends Controller
     {
         $application = PrequalificationApplication::with(['supplier', 'category'])->findOrFail($applicationId);
 
-        // Existing stored result (created during generation); if missing show guidance screen
-        $result = PrequalificationResult::where('ApplicationID', $applicationId)->first();
-        if (!$result) {
-            return view('procurement.suppliers.prequalification.prequalification-evaluation.no_results', compact('application'));
-        }
-
-        // Gather evaluations (criterion-level scores)
+        // Load evaluations
         $evaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
             ->with(['criteria', 'evaluationSection'])
             ->get();
 
-        $sections = [];
-        $grandTotal = 0.0;
-        if ($evaluations->isNotEmpty()) {
-            $calc = $this->buildWeightedResults($application, $evaluations);
-            $sections = $calc['sections'];
-            $grandTotal = $calc['grandTotal'];
+        if ($evaluations->isEmpty()) {
+            return view('procurement.suppliers.prequalification.prequalification-evaluation.no_results', compact('application'));
         }
 
-        // Optionally sync stored TotalScore with new formula (only if significantly different)
-        if ($result && abs(($result->TotalScore ?? 0) - $grandTotal) > 0.01) {
-            $result->TotalScore = $grandTotal;
-            $result->save();
-        }
+        // Always (re)calculate & persist on viewing to keep data fresh
+        $calc = $this->buildWeightedResults($application, $evaluations);
+        $result = $this->persistResults($application, $calc);
 
-    return view('procurement.suppliers.prequalification.prequalification-evaluation.show_results', compact('application', 'sections', 'result', 'grandTotal'));
+        $sections = $calc['sections'];
+        $grandTotal = $calc['grandTotal'];
+
+        return view('procurement.suppliers.prequalification.prequalification-evaluation.show_results', compact('application', 'sections', 'result', 'grandTotal'));
 
     }
 }

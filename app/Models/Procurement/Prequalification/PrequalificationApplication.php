@@ -62,6 +62,14 @@ class PrequalificationApplication extends Model
     }
 
     /**
+     * One-to-one prequalification result.
+     */
+    public function result()
+    {
+        return $this->hasOne(PrequalificationResult::class, 'ApplicationID', 'ApplicationID');
+    }
+
+    /**
      * Virtual attribute to mirror legacy usage of applicationNo in blades.
      * Returns the primary key (ApplicationID) unless a dedicated column is added later.
      */
