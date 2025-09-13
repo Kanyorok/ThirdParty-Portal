@@ -560,6 +560,22 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
 
+            //Load Types
+            ['CodeID' => 'LoadType', 'Description' => 'Passengers', 'Value' => 'P'],
+            ['CodeID' => 'LoadType', 'Description' => 'Goods', 'Value' => 'G'],
+            ['CodeID' => 'LoadType', 'Description' => 'Passengers & Goods', 'Value' => 'PG'],
+
+            //Trip Types
+            ['CodeID' => 'TripType', 'Description' => 'Marketing Campaign', 'Value' => 'MC'],
+            ['CodeID' => 'TripType', 'Description' => 'Inventory Transfers', 'Value' => 'IT'],
+            ['CodeID' => 'TripType', 'Description' => 'Other', 'Value' => 'O'],
+  
+            //Driver Availability Status
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
+
+
 
 
             // Recurrent Journal Payment Frequency

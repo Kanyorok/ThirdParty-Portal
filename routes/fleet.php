@@ -198,13 +198,17 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::get('/trip-logs', [FleetTripLogController::class, 'index'])->name('fleet.trip_logs.index');
     Route::get('/trip-logs/create', [FleetTripLogController::class, 'create'])->name('fleet.trip_logs.create');
     Route::post('/trip-logs', [FleetTripLogController::class, 'store'])->name('fleet.trip_logs.store');
-    Route::get('/trip-logs{Id}', [FleetTripLogController::class, 'show'])->name('fleet.trip_logs.show');
-    Route::get('/trip-logs{Id}/edit', [FleetTripLogController::class, 'edit'])->name('fleet.trip_logs.edit');
-    Route::put('trip-logs{Id}', [FleetTripLogController::class, 'update'])->name('fleet.trip_logs.update');
-    Route::delete('trip-logs{Id}', [FleetTripLogController::class, 'destroy'])->name('fleet.trip_logs.destroy');
+    Route::get('/trip-logs/approved-transfers', [FleetTripLogController::class, 'getApprovedTransfers'])->name('fleet.trip_logs.approved_transfers');
+    Route::get('/trip-logs/approved-campaigns', [FleetTripLogController::class, 'getApprovedCampaigns'])->name('fleet.trip_logs.approved_campaigns');
+    Route::get('/trip-logs/{Id}', [FleetTripLogController::class, 'show'])->name('fleet.trip_logs.show');
+    Route::get('/trip-logs/{Id}/edit', [FleetTripLogController::class, 'edit'])->name('fleet.trip_logs.edit');
+    Route::put('/trip-logs/{Id}', [FleetTripLogController::class, 'update'])->name('fleet.trip_logs.update');
+    Route::delete('/trip-logs/{Id}', [FleetTripLogController::class, 'destroy'])->name('fleet.trip_logs.destroy');
     Route::get('fleet/vehicles/available', [FleetTripLogController::class, 'getAvailableVehicles'])->name('fleet.vehicles.available');
     Route::get('fleet/drivers/available', [FleetTripLogController::class, 'getAvailablePermanentDrivers'])->name('fleet.drivers.available');
     Route::get('fleet/contracted_drivers/available', [FleetTripLogController::class, 'getAvailableContractedDrivers'])->name('fleet.contracted_drivers.available');
+    
+
 
 
      // ==================== Vehicle Inspections====================

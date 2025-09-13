@@ -29,9 +29,11 @@ class FleetTripLog extends Model
 
     protected $fillable = [
         'TripNo',
-        'VehicleID',
-        'DriverType',
-        'DriverID',
+        'ParentTripID',
+        'TripType',
+        'TripCode',
+        'VehicleType',
+        'LoadType',
         'TripStartDate',
         'StartTime',
         'TripEndDate',
@@ -50,29 +52,33 @@ class FleetTripLog extends Model
     {
         return 'TripId';
     }
-
-    public function vehicle()
+   
+    public function parentTripType()
     {
-        return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'TripType', 'ID');
     }
 
-    public function driverType()
+    public function parentLoadType()
     {
-        return $this->belongsTo(CodeDetail::class, 'DriverType', 'ID');
+        return $this->belongsTo(CodeDetail::class, 'LoadType', 'ID');
     }
 
-
-    public function driverPermanent()
+    public function parentVehicleType()
     {
-        return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'VehicleType', 'ID');
     }
 
-    public function driverContracted()
+    public function parentTrip()
     {
-        return $this->belongsTo(ContractedDriver::class, 'DriverID', 'Id');
+        return $this->belongsTo(FleetTripLog::class, 'ParentTripID', 'Id');
     }
 
+    public function childTrips()
+    {
+        return $this->hasMany(FleetTripLog::class, 'ParentTripID', 'Id');
+    }
 
+    
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
