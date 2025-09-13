@@ -60,4 +60,13 @@ class PrequalificationApplication extends Model
     {
         return $this->belongsTo(SupplierCategory::class, 'CategoryID', 'SupplierCategoryID');
     }
+
+    /**
+     * Virtual attribute to mirror legacy usage of applicationNo in blades.
+     * Returns the primary key (ApplicationID) unless a dedicated column is added later.
+     */
+    public function getApplicationNoAttribute(): string
+    {
+        return (string) ($this->attributes['ApplicationID'] ?? '');
+    }
 }
