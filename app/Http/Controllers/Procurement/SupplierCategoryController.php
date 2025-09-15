@@ -9,6 +9,8 @@ use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\Procurement\Suppliers\StoreSupplierCategoryRequest;
 use App\Http\Requests\Procurement\Suppliers\UpdateSupplierCategoryRequest;
 use Illuminate\Http\JsonResponse;
+use App\Models\Inventory\ItemCategories;
+use Illuminate\Support\Facades\Auth;
 
 class SupplierCategoryController extends Controller
 {
@@ -54,19 +56,27 @@ class SupplierCategoryController extends Controller
 
     public function create()
     {
-        return view('procurement.suppliers.supplier_categories.create');
+        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id','Name']);
+        return view('procurement.suppliers.supplier_categories.create', compact('itemCategories'));
     }
 
     public function store(StoreSupplierCategoryRequest $request)
     {
         $validatedData = array_merge($request->validated(), [
-            'CreatedBy' => auth()->id(),
+            'CreatedBy' => Auth::id(),
         ]);
 
         $category = SupplierCategory::create($validatedData);
 
+        // Attach selected item categories (top-level) if provided
+        $itemCategoryIds = collect($request->input('item_category_ids', []))
+            ->filter()->unique()->values();
+        if ($itemCategoryIds->isNotEmpty()) {
+            $category->syncItemCategoriesWithAudit($itemCategoryIds->all(), Auth::id());
+        }
+
         if ($request->wantsJson()) {
-            return response()->json($category, 201);
+            return response()->json($category->load('itemCategories'), 201);
         }
 
         return redirect()->route('proc.supplier-cat.index')->with('success', 'Supplier Category created successfully.');
@@ -74,21 +84,36 @@ class SupplierCategoryController extends Controller
 
     public function edit(SupplierCategory $supplier_cat)
     {
+        $supplier_cat->load('itemCategories');
+        $itemCategories = ItemCategories::whereNull('ParentId')->orderBy('Name')->get(['Id','Name']);
         return view('procurement.suppliers.supplier_categories.edit', [
             'category' => $supplier_cat,
+            'itemCategories' => $itemCategories,
         ]);
     }
 
     public function update(UpdateSupplierCategoryRequest $request, SupplierCategory $supplierCategory)
     {
         $validatedData = array_merge($request->validated(), [
-            'ModifiedBy' => auth()->id(),
+            'ModifiedBy' => Auth::id(),
         ]);
+
+        // Remove pivot ids before update if present
+        $itemCategoryIds = collect($validatedData['item_category_ids'] ?? $request->input('item_category_ids', []))
+            ->filter()->unique();
+        unset($validatedData['item_category_ids']);
 
         $supplierCategory->update($validatedData);
 
+        if ($itemCategoryIds->isNotEmpty()) {
+            $supplierCategory->syncItemCategoriesWithAudit($itemCategoryIds->all(), Auth::id());
+        } else if ($request->has('item_category_ids')) {
+            // Treat as removing all (soft delete existing pivots)
+            $supplierCategory->syncItemCategoriesWithAudit([], Auth::id());
+        }
+
         if ($request->wantsJson()) {
-            return response()->json($supplierCategory, 200);
+            return response()->json($supplierCategory->load('itemCategories'), 200);
         }
 
         return redirect()->route('proc.supplier-cat.index')->with('success', 'Supplier Category updated successfully.');

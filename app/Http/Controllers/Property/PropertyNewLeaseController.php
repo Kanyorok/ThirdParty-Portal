@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Property;
 
-use App\Enums\Core\PermissionEnum;
-use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
 use App\Models\Core\CodeDetail;
@@ -13,7 +11,6 @@ use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
 use DateTime;
@@ -29,13 +26,25 @@ class PropertyNewLeaseController extends Controller
     //
     public function index()
     {
-        $newleases = PropertyNewLease::with('tenant', 'property')->where('isActive', true)->get();
+        $newleases = PropertyNewLease::with('tenant', 'property')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
     }
 
     public function create(){
       //  $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
-        $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
+        $properties = PropertyRegistry::where('IsActive', 1)
+            ->whereHas('getBlockByProperty.floor.units', function ($query) {
+                $query->where('IsRentable', 1)
+                    ->where('CurrentStatus', 1);
+            })
+            ->with([
+                'getBlockByProperty.floor.units' => function ($query) {
+                    $query->where('IsRentable', 1)
+                        ->where('CurrentStatus', 1);
+                }
+            ])->get();
+
+
         $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
@@ -43,23 +52,50 @@ class PropertyNewLeaseController extends Controller
 
     public function getBlockByProperty($propertyId)
     {
-        $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
-        //dd($blocks); // check if it's returning correctly
+        $blocks = PropertyBlock::where('PropertyID', $propertyId)
+            ->whereHas('floor.units', function ($query) {
+                $query->where('IsRentable', 1)
+                    ->where('CurrentStatus', 1);
+            })
+            ->with([
+                'floor.units' => function ($query) {
+                    $query->where('IsRentable', 1)
+                        ->where('CurrentStatus', 1);
+                }
+            ])
+            ->get();
+
         return response()->json($blocks);
     }
 
-
     public function getFloorByBlock($blockId)
     {
-        $floors = PropertyFloor::where('BlockID', $blockId)->get();
+        $floors = PropertyFloor::where('BlockID', $blockId)
+            ->whereHas('units', function ($query) {
+                $query->where('IsRentable', 1)
+                    ->where('CurrentStatus', 1);
+            })
+            ->with([
+                'units' => function ($query) {
+                    $query->where('IsRentable', 1)
+                        ->where('CurrentStatus', 1);
+                }
+            ])
+            ->get();
+
         return response()->json($floors);
     }
 
     public function getUnitByFloor($floorId)
     {
-        $units = PropertyUnit::where('FloorId', $floorId)->get();
+        $units = PropertyUnit::where('FloorId', $floorId)
+            ->where('IsRentable', 1)
+            ->where('CurrentStatus', 1)
+            ->get();
+
         return response()->json($units);
     }
+
 
     public function show($Id)
     {
@@ -79,26 +115,27 @@ class PropertyNewLeaseController extends Controller
         $floor = PropertyFloor::findOrFail($data['FloorID']);
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $paymentFrequency = CodeDetail::findOrFail($data['PaymentFrequency']);
-        $document = $request->file('Document');
+        foreach ($request->file('Document', []) as $uploadedFile) {
         $this->service::create(
             $tenant,
             $property,
             $block,
             $floor,
             $unit,
-            $startDate = new DateTime($data['StartDate']),
-            $endDate = new DateTime($data['EndDate']),
+            new DateTime($data['StartDate']),
+            new DateTime($data['EndDate']),
             $paymentFrequency,
-            $monthlyRent = $data['MonthlyRent'],
-            $deposit = $data['Deposit'],
-            $serviceCharge = $data['ServiceCharge'],
-            $parkingFee = $data['ParkingFee'],
-            $otherCharges = $data['OtherCharges'],
-            $dueDay = $data['DueDay'],
-            $specialTerms = $data['SpecialTerms'] ?? '',
+            $data['MonthlyRent'],
+            $data['Deposit'],
+            $data['ServiceCharge'],
+            $data['ParkingFee'],
+            $data['OtherCharges'],
+            $data['DueDay'],
+            $data['SpecialTerms'] ?? '',
             $request->user(),
-            $document
+            $uploadedFile
         );
+    }
         return redirect()->route('addlease.index')->with('success', 'Lease created successfully');
     }
 
@@ -127,7 +164,6 @@ class PropertyNewLeaseController extends Controller
         $unit = PropertyUnit::findOrFail($data['Unit']);
         $frequency = CodeDetail::findOrFail($data['PaymentFrequency']);
         $user = auth()->user();
-        $document = $request->file('Document');
 
         $this->service::update(
             lease: $lease,
@@ -145,9 +181,30 @@ class PropertyNewLeaseController extends Controller
             OtherCharges: (float)$data['OtherCharges'],
             DueDay: (int)$data['DueDay'],
             SpecialTerms: $data['SpecialTerms'] ?? '',
-            user: $user,
-            document: $document
+            user: $user
         );
+
+        foreach ($request->file('Document', []) as $uploadedFile) {
+        $this->service::update(
+            lease: $lease,
+            PropertyID: $property,
+            BlockID: $block,
+            FloorID: $floor,
+            Unit: $unit,
+            StartDate: new \DateTime($data['StartDate']),
+            EndDate: new \DateTime($data['EndDate']),
+            PaymentFrequency: $frequency,
+            MonthlyRent: (float)$data['MonthlyRent'],
+            Deposit: (float)$data['Deposit'],
+            ServiceCharge: (float)$data['ServiceCharge'],
+            ParkingFee: (float)$data['ParkingFee'],
+            OtherCharges: (float)$data['OtherCharges'],
+            DueDay: (int)$data['DueDay'],
+            SpecialTerms: $data['SpecialTerms'] ?? '',
+            user: $user,
+            document: $uploadedFile
+        );
+    }
 
         return redirect()->route('addlease.index')->with('success', 'Lease updated successfully.');
     }

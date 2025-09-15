@@ -47,7 +47,7 @@
                             </td>
                             <td>
                                 @if ($evaluation->application->result)
-                                <a href="{{ route('prequalification-evaluation.results', $evaluation->ApplicationID) }}" class="btn btn-sm btn-info text-white">
+                                <a href="{{ route('prequalification.prequalification-evaluation.results', $evaluation->ApplicationID) }}" class="btn btn-sm btn-info text-white">
                                     <i class="fas fa-eye me-1"></i> View Results
                                 </a>
                                 @else

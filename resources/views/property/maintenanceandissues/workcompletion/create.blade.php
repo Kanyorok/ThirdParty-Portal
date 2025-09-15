@@ -81,7 +81,7 @@
         <!-- Document Upload -->
         <div class="mb-3">
             <label class="form-label">Upload Relevant Documents</label>
-            <input type="file" name="Document" class="form-control" multiple>
+            <input type="file" name="Document[]" class="form-control" multiple>
         </div>
 
         <!-- Work Summary -->

@@ -6,7 +6,6 @@
 @section('content')
 
     <div class="container mt-5" style="max-width: 1000px;">
-        <h3 class="mb-4 text-primary">✏️ Edit Stock Take</h3>
 
         @if ($errors->any())
             <div class="alert alert-danger">
@@ -30,7 +29,7 @@
                         <option value="">-- Select Branch --</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch->Id }}" {{ $stock->BranchId == $branch->Id ? 'selected' : '' }}>
-                                {{ $branch->Name }}
+                                {{ $branch->Name ?? '-'}}
                             </option>
                         @endforeach
                     </select>
@@ -42,7 +41,7 @@
                         <option value="">-- Select Store --</option>
                         @foreach ($stores as $store)
                             <option value="{{ $store->Id }}" {{ $stock->StoreId == $store->Id ? 'selected' : '' }}>
-                                {{ $store->StoreName }}
+                                {{ $store->StoreName ?? '-'}}
                             </option>
                         @endforeach
                     </select>
@@ -54,7 +53,7 @@
                         <option value="">-- Select User --</option>
                         @foreach ($users as $user)
                             <option value="{{ $user->Id }}" {{ $stock->CountedBy == $user->Id ? 'selected' : '' }}>
-                                {{ $user->Name }}
+                                {{ $user->Name ?? '-'}}
                             </option>
                         @endforeach
                     </select>
@@ -90,16 +89,16 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $line->item->item->ItemCode ?? 'N/A' }}</td>
                                     <td>{{ $line->item->item->ItemName ?? 'N/A' }}</td>
-                                    <td>{{ $line->ActualQuantity }}</td>
+                                    <td>{{ $line->ActualQuantity ?? '-'}}</td>
                                     <td>
                                         <input type="hidden" name="lines[{{ $index }}][Id]" value="{{ $line->Id }}">
                                         <input type="number" name="lines[{{ $index }}][CountedQuantity]"
                                                class="form-control"
-                                               value="{{ $line->CountedQuantity }}" required>
+                                               value="{{ $line->CountedQuantity ?? '-'}}" required>
                                     </td>
                                     <td>
                                         <input type="text" name="lines[{{ $index }}][Remarks]" class="form-control"
-                                               value="{{ $line->Remarks }}">
+                                               value="{{ $line->Remarks ?? '-'}}">
                                     </td>
                                 </tr>
                             @endforeach

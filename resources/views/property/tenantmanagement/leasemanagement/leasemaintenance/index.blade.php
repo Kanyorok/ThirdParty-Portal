@@ -7,7 +7,7 @@
 @section('content')
     <div class="container mt-4">
         <a href="{{ route('addlease.create') }}" class="btn btn-primary mb-3">New Lease</a>
-        <h4 class="fw-bold mb-3">Lease Agreements</h4>
+        <p><small>The list below consists of all lease agreements both active and inactive</small></p>
         @if($newleases->count())
             <table id="leaseagreement" class="table table-bordered table-striped align-middle">
                 <thead class="table-light">
@@ -30,8 +30,8 @@
                         <td>{{ $newlease->LeaseNumber ?? '-' }}</td>
                         <td>{{ $newlease->tenant->TenantName ?? '-' }}</td>
                         <td>{{ $newlease->property->PropertyName ?? '-' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($newlease->EndDate)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($newlease->StartDate)->format('d/m/Y') ?? '-'}}</td>
+                        <td>{{ \Carbon\Carbon::parse($newlease->EndDate)->format('d/m/Y') ?? '-'}}</td>
                         <td>{{ $newlease->code->Description ?? '-' }}</td>
                         <td>{{ $newlease->DueDay ?? '-' }}</td>
                         <td class="d-flex gap-1">

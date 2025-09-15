@@ -4,20 +4,6 @@ namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-class LegalContractController extends Controller
-{
-    public function index()
-    {
-        return view('legal.contracts.index');
-    }
-}
-<?php
-
-namespace App\Http\Controllers\Legal;
-
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Legal\LegalDocument;
 use Illuminate\Support\Facades\Auth;
 

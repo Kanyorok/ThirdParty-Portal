@@ -1,7 +1,8 @@
 @php use App\Services\Core\ModuleService; @endphp
 <ul class="pc-navbar">
-  <li class="pc-item {{ request()->is('/') ? 'active' : '' }}">
-    <a href="{{ route('home') }}" class="pc-link" data-ajax="1">
+    <li class="pc-item {{ request()->is('/') ? 'active' : '' }}">
+        @php $homePath = parse_url(route('home'), PHP_URL_PATH) ?? '/'; @endphp
+        <a href="{{ route('home') }}" class="pc-link" data-ajax="1" data-route="{{ $homePath }}">
       <span class="pc-micon">
         <i data-feather="home" class="pc-icon"></i>
       </span>

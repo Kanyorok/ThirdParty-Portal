@@ -15,6 +15,7 @@ use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluation
 use App\Http\Controllers\Procurement\SupplierCategoryController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
@@ -77,6 +78,11 @@ Route::middleware('auth:sanctum')->group(function () {
 // currencies
 Route::prefix('v1')->group(function () {
     Route::get('currencies', [ApiCurrencyController::class, 'list']);
+});
+
+// enums (public)
+Route::prefix('enums')->group(function () {
+    Route::get('third-party-types', [ThirdPartyTypesEnumController::class, 'index']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
