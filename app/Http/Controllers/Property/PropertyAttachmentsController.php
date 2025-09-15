@@ -18,13 +18,14 @@ class PropertyAttachmentsController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyAttachmentsView, PropertyAttachments::class);
         $propertyattachments = PropertyAttachments::all();
 
         return view('property.propertyregistry.propertyattachments.index', compact('propertyattachments'));
     }
 
     public function create(){
-        //$this->authorize(PermissionEnum::PropertyAttachmentsCreate, PropertyAttachments::class);
+        $this->authorize(PermissionEnum::PropertyAttachmentsCreate, PropertyAttachments::class);
         $properties = PropertyRegistry::all();
         $documenttypes = CodeDetail::where('CodeID', 'DocumentType')->get();
         return view('property.propertyregistry.propertyattachments.create', compact('properties', 'documenttypes'));
@@ -32,8 +33,7 @@ class PropertyAttachmentsController extends Controller
 
     public function store(PropertyAttachmentsRequest $request)
     {
-     //$this->authorize(PermissionEnum::PropertyAttachmentsCreate, PropertyAttachments::class);
-        //dd($request->all());
+        $this->authorize(PermissionEnum::PropertyAttachmentsCreate, PropertyAttachments::class);
         $validated = $request->validated();
         
         $PropertyID = PropertyRegistry::findOrFail($validated['PropertyID']);
@@ -55,7 +55,8 @@ class PropertyAttachmentsController extends Controller
 
     public function edit($Id)
     {
-   // $this->authorize(PermissionEnum::PropertyAttachmentsView, PropertyAttachments::class);
+
+    $this->authorize(PermissionEnum::PropertyAttachmentsView, PropertyAttachments::class);
     $propertyattachments = PropertyAttachments::findOrFail($Id);
     $properties = PropertyRegistry::all();
     $documenttypes = CodeDetail::where('CodeID', 'DocumentType')->get();
@@ -66,6 +67,8 @@ class PropertyAttachmentsController extends Controller
 
 public function update(PropertyAttachmentsRequest $request, $id)
 {
+    $this->authorize(PermissionEnum::PropertyAttachmentsUpdate, PropertyAttachments::class);
+
     $validated = $request->validated();
 
     // Fetch model instances
@@ -120,7 +123,7 @@ public function update(PropertyAttachmentsRequest $request, $id)
 
 public function destroy($Id)
 {
-  //    $this->authorize(PermissionEnum::PropertyAttachmentsDelete, PropertyAttachmentsRequest::class);
+    $this->authorize(PermissionEnum::PropertyAttachmentsDelete, PropertyAttachmentsRequest::class);
     try {
         $propertyattachments = PropertyAttachments::findOrFail($Id);
         $propertyattachments->delete();

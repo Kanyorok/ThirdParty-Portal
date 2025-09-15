@@ -54,6 +54,7 @@ return new class extends Migration {
         });
 
         // Seed data
+        
         Lead::query()->update(['CountryId' => null, 'LocationID' => null]);
         Competitor::query()->update(['CountryId' => null, 'LocationID' => null]);
         PropertyRegistry::query()->update(['CountryId' => null, 'LocationId' => null]);
@@ -76,7 +77,9 @@ return new class extends Migration {
             $location = $country?->localities()->whereNotNull('LocalityID')->first();
         }
 
-
+        if (!$country instanceof Country) {
+            dd($country);
+        }        
         Lead::query()->update(['CountryId' => $country->Id, 'LocationID' => $location->ID]);
         Competitor::query()->update(['CountryId' => $country->Id, 'LocationID' => $location->ID]);
         PropertyRegistry::query()->update(['CountryId' => $country->Id, 'LocationId' => $location->ID]);
@@ -92,8 +95,8 @@ return new class extends Migration {
         });
 
         Schema::table('t_PropertyRegistry', static function (Blueprint $table) {
-            $table->foreignId('CountryId')->nullable(false)->change();
-            $table->foreignId('LocationId')->nullable(false)->change();
+            $table->foreignId('CountryId')->nullable()->change();
+            $table->foreignId('LocationId')->nullable()->change();
         });
 
     }
