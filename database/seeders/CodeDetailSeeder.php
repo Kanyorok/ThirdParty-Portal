@@ -192,6 +192,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E', 'DisplayOrder' => 0],
+            //['CodeID' => 'GLAccountType', 'Description' => 'Share Capital', 'Value' => 'S', 'DisplayOrder' => 0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
@@ -491,8 +492,8 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
 
             //Inspection Types
-            ['CodeID' => 'InspectionType', 'Description' => 'Pre/Post-Trip Inspection', 'Value' => 'PI'],
-            ['CodeID' => 'InspectionType', 'Description' => 'Vehicle Assignment Release/Return', 'Value' => 'VAR'],
+            ['CodeID' => 'InspectionType', 'Description' => 'Pre-Trip Inspection', 'Value' => 'PRI'],
+            ['CodeID' => 'InspectionType', 'Description' => 'Post-Trip Inspection', 'Value' => 'POI'],
 
             //Vehicle Statuses
             ['CodeID' => 'VehicleStatus', 'Description' => 'Active', 'Value' => 'AC'],
@@ -547,6 +548,36 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Acknowledged', 'Value' => 'AC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Completed', 'Value' => 'CO'],
+
+
+             //Vehicle Availability Status
+            ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
+            ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
+            ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
+
+             //Driver Availability Status
+
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
+
+            //Load Types
+            ['CodeID' => 'LoadType', 'Description' => 'Passengers', 'Value' => 'P'],
+            ['CodeID' => 'LoadType', 'Description' => 'Goods', 'Value' => 'G'],
+            ['CodeID' => 'LoadType', 'Description' => 'Passengers & Goods', 'Value' => 'PG'],
+
+            //Trip Types
+            ['CodeID' => 'TripType', 'Description' => 'Marketing Campaign', 'Value' => 'MC'],
+            ['CodeID' => 'TripType', 'Description' => 'Inventory Transfers', 'Value' => 'IT'],
+            ['CodeID' => 'TripType', 'Description' => 'Other', 'Value' => 'O'],
+  
+            //Driver Availability Status
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
+            ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
+
+
+
 
             // Recurrent Journal Payment Frequency
             ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Daily', 'Value' => 'd','DisplayOrder'=>0],

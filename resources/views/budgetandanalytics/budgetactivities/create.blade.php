@@ -67,7 +67,7 @@
                             <label class="form-label">Allocation Type</label>
                             <select name="AllocationType" class="form-select" id="allocationType" required>
                                 <option disabled selected>-- Select allocation type --</option>
-                                <option value="full">Annual or Full Allocation</option>
+{{--                                <option value="full">Annual or Full Allocation</option>--}}
                                 <option value="monthly">Monthly Allocation</option>
                             </select>
                             @error('AllocationType') <small class="text-danger">{{ $message }}</small> @enderror

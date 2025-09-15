@@ -54,10 +54,10 @@ return new class extends Migration {
         });
 
         // Seed data
+        
         Lead::query()->update(['CountryId' => null, 'LocationID' => null]);
         Competitor::query()->update(['CountryId' => null, 'LocationID' => null]);
         PropertyRegistry::query()->update(['CountryId' => null, 'LocationId' => null]);
-
         // Note: LocalitySeeder should be run separately after migration
         // This ensures fast migration execution and proper data seeding
 

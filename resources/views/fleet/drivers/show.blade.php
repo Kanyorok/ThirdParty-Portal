@@ -12,12 +12,29 @@
         @endif
         <div class="row">
 
+            
+
             {{-- Left Side Panel: Driver Details --}}
             <div class="col-md-4">
     <div class="card h-100 shadow rounded-4">
         <div class="card-body p-3">
             <h5 class="card-title fw-bold mb-3">{{ $driver->FullName }} Details</h5>
             <hr>
+
+
+             {{-- Vehicle Images --}}
+       @if ($driver->image) 
+    <img src="data:{{ $driver->image->MIMEType }};base64,{{ $driver->image->Image }}"
+         alt="Driver Image"
+         class="img-fluid mb-3 rounded-circle border shadow"
+         style="width: 200px; height: 200px; object-fit: cover;">
+        @else
+            <img src="{{ asset('images/vehicle-placeholder.png') }}" 
+                alt="No Image"
+                class="img-fluid mb-3 rounded-circle border shadow"
+                style="width: 200px; height: 200px; object-fit: cover;">
+        @endif
+
 
             <dl class="row g-2">
                 <dt class="col-md-5">Driver No:</dt>
@@ -166,16 +183,24 @@
                                                         data-id="{{ $assignment->Id }}">🗑️
                                                 </button>
 
-                                            {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
-                                                method="POST" 
-                                                class="d-inline"
-                                                onsubmit="return confirmUnassign(event)">
-                                                @csrf
-                                                @method('POST')
-                                                    <input type="hidden" name="assignment_id" value="{{ $assignment->Id }}">
-                                                <button type="submit" class="btn btn-sm btn-primary">Unassign</button>
-                                            </form> --}}
+                                                {{-- Assign Inspection Button --}}
+                                                <a href="{{ route('fleet.driver_assignments.assign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-success">Assign Inspection</a>
 
+                                                {{-- Unassign Inspection Button --}}
+                                                <a href="{{ route('fleet.driver_assignments.unassign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-danger">Unassign Inspection</a>
+
+                                                {{-- Existing Unassign form (can be removed if using above buttons) --}}
+                                                {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
+                                                    method="POST" 
+                                                    class="d-inline"
+                                                    onsubmit="return confirmUnassign(event)">
+                                                    @csrf
+                                                    @method('POST')
+                                                    <input type="hidden" name="assignment_id" value="{{ $assignment->Id }}">
+                                                    <button type="submit" class="btn btn-sm btn-primary">Unassign</button>
+                                                </form> --}}
                                             </td>
                                         </tr>
                                     @endforeach
@@ -625,6 +650,17 @@
                 });
             });
         });
-    </script>
+
+    function confirmUnassign(e) {
+        e.preventDefault(); // stop form submission
+
+        if (confirm("Are you sure you want to unassign this vehicle?\n\n⚠️ Please first inspect the vehicle.")) {
+            // redirect to inspection create page instead
+            window.location.href = "{{ route('fleet.vehicle_inspection.create') }}";
+        }
+
+        return false; // always stop normal submit
+    }
+</script>
 @endsection
-  
+

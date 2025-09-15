@@ -4,6 +4,16 @@
 
     <div class="card mt-2">
 {{--        <div class="card-header bg-dark text-white">➕ Add Budget Line Entry</div>--}}
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="card-body">
             <form action="{{ route('entrybyglline.store') }}" method="POST">
                 @csrf
@@ -26,18 +36,17 @@
                         </select>
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Branch</label>
-                        <select class="form-select" name="BranchID" required>
-                            <option selected disabled>-- Select Branch --</option>
-                            @foreach ($branches as $item)
-                                <option value="{{ $item->Id }}">{{ $item->Name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
+{{--                    <div class="col-md-6">--}}
+{{--                        <label class="form-label">Branch</label>--}}
+{{--                        <select class="form-select" name="BranchID" required>--}}
+{{--                            <option selected disabled>-- Select Branch --</option>--}}
+{{--                            @foreach ($branches as $item)--}}
+{{--                                <option value="{{ $item->Id }}">{{ $item->Name }}</option>--}}
+{{--                            @endforeach--}}
+{{--                        </select>--}}
+{{--                    </div>--}}
 
-                <div class="mb-3">
+                <div class="mb-2 col-md-6">
                     <label class="form-label">Budget Line</label>
                     <select name="BudgetLineID" class="form-select" required>
                         <option disabled selected>-- Select Budget Line --</option>
@@ -48,14 +57,15 @@
                     @error('BudgetLineID') <small class="text-danger">{{ $message }}</small> @enderror
                 </div>
 
-                <!-- Manual Entry -->
-                <div class="manual-entry">
-                    <div class="mb-3">
-                        <label class="form-label">Amount</label>
-                        <input type="number" step="0.01" min="0.00" id="totalAmount" name="Amount" class="form-control"
-                               placeholder="e.g. 500000" required>
-                    </div>
                 </div>
+                <!-- Manual Entry -->
+{{--                <div class="manual-entry">--}}
+{{--                    <div class="mb-3">--}}
+{{--                        <label class="form-label">Amount</label>--}}
+{{--                        <input type="number" step="0.01" min="0.00" id="totalAmount" name="Amount" class="form-control"--}}
+{{--                               placeholder="e.g. 500000" required>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
 
                 <div class="mb-3 mt-3">
                     <label class="form-label">Remarks (optional)</label>
@@ -70,7 +80,7 @@
                         @foreach($months as $key)
                             <div class="col-md-3 mb-2">
                                 <label>Month {{ $key }}</label>
-                                <input type="number" value="0.00" min="0" name="monthly_allocations[{{ $key }}]"
+                                <input type="number" min="0" name="monthly_allocations[{{ $key }}]"
                                        class="form-control" placeholder="0.00" step="0.01" required>
                             </div>
                         @endforeach

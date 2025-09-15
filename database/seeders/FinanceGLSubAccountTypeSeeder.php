@@ -43,9 +43,22 @@ class FinanceGLSubAccountTypeSeeder extends Seeder
             ['EX_EXP', 'OPEX', 'Purchases or operating expenses'],
             ['OPEX_RENT', 'OPEX', 'Rent Expense'],
             ['CAPEX_SOFT', 'CAPEX', 'Software Licenses'],
+
+            // Share and Capital
+            ['EQ_SHARECAP', 'SC', 'Share Capital'],
+            ['EQ_RETAINED', 'RE', 'Retained Earnings'],
         ];
 
         foreach ($subAccounts as [$code, $typeGroupCode, $desc]) {
+            // Check if SubAccountCode already exists
+            $exists = DB::table('t_FinanceGLSubAccountTypes')
+                ->where('SubAccountCode', $code)
+                ->exists();
+
+            if ($exists) {
+                continue; // Skip duplicates
+            }
+
             $typeGroup = DB::table('t_FinanceGLTypeGroups')
                 ->where('TypeGroupCode', $typeGroupCode)
                 ->first();

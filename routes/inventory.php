@@ -235,6 +235,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/pricemanagement/{Id}', [PriceManagementController::class, 'update'])->name('pricemanagement.update');
     Route::delete('/pricemanagement/{Id}', [PriceManagementController::class, 'destroy'])->name('pricemanagement.destroy');
     Route::post('/pricemanagement/upload', [PriceManagementController::class, 'importPricing'])->name('pricemanagement.upload');
+    Route::get('/downloads/price_management_sample', [PriceManagementController::class, 'downloadSampleTemplate'])->name('pricemanagement.sample');
+
 
     //Route::resource('itemtype', ItemTypeController::class);
     Route::get('/itemtype', [ItemTypeController::class, 'index'])->name('itemtype.index');
