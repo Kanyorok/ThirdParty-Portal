@@ -40,7 +40,7 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Country</label>
-                        <input type="text" class="form-control" value="{{ $property->Country ?? '-' }}" readonly>
+                        <input type="text" class="form-control" value="{{ $property->propertyCountry->Name ?? '-' }}" readonly>
                     </div>
 
                     <div class="col-md-6">
@@ -50,7 +50,7 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Area/Locality</label>
-                        <input type="text" class="form-control" value="{{ $property->AreaLocality ?? '-' }}" readonly>
+                        <input type="text" class="form-control" value="{{ $property->Address ?? '-' }}" readonly>
                     </div>
 
                     <div class="col-12">

@@ -54,21 +54,22 @@
       <div class="row g-3 mb-3">
         <div class="col-md-4">
           <label class="form-label">Country <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" name="Country" required>
+          <select name="CountryId" id="country-select" class="form-select" required>
+            <option value="">-- Select a Country --</option>
+            @foreach ($countries as $country)
+                <option value="{{ $country->Id }}">{{ $country->Name }}</option>
+            @endforeach
+          </select>
         </div>
-          <div class="col-md-4">
-            <label for="TownCity" class="form-label">Town/City <span class="text-danger">*</span></label>
-            <select name="TownCity" class="form-select" required>
-                <optgroup label="Cities and Towns">
-                    @foreach ($localities as $locality)
-                    <option value="{{ $locality->ID }}">{{ $locality->Name }}</option>
-                @endforeach
-              </optgroup>
-            </select>
-          </div>
         <div class="col-md-4">
-          <label class="form-label">Area / Locality <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" name="AreaLocality" required>
+            <label for="TownCity" class="form-label">Town / City<span class="text-danger">*</span></label>
+            <select name="LocationId" id="locality-select" class="form-select" required>
+                <option value="">-- Select a Town or City --</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Address <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" name="Address" required>
         </div>
       </div>
         <div class="col-md-6">
@@ -115,6 +116,36 @@
                         });
                     })
                     .catch(error => console.error('Error loading property types:', error));
+            }
+        });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const countrySelect = document.getElementById('country-select');
+        const localitySelect = document.getElementById('locality-select');
+
+        countrySelect.addEventListener('change', function () {
+            const country = this.value;
+
+            // Reset locality dropdown
+            localitySelect.innerHTML = '<option value="">-- Select a Locality --</option>';
+
+            if (country) {
+                // Construct the URL from the named route
+                const url = `{{ route('getlocalities', ':country') }}`.replace(':country', country);
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(localities => {
+                        localities.forEach(locality => {
+                            const option = document.createElement('option');
+                            option.value = locality.ID;
+                            option.textContent = locality.Name;
+                            localitySelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error loading localities:', error));
             }
         });
     });

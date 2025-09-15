@@ -42,7 +42,7 @@
                                 <td>{{ $property->PropertyName ?? '-' }}</td>
                                 <td>{{ $property->type->PropertyTypeName ?? '-' }}</td>
                                 <td>{{ $property->propertyCategory->Name ?? '-' }}</td>
-                                <td>{{ $property->Country ?? '-' }}</td>
+                                <td>{{ $property->propertyCountry->Name ?? '-' }}</td>
                                 <td>{{ $property->propertyLocality->Name ?? '-' }}</td>
                                 <td>
                                     @if($property->IsActive)

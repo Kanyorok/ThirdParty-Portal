@@ -3,6 +3,7 @@
 namespace App\Models\PropertyManagement;
 
 use App\Models\Core\CategoryMaster;
+use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
@@ -26,9 +27,9 @@ class PropertyRegistry extends Model
         'Category',
         'Owner',
         'AcquisitionDate',
-        'Country',
-        'TownCity',
-        'AreaLocality',
+        'Address',
+        'CountryId',
+        'LocationId',
         'PropertyDescription',
         'IsActive',
         'CreatedBy',
@@ -56,7 +57,12 @@ class PropertyRegistry extends Model
     }
     public function propertyLocality()
     {
-        return $this->belongsTo(Locality::class, 'TownCity', 'Id');
+        return $this->belongsTo(Locality::class, 'LocationId', 'Id');
+    }
+
+    public function propertyCountry()
+    {
+        return $this->belongsTo(Country::class, 'CountryId', 'Id');
     }
 
     public function getFloorByBlock()
@@ -67,16 +73,13 @@ class PropertyRegistry extends Model
     {
         return $this->hasMany(PropertyAttachments::class, 'PropertyID', 'Id');
     }
- public function createdByUser()
-{
-    return $this->belongsTo(User::class, 'CreatedBy');
-}
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
 
-public function modifiedByUser()
-{
-    return $this->belongsTo(User::class, 'ModifiedBy');
-}
-
-    
-
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
+    }
 }
