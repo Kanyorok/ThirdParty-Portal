@@ -214,9 +214,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('bidevaluation', BidEvaluationController::class);
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
-    Route::resource('procurementreports', ProcurementReportsController::class);
-    Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
-    Route::resource('bidscores', BidScoreConsolidationController::class);
+    Route::get('bidscores/{tenderId}/{supplierId}/drilldown', [BidScoreConsolidationController::class, 'show'])->name('bidscores.drilldown');
     Route::resource('procurementreports', ProcurementReportsController::class);
 
     //Tender Creteria setup

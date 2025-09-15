@@ -3,9 +3,7 @@
 use App\Http\Controllers\Finance\AgingReportARController;
 use App\Http\Controllers\Finance\AgingReportController;
 use App\Http\Controllers\Finance\BalanceSheetController;
-use App\Http\Controllers\Finance\BankAccountSetupController;
 use App\Http\Controllers\Finance\BankReconciliationController;
-use App\Http\Controllers\Finance\CashBookController;
 use App\Http\Controllers\Finance\CashFlowStatementController;
 use App\Http\Controllers\Finance\CashManagementController;
 use App\Http\Controllers\Finance\ChartOfAccountsController;
@@ -50,8 +48,19 @@ use App\Http\Controllers\Finance\TransactionTypesController;
 use App\Http\Controllers\Finance\TrialBalanceController;
 use App\Http\Controllers\Finance\ReportsController;
 use App\Http\Controllers\Finance\VendorMasterController;
+
+
 use App\Http\Controllers\Finance\BankController;
 use App\Http\Controllers\Finance\BankBranchController;
+use App\Http\Controllers\Finance\BankAccountSetupController;
+use App\Http\Controllers\Finance\CashBookController;
+use App\Http\Controllers\Finance\BankTransferController;
+use App\Http\Controllers\Finance\BankTransactionController;
+use App\Http\Controllers\Finance\ChequeBookController;
+use App\Http\Controllers\Finance\ChequeController;
+use App\Http\Controllers\Finance\PettyCashFloatController;
+use App\Http\Controllers\Finance\PettyCashController;
+
 use Illuminate\Support\Facades\Route;
 
 // Newly added
@@ -75,8 +84,6 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('agingreportar', AgingReportARController::class);
     Route::resource('customerstatement', CustomerStatementController::class);
     Route::resource('paymentvoucher', PaymentVoucherController::class);
-    Route::resource('bankaccountsetup', BankAccountSetupController::class);
-    Route::resource('cashbook', CashBookController::class);
     Route::resource('cashmanagement', CashManagementController::class);
     Route::resource('chequemanagement', ChequeManagementController::class);
     Route::resource('paymentandreceiptvouchers', PaymentAndReceiptsController::class);
@@ -211,19 +218,151 @@ Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.ar.')->group(
 
 // Bank Routes
 
-Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+Route::middleware('auth')->prefix('finance')->name('finance.')->group(function () {
 
-    // Banks Routes (resource route for all CRUD)
-    Route::resource('bank', BankController::class);
+    // Banks => finance.bank.*
+    Route::resource('bank', BankController::class)->names('bank');
 
-    // All Bank Branches (safe for sidebar, no params)
+    // Branches (menu-safe, no param) => finance.bankbranch.index
     Route::get('bank-branches', [BankBranchController::class, 'listAll'])
         ->name('bankbranch.index');
 
-    // Bank-specific branches (filtered by bankId)
+    // Branches filtered by bank => finance.bankbranch.bybank
     Route::get('bank/{bankId}/branches', [BankBranchController::class, 'index'])
         ->name('bankbranch.bybank');
 
-    // Bank Branch CRUD (exclude index as we already defined it in above routes)
-    Route::resource('bankbranch', BankBranchController::class)->except(['index']);
+    // Branch CRUD (no index here) => finance.bankbranch.*
+    Route::resource('bankbranch', BankBranchController::class)
+        ->except(['index'])
+        ->names('bankbranch');
+});
+
+
+Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+    Route::resource('bankaccountsetup', BankAccountSetupController::class)
+        ->names('bankaccountsetup'); // => finance.bankaccountsetup.*
+});
+
+Route::prefix('finance')->middleware('auth')->group(function () {
+    Route::resource('cashbook', CashBookController::class); // cashbook.*
+    Route::get('cashbook/create/receipt', [CashBookController::class, 'createReceipt'])->name('cashbook.create.receipt');
+    Route::get('cashbook/create/payment', [CashBookController::class, 'createPayment'])->name('cashbook.create.payment');
+    Route::post('cashbook/{id}/post',  [CashBookController::class, 'post'])->name('cashbook.post');
+    Route::post('cashbook/{id}/void',  [CashBookController::class, 'void'])->name('cashbook.void');
+
+    // NEW: mapping preview for auto-GL
+    Route::get('cashbook/txntype/{id}/mapping', [CashBookController::class, 'txnTypeMapping'])
+        ->name('cashbook.txntype.mapping');
+});
+
+
+Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+    Route::resource('banktransfers', BankTransferController::class)->names([
+        'index'  => 'banktransfers.index',
+        'create' => 'banktransfers.create',
+        'store'  => 'banktransfers.store',
+        'show'   => 'banktransfers.show',
+        'edit'   => 'banktransfers.edit',
+        'update' => 'banktransfers.update',
+        'destroy'=> 'banktransfers.destroy',
+    ]);
+
+    Route::post('banktransfers/{id}/post', [BankTransferController::class, 'post'])->name('banktransfers.post');
+    Route::post('banktransfers/{id}/void', [BankTransferController::class, 'void'])->name('banktransfers.void');
+});
+
+
+Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+    Route::resource('banktransactions', BankTransactionController::class)->names([
+        'index'  => 'banktransactions.index',
+        'create' => 'banktransactions.create',
+        'store'  => 'banktransactions.store',
+        'show'   => 'banktransactions.show',
+        'edit'   => 'banktransactions.edit',
+        'update' => 'banktransactions.update',
+        'destroy'=> 'banktransactions.destroy',
+    ]);
+
+    Route::post('banktransactions/{id}/post', [BankTransactionController::class, 'post'])->name('banktransactions.post');
+    Route::post('banktransactions/{id}/void', [BankTransactionController::class, 'void'])->name('banktransactions.void');
+});
+
+
+
+Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+    // Helper to compute next start/end based on last book for a bank account
+    Route::get('chequebooks/next-range/{bankAccountId}', [ChequeBookController::class, 'nextRange'])
+        ->name('chequebooks.next-range');
+
+    Route::resource('chequebooks', ChequeBookController::class)
+        ->only(['index','create','store','show','edit','update','destroy'])
+        ->names([
+            'index'   => 'chequebooks.index',
+            'create'  => 'chequebooks.create',
+            'store'   => 'chequebooks.store',
+            'show'    => 'chequebooks.show',
+            'edit'    => 'chequebooks.edit',
+            'update'  => 'chequebooks.update',
+            'destroy' => 'chequebooks.destroy',
+        ])
+        ->parameters(['chequebooks' => 'id']);
+
+        // Cheques
+    Route::get('cheques', [ChequeController::class, 'index'])->name('cheques.index');
+
+    // Create
+    Route::get('cheques/issued/create',   [ChequeController::class, 'createIssued'])->name('cheques.issued.create');
+    Route::post('cheques/issued',         [ChequeController::class, 'storeIssued'])->name('cheques.issued.store');
+
+    Route::get('cheques/received/create', [ChequeController::class, 'createReceived'])->name('cheques.received.create');
+    Route::post('cheques/received',       [ChequeController::class, 'storeReceived'])->name('cheques.received.store');
+
+    // Show
+    Route::get('cheques/{id}', [ChequeController::class, 'show'])->name('cheques.show');
+
+    // Actions
+    Route::post('cheques/{id}/deposit', [ChequeController::class, 'deposit'])->name('cheques.deposit'); // RECEIVED only
+    Route::post('cheques/{id}/clear',   [ChequeController::class, 'clear'])->name('cheques.clear');     // both
+    Route::post('cheques/{id}/bounce',  [ChequeController::class, 'bounce'])->name('cheques.bounce');   // both
+    Route::post('cheques/{id}/cancel',  [ChequeController::class, 'cancel'])->name('cheques.cancel');   // Draft/Issued/OnHand
+
+    // Optional: spoil a specific unused leaf (mark as not usable)
+    Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function($book,$leaf){ $l = \App\Models\Finance\ChequeLeaf::where('ChequeBookID',$book)->findOrFail($leaf);
+        if ($l->Status !== 'Unused') return back()->with('error','Only Unused leaves can be spoiled.'); $l->Status = 'Spoiled';
+        $l->Notes  = 'Manually spoiled';  $l->save();
+       return back()->with('success','Leaf spoiled.');  })->name('chequebooks.leaves.spoil');
+});
+
+
+Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
+    // Setup
+    Route::resource('pettyfloats', PettyCashFloatController::class)->names([
+        'index'  => 'pettyfloats.index',
+        'create' => 'pettyfloats.create',
+        'store'  => 'pettyfloats.store',
+        'edit'   => 'pettyfloats.edit',
+        'update' => 'pettyfloats.update',
+        'destroy'=> 'pettyfloats.destroy',
+    ])->except(['show']);
+
+    // Vouchers
+    Route::get('pettycash', [PettyCashController::class, 'index'])->name('pettycash.index');
+    Route::get('pettycash/disbursement/create', [PettyCashController::class, 'createDisbursement'])->name('pettycash.disbursement.create');
+    Route::get('pettycash/replenishment/create', [PettyCashController::class, 'createReplenishment'])->name('pettycash.replenishment.create');
+    Route::get('pettycash/refund/create',        [PettyCashController::class, 'createRefund'])->name('pettycash.refund.create');
+    Route::post('pettycash',                     [PettyCashController::class, 'store'])->name('pettycash.store');
+
+    Route::get('pettycash/{id}',       [PettyCashController::class, 'show'])->name('pettycash.show');
+    Route::post('pettycash/{id}/post', [PettyCashController::class, 'post'])->name('pettycash.post');
+    Route::post('pettycash/{id}/void', [PettyCashController::class, 'void'])->name('pettycash.void');
+    Route::delete('pettycash/{id}',    [PettyCashController::class, 'destroy'])->name('pettycash.destroy');
+
+    Route::post('pettycash/{id}/submit', [PettyCashController::class, 'submitForApproval'])->name('pettycash.submit');
+    Route::post('pettycash/{id}/approve', [PettyCashController::class, 'approve'])->name('pettycash.approve');
+    Route::post('pettycash/{id}/reject',  [PettyCashController::class, 'reject'])->name('pettycash.reject');
+
+    // Replenishment wizard
+    Route::get('pettycash/replenishment/wizard',        [PettyCashController::class, 'wizard'])->name('pettycash.wizard');
+    Route::get('pettycash/replenishment/wizard/preview',[PettyCashController::class, 'wizardPreview'])->name('pettycash.wizard.preview');
+    Route::post('pettycash/replenishment/wizard',       [PettyCashController::class, 'wizardStore'])->name('pettycash.wizard.store');
 });

@@ -11,7 +11,7 @@ class BankController extends Controller
     // Display a listing of the banks
     public function index()
     {
-        $banks = Bank::all();
+        $banks = \App\Models\Finance\Bank::orderBy('BankName')->paginate(20);
         return view('finance.bank.index', compact('banks'));
     }
 
@@ -25,15 +25,35 @@ class BankController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'BankName' => 'required|string|max:200',
-            'ShortName' => 'nullable|string|max:50',
+            'BankName'     => 'required|string|max:200',
+            'ShortName'    => 'nullable|string|max:50',
+            'BankCode'     => 'nullable|string|max:50',
+            'SwiftCode'    => 'nullable|string|max:20',
+            'ClearingCode' => 'nullable|string|max:50',
+            'CountryID'    => 'nullable|integer',
+            'EmailID'      => 'nullable|email|max:150',
+            'Phone'        => 'nullable|string|max:50',
+            'Website'      => 'nullable|url|max:150',
+            'IsActive'     => 'nullable|boolean',
         ]);
 
-        Bank::create($request->all());
+        $bank = new \App\Models\Finance\Bank();
+        $bank->BankName     = $request->BankName;
+        $bank->ShortName    = $request->ShortName;
+        $bank->BankCode     = $request->BankCode;
+        $bank->SwiftCode    = $request->SwiftCode;
+        $bank->ClearingCode = $request->ClearingCode;
+        $bank->CountryID    = $request->CountryID;
+        $bank->EmailID      = $request->EmailID;
+        $bank->Phone        = $request->Phone;
+        $bank->Website      = $request->Website;
+        $bank->IsActive     = $request->boolean('IsActive'); // checkbox → 1/0
+        $bank->CreatedBy    = auth()->id();
+        // CreatedOn has DB default (GETDATE()), so no need to set here
+        $bank->save();
 
-        return redirect()->route('finance.bank.index');
+        return redirect()->route('finance.bank.index')->with('success', 'Bank created.');
     }
-
     // Show a specific bank's details
     public function show($id)
     {
@@ -52,13 +72,34 @@ class BankController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'BankName' => 'required|string|max:200',
+            'BankName'     => 'required|string|max:200',
+            'ShortName'    => 'nullable|string|max:50',
+            'BankCode'     => 'nullable|string|max:50',
+            'SwiftCode'    => 'nullable|string|max:20',
+            'ClearingCode' => 'nullable|string|max:50',
+            'CountryID'    => 'nullable|integer',
+            'EmailID'      => 'nullable|email|max:150',
+            'Phone'        => 'nullable|string|max:50',
+            'Website'      => 'nullable|url|max:150',
+            'IsActive'     => 'nullable|boolean',
         ]);
 
-        $bank = Bank::findOrFail($id);
-        $bank->update($request->all());
+        $bank = \App\Models\Finance\Bank::findOrFail($id);
+        $bank->BankName     = $request->BankName;
+        $bank->ShortName    = $request->ShortName;
+        $bank->BankCode     = $request->BankCode;
+        $bank->SwiftCode    = $request->SwiftCode;
+        $bank->ClearingCode = $request->ClearingCode;
+        $bank->CountryID    = $request->CountryID;
+        $bank->EmailID      = $request->EmailID;
+        $bank->Phone        = $request->Phone;
+        $bank->Website      = $request->Website;
+        $bank->IsActive     = $request->boolean('IsActive');
+        $bank->ModifiedBy   = auth()->id();
+        $bank->ModifiedOn   = now(); // will work fine against SQL Server
+        $bank->save();
 
-        return redirect()->route('finance.bank.index');
+        return redirect()->route('finance.bank.index')->with('success', 'Bank updated.');
     }
 
     // Delete the bank
