@@ -12,10 +12,10 @@ return new class extends Migration {
     {
         Schema::table('t_TripLogs', function (Blueprint $table) {
             // Add new fields
-            $table->string('TripType')->after('TripNo');
-            $table->string('TripCode')->after('TripType');
-            $table->foreignId('VehicleType')->after('TripCode')->constrained('t_CodeDetails', 'ID');
-            $table->foreignId('LoadType')->after('VehicleType')->constrained('t_CodeDetails', 'ID');
+            $table->string('TripType')->after('TripNo')->nullable();
+            $table->string('TripCode')->after('TripType')->nullable();
+            $table->foreignId('VehicleType')->after('TripCode')->constrained('t_CodeDetails', 'ID')->nullable();
+            $table->foreignId('LoadType')->after('VehicleType')->constrained('t_CodeDetails', 'ID')->nullable();
             $table->foreignId('ParentTripID')->nullable()->after('Id')->constrained('t_TripLogs', 'Id');
 
             $table->string('Purpose')->nullable()->change();

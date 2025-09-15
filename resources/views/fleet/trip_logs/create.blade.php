@@ -26,13 +26,14 @@
         <hr>
         <div class="row g-3">
 
+            {{-- Trip Type --}}
             <div class="col-md-4">
                 <label for="TripType" class="form-label">Trip Type</label>
                 <select name="TripType" id="TripType" class="form-select" required {{ $parentTrip ? 'disabled' : '' }}>
                     <option value="">-- Select Trip Type --</option>
                     @foreach($tripTypes as $type)
                         <option value="{{ $type->ID }}"
-                            {{ old('TripType', $parentTrip->TripType ?? '') == $type->ID ? 'selected' : '' }}>
+                            {{ old('TripType', $parentTrip->TripType ?? $tripLog->TripType ?? '') == $type->ID ? 'selected' : '' }}>
                             {{ $type->Description }}
                         </option>
                     @endforeach
@@ -42,29 +43,32 @@
                 @endif
             </div>
 
-            <div class="col-md-4">
-    <label for="TripCode" class="form-label">Trip Code</label>
-    <select name="TripCode" id="TripCode" class="form-select" {{ $tripLog ? 'disabled' : '' }}>
-        <option value="">-- Select Trip Code --</option>
-        @if ($tripLog)
-            <option value="{{ $tripLog->TripCode }}" selected>
-                {{ $tripLog->TripCode }}
-            </option>
-        @endif
-    </select>
-    @if ($tripLog)
-        <input type="hidden" name="TripCode" value="{{ $tripLog->TripCode }}">
-    @endif
-</div>
+            {{-- Trip Code --}}
+            <div class="col-md-4" id="tripCodeContainer">
+                <label for="TripCode" class="form-label">Trip Code</label>
+                <select name="TripCode" id="TripCode" class="form-select" {{ $tripLog ? 'disabled' : '' }}>
+                    <option value="">-- Select Trip Code --</option>
+                </select>
+                @if ($tripLog)
+                    <input type="hidden" name="TripCode" value="{{ $tripLog->TripCode }}">
+                @endif
+            </div>
 
+            {{-- Purpose (only if Trip Type = Other) --}}
+            <div class="col-md-4 d-none" id="purposeContainer">
+                <label for="Purpose" class="form-label">Purpose</label>
+                <input type="text" name="Purpose" id="Purpose" class="form-control"
+                       value="{{ old('Purpose', $tripLog->Purpose ?? '') }}">
+            </div>
 
+            {{-- Vehicle Type --}}
             <div class="col-md-4">
                 <label for="VehicleType" class="form-label">Vehicle Type</label>
                 <select name="VehicleType" id="VehicleType" class="form-select" required {{ $parentTrip ? 'disabled' : '' }}>
                     <option value="">-- Select Vehicle Type --</option>
                     @foreach($vehicleTypes as $type)
                         <option value="{{ $type->ID }}"
-                            {{ old('VehicleType', $parentTrip->VehicleType ?? '') == $type->ID ? 'selected' : '' }}>
+                            {{ old('VehicleType', $parentTrip->VehicleType ?? $tripLog->VehicleType ?? '') == $type->ID ? 'selected' : '' }}>
                             {{ $type->Description }}
                         </option>
                     @endforeach
@@ -74,13 +78,14 @@
                 @endif
             </div>
 
+            {{-- Load Type --}}
             <div class="col-md-4">
                 <label for="LoadType" class="form-label">Load Type</label>
                 <select name="LoadType" id="LoadType" class="form-select" {{ $parentTrip ? 'disabled' : '' }}>
                     <option value="">-- Select Load Type --</option>
                     @foreach($loadTypes as $type)
                         <option value="{{ $type->ID }}"
-                            {{ old('LoadType', $parentTrip->LoadType ?? '') == $type->ID ? 'selected' : '' }}>
+                            {{ old('LoadType', $parentTrip->LoadType ?? $tripLog->LoadType ?? '') == $type->ID ? 'selected' : '' }}>
                             {{ $type->Description }}
                         </option>
                     @endforeach
@@ -90,45 +95,58 @@
                 @endif
             </div>
 
+            {{-- Dates / Times --}}
             <div class="col-md-4">
                 <label for="TripStartDate" class="form-label">Trip Start Date</label>
                 <input type="date" name="TripStartDate" id="TripStartDate" class="form-control"
-                       value="{{ old('TripStartDate', $parentTrip->TripStartDate ?? '') }}" required {{ $parentTrip ? 'readonly' : '' }}>
+                       value="{{ old('TripStartDate', $parentTrip->TripStartDate ?? $tripLog->TripStartDate ?? '') }}"
+                       required {{ $parentTrip ? 'readonly' : '' }}>
             </div>
 
             <div class="col-md-4">
                 <label for="StartTime" class="form-label">Start Time</label>
                 <input type="time" name="StartTime" id="StartTime" class="form-control"
-                       value="{{ old('StartTime', $parentTrip->StartTime ?? '') }}" {{ $parentTrip ? 'readonly' : '' }}>
+                       value="{{ old('StartTime', $parentTrip->StartTime ?? $tripLog->StartTime ?? '') }}"
+                       {{ $parentTrip ? 'readonly' : '' }}>
             </div>
 
             <div class="col-md-4">
                 <label for="TripEndDate" class="form-label">Trip End Date</label>
                 <input type="date" name="TripEndDate" id="TripEndDate" class="form-control"
-                       value="{{ old('TripEndDate', $parentTrip->TripEndDate ?? '') }}" {{ $parentTrip ? 'readonly' : '' }}>
+                       value="{{ old('TripEndDate', $parentTrip->TripEndDate ?? $tripLog->TripEndDate ?? '') }}"
+                       {{ $parentTrip ? 'readonly' : '' }}>
             </div>
 
             <div class="col-md-4">
                 <label for="EndTime" class="form-label">End Time</label>
                 <input type="time" name="EndTime" id="EndTime" class="form-control"
-                       value="{{ old('EndTime', $parentTrip->EndTime ?? '') }}" {{ $parentTrip ? 'readonly' : '' }}>
+                       value="{{ old('EndTime', $parentTrip->EndTime ?? $tripLog->EndTime ?? '') }}"
+                       {{ $parentTrip ? 'readonly' : '' }}>
             </div>
 
+            {{-- Locations --}}
             <div class="col-md-4">
                 <label for="StartLocation" class="form-label">Start Location</label>
                 <input type="text" name="StartLocation" id="StartLocation"
-                       class="form-control" value="{{ old('StartLocation', $parentTrip->StartLocation ?? '') }}" {{ $parentTrip ? 'readonly' : '' }}>
+                       class="form-control"
+                       value="{{ old('StartLocation', $parentTrip->StartLocation ?? $tripLog->StartLocation ?? '') }}"
+                       {{ $parentTrip ? 'readonly' : '' }}>
             </div>
 
             <div class="col-md-4">
                 <label for="EndLocation" class="form-label">End Location</label>
                 <input type="text" name="EndLocation" id="EndLocation"
-                       class="form-control" value="{{ old('EndLocation', $parentTrip->EndLocation ?? '') }}" {{ $parentTrip ? 'readonly' : '' }}>
+                       class="form-control"
+                       value="{{ old('EndLocation', $parentTrip->EndLocation ?? $tripLog->EndLocation ?? '') }}"
+                       {{ $parentTrip ? 'readonly' : '' }}>
             </div>
 
+            {{-- Notes --}}
             <div class="col-md-12">
                 <label for="Notes" class="form-label">Notes</label>
-                <textarea name="Notes" id="Notes" class="form-control" rows="3" {{ $parentTrip ? 'readonly' : '' }}>{{ old('Notes', $parentTrip->Notes ?? '') }}</textarea>
+                <textarea name="Notes" id="Notes" class="form-control" rows="3" {{ $parentTrip ? 'readonly' : '' }}>
+                    {{ old('Notes', $parentTrip->Notes ?? $tripLog->Notes ?? '') }}
+                </textarea>
             </div>
         </div>
         
@@ -153,6 +171,7 @@
     </form>
 </div>
 @endsection
+
 @section('scripts')
 <script>
 const tripTypeSelect = document.getElementById('TripType');
@@ -164,12 +183,33 @@ const endLocationInput = document.getElementById('EndLocation');
 const childTripsContainer = document.getElementById('childTripsContainer');
 const addChildTripBtn = document.getElementById('addChildTripBtn');
 
+const tripCodeContainer = document.getElementById('tripCodeContainer');
+const purposeContainer = document.getElementById('purposeContainer');
+const purposeInput = document.getElementById('Purpose');
+
 /**
  * Load approved transfers or campaigns into TripCode select
  */
 function loadApprovedTrips() {
     let selectedText = tripTypeSelect.options[tripTypeSelect.selectedIndex]?.text?.toLowerCase() || '';
     tripCodeSelect.innerHTML = '<option value="">-- Select Trip Code --</option>';
+
+    // Reset containers
+    tripCodeContainer.classList.remove('d-none');
+    purposeContainer.classList.add('d-none');
+    tripCodeSelect.required = true;
+    purposeInput.required = false;
+
+    // If "Other" -> show Purpose field instead
+    if (selectedText.includes('other')) {
+        tripCodeContainer.classList.add('d-none');
+        purposeContainer.classList.remove('d-none');
+        tripCodeSelect.required = false;
+        purposeInput.required = true;
+        return;
+    }
+
+    const selectedId = "{{ old('TripCode', $tripLog->TripCode ?? '') }}";
 
     if (selectedText.includes('inventory transfer')) {
         fetch("{{ route('fleet.trip_logs.approved_transfers') }}")
@@ -182,8 +222,10 @@ function loadApprovedTrips() {
                     opt.dataset.transferdate = trf.TransferDate;
                     opt.dataset.frombranch = trf.FromBranch ?? '';
                     opt.dataset.tobranch = trf.ToBranch ?? '';
+                    if (opt.value == selectedId) opt.selected = true;
                     tripCodeSelect.appendChild(opt);
                 });
+                if (tripCodeSelect.value) tripCodeSelect.dispatchEvent(new Event('change'));
             });
     }
 
@@ -198,8 +240,10 @@ function loadApprovedTrips() {
                     opt.dataset.starton = cmp.StartOn;
                     opt.dataset.endon = cmp.EndOn;
                     opt.dataset.activities = JSON.stringify(cmp.Activities ?? []);
+                    if (opt.value == selectedId) opt.selected = true;
                     tripCodeSelect.appendChild(opt);
                 });
+                if (tripCodeSelect.value) tripCodeSelect.dispatchEvent(new Event('change'));
             });
     }
 }
@@ -294,9 +338,9 @@ addChildTripBtn?.addEventListener('click', () => {
     addChildTripRow(index);
 });
 
-// Preload options if editing
-@if ($parentTrip)
+// Run on page load
+window.addEventListener('DOMContentLoaded', () => {
     loadApprovedTrips();
-@endif
+});
 </script>
 @endsection
