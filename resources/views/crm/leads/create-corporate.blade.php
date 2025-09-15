@@ -52,13 +52,22 @@
             <p id="Email_error" class="invalid-feedback d-none error col-12"
                role="alert"></p>
         </div>
-
-
         <div class="mb-3">
-            <label for="Location" class="form-label">Location <span
-                    class="text-danger">*</span></label>
+            <label for="Country" class="form-label">Country <span class="text-danger">*</span></label>
+            <select class="form-control" name="Country" id="Country" required>
+                <option disabled selected>Select Country</option>
+                @foreach($Countries as $Country)
+                    <option value="{{ $Country->CountryCode }}" data-phone="{{$Country->PhoneCode}}"
+                            data-location="{{ route('locality.select2',['country'=>$Country->CountryCode]) }}">{{ $Country->Flag}} {{ $Country->Name}}</option>
+                @endforeach
+            </select>
+            <p id="Country_error" class="invalid-feedback d-none error col-12"
+               role="alert"></p>
+        </div>
+        <div class="mb-3">
+            <label for="Location" class="form-label">Location <span class="text-danger">*</span></label>
             <select class="form-control locations" name="Location" id="Location"
-                    required></select>
+                    required disabled></select>
             <p id="Location_error" class="invalid-feedback d-none error col-12"
                role="alert"></p>
         </div>
@@ -165,11 +174,41 @@
             }
         });
 
-        $('.locations').select2({
+        $('#Country').select2({
+            placeholder: "Select a Country",
+            dropdownParent: $("#offcanvasMain")
+        }).on('change', function () {
+            const option = $(this).find('option:selected');
+            $('#Phone').val(option.data('phone'));
+            $('#Location').prop('disabled', false).select2('destroy').val(null).select2({
+                placeholder: "Search for the Location",
+                minimumInputLength: 2,
+                dropdownParent: $("#offcanvasMain"),
+                ajax: {
+                    url: option.data('location'),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {q: $.trim(params.term)};
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return {text: item.Name, id: item.ID}
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+        });
+        $('#Location').select2();
+
+        /*$('.locations').select2({
             placeholder: "Select a Town/City", minimumInputLength: 2,
             dropdownParent: $("#offcanvasMain"),
             ajax: {
-                url: "{{ route('locality.select2') }}?type={{  LocalityTypeEnum::City->value }}",
+                url: "{ { route('locality.select2') }}?type={ {  LocalityTypeEnum::City->value }}",
                 dataType: 'json',
                 delay: 250,
                 data: function (params) {
@@ -184,7 +223,7 @@
                 },
                 cache: true
             }
-        });
+        });*/
 
         flatpickr(".last-contact", {
             enableTime: true,

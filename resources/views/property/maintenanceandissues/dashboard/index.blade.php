@@ -2,7 +2,7 @@
 @section('title', 'Maintenance Dashboard')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📈 Maintenance Dashboard</h4>
+  <p><small>This dashboard displays the position of the maintenance task based on it's current status</small></p>
 
   <!-- Summary Cards -->
   <div class="row g-3 mb-4">
@@ -66,7 +66,6 @@
         <th>Status</th>
         <th>Assigned To</th>
         <th>Date Reported</th>
-        <th>Action</th>
       </tr>
     </thead>
     <tbody>
@@ -90,9 +89,6 @@
             {{ $assign->internalTechnician->FullName ?? $assign->prequalifiedVendor->TradingName ?? '-' }}
           </td>
           <td>{{ \Carbon\Carbon::parse($assign->AssignmentDate)->format('d/m/Y') }}</td>
-          <td>
-            <a href="{{ route('workcompletion.show', $assign->Id) }}" class="btn btn-sm btn-outline-primary">View</a>
-          </td>
         </tr>
       @empty
         <tr>

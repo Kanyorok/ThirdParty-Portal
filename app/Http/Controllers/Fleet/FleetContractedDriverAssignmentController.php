@@ -31,7 +31,7 @@ class FleetContractedDriverAssignmentController extends Controller
         }
 
         $driver = ContractedDriver::findOrFail($driverId);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
 
@@ -107,7 +107,7 @@ class FleetContractedDriverAssignmentController extends Controller
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
 
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
 
         return view('fleet.contracted_drivers.show', compact('driver', 'licenses', 'assignments', 'assigners', 'vehicles'));
     }

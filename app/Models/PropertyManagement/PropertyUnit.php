@@ -35,14 +35,6 @@ class PropertyUnit extends Model
     {
         return 'PropertyUnitId';
     }
-    // public function getBlockByProperty()
-    // {
-    //     return $this->hasMany(PropertyBlock::class, 'PropertyID', 'Id');
-    // }
-    //     public function getFloorByBlock()
-    // {
-    //     return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');
-    // }
     public function unit()
     {
         return $this->belongsTo(PropertyBlock::class, 'BlockID', 'Id');
@@ -61,5 +53,10 @@ class PropertyUnit extends Model
     public function floors()
     {
         return $this->belongsTo(PropertyFloor::class, 'FloorID', 'Id');
+    }
+
+    public function unitlease()
+    {
+        return $this->belongsTo(PropertyNewLease::class, 'Id', 'Unit');
     }
 }

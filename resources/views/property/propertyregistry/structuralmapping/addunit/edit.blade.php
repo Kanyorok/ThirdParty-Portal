@@ -18,7 +18,6 @@
       @method('PUT')
 
       <div class="card shadow">
-        <div class="card-header bg-light fw-bold">✏️ Edit Unit</div>
         <div class="card-body">
 
           {{-- Row 1: Property / Block / Floor --}}
@@ -28,9 +27,9 @@
               <select name="PropertyID" id="property-select" class="form-select" required>
                 <option value="">-- Select Property --</option>
                 @foreach ($lineentries as $property)
-                  <option value="{{ $property->Id }}"
+                  <option value="{{ $property->Id ?? '-'}}"
                     {{ old('PropertyID', $unit->PropertyID) == $property->Id ? 'selected' : '' }}>
-                    {{ $property->PropertyName }}
+                    {{ $property->PropertyName ?? '-'}}
                   </option>
                 @endforeach
               </select>
@@ -101,15 +100,13 @@
             <textarea class="form-control" rows="2" name="Remarks">{{ old('Remarks', $unit->Remarks) }}</textarea>
           </div>
 
-          {{-- Submit --}}
-          <div class="d-grid">
-            <button type="submit" class="btn btn-success"
-              onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">
-              Update Unit
-            </button>
-            <a href="{{ route('addunit.index') }}" class="btn btn-secondary mt-2">Cancel</a>
+          <div class="d-flex justify-content-end gap-2 mt-3">
+              <button type="submit" class="btn btn-success"
+                  onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">
+                  Update Unit
+              </button>
+              <a href="{{ route('addunit.index') }}" class="btn btn-secondary">Cancel</a>
           </div>
-
         </div>
       </div>
     </form>

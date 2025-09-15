@@ -11,10 +11,17 @@ class PrequalificationApplicationResource extends JsonResource
     {
         return [
             'ApplicationID' => $this->ApplicationID,
+            'applicationId' => $this->ApplicationID,
             'SupplierID' => $this->SupplierID,
             'RoundID' => $this->RoundID,
+            'roundId' => $this->RoundID,
             'CategoryID' => $this->CategoryID,
             'Status' => $this->Status,
+            'status' => $this->when($this->Status, fn() => [
+                'value' => $this->Status->value ?? (string)$this->Status,
+                'label' => method_exists($this->Status, 'label') ? $this->Status->label() : (string)$this->Status,
+            ]),
+            'hasApplied' => true,
             'SubmittedOn' => $this->SubmittedOn?->format('Y-m-d H:i:s'),
             'Evaluations' => PrequalificationEvaluationResource::collection($this->whenLoaded('evaluations')),
         ];

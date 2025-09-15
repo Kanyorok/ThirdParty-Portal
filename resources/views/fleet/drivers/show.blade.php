@@ -140,8 +140,8 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Vehicle</th>
-                                        <th>Assigned</th>
-                                        <th>Unassigned</th>
+                                        <th>Assigned On</th>
+                                        <th>Unassigned On</th>
                                         <th>Purpose</th>
                                         <th>AssignedBy</th>
                                         <th>Notes</th>
@@ -153,8 +153,8 @@
                                         <tr data-id="{{ $assignment->Id }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $assignment->vehicle?->RegistrationNo?? '' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d M Y') }}</td>
-                                            <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d M Y') : '—' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') }}</td>
+                                            <td>{{ $assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—' }}</td>
                                             <td>{{ $assignment->Purpose ?: '—' }}</td>
                                             <td>{{ $assignment->assignedBy?->LastName ?? '—' }}</td>
                                             <td>{{ $assignment->Notes ?: '—' }}</td>
@@ -165,6 +165,17 @@
                                                 <button class="btn btn-sm btn-danger btn-delete" data-type="assignment"
                                                         data-id="{{ $assignment->Id }}">🗑️
                                                 </button>
+
+                                            {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
+                                                method="POST" 
+                                                class="d-inline"
+                                                onsubmit="return confirmUnassign(event)">
+                                                @csrf
+                                                @method('POST')
+                                                    <input type="hidden" name="assignment_id" value="{{ $assignment->Id }}">
+                                                <button type="submit" class="btn btn-sm btn-primary">Unassign</button>
+                                            </form> --}}
+
                                             </td>
                                         </tr>
                                     @endforeach
@@ -258,7 +269,7 @@
     {{-- Add Assignment Modal --}}
     <div class="modal fade" id="addAssignmentModal" tabindex="-1">
         <div class="modal-dialog">
-            <form id="addAssignmentForm">
+            <form id="addAssignmentForm" action="{{ route('fleet.driver_assignments.store') }}" method="POST">
                 @csrf
                 <input type="hidden" name="DriverID" value="{{ $driver->Id }}">
                 <div class="modal-content rounded-4">
@@ -269,10 +280,12 @@
                     <div class="modal-body">
                         <label class="form-label">Vehicle</label>
                         <select name="VehicleID" class="form-control" required>
+                            <option value="">-- Select Vehicle --</option>
                             @foreach($vehicles as $vehicle)
                                 <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
                             @endforeach
                         </select>
+
                         <label class="form-label mt-2">Assignment Date</label>
                         <input type="date" name="AssignmentDate" class="form-control" required>
                         <label class="form-label mt-2">Unassignment Date</label>
@@ -614,3 +627,4 @@
         });
     </script>
 @endsection
+  

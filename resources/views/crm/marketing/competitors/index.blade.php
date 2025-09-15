@@ -41,8 +41,8 @@
         </div>
     </div>
     <div class="modal fade" id="CompetitorActionsModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content ">
                 <div class="modal-header">
                     <h5 class="modal-title">..</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"
@@ -56,9 +56,10 @@
                                  aria-valuemin="0" aria-valuemax="100"><small class="sr-only">0%
                                     Complete</small></div>
                         </div>
-                        <form action="{{ route('competitors.store') }}" method="post" id="createCompetitorForm"
+                        <form action="{{ route('competitors.store') }}" method="post" class="row"
+                              id="createCompetitorForm"
                               enctype="multipart/form-data"> @csrf
-                            <div class="mb-3 text-center">
+                            <div class="mb-3 text-center col-sm-6 col-12">
                                 <input type="file" name="image" class="d-none" accept="image/*"
                                        style="display: none;" id="Upload_image">
                                 <label for="Upload_image">
@@ -66,44 +67,60 @@
                                          id="image_upload_preview" alt=".." class="img-fluid img-thumbnail mb-2"
                                          width="200" height="200"/></label>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="Name">Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="Name" name="Name" required
-                                       placeholder="Name">
-                                <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            <div class="col-sm-6 col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" for="Name">Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="Name" name="Name" required
+                                           placeholder="Name">
+                                    <p id="Name_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="Website">Website </label>
+                                    <input type="url" class="form-control" id="Website" name="Website"
+                                           placeholder="https://craftsillicon.com">
+                                    <p id="Website_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                </div>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3 col-sm-6 col-12">
+                                <label for="Country" class="form-label">Country <span
+                                        class="text-danger">*</span></label>
+                                <select class="form-control" name="Country" id="Country" required>
+                                    <option disabled selected>Select Country</option>
+                                    @foreach($Countries as $Country)
+                                        <option value="{{ $Country->CountryCode }}" data-phone="{{$Country->PhoneCode}}"
+                                                data-location="{{ route('locality.select2',['country'=>$Country->CountryCode]) }}">{{ $Country->Flag}} {{ $Country->Name}}</option>
+                                    @endforeach
+                                </select>
+                                <p id="Country_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
+                            </div>
+                            <div class="mb-3 col-sm-6 col-12">
                                 <label for="Location" class="form-label">Location <span
                                         class="text-danger">*</span></label>
-                                <select class="form-control" name="Location" id="Location" required></select>
-                                <p id="Location_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="Website">Website </label>
-                                <input type="url" class="form-control" id="Website" name="Website"
-                                       placeholder="https://craftsillicon.com">
-                                <p id="Website_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                <select class="form-control locations" name="Location" id="Location"
+                                        required disabled></select>
+                                <p id="Location_error" class="invalid-feedback d-none error col-12"
+                                   role="alert"></p>
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-3 col-sm-6 col-12">
                                 <label class="form-label" for="Phone">Phone Number </label>
                                 <input type="text" class="form-control" id="Phone" name="Phone"
                                        placeholder="Phone Number">
                                 <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3 col-sm-6 col-12">
                                 <label class="form-label" for="Email">Email </label>
                                 <input type="text" class="form-control" id="Email" name="Email"
                                        placeholder="Email">
                                 <p id="Email_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3 col-12">
                                 <label class="form-label" for="Notes">Notes </label>
-                                <textarea name="Notes" id="Notes" rows="3" class="form-control"></textarea>
+                                <textarea name="Notes" id="Notes" rows="2" class="form-control"></textarea>
                                 <p id="Notes_end_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-                            <hr>
-                            <div class="mt-4">
+                            <div class="mt-4 col-12 border-top border-1">
                                 <button type="button" class="btn btn-secondary float-start"
                                         data-bs-dismiss="modal">
                                     cancel
@@ -127,7 +144,36 @@
         $(function () {
             $.fn.dataTable.ext.errMode = 'none';
             fetchCompetitorsTable();
-
+            $('#Country').select2({
+                placeholder: "Select a Country",
+                dropdownParent: $Modal
+            }).on('change', function () {
+                const option = $(this).find('option:selected');
+                $('#Phone').val(option.data('phone'));
+                $('#Location').prop('disabled', false).select2('destroy').val(null).select2({
+                    placeholder: "Search for the Location",
+                    minimumInputLength: 2,
+                    dropdownParent: $Modal,
+                    ajax: {
+                        url: option.data('location'),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {q: $.trim(params.term)};
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: $.map(data, function (item) {
+                                    return {text: item.Name, id: item.ID}
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            });
+            $('#Location').select2();
+            {{--
             $('#Location').select2({
                 placeholder: "Select a Town/City", minimumInputLength: 2,
                 dropdownParent: $Modal,
@@ -147,7 +193,7 @@
                     },
                     cache: true
                 }
-            });
+            }); --}}
 
             $("#Upload_image").change(function () {
                 $('.avatar-change').removeClass('d-none');

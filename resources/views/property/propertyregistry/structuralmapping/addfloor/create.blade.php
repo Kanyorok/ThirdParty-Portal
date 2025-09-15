@@ -14,7 +14,7 @@
     <form action="{{ route('addfloor.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="card shadow">
-            <div class="card-header bg-light fw-bold">➕ Floor Setup</div>
+            <div class="card-header bg-light fw-bold">Floor Setup</div>
             <div class="card-body">
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
@@ -45,7 +45,7 @@
                     <textarea class="form-control" rows="2" placeholder="Optional floor notes"
                               name="FloorNotes"></textarea>
                 </div>
-                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Save Floor</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Floor</button>
                 <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>

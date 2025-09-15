@@ -5,120 +5,131 @@
 
 @section('content')
 <div class="container mt-4" style="max-width: 1000px;">
-    <h4 class="mb-3">Lease Agreement Details</h4>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
-
-                <div class="col">
-                    <strong>Lease Number</strong>
-                    <p class="mb-1">{{ $newlease->LeaseNumber ?? '-' }}</p>
+            {{-- Lease Information --}}
+            <h6 class="mb-3 text-dark">Lease Information</h6>
+            <hr>
+            <div class="row g-3 text-dark">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Lease Number</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->LeaseNumber ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Tenant</strong>
-                    <p class="mb-1">{{ $newlease->tenant->TenantName ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Tenant</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->tenant->TenantName ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Property</strong>
-                    <p class="mb-1">{{ $newlease->property->PropertyName ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Property</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->property->PropertyName ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Block</strong>
-                    <p class="mb-1">{{ $newlease->block->BlockName ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Block</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->block->BlockName ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Floor</strong>
-                    <p class="mb-1">{{ $newlease->floor->FloorLabel ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Floor</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->floor->FloorLabel ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Unit</strong>
-                    <p class="mb-1">{{ $newlease->unit->UnitCode ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Unit</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->unit->UnitCode ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Start Date</strong>
-                    <p class="mb-1">{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d M Y') : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Start Date</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>End Date</strong>
-                    <p class="mb-1">{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d M Y') : '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">End Date</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d M Y') : '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Payment Frequency</strong>
-                    <p class="mb-1">{{ $newlease->code->Description ?? '-' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Payment Frequency</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->code->Description ?? '-' }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Monthly Rent (KES)</strong>
-                    <p class="mb-1">{{ number_format($newlease->MonthlyRent, 2) }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Due Day</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->DueDay ?? '-' }}" readonly>
+                </div>
+            </div><br>
+
+
+            {{-- Financial Information --}}
+            <h6 class="mb-3 text-dark">Financial Information</h6>
+            <hr>
+            <div class="row g-3 text-dark">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Monthly Rent (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->MonthlyRent, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Deposit (KES)</strong>
-                    <p class="mb-1">{{ number_format($newlease->Deposit, 2) }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Deposit (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->Deposit, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Service Charge (KES)</strong>
-                    <p class="mb-1">{{ number_format($newlease->ServiceCharge, 2) }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Service Charge (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ServiceCharge, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Parking Fee (KES)</strong>
-                    <p class="mb-1">{{ number_format($newlease->ParkingFee, 2) }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Parking Fee (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ParkingFee, 2) }}" readonly>
                 </div>
 
-                <div class="col">
-                    <strong>Other Charges (KES)</strong>
-                    <p class="mb-1">{{ number_format($newlease->OtherCharges, 2) }}</p>
-                </div>
-
-                <div class="col">
-                    <strong>Due Day</strong>
-                    <p class="mb-1">{{ $newlease->DueDay ?? '-' }}</p>
-                </div>
-
-                <div class="col-12">
-                    <strong>Special Terms</strong>
-                    <p class="mb-1">{{ $newlease->SpecialTerms ?? '—' }}</p>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Other Charges (KES)</label>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->OtherCharges, 2) }}" readonly>
                 </div>
             </div>
 
-            <hr class="my-3">
+            <hr class="my-4">
 
-            <h6 class="mb-2">Audit Information</h6>
-            <div class="row row-cols-1 row-cols-md-2 g-2 fs-6">
-                <div class="col">
-                    <strong>Created By</strong>
-                    <p class="mb-1">{{ $newlease->createdByUser->Name ?? '-' }}</p>
-                </div>
-                <div class="col">
-                    <strong>Created On</strong>
-                    <p class="mb-1">{{ $newlease->CreatedOn ? Carbon::parse($newlease->CreatedOn)->format('d M Y H:i') : '-' }}</p>
-                </div>
-                <div class="col">
-                    <strong>Modified By</strong>
-                    <p class="mb-1">{{ $newlease->modifiedByUser->Name ?? '-' }}</p>
-                </div>
-                <div class="col">
-                    <strong>Modified On</strong>
-                    <p class="mb-1">{{ $newlease->ModifiedOn ? Carbon::parse($newlease->ModifiedOn)->format('d M Y H:i') : '-' }}</p>
-                </div>
+            {{-- Special Terms --}}
+            <h6 class="mb-3 text-dark">Special Terms</h6>
+            <div class="mb-3">
+                <textarea class="form-control bg-light text-dark" rows="3" readonly>{{ $newlease->SpecialTerms ?? '—' }}</textarea>
+            </div>
+
+            {{-- Attached Documents --}}
+            <h6 class="mb-3 text-dark">Attached Documents</h6>
+            <div class="p-3 border rounded bg-light text-dark">
+                @forelse($newlease->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                    {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                @empty
+                    <span>No documents attached.</span>
+                @endforelse
             </div>
         </div>
 
-        <div class="card-footer text-end py-2">
-            <a href="{{ route('addlease.index') }}" class="btn btn-sm btn-secondary">⬅ Back</a>
-            <a href="{{ route('addlease.edit', $newlease->Id) }}" class="btn btn-sm btn-primary">✏ Edit</a>
+        {{-- Footer with Audit Info + Actions --}}
+        <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
+            <div>
+                Created by <strong>{{ $newlease->createdByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $newlease->CreatedOn ? Carbon::parse($newlease->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                | Modified by <strong>{{ $newlease->modifiedByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $newlease->ModifiedOn ? Carbon::parse($newlease->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+            </div>
+            <div>
+                <a href="{{ route('addlease.index') }}" class="btn btn-sm btn-dark">Back</a>
+                <a href="{{ route('addlease.edit', $newlease->Id) }}" class="btn btn-sm btn-dark">Edit</a>
+            </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

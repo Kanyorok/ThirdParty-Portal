@@ -491,6 +491,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TK'],
             ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
 
+            //Inspection Types
+            ['CodeID' => 'InspectionType', 'Description' => 'Pre/Post-Trip Inspection', 'Value' => 'PI'],
+            ['CodeID' => 'InspectionType', 'Description' => 'Vehicle Assignment Release/Return', 'Value' => 'VAR'],
+
             //Vehicle Statuses
             ['CodeID' => 'VehicleStatus', 'Description' => 'Active', 'Value' => 'AC'],
             ['CodeID' => 'VehicleStatus', 'Description' => 'Under Maintenance', 'Value' => 'UM'],
