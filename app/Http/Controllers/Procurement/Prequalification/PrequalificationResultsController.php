@@ -29,10 +29,16 @@ class PrequalificationResultsController extends Controller
             ->get()
             ->keyBy('SectionId');
 
+        // Normalize section weights so their sum equals 100
+        $totalSectionWeight = max(0.0, (float) ($preqSections->sum('Weight') ?? 0));
+        $weightScale = ($totalSectionWeight > 0 && abs($totalSectionWeight - 100.0) > 0.0001)
+            ? (100.0 / $totalSectionWeight)
+            : 1.0;
+
         $bySection = $evaluations->groupBy('SectionID');
         foreach ($bySection as $sectionId => $sectionEvaluations) {
             $sectionModel = $preqSections[$sectionId] ?? null;
-            $sectionWeight = $sectionModel?->Weight ?? 0; // expects total of all to be 100
+            $sectionWeight = ($sectionModel?->Weight ?? 0) * $weightScale; // total normalized to 100
             $criteriaCount = $sectionModel?->criteria?->count() ?: max(1, $sectionEvaluations->count());
             $perCriterionWeight = $criteriaCount > 0 ? ($sectionWeight / $criteriaCount) : 0; // portion of 100
             $sectionDisplayName = $sectionModel?->masterSection?->SectionName
@@ -77,13 +83,15 @@ class PrequalificationResultsController extends Controller
     private function persistResults(PrequalificationApplication $application, array $calc): PrequalificationResult
     {
         $grandTotal = $calc['grandTotal'] ?? 0.0;
-        $passingThreshold = 70; // configurable later
-        $decision = ($grandTotal >= $passingThreshold) ? 'Passed' : 'Failed';
+        // Compare with 2-decimal rounding to match UI and avoid 59.999999 vs 60 issues
+        $score = round($grandTotal, 2);
+        $passingThreshold = (int) config('prequalification.passing_threshold', 60);
+        $decision = ($score >= $passingThreshold) ? 'Passed' : 'Failed';
 
         return PrequalificationResult::updateOrCreate(
             ['ApplicationID' => $application->ApplicationID],
             [
-                'TotalScore' => $grandTotal,
+                'TotalScore' => $score,
                 'Decision' => $decision,
                 'ApprovalBy' => Auth::id(),
                 'CreatedOn' => now(),

@@ -37,7 +37,7 @@ class LocalitySeeder extends Seeder
 
             $currencyId = $this->getCurrencyId($countryData['currency'], $countryData['currency_symbol']);
             if (!$currencyId) {
-                $currencyId = DB::table('t_Currencies')->insertGetId([
+                $currencyData = [
                     "Name" => $countryData['currency_name'],
                     "Code" => $countryData['currency'],
                     "Symbol" => $countryData['currency_symbol'],
@@ -48,11 +48,17 @@ class LocalitySeeder extends Seeder
                     'CreatedBy' => $actor->Id,
                     'ModifiedOn' => $date,
                     'ModifiedBy' => $actor->Id,
-                ]);
+                ];
+                
+                DB::table('t_Currencies')->updateOrInsert(
+                    ['Code' => $countryData['currency']],
+                    $currencyData
+                );
+                $currencyId = $this->getCurrencyId($countryData['currency'], $countryData['currency_symbol']);
             }
 
-            // Insert country
-            $countryId = DB::table('t_Countries')->insertGetId([
+            // Insert or update country
+            $countryInsertData = [
                 "Name" => $countryData['name'],
                 "CountryCode" => $countryData['iso2'],
                 "PhoneCode" => $countryData['phonecode'],
@@ -62,13 +68,22 @@ class LocalitySeeder extends Seeder
                 'CreatedBy' => $actor->Id,
                 'ModifiedOn' => $date,
                 'ModifiedBy' => $actor->Id,
-            ]);
+            ];
+            
+            DB::table('t_Countries')->updateOrInsert(
+                ['Name' => $countryInsertData['Name']],
+                $countryInsertData
+            );
+            
+            $countryId = DB::table('t_Countries')
+                ->where('Name', $countryInsertData['Name'])
+                ->value('Id');
 
             // Process states/regions
             if (!empty($countryData['states'])) {
                 foreach ($countryData['states'] as $stateData) {
-                    // Insert state/region
-                    $stateId = DB::table('t_Localities')->insertGetId([
+                    // Insert or update state/region
+                    $stateInsertData = [
                         'Name' => $stateData['name'],
                         'LocationType' => $stateData['type'] ?? 'state',
                         'CreatedOn' => $date,
@@ -77,12 +92,23 @@ class LocalitySeeder extends Seeder
                         'CreatedBy' => $actor->Id,
                         'ModifiedOn' => $date,
                         'ModifiedBy' => $actor->Id,
-                    ]);
+                    ];
+                    
+                    DB::table('t_Localities')->updateOrInsert(
+                        ['Name' => $stateInsertData['Name'], 'CountryId' => $countryId, 'LocationType' => $stateInsertData['LocationType']],
+                        $stateInsertData
+                    );
+                    
+                    $stateId = DB::table('t_Localities')
+                        ->where('Name', $stateInsertData['Name'])
+                        ->where('CountryId', $countryId)
+                        ->where('LocationType', $stateInsertData['LocationType'])
+                        ->value('Id');
 
                     // Process cities
                     if (!empty($stateData['cities'])) {
                         foreach ($stateData['cities'] as $cityData) {
-                            DB::table('t_Localities')->insert([
+                            $cityInsertData = [
                                 'Name' => $cityData['name'],
                                 'LocationType' => 'city',
                                 'CountryId' => $countryId,
@@ -91,7 +117,12 @@ class LocalitySeeder extends Seeder
                                 'CreatedBy' => $actor->Id,
                                 'ModifiedOn' => $date,
                                 'ModifiedBy' => $actor->Id,
-                            ]);
+                            ];
+                            
+                            DB::table('t_Localities')->updateOrInsert(
+                                ['Name' => $cityInsertData['Name'], 'CountryId' => $countryId, 'LocalityID' => $stateId],
+                                $cityInsertData
+                            );
                         }
                     }
                 }

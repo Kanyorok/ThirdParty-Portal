@@ -89,7 +89,8 @@ function actionButtons(row) {
         buttons += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1"><i class='fas fa-edit'></i></a>`;
     }
     if (row.prequalify_allowed) {
-        buttons += `<form method='POST' action='${singleUrl}' class='d-inline prequalify-single-form'>@csrf<button type='submit' class='btn btn-sm btn-success' title='Force Prequalify'><i class="fas fa-check"></i></button></form>`;
+    const prequalifyTitle = (row.decision === 'Passed') ? 'Prequalify' : 'Force Prequalify';
+    buttons += `<form method='POST' action='${singleUrl}' class='d-inline prequalify-single-form'>@csrf<button type='submit' class='btn btn-sm btn-success' title='${prequalifyTitle}'><i class="fas fa-check"></i></button></form>`;
     }
     return buttons;
 }

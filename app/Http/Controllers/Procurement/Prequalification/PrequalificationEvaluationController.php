@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationCriteria;
 use App\Models\Procurement\Prequalification\PrequalificationEvaluation;
+use App\Models\Procurement\Prequalification\PrequalificationResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\ThirdParty\ThirdParties;
@@ -99,6 +100,7 @@ class PrequalificationEvaluationController extends Controller
     public function bulkPrequalify(int $roundId): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $now = Carbon::now();
+    $userId = Auth::id();
         // Get applications with passed decision
         $passedApps = PrequalificationApplication::with('result')
             ->where('RoundID', $roundId)
@@ -112,15 +114,27 @@ class PrequalificationEvaluationController extends Controller
             return back()->with('warning','No passed applications to prequalify.');
         }
 
-        DB::transaction(function () use ($passedApps, $roundId, $now) {
+        DB::transaction(function () use ($passedApps, $roundId, $now, $userId) {
             foreach ($passedApps as $app) {
                 // mark third party as prequalified
-                ThirdParties::where('Id', $app->SupplierID)->update(['IsPrequalified'=>1, 'ModifiedOn'=>$now]);
-                // ensure supplier row exists
-                Supplier::updateOrCreate(
+                ThirdParties::where('Id', $app->SupplierID)->update([
+                    'IsPrequalified'=>1,
+                    'ModifiedOn'=>$now,
+                    'ModifiedBy'=>$userId,
+                ]);
+                // ensure supplier row exists with required audit fields
+                $supplier = Supplier::firstOrCreate(
                     ['ThirdPartyID'=>$app->SupplierID, 'RoundID'=>$roundId],
-                    ['Active_Status'=>1, 'ModifiedOn'=>$now, 'CreatedOn'=>$now]
+                    [
+                        'Active_Status'=>1,
+                        'CreatedOn'=>$now,
+                        'CreatedBy'=>$userId,
+                    ]
                 );
+                $supplier->Active_Status = 1;
+                $supplier->ModifiedOn = $now;
+                $supplier->ModifiedBy = $userId;
+                $supplier->save();
             }
         });
 
@@ -209,8 +223,8 @@ class PrequalificationEvaluationController extends Controller
         $request->validate([
             'criteria_scores' => 'required|array',
             'criteria_scores.*.criteria_id' => 'required|integer',
-            'criteria_scores.*.score' => 'nullable|numeric|min:0',
-            'criteria_scores.*.max_score' => 'required|numeric|min:0',
+            'criteria_scores.*.score' => 'nullable|numeric|min:0|max:10',
+            'criteria_scores.*.max_score' => 'required|numeric|in:10',
             'criteria_scores.*.comments' => 'nullable|string',
             'general_comments' => 'nullable|string',
         ]);
@@ -250,7 +264,45 @@ class PrequalificationEvaluationController extends Controller
             );
         }
 
-        $application = PrequalificationApplication::find($applicationId);
+        $application = PrequalificationApplication::with('round.prequalificationSections.criteria')->find($applicationId);
+        // Recompute and persist results immediately so decision reflects latest scores
+        $evaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
+            ->get();
+        if ($application && $application->round && $evaluations->isNotEmpty()) {
+            $preqSections = $application->round->prequalificationSections->keyBy('SectionId');
+            $totalSectionWeight = max(0.0, (float) ($preqSections->sum('Weight') ?? 0));
+            $weightScale = ($totalSectionWeight > 0 && abs($totalSectionWeight - 100.0) > 0.0001)
+                ? (100.0 / $totalSectionWeight)
+                : 1.0;
+
+            $grandTotal = 0.0;
+            foreach ($evaluations->groupBy('SectionID') as $sectionId => $sectionEvaluations) {
+                $sectionModel = $preqSections[$sectionId] ?? null;
+                $sectionWeight = ($sectionModel?->Weight ?? 0) * $weightScale;
+                $criteriaCount = $sectionModel?->criteria?->count() ?: max(1, $sectionEvaluations->count());
+                $perCriterionWeight = $criteriaCount > 0 ? ($sectionWeight / $criteriaCount) : 0;
+
+                $sectionTotal = 0.0;
+                foreach ($sectionEvaluations as $eval) {
+                    $raw = (float) ($eval->Score ?? 0);
+                    if ($raw < 0) $raw = 0; if ($raw > 10) $raw = 10;
+                    $sectionTotal += $perCriterionWeight * ($raw / 10);
+                }
+                $grandTotal += round($sectionTotal, 6);
+            }
+            $grandTotal = round($grandTotal, 2);
+            $threshold = (int) config('prequalification.passing_threshold', 60);
+            $decision = ($grandTotal >= $threshold) ? 'Passed' : 'Failed';
+
+            PrequalificationResult::updateOrCreate(
+                ['ApplicationID' => $application->ApplicationID],
+                [
+                    'TotalScore' => $grandTotal,
+                    'Decision' => $decision,
+                    'ApprovalBy' => Auth::id(),
+                ]
+            );
+        }
         if ($request->filled('general_comments')) {
             $application->GeneralComments = $request->input('general_comments');
             $application->save();
