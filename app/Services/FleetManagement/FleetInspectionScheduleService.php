@@ -83,7 +83,7 @@ class FleetInspectionScheduleService
             $records->DeletedOn = now();
             $records->save();
 
-            $records->delete(); // Soft delete
+            $records->delete(); 
 
             activity()
                 ->performedOn($records)

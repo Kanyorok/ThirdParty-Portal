@@ -21,12 +21,12 @@
           enctype="multipart/form-data">
         @csrf
 
-        {{-- If this is a Post-Trip inspection --}}
+        {{-- Post-Trip Inspection --}}
         @if(isset($parentInspection))
-            <input type="hidden" name="ParentInspectionID" value="{{ $parentInspection->Id }}">
             <input type="hidden" name="VehicleID" value="{{ $parentInspection->VehicleID }}">
             <input type="hidden" name="FuelType" value="{{ $parentInspection->FuelType }}">
             <input type="hidden" name="InspectionTypeID" value="{{ $parentInspection->InspectionTypeID }}">
+            <input type="hidden" name="ParentInspectionID" value="{{ $parentInspection->Id }}">
 
             <div class="alert alert-info">
                 Creating a <strong>Post-Trip</strong> inspection for:
@@ -39,32 +39,36 @@
             </div>
         @endif
 
-        {{-- Row 1: Vehicle & Fuel (Pre-Trip only) --}}
+        {{-- Pre-Trip Inspection --}}
         @unless(isset($parentInspection))
         <div class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label">Inspection Type</label>
-            <select name="InspectionTypeID" class="form-select" required>
-                <option value="">-- Select Inspection Type --</option>
-                @foreach($inspectionTypes as $type)
-                    <option value="{{ $type->ID }}" {{ old('InspectionTypeID') == $type->ID ? 'selected' : '' }}>
-                        {{ $type->Description }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+            <div class="col-md-4">
+                <label class="form-label">Inspection Type</label>
+                <select name="InspectionTypeID" class="form-select" required>
+                    <option value="">-- Select Inspection Type --</option>
+                    @foreach($inspectionTypes as $type)
+                        <option value="{{ $type->ID }}" {{ old('InspectionTypeID') == $type->ID ? 'selected' : '' }}>
+                            {{ $type->Description }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
             <div class="col-md-4">
                 <label class="form-label">Vehicle</label>
                 <select name="VehicleID" class="form-select" required>
                     <option value="">-- Select Vehicle --</option>
                     @foreach($vehicles as $vehicle)
-                        <option value="{{ $vehicle->Id }}" {{ old('VehicleID') == $vehicle->Id ? 'selected' : '' }}>
+                        <option value="{{ $vehicle->Id }}"
+                            @if(isset($assignment) && (string)$assignment->VehicleID === (string)$vehicle->Id)
+                                selected
+                            @elseif(old('VehicleID') == $vehicle->Id)
+                                selected
+                            @endif>
                             {{ $vehicle->RegistrationNo }}
                         </option>
                     @endforeach
                 </select>
             </div>
-
             <div class="col-md-4">
                 <label class="form-label">Fuel Type</label>
                 <select name="FuelType" class="form-select" required>
@@ -79,7 +83,7 @@
         </div>
         @endunless
 
-        {{-- Driver (Always shown for both Pre-Trip & Post-Trip) --}}
+        {{-- Driver (Always shown) --}}
         <div class="row g-3 mt-2">
             <div class="col-md-4">
                 <label class="form-label">Driver</label>
@@ -92,44 +96,33 @@
                     @endforeach
                 </select>
             </div>
-
             <div class="col-md-4">
                 <label class="form-label">Inspection Date</label>
-                <input type="date" name="InspectionDate" class="form-control" 
-                       value="{{ old('InspectionDate') }}" required>
+                <input type="date" name="InspectionDate" class="form-control" value="{{ old('InspectionDate') }}" required>
             </div>
-
             <div class="col-md-4">
                 <label class="form-label">Mileage (Km)</label>
-                <input type="number" name="Mileage" class="form-control" 
-                       value="{{ old('Mileage') }}" required>
+                <input type="number" name="Mileage" class="form-control" value="{{ old('Mileage') }}" required>
             </div>
         </div>
 
-        {{-- Row 2: Fluids & Speedometer --}}
+        {{-- Fluids --}}
         <div class="row g-3 mt-2">
             <div class="col-md-4">
                 <label class="form-label">Fuel (Litres)</label>
-                <input type="number" step="0.01" name="Fuel" class="form-control" 
-                       value="{{ old('Fuel') }}" required>
+                <input type="number" step="0.01" name="Fuel" class="form-control" value="{{ old('Fuel') }}" required>
             </div>
-
             <div class="col-md-4">
                 <label class="form-label">Engine Oil (L)</label>
-                <input type="number" step="0.01" name="EngineOil" class="form-control" 
-                       value="{{ old('EngineOil') }}" required>
+                <input type="number" step="0.01" name="EngineOil" class="form-control" value="{{ old('EngineOil') }}" required>
             </div>
-
             <div class="col-md-4">
                 <label class="form-label">Coolant (L)</label>
-                <input type="number" step="0.01" name="Coolant" class="form-control" 
-                       value="{{ old('Coolant') }}" required>
+                <input type="number" step="0.01" name="Coolant" class="form-control" value="{{ old('Coolant') }}" required>
             </div>
-
             <div class="col-md-4">
                 <label class="form-label">Speedometer (Km/h)</label>
-                <input type="number" name="Speedometer" class="form-control" 
-                       value="{{ old('Speedometer') }}" required>
+                <input type="number" name="Speedometer" class="form-control" value="{{ old('Speedometer') }}" required>
             </div>
         </div>
 
@@ -148,9 +141,7 @@
                         '4XFloorMats' => '4X Floor Mats',
                     ] as $field => $label)
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" 
-                                   name="{{ $field }}" value="1" 
-                                   {{ old($field) ? 'checked' : '' }}>
+                            <input class="form-check-input" type="checkbox" name="{{ $field }}" value="1" {{ old($field) ? 'checked' : '' }}>
                             <label class="form-check-label">{{ $label }}</label>
                         </div>
                     @endforeach
@@ -172,4 +163,16 @@
         </div>
     </form>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(isset($assignment) && !isset($parentInspection))
+            document.querySelector('[name="InspectionTypeID"]').value = "{{ $assignment->InspectionTypeID ?? '' }}";
+            document.querySelector('[name="VehicleID"]').value = "{{ $assignment->VehicleID ?? '' }}";
+            document.querySelector('[name="DriverID"]').value = "{{ $assignment->DriverID ?? '' }}";
+        @endif
+    });
+</script>
 @endsection
