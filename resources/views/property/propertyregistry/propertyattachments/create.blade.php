@@ -35,7 +35,7 @@
             </select>
           </div>
         <div class="col-md-6">
-          <label class="form-label">Upload File</label>
+          <label class="form-label">Upload File<span class="text-danger">*</span></label>
           <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
         </div>
       </div>

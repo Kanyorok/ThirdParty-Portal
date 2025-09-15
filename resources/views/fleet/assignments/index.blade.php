@@ -10,8 +10,10 @@
                 <thead class="table-light">
                 <tr>
                     <th>#</th>
-                    <th>Vehicle</th>
-                    <th>Assigned To</th>
+                    <th>TripNo</th>
+                    <th>VehicleType</th>
+                    <th>VehicleNo</th>
+                    <th>AssignedTo</th>
                     <th>Branch</th>
                     <th>Date</th>
                     <th>Purpose</th>

@@ -2,8 +2,9 @@
 @section('title', ' Stock Take Records')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📋 Stock Take Records</h4>
-  <a href="{{ route('stocktake.create') }}" class="btn btn-success">➕ Add New Stock Take</a>
+  <a href="{{ route('stocktake.create') }}" class="btn btn-success">Add New Stock Take</a>
+
+  <p><small>The list is of different stock take counts</small></p>
     @if($stocks->count())
         <table id="stocktake" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
@@ -22,14 +23,14 @@
     @foreach($stocks as $stock)
       <tr>
           <td>{{$loop->iteration}}</td>
-          <td>{{ $stock->branch->Name }}</td>
-          <td>{{$stock->store->StoreName}}</td>
+          <td>{{ $stock->branch->Name ?? '-'}}</td>
+          <td>{{$stock->store->StoreName ?? '-'}}</td>
           <td>{{$stock->countedby->Name ?? 'N/A'}}</td>
-          <td>{{ \Carbon\Carbon::parse($stock->CountDate)->format('d/m/Y') }}</td>
-          <td>{{$stock->createdby->Name}}</td>
-          <td>{{ \Carbon\Carbon::parse($stock->CreatedOn)->format('d/m/Y') }}</td>
+          <td>{{ \Carbon\Carbon::parse($stock->CountDate)->format('d/m/Y') ?? '-'}}</td>
+          <td>{{$stock->createdby->Name ?? '-'}}</td>
+          <td>{{ \Carbon\Carbon::parse($stock->CreatedOn)->format('d/m/Y') ?? '-'}}</td>
         <td>
-            <a href="{{ route('stocktake.show', $stock->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+            <a href="{{ route('stocktake.show', $stock->Id) }}" class="btn btn-sm btn-info">View</a>
             <a href="{{ route('stocktake.edit', $stock->Id) }}" class="btn btn-sm btn-warning">Edit</a>
             <form action="{{ route('stocktake.destroy', $stock->Id) }}" method="POST" class="d-inline">
                 @csrf

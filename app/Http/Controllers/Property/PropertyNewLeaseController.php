@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Property;
 
-use App\Enums\Core\PermissionEnum;
-use App\Enums\Property\TenantClearanceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
 use App\Models\Core\CodeDetail;
@@ -13,7 +11,6 @@ use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyNewLease;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use App\Models\PropertyManagement\PropertyRegistry;
-use App\Models\PropertyManagement\PropertyTenantClearance;
 use App\Models\PropertyManagement\PropertyUnit;
 use App\Services\Property\TenantAndLease\PropertyNewLeaseService;
 use DateTime;
@@ -29,13 +26,25 @@ class PropertyNewLeaseController extends Controller
     //
     public function index()
     {
-        $newleases = PropertyNewLease::with('tenant', 'property')->where('isActive', true)->get();
+        $newleases = PropertyNewLease::with('tenant', 'property')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
     }
 
     public function create(){
       //  $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
-        $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
+        $properties = PropertyRegistry::where('IsActive', 1)
+            ->whereHas('getBlockByProperty.floor.units', function ($query) {
+                $query->where('IsRentable', 1)
+                    ->where('CurrentStatus', 1);
+            })
+            ->with([
+                'getBlockByProperty.floor.units' => function ($query) {
+                    $query->where('IsRentable', 1)
+                        ->where('CurrentStatus', 1);
+                }
+            ])->get();
+
+
         $newtenants = PropertyNewTenant::where('IsActive', true)->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
@@ -43,23 +52,50 @@ class PropertyNewLeaseController extends Controller
 
     public function getBlockByProperty($propertyId)
     {
-        $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
-        //dd($blocks); // check if it's returning correctly
+        $blocks = PropertyBlock::where('PropertyID', $propertyId)
+            ->whereHas('floor.units', function ($query) {
+                $query->where('IsRentable', 1)
+                    ->where('CurrentStatus', 1);
+            })
+            ->with([
+                'floor.units' => function ($query) {
+                    $query->where('IsRentable', 1)
+                        ->where('CurrentStatus', 1);
+                }
+            ])
+            ->get();
+
         return response()->json($blocks);
     }
 
-
     public function getFloorByBlock($blockId)
     {
-        $floors = PropertyFloor::where('BlockID', $blockId)->get();
+        $floors = PropertyFloor::where('BlockID', $blockId)
+            ->whereHas('units', function ($query) {
+                $query->where('IsRentable', 1)
+                    ->where('CurrentStatus', 1);
+            })
+            ->with([
+                'units' => function ($query) {
+                    $query->where('IsRentable', 1)
+                        ->where('CurrentStatus', 1);
+                }
+            ])
+            ->get();
+
         return response()->json($floors);
     }
 
     public function getUnitByFloor($floorId)
     {
-        $units = PropertyUnit::where('FloorId', $floorId)->get();
+        $units = PropertyUnit::where('FloorId', $floorId)
+            ->where('IsRentable', 1)
+            ->where('CurrentStatus', 1)
+            ->get();
+
         return response()->json($units);
     }
+
 
     public function show($Id)
     {
