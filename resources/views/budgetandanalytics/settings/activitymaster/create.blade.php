@@ -77,9 +77,14 @@
                         <button type="reset" class="btn btn-outline-secondary">
                             <i class="fas fa-undo me-1"></i> Reset
                         </button>
+
                         <button type="submit" class="btn btn-success"
-                                onclick="this.disabled=true; this.innerHTML='<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Saving...'; this.form.submit();">
-                            <i class="fas fa-save me-1"></i> Save Activity
+                                onclick="if(this.form.checkValidity()){
+                                    this.disabled = true;
+                                    this.innerHTML = '<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i>Saving...';
+                                    this.form.submit();
+                                }">
+                            Save Activity
                         </button>
                     </div>
                 </form>

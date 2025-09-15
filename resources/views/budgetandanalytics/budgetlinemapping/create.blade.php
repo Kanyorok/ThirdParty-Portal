@@ -135,10 +135,10 @@
         </div>
 
         <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-success"
                     onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Submitting...'; this.form.submit(); }">
-                💾 Save Budget Line & Mapping
+                💾 Save Budget Line
             </button>
         </div>
             </form>

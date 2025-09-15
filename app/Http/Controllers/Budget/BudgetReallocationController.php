@@ -145,6 +145,7 @@ class BudgetReallocationController extends Controller
 
     public function store(Request $request)
     {
+        //return $request;
         // 1) Validate input
         $validated = $request->validate([
             'BudgetID'         => ['required','integer','exists:t_Budgets,Id'],
@@ -271,25 +272,24 @@ class BudgetReallocationController extends Controller
                 'ReallocationType' => $validated['ReallocationType'] ?? null,
                 'Amount'           => $validated['Amount'],
                 'Justification'    => $validated['Justification'],
-                'Status'           => 'Pending',
                 'CreatedBy'        => auth()->id(),
                 'CreatedOn'        => now(),
             ]);
-
             // Helper to insert pending monthly limits
             $insertLimits = function(array $arr, BudgetLine $line, int $reallocId,$ledgerID) use ($validated, $months) {
                 foreach ($arr as $idx => $val) {
-                    if ($val === null || $val === '' || (float)$val <= 0) continue;
+                    //if ($val === null || $val === '' || (float)$val <= 0) continue;
 
                     // $idx is 1..12 per your field names (e.g., FromAllocations[9])
-                    $month = $months[(int)$idx] ?? null;
-                    if (!$month instanceof Carbon) continue;
+                        $month = $months[(int)$idx] ?? null;
+                    //if (!$month instanceof Carbon) continue;
 
+                    $erpLedgerId=BudgetLinesGLAccount::where('BudgetLineID',$line->Id)->pluck('BudgetGLAccountID')->first();
                     BudgetLineLedgerLimit::create([
                         'BudgetID'       => $validated['BudgetID'],
                         'ReallocationID' => $reallocId,
                         'BudgetLineID'   => $line->Id, // assumes PK is Id per your schema
-                        'ERPLedgerID'    => $line->BudgetGLAccountID ?? null,
+                        'ERPLedgerID'    => $erpLedgerId ?? null,
                         'LedgerID'       => $ledgerID,   // required
                         'BranchID'       => $validated['BranchID'],
                         'LimitType'      => 'Monthly',
@@ -492,6 +492,7 @@ class BudgetReallocationController extends Controller
         $totAmountAllocated=BudgetLineLedgerLimit::where('BudgetLineID',$validated['BudgetLineID'])
             ->where('BudgetID',$validated['BudgetID'])
             ->where('BranchID',$validated['BranchID'])
+            ->where('IsActive',true)
             ->sum('LimitAmount');
 
         //Get the Usage for that GL so far
@@ -500,7 +501,7 @@ class BudgetReallocationController extends Controller
         $asDate = Carbon::createFromFormat('Y-m-d', '2024-04-30')->format('d M Y');
         // Call stored procedure and get the result
         $result = DB::select(
-            'EXEC dbo.sp_GetBudgetLineClosingBalance ?, ?, ?, ?',
+            'EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?',
             [$validated['BudgetLineID'], $b_id, $asDate,'L']
         );
 
@@ -519,5 +520,105 @@ class BudgetReallocationController extends Controller
 
     }
 
+
+    public function getDetails($id)
+    {
+        try {
+            $reallocation = BudgetReallocation::with([
+                'budget',
+                'fromLine.department',
+                'toLine.department',
+                'branch',
+                'department',
+                'createdBy',
+                'approvedBy'
+            ])->findOrFail($id);
+
+            // Get related budget limits from BudgetLineLedgerLimits table
+            $budgetLimits = DB::table('t_BudgetLineLedgerLimits')
+                ->where('ReallocationID', $id)
+                ->get();
+
+            // Get monthly allocation data (you'll need to adjust based on your actual allocation storage)
+            $fromAllocations = $this->getMonthlyAllocations($reallocation->FromBudgetLineID, $reallocation->BudgetID);
+            $toAllocations = $this->getMonthlyAllocations($reallocation->ToBudgetLineID, $reallocation->BudgetID);
+
+            $statusClass = match(strtolower($reallocation->Status)) {
+                'approved' => 'bg-success',
+                'pending' => 'bg-warning text-dark',
+                'rejected' => 'bg-danger',
+                default => 'bg-secondary'
+            };
+
+            return response()->json([
+                'budget_name' => $reallocation->budget->Name ?? null,
+                'branch_name' => $reallocation->branch->Name ?? null,
+                'department_name' => $reallocation->department->Name ?? null,
+                'reallocation_type' => $reallocation->ReallocationType,
+                'amount' => number_format($reallocation->Amount, 2),
+                'status' => ucfirst($reallocation->Status),
+                'status_class' => $statusClass,
+                'from_line' => $reallocation->fromLine->LineName ?? '—Null Line—',
+                'from_dept' => $reallocation->fromLine->department->Name ?? null,
+                'to_line' => $reallocation->toLine->LineName ?? '—Null Line—',
+                'to_dept' => $reallocation->toLine->department->Name ?? null,
+                'justification' => $reallocation->Justification,
+                'created_on' => $reallocation->CreatedOn?->format('Y-m-d H:i'),
+                'approved_on' => $reallocation->ApprovedOn?->format('Y-m-d H:i'),
+                'approved_by' => $reallocation->approvedBy->name ?? null,
+                'from_summary' => [
+                    'allocated' => number_format($fromAllocations['total'] ?? 0, 2),
+                    'usage' => number_format($fromAllocations['used'] ?? 0, 2),
+                    'balance' => number_format(($fromAllocations['total'] ?? 0) - ($fromAllocations['used'] ?? 0), 2)
+                ],
+                'to_summary' => [
+                    'allocated' => number_format($toAllocations['total'] ?? 0, 2),
+                    'usage' => number_format($toAllocations['used'] ?? 0, 2),
+                    'balance' => number_format(($toAllocations['total'] ?? 0) - ($toAllocations['used'] ?? 0), 2)
+                ],
+                'from_allocations' => $fromAllocations['monthly'] ?? [],
+                'to_allocations' => $toAllocations['monthly'] ?? [],
+                'budget_limits' => $budgetLimits->map(function($limit) {
+                    return [
+                        'ledger_id' => $limit->LedgerID,
+                        'limit_type' => $limit->LimitType,
+                        'limit_amount' => number_format($limit->LimitAmount, 2),
+                        'effective_from' => $limit->EffectiveFrom,
+                        'effective_to' => $limit->EffectiveTo
+                    ];
+                })
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Reallocation not found'], 404);
+        }
+    }
+
+    private function getMonthlyAllocations($budgetLineId, $budgetId)
+    {
+        // Adjust this query based on your actual monthly allocation storage structure
+        // This is a placeholder - you'll need to modify based on your database schema
+        $allocations = DB::table('your_monthly_allocations_table')
+            ->where('budget_line_id', $budgetLineId)
+            ->where('budget_id', $budgetId)
+            ->get();
+
+        $monthly = [];
+        $total = 0;
+        $used = 0; // Calculate based on your usage tracking
+
+        foreach ($allocations as $allocation) {
+            $monthly[] = [
+                'month' => $allocation->month_name, // e.g., 'Jan 2024'
+                'amount' => number_format($allocation->amount, 2)
+            ];
+            $total += $allocation->amount;
+        }
+
+        return [
+            'monthly' => $monthly,
+            'total' => $total,
+            'used' => $used
+        ];
+    }
 
 }

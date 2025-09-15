@@ -162,36 +162,66 @@ class BudgetLineMappingController extends Controller
 
     public function edit($id)
     {
-        $budgetLine = BudgetLine::findOrFail($id);
-        $budgetCategories = BudgetLineCategories::all();
-        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description')->get();
-        $productTypes = BudgetProduct::select('Id', 'Description')->get();
-        $departments = \App\Models\HRM\Department::all();
-        $glAccountTypes = \App\Models\Core\CodeDetail::select('Id', 'CodeID', 'Value', 'Description')->where('CodeID', 'GLAccountType')->get();
-        $glSubtype = BudgetGLSubType::select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID as GLAccountTypeValue', 'Description as GLAccountSubTypeName')
-            ->get();
+        // Check Permissions
+        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
 
-        // Get currently selected GLs for this budget line
-        $selectedGLs = BudgetLinesGLAccount::where('BudgetLineID', $budgetLine->Id)
+        $budgetLine = BudgetLine::findOrFail($id);
+
+        // Get current GL mappings - make sure we're getting the correct BudgetGLID
+        $selectedGLs = DB::table('t_BudgetLinesGLAccounts')
+            ->where('BudgetLineID', $budgetLine->Id)
+            ->whereNull('DeletedOn')
             ->pluck('BudgetGLAccountID')
             ->toArray();
-        // Get currently selected Product Types for this budget line
+
+        // Get current product type mappings
         $selectedProductTypes = BudgetLineProductTypes::where('BudgetLineId', $budgetLine->Id)
             ->pluck('ProductTypeId')
             ->toArray();
 
+        // Get all available data
+        $budgetCategories = BudgetLineCategories::all();
+        $productTypes = BudgetProduct::select('Id', 'Description')->get();
+        $glAccountTypes = CodeDetail::select('Id', 'CodeID', 'Value', 'Description')
+            ->where('CodeID', 'GLAccountType')
+            ->get();
+
+        // Get GL Sub-types for the current GL Account Type
+        $glSubtype = DB::table('t_BudgetGLSubTypes')
+            ->select('Id', 'GLAccountTypeID', 'GLSubAccountTypeID', 'Description')
+            ->where('GLAccountTypeID', $budgetLine->GLAccountTypeID)
+            ->get();
+
+        $departments = Department::all();
+
+        // Get current GLS based on the sub-type with correct mapping
+        $gls = collect();
+        if ($budgetLine->GLAccountSubTypeID) {
+            $subType = DB::table('t_BudgetGLSubTypes')
+                ->where('Id', $budgetLine->GLAccountSubTypeID)
+                ->first();
+
+            if ($subType) {
+                $gls = DB::table('t_BudgetGLMaster')
+                    ->select('BudgetGLID as Id', 'Description')
+                    ->where('GLSubAccountTypeID', $subType->GLSubAccountTypeID)
+                    ->get();
+            }
+        }
+
         return view('budgetandanalytics.budgetlinemapping.edit', compact(
             'budgetLine',
             'budgetCategories',
+            'productTypes',
+            'glAccountTypes',
+            'glSubtype',
+            'departments',
             'gls',
             'selectedGLs',
-            'productTypes',
-            'selectedProductTypes',
-            'departments',
-            'glAccountTypes',
-            'glSubtype'
+            'selectedProductTypes'
         ));
     }
+
 
     public function update(Request $request, $id)
     {

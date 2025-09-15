@@ -213,3 +213,6 @@ Route::prefix('budgetandanalytics/budget-approvals')->name('budgetandanalytics.b
     Route::get('/approve', [BudgetPeriodController::class, 'approve'])->name('approve');
     Route::get('/reject', [BudgetPeriodController::class, 'reject'])->name('reject');
 });
+
+//Fetch Data for modal in the reallocation index
+Route::get('/budgetandanalytics/reallocation/{id}/details', [BudgetReallocationController::class, 'getDetails'])->name('budgetandanalytics.reallocation.details');

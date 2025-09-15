@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('ReallocationType'); // Branch, Dept, Cross-Dept
             $table->decimal('Amount', 15, 2);
             $table->text('Justification');
-            $table->string('Status')->default('Pending');
+            $table->string('Status')->default('pending');
             $table->foreignId('CreatedBy')->constrained('t_Users');
             $table->timestamp('CreatedOn')->useCurrent();
             $table->foreignId('ApprovedBy')->nullable()->constrained('t_Users');

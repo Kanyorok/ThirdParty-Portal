@@ -39,6 +39,11 @@ class BudgetActivitiesMasterController extends Controller
             'ActivityName' => 'required|string|max:255',
             'Description' => 'nullable|string',
 
+        ],
+        [
+            'BudgetLineID.required' => 'Budget Line is required.',
+            'ActivityName.required' => 'Activity Name is required.',
+            'Description.required' => 'Description is required.',
         ]);
         DB::beginTransaction();
         try {

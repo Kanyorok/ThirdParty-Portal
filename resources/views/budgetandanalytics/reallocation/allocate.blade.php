@@ -161,7 +161,7 @@
         <td class="align-middle">${label}</td>
         <td style="max-width:180px;">
           <input type="number" step="0.01" class="form-control alloc-input"
-                 name="${prefix}[${idx+1}]" data-month="${label}" ${isPastMonth(label) ? 'disabled' : ''} value="0">
+                 name="${prefix}[${idx+1}]" data-month="${label}" ${isPastMonth(label) ? 'readonly' : ''} value="0">
         </td>
       </tr>`).join('');
             return `
