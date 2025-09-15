@@ -105,7 +105,7 @@ class PlannerService
 
     public function canApprove(User $actor): bool
     {
-        return in_array($actor->Id, $this->planner->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true) || $actor->can(PermissionEnum::MarketingPlannerApproval->value);
+        return in_array($actor->Id, $this->planner->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true) /*|| $actor->can(PermissionEnum::MarketingPlannerApproval->value)*/ ;
     }
 
     public function update(Branch $branch, CodeDetail $Mode, string $Name, string $Notes, User $actor): static
@@ -267,7 +267,7 @@ class PlannerService
                 $planIDs->add($plan->Id);
             }
             if ($Workflows->count() === 0) {
-                throw new ErroredException('marketing plan has no plans');
+                throw new ErroredException('marketing plan has no activities');
             }
             //add workflow to all.
             DB::table('t_Workflows')->insert($Workflows->toArray());
@@ -412,7 +412,7 @@ class PlannerService
             if ($branch->manager->Id === $actor->Id) {
                 return $this->branchWorkflowApprove($actor);
             }
-            (new UserService($branch->operation))->sendEmail(
+            (new UserService($branch->manager))->sendEmail(
                 'Marketing Plan Submission for Your Review and Approval',
                 '<p>Hello</p><p>A marketing plan <b>' . $this->planner->PlannerID . '</b> has been prepared and submitted for your review. Click the link below to review</p>
                     <p><a href="' . route('marketing-planner.show', [$this->planner->PlannerID]) . '">' . $this->planner->PlannerID . ' details</a></p><p>Kindly review and approve the plan at your earliest convenience.</p>'

@@ -5,7 +5,6 @@
 
 @section('content')
   <div class="container mt-4">
-    <h4 class="fw-bold mb-3">Edit Lease Agreement</h4>
 
     <form method="POST" action="{{ route('addlease.update', $newlease->Id) }}" enctype="multipart/form-data">
       @csrf
@@ -133,7 +132,14 @@
           <!-- Documents -->
           <div class="mb-3">
             <label class="form-label">Upload Lease Document</label>
-            <input type="file" name="Document" class="form-control" multiple>
+              <div class="p-3 border rounded bg-light text-dark">
+                @forelse($newlease->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                    {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                @empty
+                    <span>No documents attached.</span>
+                @endforelse
+            </div>
+            <input type="file" name="Document[]" class="form-control" multiple>
             <small class="text-muted">e.g. upload Lease Document</small>
           </div>
 
@@ -218,4 +224,8 @@
       });
     });
   </script>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

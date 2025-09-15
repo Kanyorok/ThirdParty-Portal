@@ -11,6 +11,7 @@ use App\Models\Communication\Email;
 use App\Models\Communication\SMS;
 use App\Models\Core\Activity;
 use App\Models\Core\CodeDetail;
+use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\Core\Task;
 use App\Models\DMS\Image;
@@ -27,9 +28,9 @@ class Lead extends Model
 {
     use ImageTrait, SoftDeletes, UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_Leads';
     protected $primaryKey = 'LeadID';
@@ -39,9 +40,9 @@ class Lead extends Model
         return 'LeadID';
     }
     protected $fillable = [
-        "Name", "Email", "Phone", "Website", "Gender", "Status", "RelationshipManagerID", "LocationID", "ImageId",
-        "LeadLossReason", "Industry", "Source", "JobTitle", "OtherNames", "LastContacted", "CustomerType", "Type", "Website", 'Notes', 'ApplicationID',
-        'ArchivedOn', 'ArchivedBy', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
+        "Name", "Email", "Phone", "Website", "Gender", "Status", "RelationshipManagerID", "LocationID", "CountryId", "ImageId",
+        "LeadLossReason", "Industry", "Source", "JobTitle", "OtherNames", "LastContacted", "CustomerType", "Type", "Website", 'Notes',
+        'ApplicationID', 'ArchivedOn', 'ArchivedBy', 'CreatedBy', 'ModifiedBy', 'DeletedBy',
                           ];
 
     protected $casts = [
@@ -51,6 +52,7 @@ class Lead extends Model
         'LastContacted' => 'datetime',
         'ArchivedOn' => 'datetime',
         'RelationshipManagerID' => 'integer',
+        'CountryId' => 'integer',
     ];
 
     public function photo(): BelongsTo
@@ -91,6 +93,11 @@ class Lead extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Locality::class, 'LocationID', 'ID');
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'CountryId', 'Id');
     }
 
     public function calls(): MorphMany

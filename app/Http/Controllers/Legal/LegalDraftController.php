@@ -3,24 +3,11 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-
-class LegalDraftController extends Controller
-{
-    public function index()
-    {
-        return view('legal.drafts.index');
-    }
-}
-<?php
-
-
-namespace App\Http\Controllers\Legal;
-
-use App\Http\Controllers\Controller;
 use App\Models\Legal\LegalDraft;
 use App\Models\Legal\LegalClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 
 class LegalDraftController extends Controller
 {
@@ -104,4 +91,5 @@ public function fetchClauses(Request $request)
 
     return response()->json($clauses);
 }
+
 }

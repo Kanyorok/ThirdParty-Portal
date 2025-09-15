@@ -45,12 +45,17 @@ class BudgetDriverRates extends Model
 
     public function productType(): BelongsTo
     {
-        return $this->belongsTo(BudgetProduct::class, 'ProductTypeID', 'Id');
+        return $this->belongsTo(BudgetProduct::class, 'ProductTypeID', 'CBSProductID');
     }
 
     public function periodType(): BelongsTo
     {
         return $this->belongsTo(BudgetPeriodTypes::class, 'PeriodTypeID', 'Id');
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(BudgetProduct::class, 'ProductTypeID', 'Id');
     }
 
     public function rateType(): BelongsTo

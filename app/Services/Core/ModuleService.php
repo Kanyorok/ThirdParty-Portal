@@ -26,7 +26,12 @@ class ModuleService
 
     public static function getNavbarCacheKey(User $user = null): string
     {
-        $user = $user ?? auth()->user();
+        if (!$user) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+        }
+        if(!$user){
+            return 'guest-navbar-modules';
+        }
         return $user->UserID . '-navbar_modules';
     }
 
@@ -48,7 +53,8 @@ class ModuleService
             } elseif (is_string($module['route']) && request()->route()?->named($module['route'])) {
                 $menu .= ' active';
             }
-            $menu .= '"><a href="' . $module['route'] . '" class="pc-link" data-ajax="1">';
+            $path = parse_url($module['route'], PHP_URL_PATH) ?? '/';
+            $menu .= '"><a href="' . $module['route'] . '" class="pc-link" data-ajax="1" data-route="' . $path . '">';
             $menu .= '<span class="pc-micon">';
             $menu .= $module['icon'] ?? '<i data-feather="box"></i>';
             $menu .= '</span>';
@@ -77,7 +83,8 @@ class ModuleService
             } elseif (is_string($child['route']) && request()->route()?->named($child['route'])) {
                 $menu .= ' active';
             }
-            $menu .= '"><a href="' . $child['route'] . '" class="pc-link" data-ajax="1">';
+            $childPath = parse_url($child['route'], PHP_URL_PATH) ?? '/';
+            $menu .= '"><a href="' . $child['route'] . '" class="pc-link" data-ajax="1" data-route="' . $childPath . '">';
             $menu .= '<span>' . $child['name'] . '</span>';
             if (!empty($child['children'])) {
                 $menu .= '<span class="pc-arrow"><i data-feather="chevron-right"></i></span>';

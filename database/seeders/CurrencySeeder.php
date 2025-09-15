@@ -19,7 +19,7 @@ class CurrencySeeder extends Seeder
         $user = SystemHelper::user();
         $date = now();
 
-        $source = 'https://raw.githubusercontent.com/leequixxx/currencies.json/master/currencies.json';#"https://github.com/leequixxx/currencies.json/blob/master/currencies.json";
+        $source = 'https://raw.githubusercontent.com/leequixxx/currencies.json/master/currencies.json';
 
         $currenciesJson = file_get_contents($source);
         try {

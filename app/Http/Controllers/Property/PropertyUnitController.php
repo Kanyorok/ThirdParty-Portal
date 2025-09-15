@@ -28,7 +28,7 @@ class PropertyUnitController extends Controller
     public function create()
     {
         //$this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
-        $lineentries = PropertyRegistry::with(['getBlockByProperty.getFloorByBlock'])->get();
+        $lineentries = PropertyRegistry::with(['getBlockByProperty.floor'])->get();
         return view('property.propertyregistry.structuralmapping.addunit.create', compact('lineentries'));
     }
 
@@ -137,6 +137,12 @@ class PropertyUnitController extends Controller
        // $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyUnit::class);
         try {
             $unit = PropertyUnit::findOrFail($id);
+
+            if ($unit->unitlease()->exists()) {
+                return redirect()->back()
+                ->withErrors(['error' => 'This Property unit is in use and cannot be deleted.']);
+            }
+            
             $unit->delete();
 
             return redirect()->route('addunit.index')

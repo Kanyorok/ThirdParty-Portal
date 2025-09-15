@@ -6,8 +6,8 @@
 @section('content')
   <div class="container mt-4">
     <a href="{{ route('rentreceipt.create') }}" class="btn btn-primary mb-3">New Reciept</a>
-    <h4 class="fw-bold mb-3">Tenant Payments</h4>
 
+    <p><small>This is a list of tenant payments/receipts</small></p>
     @if ($receipts->count())
       <table class="table table-bordered table-striped align-middle" id='Rentreceipt'>
         <thead class="table-light">
@@ -33,8 +33,7 @@
               <td>{{ $receipt->Balance ?? '_' }}</td>
               <td>{{ $receipt->AmountPaidNow ?? '_' }}</td>
               <td>
-                <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}" class="btn btn-sm btn-outline-secondary">Print
-                  Receipt</a>
+                <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Print Receipt</a>
                 <a href="{{ route('rentreceipt.show', $receipt->Id) }}" class="btn btn-sm btn-info">View</a>
                 <a href="{{ route('rentreceipt.edit', $receipt->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                 <form action="{{ route('rentreceipt.destroy', $receipt->Id) }}" method="POST" class="d-inline">

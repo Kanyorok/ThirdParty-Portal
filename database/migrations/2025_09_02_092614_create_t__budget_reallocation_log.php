@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('t_BudgetReallocationLog', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ReallocationID')->constrained('t_BudgetReallocations');
+            $table->unsignedBigInteger('BudgetID');
+            $table->foreignId('LimitID')->constrained('t_BudgetLineLedgerLimits');
             $table->foreignId('BudgetLineID')->constrained('t_BudgetLines');
             $table->foreignId('ActivityID')->nullable()->constrained('t_BudgetActivityMaster');
             $table->decimal('BeforeAmount', 15, 2);

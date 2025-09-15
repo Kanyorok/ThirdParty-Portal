@@ -192,6 +192,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'GLAccountType', 'Description' => 'Liabilities', 'Value' => 'L', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Income', 'Value' => 'I', 'DisplayOrder' => 0],
             ['CodeID' => 'GLAccountType', 'Description' => 'Expenses', 'Value' => 'E', 'DisplayOrder' => 0],
+            //['CodeID' => 'GLAccountType', 'Description' => 'Share Capital', 'Value' => 'S', 'DisplayOrder' => 0],
 
             // Tenant Types
             ['CodeID' => 'TenantType', 'Description' => 'Individual', 'Value' => 'I'],
@@ -489,6 +490,10 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'VehicleType', 'Description' => 'Bus', 'Value' => 'BU'],
             ['CodeID' => 'VehicleType', 'Description' => 'Truck', 'Value' => 'TK'],
             ['CodeID' => 'VehicleType', 'Description' => 'Van', 'Value' => 'VA'],
+
+            //Inspection Types
+            ['CodeID' => 'InspectionType', 'Description' => 'Pre/Post-Trip Inspection', 'Value' => 'PI'],
+            ['CodeID' => 'InspectionType', 'Description' => 'Vehicle Assignment Release/Return', 'Value' => 'VAR'],
 
             //Vehicle Statuses
             ['CodeID' => 'VehicleStatus', 'Description' => 'Active', 'Value' => 'AC'],

@@ -110,7 +110,10 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
     public function scopeSuppliersOnly(Builder $query): Builder
     {
         return $query->whereHas('thirdParty', function ($q) {
-            $q->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier);
+            // Prefer pivot relationship filtering
+            $q->whereHas('types', function($t){
+                $t->where('Code', 'like', 'SU-%');
+            })->orWhere('ThirdPartyType', ThirdPartyTypeEnum::Supplier); // legacy fallback
         });
     }
 
@@ -131,6 +134,11 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
 
     public function isSupplier(): bool
     {
+        if ($this->thirdParty && $this->thirdParty->relationLoaded('types')) {
+            return $this->thirdParty->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'SU-'))
+                || $this->thirdParty->types->pluck('TypeId')->contains(fn($id) => $id === $this->thirdParty->ThirdPartyType); // safety
+        }
+        // Fallback to legacy enum column
         return $this->thirdParty?->ThirdPartyType === ThirdPartyTypeEnum::Supplier;
     }
 

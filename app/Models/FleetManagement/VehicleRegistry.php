@@ -10,9 +10,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\CodeDetail;
 use App\Models\Auth\User;
 
-use App\Models\FleetManagement\VehicleRegistry;
-
-
 class VehicleRegistry extends Model
 {
     use UserActorTrait, SoftDeletes;
@@ -24,6 +21,7 @@ class VehicleRegistry extends Model
     protected $table = 't_Vehicles';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
+
     protected $fillable = [
 
         'RegistrationNo',
@@ -75,5 +73,5 @@ class VehicleRegistry extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
-    
+
 }

@@ -54,6 +54,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::post('propertyregistry', [PropertyRegistryController::class, 'store'])->name('propertyregistry.store');
     Route::get('propertyregistry/show/{id}', [PropertyRegistryController::class, 'show'])->name('PropertyRegistry.show');
     Route::get('/propertyregistry/types/{categoryId}', [PropertyRegistryController::class, 'getTypesByCategory'])->name('gettypes');
+    Route::get('/propertyregistry/localities/{country}', [PropertyRegistryController::class, 'getLocalityByCountry'])->name('getlocalities');
     Route::delete('propertyregistry/delete/{Id}', [PropertyRegistryController::class, 'destroy'])->name('PropertyRegistry.destroy');
     Route::get('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'edit'])->name('PropertyRegistry.edit');
     Route::put('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'update'])->name('PropertyRegistry.update');
@@ -86,7 +87,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddfloor', [PropertyFloorController::class, 'index'])->name('addfloor.index');
     Route::get('propertyaddfloor/create', [PropertyFloorController::class, 'create'])->name('addfloor.create');
     Route::post('propertyaddfloor', [PropertyFloorController::class, 'store'])->name('addfloor.store');
-    Route::get('propertyaddfloor/show/', [PropertyFloorController::class, 'show'])->name('addfloor.show');
     Route::get('/propertyaddfloor/{BlockId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblockbyproperty');
     Route::delete('propertyaddfloor/delete/{Id}', [PropertyFloorController::class, 'destroy'])->name('addfloor.destroy');
     Route::get('propertyaddfloor/edit/{Id}', [PropertyFloorController::class, 'edit'])->name('addfloor.edit');
@@ -132,8 +132,8 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddlease/edit/{Id}', [PropertyNewLeaseController::class, 'edit'])->name('addlease.edit');
     Route::put('propertyaddlease/edit/{Id}', [PropertyNewLeaseController::class, 'update'])->name('addlease.update');
     Route::delete('propertyaddlease/delete/{Id}', [PropertyNewLeaseController::class, 'destroy'])->name('addlease.destroy');
-    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty.lease');
-    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock.lease');
+    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock');
     Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor');
 
 

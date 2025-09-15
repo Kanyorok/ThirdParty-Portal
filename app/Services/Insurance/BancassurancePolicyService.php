@@ -86,7 +86,7 @@ class BancassurancePolicyService
     ): self {
         if ($document) {
         $policy->newDocument(
-            ModulesEnum::Property,
+            ModulesEnum::Insurance,
             $document,
             [PermissionEnum::BancassurancePolicyView->value],
             $user
