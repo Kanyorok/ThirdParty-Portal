@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models\Budget;
@@ -13,12 +12,18 @@ class BudgetReallocation extends Model
 {
     use UserActorTrait;
 
+    protected $primaryKey = 'Id';
     protected $table = 't_BudgetReallocations';
     public $timestamps = false;
 
     // Define custom timestamp column names
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = null; // No updated_at equivalent in your table
+
+    public static function getPrimaryKey(): string
+    {
+        return 'BudgetReallocationId';
+    }
 
     protected $fillable = [
         'BudgetID',

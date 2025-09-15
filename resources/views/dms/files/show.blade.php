@@ -440,7 +440,7 @@
                                 </div>
                             @else
                                 <form id="trashFileForm" method="post"
-                                      action="{{  route('files.destroy', [$file->repository->RepositoryId, $file->DocumentId]), }}"> @csrf
+                                      action="{{  route('files.destroy', [$file->repository->RepositoryId, $file->DocumentId]) }}"> @csrf
                                     <div class="mt-4">@method('delete')
                                         <button type="button" class="btn btn-secondary float-start"
                                                 data-bs-dismiss="modal">

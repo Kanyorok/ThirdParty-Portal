@@ -3,19 +3,6 @@
 namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
-
-class LegalDispatchController extends Controller
-{
-    public function index()
-    {
-        return view('legal.dispatch.index');
-    }
-}
-<?php
-
-namespace App\Http\Controllers\Legal;
-
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Legal\LegalDocument;
