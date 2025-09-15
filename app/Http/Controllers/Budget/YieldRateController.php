@@ -28,11 +28,13 @@ class YieldRateController extends Controller
         $driverRates=[];
         foreach($driverRatesData as $driverRate){
             //Get Product Name
+
             $product=BudgetProduct::findOrFail($driverRate->ProductTypeId);
             $driverRates[]=[
                 'Id'=>$driverRate->Id,
                 'Description'=>$product,
                 'RateTypeName'=>$driverRate->rateType->RateTypeName,
+                'RateTypeNameID'=>$driverRate->rateType->Id,
                 'RateValue'=>$driverRate->RateValue,
                 'Source'=>$driverRate->Source,
             ];
@@ -174,13 +176,13 @@ class YieldRateController extends Controller
     public function update(Request $request, $id)
     {
         //Check permissions
+        //return $request;
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetDriverRates::class);
 
-        return $request;
         //Validate request
         $validated = $request->validate([
             // 'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
-            'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
+            //'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
             'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
             'RateValue' => 'required|numeric|min:0|max:100',
             // 'EffectiveDate'  => 'required|date',
@@ -192,7 +194,7 @@ class YieldRateController extends Controller
             $driverRate = BudgetDriverRates::findOrFail($id);
             $driverRate->update([
                 'PeriodTypeID' => 1,
-                'ProductTypeID' => $validated['ProductTypeID'],
+                //'ProductTypeID' => $validated['ProductTypeID'],
                 'RateTypeID' => $validated['RateTypeID'],
                 'RateValue' => $validated['RateValue'],
                 'EffectiveDate' => 1,

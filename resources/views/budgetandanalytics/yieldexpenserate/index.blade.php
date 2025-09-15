@@ -65,7 +65,7 @@
                                        data-source="{{ $item['Source'] ?? '-' }}"
                                        title="Edit"
                                        data-bs-toggle="modal"
-                                       data-bs-target="#editRateModal">
+                                       data-bs-target="#editRateModal-{{$item['Id']}}">
                                         <i class="fas fa-edit"></i>
                                     </a>
 
@@ -73,7 +73,7 @@
                                             class="btn btn-sm btn-outline-danger custom-delete-btn"
                                             data-bs-toggle="modal"
                                             data-bs-target="#customDeleteConfirmModal"
-                                            data-name="{{ $item->productType->Description??'-' }}"
+                                            data-name="{{ $item['Description']['Description']??'-' }}"
                                             data-route="{{ route('yieldexpenserate.destroy', $item['Id']) }}"
                                             title="Delete">
                                         <i class="fas fa-trash-alt"></i>
@@ -174,94 +174,78 @@
     </div>
 
 
+    @foreach($driverRates as $item)
+        <!-- Edit Rate Modal -->
+        <div class="modal fade" id="editRateModal-{{ $item['Id'] }}" tabindex="-1" aria-labelledby="editRateLabel-{{ $item['Id'] }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-3 shadow">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-primary" id="editRateLabel-{{ $item['Id'] }}">
+                            <i class="fas fa-edit me-2"></i> Edit Product Rate
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
 
-    <!-- Edit Rate Modal -->
-    <div class="modal fade" id="editRateModal" tabindex="-1" aria-labelledby="editRateLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content rounded-3 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title text-primary" id="editRateLabel">
-                        <i class="fas fa-edit me-2"></i> Edit Product Rate
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form method="POST" id="editRateForm">
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <!-- Product (disabled) -->
-                            <div class="col-md-6">
-                                <label class="form-label">Product</label>
-                                <input type="text" class="form-control" name="ProductTypeID" id="editProduct" readonly>
-                            </div>
+                    <form method="POST" action="{{ route('yieldexpenserate.update', $item['Id']) }}">
+                        @csrf
+                        @method('PATCH')
 
-                            <!-- Rate Type -->
-                            <div class="col-md-6">
-                                <label class="form-label">Rate Type</label>
-                                <input type="text" class="form-control" name="RateTypeID" id="editRateType" required>
-                            </div>
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <!-- Product (readonly text) -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Product</label>
+                                    <input type="text" class="form-control" value="{{ $item['Description']['Description'] }}" readonly>
+                                    <!-- Hidden field to still hold ProductTypeID -->
+                                    <input type="hidden" name="ProductTypeID" value="{{ $item['Description']['Id'] }}">
+                                </div>
 
-                            <!-- Rate Value -->
-                            <div class="col-md-6">
-                                <label class="form-label">Rate Value (%)</label>
-                                <input type="number" step="0.01" class="form-control" name="RateValue" id="editRateValue" required>
-                            </div>
+                                <!-- Rate Type -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Rate Type</label>
+                                    <select class="form-select" name="RateTypeID" required>
+                                        <option value="">-- Select Rate Type --</option>
+                                        @foreach($rateTypes as $rate)
+                                            <option value="{{ $rate->Id }}" {{ $rate->RateTypeName === $item['RateTypeName'] ? 'selected' : '' }}>
+                                                {{ $rate->RateTypeName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                            <!-- Source -->
-                            <div class="col-md-6">
-                                <label class="form-label">Source</label>
-                                <input type="text" class="form-control" name="Source" id="editSource" required>
+                                <!-- Rate Value -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Rate Value (%)</label>
+                                    <input type="number" step="0.01" class="form-control" name="RateValue"
+                                           value="{{ $item['RateValue'] }}" required>
+                                </div>
+
+                                <!-- Source -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Source</label>
+                                    <input type="text" class="form-control" name="Source"
+                                           value="{{ $item['Source'] }}" required>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                            Cancel
-                        </button>
-                        <button type="submit" class="btn btn-success"
-                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerHTML='<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Updating...'; this.form.submit(); }">
-                            <i class="fas fa-save me-1"></i> Update Rate
-                        </button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-success"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerHTML='<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Updating...'; this.form.submit(); }">
+                                <i class="fas fa-save me-1"></i> Update Rate
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+    @endforeach
+
 
 
     @include('components.modals.delete-confirm')
-
-@endsection
-
-
-@section('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const editButtons = document.querySelectorAll('.edit-btn');
-            const form = document.getElementById('editRateForm');
-
-            editButtons.forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const id = this.dataset.id;
-                    const product = this.dataset.product;
-                    const ratetype = this.dataset.ratetype;
-                    const ratevalue = this.dataset.ratevalue;
-                    const source = this.dataset.source;
-
-                    // Set form action dynamically
-                    form.action = "{{ route('yieldexpenserate.update', ':id') }}".replace(':id', id);
-
-
-                    // Prefill fields
-                    document.getElementById('editProduct').value = product;
-                    document.getElementById('editRateType').value = ratetype;
-                    document.getElementById('editRateValue').value = ratevalue;
-                    document.getElementById('editSource').value = source;
-                });
-            });
-        });
-    </script>
 
 @endsection
