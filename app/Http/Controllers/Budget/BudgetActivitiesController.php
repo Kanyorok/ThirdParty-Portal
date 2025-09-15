@@ -41,7 +41,12 @@ class BudgetActivitiesController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivity::class);
 
-        $budgetLines = BudgetLine::select('Id', 'LineName')->get();
+        //Pick budgetlines that have activities only.
+        $checkIds = BudgetActivityMaster::query()
+            ->distinct()
+            ->pluck('BudgetLineID')
+            ->toArray();
+        $budgetLines = BudgetLine::select('Id', 'LineName')->whereIn('Id',$checkIds)->get();
         $branches = Branch::select('Id', 'Name')->get();
         $budgets = Budget::all();
 
@@ -86,12 +91,13 @@ class BudgetActivitiesController extends Controller
                 $fullAllocation = $validated['FullAllocation'] ?? 0;
             }
             // Create Budget Activity
+            $branchId = session('LoginBranchId');
             $activity = BudgetActivity::create([
                 'BudgetLineID' => $validated['BudgetLineID'],
                 'BudgetID' => $validated['BudgetID'],
                 'ActivityID' => $validated['ActivityID'],
                 'Description' => $validated['Description'],
-                'BranchID' => 1,//$validated['BranchID'], To be fixed when Login branch is implemented
+                'BranchID' => $branchId,//$validated['BranchID'], To be fixed when Login branch is implemented
                 'AllocationType' => $validated['AllocationType'],
                 'FullAllocation' => $fullAllocation,
                 'CreatedBy' => $userId,
@@ -209,12 +215,14 @@ class BudgetActivitiesController extends Controller
             } elseif ($validated['AllocationType'] === 'full') {
                 $fullAllocation = $validated['FullAllocation'] ?? 0;
             }
+
+            $branchId = session('LoginBranchId');
             $activity->update([
                 'BudgetLineID' => $validated['BudgetLineID'],
                 // 'BudgetID' => $validated['BudgetID'],
                 'ActivityID' => $validated['ActivityID'],
                 'Description' => $validated['Description'],
-                'BranchID' => 1,//$validated['BranchID'],
+                'BranchID' => $branchId,//$validated['BranchID'],
                 'AllocationType' => $validated['AllocationType'],
                 'FullAllocation' => $fullAllocation,
                 'ModifiedBy' => $userId,

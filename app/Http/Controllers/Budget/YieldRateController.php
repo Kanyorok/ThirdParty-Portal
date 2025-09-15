@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetDriverRates;
+use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetPeriodTypes;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
@@ -20,10 +22,22 @@ class YieldRateController extends Controller
     //
     public function index()
     {
-        $driverRates = BudgetDriverRates::with('productType', 'periodType', 'rateType')->get();
+        $driverRates = BudgetDriverRates::with('rateType')->get();
+
+        //Group this into data array
+        $driverRates=[];
+        foreach($driverRates as $driverRate){
+            //Get Product Name
+            $product=BudgetProduct::where('Id',$driverRate->ProductTypeID)->first()->Description;
+        }
 
         $periodTypes = BudgetPeriodTypes::select('Id', 'PeriodType')->get();
-        $productTypes = BudgetProduct::select('Id', 'Description as Name')->get();
+
+        //Get Products thay are containe din budgetline
+        $budgetLineWithProducts=BudgetLine::where('IsProductDriven',true)->pluck('Id')->toArray();
+        $productIds=BudgetLineProductTypes::whereIn('BudgetLineId',$budgetLineWithProducts)->pluck('ProductTypeId')->toArray();
+        $productTypes = BudgetProduct::select('Id', 'Description as Name')->whereIn('Id',$productIds)->get();
+
         $rateTypes = BudgetRates::select('Id', 'RateTypeName')->get();
 
         return view('budgetandanalytics.yieldexpenserate.index', compact(
