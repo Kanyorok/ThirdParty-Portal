@@ -49,14 +49,23 @@
                                 </td>
                                 <td>{{ number_format($activities->sum('FullAllocation'), 2) }}</td>
                                 <td>
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger custom-delete-btn"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#customDeleteConfirmModal"
-                                            data-name="{{ $budget->Name }}"
-                                            data-route="{{ route('budgetactivities.destroy', $budgetId) }}">
-                                        <i class="fas fa-trash-alt me-1"></i> Delete
-                                    </button>
+                                    @if($budget->Status==='approved')
+                                        <span class="badge rounded-pill bg-success text-white text-decoration-none">
+                                               Approved budget
+                                        </span>
+                                    @else
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger custom-delete-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{ $budget->Name }}"
+                                                data-route="{{ route('budgetactivities.destroy', $budgetId) }}"
+                                                @if($budget->Status === 'approved') disabled @endif
+                                        >
+                                            <i class="fas fa-trash-alt me-1"></i> Delete
+                                        </button>
+                                    @endif
+
                                 </td>
                             </tr>
                         @empty

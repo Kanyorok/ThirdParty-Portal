@@ -70,7 +70,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Allocation Type</label>
                             <select name="AllocationType" class="form-select" id="allocationType" required>
-                                <option disabled {{ old('AllocationType') ? '' : 'selected' }}>-- Select allocation type --</option>
+                                <option value="" selected>-- Select allocation type --</option>
 {{--                                <option value="full" {{ old('AllocationType') == 'full' ? 'selected' : '' }}>Annual or Full Allocation</option>--}}
                                 <option value="monthly" {{ old('AllocationType') == 'monthly' ? 'selected' : '' }}>Monthly Allocation</option>
                             </select>

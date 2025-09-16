@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', '📦 Budget Projections Entry')
+@section('title', 'Budget Projections Entry')
 
 @section('content')
 
@@ -34,7 +34,7 @@
                 <div class="col-md-6">
                     <label for="budget" class="form-label">Budget</label>
                     <select id="budget" class="form-select" name="BudgetID" required>
-                        <option disabled selected>-- Select Budget --</option>
+                        <option disabled value="" selected>-- Select Budget --</option>
                         @foreach($budgets as $budget)
                             <option value="{{ $budget->Id }}">{{ $budget->Name }}</option>
                         @endforeach
@@ -44,11 +44,16 @@
                 <div class="col-md-6">
                     <label for="budgetLine" class="form-label">Budget Line</label>
                     <select id="budgetLine" class="form-select" name="BudgetLineID" required>
-                        <option disabled selected>-- Select Budget Line --</option>
-                        @foreach($budgetLines as $budgetline)
-                            <option value="{{ $budgetline->Id }}">{{ $budgetline->LineName }}</option>
-                        @endforeach
+                        <option disabled value="" {{ old('BudgetLineID') ? '' : 'selected' }}>-- Select Budget Line --</option>
+                        @forelse($budgetLines as $budgetline)
+                            <option value="{{ $budgetline->Id }}" {{ old('BudgetLineID') == $budgetline->Id ? 'selected' : '' }}>
+                                {{ $budgetline->LineName }}
+                            </option>
+                        @empty
+                            <option disabled selected>⚠️ Create a BudgetLine with Products and Rates</option>
+                        @endforelse
                     </select>
+
                 </div>
             </div>
 
@@ -56,7 +61,7 @@
                 <div class="col-md-6">
                     <label for="productType" class="form-label">Product</label>
                     <select id="productType" class="form-select" name="ProductTypeId" required>
-                        <option disabled selected>-- Select Product --</option>
+                        <option disabled value="" selected>-- Select Product --</option>
                         {{-- Dynamically loaded --}}
                     </select>
                 </div>
@@ -71,7 +76,7 @@
                 <div class="col-md-12 mb-3">
                     <label class="form-label">Allocation Type</label>
                     <select name="AllocationType" class="form-select" id="allocationType" required>
-                        <option disabled selected>-- Select allocation type --</option>
+                        <option disabled value="" selected>-- Select allocation type --</option>
                         <option value="full">Annual or Full Allocation</option>
                         <option value="monthly">Monthly Allocation</option>
                     </select>
