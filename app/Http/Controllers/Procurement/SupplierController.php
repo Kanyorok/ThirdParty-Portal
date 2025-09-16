@@ -94,6 +94,7 @@ class SupplierController extends Controller
                 'TypeId' => $supplierTypeId,
                 'ThirdPartyId' => $supplier->Id,
                 'CreatedOn' => now(),
+                'ModifiedOn' => now(),
             ]);
         }
         $supplier->categories()->sync($request->input('category_ids', []));

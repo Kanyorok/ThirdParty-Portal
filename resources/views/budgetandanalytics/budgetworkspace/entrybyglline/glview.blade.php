@@ -29,7 +29,7 @@
                     <div class="mb-3">
                         <p class="mb-1"><strong>Budget:</strong> {{ $entries->first()->budget->Name ?? '' }}</p>
                         <p class="mb-1"><strong>Total Allocations:</strong> {{ number_format($totalAllocation, 2) }}</p>
-                        <p class="mb-1"><strong>Source:</strong> <span class="badge bg-secondary">Manual Entry</span></p>
+{{--                        <p class="mb-1"><strong>Source:</strong> <span class="badge bg-secondary">Manual Entry</span></p>--}}
                     </div>
 
                     <!-- Table -->
@@ -57,20 +57,26 @@
                                                 data-bs-target="#allocModal{{ $item->Id }}" title="View Allocations">
                                             <i class="fas fa-list-alt"></i>
                                         </button>
-                                        <!-- Edit -->
-                                        <a href="{{ route('entrybyglline.edit', $item->Id) }}"
-                                           class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <!-- Delete -->
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger custom-delete-btn"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#customDeleteConfirmModal"
-                                                data-name="{{ $item->budgetline->LineName }}"
-                                                data-route="{{ route('entrybyglline.destroy', $item->Id) }}">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        @if($entries->first()->budget->Status==='approved')
+                                            <span class="badge rounded-pill bg-success text-white text-decoration-none">
+                                                Approved Budget
+                                            </span>
+                                        @else
+                                            <!-- Edit -->
+                                            <a href="{{ route('entrybyglline.edit', $item->Id) }}"
+                                               class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <!-- Delete -->
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger custom-delete-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#customDeleteConfirmModal"
+                                                    data-name="{{ $item->budgetline->LineName }}"
+                                                    data-route="{{ route('entrybyglline.destroy', $item->Id) }}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        @endif
 
                                         <!-- Allocation Modal -->
                                         <div class="modal fade" id="allocModal{{ $item->Id }}" tabindex="-1" aria-labelledby="allocModalLabel{{ $item->Id }}" aria-hidden="true">

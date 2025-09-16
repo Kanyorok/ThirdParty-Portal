@@ -27,7 +27,7 @@
           <td>{{$stock->store->StoreName ?? '-'}}</td>
           <td>{{$stock->countedby->Name ?? 'N/A'}}</td>
           <td>{{ \Carbon\Carbon::parse($stock->CountDate)->format('d/m/Y') ?? '-'}}</td>
-          <td>{{$stock->createdby->Name}}</td>
+          <td>{{$stock->createdby->Name ?? '-'}}</td>
           <td>{{ \Carbon\Carbon::parse($stock->CreatedOn)->format('d/m/Y') ?? '-'}}</td>
         <td>
             <a href="{{ route('stocktake.show', $stock->Id) }}" class="btn btn-sm btn-info">View</a>

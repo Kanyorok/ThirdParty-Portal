@@ -5,6 +5,7 @@ namespace App\Models\HRM;
 use App\Enums\Employee\GenderEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Branch;
+use App\Models\DMS\Image;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\ImageTrait;
 use App\Traits\Model\UserActorTrait;
@@ -76,4 +77,11 @@ class Employee extends Model
         return $this->belongsToMany(Committee::class, 't_Committee_Employee', 'EmployeeId', 'CommitteeId')
             ->withPivot(['CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn']);
     }
+
+
+    public function image()
+    {
+        return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
+    }
+
 }

@@ -64,7 +64,9 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#customDeleteConfirmModal"
                                                 data-name="{{ $item->budget->Name }}"
-                                                data-route="{{ route('entrybyglline.destroy', $item->Id) }}">
+                                                data-route="{{ route('entrybyglline.destroy', $item->Id) }}"
+                                                @if($item->budget->Status === 'approved') disabled @endif
+                                        >
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </td>

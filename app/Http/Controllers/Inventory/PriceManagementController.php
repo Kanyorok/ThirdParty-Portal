@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Exports\PriceManagementExport;
 use App\Http\Requests\Inventory\PriceManagementRequest;
 use App\Services\Inventory\PriceManagementService;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
-use App\Imports\PricingImport;
+use App\Imports\PriceManagementImport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PriceManagementController extends Controller
@@ -81,6 +82,11 @@ class PriceManagementController extends Controller
             ->with('success', 'Price deleted.');
     }
 
+    public function downloadSampleTemplate()
+    {
+        return Excel::download(new PriceManagementExport, 'price_management_sample.xlsx');
+    }
+
     public function importPricing(PriceManagementRequest $request)
     {
         $this->authorize('update', PriceManagement::class);
@@ -89,7 +95,7 @@ class PriceManagementController extends Controller
             'file' => 'required|file|mimes:xlsx,csv'
         ]);
 
-        Excel::import(new PricingImport, $request->file('file'));
+        Excel::import(new PriceManagementImport, $request->file('file'));
 
         return back()->with('success', 'Pricing data imported successfully!');
     }

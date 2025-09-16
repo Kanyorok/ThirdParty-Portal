@@ -70,7 +70,7 @@ class ThirdPartyWebController extends Controller
                 })
                 ->addColumn('BusinessType', fn(ThirdParties $thirdParty) => $thirdParty->BusinessType?->label() ?? 'N/A')
                 ->addColumn('ApprovalStatus', fn(ThirdParties $thirdParty) => $thirdParty->ApprovalStatus?->label() ?? $thirdParty->ApprovalStatus?->value ?? 'N/A')
-                ->addColumn('IsPrequalified', fn(ThirdParties $thirdParty) => $thirdParty->IsPrequalified ? 'Yes' : 'No')
+                ->addColumn('IsPrequalified', fn(ThirdParties $thirdParty) => (bool) $thirdParty->IsPrequalified)
                 ->addColumn('actions', fn(ThirdParties $thirdParty) => '<a href="' . route('thirdparty.parties.show', ['party' => $thirdParty->Id]) . '" class="btn btn-sm btn-info">View</a>')
                 ->rawColumns(['actions'])
                 ->make(true);

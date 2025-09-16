@@ -299,4 +299,20 @@ class TransactionTransferService
         $year = now()->format('Y');
         return 'TRF-' . $year . '-' . str_pad($transfer->Id, 4, '0', STR_PAD_LEFT);
     }
+
+
+    public function getApprovedTransfers()
+    {
+        return TransactionTransfer::where('Status', Transfers::InTransit)
+            ->orderByDesc('CreatedOn')
+            ->get([
+                'Id', 
+                'TransferId', 
+                'TransferDate',
+                'FromBranch',
+                'ToBranch'
+            ]);
+    }
+
+
 }

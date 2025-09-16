@@ -153,7 +153,7 @@
                     Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo,
                         Currency, IsDefault</code>
                     <br>
-                    <a href="{{ asset('templates/price_upload_template.xlsx') }}" class="btn btn-sm btn-outline-primary mt-2">
+                    <a href="{{ route('pricemanagement.sample') }}" class="btn btn-sm btn-outline-primary mt-2">
                         📥 Download Template
                     </a>
                 </div>

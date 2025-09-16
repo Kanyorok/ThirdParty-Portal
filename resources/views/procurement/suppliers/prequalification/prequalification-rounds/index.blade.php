@@ -13,8 +13,17 @@
     </div>
     @endif
 
-    {{-- Header --}}
+    {{-- Header with Create Button --}}
     <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-list-ul me-2"></i>
+                Prequalification Rounds
+            </h5>
+            <a href="{{ route('prequalification.prequalification-rounds.create') }}" class="btn btn-primary" data-ajax="1">
+                <i class="fa fa-plus-circle me-1"></i> Create a New Round
+            </a>
+        </div>
         
         {{-- Table --}}
         <div class="table-responsive">
