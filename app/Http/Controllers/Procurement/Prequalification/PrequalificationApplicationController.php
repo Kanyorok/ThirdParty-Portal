@@ -8,6 +8,7 @@ use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Enums\Procurement\PrequalificationRoundEnum;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StorePrequalificationApplicationRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -38,13 +39,44 @@ class PrequalificationApplicationController extends Controller
         );
     }
 
-    public function apiIndex(): JsonResponse
+    public function apiIndex(Request $request): JsonResponse
     {
         $user = Auth::user();
         $supplierId = $user && $user->thirdParty ? $user->thirdParty->Id : null;
 
-        // Include ALL open rounds, marking those already applied to by this supplier instead of excluding them.
-        $availableRounds = PrequalificationRound::query()
+        // Get query parameters with defaults
+        $page = (int) $request->get('page', 1);
+        $pageSize = (int) $request->get('pageSize', 10);
+        $sortBy = $request->get('sortBy', 'startDate');
+        $sortOrder = $request->get('sortOrder', 'asc');
+        $status = $request->get('status', 'all');
+        $search = $request->get('q', '');
+        
+        // Validate and sanitize parameters
+        $pageSize = max(1, min(100, $pageSize)); // Limit between 1-100
+        $page = max(1, $page); // Minimum page 1
+        
+        // Validate sortBy parameter
+        $allowedSortFields = ['startDate', 'endDate', 'title', 'createdOn'];
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'startDate';
+        }
+        
+        // Validate sortOrder parameter
+        $sortOrder = in_array(strtolower($sortOrder), ['asc', 'desc']) ? strtolower($sortOrder) : 'asc';
+        
+        // Map frontend sortBy to database column names
+        $sortColumnMap = [
+            'startDate' => 't_PrequalificationRounds.StartDate',
+            'endDate' => 't_PrequalificationRounds.EndDate', 
+            'title' => 't_PrequalificationRounds.Title',
+            'createdOn' => 't_PrequalificationRounds.CreatedOn'
+        ];
+        
+        $sortColumn = $sortColumnMap[$sortBy] ?? 't_PrequalificationRounds.StartDate';
+
+        // Build the query
+        $query = PrequalificationRound::query()
             ->with(['sections.criteria', 'criteria.masterCriteria'])
             ->select('t_PrequalificationRounds.*')
             ->leftJoin('t_SupplierPrequalificationApplications as apps', function ($join) use ($supplierId) {
@@ -54,14 +86,67 @@ class PrequalificationApplicationController extends Controller
             })
             ->addSelect([
                 'apps.ApplicationID as applicationId',
-                // Placeholder: pivot table lacks CreatedBy; default 0 so frontend can rely on field existence
                 DB::raw('0 as createdByOwner')
-            ])
-            ->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Open)
-            ->latest('t_PrequalificationRounds.StartDate')
-            ->paginate(10);
+            ]);
 
-        return PrequalificationRoundResource::collection($availableRounds)->response();
+        // Apply status filtering
+        if ($status !== 'all') {
+            if ($status === 'open') {
+                $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Open);
+            } elseif ($status === 'closed') {
+                $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Closed);
+            }
+        }
+
+        // Apply search functionality
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('t_PrequalificationRounds.Title', 'LIKE', '%' . $search . '%')
+                  ->orWhere('t_PrequalificationRounds.Description', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        // Apply sorting
+        $query->orderBy($sortColumn, $sortOrder);
+
+        // Get total count before pagination
+        $totalCount = $query->count();
+        $totalPages = ceil($totalCount / $pageSize);
+
+        // Apply pagination
+        $availableRounds = $query->paginate($pageSize, ['*'], 'page', $page);
+
+        // Transform the data using the resource
+        $transformedData = PrequalificationRoundResource::collection($availableRounds);
+
+        // Return custom response format that matches frontend expectations
+        return response()->json([
+            'data' => $transformedData,
+            'page' => $page,
+            'pageSize' => $pageSize,
+            'total' => $totalCount,
+            'totalPages' => $totalPages,
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
+            'filters' => [
+                'status' => $status,
+                'q' => $search
+            ],
+            'links' => [
+                'first' => $availableRounds->url(1),
+                'last' => $availableRounds->url($totalPages),
+                'prev' => $availableRounds->previousPageUrl(),
+                'next' => $availableRounds->nextPageUrl(),
+            ],
+            'meta' => [
+                'currentPage' => $availableRounds->currentPage(),
+                'from' => $availableRounds->firstItem(),
+                'lastPage' => $availableRounds->lastPage(),
+                'perPage' => $availableRounds->perPage(),
+                'to' => $availableRounds->lastItem(),
+                'total' => $availableRounds->total(),
+            ]
+        ]);
     }
 
     public function apiShow(PrequalificationRound $round): JsonResponse

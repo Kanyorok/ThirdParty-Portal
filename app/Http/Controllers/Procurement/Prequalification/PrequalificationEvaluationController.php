@@ -66,10 +66,12 @@ class PrequalificationEvaluationController extends Controller
                 $thirdPartyPreq = (bool) $app->supplier?->IsPrequalified; // flag on t_ThirdParties
                 $supplierActive = (bool) ($supplierRow?->Active_Status);   // flag on t_Suppliers
                 $decision = $res?->Decision;
-                // Hide prequalify button only if:
+                
+                // Hide prequalify button if:
                 // 1. Third party already marked prequalified (manual or bulk) OR
-                // 2. Supplier row active AND decision == Passed
-                $prequalifyAllowed = !($thirdPartyPreq || ($supplierActive && $decision === 'Passed'));
+                // 2. There's a result with "Passed" decision (evaluation completed)
+                $prequalifyAllowed = !($thirdPartyPreq || $decision === 'Passed');
+                
                 return [
                     'application_no' => $app->applicationNo,
                     'supplier' => $app->supplier?->ThirdPartyName,
@@ -213,11 +215,26 @@ class PrequalificationEvaluationController extends Controller
             ->get()
             ->keyBy('CriteriaID');
 
-        return view('procurement.suppliers.prequalification.prequalification-evaluation.evaluate', compact('application', 'sections', 'existingEvaluations'));
+        // Check if there's already a result for this application
+        $result = $application->result;
+        $isReadonly = $result !== null; // Make readonly if result already exists
+        
+        // Check if supplier is already prequalified
+        $isPrequalified = $application->supplier?->IsPrequalified ?? false;
+
+        return view('procurement.suppliers.prequalification.prequalification-evaluation.evaluate', compact('application', 'sections', 'existingEvaluations', 'isReadonly', 'isPrequalified', 'result'));
     }
 
     public function submitEvaluation(Request $request, $applicationId): RedirectResponse
     {
+        $application = PrequalificationApplication::findOrFail($applicationId);
+        
+        // Check if there's already a result for this application
+        $result = $application->result;
+        if ($result !== null) {
+            return redirect()->back()->with('error', 'This evaluation has already been completed and cannot be modified.');
+        }
+        
         $evaluatorId = Auth::id();
 
         $request->validate([

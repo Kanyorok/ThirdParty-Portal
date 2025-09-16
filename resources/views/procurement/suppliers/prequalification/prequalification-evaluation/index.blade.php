@@ -83,15 +83,24 @@ function actionButtons(row) {
     const evalUrl = `{{ route('prequalification.prequalification-evaluation.show', '__ID__') }}`.replace('__ID__', row.application_id);
     const singleUrl = SINGLE_PREQUALIFY_TEMPLATE.replace('__RID__', row.round_id).replace('__TPID__', row.supplier_id);
     let buttons = '';
+    
+    // Always show view button for results
     if (row.decision) {
-        buttons += `<a href="${viewUrl}" class="btn btn-sm btn-info text-white me-1"><i class='fas fa-eye'></i></a>`;
+        buttons += `<a href="${viewUrl}" class="btn btn-sm btn-info text-white me-1" title="View Results"><i class='fas fa-eye'></i></a>`;
     } else {
-        buttons += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1"><i class='fas fa-edit'></i></a>`;
+        // Show edit button only if not already evaluated
+        buttons += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1" title="Evaluate Application"><i class='fas fa-edit'></i></a>`;
     }
+    
+    // Only show prequalify button if prequalify is allowed (not already prequalified)
     if (row.prequalify_allowed) {
-    const prequalifyTitle = (row.decision === 'Passed') ? 'Prequalify' : 'Force Prequalify';
-    buttons += `<form method='POST' action='${singleUrl}' class='d-inline prequalify-single-form'>@csrf<button type='submit' class='btn btn-sm btn-success' title='${prequalifyTitle}'><i class="fas fa-check"></i></button></form>`;
+        const prequalifyTitle = (row.decision === 'Passed') ? 'Prequalify Supplier' : 'Force Prequalify Supplier';
+        buttons += `<form method='POST' action='${singleUrl}' class='d-inline prequalify-single-form'>@csrf<button type='submit' class='btn btn-sm btn-success' title='${prequalifyTitle}'><i class="fas fa-check"></i></button></form>`;
+    } else {
+        // Show readonly indicator for already prequalified suppliers
+        buttons += `<span class="btn btn-sm btn-secondary disabled" title="Already Prequalified"><i class="fas fa-check-circle"></i></span>`;
     }
+    
     return buttons;
 }
 

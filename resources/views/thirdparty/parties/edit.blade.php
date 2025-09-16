@@ -447,7 +447,7 @@
                 </div>
                 @endif
 
-                <form action="{{ route('thirdparty.parties.update', ['party' => $party->Id]) }}" method="POST">
+                <form action="{{ route('thirdparty.parties.update', ['party' => $party->Id]) }}" method="POST" id="thirdPartyEditForm">
                     @csrf
                     @method('PATCH')
 
@@ -738,4 +738,50 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+$(document).ready(function() {
+    // Debug form submission
+    $('#thirdPartyEditForm').on('submit', function(e) {
+        console.log('Form submission started');
+        console.log('ApprovalStatus value:', $('#ApprovalStatus').val());
+        console.log('Status value:', $('#Status').val());
+        console.log('Form data:', $(this).serialize());
+        
+        // Check if required fields are filled
+        const approvalStatus = $('#ApprovalStatus').val();
+        const status = $('#Status').val();
+        
+        if (!approvalStatus) {
+            console.error('ApprovalStatus is empty');
+            alert('Please select an Approval Status');
+            e.preventDefault();
+            return false;
+        }
+        
+        if (!status) {
+            console.error('Status is empty');
+            alert('Please select a Status');
+            e.preventDefault();
+            return false;
+        }
+        
+        console.log('Form validation passed, submitting...');
+    });
+    
+    // Debug dropdown changes
+    $('#ApprovalStatus, #Status').on('change', function() {
+        console.log('Dropdown changed:', $(this).attr('id'), 'Value:', $(this).val());
+    });
+    
+    // Debug initial values
+    console.log('Initial ApprovalStatus:', $('#ApprovalStatus').val());
+    console.log('Initial Status:', $('#Status').val());
+    console.log('Current party ID:', '{{ $party->Id }}');
+    console.log('Current ApprovalStatus enum value:', '{{ $party->ApprovalStatus?->value }}');
+    console.log('Current Status enum value:', '{{ $party->Status?->value }}');
+});
+</script>
 @endsection
