@@ -90,20 +90,27 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('budgetactivities.edit', $activity->Id) }}"
-                                       class="btn btn-sm btn-outline-primary" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger custom-delete-btn"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#customDeleteConfirmModal"
-                                            data-name="{{ $activity->activity->ActivityName }}"
-                                            data-route="{{ route('budgetactivities.destroy', $activity->Id) }}">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
+                                @if($budget->Status==='approved')
+                                    <span class="badge rounded-pill bg-success text-white text-decoration-none">
+                                               Approved budget
+                                        </span>
+                                @else
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ route('budgetactivities.edit', $activity->Id) }}"
+                                           class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger custom-delete-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{ $activity->activity->ActivityName }}"
+                                                data-route="{{ route('budgetactivities.destroy', $activity->Id) }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                @endif
+
                             </td>
                         </tr>
                     @endforeach
