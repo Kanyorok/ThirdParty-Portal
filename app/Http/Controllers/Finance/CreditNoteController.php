@@ -310,6 +310,5 @@ class CreditNoteController extends Controller
             return back()->with('error', $th->getMessage());
         }
     }
-
 }
 

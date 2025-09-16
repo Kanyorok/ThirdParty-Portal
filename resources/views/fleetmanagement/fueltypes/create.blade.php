@@ -25,7 +25,7 @@
             </div>
 
             <div class="mb-3">
-                <label for="Description" class="form-label">Description</label>
+                <label for="Description" class="form-label">Notes (If any)</label>
                 <textarea name="Description" id="Description" class="form-control">{{ old('Description') }}</textarea>
             </div>
 

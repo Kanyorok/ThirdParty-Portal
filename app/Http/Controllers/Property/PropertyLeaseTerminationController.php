@@ -48,15 +48,16 @@ class PropertyLeaseTerminationController extends Controller
         $validatedData = $request->validated();
         $LeaseID = PropertyNewLease::findOrFail($validatedData['LeaseID']);
         $TerminationReason = CodeDetail::findOrFail($validatedData['TerminationReason']);
-        $document = $request->file('Document');
+        foreach ($request->file('Document', []) as $uploadedFile) {
         $this->service->create(
             $LeaseID,
             $TerminationDate = $validatedData['TerminationDate'],
             $TerminationReason,
             $Remarks = $validatedData['Remarks'] ?? '',
             Auth::user(),
-            $document
+            $uploadedFile
         );
+    }
         return redirect()->route('terminatelease.index')->with('success', 'Lease termination created successfully');
     }
 

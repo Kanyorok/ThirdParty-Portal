@@ -18,9 +18,9 @@ class EmailConversationUser extends Model
      *
      * @return string
      */
-    public function getPrimaryKey(): string
+    public static function getPrimaryKey(): string
     {
-        return $this->primaryKey;
+        return (new self)->primaryKey;
     }
 
     const CREATED_AT = 'CreatedOn';

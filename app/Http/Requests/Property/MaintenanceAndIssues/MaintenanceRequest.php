@@ -30,7 +30,8 @@ class MaintenanceRequest extends FormRequest
             'IssueType' => 'required|exists:t_CodeDetails,ID',
             'Priority' => 'required|exists:t_CodeDetails,ID',
             'IssueDescription' => 'required|string|max:255',
-            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'Document' => 'nullable|array',
+            'Document.*' => 'file|max:9000',
         ];
     }
     

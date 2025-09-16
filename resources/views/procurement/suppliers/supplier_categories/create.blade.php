@@ -1,14 +1,12 @@
 @extends('layouts.app')
-
+@section('title', 'Supplier Classifications')
 @section('content')
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 text-gray-800">Create New Supplier Category</h1>
-    </div>
 
+<div class="container mt-5">
+    
     <div class="card mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">New Category Details</h6>
+            <h6 class="m-0 font-weight-bold text-primary">New Classification Details</h6>
         </div>
         <div class="card-body">
             <form action="{{ route('proc.supplier-cat.store') }}" method="POST">
@@ -20,6 +18,16 @@
                     @error('CategoryName')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="item_category_ids" class="form-label">Top-level Item Categories (multi-select)</label>
+                    <select id="item_category_ids" name="item_category_ids[]" class="form-control" multiple size="6">
+                        @foreach(($itemCategories ?? []) as $cat)
+                            <option value="{{ $cat->Id }}" @selected(collect(old('item_category_ids', []))->contains($cat->Id))>{{ $cat->Name }}</option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">Hold Ctrl / Cmd to select multiple. Only parent categories (no ParentId) listed.</small>
                 </div>
 
                 <div class="mb-3">

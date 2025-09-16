@@ -1,11 +1,11 @@
 @extends('layouts.app')
-
+@section('title', 'Supplier Classifications')
 @section('content')
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 text-gray-800">Supplier Categories</h1>
+       
         <a href="{{ route('proc.supplier-cat.create') }}" class="btn btn-primary">
-            <i class="fa fa-plus-circle me-2"></i>Create New Category
+            <i class="fa fa-plus-circle me-2"></i>New Supplier Classification
         </a>
     </div>
 
@@ -22,8 +22,8 @@
                 <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
                     <thead class="bg-primary text-white">
                         <tr>
-                            <th>Category ID</th>
-                            <th>Category Name</th>
+                            <th>Classification ID</th>
+                            <th>Classification Name</th>
                             <th>Description</th>
                             <th>Status</th>
                             <th class="text-center">Actions</th>

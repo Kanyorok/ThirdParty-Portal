@@ -6,9 +6,9 @@
         <h4>🔒 Close Claim – Ref #{{ $claim->Id }}</h4>
 
         <div class="mb-3">
-            <strong>Policy Number:</strong> {{ $claim->PolicyNumber }}<br>
-            <strong>Customer:</strong> {{ $claim->CustomerName }}<br>
-            <strong>Claim Type:</strong> {{ $claim->ClaimType }}<br>
+            <strong>Policy Number:</strong> {{ $claim->PolicyNumber ?? '-'}}<br>
+            <strong>Customer:</strong> {{ $claim->CustomerName ?? '-'}}<br>
+            <strong>Claim Type:</strong> {{ $claim->ClaimType ?? '-'}}<br>
             <strong>Approved Amount:</strong> KES {{ number_format($claim->ApprovedAmount, 2) }}
         </div>
 

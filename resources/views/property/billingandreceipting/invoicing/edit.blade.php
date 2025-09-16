@@ -13,8 +13,6 @@
     </div>
 @endif
 
-<h1>Edit Rent Invoice</h1>
-
 <form action="{{ route('rentinvoice.update', $invoices->Id) }}" method="POST">
     @csrf
     @method('PUT')

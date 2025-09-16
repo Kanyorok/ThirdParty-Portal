@@ -4,7 +4,6 @@
 @section('content')
 <div class="container mt-5" style="max-width: 800px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Edit Maintenance Request</h3>
         <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
     </div>
 
@@ -124,10 +123,21 @@
                     <textarea name="IssueDescription" class="form-control" rows="3" placeholder="Optional">{{ old('IssueDescription', $maintenancerequest->IssueDescription) }}</textarea>
                 </div>
 
-                        <!-- Document Upload -->
+                <!-- Document Upload -->
+                
+                <div class="col-12">
+                        <label class="form-label">Attached Documents</label>
+                        <div class="p-2 border rounded bg-light">
+                            @forelse($maintenancerequest->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                            @empty
+                                <span class="text-muted">No documents attached.</span>
+                            @endforelse
+                        </div>
+                    </div>
                 <div class="mb-3">
                     <label class="form-label">Upload Relevant Documents</label>
-                    <input type="file" name="Document" class="form-control" multiple>
+                    <input type="file" name="Document[]" class="form-control" multiple>
                 </div>
 
             </div>
@@ -230,4 +240,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

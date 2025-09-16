@@ -11,7 +11,6 @@
             </ul>
         </div>
     @endif
-    <h1>Edit Lease Schedule</h1>
     <form action="{{ route('schedulelease.update', $leaseschedules->Id) }}" method="POST">
         @csrf
         @method('PUT')

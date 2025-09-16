@@ -29,13 +29,19 @@
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 50%;">CRITERIA</th>
-                                    <th style="width: 15%;">MAX SCORE</th>
+                                    <th style="width: 15%;">MAX SCORE (10)</th>
                                     <th style="width: 15%;">SCORE AWARDED</th>
                                     <th style="width: 20%;">COMMENTS</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($section->criteria as $criteria)
+                                @php
+                                    // Ensure criteria list is unique by CriteriaId to avoid duplicates due to joins
+                                    $criteriaList = ($section->criteria instanceof \Illuminate\Support\Collection)
+                                        ? $section->criteria->unique('CriteriaId')->values()
+                                        : collect($section->criteria)->unique('CriteriaId')->values();
+                                @endphp
+                                @foreach ($criteriaList as $criteria)
                                 @php
                                 $existing = $existingEvaluations->get($criteria->CriteriaId);
                                 $score = old("criteria_scores.{$criteria->CriteriaId}.score", $existing->Score ?? '');
@@ -46,17 +52,17 @@
                                         <strong>{{ $criteria->masterCriteria->CriteriaName }}</strong>
                                         <!-- <small class="d-block text-muted">{{ $criteria->masterCriteria->Description }}</small> -->
                                     </td>
-                                    <td>{{ $criteria->Weight }}</td>
+                                    <td>10</td>
                                     <td>
                                         <input type="number"
                                             name="criteria_scores[{{ $criteria->CriteriaId }}][score]"
-                                            class="form-control form-control-sm @error(" criteria_scores.{$criteria->CriteriaId}.score") is-invalid @enderror"
+                                            class="form-control form-control-sm @error('criteria_scores.'.$criteria->CriteriaId.'.score') is-invalid @enderror"
                                         value="{{ $score }}"
-                                        step="0.01" min="0" max="{{ $criteria->Weight }}">
+                                        step="0.01" min="0" max="10">
                                         <input type="hidden" name="criteria_scores[{{ $criteria->CriteriaId }}][criteria_id]" value="{{ $criteria->CriteriaId }}">
-                                        <input type="hidden" name="criteria_scores[{{ $criteria->CriteriaId }}][max_score]" value="{{ $criteria->Weight }}">
+                                        <input type="hidden" name="criteria_scores[{{ $criteria->CriteriaId }}][max_score]" value="10">
                                         <input type="hidden" name="criteria_scores[{{ $criteria->CriteriaId }}][section_id]" value="{{ $section->SectionID }}">
-                                        @error("criteria_scores.{$criteria->CriteriaId}.score") <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        @error('criteria_scores.'.$criteria->CriteriaId.'.score') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </td>
                                     <td>
                                         <textarea name="criteria_scores[{{ $criteria->CriteriaId }}][comments]"

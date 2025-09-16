@@ -92,10 +92,8 @@
                         <tr>
                             <td class="fw-semibold text-muted">Categories Applied</td>
                             <td>
-                                @if($application->categories->isNotEmpty())
-                                @foreach($application->categories as $category)
-                                <span class="badge bg-secondary me-1">{{ $category->CategoryName }}</span>
-                                @endforeach
+                                @if($application->category)
+                                <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
                                 @else
                                 <span class="text-muted">N/A</span>
                                 @endif

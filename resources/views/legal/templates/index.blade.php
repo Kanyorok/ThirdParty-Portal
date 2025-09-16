@@ -2,8 +2,6 @@
 @section('title', 'Legal Templates')
 
 @section('styles')
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <style>
         .badge-pill { border-radius: 999px; }
         .table thead th { white-space: nowrap; }
@@ -52,21 +50,21 @@
                             <button class="btn btn-primary flex-fill" type="submit">
                                 <i class="fa-solid fa-magnifying-glass me-1"></i> Search
                             </button>
-                            <a href="{{ route('legal.templates.index') }}" class="btn btn-outline-secondary flex-fill">
-                                Reset
-                            </a>
+{{--                            <a href="{{ route('legal.templates.index') }}" class="btn btn-outline-secondary flex-fill">--}}
+{{--                                <i class="fas fa-refresh me-1"></i> Reset--}}
+{{--                            </a>--}}
                         </div>
                     </div>
                 </form>
 
                 <div class="table-responsive">
-                    <table class="table align-middle">
+                    <table class="table align-middle text-center">
                         <thead>
                         <tr>
                             <th>Title</th>
                             <th>Type</th>
                             <th>Version</th>
-                            <th>Status</th>
+{{--                            <th>Status</th>--}}
                             <th>Active</th>
                             <th>Clauses</th>
                             <th>Created</th>
@@ -87,18 +85,18 @@
                                 </td>
                                 <td>{{ $t->DocumentType ?? '—' }}</td>
                                 <td>{{ $t->Version ?? '—' }}</td>
-                                <td>
-                                    @php
-                                        $color = match($t->Status){
-                                          'ACTIVE' => 'success',
-                                          'DRAFT' => 'secondary',
-                                          'DEPRECATED' => 'warning',
-                                          'ARCHIVED' => 'dark',
-                                          default => 'secondary'
-                                        };
-                                    @endphp
-                                    <span class="badge text-bg-{{ $color }} badge-pill">{{ $t->Status }}</span>
-                                </td>
+{{--                                <td>--}}
+{{--                                    @php--}}
+{{--                                        $color = match($t->Status){--}}
+{{--                                          'ACTIVE' => 'success',--}}
+{{--                                          'DRAFT' => 'secondary',--}}
+{{--                                          'DEPRECATED' => 'warning',--}}
+{{--                                          'ARCHIVED' => 'dark',--}}
+{{--                                          default => 'secondary'--}}
+{{--                                        };--}}
+{{--                                    @endphp--}}
+{{--                                    <span class="badge text-bg-{{ $color }} badge-pill">{{ $t->Status }}</span>--}}
+{{--                                </td>--}}
                                 <td>
                                     @if($t->IsActive)
                                         <span class="badge text-bg-success">Yes</span>
@@ -139,6 +137,3 @@
     </div>
 @endsection
 
-@section('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-@endsection
