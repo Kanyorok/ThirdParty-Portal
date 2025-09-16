@@ -2,115 +2,149 @@
 @section('title', 'Budget Creation')
 @section('content')
     <div class="container-lg mt-4">
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{--        <h4 class="fw-bold mb-4 text-primary">Create New Budget Period</h4>--}}
         <div class="fs-6 text-secondary mb-4">
             This form allows you to create a new budget by specifying budget details and selecting GL accounts.
         </div>
-    @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-    @endif
-    @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-    @endif
 
-    <form method="post" action="{{ route('budgetperiod.store') }}">
-        @csrf
-        @method('POST')
-        <div class="card p-4 shadow-sm border-0 rounded-3">
-            <div class="row g-3">
-                <div class="col-md-6 mb-3">
-                    <label for="Name" class="form-label fw-medium">Budget Name</label>
-                    <input type="text" class="form-control rounded-3" id="Name" name="Name"
-                           placeholder="Enter the Budget Name" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="FiscalYear" class="form-label fw-medium">Fiscal Year</label>
-                    <input type="number" class="form-control rounded-3" id="FiscalYear" min="2020" name="FiscalYear"
-                           placeholder="e.g., 2025" required>
-                </div>
-            </div>
-            <div class="row g-3">
-                <div class="col-md-6 mb-3">
-                    <label for="From" class="form-label fw-medium">From (Date)</label>
-                    <input type="date" class="form-control rounded-3" id="From" name="From" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="To" class="form-label fw-medium">To (Date)</label>
-                    <input type="date" class="form-control rounded-3" id="To" name="To" required>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="notes" class="form-label fw-medium">Notes</label>
-                <textarea class="form-control rounded-3" id="notes" name="Notes" rows="3"
-                          placeholder="Add any additional notes"></textarea>
-            </div>
+            <form method="post" action="{{ route('budgetperiod.store') }}">
+                @csrf
+                @method('POST')
+                <div class="card p-4 shadow-sm border-0 rounded-3">
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label for="Name" class="form-label fw-medium">Budget Name</label>
+                            <input type="text" class="form-control rounded-3 @error('Name') is-invalid @enderror"
+                                   id="Name" name="Name"
+                                   value="{{ old('Name') }}"
+                                   placeholder="Enter the Budget Name" required>
+                            @error('Name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-            <!-- GL Selection Section -->
-            <h5 class="mt-4 mb-3 fw-bold text-primary">Select General Ledger Accounts</h5>
-            <div class="row g-3">
-                <div class="col-md-6 mb-3">
-                    <label for="glAccountType" class="form-label fw-medium">GL Account Type</label>
-                    <select class="form-select rounded-3" id="glAccountType" name="glAccountType">
-                        <option disabled selected>Select GL Account Type</option>
-                        <option value="A" data-description="Asset">Asset (A)</option>
-                        <option value="E" data-description="Expense">Expense (E)</option>
-                        <option value="I" data-description="Income">Income (I)</option>
-                        <option value="L" data-description="Liability">Liability (L)</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="glSubAccountType" class="form-label fw-medium">GL Subtype</label>
-                    <select class="form-select rounded-3" id="glSubAccountType" name="glSubAccountType" disabled>
-                        <option disabled selected>Select Subtype</option>
-                    </select>
-                </div>
-                <div class="col-md-12 mb-3">
-                    <label for="glAccounts" class="form-label fw-medium">GL Accounts</label>
-                    <select class="form-select rounded-3" id="glAccounts" multiple size="8" disabled>
-                        <option disabled>Select GL Accounts</option>
-                    </select>
-                    <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
-                    <button type="button" class="btn btn-outline-primary mt-2 w-100 rounded-3" id="addGlButton"
-                            disabled>
-                        <i class="bi bi-plus-circle me-1"></i>Add Selected GLs
-                    </button>
-                </div>
-            </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="FiscalYear" class="form-label fw-medium">Fiscal Year</label>
+                            <input type="number" class="form-control rounded-3 @error('FiscalYear') is-invalid @enderror"
+                                   id="FiscalYear" min="2020" name="FiscalYear"
+                                   value="{{ old('FiscalYear') }}"
+                                   placeholder="e.g., 2025" required>
+                            @error('FiscalYear')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
 
-            <!-- Selected GLs Table -->
-            <h6 class="mt-3 mb-2 fw-bold">Selected GL Accounts</h6>
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered rounded-3" id="selectedGlTable">
-                    <thead class="table-light">
-                    <tr>
-                        <th scope="col">Account ID</th>
-                        <th scope="col">Description</th>
-                        <th scope="col">Account Type</th>
-                        <th scope="col">Action</th>
-                    </tr>
-                    </thead>
-                    <tbody id="selectedGlBody">
-                    <!-- Selected GLs will be appended here -->
-                    </tbody>
-                </table>
-            </div>
-            <!-- Hidden input to store selected GLs -->
-            <input type="hidden" name="selected_gls" id="selected_gls" value="">
-            <div class="modal-footer border-0 pt-4">
-                {{--                <button type="button" class="btn btn-outline-secondary rounded-3 me-2">Cancel</button>--}}
-                <button type="submit" class="btn btn-primary rounded-3"
-                        onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
-                    <i class="bi bi-save me-1"></i>Create Budget
-                </button>
-            </div>
-        </div>
-    </form>
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label for="From" class="form-label fw-medium">From (Date)</label>
+                            <input type="date" class="form-control rounded-3 @error('From') is-invalid @enderror"
+                                   id="From" name="From" value="{{ old('From') }}" required>
+                            @error('From')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="To" class="form-label fw-medium">To (Date)</label>
+                            <input type="date" class="form-control rounded-3 @error('To') is-invalid @enderror"
+                                   id="To" name="To" value="{{ old('To') }}" required>
+                            @error('To')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label fw-medium">Notes</label>
+                        <textarea class="form-control rounded-3 @error('Notes') is-invalid @enderror"
+                                  id="notes" name="Notes" rows="3"
+                                  placeholder="Add any additional notes" required>{{ old('Notes') }}</textarea>
+                        @error('Notes')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- GL Selection Section -->
+                    <h5 class="mt-4 mb-3 fw-bold text-primary">Select General Ledger Accounts</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label for="glAccountType" class="form-label fw-medium">GL Account Type</label>
+                            <select class="form-select rounded-3" id="glAccountType" name="glAccountType">
+                                <option disabled selected>Select GL Account Type</option>
+                                <option value="A" {{ old('glAccountType') == 'A' ? 'selected' : '' }}>Asset (A)</option>
+                                <option value="E" {{ old('glAccountType') == 'E' ? 'selected' : '' }}>Expense (E)</option>
+                                <option value="I" {{ old('glAccountType') == 'I' ? 'selected' : '' }}>Income (I)</option>
+                                <option value="L" {{ old('glAccountType') == 'L' ? 'selected' : '' }}>Liability (L)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="glSubAccountType" class="form-label fw-medium">GL Subtype</label>
+                            <select class="form-select rounded-3" id="glSubAccountType" name="glSubAccountType" disabled>
+                                <option disabled selected>Select Subtype</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12 mb-3">
+                            <label for="glAccounts" class="form-label fw-medium">GL Accounts</label>
+                            <select class="form-select rounded-3" id="glAccounts" multiple size="8" disabled>
+                                <option disabled>Select GL Accounts</option>
+                            </select>
+                            <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple GLs.</div>
+                            <button type="button" class="btn btn-outline-primary mt-2 w-100 rounded-3" id="addGlButton" disabled>
+                                <i class="bi bi-plus-circle me-1"></i>Add Selected GLs
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Selected GLs Table -->
+                    <h6 class="mt-3 mb-2 fw-bold">Selected GL Accounts</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered rounded-3" id="selectedGlTable">
+                            <thead class="table-light">
+                            <tr>
+                                <th scope="col">Account ID</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Account Type</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody id="selectedGlBody">
+                            <!-- Selected GLs will be appended here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Hidden input to store selected GLs -->
+                    <input type="hidden" name="selected_gls" id="selected_gls" value="{{ old('selected_gls') }}">
+
+                    <div class="modal-footer border-0 pt-4">
+                        <button type="submit" class="btn btn-success"
+                                onclick="if(this.form.checkValidity()){
+                                this.disabled = true;
+                                this.innerHTML = '<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Please Wait...';
+                                this.form.submit();
+                            }">
+                            Create Budget
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+
+
 
         <!-- Custom CSS for Enhanced UI -->
         <style>
@@ -247,4 +281,17 @@
                 });
             });
         </script>
+
+            <!-- Client-side date validation -->
+            <script>
+                document.querySelector("form").addEventListener("submit", function (e) {
+                    const fromDate = new Date(document.getElementById("From").value);
+                    const toDate = new Date(document.getElementById("To").value);
+
+                    if (fromDate > toDate) {
+                        e.preventDefault();
+                        alert("The 'From' date cannot be later than the 'To' date.");
+                    }
+                });
+            </script>
 @endsection

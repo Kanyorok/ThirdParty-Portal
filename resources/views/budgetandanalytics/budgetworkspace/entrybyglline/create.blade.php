@@ -28,7 +28,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Budget</label>
                         <select class="form-select" name="BudgetID" required>
-                            <option selected disabled>-- Select Budget --</option>
+                            <option selected value="" disabled>-- Select Budget --</option>
                             @foreach ($budgets as $item)
                                 <option value="{{ $item->Id }}">{{ $item->Name }}
                                     - ({{ $item->From.' |to| '.$item->To }})</option>
@@ -49,7 +49,7 @@
                 <div class="mb-2 col-md-6">
                     <label class="form-label">Budget Line</label>
                     <select name="BudgetLineID" class="form-select" required>
-                        <option disabled selected>-- Select Budget Line --</option>
+                        <option disabled value="" selected>-- Select Budget Line --</option>
                         @foreach ($budgetLines as $item)
                             <option value="{{ $item->Id }}">{{ $item->LineName }}</option>
                         @endforeach
@@ -69,7 +69,7 @@
 
                 <div class="mb-3 mt-3">
                     <label class="form-label">Remarks (optional)</label>
-                    <textarea class="form-control" name="Comments" rows="2"></textarea>
+                    <textarea class="form-control" name="Comments" rows="2" required></textarea>
                 </div>
 
                 <!-- Monthly Allocation Fields -->

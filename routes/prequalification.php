@@ -29,6 +29,14 @@ Route::prefix('prequalification')
                 ->name('prequalification-evaluation.show');
             Route::post('applications/{applicationId}/evaluate', 'submitEvaluation')
                 ->name('prequalification-evaluation.submit');
+            Route::post('rounds/{roundId}/prequalify/bulk', 'bulkPrequalify')
+                ->name('prequalification-evaluation.prequalify.bulk');
+            Route::post('rounds/{roundId}/prequalify/{thirdPartyId}', 'prequalifySupplier')
+                ->name('prequalification-evaluation.prequalify.single');
+            Route::post('rounds/expire/run', 'expireRounds')
+                ->name('prequalification-evaluation.rounds.expire');
+            Route::get('evaluations/datatable', 'datatable')
+                ->name('prequalification-evaluation.datatable');
         });
 
         // Results Routes (for viewing)

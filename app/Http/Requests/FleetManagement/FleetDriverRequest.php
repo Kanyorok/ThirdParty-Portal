@@ -31,6 +31,8 @@ class FleetDriverRequest extends FormRequest
             'Notes' => 'required|string',
             'IsActive' => 'required|boolean',
             'Document' => 'nullable|file|max:2048',
+            'DriverStatus' => 'nullable|numeric|exists:t_CodeDetails,ID',
+            'ImageFile' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
 

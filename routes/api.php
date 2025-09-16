@@ -9,8 +9,6 @@ use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
 use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
-// use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
-use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\SupplierCategoryController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;
@@ -28,14 +26,14 @@ Route::prefix('third-party-auth')->group(function () {
 Route::post('third-parties/register-details', [ThirdPartyController::class, 'store']);
 
 // Tenders
-Route::get('/tenders', [TenderApiController::class, 'index']);
-Route::post('/tenders', [TenderApiController::class, 'store']);
-Route::put('/tenders/{id}', [TenderApiController::class, 'update']);
-Route::delete('/tenders/{id}', [TenderApiController::class, 'destroy']);
-Route::post('/tenders/{tenderId}/items', [TenderApiController::class, 'addItem']);
-Route::delete('/tenders/{tenderId}/items/{itemId}', [TenderApiController::class, 'deleteItem']);
-Route::post('/tenders/{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
-Route::delete('/tenders/{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
+// Route::get('/tenders', [TenderApiController::class, 'index']);
+// Route::post('/tenders', [TenderApiController::class, 'store']);
+// Route::put('/tenders/{id}', [TenderApiController::class, 'update']);
+// Route::delete('/tenders/{id}', [TenderApiController::class, 'destroy']);
+// Route::post('/tenders/{tenderId}/items', [TenderApiController::class, 'addItem']);
+// Route::delete('/tenders/{tenderId}/items/{itemId}', [TenderApiController::class, 'deleteItem']);
+// Route::post('/tenders/{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
+// Route::delete('/tenders/{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/thirdpartyuser', function (Request $request) {

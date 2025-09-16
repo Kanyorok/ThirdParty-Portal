@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title', '📋 Budget Projections Overview')
+@section('title', 'Budget Projections')
 
 @section('content')
     <div class="container my-3">
         <div class="card shadow-sm rounded-3 p-3">
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0 text-primary">📋 Projections</h5>
+                <h5 class="mb-0 text-primary">📋</h5>
                 <a href="{{ route('budgetprojections.create') }}" class="btn btn-info btn-sm px-3 py-2">
                     <i class="fas fa-plus me-1"></i> Add Projection
                 </a>
@@ -48,7 +48,9 @@
                                             data-bs-toggle="modal"
                                             data-bs-target="#customDeleteConfirmModal"
                                             data-name="{{ $item['Name'] }} (All Projections)"
-                                            data-route="{{ route('budgetprojections.destroy', $item['Id']) }}">
+                                            data-route="{{ route('budgetprojections.destroy', $item['Id']) }}"
+                                            @if($item['ApprovalStatus'] === 'approved') disabled @endif
+                                    >
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
