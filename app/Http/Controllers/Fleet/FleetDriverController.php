@@ -147,18 +147,17 @@ class FleetDriverController extends Controller
                 ->pluck('name', 'Id');
 
         
-            $trips = FleetTripLog::with(['vehicle'])
-                ->where('DriverID', $driver->Id)
-                ->orderByDesc('TripStartDate')
-                ->get();
+            // $trips = FleetTripLog::with(['vehicle'])
+            //     ->where('DriverID', $driver->Id)
+            //     ->orderByDesc('TripStartDate')
+            //     ->get();
 
             return view('fleet.drivers.show', compact(
                 'driver',
                 'licenses',
                 'assignments',
                 'vehicles',
-                'assigners',
-                'trips'
+                'assigners'
             ));
         }
     
