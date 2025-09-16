@@ -71,7 +71,7 @@
                 
 
                 <div class="tab-content">
-                    {{-- Trips Tab --}}
+                    {{-- Trips Tab
                     <div class="tab-pane fade show active" id="trips" role="tabpanel">
                         <h5>Trips</h5>
                         <div class="table-responsive">
@@ -102,7 +102,7 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    </div> --}}
 
                  {{-- Drivers Tab --}}
 <div class="tab-pane fade" id="drivers" role="tabpanel">

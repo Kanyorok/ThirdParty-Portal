@@ -88,11 +88,11 @@ class VehicleController extends Controller
 
         $this->authorize('view', $vehicle);
 
-        // Trips
-        $trips = FleetTripLog::with(['driverContracted', 'driverPermanent', 'driverType'])
-            ->where('VehicleID', $vehicle->Id)
-            ->orderByDesc('TripStartDate')
-            ->get();
+        // // Trips
+        // $trips = FleetTripLog::with(['driverContracted', 'driverPermanent', 'driverType'])
+        //     ->where('VehicleID', $vehicle->Id)
+        //     ->orderByDesc('TripStartDate')
+        //     ->get();
 
         // Drivers from trips, assignments, contracted assignments
         $driverList = $this->getVehicleDrivers($vehicle->Id);
@@ -126,8 +126,7 @@ class VehicleController extends Controller
             ->get();
 
         return view('fleet.vehicles.show', compact(
-            'vehicle', 'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels',
-            'trips', 'driverList', 'insuranceRecords', 'inspections', 'repairLogs', 'maintenanceLogs'
+            'vehicle', 'vehicleTypes', 'fuelTypes', 'branches', 'brands', 'fleetModels', 'driverList', 'insuranceRecords', 'inspections', 'repairLogs', 'maintenanceLogs'
         ));
     }
 
@@ -215,22 +214,22 @@ class VehicleController extends Controller
      */
     private function getVehicleDrivers(int $vehicleId)
     {
-        // Trip drivers
-        $tripDrivers = FleetTripLog::with('driverType')
-            ->where('VehicleID', $vehicleId)
-            ->get(['DriverID', 'DriverType', 'TripStartDate', 'TripEndDate'])
-            ->map(function ($trip) {
-                return [
-                    'Id' => $trip->DriverID,
-                    'DriverType' => $trip->driverType?->Description,
-                    'Source' => 'TripLog',
-                    'Period' => $trip->TripStartDate
-                        ? \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') .
-                          ' → ' .
-                          ($trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') : '—')
-                        : null,
-                ];
-            });
+        // // Trip drivers
+        // $tripDrivers = FleetTripLog::with('driverType')
+        //     ->where('VehicleID', $vehicleId)
+        //     ->get(['DriverID', 'DriverType', 'TripStartDate', 'TripEndDate'])
+        //     ->map(function ($trip) {
+        //         return [
+        //             'Id' => $trip->DriverID,
+        //             'DriverType' => $trip->driverType?->Description,
+        //             'Source' => 'TripLog',
+        //             'Period' => $trip->TripStartDate
+        //                 ? \Carbon\Carbon::parse($trip->TripStartDate)->format('d/m/Y') .
+        //                   ' → ' .
+        //                   ($trip->TripEndDate ? \Carbon\Carbon::parse($trip->TripEndDate)->format('d/m/Y') : '—')
+        //                 : null,
+        //         ];
+        //     });
 
         // Permanent assignments
         $assignedDrivers = FleetDriverAssignment::where('VehicleID', $vehicleId)
@@ -265,7 +264,7 @@ class VehicleController extends Controller
             });
 
         // Merge all and attach driver names
-        $allDrivers = $tripDrivers->merge($assignedDrivers)->merge($contractedDrivers)->filter();
+        $allDrivers = $assignedDrivers->merge($contractedDrivers)->filter();
         $driverIds = $allDrivers->pluck('Id')->unique()->filter();
 
         $permanentDrivers = FleetDriver::whereIn('Id', $driverIds)->get()->keyBy('Id');

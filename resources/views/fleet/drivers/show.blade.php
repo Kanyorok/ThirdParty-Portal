@@ -209,7 +209,7 @@
                             </div>
                         </div>
 
-                        {{-- Trips Tab Content --}}
+                        {{-- Trips Tab Content
                         <div class="tab-pane fade" id="trips">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h5>Trips</h5>
@@ -229,8 +229,8 @@
                                         <th>End Location</th>
                                         <th>Distance (Km)</th>
                                     </tr>
-                                    </thead>
-                                    <tbody id="tripsTable">
+                                    </thead> --}}
+                                    {{-- <tbody id="tripsTable">
                                     @foreach($trips as $trip)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
@@ -253,7 +253,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
     {{-- Add License Modal --}}
 
     <div class="modal fade" id="addLicenseModal" tabindex="-1">
