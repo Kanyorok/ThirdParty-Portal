@@ -23,6 +23,7 @@ import { Button } from '@/components/common/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/common/form';
 import { Input } from '@/components/common/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/select';
+import { useEnums } from '@/hooks/use-enums';
 
 const formSchema = z.object({
     ThirdPartyName: z.string()
@@ -73,10 +74,7 @@ const businessTypes = [
     { value: 'NGO', label: 'Non-Profit Organization' },
 ];
 
-const thirdPartyTypes = [
-    { value: 'S', label: 'Supplier' },
-    { value: 'T', label: 'Tenant' },
-];
+// Removed hardcoded thirdPartyTypes; now fetched dynamically via useEnums("third-party-types")
 
 //animation variants
 const containerVariants: Variants = {
@@ -233,7 +231,8 @@ const formFields = [
         placeholder: 'Select type',
         required: true,
         type: 'select',
-        options: thirdPartyTypes,
+        // options will be injected dynamically from hook data in render
+        options: [],
         gridSpan: 'col-span-full sm:col-span-1',
     },
 ];
@@ -242,6 +241,9 @@ export default function RegisterThirdPartyDetails() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const userId = searchParams.get('user_id');
+
+    // Fetch dynamic third party types
+    const { data: thirdPartyTypeOptions, isLoading: thirdPartyTypesLoading, error: thirdPartyTypesError, refetch: refetchThirdPartyTypes } = useEnums('third-party-types');
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -298,7 +300,7 @@ export default function RegisterThirdPartyDetails() {
                 user_id: userId,
             };
 
-            const response = await fetch('http://localhost:8000/api/third-parties/register-details', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/register-details`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -448,7 +450,10 @@ export default function RegisterThirdPartyDetails() {
                                             variants={formFieldVariants}
                                             className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6"
                                         >
-                                            {formFields.map((fieldConfig) => (
+                                            {formFields.map((fieldConfig) => {
+                                                const isThirdPartyType = fieldConfig.name === 'ThirdPartyType';
+                                                const dynamicOptions = isThirdPartyType ? thirdPartyTypeOptions : fieldConfig.options;
+                                                return (
                                                 <FormField
                                                     key={fieldConfig.name}
                                                     control={form.control}
@@ -471,7 +476,16 @@ export default function RegisterThirdPartyDetails() {
                                                                             <SelectValue placeholder={fieldConfig.placeholder} />
                                                                         </SelectTrigger>
                                                                         <SelectContent className="rounded-2xl border-slate-200">
-                                                                            {fieldConfig.options?.map((option) => (
+                                                                            {isThirdPartyType && thirdPartyTypesLoading && (
+                                                                                <div className="px-3 py-2 text-sm text-slate-500">Loading...</div>
+                                                                            )}
+                                                                            {isThirdPartyType && thirdPartyTypesError && (
+                                                                                <div className="px-3 py-2 text-sm text-red-500 flex flex-col gap-2">
+                                                                                    <span>Failed to load options.</span>
+                                                                                    <button type="button" onClick={refetchThirdPartyTypes} className="underline text-blue-600 text-left">Retry</button>
+                                                                                </div>
+                                                                            )}
+                                                                            {!thirdPartyTypesLoading && dynamicOptions?.map((option) => (
                                                                                 <SelectItem
                                                                                     key={option.value}
                                                                                     value={option.value}
@@ -497,7 +511,8 @@ export default function RegisterThirdPartyDetails() {
                                                         </FormItem>
                                                     )}
                                                 />
-                                            ))}
+                                                );
+                                            })}
                                         </motion.div>
 
                                         {/* Submit Button */}

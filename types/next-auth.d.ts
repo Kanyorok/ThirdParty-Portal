@@ -82,11 +82,18 @@ export interface BaseUser {
     isActive: boolean;
     isApproved: boolean;
     isSupplier: boolean;
+    types?: ThirdPartyTypeEntry[];
     emailVerifiedOn?: string | null;
     createdOn: string;
     isDeleted?: boolean | null;
     modifiedOn: string;
     thirdParty?: ThirdParty | null;
+}
+
+export interface ThirdPartyTypeEntry {
+    id: number;
+    code: string;
+    categoryId: number | null;
 }
 
 declare module "next-auth" {

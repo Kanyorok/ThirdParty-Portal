@@ -45,7 +45,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${roboto.variable} smooth-scroll antialiased`}>
+      <body suppressHydrationWarning className={`${roboto.variable} smooth-scroll antialiased`}>
         <NextAuthProvider attribute="class" enableSystem disableTransitionOnChange>
           {children}
         </NextAuthProvider>

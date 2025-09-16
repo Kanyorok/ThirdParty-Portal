@@ -11,15 +11,18 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/common/sheet"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
-import { getRounds, submitApplication, getSupplierCategories } from "@/lib/api-base"
+import { getRounds, getSupplierCategories, submitApplicationSafe } from "@/lib/api-base"
 import { cn } from "@/lib/utils"
 
+// Local round shape used inside the form (separate from global Round but can overlap)
 type Round = {
     id: string;
     name: string;
     status: string;
     deadline?: string;
     applicantCount?: number;
+    hasApplied?: boolean;
+    applicationId?: string;
 };
 
 type SupplierCategory = {
@@ -42,7 +45,12 @@ const RoundApiItemSchema = z.object({
     id: z.union([z.string(), z.number()]).optional(),
     title: z.string().optional(),
     name: z.string().optional(),
-    status: z.string().optional(),
+    status: z.union([
+        z.string(),
+        z.object({ value: z.string(), label: z.string().optional() }),
+    ]).optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
     deadline: z.string().optional(),
     applicantCount: z.number().optional(),
 });
@@ -181,7 +189,7 @@ const SuccessState = ({ onClose }: { onClose: () => void }) => (
             Application Submitted! 🎉
         </h3>
         <p className="text-sm text-green-600 dark:text-green-400 max-w-sm mb-6">
-            Your prequalification application has been successfully submitted. We'll send you an email with the next steps.
+            Your prequalification application has been successfully submitted. We&apos;ll send you an email with the next steps.
         </p>
         <Button onClick={onClose} className="w-full sm:w-auto px-8">
             Continue
@@ -242,7 +250,7 @@ const CategorySelector = ({ categories, selectedIds, onToggle, error }: { catego
     </div>
 );
 
-export default function ApplicationForm({ children, open = false, onOpenChange, defaultRoundId, onSuccess }: { children?: React.ReactNode; open?: boolean; onOpenChange?: (open: boolean) => void; defaultRoundId?: string; onSuccess?: (result: { applicationId: string; statusCode: "O" | "CL" | "S"; statusLabel: string }) => void }) {
+export default function ApplicationForm({ children, open = false, onOpenChange, defaultRoundId, onSuccess }: { children?: React.ReactNode; open?: boolean; onOpenChange?: (open: boolean) => void; defaultRoundId?: string; onSuccess?: (result: { applicationId: string; statusCode: "O" | "CL" | "S"; statusLabel: string; roundId: string }) => void }) {
     const { data: session } = useSession();
     const accessToken = session?.accessToken as string;
     const [rounds, setRounds] = useState<Round[]>([]);
@@ -271,22 +279,36 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             const roundsRes: unknown = await getRounds({}, accessToken);
             const parsed = RoundsApiResponseSchema.safeParse(roundsRes);
             const raw = parsed.success ? parsed.data.data ?? [] : Array.isArray(roundsRes) ? roundsRes : [];
-            const normalized = (raw as z.infer<typeof RoundApiItemSchema>[]).map((r) => ({
-                id: (r.roundID ?? r.id ?? "").toString(),
-                name: r.title ?? r.name ?? "Untitled Round",
-                status: r.status ?? "O",
-                deadline: r.deadline,
-                applicantCount: r.applicantCount,
-            }));
-            setRounds(normalized);
-            setRoundsLoadingState("success");
-        } catch (error: any) {
-            const errorMessage = error?.message || "Failed to load prequalification rounds. Please try again.";
+            const normalizedAll = (raw as z.infer<typeof RoundApiItemSchema>[]).map((r) => {
+                const statusCode = typeof r.status === "string" ? r.status : (r.status as { value?: string })?.value;
+                const deadline = r.deadline || r.endDate || r.startDate;
+                return {
+                    id: (r.roundID ?? r.id ?? "").toString(),
+                    name: r.title ?? r.name ?? "Untitled Round",
+                    status: (statusCode || "O") as string,
+                    deadline,
+                    applicantCount: r.applicantCount,
+                    hasApplied: Boolean((r as { hasApplied?: boolean }).hasApplied) || Boolean((r as { applicationId?: unknown }).applicationId),
+                    applicationId: (r as { applicationId?: unknown }).applicationId ? String((r as { applicationId?: unknown }).applicationId) : undefined,
+                };
+            }).filter(r => r.id);
+            const filtered = defaultRoundId
+                ? normalizedAll.filter(r => r.id === defaultRoundId)
+                : normalizedAll;
+            setRounds(filtered);
+            if (defaultRoundId && filtered.length === 0) {
+                setRoundError("Selected round not found or is unavailable.");
+                setRoundsLoadingState("error");
+            } else {
+                setRoundsLoadingState("success");
+            }
+        } catch (error: unknown) {
+            const errorMessage = (error as Error)?.message || "Failed to load prequalification rounds. Please try again.";
             setRoundError(errorMessage);
             setRoundsLoadingState("error");
             setRounds([]);
         }
-    }, [accessToken]);
+    }, [accessToken, defaultRoundId]);
 
     const fetchCategories = useCallback(async () => {
         if (!accessToken || !selectedRoundId) {
@@ -308,8 +330,8 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             const active = mapped.filter((c) => c.is_active);
             setCategories(active);
             setCategoriesLoadingState("success");
-        } catch (error: any) {
-            const errorMessage = error?.message || "Failed to load supplier categories. Please try again.";
+        } catch (error: unknown) {
+            const errorMessage = (error as Error)?.message || "Failed to load supplier categories. Please try again.";
             setCategoryError(errorMessage);
             setCategoriesLoadingState("error");
             setCategories([]);
@@ -319,6 +341,16 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     useEffect(() => {
         if (open && accessToken) fetchRounds();
     }, [open, accessToken, fetchRounds]);
+
+    // When defaultRoundId is provided, auto-select it after rounds load
+    useEffect(() => {
+        if (defaultRoundId && roundsLoadingState === "success") {
+            const match = rounds.find(r => r.id === defaultRoundId);
+            if (match) {
+                form.setValue("roundId", match.id, { shouldValidate: true });
+            }
+        }
+    }, [defaultRoundId, roundsLoadingState, rounds, form]);
 
     useEffect(() => {
         if (selectedRoundId) fetchCategories();
@@ -350,23 +382,45 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             const roundId = parseInt(values.roundId, 10);
             const categoryIds = values.categoryIds.map((id) => parseInt(id, 10));
             try {
-                const body: any = await submitApplication(roundId, categoryIds, accessToken);
-                if (typeof body?.message === "string" && body.message.toLowerCase().includes("already applied")) {
-                    setFormMessage({ type: "warning", message: "You have already applied to this prequalification round. Check your applications dashboard for status updates." });
-                    setFormLoadingState("warning");
-                } else {
+                const resp = await submitApplicationSafe(roundId, categoryIds, accessToken);
+                if (resp.status === 201) {
                     setFormMessage({ type: "success", message: "" });
                     setFormLoadingState("success");
-                }
-                const application = body?.application;
-                if (application) {
-                    onSuccess?.({ applicationId: application.ApplicationID, statusCode: application.Status as "O" | "CL" | "S", statusLabel: application.StatusLabel ?? "Submitted" });
+                    const application = resp.data?.application;
+                    if (application) {
+                        onSuccess?.({ applicationId: application.ApplicationID, statusCode: application.Status as "O" | "CL" | "S", statusLabel: application.StatusLabel ?? "Submitted", roundId: values.roundId });
+                    } else {
+                        onSuccess?.({ applicationId: "", statusCode: "S", statusLabel: "Submitted", roundId: values.roundId });
+                    }
+                } else if (resp.status === 409) {
+                    const duplicates = resp.data?.duplicates || [];
+                    const names = duplicates.map((d: { name?: string }) => d.name || 'Unknown').join(', ');
+                    setFormMessage({ type: "warning", message: `⚠️ You have already applied for the category: ${names} in this round.` });
+                    setFormLoadingState("warning");
+                } else if (resp.status === 401 || resp.status === 403) {
+                    setFormMessage({ type: "error", message: "You are not authorized to apply to this round." });
+                    setFormLoadingState("error");
+                } else if (resp.status === 422) {
+                    const firstErr = (() => {
+                        const errs = resp.data?.errors;
+                        if (errs && typeof errs === 'object') {
+                            const firstKey = Object.keys(errs)[0];
+                            if (firstKey) return Array.isArray(errs[firstKey]) ? errs[firstKey][0] : errs[firstKey];
+                        }
+                        return null;
+                    })();
+                    setFormMessage({ type: "error", message: firstErr || "Validation error. Please check your input." });
+                    setFormLoadingState("error");
+                } else if (resp.status >= 500) {
+                    setFormMessage({ type: "error", message: "Server error. Please try again later." });
+                    setFormLoadingState("error");
                 } else {
-                    onSuccess?.({ applicationId: "", statusCode: "S", statusLabel: "Submitted" });
+                    setFormMessage({ type: "error", message: resp.data?.message || `Unexpected error (${resp.status}).` });
+                    setFormLoadingState("error");
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 setFormLoadingState("error");
-                setFormMessage({ type: "error", message: err?.message || "Please check your connection and try again." });
+                setFormMessage({ type: "error", message: (err as Error)?.message || "Please check your connection and try again." });
             }
         },
         [accessToken, onSuccess]
@@ -398,59 +452,93 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     <form className="mt-8 space-y-8" onSubmit={form.handleSubmit(onSubmit)} noValidate>
                         <div className="space-y-6">
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor="roundId" id="rounds-label" className="text-base font-semibold flex items-center gap-2">
-                                        <Calendar className="w-4 h-4" />
-                                        Available Rounds
-                                    </Label>
-                                    {roundsLoadingState === "loading" && <Loader2 className="w-4 h-4 animate-spin text-blue-500" aria-label="Loading rounds" />}
-                                </div>
-                                {roundsLoadingState === "loading" && <LoadingSkeleton />}
-                                {roundsLoadingState === "error" && <ErrorState error={roundError} onRetry={fetchRounds} />}
-                                {roundsLoadingState === "success" && rounds.length > 0 && (
+                                {!defaultRoundId && (
                                     <>
-                                        <Select value={form.watch("roundId")} onValueChange={(value) => form.setValue("roundId", value, { shouldValidate: true })}>
-                                            <SelectTrigger id="roundId" className={`h-12 transition-all duration-300 ${roundValidationState === "valid" ? "border-green-300 focus:border-green-500 focus:ring-green-200" : roundValidationState === "invalid" ? "border-red-300 focus:border-red-500 focus:ring-red-200" : "focus:border-blue-500 focus:ring-blue-200"}`} aria-invalid={!!form.formState.errors.roundId} aria-describedby="roundId-error" aria-labelledby="rounds-label">
-                                                <SelectValue placeholder="Choose a prequalification round" />
-                                            </SelectTrigger>
-                                            <SelectContent className="max-w-md">
-                                                {rounds.map((round) => (
-                                                    <SelectItem key={round.id} value={round.id} disabled={round.status.toLowerCase() === "cl" || round.status.toLowerCase() === "closed"} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                                        <div className="w-full">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <span className="font-medium text-gray-900 dark:text-gray-100">{round.name}</span>
-                                                                <StatusBadge status={round.status} />
-                                                            </div>
-                                                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
-                                                                {round.deadline && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <Clock className="w-3 h-3" />
-                                                                        Deadline: {new Date(round.deadline).toLocaleDateString()}
-                                                                    </span>
-                                                                )}
-                                                                {round.applicantCount !== undefined && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <Users className="w-3 h-3" />
-                                                                        {round.applicantCount} applicants
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {form.formState.errors.roundId && (
-                                            <div className="flex items-center gap-2 text-red-600 text-sm animate-in slide-in-from-left-2" role="alert">
-                                                <AlertCircle className="w-4 h-4" />
-                                                <span id="roundId-error">{form.formState.errors.roundId.message}</span>
-                                            </div>
+                                        <div className="flex items-center justify-between">
+                                            <Label htmlFor="roundId" id="rounds-label" className="text-base font-semibold flex items-center gap-2">
+                                                <Calendar className="w-4 h-4" />
+                                                Available Rounds
+                                            </Label>
+                                            {roundsLoadingState === "loading" && <Loader2 className="w-4 h-4 animate-spin text-blue-500" aria-label="Loading rounds" />}
+                                        </div>
+                                        {roundsLoadingState === "loading" && <LoadingSkeleton />}
+                                        {roundsLoadingState === "error" && <ErrorState error={roundError} onRetry={fetchRounds} />}
+                                        {roundsLoadingState === "success" && rounds.length > 0 && (
+                                            <>
+                                                <Select value={form.watch("roundId")} onValueChange={(value) => form.setValue("roundId", value, { shouldValidate: true })}>
+                                                    <SelectTrigger id="roundId" className={`h-12 transition-all duration-300 ${roundValidationState === "valid" ? "border-green-300 focus:border-green-500 focus:ring-green-200" : roundValidationState === "invalid" ? "border-red-300 focus:border-red-500 focus:ring-red-200" : "focus:border-blue-500 focus:ring-blue-200"}`} aria-invalid={!!form.formState.errors.roundId} aria-describedby="roundId-error" aria-labelledby="rounds-label">
+                                                        <SelectValue placeholder="Choose a prequalification round" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="max-w-md">
+                                                        {rounds.map((round) => (
+                                                            <SelectItem key={round.id} value={round.id} disabled={round.status.toLowerCase() === "cl" || round.status.toLowerCase() === "closed"} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                                                <div className="w-full">
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <span className="font-medium text-gray-900 dark:text-gray-100">{round.name}</span>
+                                                                        <StatusBadge status={round.status} />
+                                                                    </div>
+                                                                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                                                                        {round.deadline && (
+                                                                            <span className="flex items-center gap-1">
+                                                                                <Clock className="w-3 h-3" />
+                                                                                Deadline: {new Date(round.deadline).toLocaleDateString()}
+                                                                            </span>
+                                                                        )}
+                                                                        {round.applicantCount !== undefined && (
+                                                                            <span className="flex items-center gap-1">
+                                                                                <Users className="w-3 h-3" />
+                                                                                {round.applicantCount} applicants
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {form.formState.errors.roundId && (
+                                                    <div className="flex items-center gap-2 text-red-600 text-sm animate-in slide-in-from-left-2" role="alert">
+                                                        <AlertCircle className="w-4 h-4" />
+                                                        <span id="roundId-error">{form.formState.errors.roundId.message}</span>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
+                                        {roundsLoadingState === "success" && rounds.length === 0 && <EmptyState onRetry={fetchRounds} />}
                                     </>
                                 )}
-                                {roundsLoadingState === "success" && rounds.length === 0 && <EmptyState onRetry={fetchRounds} />}
+                                {defaultRoundId && roundsLoadingState === "success" && rounds[0] && (
+                                    <div className="p-4 rounded-lg border bg-gray-50 dark:bg-gray-900/30 dark:border-gray-700">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="w-4 h-4 text-blue-500" />
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">{rounds[0].name}</span>
+                                            </div>
+                                            <StatusBadge status={rounds[0].status} />
+                                        </div>
+                                        {rounds[0].hasApplied && (
+                                            <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium" role="note">
+                                                Already applied{rounds[0].applicationId ? ` • Ref ${rounds[0].applicationId}` : ''}
+                                            </div>
+                                        )}
+                                        <div className="flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
+                                            {rounds[0].deadline && (
+                                                <span className="flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" />
+                                                    Deadline: {new Date(rounds[0].deadline).toLocaleDateString()}
+                                                </span>
+                                            )}
+                                            {rounds[0].applicantCount !== undefined && (
+                                                <span className="flex items-center gap-1">
+                                                    <Users className="w-3 h-3" />
+                                                    {rounds[0].applicantCount} applicants
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            {selectedRoundId && (
+                            {selectedRoundId && (!rounds[0]?.hasApplied) && (
                                 <div className="space-y-4 pt-6 transition-all duration-300 ease-in-out animate-in slide-in-from-bottom-4">
                                     <div className="flex items-center justify-between">
                                         <Label htmlFor="categories" id="categories-label" className="text-base font-semibold flex items-center gap-2">
@@ -478,7 +566,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                             <Button type="button" variant="outline" onClick={handleClose} disabled={formLoadingState === "submitting"} className="flex-1 sm:flex-none transition-all duration-200 hover:scale-105 focus:scale-105">
                                 Cancel
                             </Button>
-                            <Button
+                            {!rounds[0]?.hasApplied && <Button
                                 type="submit"
                                 disabled={
                                     formLoadingState === "submitting" ||
@@ -501,7 +589,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                         Submit Application
                                     </>
                                 )}
-                            </Button>
+                            </Button>}
                         </div>
                     </form>
                 );

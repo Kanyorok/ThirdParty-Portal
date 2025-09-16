@@ -1,5 +1,4 @@
-"use server";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth"; // (kept in case future auth-based filtering is needed)
 import RoundsTable from "./rounds-table";
 import RoundsToolbar from "./rounds-toolbar";
 import { Round } from "@/types/types";
@@ -11,10 +10,13 @@ type ApiRound = {
     roundId?: string;
     title?: string;
     name?: string;
-    status?: "O" | "CL" | string;
+    status?: "O" | "CL" | string | { value: string; label?: string };
     startDate?: string;
     endDate?: string;
     maxVendors?: number;
+    applicationId?: string | number;
+    hasApplied?: boolean;
+    applicationProgress?: { stage?: string; percent?: number; updatedOn?: string; label?: string };
 };
 
 type ApiResponse = {
@@ -29,34 +31,17 @@ type ApiResponse = {
 };
 
 async function getRounds(query: Record<string, string | undefined>): Promise<ApiResponse> {
-    const base = (process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+    // Build absolute URL (Node fetch on the server requires absolute URLs when not in a route handler context)
     const usp = new URLSearchParams();
-
-    for (const [k, v] of Object.entries(query)) {
-        if (v != null && v !== "") usp.set(k, v);
-    }
-
+    for (const [k, v] of Object.entries(query)) if (v != null && v !== "") usp.set(k, v);
     const queryString = usp.toString();
-    const url = `${base}/api/procurement/prequalification/rounds${queryString ? `?${queryString}` : ""}`;
 
-    let bearer: string | undefined;
-    try {
-        const session = await getServerSession(authOptions);
-        bearer = (session as any)?.accessToken ?? (session as any)?.access_token;
-    } catch {
-        bearer = undefined;
-    }
+    // Prefer NEXTAUTH_URL (already present), fallback to Vercel URL envs, then localhost.
+    const base = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+    const url = `${base}/api/prequalification/rounds${queryString ? `?${queryString}` : ""}`;
 
     try {
-        const res = await fetch(url, {
-            cache: "no-store",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-                ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
-            },
-            credentials: "include",
-        });
+        const res = await fetch(url, { cache: "no-store", headers: { Accept: "application/json", "Content-Type": "application/json" } });
 
         if (!res.ok) {
             console.error(`Failed to load rounds: ${res.status} ${res.statusText}`);
@@ -125,20 +110,53 @@ export default async function RoundsView({
 }) {
     const apiData = await getRounds(initialQuery);
 
-    const mappedRounds: Round[] = apiData.data.map((r) => {
-        const id = String(r.roundID ?? r.id ?? r.roundId ?? "");
-        const title = String(r.title ?? r.name ?? id);
+    // Build rounds with guaranteed unique, non-empty IDs (backend may return null IDs)
+    const usedIds = new Set<string>();
+    const mappedRounds: Round[] = apiData.data.map((r, idx) => {
+        let baseId = (r.roundID ?? r.id ?? r.roundId ?? "").toString().trim();
+        if (!baseId) {
+            const basis = (r.title ?? r.name ?? "round")
+                .toString()
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "") || "round";
+            baseId = `round-${basis}-${idx + 1}`;
+        }
+        let uniqueId = baseId;
+        let counter = 2;
+        while (usedIds.has(uniqueId)) {
+            uniqueId = `${baseId}-${counter++}`;
+        }
+        usedIds.add(uniqueId);
+
+        const title = String(r.title ?? r.name ?? uniqueId);
         const startDate = r.startDate ?? "";
         const endDate = r.endDate ?? "";
         const maxVendors = Number(r.maxVendors ?? 0);
 
+        const rawStatus: any = (r as any).status
+        let status: any
+        if (rawStatus && typeof rawStatus === 'object') {
+            status = { value: rawStatus.value, label: rawStatus.label }
+        } else {
+            const v = (rawStatus ?? r.status)
+            status = v === 'O' || v === 'CL' ? v : (v === 'Open' ? 'O' : 'CL')
+        }
         return {
-            id,
+            id: uniqueId,
             title,
-            status: r.status === "O" ? "O" : "CL",
+            status,
             startDate,
             endDate,
             maxVendors,
+            hasApplied: Boolean((r as any).hasApplied) || Boolean((r as any).applicationId),
+            applicationId: (r as any).applicationId ? String((r as any).applicationId) : undefined,
+            applicationProgress: (r as any).applicationProgress ? {
+                stage: (r as any).applicationProgress.stage,
+                percent: (r as any).applicationProgress.percent,
+                updatedOn: (r as any).applicationProgress.updatedOn,
+                label: (r as any).applicationProgress.label,
+            } : undefined,
         };
     });
 
