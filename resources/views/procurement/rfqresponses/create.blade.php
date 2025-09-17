@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="container">
-    <h3>Create RFQ Response</h3>
 
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -38,6 +37,7 @@
                         </select>
                     </div>
                     <input type="hidden" name="SupplierId" id="supplier-id" value=""/>
+                    <div id="existing-response-alert" class="alert alert-info d-none">Existing response found. Fields are locked.</div>
                     <h5>Requisition Items Details:</h5>
                     <div id="requisition-items-container"></div>
 
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Load suppliers
+        // Load suppliers (excludes those whose ThirdParty already responded)
         fetch(`/procurement/rfq-suppliers/${rfqId}`)
             .then(response => response.json())
             .then(data => {
@@ -144,8 +144,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <td>
                                     <select name="Currency" class="form-control" required>
                                         <option value="">-- Select Currency --</option>
-                                        @foreach($currencies as $code => $name)
-                                            <option value="{{ $code }}">{{ $code }}</option>
+                                        @foreach($currencies as $curr)
+                                            <option value="{{ $curr->Code }}" {{ $curr->Symbol === 'Ksh' ? 'selected' : '' }}>
+                                                {{ $curr->Symbol }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </td>
@@ -181,9 +183,56 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Update hidden SupplierId field when a supplier is selected
-    supplierSelect.addEventListener('change', function () {
+    supplierSelect.addEventListener('change', async function () {
         const selectedOption = supplierSelect.options[supplierSelect.selectedIndex];
-        supplierIdInput.value = selectedOption.value || ''; // Set the hidden SupplierId field
+        supplierIdInput.value = selectedOption.value || '';
+
+        // If both RFQ and Supplier are selected, check for existing response
+        const rfqId = rfqCodeSelect.value;
+        const supplierId = supplierIdInput.value;
+        if (rfqId && supplierId) {
+            try {
+                const res = await fetch(`/procurement/rfqresponses/find-existing?rfqId=${encodeURIComponent(rfqId)}&supplierId=${encodeURIComponent(supplierId)}`);
+                const data = await res.json();
+                const alertBox = document.getElementById('existing-response-alert');
+                if (data && data.exists) {
+                    alertBox.classList.remove('d-none');
+                    // Fill header fields if present
+                    if (data.header) {
+                        // DurationDays: same input name appears per row; set first occurrence
+                        const durationInput = document.querySelector('input[name="DurationDays"]');
+                        if (durationInput && data.header.durationDays) durationInput.value = data.header.durationDays;
+
+                        // Currency: set selected option by code
+                        const currencySelect = document.querySelector('select[name="Currency"]');
+                        if (currencySelect && data.header.currency) currencySelect.value = data.header.currency;
+                    }
+                    // Fill items by matching names and quantities where possible
+                    if (Array.isArray(data.items)) {
+                        data.items.forEach((it, idx) => {
+                            const priceInput = document.querySelector(`input[name="RequisitionItems[${idx}][quotedprice]"]`);
+                            const totInput = document.querySelector(`input[name="RequisitionItems[${idx}][totalpayable]"]`);
+                            if (priceInput && typeof it.quotedPrice !== 'undefined') priceInput.value = it.quotedPrice;
+                            if (totInput && typeof it.totalPayable !== 'undefined') totInput.value = Number(it.totalPayable).toFixed(2);
+                        });
+                    }
+                    // Disable all inputs and save button (except RFQ & Supplier selects)
+                    document.querySelectorAll('input, select, button[type="submit"]').forEach(el => {
+                        if (el === rfqCodeSelect || el === supplierSelect) return;
+                        el.setAttribute('disabled', 'disabled');
+                    });
+                } else {
+                    alertBox.classList.add('d-none');
+                    // Re-enable fields if previously disabled
+                    document.querySelectorAll('input, select, button[type="submit"]').forEach(el => {
+                        if (el === rfqCodeSelect || el === supplierSelect) return;
+                        el.removeAttribute('disabled');
+                    });
+                }
+            } catch (e) {
+                // On error, do nothing special
+            }
+        }
     });
 });
 </script>
