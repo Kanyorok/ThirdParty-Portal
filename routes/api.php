@@ -14,6 +14,33 @@ use App\Http\Controllers\Procurement\SupplierCategoryController;
 use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
+
+// Token validation (Sanctum) for frontend session checks
+Route::post('auth/validate-token', function (Request $request) {
+    $user = $request->user();
+    if (!$user) {
+        return response()->json(['valid' => false], 401);
+    }
+
+    // ThirdPartyUser specific flags
+    $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool) ($user->IsActive ?? $user->isActive ?? false);
+    $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool) ($user->isApproved ?? false);
+
+    if (!$isActive || !$isApproved) {
+        return response()->json(['valid' => false], 403);
+    }
+
+    return response()->json([
+        'valid' => true,
+        'user' => [
+            'id' => $user->getAuthIdentifier(),
+            'email' => $user->email ?? $user->Email ?? null,
+            'isActive' => $isActive,
+            'isApproved' => $isApproved,
+        ],
+    ]);
+})->middleware('auth:sanctum')->name('auth.validate-token');
 
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
@@ -35,7 +62,7 @@ Route::post('third-parties/register-details', [ThirdPartyController::class, 'sto
 // Route::post('/tenders/{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
 // Route::delete('/tenders/{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
     Route::get('/thirdpartyuser', function (Request $request) {
         return $request->user();
     })->name('thirdpartyuser.profile');
@@ -78,12 +105,17 @@ Route::prefix('v1')->group(function () {
     Route::get('currencies', [ApiCurrencyController::class, 'list']);
 });
 
+// countries
+Route::prefix('v1')->group(function () {
+    Route::get('countries', [\App\Http\Controllers\Settings\Codes\ApiCountryController::class, 'list']);
+});
+
 // enums (public)
 Route::prefix('enums')->group(function () {
     Route::get('third-party-types', [ThirdPartyTypesEnumController::class, 'index']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
     Route::prefix('proc')->name('proc.api.')->group(function () {
         Route::apiResource('supplier-cat', SupplierCategoryController::class);
         Route::apiResource('supp', SupplierController::class);
@@ -123,14 +155,19 @@ Route::prefix('v1')->group(function () {
 });
 
 
+Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->prefix('v1')->group(function(){
+    Route::get('/prequalification/applications/{roundId}/progress', [PrequalificationProgressController::class, 'getApplicationProgress']);
+    Route::post('/prequalification/applications/{roundId}/categories/{categoryId}/progress', [PrequalificationProgressController::class, 'updateCategoryProgress']);
+    Route::get('/prequalification/applications/my-applications', [PrequalificationProgressController::class, 'getMyApplications']);
+});
 // API Routes (for Supplier Portal)
 Route::prefix('procurement')->name('api.procurement.')
-    ->middleware(['auth:sanctum'])
+    ->middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
     ->group(function () {
         Route::apiResource('supplier-cat', SupplierCategoryApiController::class);
         Route::apiResource('supp', SupplierController::class);
 
-        // Prequalification API endpoints
+        // Prequalification API endpoints (for frontend compatibility)
         Route::prefix('prequalification')->name('prequalification.')->group(function () {
             Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
@@ -138,11 +175,14 @@ Route::prefix('procurement')->name('api.procurement.')
         });
     });
 
-// Public (unauthenticated) read-only endpoints for prequalification rounds to support frontend path /api/prequalification/rounds
-Route::prefix('prequalification')->name('api.prequalification.')->group(function () {
-    Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
-    Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
-});
+// Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage
+Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
+    ->prefix('prequalification')
+    ->name('api.prequalification.')
+    ->group(function () {
+        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+    });
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods
@@ -159,10 +199,4 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     //     });
     // });
 
-    // Evaluator Routes
-    Route::middleware('role:evaluator')->group(function () {
-        Route::controller(PrequalificationEvaluationController::class)->group(function () {
-            Route::post('evaluator/evaluations', 'store');
-        });
-    });
 });

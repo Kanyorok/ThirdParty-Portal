@@ -24,13 +24,44 @@ class DepartmentNeedsController extends Controller
 
     public function create()
     {
-        $items = ItemMasterList::with('category', 'uom')->orderBy('ItemName')->get();
+        $items = ItemMasterList::with(['category', 'uom', 'price'])
+            ->whereNotNull('ItemPrice')
+            ->whereHas('price', function ($q) {
+                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            })
+            ->orderBy('ItemName')
+            ->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.create', compact('items'));
     }
 
     public function store(Request $request, DepartmentNeedsService $service)
     {
         try {
+            // Basic validation: estimated cost must be present and > 0
+            $validated = $request->validate([
+                'ItemID' => ['required', 'integer', 'exists:t_Items,Id'],
+                'RequestedQty' => ['required', 'numeric', 'min:1'],
+                'EstimatedUnitCost' => ['required', 'numeric', 'gt:0'],
+                'RequestedDate' => ['required', 'date'],
+                'Justification' => ['nullable', 'string'],
+            ]);
+
+            // Guard: ensure the chosen item has an estimated/actual price configured and > 0
+            $hasValidPrice = \App\Models\Inventory\ItemMasterList::query()
+                ->where('Id', $validated['ItemID'])
+                ->whereNotNull('ItemPrice')
+                ->whereHas('price', function ($q) {
+                    $q->whereNotNull('ActualPrice')
+                      ->where('ActualPrice', '>', 0);
+                })
+                ->exists();
+
+            if (!$hasValidPrice) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['ItemID' => 'Cannot raise a need for an item without a configured estimated cost.']);
+            }
+
             DB::transaction(function () use ($request, $service) {
                 $actor = $request->user();
                 $service->create($request->all(), $actor);

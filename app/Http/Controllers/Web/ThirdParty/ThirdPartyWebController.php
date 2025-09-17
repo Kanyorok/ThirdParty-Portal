@@ -127,21 +127,51 @@ class ThirdPartyWebController extends Controller
     public function update(UpdateThirdPartyRequest $request, ThirdParties $party): RedirectResponse
     {
         try {
+            // Debug logging
+            Log::info('ThirdParty Update Started', [
+                'partyId' => $party->Id,
+                'requestData' => $request->all(),
+                'approvalStatus' => $request->input('ApprovalStatus'),
+                'status' => $request->input('Status'),
+                'totalParties' => ThirdParties::count()
+            ]);
+            
             $data = $request->validated();
             $data['ModifiedBy'] = Auth::id();
 
+            Log::info('Validated data', [
+                'partyId' => $party->Id,
+                'validatedData' => $data
+            ]);
+
             $party->update($data);
+
+            Log::info('Party updated successfully', [
+                'partyId' => $party->Id,
+                'newApprovalStatus' => $party->ApprovalStatus,
+                'newStatus' => $party->Status
+            ]);
 
             // If the party status was set to Active, ensure linked users are activated
             if (array_key_exists('Status', $data) && $data['Status'] === ThirdPartyStatusEnum::Active->value) {
                 ThirdPartyUser::where('ThirdPartyId', $party->Id)
                     ->update(['IsActive' => 1, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+                
+                Log::info('Users activated for party', [
+                    'partyId' => $party->Id,
+                    'activatedUsers' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
+                ]);
             }
 
             return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
                 ->with('success', 'Third party information updated successfully.');
         } catch (\Exception $e) {
-            Log::error('Failed to update third party: ' . $e->getMessage(), ['partyId' => $party->Id, 'request_data' => $request->all()]);
+            Log::error('Failed to update third party: ' . $e->getMessage(), [
+                'partyId' => $party->Id, 
+                'request_data' => $request->all(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])
                 ->with('error', 'Failed to update third party information. Please try again.');
         }
@@ -162,6 +192,125 @@ class ThirdPartyWebController extends Controller
             Log::error('Failed to delete third party: ' . $e->getMessage(), ['partyId' => $party->Id]);
             return redirect()->back()
                 ->with('error', 'Failed to delete third party. Please try again.');
+        }
+    }
+
+    /**
+     * Handle bulk actions on multiple third parties
+     */
+    public function bulkAction(Request $request): JsonResponse
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject,activate,deactivate',
+            'selectedItems' => 'required|array|min:1',
+            'selectedItems.*' => 'required|integer|exists:t_ThirdParties,Id'
+        ]);
+
+        try {
+              $action = $request->input('action');
+              $selectedItems = $request->input('selectedItems');
+              $userId = Auth::id();
+              $now = now();
+            
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+
+              DB::transaction(function () use ($action, $selectedItems, $userId, $now, &$successCount, &$errorCount, &$errors) {
+                foreach ($selectedItems as $partyId) {
+                    try {
+                        $party = ThirdParties::findOrFail($partyId);
+                        
+                        switch ($action) {
+                            case 'approve':
+                                  if ($party->ApprovalStatus !== ThirdPartyApprovalStatusEnum::Approved) {
+                                      $party->ApprovalStatus = ThirdPartyApprovalStatusEnum::Approved;
+                                      $party->ModifiedBy = $userId;
+                                      $party->ModifiedOn = $now;
+                                      $party->save();
+                                      
+                                      // Activate users when approved
+                                      ThirdPartyUser::where('ThirdPartyId', $partyId)
+                                          ->update(['IsActive' => 1, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
+                                  }
+                                break;
+                                
+                            case 'reject':
+                                if ($party->ApprovalStatus !== ThirdPartyApprovalStatusEnum::Rejected) {
+                                    $party->ApprovalStatus = ThirdPartyApprovalStatusEnum::Rejected;
+                                    $party->ModifiedBy = $userId;
+                                    $party->ModifiedOn = $now;
+                                    $party->save();
+                                    
+                                    // Deactivate users when rejected
+                                    ThirdPartyUser::where('ThirdPartyId', $partyId)
+                                        ->update(['IsActive' => 0, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
+                                }
+                                break;
+                                
+                            case 'activate':
+                                if ($party->Status !== ThirdPartyStatusEnum::Active) {
+                                    $party->Status = ThirdPartyStatusEnum::Active;
+                                    $party->ModifiedBy = $userId;
+                                    $party->ModifiedOn = $now;
+                                    $party->save();
+                                    
+                                    // Activate users when status is set to active
+                                    ThirdPartyUser::where('ThirdPartyId', $partyId)
+                                        ->update(['IsActive' => 1, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
+                                }
+                                break;
+                                
+                            case 'deactivate':
+                                if ($party->Status !== ThirdPartyStatusEnum::Inactive) {
+                                    $party->Status = ThirdPartyStatusEnum::Inactive;
+                                    $party->ModifiedBy = $userId;
+                                    $party->ModifiedOn = $now;
+                                    $party->save();
+                                    
+                                    // Deactivate users when status is set to inactive
+                                    ThirdPartyUser::where('ThirdPartyId', $partyId)
+                                        ->update(['IsActive' => 0, 'ModifiedBy' => $userId, 'ModifiedOn' => $now]);
+                                }
+                                break;
+                        }
+                        
+                        $successCount++;
+                    } catch (\Exception $e) {
+                        $errorCount++;
+                        $errors[] = "Failed to update party {$partyId}: " . $e->getMessage();
+                        Log::error("Bulk action failed for party {$partyId}", [
+                            'action' => $action,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            });
+
+            $message = "Successfully processed {$successCount} item(s)";
+            if ($errorCount > 0) {
+                $message .= ". {$errorCount} item(s) failed to process.";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'successCount' => $successCount,
+                'errorCount' => $errorCount,
+                'errors' => $errors
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk action failed: ' . $e->getMessage(), [
+                'action' => $request->input('action'),
+                'selectedItems' => $request->input('selectedItems')
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing the bulk action. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

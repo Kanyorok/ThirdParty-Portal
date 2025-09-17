@@ -77,4 +77,9 @@ class PrequalificationApplication extends Model
     {
         return (string) ($this->attributes['ApplicationID'] ?? '');
     }
+
+    public function categoryStatuses()
+    {
+        return $this->hasMany(ApplicationCategoryStatus::class, 'ApplicationId', 'ApplicationID');
+    }
 }

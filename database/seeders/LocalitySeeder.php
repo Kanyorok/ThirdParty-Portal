@@ -5,8 +5,8 @@ namespace Database\Seeders;
 use App\Helpers\SystemHelper;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use JsonException;
-use Log;
 
 class LocalitySeeder extends Seeder
 {
@@ -16,125 +16,210 @@ class LocalitySeeder extends Seeder
     public function run(): void
     {
         $this->command->info('Starting optimized LocalitySeeder...');
-        
+
+        // Capture original memory_limit and try to raise it defensively
+        $originalMemoryLimit = ini_get('memory_limit') ?: '128M';
+        $raised = @ini_set('memory_limit', '2G');
+        if ($raised === false) {
+            $this->command->warn('Could not raise memory_limit to 2G; continuing with current limit (' . $originalMemoryLimit . ').');
+        } else {
+            $this->command->info('Increased memory limit to 2G (was: ' . $originalMemoryLimit . ').');
+        }
+
+        // Reduce memory overhead from Laravel connection query log
+        if (method_exists(DB::connection(), 'disableQueryLog')) {
+            DB::connection()->disableQueryLog();
+        }
+
         $local = database_path('data/countries_states_cities.json');
 
-        // Fetch and decode JSON data
         if (!file_exists($local)) {
             $this->command->error('Countries data file not found: ' . $local);
+            // finally{} will still run and attempt safe restore
             return;
         }
 
-        try {
-            $countries = json_decode(file_get_contents($local), true, 512, JSON_THROW_ON_ERROR);
-            $this->command->info('Loaded ' . count($countries) . ' countries');
-        } catch (JsonException $e) {
-            $this->command->error('Could not fetch countries-states-cities-database data from ' . $local . '. Error: ' . $e->getMessage());
-            return;
-        }
-        
-        $actor = SystemHelper::user();
-        $date = now();
-
-        // Note: SQL Server doesn't support disabling foreign key checks like MySQL
-        // We'll rely on updateOrInsert to handle duplicates gracefully
+        $countries = null;
 
         try {
-            // Process only essential countries (first 50) to avoid timeout
-            $essentialCountries = array_slice($countries, 0, 50);
-            $this->command->info('Processing essential countries (first 50)...');
+            $this->command->info('Loading countries data (large file)…');
+            $fileContent = file_get_contents($local);
 
-            foreach ($essentialCountries as $countryData) {
-                $this->command->info('Processing country: ' . $countryData['name']);
+            if ($fileContent === false) {
+                throw new \RuntimeException('file_get_contents failed for ' . $local);
+            }
 
-                $currencyId = $this->getCurrencyId($countryData['currency'], $countryData['currency_symbol']);
-                if (!$currencyId) {
+            $this->command->info('File loaded, parsing JSON…');
+            $countries = json_decode($fileContent, true, 512, JSON_THROW_ON_ERROR);
+
+            // Free the raw file content ASAP
+            unset($fileContent);
+
+            if (!is_array($countries)) {
+                throw new \RuntimeException('Parsed JSON is not an array.');
+            }
+
+            $this->command->info('Successfully loaded ' . count($countries) . ' countries.');
+
+            $actor = SystemHelper::user();
+            $date  = now();
+
+            // Filter to Africa and Asia only
+            $allowedRegions = ['Africa', 'Asia'];
+            $filtered = [];
+            foreach ($countries as $c) {
+                $region = $c['region'] ?? null;
+                if ($region && in_array($region, $allowedRegions, true)) {
+                    $filtered[] = $c;
+                }
+            }
+
+            // Reorder so that Kenya comes first within the filtered list
+            $kenyaIndex = null;
+            foreach ($filtered as $idx => $c) {
+                if (isset($c['name']) && strtolower($c['name']) === 'kenya') {
+                    $kenyaIndex = $idx;
+                    break;
+                }
+            }
+
+            if ($kenyaIndex !== null) {
+                $kenyaData = $filtered[$kenyaIndex];
+                unset($filtered[$kenyaIndex]);
+                $filtered = array_values($filtered);
+                array_unshift($filtered, $kenyaData);
+            }
+
+            // Optionally sort remaining countries alphabetically by name after Kenya
+            if (count($filtered) > 1) {
+                $first = array_shift($filtered); // Kenya if present
+                usort($filtered, function ($a, $b) {
+                    return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
+                });
+                array_unshift($filtered, $first);
+            }
+
+            $totalCountries = count($filtered);
+            $this->command->info("Seeding {$totalCountries} Africa and Asia countries (Kenya first)…");
+
+            foreach ($filtered as $index => $countryData) {
+                $progress = $index + 1;
+                $countryName = $countryData['name'] ?? '(unknown)';
+                if ($index === 0 || $progress % 10 === 0 || $progress === $totalCountries) {
+                    $this->command->info("Processing country {$progress}/{$totalCountries}: {$countryName}");
+                }
+
+                // Currency fields with fallbacks
+                $currencyCode   = $countryData['currency']         ?? null;
+                $currencySymbol = $countryData['currency_symbol']  ?? '';
+                $currencyName   = $countryData['currency_name']    ?? '';
+
+                $currencyId = $currencyCode ? $this->getCurrencyId($currencyCode, $currencySymbol) : null;
+
+                if (!$currencyId && $currencyCode) {
                     $currencyData = [
-                        "Name" => $countryData['currency_name'],
-                        "Code" => $countryData['currency'],
-                        "Symbol" => $countryData['currency_symbol'],
-                        "SymbolNative" => $countryData['currency_symbol'],
-                        "DecimalDigits" => 2,
-                        "Rounding" => 2,
-                        'CreatedOn' => $date,
-                        'CreatedBy' => $actor->Id,
-                        'ModifiedOn' => $date,
-                        'ModifiedBy' => $actor->Id,
+                        'Name'          => $currencyName ?: $currencyCode,
+                        'Code'          => $currencyCode,
+                        'Symbol'        => $currencySymbol,
+                        'SymbolNative'  => $currencySymbol,
+                        'DecimalDigits' => 2,
+                        'Rounding'      => 2,
+                        'CreatedOn'     => $date,
+                        'CreatedBy'     => $actor->Id,
+                        'ModifiedOn'    => $date,
+                        'ModifiedBy'    => $actor->Id,
                     ];
-                    
                     DB::table('t_Currencies')->updateOrInsert(
-                        ['Code' => $countryData['currency']],
+                        ['Code' => $currencyCode],
                         $currencyData
                     );
-                    $currencyId = $this->getCurrencyId($countryData['currency'], $countryData['currency_symbol']);
+                    $currencyId = $this->getCurrencyId($currencyCode, $currencySymbol);
                 }
 
                 // Insert or update country
                 $countryInsertData = [
-                    "Name" => $countryData['name'],
-                    "CountryCode" => $countryData['iso2'],
-                    "PhoneCode" => $countryData['phonecode'],
-                    "Flag" => $countryData['emoji'],
-                    "CurrencyId" => $currencyId,
-                    'CreatedOn' => $date,
-                    'CreatedBy' => $actor->Id,
-                    'ModifiedOn' => $date,
-                    'ModifiedBy' => $actor->Id,
+                    'Name'        => $countryName,
+                    'CountryCode' => $countryData['iso2']     ?? '',
+                    'Iso3'        => $countryData['iso3']     ?? null,
+                    'PhoneCode'   => $countryData['phonecode'] ?? '',
+                    'Flag'        => $countryData['emoji']     ?? '',
+                    'CurrencyId'  => $currencyId,
+                    'IsActive'    => 1,
+                    'SortOrder'   => $index, // Kenya will be 0, others sequential within Africa+Asia
+                    'CreatedOn'   => $date,
+                    'CreatedBy'   => $actor->Id,
+                    'ModifiedOn'  => $date,
+                    'ModifiedBy'  => $actor->Id,
                 ];
-                
+
                 DB::table('t_Countries')->updateOrInsert(
                     ['Name' => $countryInsertData['Name']],
                     $countryInsertData
                 );
-                
+
                 $countryId = DB::table('t_Countries')
                     ->where('Name', $countryInsertData['Name'])
                     ->value('Id');
 
-                // Process only major states/regions (limit to first 5 per country)
-                if (!empty($countryData['states'])) {
-                    $majorStates = array_slice($countryData['states'], 0, 5);
-                    foreach ($majorStates as $stateData) {
-                        // Insert or update state/region
+                // Process all states/regions
+                if (!empty($countryData['states']) && $countryId) {
+                    $states = $countryData['states'];
+                    // Intentionally minimize console output for performance
+
+                    foreach ($states as $stateData) {
+                        $stateName = $stateData['name'] ?? '(unknown state)';
+                        $stateType = $stateData['type'] ?? 'state';
+
                         $stateInsertData = [
-                            'Name' => $stateData['name'],
-                            'LocationType' => $stateData['type'] ?? 'state',
-                            'CreatedOn' => $date,
-                            'LocalityID' => null,
-                            'CountryId' => $countryId,
-                            'CreatedBy' => $actor->Id,
-                            'ModifiedOn' => $date,
-                            'ModifiedBy' => $actor->Id,
+                            'Name'         => $stateName,
+                            'LocationType' => $stateType,
+                            'CreatedOn'    => $date,
+                            'LocalityID'   => null,          // parent is the country
+                            'CountryId'    => $countryId,
+                            'CreatedBy'    => $actor->Id,
+                            'ModifiedOn'   => $date,
+                            'ModifiedBy'   => $actor->Id,
                         ];
-                        
+
                         DB::table('t_Localities')->updateOrInsert(
-                            ['Name' => $stateInsertData['Name'], 'CountryId' => $countryId, 'LocationType' => $stateInsertData['LocationType']],
+                            [
+                                'Name'         => $stateInsertData['Name'],
+                                'CountryId'    => $countryId,
+                                'LocationType' => $stateInsertData['LocationType'],
+                            ],
                             $stateInsertData
                         );
-                        
+
                         $stateId = DB::table('t_Localities')
                             ->where('Name', $stateInsertData['Name'])
                             ->where('CountryId', $countryId)
                             ->where('LocationType', $stateInsertData['LocationType'])
                             ->value('Id');
 
-                        // Process only major cities (limit to first 10 per state)
+                        // Process all cities for the state
                         if (!empty($stateData['cities']) && $stateId) {
-                            $majorCities = array_slice($stateData['cities'], 0, 10);
-                            foreach ($majorCities as $cityData) {
+                            $cities = $stateData['cities'];
+                            // Intentionally minimize console output for performance
+
+                            foreach ($cities as $cityData) {
+                                $cityName = $cityData['name'] ?? '(unknown city)';
                                 $cityInsertData = [
-                                    'Name' => $cityData['name'],
+                                    'Name'         => $cityName,
                                     'LocationType' => 'city',
-                                    'CountryId' => $countryId,
-                                    'LocalityID' => $stateId,
-                                    'CreatedOn' => $date,
-                                    'CreatedBy' => $actor->Id,
-                                    'ModifiedOn' => $date,
-                                    'ModifiedBy' => $actor->Id,
+                                    'CountryId'    => $countryId,
+                                    'LocalityID'   => $stateId,   // parent is the state
+                                    'CreatedOn'    => $date,
+                                    'CreatedBy'    => $actor->Id,
+                                    'ModifiedOn'   => $date,
+                                    'ModifiedBy'   => $actor->Id,
                                 ];
-                                
+
                                 DB::table('t_Localities')->updateOrInsert(
-                                    ['Name' => $cityInsertData['Name'], 'CountryId' => $countryId, 'LocalityID' => $stateId],
+                                    [
+                                        'Name'       => $cityInsertData['Name'],
+                                        'CountryId'  => $countryId,
+                                        'LocalityID' => $stateId,
+                                    ],
                                     $cityInsertData
                                 );
                             }
@@ -142,57 +227,128 @@ class LocalitySeeder extends Seeder
                     }
                 }
             }
-            
-            $this->command->info('LocalitySeeder completed successfully with essential data!');
-        } catch (\Exception $e) {
+
+            // Free up countries data from memory
+            unset($countries, $filtered);
+
+            $this->command->info('LocalitySeeder completed successfully with Africa + Asia data!');
+
+        } catch (JsonException $e) {
+            $this->command->error('Could not parse JSON data from ' . $local . '. Error: ' . $e->getMessage());
+        } catch (\Throwable $e) {
             $this->command->error('Error during seeding: ' . $e->getMessage());
-            throw $e;
+            Log::error('LocalitySeeder failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        } finally {
+            // Ensure large references are dropped before attempting to lower the memory limit
+            if (isset($countries)) unset($countries);
+            if (function_exists('gc_collect_cycles')) gc_collect_cycles();
+
+            $this->safeRestoreMemoryLimit($originalMemoryLimit);
         }
     }
 
     /**
-     * Get currency ID from currency code
+     * Get currency ID from currency code or symbol.
      */
-    private function getCurrencyId(string $currencyCode, string $currencySymbol): ?int
+    private function getCurrencyId(?string $currencyCode, ?string $currencySymbol): ?int
     {
-        return DB::table('t_Currencies')
-            ->where('Code', $currencyCode)
-            ->orWhere('Symbol', $currencySymbol)
-            ->value('Id');
+        if (!$currencyCode && !$currencySymbol) {
+            return null;
+        }
+
+        $query = DB::table('t_Currencies');
+
+        if ($currencyCode) {
+            $query->where('Code', $currencyCode);
+        }
+        if ($currencySymbol) {
+            $query->orWhere('Symbol', $currencySymbol);
+        }
+
+        return $query->value('Id');
     }
 
-    /*  $user = SystemHelper::user();
-      $counties = collect();
-      $cities = collect();
-      $date = now();
-      $response = Http::get('https://gist.githubusercontent.com/danielmaangi/2c97392df1473f859328f6be070b13cb/raw/bc541a2129c6a75e28a9f1208b687f37dcd40df2/kenyan_counties.json')->collect()->sortBy('code');
+    /**
+     * Safely restore memory_limit to the original value.
+     * Skips restoration if current usage exceeds the target limit, or if original was -1.
+     */
+    private function safeRestoreMemoryLimit(string $originalLimit): void
+    {
+        $originalLimit = trim($originalLimit);
 
+        // If original was unlimited, nothing to do
+        if ($originalLimit === '-1') {
+            $this->command->info('Original memory limit was unlimited (-1); leaving current setting.');
+            return;
+        }
 
-      foreach ($response as $res) {
-          $counties->add([
-              //'ID' => $res['code'],
-                          'Name'         => $res['name'],
-                          'LocationType' => LocalityTypeEnum::County->value,
-                          'CreatedOn'    => $date,
-                          'CreatedBy'    => $user->Id,
-                          'ModifiedOn'   => $date,
-                          'ModifiedBy'   => $user->Id,
-                         ]);
-          $cities->add([
-                        'Name'         => (array_key_exists('capital', $res)) ? $res['capital'] : $res['name'],
-                        'LocationType' => LocalityTypeEnum::City->value,
-                        'LocalityID'   => $res['code'],
-                        'CreatedOn'    => $date,
-                        'CreatedBy'    => $user->Id,
-                        'ModifiedOn'   => $date,
-                        'ModifiedBy'   => $user->Id,
-                       ]);
-      }
+        $currentUsage     = memory_get_usage(true);
+        $targetLimitBytes = $this->parseMemoryLimit($originalLimit);
 
+        if ($currentUsage > $targetLimitBytes) {
+            $this->command->warn(
+                'Skipping memory_limit restore to ' . $originalLimit .
+                ' because current usage (' . $this->formatBytes($currentUsage) . ') exceeds it. Leaving limit unchanged.'
+            );
+            return;
+        }
 
-      DB::table('t_Localities')->insert($counties->toArray());
+        $result = @ini_set('memory_limit', $originalLimit);
+        if ($result === false) {
+            $this->command->warn('ini_set refused to restore memory_limit to ' . $originalLimit . '. Leaving unchanged.');
+        } else {
+            $this->command->info('Restored memory limit to: ' . $originalLimit);
+        }
+    }
 
+    /**
+     * Parse a memory_limit string (e.g., "128M", "2G", "-1") into bytes.
+     */
+    private function parseMemoryLimit(string $limit): int
+    {
+        $limit = trim($limit);
 
-      DB::table('t_Localities')->insert($cities->toArray());*/
+        if ($limit === '-1') {
+            return PHP_INT_MAX; // treat unlimited as "infinite" for comparisons
+        }
 
+        if (is_numeric($limit)) {
+            return (int) $limit;
+        }
+
+        $last  = strtolower(substr($limit, -1));
+        $value = (float) substr($limit, 0, -1);
+
+        switch ($last) {
+            case 'g': $value *= 1024;
+            // no break
+            case 'm': $value *= 1024;
+            // no break
+            case 'k': $value *= 1024;
+                break;
+            default:
+                $value = (float) $limit; // assume bytes if unit missing
+        }
+
+        return (int) $value;
+    }
+
+    /**
+     * Format bytes to human-readable string.
+     */
+    private function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = 0;
+
+        while ($bytes >= 1024 && $i < count($units) - 1) {
+            $bytes /= 1024;
+            $i++;
+        }
+
+        return round($bytes, 2) . ' ' . $units[$i];
+    }
 }

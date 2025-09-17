@@ -22,6 +22,7 @@ class Supplier extends ThirdParties
     protected $fillable = [
         'ThirdPartyID',
         'RoundID',
+    'CategoryId',
         'IsPrequalified',
         'Active_Status',
         'CreatedOn',
@@ -33,6 +34,7 @@ class Supplier extends ThirdParties
     protected $casts = [
         'IsPrequalified' => 'boolean',
     'Active_Status' => 'boolean',
+    'CategoryId' => 'integer',
     ];
 
     protected static function booted()

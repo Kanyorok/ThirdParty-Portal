@@ -58,7 +58,6 @@ class PrequalificationResultsController extends Controller
                     'maxScore' => 10,
                     'criterionWeightShare' => $perCriterionWeight, // share of 100 allocated to this criterion
                     'weightedScore' => $weighted,
-                    'remarks' => $eval->Remarks,
                 ];
             }
             // clip floating drift

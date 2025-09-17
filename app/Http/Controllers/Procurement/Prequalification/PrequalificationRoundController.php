@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class PrequalificationRoundController extends Controller
@@ -82,11 +83,11 @@ class PrequalificationRoundController extends Controller
 
         if ($isCreating) {
             $validated['Status'] = $request->input('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Draft);
-            $validated['CreatedBy'] = auth()->id();
+            $validated['CreatedBy'] = Auth::id();
             $validated['CreatedOn'] = now();
         } else {
             $validated['Status'] = $request->input('Status', $prequalificationRound->Status->value);
-            $validated['ModifiedBy'] = auth()->id();
+            $validated['ModifiedBy'] = Auth::id();
             $validated['ModifiedOn'] = now();
         }
 
@@ -117,8 +118,8 @@ class PrequalificationRoundController extends Controller
 
     private function syncSectionsAndCriteria(PrequalificationRound $round, array $sections): void
     {
-        $now = now();
-        $userId = auth()->id();
+    $now = now();
+    $userId = Auth::id();
 
         // Filter only included sections
         $includedSectionsData = collect($sections)->filter(function ($section) {
@@ -140,7 +141,8 @@ class PrequalificationRoundController extends Controller
                         'RoundId' => $round->RoundID,
                         'SectionId' => $section['section_id'],
                         'CriteriaId' => $criteria['criteria_id'],
-                        'Weight' => (int) ($criteria['weight'] ?? 0),
+                        // Fixed per-criterion max score: always 10
+                        'Weight' => 10,
                         'Included' => (int) ($criteria['included'] ?? 0),
                         'ModifiedBy' => $userId,
                         'ModifiedOn' => $now,

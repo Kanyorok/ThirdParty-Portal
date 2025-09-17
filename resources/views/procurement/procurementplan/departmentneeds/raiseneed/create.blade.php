@@ -85,7 +85,7 @@
 
         <div class="d-flex justify-content-end">
             <button type="reset" class="btn btn-secondary me-2">Clear</button>
-            <button type="submit" class="btn btn-primary">Submit Need</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary" disabled>Submit Need</button>
         </div>
     </form>
     </div>
@@ -104,14 +104,39 @@
         const uomField = document.getElementById('uomField');
         const estimatedCostField = document.getElementById('EstimatedUnitCostField');
         const estimatedCostHidden = document.getElementById('EstimatedUnitCostHidden');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const priceErrorId = 'priceErrorMsg';
+        function ensurePriceErrorEl() {
+            let el = document.getElementById(priceErrorId);
+            if (!el) {
+                el = document.createElement('div');
+                el.id = priceErrorId;
+                el.className = 'text-danger mt-2';
+                // place right under the Estimated Unit Cost field
+                estimatedCostField.parentElement.appendChild(el);
+            }
+            return el;
+        }
 
         function fillFields() {
             const selected = itemDropdown.options[itemDropdown.selectedIndex];
             categoryField.value = selected.getAttribute('data-category') || '';
             uomField.value = selected.getAttribute('data-uom') || '';
-            const price = selected.getAttribute('data-price') || '';
-            estimatedCostField.value = price;
-            estimatedCostHidden.value = price;
+            const priceRaw = selected.getAttribute('data-price') || '';
+            const price = parseFloat(priceRaw);
+            const hasValidPrice = !isNaN(price) && price > 0;
+            estimatedCostField.value = hasValidPrice ? price.toFixed(2) : '';
+            estimatedCostHidden.value = hasValidPrice ? price.toFixed(2) : '';
+
+            const msgEl = ensurePriceErrorEl();
+            if (!hasValidPrice) {
+                msgEl.textContent = 'This item has no estimated cost configured. Please contact procurement or select another item.';
+                submitBtn.disabled = true;
+            } else {
+                msgEl.textContent = '';
+                submitBtn.disabled = false;
+            }
         }
 
         if (itemDropdown.value) fillFields();
