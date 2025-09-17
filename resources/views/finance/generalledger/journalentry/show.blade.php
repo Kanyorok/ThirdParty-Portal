@@ -6,7 +6,11 @@
             <div class="card-header bg-white border-bottom">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-info">📘 Journal Entry Details</h5>
-                    <span class="text-end">Approval Status:
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                            <i class="fas fa-print me-1"></i> Print
+                        </button>
+                        <span class="text-end">Approval Status:
                         @if($journalEntry->ApprovalStatus == 'posted')
                             <span class="badge bg-success">Approved</span>
                         @elseif($journalEntry->ApprovalStatus == 'rejected')
@@ -14,7 +18,8 @@
                         @elseif($journalEntry->ApprovalStatus == 'draft')
                             <span class="badge bg-warning text-dark">Pending</span>
                         @endif
-                    </span>
+                        </span>
+                    </div>
                 </div>
             </div>
 

@@ -48,17 +48,18 @@ public function store(Request $request)
         'BankID','BranchCode','BranchName','Address1','Address2',
         'CityID','CountryID','ZipCode','Phone','EmailID'
     ]));
-    $branch->IsActive = $request->boolean('IsActive');
+    // Default Active on create
+    $branch->IsActive = 1;
     $branch->save();
 
     return redirect()->route('finance.bankbranch.bybank', $branch->BankID)
         ->with('success', 'Branch created.');
 }
 
-    // Show the branch details
-    public function show($bankId, $branchId)
+    // Show the branch details (resource route → single param)
+    public function show($id)
     {
-        $branch = BankBranch::findOrFail($branchId);
+        $branch = BankBranch::findOrFail($id);
         return view('finance.bankbranch.show', compact('branch'));
     }
 
@@ -92,18 +93,21 @@ public function update(Request $request, $id)
         'BranchCode','BranchName','Address1','Address2',
         'CityID','CountryID','ZipCode','Phone','EmailID'
     ]));
-    $branch->IsActive = $request->boolean('IsActive');
     $branch->save();
 
     return redirect()->route('finance.bankbranch.bybank', $branch->BankID)
         ->with('success', 'Branch updated.');
 }
 
-    // Delete the specified branch
-    public function destroy($bankId, $branchId)
+    // Delete the specified branch (resource route → single param)
+    public function destroy($id)
     {
-        BankBranch::destroy($branchId);
-        return redirect()->route('finance.bankbranch.index', $bankId);
+        $branch = BankBranch::findOrFail($id);
+        $bankId = $branch->BankID;
+        $branch->delete();
+        // Prefer going back to list by bank if available
+        return redirect()->route('finance.bankbranch.bybank', $bankId)
+            ->with('success', 'Branch deleted.');
     }
 
     // List all branches (for all banks, menu-safe)

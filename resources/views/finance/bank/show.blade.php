@@ -1,8 +1,13 @@
 @extends('layouts.app')
 @section('content')
-<div class="container">
-    <h1>Bank Details</h1>
-    <div class="card mt-3">
+<div class="container mt-3">
+    <div class="card shadow-sm rounded-4 border-0">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-info">🏦 Bank Details</h5>
+            <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                <i class="fas fa-print me-1"></i> Print
+            </button>
+        </div>
         <div class="card-body">
             <dl class="row">
                 <dt class="col-md-3">Bank Name</dt><dd class="col-md-9">{{ $bank->BankName }}</dd>
@@ -21,9 +26,9 @@
                 <dt class="col-md-3">Modified By</dt><dd class="col-md-9">{{ $bank->ModifiedBy ?? '—' }}</dd>
             </dl>
         </div>
-        <div class="card-footer">
-            <a href="{{ route('finance.bank.edit', $bank->BankID) }}" class="btn btn-warning">Edit</a>
-            <a href="{{ route('finance.bank.index') }}" class="btn btn-secondary">Back</a>
+        <div class="card-footer d-flex justify-content-end gap-2">
+            <a href="{{ route('finance.bank.index') }}" class="btn btn-outline-secondary">Back</a>
+            <a href="{{ route('finance.bank.edit', $bank->BankID) }}" class="btn btn-primary">Edit</a>
         </div>
     </div>
 </div>

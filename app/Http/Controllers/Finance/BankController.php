@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Finance;
 use App\Models\Finance\Bank;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 
 class BankController extends Controller
 {
@@ -37,22 +38,28 @@ class BankController extends Controller
             'IsActive'     => 'nullable|boolean',
         ]);
 
-        $bank = new \App\Models\Finance\Bank();
-        $bank->BankName     = $request->BankName;
-        $bank->ShortName    = $request->ShortName;
-        $bank->BankCode     = $request->BankCode;
-        $bank->SwiftCode    = $request->SwiftCode;
-        $bank->ClearingCode = $request->ClearingCode;
-        $bank->CountryID    = $request->CountryID;
-        $bank->EmailID      = $request->EmailID;
-        $bank->Phone        = $request->Phone;
-        $bank->Website      = $request->Website;
-        $bank->IsActive     = $request->boolean('IsActive'); // checkbox → 1/0
-        $bank->CreatedBy    = auth()->id();
-        // CreatedOn has DB default (GETDATE()), so no need to set here
-        $bank->save();
+        try {
+            $bank = new \App\Models\Finance\Bank();
+            $bank->BankName     = $request->BankName;
+            $bank->ShortName    = $request->ShortName;
+            $bank->BankCode     = $request->BankCode;
+            $bank->SwiftCode    = $request->SwiftCode;
+            $bank->ClearingCode = $request->ClearingCode;
+            $bank->CountryID    = $request->CountryID;
+            $bank->EmailID      = $request->EmailID;
+            $bank->Phone        = $request->Phone;
+            $bank->Website      = $request->Website;
+            $bank->IsActive     = true;//$request->boolean('IsActive'); // checkbox → 1/0
+            $bank->CreatedBy    = auth()->id();
+            // CreatedOn has DB default (GETDATE()), so no need to set here
+            $bank->save();
 
-        return redirect()->route('finance.bank.index')->with('success', 'Bank created.');
+            return redirect()->route('finance.bank.index')->with('success', 'Bank created.');
+        }catch(\Throwable $th){
+            Log::error('Bank creation failed: '.$th->getMessage());
+            return redirect()->route('finance.bank.index')->with('error', 'Bank creation failed.');
+        }
+
     }
     // Show a specific bank's details
     public function show($id)

@@ -1,25 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="d-flex align-items-center justify-content-between">
-        <div>
-            <h1 class="mb-0">Branches – {{ $bank->BankName }}</h1>
-            <div class="text-muted">
-                Code: {{ $bank->BankCode ?? '—' }} · SWIFT: {{ $bank->SwiftCode ?? '—' }} · CountryID: {{ $bank->CountryID ?? '—' }}
+<div class="container my-3">
+    <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
+        <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0 text-primary"><i class="fas fa-code-branch me-2"></i> Branches – {{ $bank->BankName }}</h5>
+                <small class="text-muted">Code: {{ $bank->BankCode ?? '—' }} · SWIFT: {{ $bank->SwiftCode ?? '—' }} · CountryID: {{ $bank->CountryID ?? '—' }}</small>
+            </div>
+            <div>
+                <a href="{{ route('finance.bankbranch.create', ['bankId' => $bank->BankID]) }}" class="btn btn-info btn-sm p-2">
+                    <i class="fas fa-plus me-1"></i> New Branch
+                </a>
+                <a href="{{ route('finance.bank.index') }}" class="btn btn-outline-secondary btn-sm p-2">Back to Banks</a>
             </div>
         </div>
-        <div>
-            <a href="{{ route('finance.bankbranch.create', ['bankId' => $bank->BankID]) }}" class="btn btn-success">Add Branch</a>
-            <a href="{{ route('finance.bank.index') }}" class="btn btn-outline-secondary">Back to Banks</a>
-        </div>
-    </div>
+        <div class="card-body p-3">
+        @if(session('success'))
+            <div class="alert alert-success mt-2">{{ session('success') }}</div>
+        @endif
 
-    @if(session('success'))
-        <div class="alert alert-success mt-3">{{ session('success') }}</div>
-    @endif
-
-    <div class="table-responsive mt-3">
+        <div class="table-responsive">
         <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
@@ -32,7 +33,6 @@
                     <th>ZipCode</th>
                     <th>Phone</th>
                     <th>Email</th>
-                    <th>Status</th>
                     <th style="width: 220px;">Actions</th>
                 </tr>
             </thead>
@@ -48,21 +48,18 @@
                         <td>{{ $branch->ZipCode ?? '—' }}</td>
                         <td>{{ $branch->Phone ?? '—' }}</td>
                         <td>{{ $branch->EmailID ?? '—' }}</td>
-                        <td>
-                            @if($branch->IsActive)
-                                <span class="badge bg-success">Active</span>
-                            @else
-                                <span class="badge bg-secondary">Inactive</span>
-                            @endif
-                        </td>
                         <td class="text-nowrap">
-                            <a href="{{ route('finance.bankbranch.show', $branch->BranchID) }}" class="btn btn-sm btn-info">View</a>
-                            <a href="{{ route('finance.bankbranch.edit', $branch->BranchID) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <form action="{{ route('finance.bankbranch.destroy', $branch->BranchID) }}" method="POST" class="d-inline"
-                                  onsubmit="return confirm('Delete this branch?');">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-danger">Delete</button>
-                            </form>
+                            <a href="{{ route('finance.bankbranch.show', $branch->BranchID) }}" class="btn btn-sm btn-outline-info me-1" title="View"><i class="fas fa-eye"></i></a>
+                            <a href="{{ route('finance.bankbranch.edit', $branch->BranchID) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit"><i class="fas fa-edit"></i></a>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger custom-delete-btn"
+                                    title="Delete"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#customDeleteConfirmModal"
+                                    data-name="{{ $branch->BranchName }}"
+                                    data-route="{{ route('finance.bankbranch.destroy', $branch->BranchID) }}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </td>
                     </tr>
                 @empty
@@ -70,11 +67,20 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
+        </div>
+        @if($branches instanceof \Illuminate\Pagination\LengthAwarePaginator)
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center py-2 px-3">
+                <small class="text-muted mb-0">
+                    Showing {{ $branches->firstItem() ?? 0 }} to {{ $branches->lastItem() ?? 0 }} of {{ $branches->total() }} branches
+                </small>
+                <div class="mb-0">
+                    {{ $branches->onEachSide(1)->links('pagination::bootstrap-5') }}
+                </div>
+            </div>
+        @endif
     </div>
 
-    {{-- Add pagination if you switch controller to paginate() --}}
-    @if($branches instanceof \Illuminate\Pagination\LengthAwarePaginator)
-        {{ $branches->links() }}
-    @endif
+    @include('components.modals.delete-confirm')
 </div>
 @endsection

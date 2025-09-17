@@ -103,4 +103,18 @@ class ReversingJournalController extends Controller
         return view('finance.generalledger.reversingjournal.show', compact('journalEntry','originalJournalRef'));;
     }
 
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerDelete, FinanceJournalEntry::class);
+
+        $entry = FinanceJournalEntry::findOrFail($id);
+        DB::transaction(function () use ($entry) {
+            // Delete related lines and reverse journal record
+            FinanceJournalLines::where('JournalEntryId', $entry->Id)->delete();
+            ReverseJournalEntry::where('JournalEntryId', $entry->Id)->delete();
+            $entry->delete();
+        });
+
+        return redirect()->route('reversingjournal.index')->with('success', 'Reversing journal deleted.');
+    }
 }
