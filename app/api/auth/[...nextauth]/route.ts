@@ -26,8 +26,8 @@ export interface UserNavUIProps extends React.HTMLAttributes<HTMLDivElement> {
     onLogout: () => void
     onOpenChange: (open: boolean) => void
 }
-const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL!
-const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET!
+const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://127.0.0.1:8000"
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "your-dev-secret-key-change-in-production"
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -124,12 +124,58 @@ export const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async jwt({ token, user }) {
+            // Initial login
             if (user) {
                 token = { ...token, ...user }
+                token.lastValidated = Date.now()
+                return token
             }
+
+            // If token is null or doesn't have required fields, force re-authentication
+            if (!token || !token.accessToken) {
+                console.log('Invalid token structure, forcing re-authentication')
+                return {}
+            }
+
+            // Subsequent requests - validate token periodically
+            // Temporarily disabled until backend validation endpoint is implemented
+            /*
+            const lastValidated = token.lastValidated as number || 0
+            const fiveMinutes = 5 * 60 * 1000
+            
+            if (Date.now() - lastValidated > fiveMinutes) {
+                try {
+                    const response = await fetch(`${baseUrl}/api/auth/validate-token`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token.accessToken}`,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+
+                    if (!response.ok) {
+                        console.log('Token validation failed, forcing re-authentication')
+                        return {} // Return empty object instead of null
+                    }
+
+                    token.lastValidated = Date.now()
+                } catch (error) {
+                    console.error('Token validation error:', error)
+                    return {} // Return empty object instead of null
+                }
+            }
+            */
+
             return token
         },
         async session({ session, token }) {
+            // If token is empty/invalid (no required fields), return null session
+            if (!token || !token.id || !token.accessToken) {
+                console.log('Invalid token in session callback, returning null session')
+                return null
+            }
+
             session.user = {
                 id: token.id,
                 userId: token.userId,

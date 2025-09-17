@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -74,7 +74,7 @@ const thirdPartySchema = z.object({
     registrationNumber: z.string().min(1, { message: 'Registration Number is required.' }),
     taxPIN: z.string().min(1, { message: 'Tax PIN is required.' }),
     vatNumber: z.string().nullable().optional().transform(e => e === '' ? null : e),
-    country: z.string().min(1, { message: 'Country is required.' }),
+    country: z.coerce.number().min(1).int({ message: 'Country is required.' }),
     physicalAddress: z.string().min(1, { message: 'Physical Address is required.' }),
     email: z.string().email({ message: 'Invalid email address.' }),
     phone: z.string().min(1, { message: 'Phone number is required.' }).regex(/^\+?[0-9()\s-]+$/, { message: 'Invalid phone number format.' }),
@@ -91,7 +91,8 @@ interface ThirdPartyProfile {
     registrationNumber: string;
     taxPIN: string;
     vatNumber: string | null;
-    country: string;
+    country: number;
+    countryName?: string;
     physicalAddress: string;
     email: string;
     phone: string;
@@ -101,6 +102,13 @@ interface ThirdPartyProfile {
     status: number;
     thirdPartyType: number;
     approvalStatus: string;
+}
+
+interface Country {
+    id: number;
+    name: string;
+    code: string;
+    iso2: string;
 }
 
 const containerVariants: Variants = {
@@ -145,6 +153,7 @@ export default function ThirdPartyDetailsForm() {
     const [thirdPartyDetails, setThirdPartyDetails] = useState<ThirdPartyProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
+    const [countries, setCountries] = useState<Country[]>([]);
 
     const form = useForm<ThirdPartyInputs>({
         resolver: zodResolver(thirdPartySchema),
@@ -155,7 +164,7 @@ export default function ThirdPartyDetailsForm() {
             registrationNumber: '',
             taxPIN: '',
             vatNumber: '',
-            country: '',
+            country: 1,
             physicalAddress: '',
             email: '',
             phone: '',
@@ -165,7 +174,27 @@ export default function ThirdPartyDetailsForm() {
 
     const thirdPartyId = session?.user?.thirdParty?.id;
 
-    const fetchThirdPartyDetails = async () => {
+    const fetchCountries = useCallback(async () => {
+        try {
+            const response = await fetch('/api/v1/countries');
+            if (!response.ok) {
+                throw new Error('Failed to fetch countries.');
+            }
+            const { data }: { data: Country[] } = await response.json();
+            setCountries(data);
+
+            // Set default country if form doesn't have one
+            if (data.length > 0 && !form.getValues('country')) {
+                form.setValue('country', data[0].id, { shouldValidate: true });
+            }
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Error fetching countries.';
+            toast.error(errorMessage);
+            console.error('Fetch countries error:', error);
+        }
+    }, [form]);
+
+    const fetchThirdPartyDetails = useCallback(async () => {
         if (status === 'loading' || !thirdPartyId) {
             setIsLoading(false);
             return;
@@ -188,27 +217,29 @@ export default function ThirdPartyDetailsForm() {
                 registrationNumber: responseData.registrationNumber || '',
                 taxPIN: responseData.taxPIN || '',
                 vatNumber: responseData.vatNumber || '',
-                country: responseData.country || '',
+                country: responseData.country || 1,
                 physicalAddress: responseData.physicalAddress || '',
                 email: responseData.email || '',
                 phone: responseData.phone || '',
                 website: responseData.website || '',
             });
-        } catch (error: any) {
-            toast.error(error.message || 'Error fetching third party details.');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Error fetching third party details.';
+            toast.error(errorMessage);
             setThirdPartyDetails(null);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [status, thirdPartyId, form]);
 
     useEffect(() => {
         if (status === 'authenticated') {
+            fetchCountries();
             fetchThirdPartyDetails();
         } else if (status === 'unauthenticated') {
             setIsLoading(false);
         }
-    }, [thirdPartyId, status]);
+    }, [thirdPartyId, status, fetchCountries, fetchThirdPartyDetails]);
 
     const handleFormSubmit = async (data: ThirdPartyInputs) => {
         if (!thirdPartyId || !session?.accessToken) {
@@ -260,7 +291,7 @@ export default function ThirdPartyDetailsForm() {
                 registrationNumber: thirdPartyDetails.registrationNumber || '',
                 taxPIN: thirdPartyDetails.taxPIN || '',
                 vatNumber: thirdPartyDetails.vatNumber || '',
-                country: thirdPartyDetails.country || '',
+                country: thirdPartyDetails.country || 1,
                 physicalAddress: thirdPartyDetails.physicalAddress || '',
                 email: thirdPartyDetails.email || '',
                 phone: thirdPartyDetails.phone || '',
@@ -310,7 +341,7 @@ export default function ThirdPartyDetailsForm() {
                 <Building2 className="h-16 w-16 mb-4 text-primary/50" />
                 <h3 className="text-2xl font-semibold mb-2">No Company Information Found</h3>
                 <p className="text-base text-center max-w-md">
-                    It looks like you haven't set up your company details yet. Please contact support if you believe this is an error.
+                    It looks like you haven&apos;t set up your company details yet. Please contact support if you believe this is an error.
                 </p>
             </motion.div>
         );
@@ -491,9 +522,20 @@ export default function ThirdPartyDetailsForm() {
                                                             render={({ field }) => (
                                                                 <FormItem>
                                                                     <FormLabel>Country *</FormLabel>
-                                                                    <FormControl>
-                                                                        <Input placeholder="e.g., Kenya" className="h-11" {...field} />
-                                                                    </FormControl>
+                                                                    <Select onValueChange={value => field.onChange(parseInt(value))} value={String(field.value)}>
+                                                                        <FormControl>
+                                                                            <SelectTrigger className="h-11">
+                                                                                <SelectValue placeholder="Select country" />
+                                                                            </SelectTrigger>
+                                                                        </FormControl>
+                                                                        <SelectContent>
+                                                                            {countries.map((country) => (
+                                                                                <SelectItem key={country.id} value={String(country.id)}>
+                                                                                    {country.name}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
                                                                     <FormMessage />
                                                                 </FormItem>
                                                             )}
@@ -605,7 +647,7 @@ export default function ThirdPartyDetailsForm() {
                                             <Separator className="flex-grow" />
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <FieldDisplay label="Country" value={thirdPartyDetails?.country} icon={MapPin} />
+                                            <FieldDisplay label="Country" value={thirdPartyDetails?.countryName || countries.find(c => c.id === thirdPartyDetails?.country)?.name} icon={MapPin} />
                                             <FieldDisplay label="Physical Address" value={thirdPartyDetails?.physicalAddress} icon={MapPin} />
                                             <FieldDisplay label="Email Address" value={thirdPartyDetails?.email} icon={Mail} />
                                             <FieldDisplay label="Phone Number" value={thirdPartyDetails?.phone} icon={Phone} />

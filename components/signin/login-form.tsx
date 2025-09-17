@@ -49,9 +49,39 @@ function SignInFormComponent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
+    const error = searchParams.get("error")
 
     const [showPassword, setShowPassword] = useState(false)
     const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+    const [authError, setAuthError] = useState<string | null>(null)
+
+    // Handle authentication errors from URL params
+    useEffect(() => {
+        if (error) {
+            switch (error) {
+                case 'SessionExpired':
+                    setAuthError('Your session has expired. Please sign in again.')
+                    break
+                case 'SessionRequired':
+                    setAuthError('Please sign in to access this page.')
+                    break
+                case 'AccountNotApproved':
+                    setAuthError('Your account is not approved or active. Please contact support.')
+                    break
+                case 'NoAccessToken':
+                    setAuthError('Authentication error. Please sign in again.')
+                    break
+                case 'Configuration':
+                    setAuthError('Authentication configuration error. Please try again.')
+                    break
+                case 'CredentialsSignin':
+                    setAuthError('Invalid email or password. Please try again.')
+                    break
+                default:
+                    setAuthError('Authentication error. Please try again.')
+            }
+        }
+    }, [error])
 
     const {
         register,
@@ -64,6 +94,14 @@ function SignInFormComponent() {
         mode: "onTouched",
     })
 
+    // Clear auth error when user starts typing
+    const watchedFields = watch(['email', 'password'])
+    useEffect(() => {
+        if (authError && (watchedFields[0] || watchedFields[1])) {
+            setAuthError(null)
+        }
+    }, [watchedFields, authError])
+
     const watchedPassword = watch("password")
 
     useEffect(() => {
@@ -75,6 +113,7 @@ function SignInFormComponent() {
     }, [searchParams])
 
     const onSubmit = async (data: SignInFormInputs) => {
+        setAuthError(null) // Clear any previous auth errors
         try {
             const result = await signIn("credentials", {
                 redirect: false,
@@ -144,6 +183,12 @@ function SignInFormComponent() {
                     <div role="alert" aria-live="polite" className="p-4 mb-6 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-200 rounded-lg flex items-center justify-center">
                         <Check className="h-5 w-5 mr-2" />
                         Registration successful! Please log in.
+                    </div>
+                )}
+                {authError && (
+                    <div role="alert" aria-live="polite" className="p-4 mb-6 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 rounded-lg flex items-center">
+                        <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                        <span>{authError}</span>
                     </div>
                 )}
                 <form className="space-y-6 mt-8" onSubmit={handleSubmit(onSubmit)}>
