@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/common/separator"
 import StatusBadge from "./status-badge"
 import ApplicationForm from "./application-form"
+import CategoryApplications from "./category-applications"
 import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { Round } from "@/types/types"
@@ -61,19 +62,10 @@ export default function RoundsTable({
                 render: (r: Round) => formatDateRange(r.startDate, r.endDate),
             },
             {
-                key: 'progress',
-                label: 'Progress',
+                key: 'categories',
+                label: 'Category Applications',
                 render: (r: Round) => {
-                    if (!r.applicationProgress) return <span className="text-xs text-muted-foreground">—</span>
-                    const pct = r.applicationProgress.percent ?? 0
-                    return (
-                        <div className="flex items-center gap-2 min-w-[120px]">
-                            <div className="flex-1 h-2 rounded bg-gray-200 dark:bg-gray-800 overflow-hidden">
-                                <div className="h-2 bg-emerald-500 transition-all" style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
-                            </div>
-                            <span className="text-xs tabular-nums w-10 text-right">{pct}%</span>
-                        </div>
-                    )
+                    return <CategoryApplications round={r} className="justify-start" />
                 }
             },
             {
@@ -81,20 +73,50 @@ export default function RoundsTable({
                 label: "Actions",
                 align: "right" as const,
                 render: (r: Round) => {
-                    const hasApplied = r.hasApplied || appliedRoundIds.has(r.id) || !!r.applicationId
-                    const createdByOwner = (r as any).createdByOwner === true || (r as any).createdByOwner === 1
-                    const backendCanApply = (r as any).canApply !== undefined ? Boolean((r as any).canApply) : !hasApplied
-                    const effectiveCanApply = backendCanApply && !hasApplied && !createdByOwner
-                    if (hasApplied) {
+                    // Check if user has applied to any category in this round
+                    const appliedCategories = r.categories?.filter(cat => cat.has_applied) || [];
+                    const hasAnyApplication = appliedCategories.length > 0 || appliedRoundIds.has(r.id);
+                    const createdByOwner = (r as any).createdByOwner === true || (r as any).createdByOwner === 1;
+                    
+                    // Check if there are any categories available to apply to
+                    const availableCategories = r.categories?.filter(cat => !cat.has_applied) || [];
+                    const canApplyToMore = availableCategories.length > 0;
+                    
+                    const backendCanApply = (r as any).canApply !== undefined ? Boolean((r as any).canApply) : true;
+                    const effectiveCanApply = backendCanApply && canApplyToMore && !createdByOwner;
+                    
+                    if (hasAnyApplication && !canApplyToMore) {
                         return (
                             <span
-                                title={`Application ID: ${r.applicationId || 'Pending'}${r.applicationProgress?.label ? ' • ' + r.applicationProgress.label : ''}`}
-                                aria-label={`Applied. Application ID ${r.applicationId || 'pending'}`}
+                                title={`Applied to all categories (${appliedCategories.length})`}
+                                aria-label={`Applied to all available categories`}
                                 className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
-                                Applied
+                                All Applied
                             </span>
                         )
                     }
+                    
+                    if (hasAnyApplication && canApplyToMore) {
+                        return (
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-green-600 font-medium">
+                                    {appliedCategories.length} applied
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    onClick={() => setOpenRoundId(r.id)}
+                                    disabled={!accessToken}
+                                    title={`Apply to ${availableCategories.length} more categories`}
+                                >
+                                    <FilePlus2 className="h-3 w-3 mr-1" />
+                                    Apply More
+                                </Button>
+                            </div>
+                        )
+                    }
+                    
                     if (!effectiveCanApply) {
                         return (
                             <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={createdByOwner ? 'Owner created round' : 'Not eligible to apply'}>
