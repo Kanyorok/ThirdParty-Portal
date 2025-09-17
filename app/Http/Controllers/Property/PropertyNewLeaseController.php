@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\TenantAndLease\PropertyNewLeaseRequest;
 use App\Models\Core\CodeDetail;
@@ -26,12 +27,13 @@ class PropertyNewLeaseController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
         $newleases = PropertyNewLease::with('tenant', 'property')->get();
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.index', compact('newleases'));
     }
 
     public function create(){
-      //  $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
+        $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
         $properties = PropertyRegistry::where('IsActive', 1)
             ->whereHas('getBlockByProperty.floor.units', function ($query) {
                 $query->where('IsRentable', 1)
@@ -99,7 +101,7 @@ class PropertyNewLeaseController extends Controller
 
     public function show($Id)
     {
-       // $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
+        $this->authorize(PermissionEnum::PropertyNewLeaseView, PropertyNewLease::class);
         $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.show', compact('newlease'));
     }
@@ -107,7 +109,7 @@ class PropertyNewLeaseController extends Controller
     public function store(PropertyNewLeaseRequest $request)
     {
 
-      //  $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
+        $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
         $data = $request->validated();
         $tenant = PropertyNewTenant::findOrFail($data['Tenant']);
         $property = PropertyRegistry::findOrFail($data['PropertyID']);
@@ -141,7 +143,7 @@ class PropertyNewLeaseController extends Controller
 
     public function edit($Id)
     {
-      //  $this->authorize(PermissionEnum::PropertyNewLeaseUpdate, PropertyNewLease::class);
+        $this->authorize(PermissionEnum::PropertyNewLeaseUpdate, PropertyNewLease::class);
         $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
         $newtenants = PropertyNewLease::with('tenant')->get();
@@ -153,7 +155,7 @@ class PropertyNewLeaseController extends Controller
 
     public function update(PropertyNewLeaseRequest $request, $Id)
     {
-       // $this->authorize(PermissionEnum::PropertyNewLeaseUpdate, PropertyNewLease::class);
+        $this->authorize(PermissionEnum::PropertyNewLeaseUpdate, PropertyNewLease::class);
         $data = $request->validated();
 
         $lease = PropertyNewLease::findOrFail($Id);
@@ -212,7 +214,7 @@ class PropertyNewLeaseController extends Controller
 
     public function destroy($Id)
     {
-      //  $this->authorize(PermissionEnum::PropertyNewLeaseDelete, PropertyNewLease::class);
+        $this->authorize(PermissionEnum::PropertyNewLeaseDelete, PropertyNewLease::class);
         $newlease = PropertyNewLease::findOrFail($Id);
 
         PropertyLeaseSchedule::where('LeaseNumber', $newlease->Id)->delete();

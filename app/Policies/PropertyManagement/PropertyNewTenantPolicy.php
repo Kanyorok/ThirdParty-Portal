@@ -13,26 +13,26 @@ class PropertyNewTenantPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::TenantMentenanceView->value);
+        return $user->can(PermissionEnum::TenantMaintenanceView->value);
     }
 
     public function store(User $user): bool
     {
-        return $user->can(PermissionEnum::TenantMentenanceCreate->value);
+        return $user->can(PermissionEnum::TenantMaintenanceCreate->value);
     }
 
     public function view(User $user, PropertyNewTenant $propertyNewTenant): bool
     {
-        return $user->can(PermissionEnum::TenantMentenanceView->value);
+        return $user->can(PermissionEnum::TenantMaintenanceView->value);
     }
 
     public function update(User $user, PropertyNewTenant $propertyNewTenant): bool
     {
-        return $user->can(PermissionEnum::TenantMentenanceUpdate->value);
+        return $user->can(PermissionEnum::TenantClearanceUpdate->value);
     }
 
     public function destroy(User $user, PropertyNewTenant $propertyNewTenant): bool
     {
-        return $user->can(PermissionEnum::TenantMentenanceDelete->value);
+        return $user->can(PermissionEnum::TenantClearanceDelete->value);
     }
 }

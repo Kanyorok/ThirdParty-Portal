@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Property Management')
+@section('title', 'Tenant Maintenance')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
@@ -28,10 +28,10 @@
       <tr>
           <td>{{ $loop->iteration ?? '-' }}</td>
           <td>{{ $newtenant->type->Description ?? '-' }}</td>
-          <td>{{ $newtenant->TenantName ?? '-' }}</td>
-          <td>{{ $newtenant->IDRegistrationNo ?? '-' }}</td>
-          <td>{{ $newtenant->PhoneNumber ?? '-' }}</td>
-          <td>{{ $newtenant->EmailAddress ?? '-' }}</td>
+          <td>{{ $newtenant->thirdParty->TradingName ?? '-' }}</td>
+          <td>{{ $newtenant->thirdParty->RegistrationNumber ?? '-' }}</td>
+          <td>{{ $newtenant->thirdParty->Phone ?? '-' }}</td>
+          <td>{{ $newtenant->thirdParty->Email ?? '-' }}</td>
           <td>{{ $newtenant->Remarks ?? '-' }}</td>
           <td>
               @if($newtenant->IsActive == 1)
@@ -42,7 +42,7 @@
           </td>
         <td>
             <a href="{{ route('addtenant.show', $newtenant->Id) }}" class="btn btn-sm btn-info">View</a>
-            <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-outline-primary btn-sm">Edit</a>
+            <a href="{{ route('addtenant.edit', $newtenant->Id) }}" class="btn btn-primary btn-sm">Edit</a>
         </td>
       </tr>
     @endforeach
