@@ -33,15 +33,15 @@ class PropertyFloorController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
-        $lineentries = PropertyRegistry::with('getBlockByProperty')->get();
+        $lineentries = PropertyRegistry::with('getBlockByProperty')->where('IsActive',true)->get();
 
 
         return view('property.propertyregistry.structuralmapping.addfloor.create', compact('lineentries'));
     }
 
-    public function getBlockByProperty($propertyId)
+    public function getBlocksForFloor($PropertyId)
     {
-        $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+        $blocks = PropertyBlock::where('PropertyID', $PropertyId)->get();
         return response()->json($blocks);
     }
 

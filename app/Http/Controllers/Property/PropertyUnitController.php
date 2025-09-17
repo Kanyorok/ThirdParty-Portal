@@ -27,8 +27,8 @@ class PropertyUnitController extends Controller
 
     public function create()
     {
-        //$this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
-        $lineentries = PropertyRegistry::with(['getBlockByProperty.floor'])->get();
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
+        $lineentries = PropertyRegistry::with(['getBlockByProperty.floor'])->where('IsActive',true)->get();
         return view('property.propertyregistry.structuralmapping.addunit.create', compact('lineentries'));
     }
 
@@ -47,8 +47,7 @@ class PropertyUnitController extends Controller
 
     public function store(PropertyUnitRequest $request)
     {
-       // $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
-        //dd($request->all());
+        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyUnit::class);
         $validated = $request->validated();
 
         try {
@@ -74,7 +73,7 @@ class PropertyUnitController extends Controller
 
     public function edit($id)
     {
-        //$this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
+        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
         
         $unit = PropertyUnit::findOrFail($id);
         $floors = PropertyFloor::all();
@@ -87,7 +86,7 @@ class PropertyUnitController extends Controller
 
     public function update(Request $request, $id)
     {
-        //$this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
+        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
         $validated = $request->validate([
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
@@ -134,7 +133,7 @@ class PropertyUnitController extends Controller
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-       // $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyUnit::class);
+        $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyUnit::class);
         try {
             $unit = PropertyUnit::findOrFail($id);
 

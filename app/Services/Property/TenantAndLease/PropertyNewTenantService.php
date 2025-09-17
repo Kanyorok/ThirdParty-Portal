@@ -7,6 +7,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Http\UploadedFile;
 
 class PropertyNewTenantService
@@ -20,13 +21,8 @@ class PropertyNewTenantService
     }
 
     public static function create(
+        ThirdParties $ThirdPartyId,
         CodeDetail $TenantType,
-        string $TenantName,
-        string $IDRegistrationNo,
-        string $PhoneNumber,
-        string $EmailAddress,
-        string $Nationality,
-        string $PostalAddress,
         string $Remarks = null,
         bool   $IsActive,
         User   $user,
@@ -34,13 +30,8 @@ class PropertyNewTenantService
     ): self
     {
         $newtenant = PropertyNewTenant::create([
+            'ThirdPartyId' => $ThirdPartyId->Id,
             'TenantType' => $TenantType->ID,
-            'TenantName' => $TenantName,
-            'IDRegistrationNo' => $IDRegistrationNo,
-            'PhoneNumber' => $PhoneNumber,
-            'EmailAddress' => $EmailAddress,
-            'Nationality' => $Nationality,
-            'PostalAddress' => $PostalAddress,
             'Remarks' => $Remarks,
             'IsActive' => $IsActive,
             'CreatedBy' => $user->Id,
@@ -51,7 +42,7 @@ class PropertyNewTenantService
         $newtenant->newDocument(
             ModulesEnum::Property,
             $document,
-            [PermissionEnum::TenantMentenanceView->value],
+            [PermissionEnum::TenantMaintenanceView->value],
             $user
             );
         }
@@ -66,34 +57,37 @@ class PropertyNewTenantService
     public static function update(
         PropertyNewTenant $propertyNewTenant,
         CodeDetail $TenantType,
-        string     $TenantName,
-        string     $IDRegistrationNo,
-        string     $PhoneNumber,
-        string     $EmailAddress,
-        string     $Nationality,
-        string     $PostalAddress,
-        string     $Remarks,
-        bool       $IsActive,
-        User       $user
+        ?string $Remarks,
+        bool $IsActive,
+        User $user,
+        UploadedFile $document = null
     ): self
     {
+        // Update tenant details
         $propertyNewTenant->update([
             'TenantType' => $TenantType->ID,
-            'TenantName' => $TenantName,
-            'IDRegistrationNo' => $IDRegistrationNo,
-            'PhoneNumber' => $PhoneNumber,
-            'EmailAddress' => $EmailAddress,
-            'Nationality' => $Nationality,
-            'PostalAddress' => $PostalAddress,
-            'Remarks' => $Remarks,
-            'IsActive' => $IsActive,
+            'Remarks'    => $Remarks,
+            'IsActive'   => $IsActive,
             'ModifiedBy' => $user->Id,
         ]);
 
-        activity()->causedBy($user->Id)
+        if (!empty($document)) {
+            foreach ($document as $doc) {
+                $propertyNewTenant->newDocument(
+                    ModulesEnum::Property,
+                    $doc,
+                    [PermissionEnum::TenantMaintenanceView->value],
+                    $user
+                );
+            }
+        }
+
+        activity()
+            ->causedBy($user->Id)
             ->performedOn($propertyNewTenant)
             ->event('update')
             ->log("Updated Tenant {$propertyNewTenant->Id}.");
+
         return new self($propertyNewTenant);
     }
 }

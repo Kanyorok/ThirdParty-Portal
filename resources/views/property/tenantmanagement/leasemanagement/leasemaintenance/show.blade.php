@@ -79,17 +79,17 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Service Charge (KES)</label>
+                    <label class="form-label fw-semibold">Service Charge</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ServiceCharge, 2) }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Parking Fee (KES)</label>
+                    <label class="form-label fw-semibold">Parking Fee</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ParkingFee, 2) }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Other Charges (KES)</label>
+                    <label class="form-label fw-semibold">Other Charges</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->OtherCharges, 2) }}" readonly>
                 </div>
             </div>
