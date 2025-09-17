@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+
+class VerifiedUser
+{
+    public function handle(Request $request, Closure $next)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        // ThirdPartyUser model exposes helpers
+        $isActive = method_exists($user, 'isActive') ? $user->isActive() : (bool) ($user->IsActive ?? $user->isActive ?? false);
+        $isApproved = method_exists($user, 'isApproved') ? $user->isApproved() : (bool) ($user->isApproved ?? false);
+
+        if (!$isActive) {
+            return response()->json(['error' => 'Account inactive'], 403);
+        }
+
+        if (!$isApproved) {
+            return response()->json(['error' => 'Account not approved'], 403);
+        }
+
+        return $next($request);
+    }
+}

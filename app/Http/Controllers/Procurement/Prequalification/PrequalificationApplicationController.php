@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Procurement\Prequalification;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
+use App\Models\Procurement\Prequalification\ApplicationCategoryStatus;
+use App\Models\ThirdParty\SupplierCategory as SupplierCategoryModel;
 use App\Enums\Procurement\PrequalificationRoundEnum;
 use App\Http\Requests\Procurement\Suppliers\Prequalification\StorePrequalificationApplicationRequest;
 use Illuminate\Http\JsonResponse;
@@ -41,8 +43,14 @@ class PrequalificationApplicationController extends Controller
 
     public function apiIndex(Request $request): JsonResponse
     {
-        $user = Auth::user();
-        $supplierId = $user && $user->thirdParty ? $user->thirdParty->Id : null;
+        try {
+            if (!Auth::check()) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            $user = Auth::user();
+            Log::debug('apiIndex: authenticated user', ['id' => $user->Id ?? null, 'email' => $user->email ?? $user->Email ?? null]);
+            $supplierId = $user && $user->thirdParty ? $user->thirdParty->Id : null;
 
         // Get query parameters with defaults
         $page = (int) $request->get('page', 1);
@@ -75,19 +83,10 @@ class PrequalificationApplicationController extends Controller
         
         $sortColumn = $sortColumnMap[$sortBy] ?? 't_PrequalificationRounds.StartDate';
 
-        // Build the query
-        $query = PrequalificationRound::query()
-            ->with(['sections.criteria', 'criteria.masterCriteria'])
-            ->select('t_PrequalificationRounds.*')
-            ->leftJoin('t_SupplierPrequalificationApplications as apps', function ($join) use ($supplierId) {
-                $join->on('apps.RoundID', '=', 't_PrequalificationRounds.RoundID')
-                    ->whereNull('apps.DeletedOn')
-                    ->where('apps.SupplierID', '=', $supplierId);
-            })
-            ->addSelect([
-                'apps.ApplicationID as applicationId',
-                DB::raw('0 as createdByOwner')
-            ]);
+            // Build the query (rounds only; applications fetched separately)
+            $query = PrequalificationRound::query()
+                ->with(['sections.criteria', 'criteria.masterCriteria'])
+                ->select('t_PrequalificationRounds.*');
 
         // Apply status filtering
         if ($status !== 'all') {
@@ -109,50 +108,166 @@ class PrequalificationApplicationController extends Controller
         // Apply sorting
         $query->orderBy($sortColumn, $sortOrder);
 
-        // Get total count before pagination
-        $totalCount = $query->count();
-        $totalPages = ceil($totalCount / $pageSize);
+            // Get total count before pagination
+            $totalCount = $query->count();
+            $totalPages = ceil($totalCount / $pageSize);
 
-        // Apply pagination
-        $availableRounds = $query->paginate($pageSize, ['*'], 'page', $page);
+            // Apply pagination
+            $availableRounds = $query->paginate($pageSize, ['*'], 'page', $page);
 
-        // Transform the data using the resource
-        $transformedData = PrequalificationRoundResource::collection($availableRounds);
+            // Find allowed categories per round via pivot table
+            $roundIds = $availableRounds->pluck('RoundID')->filter()->values();
+            $categoriesByRound = collect();
+            if ($roundIds->isNotEmpty()) {
+                $rows = DB::table('t_PrequalificationRoundSupplierCategory as prc')
+                    ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'prc.SupplierCategoryID')
+                    ->whereIn('prc.RoundID', $roundIds)
+                    ->whereNull('sc.DeletedOn')
+                    ->where(function ($q) { $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive'); })
+                    ->select('prc.RoundID', 'sc.SupplierCategoryID', 'sc.CategoryName', 'sc.Description')
+                    ->orderBy('sc.CategoryName')
+                    ->get();
+                $categoriesByRound = $rows->groupBy('RoundID');
+            }
 
-        // Return custom response format that matches frontend expectations
-        return response()->json([
-            'data' => $transformedData,
-            'page' => $page,
-            'pageSize' => $pageSize,
-            'total' => $totalCount,
-            'totalPages' => $totalPages,
-            'sortBy' => $sortBy,
-            'sortOrder' => $sortOrder,
-            'filters' => [
-                'status' => $status,
-                'q' => $search
-            ],
-            'links' => [
-                'first' => $availableRounds->url(1),
-                'last' => $availableRounds->url($totalPages),
-                'prev' => $availableRounds->previousPageUrl(),
-                'next' => $availableRounds->nextPageUrl(),
-            ],
-            'meta' => [
-                'currentPage' => $availableRounds->currentPage(),
-                'from' => $availableRounds->firstItem(),
-                'lastPage' => $availableRounds->lastPage(),
-                'perPage' => $availableRounds->perPage(),
-                'to' => $availableRounds->lastItem(),
-                'total' => $availableRounds->total(),
-            ]
-        ]);
+            // Fetch applications for current supplier across these rounds
+            $applications = collect();
+            if ($supplierId && $roundIds->isNotEmpty()) {
+                $applications = PrequalificationApplication::query()
+                    ->where('SupplierID', $supplierId)
+                    ->whereIn('RoundID', $roundIds)
+                    ->whereNull('DeletedOn')
+                    ->select('ApplicationID', 'RoundID', 'CategoryID', 'SubmittedOn', 'Status')
+                    ->get();
+            }
+
+            // Map applications by RoundID:CategoryID
+            $appsByKey = $applications->keyBy(function ($a) {
+                return $a->RoundID . ':' . $a->CategoryID;
+            });
+
+            // Fetch per-category status for these applications
+            $appIds = $applications->pluck('ApplicationID');
+            $catStatuses = collect();
+            if ($appIds->isNotEmpty()) {
+                $catStatuses = ApplicationCategoryStatus::query()
+                    ->whereIn('ApplicationId', $appIds)
+                    ->get()
+                    ->groupBy('ApplicationId');
+            }
+
+            // Helper to map status codes/enums to required labels
+            $mapStatus = function ($appStatusCode = null, $catStatusCode = null, $stage = null) {
+                // Category status overrides application status when present
+                $code = $catStatusCode ?? $appStatusCode;
+                if (!$code) return 'NOT_APPLIED';
+                $code = is_string($code) ? $code : (string) $code;
+                return match ($code) {
+                    'A', 'P' => 'APPROVED',
+                    'R' => 'REJECTED',
+                    'V' => 'UNDER_REVIEW', // Reviewed/Verification -> treated as under review for UI
+                    'S' => 'SUBMITTED',
+                    default => $stage && str_contains(strtolower($stage), 'review') ? 'UNDER_REVIEW' : 'SUBMITTED',
+                };
+            };
+
+            // Build output rounds with categories array
+            $data = $availableRounds->map(function ($round) use ($categoriesByRound, $appsByKey, $catStatuses, $mapStatus) {
+                $roundId = $round->RoundID;
+                $roundCats = $categoriesByRound->get($roundId, collect());
+                $cats = $roundCats->map(function ($cat) use ($roundId, $appsByKey, $catStatuses, $mapStatus) {
+                    $key = $roundId . ':' . $cat->SupplierCategoryID;
+                    /** @var \App\Models\Procurement\Prequalification\PrequalificationApplication|null $app */
+                    $app = $appsByKey->get($key);
+                    $statusRow = null;
+                    if ($app) {
+                        $statusRow = optional($catStatuses->get($app->ApplicationID))->firstWhere('CategoryId', $cat->SupplierCategoryID);
+                    }
+
+                    $hasApplied = (bool) $app;
+                    $progress = $statusRow?->ProgressPercent ?? 0;
+                    $stage = $statusRow?->Stage ?? null;
+                    $stageLabel = $statusRow?->StageLabel ?? null;
+                    $decisionDate = $statusRow && $statusRow->DecisionDate ? $statusRow->DecisionDate->format('Y-m-d') : null;
+                    $updatedOn = $statusRow && $statusRow->ModifiedOn ? $statusRow->ModifiedOn->format('Y-m-d') : ($statusRow && $statusRow->CreatedOn ? $statusRow->CreatedOn->format('Y-m-d') : null);
+                    $status = $mapStatus($app?->Status?->value ?? (is_string($app?->Status) ? $app->Status : null), $statusRow?->Status ?? null, $stage);
+
+                    $out = [
+                        'id' => (int) $cat->SupplierCategoryID,
+                        'name' => $cat->CategoryName,
+                        'description' => $cat->Description,
+                        'has_applied' => $hasApplied,
+                        'status' => $hasApplied ? $status : 'NOT_APPLIED',
+                        'progress_percent' => (float) $progress,
+                    ];
+
+                    if ($hasApplied) {
+                        $out['application_id'] = (string) $app->ApplicationID;
+                        $out['application_date'] = $app->SubmittedOn ? $app->SubmittedOn->format('Y-m-d') : null;
+                        $out['stage'] = $stage;
+                        $out['stage_label'] = $stageLabel;
+                        $out['updated_on'] = $updatedOn;
+                        $out['decision_date'] = $decisionDate;
+                        if ($status === 'REJECTED') {
+                            $out['rejection_reason'] = $statusRow->RejectionReason ?? null;
+                        }
+                    }
+
+                    return $out;
+                })->values();
+
+                return [
+                    'id' => (int) $round->RoundID,
+                    'title' => $round->Title,
+                    'status' => is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status,
+                    'startDate' => $round->StartDate ? $round->StartDate->format('Y-m-d') : null,
+                    'endDate' => $round->EndDate ? $round->EndDate->format('Y-m-d') : null,
+                    'maxVendors' => $round->MaxVendors,
+                    'categories' => $cats,
+                ];
+            })->values();
+
+            return response()->json([
+                'data' => $data,
+                'page' => $page,
+                'pageSize' => $pageSize,
+                'total' => $totalCount,
+                'totalPages' => $totalPages,
+                'sortBy' => $sortBy,
+                'sortOrder' => $sortOrder,
+                'filters' => [
+                    'status' => $status,
+                    'q' => $search
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Prequalification apiIndex failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'message' => 'Failed to fetch rounds',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function apiShow(PrequalificationRound $round): JsonResponse
     {
-        $round->load(['sections.criteria.masterCriteria', 'applications']);
-        return (new PrequalificationRoundResource($round))->response();
+        try {
+            $round->load(['sections.criteria.masterCriteria', 'applications']);
+            return (new PrequalificationRoundResource($round))->response();
+        } catch (\Throwable $e) {
+            Log::error('Prequalification apiShow failed', [
+                'round' => $round->RoundID ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'message' => 'Failed to fetch round',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function store(StorePrequalificationApplicationRequest $request): JsonResponse
