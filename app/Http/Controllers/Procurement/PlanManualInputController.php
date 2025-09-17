@@ -12,6 +12,7 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 
 class PlanManualInputController extends Controller
@@ -45,7 +46,13 @@ class PlanManualInputController extends Controller
         $selectedPlanId = $request->input('plan_id');
         $selectedPlanTitle = $request->input('title');
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        $items = ItemMasterList::with('category', 'uom', 'price')->get();
+        $items = ItemMasterList::with(['category', 'uom', 'price'])
+            ->whereNotNull('ItemPrice')
+            ->whereHas('price', function ($q) {
+                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            })
+            ->orderBy('ItemName')
+            ->get();
         $budgetLines = BudgetMaster::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines', 'selectedPlanId', 'selectedPlanTitle'));
@@ -112,7 +119,13 @@ class PlanManualInputController extends Controller
         $lineItem = PlanLineItem::with(['item', 'item.category', 'item.uom'])->findOrFail($lineItemId);
         $this->authorize('edit', $lineItem);
         $plans = ConsolidatedProcurementPlan::all();
-        $items = ItemMasterList::all();
+        $items = ItemMasterList::with(['category', 'uom', 'price'])
+            ->whereNotNull('ItemPrice')
+            ->whereHas('price', function ($q) {
+                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            })
+            ->orderBy('ItemName')
+            ->get();
         $categories = ItemCategories::all();
         $budgetLines = BudgetMaster::all();
 
@@ -122,7 +135,7 @@ class PlanManualInputController extends Controller
     public function update(PlanManualInputRequest $request, $lineItemId)
     {
         $validated = $request->validated();
-        $user = auth()->user();
+    $user = Auth::user();
         $lineItem = PlanLineItem::findOrFail($lineItemId);
 
         $this->authorize('update', $lineItem);
@@ -163,7 +176,7 @@ class PlanManualInputController extends Controller
         }
 
         $lineItem->ModifiedOn = now();
-        $lineItem->ModifiedBy = auth()->id();
+    $lineItem->ModifiedBy = Auth::id();
 
         $lineItem->save();
 
