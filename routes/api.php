@@ -78,6 +78,11 @@ Route::prefix('v1')->group(function () {
     Route::get('currencies', [ApiCurrencyController::class, 'list']);
 });
 
+// countries
+Route::prefix('v1')->group(function () {
+    Route::get('countries', [\App\Http\Controllers\Settings\Codes\ApiCountryController::class, 'list']);
+});
+
 // enums (public)
 Route::prefix('enums')->group(function () {
     Route::get('third-party-types', [ThirdPartyTypesEnumController::class, 'index']);

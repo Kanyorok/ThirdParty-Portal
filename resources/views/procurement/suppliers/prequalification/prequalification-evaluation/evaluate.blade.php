@@ -52,10 +52,9 @@
                         <table class="table table-bordered table-striped table-sm">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 50%;">CRITERIA</th>
-                                    <th style="width: 15%;">MAX SCORE (10)</th>
-                                    <th style="width: 15%;">SCORE AWARDED</th>
-                                    <th style="width: 20%;">COMMENTS</th>
+                                    <th style="width: 60%;">CRITERIA</th>
+                                    <th style="width: 20%;">MAX SCORE (10)</th>
+                                    <th style="width: 20%;">SCORE AWARDED</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -69,7 +68,6 @@
                                 @php
                                 $existing = $existingEvaluations->get($criteria->CriteriaId);
                                 $score = old("criteria_scores.{$criteria->CriteriaId}.score", $existing->Score ?? '');
-                                $comments = old("criteria_scores.{$criteria->CriteriaId}.comments", $existing->Remarks ?? '');
                                 @endphp
                                 <tr>
                                     <td>
@@ -88,12 +86,6 @@
                                         <input type="hidden" name="criteria_scores[{{ $criteria->CriteriaId }}][max_score]" value="10">
                                         <input type="hidden" name="criteria_scores[{{ $criteria->CriteriaId }}][section_id]" value="{{ $section->SectionID }}">
                                         @error('criteria_scores.'.$criteria->CriteriaId.'.score') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    </td>
-                                    <td>
-                                        <textarea name="criteria_scores[{{ $criteria->CriteriaId }}][comments]"
-                                            class="form-control form-control-sm"
-                                            rows="1"
-                                            @if($isReadonly) readonly @endif>{{ $comments }}</textarea>
                                     </td>
                                 </tr>
                                 @endforeach

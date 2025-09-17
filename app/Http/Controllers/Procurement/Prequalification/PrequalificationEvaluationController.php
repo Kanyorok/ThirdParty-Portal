@@ -63,14 +63,21 @@ class PrequalificationEvaluationController extends Controller
                 $res = $app->result;
                 $key = $app->SupplierID.'-'.$app->RoundID;
                 $supplierRow = $supplierRows->get($key)?->first();
-                $thirdPartyPreq = (bool) $app->supplier?->IsPrequalified; // flag on t_ThirdParties
+                
+                // Check if supplier is prequalified for this specific category
+                $categoryPrequalified = DB::table('t_PrequalificationRoundSupplierCategory')
+                    ->where('RoundID', $app->RoundID)
+                    ->where('ThirdPartyID', $app->SupplierID)
+                    ->where('SupplierCategoryID', $app->CategoryID)
+                    ->exists();
+                
                 $supplierActive = (bool) ($supplierRow?->Active_Status);   // flag on t_Suppliers
                 $decision = $res?->Decision;
                 
                 // Hide prequalify button if:
-                // 1. Third party already marked prequalified (manual or bulk) OR
+                // 1. Supplier already prequalified for this specific category OR
                 // 2. There's a result with "Passed" decision (evaluation completed)
-                $prequalifyAllowed = !($thirdPartyPreq || $decision === 'Passed');
+                $prequalifyAllowed = !($categoryPrequalified || $decision === 'Passed');
                 
                 return [
                     'application_no' => $app->applicationNo,
@@ -82,8 +89,9 @@ class PrequalificationEvaluationController extends Controller
                     'application_id' => $app->ApplicationID,
                     'supplier_id' => $app->SupplierID,
                     'round_id' => $app->RoundID,
+                    'category_id' => $app->CategoryID,
                     'is_prequalified' => !$prequalifyAllowed, // kept for backward compatibility but now means 'button hidden'
-                    'third_party_is_prequalified' => $thirdPartyPreq,
+                    'category_prequalified' => $categoryPrequalified,
                     'supplier_active' => $supplierActive,
                     'prequalify_allowed' => $prequalifyAllowed,
                 ];
@@ -118,6 +126,19 @@ class PrequalificationEvaluationController extends Controller
 
         DB::transaction(function () use ($passedApps, $roundId, $now, $userId) {
             foreach ($passedApps as $app) {
+                // Create category-specific prequalification record
+                DB::table('t_PrequalificationRoundSupplierCategory')->updateOrInsert(
+                    [
+                        'RoundID' => $roundId,
+                        'ThirdPartyID' => $app->SupplierID,
+                        'SupplierCategoryID' => $app->CategoryID,
+                    ],
+                    [
+                        'CreatedOn' => $now,
+                        'ModifiedOn' => $now,
+                    ]
+                );
+                
                 // mark third party as prequalified
                 ThirdParties::where('Id', $app->SupplierID)->update([
                     'IsPrequalified'=>1,
@@ -149,16 +170,32 @@ class PrequalificationEvaluationController extends Controller
     /**
      * Individually prequalify a supplier even if failed (under review scenario)
      */
-    public function prequalifySupplier(int $thirdPartyId, int $roundId): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function prequalifySupplier(int $thirdPartyId, int $roundId, int $categoryId): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $now = Carbon::now();
         $userId = Auth::id();
-        DB::transaction(function () use ($thirdPartyId, $roundId, $now, $userId) {
+        DB::transaction(function () use ($thirdPartyId, $roundId, $categoryId, $now, $userId) {
+            // Create category-specific prequalification record
+            DB::table('t_PrequalificationRoundSupplierCategory')->updateOrInsert(
+                [
+                    'RoundID' => $roundId,
+                    'ThirdPartyID' => $thirdPartyId,
+                    'SupplierCategoryID' => $categoryId,
+                ],
+                [
+                    'CreatedOn' => $now,
+                    'ModifiedOn' => $now,
+                ]
+            );
+            
+            // Also update the global prequalification flag for backward compatibility
             ThirdParties::where('Id',$thirdPartyId)->update([
                 'IsPrequalified'=>1,
                 'ModifiedOn'=>$now,
                 'ModifiedBy'=>$userId,
             ]);
+            
+            // Ensure supplier row exists with required audit fields
             Supplier::updateOrCreate(
                 ['ThirdPartyID'=>$thirdPartyId,'RoundID'=>$roundId],
                 [
@@ -171,9 +208,9 @@ class PrequalificationEvaluationController extends Controller
             );
         });
         if (request()->expectsJson()) {
-            return response()->json(['status'=>'success','message'=>'Supplier prequalified.']);
+            return response()->json(['status'=>'success','message'=>'Supplier prequalified for this category.']);
         }
-        return back()->with('success','Supplier prequalified.');
+        return back()->with('success','Supplier prequalified for this category.');
     }
 
     /**
@@ -242,7 +279,6 @@ class PrequalificationEvaluationController extends Controller
             'criteria_scores.*.criteria_id' => 'required|integer',
             'criteria_scores.*.score' => 'nullable|numeric|min:0|max:10',
             'criteria_scores.*.max_score' => 'required|numeric|in:10',
-            'criteria_scores.*.comments' => 'nullable|string',
             'general_comments' => 'nullable|string',
         ]);
 
@@ -276,7 +312,6 @@ class PrequalificationEvaluationController extends Controller
                     'SectionID' => $sectionId,
                     'Score' => $scoreAwarded,
                     'MaxScore' => $maxScore,
-                    'Remarks' => $evaluationData['comments'],
                 ]
             );
         }

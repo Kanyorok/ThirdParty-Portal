@@ -64,14 +64,50 @@ class LocalitySeeder extends Seeder
             $actor = SystemHelper::user();
             $date  = now();
 
-            // Work with a manageable subset to avoid timeouts for now
-            $essentialCountries = array_slice($countries, 0, 50);
-            $this->command->info('Processing essential countries (first 50)…');
+            // Filter to Africa and Asia only
+            $allowedRegions = ['Africa', 'Asia'];
+            $filtered = [];
+            foreach ($countries as $c) {
+                $region = $c['region'] ?? null;
+                if ($region && in_array($region, $allowedRegions, true)) {
+                    $filtered[] = $c;
+                }
+            }
 
-            foreach ($essentialCountries as $index => $countryData) {
+            // Reorder so that Kenya comes first within the filtered list
+            $kenyaIndex = null;
+            foreach ($filtered as $idx => $c) {
+                if (isset($c['name']) && strtolower($c['name']) === 'kenya') {
+                    $kenyaIndex = $idx;
+                    break;
+                }
+            }
+
+            if ($kenyaIndex !== null) {
+                $kenyaData = $filtered[$kenyaIndex];
+                unset($filtered[$kenyaIndex]);
+                $filtered = array_values($filtered);
+                array_unshift($filtered, $kenyaData);
+            }
+
+            // Optionally sort remaining countries alphabetically by name after Kenya
+            if (count($filtered) > 1) {
+                $first = array_shift($filtered); // Kenya if present
+                usort($filtered, function ($a, $b) {
+                    return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
+                });
+                array_unshift($filtered, $first);
+            }
+
+            $totalCountries = count($filtered);
+            $this->command->info("Seeding {$totalCountries} Africa and Asia countries (Kenya first)…");
+
+            foreach ($filtered as $index => $countryData) {
                 $progress = $index + 1;
                 $countryName = $countryData['name'] ?? '(unknown)';
-                $this->command->info("Processing country {$progress}/50: {$countryName}");
+                if ($index === 0 || $progress % 10 === 0 || $progress === $totalCountries) {
+                    $this->command->info("Processing country {$progress}/{$totalCountries}: {$countryName}");
+                }
 
                 // Currency fields with fallbacks
                 $currencyCode   = $countryData['currency']         ?? null;
@@ -104,9 +140,12 @@ class LocalitySeeder extends Seeder
                 $countryInsertData = [
                     'Name'        => $countryName,
                     'CountryCode' => $countryData['iso2']     ?? '',
+                    'Iso3'        => $countryData['iso3']     ?? null,
                     'PhoneCode'   => $countryData['phonecode'] ?? '',
                     'Flag'        => $countryData['emoji']     ?? '',
                     'CurrencyId'  => $currencyId,
+                    'IsActive'    => 1,
+                    'SortOrder'   => $index, // Kenya will be 0, others sequential within Africa+Asia
                     'CreatedOn'   => $date,
                     'CreatedBy'   => $actor->Id,
                     'ModifiedOn'  => $date,
@@ -122,12 +161,12 @@ class LocalitySeeder extends Seeder
                     ->where('Name', $countryInsertData['Name'])
                     ->value('Id');
 
-                // Process only major states/regions (limit to first 5 per country)
+                // Process all states/regions
                 if (!empty($countryData['states']) && $countryId) {
-                    $majorStates = array_slice($countryData['states'], 0, 5);
-                    $this->command->info("  Processing " . count($majorStates) . " states for {$countryName}");
+                    $states = $countryData['states'];
+                    // Intentionally minimize console output for performance
 
-                    foreach ($majorStates as $stateData) {
+                    foreach ($states as $stateData) {
                         $stateName = $stateData['name'] ?? '(unknown state)';
                         $stateType = $stateData['type'] ?? 'state';
 
@@ -157,12 +196,12 @@ class LocalitySeeder extends Seeder
                             ->where('LocationType', $stateInsertData['LocationType'])
                             ->value('Id');
 
-                        // Process only major cities (limit to first 10 per state)
+                        // Process all cities for the state
                         if (!empty($stateData['cities']) && $stateId) {
-                            $majorCities = array_slice($stateData['cities'], 0, 10);
-                            $this->command->info("    Processing " . count($majorCities) . " cities for {$stateName}");
+                            $cities = $stateData['cities'];
+                            // Intentionally minimize console output for performance
 
-                            foreach ($majorCities as $cityData) {
+                            foreach ($cities as $cityData) {
                                 $cityName = $cityData['name'] ?? '(unknown city)';
                                 $cityInsertData = [
                                     'Name'         => $cityName,
@@ -184,21 +223,15 @@ class LocalitySeeder extends Seeder
                                     $cityInsertData
                                 );
                             }
-
-                            // Free per-iteration arrays ASAP
-                            unset($majorCities);
                         }
                     }
-
-                    // Free per-country arrays ASAP
-                    unset($majorStates);
                 }
             }
 
             // Free up countries data from memory
-            unset($countries, $essentialCountries);
+            unset($countries, $filtered);
 
-            $this->command->info('LocalitySeeder completed successfully with essential data!');
+            $this->command->info('LocalitySeeder completed successfully with Africa + Asia data!');
 
         } catch (JsonException $e) {
             $this->command->error('Could not parse JSON data from ' . $local . '. Error: ' . $e->getMessage());
