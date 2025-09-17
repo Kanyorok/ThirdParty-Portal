@@ -2,6 +2,7 @@
 
 namespace App\Models\ThirdParty;
 
+use App\Models\Core\CategoryMaster;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -34,5 +35,10 @@ class ThirdPartyType extends Model
             'TypeId',
             'ThirdPartyId'
         );
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(CategoryMaster::class, 'Type', 'Id');
     }
 }

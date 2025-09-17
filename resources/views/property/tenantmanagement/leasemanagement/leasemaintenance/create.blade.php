@@ -3,6 +3,7 @@
 @section('title', 'New Lease Agreement')
 
 @section('content')
+
     {{-- Validation Errors --}}
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -21,29 +22,29 @@
             <div class="card shadow">
                 <div class="card-header bg-light fw-bold">Lease Details</div>
                 <div class="card-body">
-                    
+
                     {{-- Tenant & Property --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">
-                                Select Tenant <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label">Select Tenant <span class="text-danger">*</span></label>
                             <select name="Tenant" class="form-select" required>
                                 <option value="">-- Select Tenant --</option>
                                 @foreach ($newtenants as $newtenant)
-                                    <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
+                                    <option value="{{ $newtenant->Id }}">
+                                        {{ $newtenant->thirdParty->TradingName ?? '-' }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">
-                                Select Property <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label">Select Property <span class="text-danger">*</span></label>
                             <select name="PropertyID" id="property-select" class="form-select" required>
                                 <option value="">-- Select Property --</option>
                                 @foreach ($properties as $property)
-                                    <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
+                                    <option value="{{ $property->Id }}">
+                                        {{ $property->PropertyName ?? '-' }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -52,27 +53,21 @@
                     {{-- Property Hierarchy --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">
-                                Select Block <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label">Select Block <span class="text-danger">*</span></label>
                             <select name="BlockID" id="block-select" class="form-select" required>
                                 <option value="">-- Select Block --</option>
                             </select>
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">
-                                Select Floor <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label">Select Floor <span class="text-danger">*</span></label>
                             <select name="FloorID" id="floor-select" class="form-select" required>
                                 <option value="">-- Select Floor --</option>
                             </select>
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">
-                                Select Unit <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label">Select Unit <span class="text-danger">*</span></label>
                             <select name="Unit" id="unit-select" class="form-select" required>
                                 <option value="">-- Select Unit --</option>
                             </select>
@@ -96,7 +91,9 @@
                             <select class="form-select" name="PaymentFrequency" required>
                                 <option value="">-- Select Frequency --</option>
                                 @foreach ($codes as $code)
-                                    <option value="{{ $code->ID }}">{{ $code->Description }}</option>
+                                    <option value="{{ $code->ID }}">
+                                        {{ $code->Description ?? '-' }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -105,8 +102,8 @@
                     {{-- Financials --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Monthly Rent (KES) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="MonthlyRent" placeholder="e.g. 25000" required>
+                            <label class="form-label">Rent <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control charge-field" name="MonthlyRent" placeholder="e.g. 25000" required>
                         </div>
 
                         <div class="col-md-4">
@@ -116,19 +113,27 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Service Charge <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="ServiceCharge" placeholder="e.g. 5000" required>
+                            <input type="number" class="form-control charge-field" name="ServiceCharge" placeholder="e.g. 5000" required>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Parking Fee <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="ParkingFee" placeholder="e.g. 1000" required>
+                            <input type="number" class="form-control charge-field" name="ParkingFee" placeholder="e.g. 1000" required>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Other Charges <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="OtherCharges" placeholder="e.g. 250" required>
+                            <input type="number" class="form-control charge-field" name="OtherCharges" placeholder="e.g. 250" required>
                         </div>
 
+                        <div class="col-md-4">
+                            <label class="form-label">Total Rent</label>
+                            <input type="number" class="form-control" id="TotalPayable" readonly>
+                        </div>
+                    </div>
+
+                    {{-- Due Day --}}
+                    <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Due Day <span class="text-danger">*</span></label>
                             <input 
@@ -173,17 +178,18 @@
                             Save Lease
                         </button>
                     </div>
+
                 </div>
             </div>
         </form>
     </div>
 
-    {{-- Dynamic Dropdown Script --}}
+    {{-- Scripts --}}
     <script>
         const routes = {
-            getBlocks: "{{ route('getblockbyproperty', ['PropertyId' => '__ID__']) }}",
-            getFloors: "{{ route('getfloorbyblock', ['BlockId' => '__ID__']) }}",
-            getUnits: "{{ route('getunitbyfloor', ['FloorId' => '__ID__']) }}"
+            getBlocks: "{{ route('getblockbyproperty.lease', ['PropertyId' => '__ID__']) }}",
+            getFloors: "{{ route('getfloorbyblock.lease', ['BlockId' => '__ID__']) }}",
+            getUnits: "{{ route('getunitbyfloor.lease', ['FloorId' => '__ID__']) }}"
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -191,14 +197,16 @@
             const blockSelect = document.getElementById('block-select');
             const floorSelect = document.getElementById('floor-select');
             const unitSelect = document.getElementById('unit-select');
+            const totalField = document.getElementById('TotalPayable');
+            const chargeFields = document.querySelectorAll('.charge-field');
 
-            // Helper function to reset options
+            // Helper: reset options
             const resetOptions = (select, placeholder) => {
                 select.innerHTML = `<option value="">-- ${placeholder} --</option>`;
             };
 
             // Property → Block
-            propertySelect.addEventListener('change', function() {
+            propertySelect.addEventListener('change', function () {
                 resetOptions(blockSelect, 'Select Block');
                 resetOptions(floorSelect, 'Select Floor');
                 resetOptions(unitSelect, 'Select Unit');
@@ -219,7 +227,7 @@
             });
 
             // Block → Floor
-            blockSelect.addEventListener('change', function() {
+            blockSelect.addEventListener('change', function () {
                 resetOptions(floorSelect, 'Select Floor');
                 resetOptions(unitSelect, 'Select Unit');
 
@@ -239,7 +247,7 @@
             });
 
             // Floor → Unit
-            floorSelect.addEventListener('change', function() {
+            floorSelect.addEventListener('change', function () {
                 resetOptions(unitSelect, 'Select Unit');
 
                 if (this.value) {
@@ -255,6 +263,19 @@
                         })
                         .catch(() => alert('Failed to load units.'));
                 }
+            });
+
+            // Calculate Total
+            function calculateTotal() {
+                let total = 0;
+                chargeFields.forEach(input => {
+                    total += parseFloat(input.value) || 0;
+                });
+                totalField.value = total;
+            }
+
+            chargeFields.forEach(input => {
+                input.addEventListener('input', calculateTotal);
             });
         });
     </script>
