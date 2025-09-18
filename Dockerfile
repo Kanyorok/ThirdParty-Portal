@@ -9,8 +9,15 @@ ARG SANCTUM_STATEFUL_DOMAINS
 
 WORKDIR /app
 
-# Copy package file and install dependencies (ignore lockfile to avoid corruption issues)
+# Upgrade npm to avoid semver issues
+RUN npm install -g npm@11.6.0
+
+# Copy package file and install dependencies (ignore lockfile)
 COPY package.json ./
+
+# Avoid optional native platform packages (e.g., tailwind oxide variants)
+ENV npm_config_optional=false \
+    TAILWIND_DISABLE_OXIDE=1
 
 # Use npm install instead of npm ci to handle lock file mismatches
 RUN npm install --legacy-peer-deps
