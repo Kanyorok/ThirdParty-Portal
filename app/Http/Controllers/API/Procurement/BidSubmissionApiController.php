@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
+use App\Models\Auth\User;
 use App\Services\Procurement\EncryptedBidDocumentService;
 use App\Enums\TenderStatusEnum;
 use Illuminate\Http\Request;
@@ -77,12 +78,27 @@ class BidSubmissionApiController extends Controller
 
             DB::beginTransaction();
 
-            // Store encrypted documents
-            $encryptedDocs = EncryptedBidDocumentService::storeEncryptedBidDocuments(
-                new BidSubmission(), // Temporary instance for service
-                $request->file('bid_documents'),
-                $systemUser
-            );
+            try {
+                // Store encrypted documents
+                $encryptedDocs = EncryptedBidDocumentService::storeEncryptedBidDocuments(
+                    new BidSubmission(), // Temporary instance for service
+                    $request->file('bid_documents'),
+                    $systemUser
+                );
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Error encrypting bid documents', [
+                    'tender_id' => $request->tender_id,
+                    'third_party_id' => $request->third_party_id,
+                    'error' => $e->getMessage()
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to encrypt bid documents. Please try again.',
+                    'error_details' => $e->getMessage(),
+                ], 500);
+            }
 
             // Create bid submission record
             $bidSubmission = BidSubmission::create([
@@ -244,8 +260,20 @@ class BidSubmissionApiController extends Controller
     /**
      * Get system user for operations
      */
-    private function getSystemUser()
+    private function getSystemUser(): User
     {
-        return DB::table('t_Users')->first(); // Get first available user
+        // Get first available active user, or create a system user if needed
+        $user = User::where('IsActive', true)->first();
+        
+        if (!$user) {
+            // Fallback: get any user from the database
+            $user = User::first();
+        }
+        
+        if (!$user) {
+            throw new \Exception('No users found in the system for bid processing');
+        }
+        
+        return $user;
     }
 }
