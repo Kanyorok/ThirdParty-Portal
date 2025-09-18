@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Input } from "@/components/common/input";
 import { Button } from "@/components/common/button";
 import {
@@ -10,8 +11,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/common/select";
-import { ClipboardList, Search, X, Loader2 } from "lucide-react"; // Using ClipboardList for RFQs
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table";
+import { Badge } from "@/components/common/badge";
+import { Card } from "@/components/common/card";
+import { ClipboardList, Search, X, Loader2, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
 
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -29,32 +34,64 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function pick(obj: Record<string, unknown>, keys: readonly string[]): unknown {
+    for (const k of keys) {
+        const v = obj[k];
+        if (v !== undefined && v !== null && v !== "") return v;
+    }
+    return undefined;
+}
+
 export function RfqsFilter() {
     const [searchTerm, setSearchTerm] = useState("");
     const [status, setStatus] = useState("all");
     const [openType, setOpenType] = useState("openToAll");
     const [isSearching, setIsSearching] = useState(false);
     const [resultCount, setResultCount] = useState<number | null>(null);
+    const [invitations, setInvitations] = useState<unknown[] | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
     useEffect(() => {
-        const applyFilters = async () => {
-            setIsSearching(true);
-            await new Promise((resolve) => setTimeout(resolve, 800));
-
-            const newResultCount = Math.floor(Math.random() * 100);
-            setResultCount(newResultCount);
-            setIsSearching(false);
-
-            console.log("Applying filters:", {
-                searchTerm: debouncedSearchTerm,
-                status,
-                openType,
-            });
+        const controller = new AbortController();
+        const fetchInvitations = async () => {
+            try {
+                setIsSearching(true);
+                setError(null);
+                const params = new URLSearchParams();
+                if (debouncedSearchTerm) params.set("q", debouncedSearchTerm);
+                if (status && status !== "all") params.set("status", status);
+                const url = `/api/procurement/rfq-suppliers${params.toString() ? `?${params.toString()}` : ""}`;
+                const res = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
+                const contentType = res.headers.get("content-type") || "";
+                const data = contentType.includes("application/json") ? await res.json() : await res.text();
+                if (!res.ok) {
+                    throw new Error((data && data.message) || "Failed to load RFQs");
+                }
+                let list: unknown[] = [];
+                if (isRecord(data) && Array.isArray((data as Record<string, unknown>)["data"])) {
+                    list = (data as Record<string, unknown>)["data"] as unknown[];
+                } else if (Array.isArray(data)) {
+                    list = data as unknown[];
+                }
+                setInvitations(list);
+                setResultCount(list.length);
+            } catch (e: unknown) {
+                if (isRecord(e) && typeof (e as { name?: unknown }).name === "string" && (e as { name: string }).name === "AbortError") return;
+                setError(isRecord(e) && typeof (e as { message?: unknown }).message === "string" ? String((e as { message: string }).message) : "Unable to load RFQs");
+                setInvitations([]);
+                setResultCount(0);
+            } finally {
+                setIsSearching(false);
+            }
         };
-
-        applyFilters();
+        fetchInvitations();
+        return () => controller.abort();
     }, [debouncedSearchTerm, status, openType]);
 
     const getActiveFilters = useCallback(() => {
@@ -84,10 +121,9 @@ export function RfqsFilter() {
         setStatus("all");
         setOpenType("openToAll");
         setResultCount(null);
-        console.log("Filters cleared.");
     };
 
-    const handleRemoveFilter = (type: string, value: string) => {
+    const handleRemoveFilter = (type: string) => {
         if (type === "search") setSearchTerm("");
         if (type === "status") setStatus("all");
         if (type === "openType") setOpenType("openToAll");
@@ -205,7 +241,7 @@ export function RfqsFilter() {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleRemoveFilter(filter.type, filter.value)}
+                                        onClick={() => handleRemoveFilter(filter.type)}
                                         className="ml-1 -mr-1 h-4 w-4 rounded-full p-0.5 text-primary-foreground hover:bg-primary/20 dark:hover:bg-primary/30"
                                     >
                                         <X className="h-3 w-3" />
@@ -220,6 +256,70 @@ export function RfqsFilter() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <div className="mt-6">
+                {error && (
+                    <div className="text-destructive text-sm mb-4">{error}</div>
+                )}
+                <Card className="p-0 overflow-hidden">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Title</TableHead>
+                                <TableHead>Reference</TableHead>
+                                <TableHead>Closing date</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {(invitations || []).map((rfq: unknown) => {
+                                const obj = isRecord(rfq) ? rfq : {};
+                                const id = pick(obj, ["id", "rfqId", "RFQID", "rfq_id"]);
+                                const title = pick(obj, ["title", "RFQTitle", "name", "referenceName"]) ?? "Untitled RFQ";
+                                const ref = pick(obj, ["referenceNumber", "reference", "RFQRef", "ref_no", "ref"]) ?? "-";
+                                const closing = pick(obj, ["closingDate", "closeDate", "closing_date", "deadline", "endDate"]);
+                                const status = String(pick(obj, ["status", "invitationStatus", "state"]) ?? "").toUpperCase();
+                                return (
+                                    <TableRow key={String(id)}>
+                                        <TableCell className="max-w-[320px]">
+                                            <div className="font-medium text-foreground line-clamp-2">{String(title)}</div>
+                                            <div className="text-xs text-muted-foreground">ID: {String(id)}</div>
+                                        </TableCell>
+                                        <TableCell>{String(ref)}</TableCell>
+                                        <TableCell>{closing ? format(new Date(String(closing)), "MMM d, yyyy HH:mm") : "-"}</TableCell>
+                                        <TableCell>
+                                            {status ? (
+                                                <Badge variant={status === "OPEN" ? "default" : status === "CLOSED" ? "secondary" : "outline"}>{status}</Badge>
+                                            ) : (
+                                                <span className="text-muted-foreground">-</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            {id ? (
+                                                <Button asChild size="sm">
+                                                    <Link href={`/dashboard/rfqs/${encodeURIComponent(String(id))}`} className="inline-flex items-center gap-1">
+                                                        View & Respond <ExternalLink className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                            ) : (
+                                                <span className="text-muted-foreground">N/A</span>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                            {!isSearching && invitations && invitations.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                                        No RFQ invitations found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </Card>
+            </div>
         </div>
     );
 }
