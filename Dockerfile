@@ -1,5 +1,5 @@
 # --- Builder Stage ---
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 ARG EXTERNAL_API_URL
 ARG NEXTAUTH_SECRET
 ARG NEXTAUTH_URL
@@ -15,9 +15,8 @@ RUN npm install -g npm@11.6.0
 # Copy package file and install dependencies (ignore lockfile)
 COPY package.json ./
 
-# Avoid optional native platform packages (e.g., tailwind oxide variants)
-ENV npm_config_optional=false \
-    TAILWIND_DISABLE_OXIDE=1
+# Avoid Tailwind oxide native binary; let CSS toolchain use JS fallback
+ENV TAILWIND_DISABLE_OXIDE=1
 
 # Use npm install instead of npm ci to handle lock file mismatches
 RUN npm install --legacy-peer-deps
@@ -34,16 +33,16 @@ RUN EXTERNAL_API_URL=${EXTERNAL_API_URL} \
     npm run build
 
 # --- Production Stage ---
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production \
     PORT=3000 \
     NEXT_TELEMETRY_DISABLED=1
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
+# Create non-root user (Debian-based)
+RUN groupadd -g 1001 nodejs && \
+    useradd -m -u 1001 -g nodejs nextjs
 
 # Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
