@@ -2,72 +2,43 @@
 @section('title', 'Select Tender for Score Consolidation')
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-4">📊 Score Consolidation - Select Tender</h4>
+    <h4 class="mb-4">📊 Select Tender for Score Consolidation</h4>
 
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-8 mx-auto">
             <div class="card">
                 <div class="card-header">
-                    <h5>Available Tenders for Evaluation</h5>
+                    <h5 class="mb-0">Available Tenders</h5>
                 </div>
                 <div class="card-body">
                     @if($tenders->isEmpty())
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> No published tenders with suppliers found.
+                            <i class="fas fa-info-circle"></i> No tenders available for consolidation.
                         </div>
                     @else
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Tender No.</th>
-                                        <th>Title</th>
-                                        <th>Suppliers</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                        <form method="GET" action="{{ route('bidscores.index') }}">
+                            <div class="mb-3">
+                                <label for="tender_id" class="form-label fw-bold">Select Tender</label>
+                                <select name="tender_id" id="tender_id" class="form-select" required>
+                                    <option value="">-- Choose a Tender --</option>
                                     @foreach($tenders as $tender)
-                                    <tr>
-                                        <td>{{ $tender->TenderNo }}</td>
-                                        <td>{{ Str::limit($tender->Title, 50) }}</td>
-                                        <td>
-                                            <span class="badge bg-primary">{{ $tender->tenderSuppliers->count() }} Suppliers</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-success">Published</span>
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('bidscores.index', ['tender_id' => $tender->Id]) }}" 
-                                               class="btn btn-sm btn-primary">
-                                                <i class="fas fa-chart-bar"></i> View Scores
-                                            </a>
-                                        </td>
-                                    </tr>
+                                        <option value="{{ $tender->Id }}">
+                                            {{ $tender->TenderNo }} - {{ $tender->Title }}
+                                        </option>
                                     @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                </select>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-calculator"></i> View Consolidated Scores
+                                </button>
+                                <a href="{{ route('procurement.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                </a>
+                            </div>
+                        </form>
                     @endif
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h6>Instructions</h6>
-                </div>
-                <div class="card-body">
-                    <small class="text-muted">
-                        <ul>
-                            <li>Select a tender to view consolidated evaluation scores</li>
-                            <li>Only published tenders with registered suppliers are shown</li>
-                            <li>Scores are automatically calculated from committee evaluations</li>
-                            <li>Rankings are based on weighted section scores</li>
-                        </ul>
-                    </small>
                 </div>
             </div>
         </div>

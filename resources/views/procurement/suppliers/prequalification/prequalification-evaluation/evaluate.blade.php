@@ -20,7 +20,7 @@
         <div class="card-body">
             <p class="mb-4">
                 <strong>Round:</strong> {{ $application->round->Title }}<br>
-                <strong>Supplier:</strong> {{ $application->supplier->ThirdPartyName }}
+                <strong>Supplier:</strong> {{ $application->supplier->thirdParty->ThirdPartyName ?? 'N/A' }}
             </p>
 
             @if($isReadonly)

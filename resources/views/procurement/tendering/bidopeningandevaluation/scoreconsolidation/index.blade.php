@@ -2,35 +2,21 @@
 @section('title', 'Bid Scoring Consolidation')
 @section('content')
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4>📊 Bid Scoring Consolidation – {{ $tender->TenderNo }}</h4>
-        <a href="{{ route('bidscores.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Selection
-        </a>
-    </div>
+    <h4 class="mb-4">📊 Bid Scoring Consolidation – {{ $tender->TenderNo ?? 'N/A' }}</h4>
 
     <!-- Tender Info Summary -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <strong>Tender:</strong> {{ $tender->Title }}
-                </div>
-                <div class="col-md-4">
-                    <strong>Total Suppliers:</strong> {{ $suppliers->count() }}
-                </div>
-                <div class="col-md-4">
-                    <strong>Currency:</strong> {{ $tender->currency->Code ?? 'N/A' }}
-                </div>
-            </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <strong>Item:</strong> {{ $tender->Title ?? 'N/A' }}
+        </div>
+        <div class="col-md-6">
+            <strong>Evaluators:</strong> {{ $evaluatorCount }} Committee Members
         </div>
     </div>
 
-    @if(empty($evaluationData))
+    @if($consolidatedScores->isEmpty())
         <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle"></i> 
-            <strong>No Evaluation Data Found!</strong>
-            <br>Committee evaluations have not been completed for this tender yet.
+            <i class="fas fa-exclamation-triangle"></i> No evaluation data found for this tender. Please ensure evaluations have been completed.
         </div>
     @else
         <!-- Consolidated Scoring Table -->
@@ -41,117 +27,141 @@
                         <th rowspan="2">#</th>
                         <th rowspan="2">Bidder</th>
                         @php
-                            $firstSupplier = reset($evaluationData);
-                            $sectionColumns = $firstSupplier['section_scores'] ?? [];
+                            $sectionHeaders = $sections->take(5); // Limit display sections for table width
                         @endphp
-                        @foreach($sectionColumns as $sectionData)
-                            <th>{{ $sectionData['name'] }}<br><small>({{ number_format($sectionData['weight'], 1) }}%)</small></th>
+                        @foreach($sectionHeaders as $section)
+                            <th>{{ $section['name'] }} ({{ $section['weight'] }}%)</th>
                         @endforeach
                         <th rowspan="2">Total Weighted Score (%)</th>
                         <th rowspan="2">Rank</th>
                         <th rowspan="2">Recommendation</th>
-                        <th rowspan="2">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($evaluationData as $supplierId => $data)
+                    @foreach($consolidatedScores as $score)
                         <tr>
-                            <td class="text-center">{{ $data['rank'] }}</td>
-                            <td>
-                                <strong>{{ $data['supplier']->SupplierName }}</strong>
-                            </td>
-                            @foreach($data['section_scores'] as $sectionScore)
-                                <td class="text-center">
-                                    <span class="badge bg-info">{{ number_format($sectionScore['raw_score'], 1) }}/10</span>
-                                    <br>
-                                    <small>{{ number_format($sectionScore['weighted_score'], 1) }}%</small>
-                                </td>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $score['bidder_name'] }}</td>
+                            
+                            @foreach($score['section_scores'] as $sectionScore)
+                                @if($loop->iteration <= 5) <!-- Limit to 5 sections for display -->
+                                    <td>
+                                        <div class="d-flex flex-column text-center">
+                                            <small>{{ number_format($sectionScore['score'], 1) }}%</small>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-info" style="width: {{ min(100, $sectionScore['score']) }}%;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                @endif
                             @endforeach
-                            <td class="text-center">
-                                <strong class="text-primary">{{ number_format($data['total_weighted_score'], 2) }}%</strong>
-                            </td>
-                            <td class="text-center">
-                                @if($data['rank'] == 1)
-                                    <span class="badge bg-success fs-6">{{ $data['rank'] }}</span>
-                                @elseif($data['rank'] <= 3)
-                                    <span class="badge bg-warning fs-6">{{ $data['rank'] }}</span>
-                                @else
-                                    <span class="badge bg-secondary fs-6">{{ $data['rank'] }}</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                @if($data['rank'] == 1)
-                                    <span class="badge bg-success">{{ $data['recommendation'] }}</span>
-                                @elseif($data['rank'] <= 3)
-                                    <span class="badge bg-warning">{{ $data['recommendation'] }}</span>
-                                @else
-                                    <span class="badge bg-danger">{{ $data['recommendation'] }}</span>
-                                @endif
-                            </td>
-                            <td class="text-center">
-                                <a href="{{ route('bidscores.show', [$tender->Id, $supplierId]) }}" 
-                                   class="btn btn-sm btn-outline-primary" 
-                                   title="View detailed evaluation">
-                                    <i class="fas fa-eye"></i> Details
-                                </a>
+                            
+                            <!-- Fill remaining columns if fewer than 5 sections -->
+                            @for($i = count($score['section_scores']); $i < 5; $i++)
+                                <td>
+                                    <div class="d-flex flex-column text-center">
+                                        <small>N/A</small>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-secondary" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                            @endfor
+                            
+                            <td><strong>{{ number_format($score['total_weighted_score'], 1) }}%</strong></td>
+                            <td>{{ $score['rank'] }}</td>
+                            <td>
+                                <span class="badge {{ $score['recommendation']['class'] }}">
+                                    {{ $score['recommendation']['status'] }}
+                                </span>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
-    @endif
 
-    <!-- Summary Statistics -->
-    @if(!empty($evaluationData))
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h6>📈 Evaluation Summary</h6>
-                    </div>
-                    <div class="card-body">
-                        @php
-                            $topSupplier = reset($evaluationData);
-                            $lowestScore = end($evaluationData);
-                        @endphp
-                        <ul class="list-unstyled mb-0">
-                            <li><strong>Highest Score:</strong> {{ $topSupplier['supplier']->SupplierName }} ({{ number_format($topSupplier['total_weighted_score'], 2) }}%)</li>
-                            <li><strong>Lowest Score:</strong> {{ $lowestScore['supplier']->SupplierName }} ({{ number_format($lowestScore['total_weighted_score'], 2) }}%)</li>
-                            <li><strong>Score Range:</strong> {{ number_format($topSupplier['total_weighted_score'] - $lowestScore['total_weighted_score'], 2) }}%</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h6>🏆 Award Recommendations</h6>
-                    </div>
-                    <div class="card-body">
-                        @php
-                            $recommended = collect($evaluationData)->where('rank', 1)->first();
-                            $reserves = collect($evaluationData)->whereBetween('rank', [2, 3]);
-                        @endphp
-                        <ul class="list-unstyled mb-0">
-                            <li><strong>Primary Recommendation:</strong><br>
-                                <span class="text-success">{{ $recommended['supplier']->SupplierName ?? 'N/A' }}</span>
-                            </li>
-                            <li><strong>Reserve List:</strong><br>
-                                @forelse($reserves as $reserve)
-                                    <span class="text-warning">{{ $reserve['supplier']->SupplierName }}</span><br>
-                                @empty
-                                    <span class="text-muted">None</span>
-                                @endforelse
-                            </li>
-                        </ul>
-                    </div>
+        <!-- Detailed Section Breakdown -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="fw-bold">📋 Detailed Section Breakdown</h5>
+                <div class="accordion" id="sectionBreakdown">
+                    @foreach($consolidatedScores->take(3) as $score) <!-- Show breakdown for top 3 bidders -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button {{ $loop->first ? '' : 'collapsed' }}" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#collapse{{ $loop->iteration }}" 
+                                        aria-expanded="{{ $loop->first ? 'true' : 'false' }}">
+                                    {{ $score['bidder_name'] }} - {{ number_format($score['total_weighted_score'], 1) }}%
+                                </button>
+                            </h2>
+                            <div id="collapse{{ $loop->iteration }}" 
+                                 class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}" 
+                                 data-bs-parent="#sectionBreakdown">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        @foreach($score['section_scores'] as $sectionScore)
+                                            <div class="col-md-4 mb-3">
+                                                <div class="card">
+                                                    <div class="card-body text-center">
+                                                        <h6 class="card-title">{{ $sectionScore['section_name'] }}</h6>
+                                                        <div class="progress mb-2">
+                                                            <div class="progress-bar bg-primary" 
+                                                                 style="width: {{ min(100, $sectionScore['score']) }}%;">
+                                                            </div>
+                                                        </div>
+                                                        <p class="card-text">
+                                                            <strong>{{ number_format($sectionScore['score'], 1) }}%</strong><br>
+                                                            <small class="text-muted">Weight: {{ $sectionScore['weight'] }}%</small>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
     @endif
+
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2 justify-content-end mb-5">
+        @if(!$consolidatedScores->isEmpty())
+            <button class="btn btn-success" onclick="forwardForAward()">
+                <i class="fas fa-award"></i> Forward for Award
+            </button>
+            <button class="btn btn-danger" onclick="rejectAllBids()">
+                <i class="fas fa-times-circle"></i> Reject All Bids
+            </button>
+        @endif
+        <a href="{{ route('bidscores.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Select Different Tender
+        </a>
+        <button class="btn btn-outline-dark" onclick="window.print()">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+    </div>
 </div>
+
+<script>
+function forwardForAward() {
+    if (confirm('Are you sure you want to forward the top bidder for award?')) {
+        // Add your forward for award logic here
+        alert('Feature coming soon: Forward for award functionality');
+    }
+}
+
+function rejectAllBids() {
+    if (confirm('Are you sure you want to reject all bids? This action cannot be undone.')) {
+        // Add your reject all bids logic here
+        alert('Feature coming soon: Reject all bids functionality');
+    }
+}
+</script>
 @endsection
 
 @push('styles')

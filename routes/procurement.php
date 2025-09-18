@@ -439,9 +439,14 @@ Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
 
 Route::resource('bidresponsiveness', TenderBidResponsivenessController::class)->except(['create']);
 Route::get('bidresponsiveness/create/{tenderSupplier}', [TenderBidResponsivenessController::class, 'create'])->name('bidresponsiveness.create');
+Route::post('bidresponsiveness/bulk', [TenderBidResponsivenessController::class, 'bulkUpdate'])->name('bidresponsiveness.bulk');
 
-Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender']); //->name('awards.view');
-Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq']); //->name('awards.view');
+Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])->name('awards.tender');
+Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.rfq');
+Route::get('/awards/unified/{id}', [AwardsController::class, 'showUnifiedAward'])->name('awards.unified');
+Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->name('awards.switch-type');
+Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
+Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
 
 Route::resource('procawards', AwardsController::class);
 

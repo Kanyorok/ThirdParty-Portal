@@ -20,14 +20,17 @@ class Supplier extends ThirdParties
 
     // Limit fillable to actual supplier table columns to avoid parent fillables bleeding in
     protected $fillable = [
+        'RoundID',
         'ThirdPartyID',
         'RoundID',
     'CategoryId',
         'Active_Status',
+        'SupplierCategoryID',
+        'CreatedBy',
         'CreatedOn',
+        'ModifiedBy',
         'ModifiedOn',
-    'CreatedBy',
-    'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
@@ -82,7 +85,42 @@ class Supplier extends ThirdParties
         ->where('Active_Status', 1);
     }
 
-    // Note: Category linkage is managed via t_SupplierCategory_ItemCategory for classification mapping.
+    /**
+     * Relationship to ThirdParty (for supplier names and details)
+     */
+    public function thirdParty()
+    {
+        return $this->belongsTo(ThirdParties::class, 'ThirdPartyID', 'Id');
+    }
+
+    /**
+     * Relationship to SupplierCategory via SupplierCategoryID
+     */
+    public function supplierCategory()
+    {
+        return $this->belongsTo(\App\Models\ThirdParty\SupplierCategory::class, 'SupplierCategoryID', 'SupplierCategoryID');
+    }
+
+    /**
+     * Relationship to PrequalificationRound via RoundID
+     */
+    public function round()
+    {
+        return $this->belongsTo(\App\Models\Procurement\Prequalification\PrequalificationRound::class, 'RoundID', 'RoundID');
+    }
+
+    /**
+     * Many-to-many relationship to SupplierCategories through pivot table
+     */
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\ThirdParty\SupplierCategory::class,
+            't_ThirdParty_SupplierCategory',
+            'third_party_id',
+            'supplier_category_id'
+        )->withTimestamps();
+    }
 
     public function scopeOnlySuppliers($query)
     {
