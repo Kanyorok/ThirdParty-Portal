@@ -7,6 +7,7 @@ use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\ThirdParies\Supplier;
 use App\Services\Procurement\EncryptedBidDocumentService;
+use App\Enums\TenderStatusEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -214,7 +215,7 @@ class BidSubmissionApiController extends Controller
     private function isTenderOpenForSubmissions(Tender $tender): bool
     {
         // Check tender status and submission deadline
-        return $tender->Status === 'pb' && 
+        return $tender->Status === TenderStatusEnum::Published && 
                ($tender->SubmissionDeadline === null || now()->lte($tender->SubmissionDeadline));
     }
 
