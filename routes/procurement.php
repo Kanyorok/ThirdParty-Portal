@@ -319,13 +319,13 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
-    // Route::resource('tenderclarification', TenderclarificationController::class)
-    //Route::resource('tenderclarification', TenderclarificationController::class);
+    // Enhanced Tender Clarification Management
     Route::get('/tenderclarification', [TenderclarificationController::class, 'index'])->name('tenderclarification.index');
-    //Route::get('/tenderclarification/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
+    Route::get('/tenderclarification/pending', [TenderclarificationController::class, 'pending'])->name('tenderclarification.pending');
+    Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
     Route::patch('/tenderclarification/update', [TenderclarificationController::class, 'update'])->name('tenderclarification.update');
     Route::get('/clarifications/edit', [TenderclarificationController::class, 'edit'])->name('tenderclarification.edit');
-    Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
+    Route::post('/tenderclarification/bulk-action', [TenderclarificationController::class, 'bulkAction'])->name('tenderclarification.bulk-action');
 
     //Bid Submission
     // Use resourceful routes for tender submissions. Custom manual view/edit URIs remain below.
@@ -333,6 +333,11 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     // Custom manual routes (unique names) - keep these if you need different URIs for manual submissions
     Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
     Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.manual.edit');
+
+    // Bid Opening Ceremony Routes
+    Route::post('/tender-opening/start-ceremony', [TenderOpeningController::class, 'startCeremony'])->name('tender-opening.start-ceremony');
+    Route::get('/tender-opening/access-documents/{submissionId}', [TenderOpeningController::class, 'accessDocuments'])->name('tender-opening.access-documents');
+    Route::get('/tender-opening/download/{submissionId}/{documentIndex}', [TenderOpeningController::class, 'downloadDocument'])->name('tender-opening.download-document');
 
     //procurement Consolidation
     Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
