@@ -21,7 +21,11 @@ class RFQResponseController extends Controller
     public function create()
     {
         $rfqs = RFQ::where('Status', 'Approved')->get();
-        $currencies = config('app.currencies');
+        // Load currencies from DB, prioritize Ksh first
+        $currencies = \App\Models\Core\Currency::query()
+            ->orderByRaw("CASE WHEN Symbol = 'Ksh' THEN 0 ELSE 1 END")
+            ->orderBy('Name')
+            ->get(['Id','Name','Code','Symbol']);
 
         // Get all unique SupplierIds from the pivot table t_RFQ_Supplier
         $supplierIds = DB::table('t_RFQ_Supplier')->pluck('SupplierId')->unique();
@@ -49,24 +53,42 @@ class RFQResponseController extends Controller
             'TotalPayable' => 'required|numeric|min:0',
         ]);
 
-        $userId = auth()->user()->Id;
+        $userId = \Illuminate\Support\Facades\Auth::user()->Id;
         $supplier = Supplier::findOrFail($request->SupplierId);
+        $supplierName = DB::table('t_Suppliers as s')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->where('s.Id', $request->SupplierId)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('tp.DeletedOn')
+            ->value('tp.TradingName');
 
         $prefix = 'RFQRE-';
         $lastRFQResponse = RFQResponse::where('RFQResponseNumber', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
         $lastNumber = $lastRFQResponse ? intval(substr($lastRFQResponse->RFQResponseNumber, strlen($prefix))) : 0;
         $newRFQResponseNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
-        DB::transaction(function () use ($request, $supplier, $newRFQResponseNumber, $userId) {
+        // Guard: prevent duplicate response for same RFQ + ThirdParty (across any SupplierId rows)
+        $supplierThirdPartyId = DB::table('t_Suppliers')->where('Id', $supplier->Id)->value('ThirdPartyID');
+        $exists = RFQResponse::where('RFQId', $request->RFQId)
+            ->whereIn('SupplierId', function ($q) use ($supplierThirdPartyId) {
+                $q->select('Id')->from('t_Suppliers')->where('ThirdPartyID', $supplierThirdPartyId)->whereNull('DeletedOn');
+            })
+            ->whereNull('DeletedOn')
+            ->exists();
+        if ($exists) {
+            return redirect()->back()->with('error', 'A response from this supplier for the selected RFQ already exists.');
+        }
+
+        DB::transaction(function () use ($request, $supplier, $newRFQResponseNumber, $userId, $supplierName) {
             // Create RFQ Response (header)
             $rfqResponse = RFQResponse::create([
                 'RFQId' => $request->RFQId,
                 'RFQResponseNumber' => $newRFQResponseNumber,
                 'RFQNumber' => $request->RFQNumber,
                 'SupplierId' => $supplier->Id,
-                'SupplierName' => $supplier->SupplierName,
+                'SupplierName' => $supplierName ?? $supplier->SupplierName,
                 'TotalPayable' => $request->TotalPayable,
-                'Currency' => $request->Currency,
+                'Currency' => $request->Currency, // should be value from t_Currencies.Code
                 'DurationDays' => $request->DurationDays,
                 'CreatedBy' => $userId,
                 'ModifiedBy' => $userId,
@@ -120,7 +142,7 @@ class RFQResponseController extends Controller
         $rfqResponse->update([
             'TotalPayable' => $request->TotalPayable,
             'DurationDays' => $request->DurationDays,
-            'ModifiedBy' => auth()->user()->Id,
+            'ModifiedBy' => \Illuminate\Support\Facades\Auth::id(),
         ]);
 
         // Only update editable fields in items
@@ -130,7 +152,7 @@ class RFQResponseController extends Controller
                 $item->update([
                     'QuotedPrice' => $itemData['quotedprice'],
                     'TotalPayable' => $itemData['totalpayable'],
-                    'ModifiedBy' => auth()->user()->Id,
+                    'ModifiedBy' => \Illuminate\Support\Facades\Auth::id(),
                 ]);
             }
         }
@@ -173,28 +195,123 @@ class RFQResponseController extends Controller
 
     public function getSuppliers($rfqId)
     {
-        // Get the RFQ with its associated suppliers
-        $rfq = RFQ::with('suppliers')->find($rfqId);
-
+        // Compute suppliers relevant to this RFQ by mapping RFQ line item categories
+        $rfq = RFQ::with('rfqLines')->find($rfqId);
         if (!$rfq) {
             return response()->json([], 404);
         }
 
-        // Get Supplier IDs that have already responded to this RFQ
-        $alreadyRespondedSupplierIds = RFQResponse::where('RFQId', $rfqId)->pluck('SupplierId')->toArray();
+        // Categories used in this RFQ (from its lines)
+        $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
+        $allCategoryIds = collect();
+        foreach ($itemCategoryIds as $catId) {
+            $cat = \App\Models\Inventory\ItemCategories::find($catId);
+            if ($cat) {
+                $allCategoryIds->push($cat->Id);
+                // include ancestors so if classification includes a parent, subcategory items still qualify
+                $parent = $cat->parent;
+                while ($parent) {
+                    $allCategoryIds->push($parent->Id);
+                    $parent = $parent->parent;
+                }
+            }
+        }
+        // include descendants (BFS) so if a parent item category is mapped, its subcategories are covered
+        $queue = collect($itemCategoryIds);
+        while ($queue->isNotEmpty()) {
+            $currentBatch = $queue->splice(0, 100)->all();
+            $children = DB::table('t_ItemCategories')
+                ->whereIn('ParentId', $currentBatch)
+                ->pluck('Id');
+            $newChildren = $children->diff($allCategoryIds);
+            if ($newChildren->isNotEmpty()) {
+                $allCategoryIds = $allCategoryIds->merge($newChildren);
+                $queue = $queue->merge($newChildren);
+            }
+        }
+        $allCategoryIds = $allCategoryIds->unique()->values();
 
-        // Filter out the already responded suppliers
-        $availableSuppliers = $rfq->suppliers->filter(function ($supplier) use ($alreadyRespondedSupplierIds) {
-            return !in_array($supplier->Id, $alreadyRespondedSupplierIds);
-        });
+        // Exclude suppliers (by ThirdParty) that already responded to this RFQ
+        $respondedThirdPartyIds = DB::table('t_RFQResponse as rr')
+            ->join('t_Suppliers as rs', 'rs.Id', '=', 'rr.SupplierId')
+            ->where('rr.RFQId', $rfqId)
+            ->whereNull('rr.DeletedOn')
+            ->whereNull('rs.DeletedOn')
+            ->pluck('rs.ThirdPartyID');
 
-        // Return the remaining suppliers
-        return response()->json($availableSuppliers->map(function ($supplier) {
-            return [
-                'Id' => $supplier->Id,
-                'SupplierName' => $supplier->SupplierName,
-            ];
-        })->values()); // use ->values() to reset the keys
+        // Map through classification table to suppliers, join t_ThirdParties for display name
+        $suppliers = DB::table('t_Suppliers as s')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->whereNull('s.DeletedOn')
+            ->whereNull('tp.DeletedOn')
+            ->where('s.Active_Status', 1)
+            ->whereNotIn('tp.Id', $respondedThirdPartyIds)
+            ->whereExists(function ($q) use ($allCategoryIds) {
+                $q->select(DB::raw(1))
+                    ->from('t_SupplierCategory_ItemCategory as scic')
+                    ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
+                    ->whereNull('sc.DeletedOn')
+                    ->whereNull('scic.DeletedOn')
+                    ->whereIn('scic.ItemCategoryID', $allCategoryIds)
+                    ->whereColumn('sc.SupplierCategoryID', 's.CategoryId');
+            })
+            // De-duplicate by ThirdParty (one option per supplier); pick a stable SupplierId
+            ->groupBy('tp.Id', 'tp.TradingName')
+            ->select(
+                DB::raw('MIN(s.Id) as Id'),
+                'tp.TradingName as SupplierName'
+            )
+            ->get();
+
+        return response()->json($suppliers);
+    }
+
+    public function findExisting(Request $request)
+    {
+        $rfqId = (int) $request->query('rfqId');
+        $supplierId = (int) $request->query('supplierId');
+
+        if (!$rfqId || !$supplierId) {
+            return response()->json(['exists' => false]);
+        }
+
+        // Find ThirdParty of the selected supplier
+        $thirdPartyId = DB::table('t_Suppliers')->where('Id', $supplierId)->value('ThirdPartyID');
+        if (!$thirdPartyId) {
+            return response()->json(['exists' => false]);
+        }
+
+        $existing = RFQResponse::with('items')
+            ->where('RFQId', $rfqId)
+            ->whereIn('SupplierId', function ($q) use ($thirdPartyId) {
+                $q->select('Id')->from('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->whereNull('DeletedOn');
+            })
+            ->whereNull('DeletedOn')
+            ->orderByDesc('Id')
+            ->first();
+
+        if (!$existing) {
+            return response()->json(['exists' => false]);
+        }
+
+        return response()->json([
+            'exists' => true,
+            'header' => [
+                'currency' => $existing->Currency,
+                'durationDays' => (int) ($existing->DurationDays ?? 0),
+                'status' => $existing->Status ?? null,
+                'submittedOn' => $existing->SubmittedOn ? \Illuminate\Support\Carbon::parse($existing->SubmittedOn)->toISOString() : null,
+            ],
+            'items' => $existing->items->map(function ($it) {
+                return [
+                    'name' => $it->ItemName,
+                    'uom' => $it->UOM,
+                    'quantity' => (float) $it->Quantity,
+                    'quotedPrice' => (float) $it->QuotedPrice,
+                    'totalPayable' => (float) $it->TotalPayable,
+                ];
+            }),
+        ]);
     }
 
     public function getRFQResponses($rfqId)

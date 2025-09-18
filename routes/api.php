@@ -15,6 +15,7 @@ use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
+use App\Http\Controllers\API\Procurement\SupplierRFQController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -238,6 +239,13 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
+
+        // Supplier RFQ endpoints (supplier portal)
+        Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
+        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation']);
+        Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
+        Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
+        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications']);
     });
 
 // Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage

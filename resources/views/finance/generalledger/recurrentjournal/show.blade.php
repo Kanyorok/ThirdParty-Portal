@@ -13,7 +13,10 @@
                 </div>
 
                 <!-- Right side -->
-                <div class="text-end">
+                <div class="text-end d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print
+                    </button>
                     Approval Status:
                     @if($journalEntry->ApprovalStatus == 'posted')
                         <span class="badge bg-success">Approved</span>

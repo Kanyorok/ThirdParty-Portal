@@ -179,6 +179,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::delete('/rfqresponses/{id}', [RFQResponseController::class, 'destroy'])->name('rfqresponses.destroy');
     Route::get('/rfq-responses/{rfqId}', [RFQEvaluationController::class, 'getRFQResponses'])->name('rfq.responses');
     Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
+    Route::get('/rfqresponses/find-existing', [RFQResponseController::class, 'findExisting']);
 
     // RFQ Evaluation routes
     Route::get('/rfq-evaluations', [RFQEvaluationController::class, 'index'])->name('evaluations.index');
@@ -215,9 +216,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('bidevaluation', BidEvaluationController::class);
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
-    Route::resource('procurementreports', ProcurementReportsController::class);
-    Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
-    Route::resource('bidscores', BidScoreConsolidationController::class);
+    Route::get('bidscores/{tenderId}/{supplierId}/drilldown', [BidScoreConsolidationController::class, 'show'])->name('bidscores.drilldown');
     Route::resource('procurementreports', ProcurementReportsController::class);
 
     //Tender Creteria setup

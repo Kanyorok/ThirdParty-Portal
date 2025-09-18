@@ -163,3 +163,22 @@ function rejectAllBids() {
 }
 </script>
 @endsection
+
+@push('styles')
+<style>
+    .table thead th {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .badge.fs-6 {
+        font-size: 1rem !important;
+        padding: 0.5rem;
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+@endpush

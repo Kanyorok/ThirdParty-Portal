@@ -24,7 +24,6 @@ class Supplier extends ThirdParties
         'ThirdPartyID',
         'RoundID',
     'CategoryId',
-        'IsPrequalified',
         'Active_Status',
         'SupplierCategoryID',
         'CreatedBy',
@@ -35,7 +34,6 @@ class Supplier extends ThirdParties
     ];
 
     protected $casts = [
-        'IsPrequalified' => 'boolean',
     'Active_Status' => 'boolean',
     'CategoryId' => 'integer',
     ];
@@ -81,11 +79,10 @@ class Supplier extends ThirdParties
 
     public function scopeApprovedAndPrequalified($query)
     {
-        // Simplified: treat Active_Status true & IsPrequalified true as approved
-        return $query
-            ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
-            ->where('IsPrequalified', true)
-            ->where('Active_Status', 1);
+    // Treat Active_Status true as approved/active supplier row for the round/category
+    return $query
+        ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
+        ->where('Active_Status', 1);
     }
 
     /**
