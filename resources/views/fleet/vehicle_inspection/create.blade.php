@@ -120,11 +120,6 @@
                 <label class="form-label">Coolant (L)</label>
                 <input type="number" step="0.01" name="Coolant" class="form-control" value="{{ old('Coolant') }}" required>
             </div>
-            <div class="col-md-4">
-                <label class="form-label">Speedometer (Km/h)</label>
-                <input type="number" name="Speedometer" class="form-control" value="{{ old('Speedometer') }}" required>
-            </div>
-        </div>
 
         {{-- Safety Equipment --}}
         <div class="row mt-4">
