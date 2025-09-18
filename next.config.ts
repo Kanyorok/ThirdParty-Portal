@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Produce standalone output for Docker multi-stage COPY (.next/standalone)
+  output: "standalone",
   // Skip ESLint during production builds
   eslint: {
     ignoreDuringBuilds: true,
