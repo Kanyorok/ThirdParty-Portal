@@ -7,6 +7,7 @@ use App\Enums\ThirdPartyStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\BusinessTypeEnum;
 
@@ -29,6 +30,7 @@ class ThirdParties extends Model
         'TaxPIN',
         'VATNumber',
         'Country',
+        'CountryId',
         'PhysicalAddress',
         'Email',
         'Phone',
@@ -104,6 +106,11 @@ class ThirdParties extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(SupplierCategory::class, 't_ThirdParty_SupplierCategory', 'third_party_id', 'supplier_category_id');
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Core\Country::class, 'CountryId', 'Id');
     }
 
     // New pivot relationship to multiple types

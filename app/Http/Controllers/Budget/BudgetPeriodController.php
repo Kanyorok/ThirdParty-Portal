@@ -95,16 +95,16 @@ class BudgetPeriodController extends Controller
             'FiscalYear' => 'required|integer|min:2020|max:2100',
             'From' => 'required|date',
             'To' => 'required|date|after_or_equal:From',
-            'Notes' => 'nullable|string|max:1000',
+            'Notes' => 'required|string|max:1000',
             'selected_gls' => [
-                'required',
+                'nullable',
                 'string',
-                function ($attribute, $value, $fail) {
-                    $gls = json_decode($value, true);
-                    if (!is_array($gls) || empty($gls)) {
-                        $fail('At least one GL account must be selected.');
-                    }
-                },
+//                function ($attribute, $value, $fail) {
+//                    $gls = json_decode($value, true);
+//                    if (!is_array($gls) || empty($gls)) {
+//                        $fail('At least one GL account must be selected.');
+//                    }
+//                },
             ],
         ]);
         DB::beginTransaction();
@@ -123,20 +123,24 @@ class BudgetPeriodController extends Controller
             ]);
 
             // Handle selected GLs
-            $selectedGls = json_decode($validated['selected_gls'], true);
-            foreach ($selectedGls as $gl) {
-                BudgetGLsAttachments::create([
-                    'BudgetID' => $budget->Id,
-                    'GLID' => $gl['AccountID'], // Assuming AccountID maps to BudgetGLID
-                    'AccountID' => $gl['AccountID'],
-                    'Description' => $gl['Description'] ?? null,
-                    'GLAccountTypeID' => $gl['GLAccountTypeID'],
-                    'CreatedBy' => Auth::id(),
-                    'CreatedOn' => now(),
-                    'ModifiedBy' => Auth::id(),
-                    'ModifiedOn' => now(),
-                ]);
+            $selectedGls = json_decode($validated['selected_gls'] ?? '[]', true);
+
+            if (!empty($selectedGls)) {
+                foreach ($selectedGls as $gl) {
+                    BudgetGLsAttachments::create([
+                        'BudgetID'        => $budget->Id,
+                        'GLID'            => $gl['AccountID'] ?? null, // fallback if missing
+                        'AccountID'       => $gl['AccountID'] ?? null,
+                        'Description'     => $gl['Description'] ?? null,
+                        'GLAccountTypeID' => $gl['GLAccountTypeID'] ?? null,
+                        'CreatedBy'       => Auth::id(),
+                        'CreatedOn'       => now(),
+                        'ModifiedBy'      => Auth::id(),
+                        'ModifiedOn'      => now(),
+                    ]);
+                }
             }
+
 
 
             activity()

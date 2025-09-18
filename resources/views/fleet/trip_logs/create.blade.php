@@ -46,11 +46,13 @@
             {{-- Trip Code --}}
             <div class="col-md-4" id="tripCodeContainer">
                 <label for="TripCode" class="form-label">Trip Code</label>
-                <select name="TripCode" id="TripCode" class="form-select" {{ $tripLog ? 'disabled' : '' }}>
+                <select name="TripCode" id="TripCode" class="form-select" {{ $parentTrip ? 'disabled' : '' }}>
                     <option value="">-- Select Trip Code --</option>
                 </select>
-                @if ($tripLog)
-                    <input type="hidden" name="TripCode" value="{{ $tripLog->TripCode }}">
+                @if ($parentTrip)
+                    <input type="text" class="form-control" 
+                        value="{{ $parentTrip->tripCodeRelation->Code ?? $parentTrip->TripCode }}" readonly>
+                    <input type="hidden" name="TripCode" value="{{ $parentTrip->TripCode }}">
                 @endif
             </div>
 
@@ -279,6 +281,8 @@ tripCodeSelect.addEventListener('change', function () {
  * Add a child trip row
  */
 function addChildTripRow(index, activity = {}) {
+    const selectedTripTypeText = tripTypeSelect.options[tripTypeSelect.selectedIndex]?.text || '';
+
     const wrapper = document.createElement('div');
     wrapper.classList.add('child-trip-row', 'p-3', 'mb-3', 'border', 'rounded');
 
@@ -318,7 +322,7 @@ function addChildTripRow(index, activity = {}) {
             <div class="col-md-4">
                 <label class="form-label">Purpose</label>
                 <input type="text" name="childTrips[${index}][Purpose]" class="form-control" 
-                    value="${activity.Purpose ?? 'Marketing Campaign'}">
+                    value="${activity.Purpose ?? selectedTripTypeText}">
             </div>
             <div class="col-md-8">
                 <label class="form-label">Notes</label>
@@ -331,6 +335,7 @@ function addChildTripRow(index, activity = {}) {
     wrapper.querySelector('.remove-child').addEventListener('click', () => wrapper.remove());
     childTripsContainer.appendChild(wrapper);
 }
+
 
 // Manual add button (empty child trip)
 addChildTripBtn?.addEventListener('click', () => {

@@ -20,24 +20,31 @@
             {{-- <th>Actions</th>  --}}
           </tr>
         </thead>
-        <tbody>
-          @foreach ($data as $item)
-            <tr>
-              <td>{{ $loop->iteration }}.</td>
-              <td class="text-break">{{ $item['Code'] }}</td>
-              <td class="text-break">{{ $item['Name'] }}</td>
-              <td class="text-break">{{ $item['Type'] }}</td>
-              <td class="text-break">{{ $item['GLCode'] }}</td>
-              {{-- <td><span class="badge bg-success">Yes</span></td> --}}
-              <td><span class="badge bg-primary">Active</span></td>
-              <td>
-                {{-- <button class="btn btn-sm btn-outline-info">👁 View</button> --}}
-              </td>
-            </tr>
-          @endforeach
-        </tbody>
+          <tbody>
+          @forelse ($data as $item)
+              <tr>
+                  <td>{{ ($products->currentPage() - 1) * $products->perPage() + $loop->iteration }}.</td>
+                  <td class="text-break">{{ $item['Code'] }}</td>
+                  <td class="text-break">{{ $item['Name'] }}</td>
+                  <td class="text-break">{{ $item['Type'] }}</td>
+                  <td class="text-break">{{ $item['GLCode'] }}</td>
+                  <td><span class="badge bg-primary">Active</span></td>
+              </tr>
+          @empty
+              <tr>
+                  <td colspan="6" class="text-center text-muted">
+                      No products available.
+                  </td>
+              </tr>
+          @endforelse
+          </tbody>
+
       </table>
     </div>
+
+      <div class="d-flex justify-content-center mt-3">
+          {{ $products->links() }}
+      </div>
   </div>
 @endsection
 

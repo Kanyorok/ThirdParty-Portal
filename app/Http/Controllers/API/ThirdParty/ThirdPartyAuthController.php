@@ -53,11 +53,16 @@ class ThirdPartyAuthController extends Controller
                 ]);
             }
 
-            if (! $user->isApproved()) {
-                return response()->json([
-                    'message' => __('auth.acc_not_approved')
-                ], 403);
+            // Enforce account status BEFORE creating token
+            if (! $user->isActive()) {
+                return response()->json(['message' => __('auth.account_inactive')], 403);
             }
+            if (! $user->isApproved()) {
+                return response()->json(['message' => __('auth.acc_not_approved')], 403);
+            }
+
+            // Optional: single-session behavior
+            $user->tokens()->delete();
 
             $token = $user->createToken('api')->plainTextToken;
 
@@ -74,6 +79,29 @@ class ThirdPartyAuthController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
+    }
+
+    // Token validation for SPA
+    public function validateToken(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['valid' => false], 401);
+        }
+        $isActive = $user->isActive();
+        $isApproved = $user->isApproved();
+        if (!$isActive || !$isApproved) {
+            return response()->json(['valid' => false], 403);
+        }
+        return response()->json([
+            'valid' => true,
+            'user' => [
+                'id' => $user->getAuthIdentifier(),
+                'email' => $user->Email,
+                'isActive' => $isActive,
+                'isApproved' => $isApproved,
+            ],
+        ]);
     }
 
     public function logout(Request $request): JsonResponse

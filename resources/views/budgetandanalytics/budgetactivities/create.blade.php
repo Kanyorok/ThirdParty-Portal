@@ -3,7 +3,6 @@
 @section('content')
     @if ($errors->any())
         <div class="alert alert-danger">
-            <strong>There were some errors with your submission:</strong>
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -35,20 +34,24 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Budget</label>
                             <select name="BudgetID" class="form-select" required>
-                                <option disabled selected required>-- Select Budget --</option>
+                                <option disabled value="">-- Select Budget --</option>
                                 @foreach ($budgets as $item)
-                                    <option value="{{ $item->Id }}">{{ $item->Name }}</option>
+                                    <option value="{{ $item->Id }}" {{ old('BudgetID') == $item->Id ? 'selected' : '' }}>
+                                        {{ $item->Name }}
+                                    </option>
                                 @endforeach
                             </select>
-                            @error('BudgetLineID') <small class="text-danger">{{ $message }}</small> @enderror
+                            @error('BudgetID') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Budget Line</label>
                             <select name="BudgetLineID" class="form-select" id="budgetLineSelect" required>
-                                <option disabled selected>-- Select Budget Line --</option>
+                                <option disabled {{ old('BudgetLineID') ? '' : 'selected' }}>-- Select Budget Line --</option>
                                 @foreach ($budgetLines as $item)
-                                    <option value="{{ $item->Id }}">{{ $item->LineName }}</option>
+                                    <option value="{{ $item->Id }}" {{ old('BudgetLineID') == $item->Id ? 'selected' : '' }}>
+                                        {{ $item->LineName }}
+                                    </option>
                                 @endforeach
                             </select>
                             @error('BudgetLineID') <small class="text-danger">{{ $message }}</small> @enderror
@@ -56,8 +59,9 @@
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Activity</label>
-                            <select name="ActivityID" id="activitySelect" class="form-select" required disabled>
-                                <option selected disabled>-- Select Activity --</option>
+                            <select name="ActivityID" id="activitySelect" class="form-select" required {{ old('BudgetLineID') ? '' : 'disabled' }}>
+                                <option disabled {{ old('ActivityID') ? '' : 'selected' }}>-- Select Activity --</option>
+                                {{-- If you want activities to reload via JS, you’ll keep them empty --}}
                             </select>
                             <div id="activity-loading" class="form-text text-muted d-none">Loading activities...</div>
                             @error('ActivityID') <small class="text-danger">{{ $message }}</small> @enderror
@@ -66,75 +70,65 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Allocation Type</label>
                             <select name="AllocationType" class="form-select" id="allocationType" required>
-                                <option disabled selected>-- Select allocation type --</option>
-{{--                                <option value="full">Annual or Full Allocation</option>--}}
-                                <option value="monthly">Monthly Allocation</option>
+                                <option value="" selected>-- Select allocation type --</option>
+{{--                                <option value="full" {{ old('AllocationType') == 'full' ? 'selected' : '' }}>Annual or Full Allocation</option>--}}
+                                <option value="monthly" {{ old('AllocationType') == 'monthly' ? 'selected' : '' }}>Monthly Allocation</option>
                             </select>
                             @error('AllocationType') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
 
-                        {{-- <div class="col-md-6 mb-3">
-                            <label class="form-label">Branch</label>
-                            <select name="BranchID" class="form-select" required>
-                                <option disabled selected>--Select Branch --</option>
-                                @foreach ($branches as $item)
-                                    <option value="{{ $item->Id }}">{{ $item->Name }}</option>
-                                @endforeach
-                            </select>
-                            @error('BranchID') <small class="text-danger">{{ $message }}</small> @enderror
-                        </div> --}}
-
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Description</label>
                             <textarea name="Description" class="form-control" rows="3"
-                                      placeholder="Brief description..." required></textarea>
+                                      placeholder="Brief description..." required>{{ old('Description') }}</textarea>
                             @error('Description') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
                     </div>
 
                     <!-- Full Allocation Fields -->
-        <div id="fullAllocationSection" class="mb-3" style="display:none;">
-            <h6>Full Allocation (KES)</h6>
-            <input type="number" name="FullAllocation" min="0" class="form-control" placeholder="0.00">
-            @error('FullAllocation') <small class="text-danger">{{ $message }}</small> @enderror
-        </div>
-
-        <!-- Monthly Allocation Fields -->
-        <div id="monthlyAllocationSection" style="display:none;">
-            <h6>Monthly Allocation(s)</h6>
-            <div class="row">
-                @php
-                    $months = range(1, 12); // Generates [1, 2, ..., 12]
-                @endphp
-
-                @foreach($months as $key)
-                    <div class="col-md-3 mb-2">
-                        <label>Month {{ $key }}</label>
-                        <input type="number" value="0.00" min="0" name="monthly_allocations[{{ $key }}]"
-                               class="form-control" placeholder="0.00" step="0.01">
+                    <div id="fullAllocationSection" class="mb-3" style="display:none;">
+                        <h6>Full Allocation (KES)</h6>
+                        <input type="number" name="FullAllocation" min="0" class="form-control"
+                               placeholder="0.00" value="{{ old('FullAllocation') }}">
+                        @error('FullAllocation') <small class="text-danger">{{ $message }}</small> @enderror
                     </div>
-                @endforeach
-            </div>
-            @error('monthly_allocations') <small class="text-danger">{{ $message }}</small> @enderror
-            <div class="mt-3">
-                <strong>Total Allocation:</strong> <span id="totalAllocation" class=" text-danger">0.00</span>
-            </div>
-        </div>
 
+                    <!-- Monthly Allocation Fields -->
+                    <div id="monthlyAllocationSection" style="display:none;">
+                        <h6>Monthly Allocation(s)</h6>
+                        <div class="row">
+                            @php
+                                $months = range(1, 12);
+                            @endphp
 
-        <!-- Submit Button (initially hidden) -->
-        <div class="text-end mt-4" id="submitButtonContainer" style="display:none;">
+                            @foreach($months as $key)
+                                <div class="col-md-3 mb-2">
+                                    <label>Month {{ $key }}</label>
+                                    <input type="number" min="0" step="0.01"
+                                           name="monthly_allocations[{{ $key }}]"
+                                           class="form-control"
+                                           placeholder="0.00"
+                                           value="{{ old('monthly_allocations.'.$key, '0.00') }}">
+                                </div>
+                            @endforeach
+                        </div>
+                        @error('monthly_allocations') <small class="text-danger">{{ $message }}</small> @enderror
+                        <div class="mt-3">
+                            <strong>Total Allocation:</strong> <span id="totalAllocation" class="text-danger">0.00</span>
+                        </div>
+                    </div>
 
-            <button class="btn btn-secondary">
-                <a href="{{ route('budgetactivities.index') }}" class="float-end text-white">← Back to
-                    Activities</a>
-            </button>
+                    <!-- Submit Button (initially hidden) -->
+                    <div class="text-end mt-4" id="submitButtonContainer" style="display:none;">
+                        <button class="btn btn-secondary">
+                            <a href="{{ route('budgetactivities.index') }}" class="float-end text-white">← Back to Activities</a>
+                        </button>
 
-            <button type="submit" class="btn btn-success"
-                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
-                💾 Save Activity
-            </button>
-        </div>
+                        <button type="submit" class="btn btn-success"
+                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
+                            💾 Save Activity
+                        </button>
+                    </div>
                 </form>
 
             </div>

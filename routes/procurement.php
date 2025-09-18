@@ -30,6 +30,7 @@ use App\Http\Controllers\Procurement\PlanvsActualController;
 use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvalAprovalController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
 use App\Http\Controllers\Procurement\PrequalificationPeriodController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
@@ -410,13 +411,26 @@ Route::get('preqcriteria/edit/{Id}', [PrequalificationCriteriaSetupController::c
 Route::put('preqcriteria/update/{id}', [PrequalificationCriteriaSetupController::class, 'update'])->name('preqcriteria.update');
 Route::delete('preqcriteria/destroy/{id}', [PrequalificationCriteriaSetupController::class, 'destroy'])->name('preqcriteria.destroy');
 
-// Removed this; kinda rendundant
-// Route::resource('supplierslist', SupplierListingController::class);
+// Prequalification Routes (ModuleIDs 303200-303240)
+Route::prefix('prequalification')->name('prequalification.')->group(function () {
+    // Prequalification Rounds (ModuleID 303210)
+    Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+    Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+    
+    // Supplier Applications (ModuleID 303230)
+    Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+    
+    // Evaluation & Approval (ModuleID 303240) - handled by existing preqevaluation routes below
+});
 
-// Route::resource('preqapplications', PrequalificationApplicationsController::class);
-Route::resource('preqevaluation', PrequalificationEvaluationController::class);
-Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
-Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
+// Evaluator Routes (for ModuleID 303240)
+Route::middleware('role:evaluator')->group(function () {
+    Route::controller(PrequalificationEvaluationController::class)->group(function () {
+        Route::post('evaluator/evaluations', 'store');
+    });
+});
+
+// Removed this; kinda rendundant
 // Route::resource('supplierslist', SupplierListingController::class);
 
 // Route::resource('preqapplications', PrequalificationApplicationsController::class);

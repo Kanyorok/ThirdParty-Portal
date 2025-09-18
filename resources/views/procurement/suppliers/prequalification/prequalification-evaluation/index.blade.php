@@ -69,13 +69,20 @@
 @endsection
 
 @section('scripts')
+@php
+    $singlePrequalifyTemplate = Route::has('prequalification.prequalification-evaluation.prequalify.single')
+        ? route('prequalification.prequalification-evaluation.prequalify.single', [
+            'roundId' => '__RID__',
+            'thirdPartyId' => '__TPID__',
+            'categoryId' => '__CID__',
+        ])
+        : '#';
+@endphp
+
 <script>
 let passedDt = null, failedDt = null;
 
-// Precompute base URLs safely; if a named route is missing, fall back to '#'
-const SINGLE_PREQUALIFY_TEMPLATE = @json(\Illuminate\Support\Facades\Route::has('prequalification.prequalification-evaluation.prequalify.single')
-    ? route('prequalification.prequalification-evaluation.prequalify.single', ['roundId'=>'__RID__','thirdPartyId'=>'__TPID__'])
-    : '#');
+const SINGLE_PREQUALIFY_TEMPLATE = @json($singlePrequalifyTemplate);
 
 function buildColumns() {
     return [
@@ -92,17 +99,26 @@ function buildColumns() {
 function actionButtons(row) {
     const viewUrl = `{{ route('prequalification.prequalification-evaluation.results', '__ID__') }}`.replace('__ID__', row.application_id);
     const evalUrl = `{{ route('prequalification.prequalification-evaluation.show', '__ID__') }}`.replace('__ID__', row.application_id);
-    const singleUrl = SINGLE_PREQUALIFY_TEMPLATE.replace('__RID__', row.round_id).replace('__TPID__', row.supplier_id);
+    const singleUrl = SINGLE_PREQUALIFY_TEMPLATE
+        .replace('__RID__', row.round_id)
+        .replace('__TPID__', row.supplier_id)
+        .replace('__CID__', row.category_id);
+
     let buttons = '';
+    
     if (row.decision) {
-        buttons += `<a href="${viewUrl}" class="btn btn-sm btn-info text-white me-1"><i class='fas fa-eye'></i></a>`;
+        buttons += `<a href="${viewUrl}" class="btn btn-sm btn-info text-white me-1" title="View Results"><i class='fas fa-eye'></i></a>`;
     } else {
-        buttons += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1"><i class='fas fa-edit'></i></a>`;
+        buttons += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1" title="Evaluate Application"><i class='fas fa-edit'></i></a>`;
     }
+    
     if (row.prequalify_allowed) {
-    const prequalifyTitle = (row.decision === 'Passed') ? 'Prequalify' : 'Force Prequalify';
-    buttons += `<form method='POST' action='${singleUrl}' class='d-inline prequalify-single-form'>@csrf<button type='submit' class='btn btn-sm btn-success' title='${prequalifyTitle}'><i class="fas fa-check"></i></button></form>`;
+        const prequalifyTitle = (row.decision === 'Passed') ? 'Prequalify Supplier' : 'Force Prequalify Supplier';
+        buttons += `<form method='POST' action='${singleUrl}' class='d-inline prequalify-single-form'>@csrf<button type='submit' class='btn btn-sm btn-success' title='${prequalifyTitle}'><i class="fas fa-check"></i></button></form>`;
+    } else {
+        buttons += `<span class="btn btn-sm btn-secondary disabled" title="Already Prequalified"><i class="fas fa-check-circle"></i></span>`;
     }
+    
     return buttons;
 }
 

@@ -31,7 +31,7 @@ Route::prefix('prequalification')
                 ->name('prequalification-evaluation.submit');
             Route::post('rounds/{roundId}/prequalify/bulk', 'bulkPrequalify')
                 ->name('prequalification-evaluation.prequalify.bulk');
-            Route::post('rounds/{roundId}/prequalify/{thirdPartyId}', 'prequalifySupplier')
+            Route::post('rounds/{roundId}/prequalify/{thirdPartyId}/{categoryId}', 'prequalifySupplier')
                 ->name('prequalification-evaluation.prequalify.single');
             Route::post('rounds/expire/run', 'expireRounds')
                 ->name('prequalification-evaluation.rounds.expire');

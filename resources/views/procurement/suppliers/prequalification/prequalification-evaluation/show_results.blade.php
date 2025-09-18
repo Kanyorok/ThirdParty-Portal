@@ -43,10 +43,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th>CRITERIA</th>
-                                <th class="text-center" style="width:10%">RAW (0-10)</th>
-                                <th class="text-center" style="width:12%">CRITERION SHARE (%)</th>
-                                <th class="text-center" style="width:12%">WEIGHTED (%)</th>
-                                <th class="text-center" style="width:25%">REMARKS</th>
+                                <th class="text-center" style="width:15%">RAW (0-10)</th>
+                                <th class="text-center" style="width:20%">CRITERION SHARE (%)</th>
+                                <th class="text-center" style="width:20%">WEIGHTED (%)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -56,7 +55,6 @@
                                     <td class="text-center">{{ number_format($criteria['score'], 2) }}</td>
                                     <td class="text-center">{{ number_format($criteria['criterionWeightShare'], 2) }}%</td>
                                     <td class="text-center fw-semibold">{{ number_format($criteria['weightedScore'], 2) }}%</td>
-                                    <td>{{ $criteria['remarks'] }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -64,7 +62,6 @@
                             <tr class="table-secondary">
                                 <th colspan="3" class="text-end">Section Total</th>
                                 <th class="text-center">{{ number_format($section['sectionScore'], 2) }}%</th>
-                                <th></th>
                             </tr>
                         </tfoot>
                     </table>

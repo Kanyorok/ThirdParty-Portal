@@ -43,6 +43,7 @@ class UpdateThirdPartyUserProfileRequest extends FormRequest
             ],
             'vatNumber' => ['nullable', 'string', 'max:50'],
             'country' => ['nullable', 'string', 'max:100'],
+            'countryId' => ['nullable', 'integer', 'exists:t_Countries,Id'],
             'physicalAddress' => ['nullable', 'string', 'max:500'],
             'website' => ['nullable', 'url', 'max:255'],
         ];

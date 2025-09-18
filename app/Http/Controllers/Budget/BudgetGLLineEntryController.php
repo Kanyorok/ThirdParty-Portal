@@ -25,7 +25,7 @@ class BudgetGLLineEntryController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetManualEntry::class);
 
         $entries = BudgetManualEntry::with([
-            'budget:Id,Name',
+            'budget:Id,Name,Status',
             'budgetLine:Id,LineName',])
             ->get();
 
@@ -37,7 +37,7 @@ class BudgetGLLineEntryController extends Controller
     public function create()
     {
 
-        $budgets = Budget::select('Id', 'Name','From','To')->get();
+        $budgets = Budget::select('Id', 'Name','From','To')->where('Status','draft')->get();
         $branches = Branch::select('Id', 'Name')->get();
         //Pick budgetlines that have activities only.
         $checkIds = BudgetActivityMaster::query()
