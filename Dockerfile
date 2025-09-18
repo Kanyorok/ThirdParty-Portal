@@ -9,8 +9,8 @@ ARG SANCTUM_STATEFUL_DOMAINS
 
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package.json package-lock.json* ./
+# Copy package file and install dependencies (ignore lockfile to avoid corruption issues)
+COPY package.json ./
 
 # Use npm install instead of npm ci to handle lock file mismatches
 RUN npm install --legacy-peer-deps
