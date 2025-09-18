@@ -3,63 +3,167 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\FleetManagement\FleetVehicleAssignmentRequest;
+use App\Services\FleetManagement\FleetVehicleAssignmentService;
+use App\Models\Fleet\FleetVehicleAssignment;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetVehicleInspection;
+use App\Models\HRM\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetVehicleAssignment;
-use App\Models\Branch;
-use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use App\Models\Auth\User;
 
 class FleetVehicleAssignmentController extends Controller
 {
+    protected FleetVehicleAssignmentService $service;
+
+    public function __construct(FleetVehicleAssignmentService $service)
+    {
+        $this->service = $service;
+        
+    }
+
+    /** Show all assignments */
     public function index()
     {
-        $assignments = FleetVehicleAssignment::with(['vehicle', 'user', 'branch', 'assignedBy'])
-            ->orderByDesc('AssignmentDate')
+        $assignments = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
+            ->orderByDesc('CreatedOn')
             ->get();
 
-        return view('fleet.assignments.index', compact('assignments'));
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');    
+
+        return view('fleet.assignments.index', compact('assignments','assigners'));
     }
 
-    public function create($id)
+    /** Show create form */
+    public function create()
     {
-        $vehicles = FleetVehicle::all();
-        $branches = Branch::all(); // No IsActive filter
-        $users = User::all(); // You may filter based on roles or branch
+        $fleetVehicles = FleetVehicle::all();
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
+        $fleetTrips = FleetTripLog::all();
+        $fleetInspections = FleetVehicleInspection::all();
 
-        return view('fleet.assignments.create', compact('vehicles', 'branches', 'users'));
+        return view('fleet.assignments.create', compact('fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
     }
 
-    public function show()
+    /** Store a new assignment */
+    public function store(FleetVehicleAssignmentRequest $request)
     {
+        try {
+            $this->service->create($request->validated());
 
+            return redirect()->route('fleet.assignments.index')
+                ->with('success', 'Vehicle assignment created successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
+        }
     }
 
-    public function store(Request $request)
+    /** Show a single assignment */
+    public function show($id)
     {
-        $validated = $request->validate([
-            'VehicleID' => 'required|exists:t_FleetVehicles,VehicleID',
-            'AssignedBranchID' => 'nullable|exists:t_Branches,ID',
-            'AssignedToUserID' => 'nullable|exists:users,id',
-            'AssignmentDate' => 'required|date',
-            'Purpose' => 'nullable|string|max:255',
-            'Notes' => 'nullable|string|max:500',
-        ]);
+        $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
+            ->where('Id', $id)
+            ->firstOrFail();
 
-        FleetVehicleAssignment::create([
-            ...$validated,
-            'AssignedBy' => Auth::id(),
-            'CreatedOn' => now(),
-        ]);
-
-        // Optional: update live assignment in FleetVehicles table
-        FleetVehicle::where('VehicleID', $validated['VehicleID'])->update([
-            'AssignedBranchID' => $validated['AssignedBranchID'],
-            'AssignedToUserID' => $validated['AssignedToUserID'],
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
-
-        return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle reassigned successfully.');
+        return view('fleet.assignments.show', compact('assignment'));
     }
+
+    /** Show edit form */
+   public function edit($id)
+    {
+        $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
+            ->where('Id', $id)
+            ->firstOrFail();
+
+        $fleetVehicles = FleetVehicle::all();
+            $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+                ->pluck('name', 'Id');
+            $fleetTrips = FleetTripLog::all();
+            $fleetInspections = FleetVehicleInspection::all();
+
+        return view('fleet.assignments.edit', compact('assignment', 'fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
+    }
+
+
+    /** Update an assignment */
+    public function update(FleetVehicleAssignmentRequest $request, $id)
+{
+    try {
+        $assignment = FleetVehicleAssignment::findOrFail($id);
+
+        $this->service->update($assignment, $request->validated());
+
+        return redirect()->route('fleet.assignments.index')
+            ->with('success', 'Vehicle assignment updated successfully.');
+    } catch (\Exception $e) {
+        return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
+    }
+}
+
+
+    /** Delete an assignment */
+    public function destroy($id)
+    {
+        $assignments = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
+            ->findOrFail($id);
+
+        $this->service->delete($assignments);
+
+        return redirect()->route('fleet.assignments.index')->with('success', 'Vehicle assignment deleted successfully.');
+    }
+
+
+    
+    /* ------------------ AJAX HELPERS ------------------ */
+
+    public function getVehiclesByTrip($Id)
+    {
+        $trip = FleetTripLog::findOrFail($Id);
+        $vehicles = FleetVehicle::where('VehicleType', $trip->VehicleType)->get();
+
+        return response()->json([
+            'fleetVehicleType' => $trip->VehicleType,
+            'vehicles' => $vehicles,
+            'tripDate' => $trip->TripStartDate
+
+        ]);
+    }
+
+    /** Get latest inspection for vehicle */
+    public function getVehicleInspection($Id)
+    {
+        $lastInspection = FleetVehicleInspection::where('VehicleID', $Id)
+            ->orderByDesc('InspectionDate')
+            ->first();
+
+        return response()->json([
+            'lastInspectionDate' => $lastInspection?->InspectionDate
+        ]);
+    }
+
+public function getVehicleDriver($Id)
+{
+    $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
+        ->whereNull('DeletedOn')
+        ->latest('AssignmentDate')
+        ->first();
+
+    if (!$driverAssignment) {
+        $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
+            ->whereNull('DeletedOn')
+            ->latest('AssignmentDate')
+            ->first();
+    }
+
+    return response()->json([
+        'driverId'   => $driverAssignment?->DriverID,
+        'driverName' => $driverAssignment?->driver?->FullName, 
+    ]);
+}
+
 }
