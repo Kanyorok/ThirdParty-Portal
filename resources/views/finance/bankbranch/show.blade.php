@@ -15,8 +15,10 @@
                 <dt class="col-md-3">Branch Code</dt><dd class="col-md-9">{{ $branch->BranchCode ?? '—' }}</dd>
                 <dt class="col-md-3">Address1</dt><dd class="col-md-9">{{ $branch->Address1 ?? '—' }}</dd>
                 <dt class="col-md-3">Address2</dt><dd class="col-md-9">{{ $branch->Address2 ?? '—' }}</dd>
-                <dt class="col-md-3">City ID</dt><dd class="col-md-9">{{ $branch->CityID ?? '—' }}</dd>
-                <dt class="col-md-3">Country ID</dt><dd class="col-md-9">{{ $branch->CountryID ?? '—' }}</dd>
+                <dt class="col-md-3">City</dt><dd class="col-md-9">{{ $branch->city?->Name ?? '—' }}</dd>
+                <dt class="col-md-3">Country</dt><dd class="col-md-9">{{ $branch->country?->Name ?? '—' }}</dd>
+                <dt class="col-md-3">Created By</dt><dd class="col-md-9">{{ $branch->createdByUser?->Name ?? ($branch->CreatedBy ?? '—') }}</dd>
+                <dt class="col-md-3">Modified By</dt><dd class="col-md-9">{{ $branch->modifiedByUser?->Name ?? ($branch->ModifiedBy ?? '—') }}</dd>
                 <dt class="col-md-3">Zip Code</dt><dd class="col-md-9">{{ $branch->ZipCode ?? '—' }}</dd>
                 <dt class="col-md-3">Phone</dt><dd class="col-md-9">{{ $branch->Phone ?? '—' }}</dd>
                 <dt class="col-md-3">Email</dt><dd class="col-md-9">{{ $branch->EmailID ?? '—' }}</dd>
