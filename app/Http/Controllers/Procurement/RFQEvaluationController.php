@@ -21,12 +21,23 @@ class RFQEvaluationController extends Controller
         $rfqEvaluations = RFQEvaluation::with([
             'rfq',
             'evaluations.rfqEvaluation',
-            'evaluations.rfqCriteria.section',
-            'evaluations.rfqCriteriaUnscoped.weightedSection',
-            'evaluations.supplier',
+            // Use unscoped relation consistently and eager-load nested relations for names/sections
+            'evaluations.rfqCriteriaUnscoped.criteria',
+            'evaluations.rfqCriteriaUnscoped.section',
+            'evaluations.supplier.thirdParty',
         ])->get();
 
         $evaluationsRanked = [];
+
+        // Build a map of RFQID => [SectionID => Weight] for all RFQs present
+        $rfqIds = $rfqEvaluations->pluck('RFQId')->unique()->values();
+        $rfqSectionWeights = DB::table('t_RFQSection')
+            ->whereIn('RFQID', $rfqIds)
+            ->get()
+            ->groupBy('RFQID')
+            ->map(function ($rows) {
+                return $rows->pluck('Weight', 'SectionID')->map(fn($w) => (float)$w)->toArray();
+            })->toArray();
 
         foreach ($rfqEvaluations as $evaluation) {
             $grouped = $evaluation->evaluations->groupBy('SupplierId');
@@ -37,8 +48,10 @@ class RFQEvaluationController extends Controller
 
                 foreach ($sectionGroups as $section => $criteriaList) {
                     $first = $criteriaList->first();
-                    // Read Weight from RFQSection relation; fallback to 0 if missing
-                    $sectionWeight = (float) ($first->rfqCriteria?->weightedSection?->Weight ?? 0);
+                    // Determine SectionID and read weight from preloaded map; fallback to 0
+                    $sectionId = $first->rfqCriteria?->SectionID ?? $first->rfqCriteriaUnscoped?->SectionID;
+                    $weightsForRfq = $rfqSectionWeights[$evaluation->RFQId] ?? [];
+                    $sectionWeight = (float) ($sectionId ? ($weightsForRfq[$sectionId] ?? 0) : 0);
                     $maxScorePerCriteria = 10;
                     $maxTotal = $criteriaList->count() * $maxScorePerCriteria;
                     $actualTotal = $criteriaList->sum('Score');
@@ -76,7 +89,11 @@ class RFQEvaluationController extends Controller
             }
         }
 
-        return view('procurement.rfqevaluation.index', ['rfqEvaluations' => $rfqEvaluations, 'evaluationsRanked' => $finalRanked]);
+        return view('procurement.rfqevaluation.index', [
+            'rfqEvaluations' => $rfqEvaluations,
+            'evaluationsRanked' => $finalRanked,
+            'rfqSectionWeights' => $rfqSectionWeights,
+        ]);
     }
 
     public function create()
@@ -163,7 +180,7 @@ class RFQEvaluationController extends Controller
     public function getRFQResponses($rfqId)
     {
         $rfqResponses = RFQResponse::where('RFQId', $rfqId)
-            ->with('supplier', 'items.uom')
+            ->with('supplier.thirdParty', 'items.uom')
             ->get();
 
         // Fetch criteria by section
@@ -182,11 +199,22 @@ class RFQEvaluationController extends Controller
             $row->setRelation('weighted_section', ['Weight' => $weight]);
         });
 
-        $criteria = $criteriaRows->groupBy('SectionID');
+        // Group by SectionID and reindex each group to a plain array for clean JSON
+        $criteria = $criteriaRows
+            ->groupBy('SectionID')
+            ->map(function ($group) {
+                return $group->values();
+            });
+
+        // Provide a simple map of SectionID => Weight as well for the frontend
+        $sectionWeights = collect($weightsBySection)->map(function ($w) {
+            return (float) $w;
+        })->toArray();
 
         return response()->json([
             'responses' => $rfqResponses,
-            'criteria' => $criteria
+            'criteria' => $criteria,
+            'sectionWeights' => $sectionWeights,
         ]);
     }
 
