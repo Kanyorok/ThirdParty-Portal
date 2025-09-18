@@ -4,13 +4,15 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
 
-export async function GET(request: NextRequest, { params }: { params: { rfqId: string } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ rfqId: string }> } | { params: { rfqId: string } }) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { rfqId } = params;
+    const awaited = 'params' in context ? (context.params as any) : undefined;
+    const resolvedParams = typeof awaited?.then === 'function' ? await awaited : (context as any).params;
+    const { rfqId } = resolvedParams as { rfqId: string };
     const search = request.nextUrl.searchParams.toString();
     const targetUrl = `${EXTERNAL_API_BASE}/api/procurement/rfq-clarifications/${encodeURIComponent(rfqId)}${search ? `?${search}` : ""}`;
 
