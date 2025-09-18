@@ -79,9 +79,14 @@ class BidSubmissionApiController extends Controller
             DB::beginTransaction();
 
             try {
+                // Create properly populated BidSubmission for EncryptedBidDocumentService
+                $tempBidSubmission = new BidSubmission();
+                $tempBidSubmission->TenderRef = $tender->TenderNo;
+                $tempBidSubmission->SupplierId = $supplier->Id;
+                
                 // Store encrypted documents
                 $encryptedDocs = EncryptedBidDocumentService::storeEncryptedBidDocuments(
-                    new BidSubmission(), // Temporary instance for service
+                    $tempBidSubmission, // Properly populated instance
                     $request->file('bid_documents'),
                     $systemUser
                 );
