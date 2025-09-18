@@ -16,6 +16,9 @@ use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
+use App\Http\Controllers\Procurement\TenderApiController;
+use App\Http\Controllers\Procurement\TenderInvitationController;
+use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -42,8 +45,6 @@ Route::post('auth/validate-token', function (Request $request) {
         ],
     ]);
 })->middleware('auth:sanctum')->name('auth.validate-token');
-use App\Http\Controllers\Procurement\TenderApiController;
-use App\Http\Controllers\Procurement\TenderInvitationController;
 
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
@@ -119,6 +120,33 @@ Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $reques
 Route::apiResource('tenders', TenderApiController::class);
 Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
 Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
+
+// Tender Clarification APIs
+Route::post('/tender-clarifications', [TenderClarificationApiController::class, 'submitClarification']);
+Route::get('/tender-clarifications', [TenderClarificationApiController::class, 'getClarifications']);
+Route::get('/tender-clarifications/pending', [TenderClarificationApiController::class, 'getPendingClarifications']);
+Route::put('/tender-clarifications/{id}/respond', [TenderClarificationApiController::class, 'respondToClarification']);
+
+// Bid Submission APIs
+Route::post('/bid-submissions', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'submitBid']);
+Route::get('/bid-submissions', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'getSupplierBids']);
+
+// Supplier Management APIs for Tender Creation
+Route::get('/suppliers/for-tender', function(Request $request) {
+    // Temporary hardcoded data - replace with actual database query when needed
+    return response()->json([
+        'success' => true,
+        'suppliers' => [
+            ['id' => 1, 'name' => 'ABC Construction Ltd', 'pin' => 'P001234567', 'email' => 'info@abcconstruction.co.ke', 'category' => 'Construction'],
+            ['id' => 2, 'name' => 'TechSolutions Kenya', 'pin' => 'P002345678', 'email' => 'contact@techsolutions.co.ke', 'category' => 'IT Services'],
+            ['id' => 3, 'name' => 'Office Supplies Plus', 'pin' => 'P003456789', 'email' => 'sales@officesupplies.co.ke', 'category' => 'Office Supplies']
+        ],
+        'total' => 3,
+        'filtered_by_category' => false
+    ]);
+});
+Route::get('/suppliers/categories', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getSupplierCategories']);
+Route::get('/suppliers/portal-registered', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getPortalRegisteredSuppliers']);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
     Route::get('/thirdpartyuser', function (Request $request) {
