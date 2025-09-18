@@ -87,16 +87,27 @@ class BidSubmissionApiController extends Controller
                 );
             } catch (\Exception $e) {
                 DB::rollBack();
+                
+                // Enhanced error logging for file storage issues
                 Log::error('Error encrypting bid documents', [
                     'tender_id' => $request->tender_id,
                     'third_party_id' => $request->third_party_id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'files_received' => $request->hasFile('bid_documents') ? count($request->file('bid_documents')) : 0,
+                    'storage_writable' => is_writable(storage_path('app')),
+                    'timestamp' => now()
                 ]);
                 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to encrypt bid documents. Please try again.',
-                    'error_details' => $e->getMessage(),
+                    'message' => 'Document storage service error. Please contact system administrator.',
+                    'error_code' => 'STORAGE_ERROR',
+                    'debug_info' => [
+                        'error_type' => get_class($e),
+                        'storage_status' => is_writable(storage_path('app')) ? 'writable' : 'permission_error',
+                        'timestamp' => now()->toISOString()
+                    ],
                 ], 500);
             }
 
