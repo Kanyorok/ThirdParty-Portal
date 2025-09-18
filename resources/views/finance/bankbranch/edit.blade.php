@@ -77,8 +77,8 @@
                             <label class="form-label">Country</label>
                             <select name="CountryID" class="form-select select2-country">
                                 <option value="" disabled>Select Country</option>
-                                @foreach(\App\Models\Core\Country::active()->ordered()->get(['Id','Name']) as $c)
-                                    <option value="{{ $c->Id }}" {{ (old('CountryID', $branch->CountryID ?? '') == $c->Id) ? 'selected' : '' }}>{{ $c->Name }}</option>
+                                @foreach(\App\Models\Core\Country::active()->ordered()->get(['Id','Name','CountryCode']) as $c)
+                                    <option value="{{ $c->Id }}" data-code="{{ $c->CountryCode }}" {{ (old('CountryID', $branch->CountryID ?? '') == $c->Id) ? 'selected' : '' }}>{{ $c->Name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -142,19 +142,59 @@
                 placeholder: 'Select Country',
                 allowClear: true
             });
-            $('.select2-city').select2({
+            var $country = $('.select2-country');
+            var $city = $('.select2-city');
+
+            $city.select2({
                 width: '100%',
                 placeholder: 'Select City',
                 allowClear: true,
+                minimumInputLength: 0,
                 ajax: {
                     delay: 250,
                     url: '{{ route('locality.select2') }}',
+                    dataType: 'json',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     data: function (params) {
-                        return { q: params.term, country: $('.select2-country').find(':selected').data('code') };
+                        return { q: (params.term || ''), countryId: $country.val() };
                     },
                     processResults: function (data) {
-                        return { results: (data || []).map(function(item){ return {id: item.ID, text: item.Name}; }) };
+                        var results = (data || []).map(function(item){ return {id: item.ID, text: item.Name}; });
+                        if (results.length === 0) {
+                            return { results: [{ id: '', text: 'No cities found', disabled: true }] };
+                        }
+                        return { results: results };
                     }
+                }
+            });
+
+            // When country changes, clear and proactively load cities
+            $country.on('change', function(){
+                $city.val(null).trigger('change');
+                if ($(this).val()) {
+                    $city.prop('disabled', false);
+                    var id = $country.val();
+                    if (id) {
+                        $.ajax({
+                            url: '{{ route('locality.select2') }}',
+                            dataType: 'json',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            data: { q: '', countryId: id },
+                            success: function(data){
+                                var opts = ['<option value="" disabled selected>Select City</option>'];
+                                (data || []).forEach(function(item){
+                                    opts.push('<option value="'+ item.ID +'">'+ item.Name +'</option>');
+                                });
+                                $city.html(opts.join(''));
+                                $city.select2('open');
+                            },
+                            error: function(){
+                                $city.html('<option value="" disabled selected>No cities found</option>');
+                            }
+                        });
+                    }
+                } else {
+                    $city.prop('disabled', true);
                 }
             });
         }

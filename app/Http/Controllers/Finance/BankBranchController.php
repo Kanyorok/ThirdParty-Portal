@@ -6,6 +6,7 @@ use App\Models\Finance\Bank;
 use App\Models\Finance\BankBranch;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Core\Locality;
 
 class BankBranchController extends Controller
 {
@@ -22,7 +23,7 @@ public function create(Request $request)
 {
     $bank = null;
     if ($request->filled('bankId')) {
-        $bank = \App\Models\Finance\Bank::find($request->query('bankId'));
+         $bank = \App\Models\Finance\Bank::with(['country'])->find($request->query('bankId'));
     }
     return view('finance.bankbranch.create', compact('bank'));
 }

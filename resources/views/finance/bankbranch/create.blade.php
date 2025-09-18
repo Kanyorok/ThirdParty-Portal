@@ -60,22 +60,22 @@
                         <div class="col-md-4">
                             <label class="form-label">Branch Code</label>
                             <input name="BranchCode" class="form-control"
-                                   value="{{ old('BranchCode', $branch->BranchCode ?? '') }}">
+                                   value="{{ old('BranchCode', $branch->BranchCode ?? '') }}" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">City ID</label>
-                            <input type="number" name="CityID" class="form-control"
-                                   value="{{ old('CityID', $branch->CityID ?? '') }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Country ID</label>
-                            <input type="number" name="CountryID" class="form-control"
+                            <label class="form-label">Country</label>
+                            <input type="number" name="CountryID" class="form-control" required
                                    value="{{ old('CountryID', $branch->CountryID ?? '') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">City</label>
+                            <input type="number" name="CityID" class="form-control" required
+                                   value="{{ old('CityID', $branch->CityID ?? '') }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Address 1</label>
                             <input name="Address1" class="form-control"
-                                   value="{{ old('Address1', $branch->Address1 ?? '') }}">
+                                   value="{{ old('Address1', $branch->Address1 ?? '') }}" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Address 2</label>
@@ -85,17 +85,17 @@
                         <div class="col-md-4">
                             <label class="form-label">Zip Code</label>
                             <input name="ZipCode" class="form-control"
-                                   value="{{ old('ZipCode', $branch->ZipCode ?? '') }}">
+                                   value="{{ old('ZipCode', $branch->ZipCode ?? '') }}" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Phone</label>
                             <input name="Phone" class="form-control"
-                                   value="{{ old('Phone', $branch->Phone ?? '') }}">
+                                   value="{{ old('Phone', $branch->Phone ?? '') }}" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Email</label>
                             <input type="email" name="EmailID" class="form-control"
-                                   value="{{ old('EmailID', $branch->EmailID ?? '') }}">
+                                   value="{{ old('EmailID', $branch->EmailID ?? '') }}" required>
                         </div>
                     </div>
                 </div>

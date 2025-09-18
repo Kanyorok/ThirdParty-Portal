@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Banks')
 
-@section('content')
+@section('content') 
 <div class="container my-3">
     <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
         <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
@@ -22,12 +22,13 @@
         <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
+                    <th>#</th>
                     <th>Bank Name</th>
                     <th>Short</th>
                     <th>Bank Code</th>
                     <th>SWIFT</th>
                     <th>Clearing</th>
-                    <th>CountryID</th>
+                    <th>Country</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>View Branches</th>
@@ -43,12 +44,13 @@
             <tbody>
                 @forelse($banks as $bank)
                     <tr>
+                        <td>{{ $loop->iteration }}</td>
                         <td>{{ $bank->BankName }}</td>
                         <td>{{ $bank->ShortName ?? '—' }}</td>
                         <td>{{ $bank->BankCode ?? '—' }}</td>
                         <td>{{ $bank->SwiftCode ?? '—' }}</td>
                         <td>{{ $bank->ClearingCode ?? '—' }}</td>
-                        <td>{{ $bank->CountryID ?? '—' }}</td>
+                        <td>{{ $bank->country?->Name ?? '—' }}</td>
                         <td>{{ $bank->EmailID ?? '—' }}</td>
                         <td>{{ $bank->Phone ?? '—' }}</td>
                         <td>
