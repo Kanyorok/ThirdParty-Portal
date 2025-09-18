@@ -14,14 +14,16 @@ class TenderAcceptController extends Controller
     //
         public function index()
     {
-        // $user_id = 1; //for testing purposes
-       $user_id = Auth::id();
-        $tenders = TenderCommitteeMember::where('UserID', $user_id)
-        ->where('Response', 0)
-        ->with(['tender', 'createdBy'])
-        ->get();
-       $rfq = RFQCommitteeMember::where('UserID', $user_id)
-            ->where('Response', 0)
+        // Resolve the current employee identifier that is stored in UserID column
+        $employeeId = optional(Auth::user())->EmployeeId ?? optional(Auth::user()?->employee)->Id;
+
+        $tenders = TenderCommitteeMember::where('UserID', $employeeId)
+            ->where(function($q){ $q->whereNull('Response')->orWhere('Response', 0); })
+            ->with(['tender', 'createdBy'])
+            ->get();
+
+        $rfq = RFQCommitteeMember::where('UserID', $employeeId)
+            ->where(function($q){ $q->whereNull('Response')->orWhere('Response', 0); })
             ->with(['rfq', 'createdBy'])
             ->get();
 
@@ -38,8 +40,8 @@ class TenderAcceptController extends Controller
     try {
         DB::beginTransaction();
 
-        $userId = Auth::id();
-        //$userId = 1; // for testing purposes
+        // Match records by employee identifier used in committee tables
+        $employeeId = optional(Auth::user())->EmployeeId ?? optional(Auth::user()?->employee)->Id;
 
         // Validate response input to only accept 1 (accept) or 2 (decline)
         $validated = $request->validate([
@@ -53,7 +55,7 @@ class TenderAcceptController extends Controller
 
         // Update tender committee response if submitted
         if ($request->filled('tender_id') && $request->filled('tender_response')) {
-            TenderCommitteeMember::where('UserID', $userId)
+            TenderCommitteeMember::where('UserID', $employeeId)
                 ->where('TenderID', $request->tender_id)
                 ->update([
                     'Response' => (int)$request->tender_response,
@@ -63,7 +65,7 @@ class TenderAcceptController extends Controller
 
         // Update RFQ committee response if submitted
         if ($request->filled('rfq_id') && $request->filled('rfq_response')) {
-            RFQCommitteeMember::where('UserID', $userId)
+            RFQCommitteeMember::where('UserID', $employeeId)
                 ->where('RFQID', $request->rfq_id)
                 ->update([
                     'Response' => (int)$request->rfq_response,

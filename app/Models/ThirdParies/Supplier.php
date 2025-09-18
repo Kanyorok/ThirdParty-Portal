@@ -23,7 +23,6 @@ class Supplier extends ThirdParties
         'ThirdPartyID',
         'RoundID',
     'CategoryId',
-        'IsPrequalified',
         'Active_Status',
         'CreatedOn',
         'ModifiedOn',
@@ -32,7 +31,6 @@ class Supplier extends ThirdParties
     ];
 
     protected $casts = [
-        'IsPrequalified' => 'boolean',
     'Active_Status' => 'boolean',
     'CategoryId' => 'integer',
     ];
@@ -78,22 +76,13 @@ class Supplier extends ThirdParties
 
     public function scopeApprovedAndPrequalified($query)
     {
-        // Simplified: treat Active_Status true & IsPrequalified true as approved
-        return $query
-            ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
-            ->where('IsPrequalified', true)
-            ->where('Active_Status', 1);
+    // Treat Active_Status true as approved/active supplier row for the round/category
+    return $query
+        ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
+        ->where('Active_Status', 1);
     }
 
-    public function categories(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            \App\Models\ThirdParty\SupplierCategory::class,
-            't_ThirdParty_SupplierCategory',
-            'third_party_id',
-            'supplier_category_id'
-        )->withTimestamps();
-    }
+    // Note: Category linkage is managed via t_SupplierCategory_ItemCategory for classification mapping.
 
     public function scopeOnlySuppliers($query)
     {

@@ -46,7 +46,7 @@ class RFQSection extends Model
 
     public function section()
     {
-        return $this->belongsTo(Section::class, 'SectionID', 'id');
+        return $this->belongsTo(\App\Models\Procurement\Section::class, 'SectionID', 'Id');
     }
 
     public function criteria()
