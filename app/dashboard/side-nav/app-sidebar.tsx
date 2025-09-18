@@ -47,6 +47,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                 },
+                credentials: 'include',
             })
             if (!response.ok) {
                 console.error("Backend logout failed:", await response.text())
@@ -54,6 +55,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         } catch (error) {
             console.error("Error during backend logout:", error)
         } finally {
+            // Clear NextAuth session and redirect
             await signOut({ callbackUrl: "/signin", redirect: true })
         }
     }, [])

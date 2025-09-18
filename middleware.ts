@@ -132,8 +132,8 @@ export async function middleware(req: NextRequest) {
   }
   */
 
-  // If authenticated and hitting an auth page, send to dashboard
-  if (isAuth && isAuthPage) {
+  // Allow signup/forgot/reset even if authenticated; only redirect authenticated users away from /signin
+  if (isAuth && pathname === "/signin") {
     const url = req.nextUrl.clone()
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
