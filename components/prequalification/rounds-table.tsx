@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react"
 import { format } from "date-fns"
-import { ChevronLeft, ChevronRight, FilePlus2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, FilePlus2, Lock } from "lucide-react"
 import { Button } from "@/components/common/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/common/table"
 import { Separator } from "@/components/common/separator"
 import StatusBadge from "./status-badge"
 import ApplicationForm from "./application-form"
+import CategoryApplications from "./category-applications"
+import { useSession } from "next-auth/react"
 import { toast } from "sonner"
 import { Round } from "@/types/types"
 
@@ -32,10 +34,15 @@ export default function RoundsTable({
     sortBy?: string
     sortOrder?: "asc" | "desc"
 }) {
+    const { data: session } = useSession()
+    const accessToken = session?.accessToken as string | undefined
     const [openRoundId, setOpenRoundId] = useState<string | null>(null)
+    const [appliedRoundIds, setAppliedRoundIds] = useState<Set<string>>(new Set())
+    // Removed submittingRoundId because we now always open the full application form (categories required)
+    const [hideApplied, setHideApplied] = useState(false)
 
     const columns = useMemo(
-        () => [
+    () => [
             {
                 key: "title",
                 label: "Round Name",
@@ -44,7 +51,10 @@ export default function RoundsTable({
             {
                 key: "status",
                 label: "Round Status",
-                render: (r: Round) => <StatusBadge status={r.status} />,
+                render: (r: Round) => {
+                    const value = typeof r.status === 'object' ? r.status.value : r.status
+                    return <StatusBadge status={value === 'O' || value === 'CL' ? value as any : 'CL'} />
+                },
             },
             {
                 key: "window",
@@ -52,38 +62,105 @@ export default function RoundsTable({
                 render: (r: Round) => formatDateRange(r.startDate, r.endDate),
             },
             {
+                key: 'categories',
+                label: 'Category Applications',
+                render: (r: Round) => {
+                    return <CategoryApplications round={r} className="justify-start" />
+                }
+            },
+            {
                 key: "actions",
                 label: "Actions",
                 align: "right" as const,
-                render: (r: Round) => (
-                    <ApplicationForm
-                        open={openRoundId === r.id}
-                        onOpenChange={(o) => setOpenRoundId(o ? r.id : null)}
-                        defaultRoundId={r.id}
-                        onSuccess={({ applicationId, statusLabel }) =>
-                            toast.success("Application submitted", {
-                                description: `Reference: ${applicationId} • Status: ${statusLabel}`,
-                            })
-                        }
-                    >
+                render: (r: Round) => {
+                    // Check if user has applied to any category in this round
+                    const appliedCategories = r.categories?.filter(cat => cat.has_applied) || [];
+                    const hasAnyApplication = appliedCategories.length > 0 || appliedRoundIds.has(r.id);
+                    const createdByOwner = (r as any).createdByOwner === true || (r as any).createdByOwner === 1;
+                    
+                    // Check if there are any categories available to apply to
+                    const availableCategories = r.categories?.filter(cat => !cat.has_applied) || [];
+                    const canApplyToMore = availableCategories.length > 0;
+                    
+                    const backendCanApply = (r as any).canApply !== undefined ? Boolean((r as any).canApply) : true;
+                    const effectiveCanApply = backendCanApply && canApplyToMore && !createdByOwner;
+                    
+                    if (hasAnyApplication && !canApplyToMore) {
+                        return (
+                            <span
+                                title={`Applied to all categories (${appliedCategories.length})`}
+                                aria-label={`Applied to all available categories`}
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                                All Applied
+                            </span>
+                        )
+                    }
+                    
+                    if (hasAnyApplication && canApplyToMore) {
+                        return (
+                            <div className="flex flex-col gap-1">
+                                <span className="text-xs text-green-600 font-medium">
+                                    {appliedCategories.length} applied
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    onClick={() => setOpenRoundId(r.id)}
+                                    disabled={!accessToken}
+                                    title={`Apply to ${availableCategories.length} more categories`}
+                                >
+                                    <FilePlus2 className="h-3 w-3 mr-1" />
+                                    Apply More
+                                </Button>
+                            </div>
+                        )
+                    }
+                    
+                    if (!effectiveCanApply) {
+                        return (
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={createdByOwner ? 'Owner created round' : 'Not eligible to apply'}>
+                                <Lock className="h-3 w-3 mr-1" />
+                                Not Eligible
+                            </span>
+                        )
+                    }
+                    return (
                         <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             className="gap-2"
-                            disabled={r.status !== "O"}
+                            aria-haspopup="dialog"
+                            onClick={() => {
+                                if (!accessToken) {
+                                    toast.error('You must be signed in to apply.')
+                                    return
+                                }
+                                setOpenRoundId(r.id)
+                            }}
                         >
                             <FilePlus2 className="h-4 w-4" />
-                            Click to Apply
+                            Apply
                         </Button>
-                    </ApplicationForm>
-                ),
+                    )
+                },
             },
         ],
-        [openRoundId]
+        [openRoundId, appliedRoundIds]
     )
 
+    const visibleRounds = hideApplied ? rounds.filter(r => !(r.hasApplied || appliedRoundIds.has(r.id))) : rounds
+
     return (
+        <>
         <div className="overflow-hidden rounded-b-xl">
+            <div className="flex items-center justify-end gap-3 p-3">
+                <label className="flex items-center gap-2 text-xs font-medium cursor-pointer select-none">
+                    <input type="checkbox" className="accent-emerald-600" checked={hideApplied} onChange={e => setHideApplied(e.target.checked)} />
+                    Hide applied
+                </label>
+            </div>
             <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
@@ -99,14 +176,14 @@ export default function RoundsTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {rounds.length === 0 ? (
+                        {visibleRounds.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="py-10 text-center text-muted-foreground">
-                                    No rounds match your filters.
+                                    {hideApplied ? 'No unapplied rounds.' : 'No rounds match your filters.'}
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            rounds.map((r) => (
+                            visibleRounds.map((r) => (
                                 <TableRow key={r.id}>
                                     {columns.map((c) => (
                                         <TableCell
@@ -155,5 +232,20 @@ export default function RoundsTable({
                 </div>
             </div>
         </div>
+        {openRoundId ? (
+            <ApplicationForm
+                open={true}
+                defaultRoundId={openRoundId || undefined}
+                onOpenChange={(o) => { if (!o) setOpenRoundId(null) }}
+                onSuccess={({ roundId, applicationId }) => {
+                    setAppliedRoundIds(prev => new Set(prev).add(roundId))
+                    toast.success('Application submitted', { description: applicationId ? `Reference: ${applicationId}` : undefined })
+                    setOpenRoundId(null)
+                }}
+            >
+                <span />
+            </ApplicationForm>
+        ) : null}
+        </>
     )
 }

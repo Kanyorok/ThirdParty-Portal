@@ -1,5 +1,4 @@
-"use server";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import RoundsTable from "./rounds-table";
 import RoundsToolbar from "./rounds-toolbar";
 import { Round } from "@/types/types";
@@ -11,10 +10,13 @@ type ApiRound = {
     roundId?: string;
     title?: string;
     name?: string;
-    status?: "O" | "CL" | string;
+    status?: "O" | "CL" | string | { value: string; label?: string };
     startDate?: string;
     endDate?: string;
     maxVendors?: number;
+    applicationId?: string | number;
+    hasApplied?: boolean;
+    applicationProgress?: { stage?: string; percent?: number; updatedOn?: string; label?: string };
 };
 
 type ApiResponse = {
@@ -29,70 +31,11 @@ type ApiResponse = {
 };
 
 async function getRounds(query: Record<string, string | undefined>): Promise<ApiResponse> {
-    const base = (process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
-    const usp = new URLSearchParams();
-
-    for (const [k, v] of Object.entries(query)) {
-        if (v != null && v !== "") usp.set(k, v);
-    }
-
-    const queryString = usp.toString();
-    const url = `${base}/api/procurement/prequalification/rounds${queryString ? `?${queryString}` : ""}`;
-
-    let bearer: string | undefined;
-    try {
-        const session = await getServerSession(authOptions);
-        bearer = (session as any)?.accessToken ?? (session as any)?.access_token;
-    } catch {
-        bearer = undefined;
-    }
-
-    try {
-        const res = await fetch(url, {
-            cache: "no-store",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-                ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
-            },
-            credentials: "include",
-        });
-
-        if (!res.ok) {
-            console.error(`Failed to load rounds: ${res.status} ${res.statusText}`);
-            return {
-                data: [],
-                page: 1,
-                pageSize: 10,
-                total: 0,
-                totalPages: 1,
-                sortBy: "opensAt",
-                sortOrder: "asc",
-                filters: {}
-            };
-        }
-
-        const json = await res.json();
-
-        if (Array.isArray(json)) {
-            const arr = json as ApiRound[];
-            return {
-                data: arr,
-                page: 1,
-                pageSize: arr.length || 10,
-                total: arr.length,
-                totalPages: 1,
-                sortBy: "startDate",
-                sortOrder: "asc",
-                filters: {}
-            };
-        }
-
-        if (typeof json === "object" && json !== null && "data" in json && Array.isArray(json.data)) {
-            return json as ApiResponse;
-        }
-
-        console.error(`Unexpected API response shape from ${url}`);
+    // Get session for authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.accessToken) {
+        console.error("No valid session found for rounds data");
         return {
             data: [],
             page: 1,
@@ -103,8 +46,110 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
             sortOrder: "asc",
             filters: {}
         };
+    }
+
+    // Call Laravel backend directly from server component (skip Next.js API route)
+    const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
+    const backendUrl = `${EXTERNAL_API_BASE}/api/prequalification/rounds`;
+
+    try {
+        const res = await fetch(backendUrl, { 
+            cache: "no-store", 
+            headers: { 
+                Accept: "application/json", 
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session.accessToken}`,
+            } 
+        });
+
+        const backendData = await res.json().catch(() => null);
+
+        if (!res.ok) {
+            console.error(`Failed to load rounds: ${res.status} ${res.statusText}`, backendData);
+            return {
+                data: [],
+                page: 1,
+                pageSize: 10,
+                total: 0,
+                totalPages: 1,
+                sortBy: "startDate",
+                sortOrder: "asc",
+                filters: {}
+            };
+        }
+
+        // Extract query parameters for client-side filtering/sorting
+        const page = parseInt(String(query.page || "1"));
+        const pageSize = parseInt(String(query.pageSize || "10"));
+        const sortBy = String(query.sortBy || "startDate");
+        const sortOrder = String(query.sortOrder || "asc") as "asc" | "desc";
+        const status = String(query.status || "all");
+        const q = String(query.q || "");
+
+        // Process the data from backend and apply frontend filtering/sorting
+        let rounds = backendData?.data || [];
+
+        // Apply search filter
+        if (q.trim()) {
+            const searchTerm = q.toLowerCase();
+            rounds = rounds.filter((round: any) =>
+                round.title?.toLowerCase().includes(searchTerm) ||
+                round.description?.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Apply status filter
+        if (status !== "all") {
+            const statusValue = status === "open" ? "O" : "CL";
+            rounds = rounds.filter((round: any) => {
+                const roundStatus = typeof round.status === "object" ? round.status.value : round.status;
+                return roundStatus === statusValue;
+            });
+        }
+
+        // Apply sorting
+        rounds.sort((a: any, b: any) => {
+            let aValue, bValue;
+            
+            if (sortBy === "title") {
+                aValue = a.title || "";
+                bValue = b.title || "";
+            } else if (sortBy === "startDate") {
+                aValue = new Date(a.startDate || 0).getTime();
+                bValue = new Date(b.startDate || 0).getTime();
+            } else if (sortBy === "endDate") {
+                aValue = new Date(a.endDate || 0).getTime();
+                bValue = new Date(b.endDate || 0).getTime();
+            } else {
+                aValue = a.startDate || "";
+                bValue = b.startDate || "";
+            }
+
+            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+        });
+
+        // Apply pagination
+        const total = rounds.length;
+        const totalPages = Math.ceil(total / pageSize);
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedRounds = rounds.slice(startIndex, endIndex);
+
+        // Return data in expected format
+        return {
+            data: paginatedRounds,
+            page,
+            pageSize,
+            total,
+            totalPages,
+            sortBy,
+            sortOrder,
+            filters: { status, q }
+        };
     } catch (error) {
-        console.error(`Error fetching rounds from ${url}:`, error);
+        console.error(`Error fetching rounds from Laravel backend:`, error);
         return {
             data: [],
             page: 1,
@@ -125,20 +170,80 @@ export default async function RoundsView({
 }) {
     const apiData = await getRounds(initialQuery);
 
-    const mappedRounds: Round[] = apiData.data.map((r) => {
-        const id = String(r.roundID ?? r.id ?? r.roundId ?? "");
-        const title = String(r.title ?? r.name ?? id);
+    // Build rounds with guaranteed unique, non-empty IDs (backend may return null IDs)
+    const usedIds = new Set<string>();
+    const mappedRounds: Round[] = apiData.data.map((r, idx) => {
+        let baseId = (r.roundID ?? r.id ?? r.roundId ?? "").toString().trim();
+        if (!baseId) {
+            const basis = (r.title ?? r.name ?? "round")
+                .toString()
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "") || "round";
+            baseId = `round-${basis}-${idx + 1}`;
+        }
+        let uniqueId = baseId;
+        let counter = 2;
+        while (usedIds.has(uniqueId)) {
+            uniqueId = `${baseId}-${counter++}`;
+        }
+        usedIds.add(uniqueId);
+
+        const title = String(r.title ?? r.name ?? uniqueId);
         const startDate = r.startDate ?? "";
         const endDate = r.endDate ?? "";
         const maxVendors = Number(r.maxVendors ?? 0);
 
+        const rawStatus: any = (r as any).status
+        let status: any
+        if (rawStatus && typeof rawStatus === 'object') {
+            status = { value: rawStatus.value, label: rawStatus.label }
+        } else {
+            const v = (rawStatus ?? r.status)
+            status = v === 'O' || v === 'CL' ? v : (v === 'Open' ? 'O' : 'CL')
+        }
+        // Map categories with their application status
+        const categories = (r as any).categories ? (r as any).categories.map((cat: any) => ({
+            category_id: cat.id || cat.category_id,
+            category_name: cat.name || cat.category_name,
+            category_description: cat.description,
+            has_applied: Boolean(cat.has_applied || cat.application_id),
+            application_id: cat.application_id ? String(cat.application_id) : undefined,
+            application_date: cat.application_date,
+            status: cat.status || (cat.has_applied ? 'SUBMITTED' : 'NOT_APPLIED'),
+            progress_percent: cat.progress_percent || 0,
+            stage: cat.stage,
+            stage_label: cat.stage_label,
+            updated_on: cat.updated_on,
+            decision_date: cat.decision_date,
+            rejection_reason: cat.rejection_reason,
+        })) : [];
+
+        // Calculate summary from categories
+        const appliedCategories = categories.filter((cat: any) => cat.has_applied);
+        const approvedCategories = categories.filter((cat: any) => cat.status === 'APPROVED');
+        const rejectedCategories = categories.filter((cat: any) => cat.status === 'REJECTED');
+        const pendingCategories = categories.filter((cat: any) => 
+            ['SUBMITTED', 'UNDER_REVIEW'].includes(cat.status)
+        );
+
         return {
-            id,
+            id: uniqueId,
             title,
-            status: r.status === "O" ? "O" : "CL",
+            status,
             startDate,
             endDate,
             maxVendors,
+            categories,
+            applicationSummary: categories.length > 0 ? {
+                total_categories: categories.length,
+                applied_categories: appliedCategories.length,
+                approved_categories: approvedCategories.length,
+                rejected_categories: rejectedCategories.length,
+                pending_categories: pendingCategories.length,
+                overall_progress: categories.length > 0 ? 
+                    Math.round(categories.reduce((sum: number, cat: any) => sum + cat.progress_percent, 0) / categories.length) : 0
+            } : undefined,
         };
     });
 

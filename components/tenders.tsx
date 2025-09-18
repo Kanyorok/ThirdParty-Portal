@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/common/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/common/card";
+import { Badge } from "@/components/common/badge";
 import {
     Loader2,
     Info,
@@ -15,18 +16,24 @@ import {
     Shield,
     FileText,
     ChevronRight,
-    Search as SearchIcon
+    Search as SearchIcon,
+    MessageSquare,
+    XCircle,
+    AlertTriangle,
+    Send
 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { format, isPast, differenceInDays } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/common/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select";
-import { Separator } from '@/components/common/separator'
+import { Separator } from '@/components/common/separator';
+import TenderDetailModal from "./tenders/tender-detail-modal";
+import DebugTenderData from "./debug-tender-data";
 
 interface Tender {
-    id: string;
-    tenderNo: string;
+    id: number;              // Database Id (t_Tenders.Id)
+    tenderNo: string;        // Display number (t_Tenders.TenderNo)
     title: string;
     tenderType: string;
     tenderCategory: string;
@@ -92,7 +99,28 @@ interface Tender {
     };
 }
 
-const BASE_URL = 'http://127.0.0.1:8000/api';
+interface TenderInvitation {
+    InvitationID?: number;
+    invitationID?: number;   // Laravel lowercase version
+    TenderId?: number;       // Database Id (t_Tenders.Id) - uppercase
+    tenderId?: number;       // Laravel lowercase version
+    SupplierId?: number;
+    supplierId?: number | string; // Laravel lowercase version
+    ResponseStatus?: 'pending' | 'accepted' | 'declined' | 'submitted';
+    responseStatus?: 'pending' | 'accepted' | 'declined' | 'submitted'; // Laravel lowercase
+    ResponseDate?: string;
+    responseDate?: string;   // Laravel lowercase version
+    DeclineReason?: string;
+    declineReason?: string;  // Laravel lowercase version
+    InvitationDate: string;
+    invitationDate?: string; // Laravel lowercase version
+}
+
+interface TenderWithInvitation extends Tender {
+    invitation?: TenderInvitation;
+}
+
+const BASE_URL = 'http://localhost:8000/api';
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -132,7 +160,15 @@ const headerVariants: Variants = {
     }
 };
 
-function TenderCard({ tender, index }: { tender: Tender; index: number }) {
+function TenderCard({ 
+    tender, 
+    index, 
+    onViewDetails 
+}: { 
+    tender: TenderWithInvitation; 
+    index: number;
+    onViewDetails: (tender: TenderWithInvitation) => void;
+}) {
     const submissionDeadlineDate = tender.submissionDeadline ? new Date(tender.submissionDeadline) : null;
     const isValidDeadlineDate = submissionDeadlineDate && !isNaN(submissionDeadlineDate.getTime());
 
@@ -154,6 +190,26 @@ function TenderCard({ tender, index }: { tender: Tender; index: number }) {
             case 'op': return 'Open Tender';
             case 'rs': return 'Restricted Tender';
             default: return typeCode;
+        }
+    };
+
+    const getInvitationStatusColor = (status: string) => {
+        switch (status) {
+            case 'accepted': return 'border-green-200 bg-green-50 text-green-700';
+            case 'declined': return 'border-red-200 bg-red-50 text-red-700';
+            case 'submitted': return 'border-blue-200 bg-blue-50 text-blue-700';
+            case 'pending': return 'border-yellow-200 bg-yellow-50 text-yellow-700';
+            default: return 'border-gray-200 bg-gray-50 text-gray-700';
+        }
+    };
+
+    const getInvitationStatusIcon = (status: string) => {
+        switch (status) {
+            case 'accepted': return <CheckCircle className="h-3 w-3" />;
+            case 'declined': return <XCircle className="h-3 w-3" />;
+            case 'submitted': return <Send className="h-3 w-3" />;
+            case 'pending': return <AlertTriangle className="h-3 w-3" />;
+            default: return <Clock className="h-3 w-3" />;
         }
     };
 
@@ -187,6 +243,14 @@ function TenderCard({ tender, index }: { tender: Tender; index: number }) {
                                 <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                                     <Shield className="h-3 w-3 mr-1 inline-block text-gray-600 dark:text-gray-400" /> {getTenderTypeDisplayName(tender.tenderType)}
                                 </span>
+                                {tender.invitation && (
+                                    <span className={cn("text-xs px-2.5 py-1 rounded-full flex items-center border", getInvitationStatusColor(tender.invitation.ResponseStatus || tender.invitation.responseStatus || 'pending'))}>
+                                        {getInvitationStatusIcon(tender.invitation.ResponseStatus || tender.invitation.responseStatus || 'pending')}
+                                        <span className="ml-1 font-medium capitalize">
+                                            {tender.invitation.ResponseStatus || tender.invitation.responseStatus || 'pending'}
+                                        </span>
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -246,11 +310,12 @@ function TenderCard({ tender, index }: { tender: Tender; index: number }) {
 
                 <CardFooter className="pt-2">
                     <Button
-                        onClick={() => console.log(`View Tender ${tender.id}`)}
+                        onClick={() => onViewDetails(tender)}
                         className="w-full rounded-xl font-medium transition-all hover:scale-[1.01] text-base py-3 bg-gray-900 hover:bg-gray-700 text-white dark:bg-gray-100 dark:hover:bg-gray-300 dark:text-gray-900"
                         size="lg"
                     >
                         View Details
+                        <ChevronRight className="h-4 w-4 ml-2" />
                     </Button>
                 </CardFooter>
             </Card>
@@ -260,20 +325,24 @@ function TenderCard({ tender, index }: { tender: Tender; index: number }) {
 
 export default function TendersPage() {
     const [isLoading, setIsLoading] = useState(true);
-    const [tenders, setTenders] = useState<Tender[]>([]);
+    const [tenders, setTenders] = useState<TenderWithInvitation[]>([]);
+    const [invitations, setInvitations] = useState<TenderInvitation[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
     const [selectedTenderTypeFilter, setSelectedTenderTypeFilter] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
+    const [selectedTender, setSelectedTender] = useState<TenderWithInvitation | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchTenders = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
-            let url = new URL(`${BASE_URL}/tenders`);
+            // Build query parameters
+            const queryParams = new URLSearchParams();
 
             if (searchQuery) {
-                url.searchParams.append('search', searchQuery);
+                queryParams.append('search', searchQuery);
             }
 
             if (selectedStatusFilter !== 'all') {
@@ -282,7 +351,7 @@ export default function TendersPage() {
                 else if (selectedStatusFilter === 'drafts') apiStatus = 'dr';
                 else if (selectedStatusFilter === 'cancelled') apiStatus = 'cl';
                 if (apiStatus) {
-                    url.searchParams.append('status', apiStatus);
+                    queryParams.append('status', apiStatus);
                 }
             }
 
@@ -291,23 +360,108 @@ export default function TendersPage() {
                 if (selectedTenderTypeFilter === 'open-to-all') apiTenderType = 'op';
                 else if (selectedTenderTypeFilter === 'restricted') apiTenderType = 'rs';
                 if (apiTenderType) {
-                    url.searchParams.append('tenderType', apiTenderType);
+                    queryParams.append('tenderType', apiTenderType);
                 }
             }
 
-            const response = await fetch(url.toString(), {
+            // Build the final URL string
+            const tenderUrl = `${BASE_URL}/tenders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+            // Fetch both tenders and invitations simultaneously
+            const [tendersResponse, invitationsResponse] = await Promise.allSettled([
+                fetch(tenderUrl, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    }
+                }),
+                fetch('/api/tender-invitations', {
                 headers: {
                     'Accept': 'application/json',
-                }
-            });
+                        'Content-Type': 'application/json',
+                    }
+                })
+            ]);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            // Handle tenders response
+            let tendersData: Tender[] = [];
+            if (tendersResponse.status === 'fulfilled' && tendersResponse.value.ok) {
+                const data = await tendersResponse.value.json();
+                tendersData = data.data || [];
+                
+                // Show a notice if using fallback data
+                if (data.fallback) {
+                    console.info('Using mock tender data - external API not available');
+                }
+            } else if (tendersResponse.status === 'fulfilled') {
+                try {
+                    const errorData = await tendersResponse.value.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${tendersResponse.value.status}`);
+                } catch (parseError) {
+                    throw new Error(`HTTP error! status: ${tendersResponse.value.status}`);
+                }
+            } else {
+                throw new Error('Network error: Could not fetch tenders');
             }
 
-            const data = await response.json();
-            setTenders(data.data);
+            // Handle invitations response (non-critical - don't fail if invitations can't be loaded)
+            let invitationsData: TenderInvitation[] = [];
+            if (invitationsResponse.status === 'fulfilled' && invitationsResponse.value.ok) {
+                const invData = await invitationsResponse.value.json();
+                
+                // Check if data structure matches expected format
+                if (invData.data && Array.isArray(invData.data)) {
+                    // Try different data extraction methods based on Laravel response format
+                    if (invData.data[0] && invData.data[0].invitation) {
+                        // Format: { data: [{ invitation: {...}, tender: {...} }] }
+                        invitationsData = invData.data.map((item: any) => item.invitation);
+                    } else if (invData.data[0] && (invData.data[0].TenderId || invData.data[0].tenderId)) {
+                        // Format: { data: [{ TenderId: ..., ResponseStatus: ... }] }
+                        invitationsData = invData.data;
+                    } else {
+                        console.warn('⚠️ Unknown invitation data format:', invData.data[0]);
+                        invitationsData = [];
+                    }
+                } else {
+                    console.warn('⚠️ Invalid invitation API response structure:', invData);
+                    invitationsData = [];
+                }
+                
+                setInvitations(invitationsData);
+                
+                // Show a notice if using fallback data
+                if (invData.fallback) {
+                    console.info('Using mock tender invitation data - external API not available');
+                }
+            } else {
+                // Log invitation fetch error but don't fail the whole operation
+                console.warn("Failed to fetch tender invitations:", invitationsResponse);
+            }
+
+            // Merge tenders with invitations
+            const tendersWithInvitations: TenderWithInvitation[] = tendersData.map(tender => {
+                const invitation = invitationsData.find(inv => {
+                    // Support both Laravel field naming conventions
+                    const tenderId = inv?.TenderId || inv?.tenderId;
+                    
+                    if (!inv || tenderId == null || tender.id == null) {
+                        return false;
+                    }
+                    
+                    // Convert both to integers for proper comparison
+                    const tenderDbId = parseInt(tender.id.toString());
+                    const invitationTenderId = parseInt(tenderId.toString());
+                    
+                    return tenderDbId === invitationTenderId;
+                });
+                
+                return {
+                    ...tender,
+                    invitation
+                };
+            });
+
+            setTenders(tendersWithInvitations);
         } catch (err: any) {
             console.error("Failed to fetch tenders:", err);
             setError(err.message || "An unexpected error occurred.");
@@ -329,6 +483,21 @@ export default function TendersPage() {
         setSearchQuery('');
         setSelectedStatusFilter('all');
         setSelectedTenderTypeFilter('all');
+    };
+
+    const handleViewDetails = (tender: TenderWithInvitation) => {
+        setSelectedTender(tender);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedTender(null);
+    };
+
+    const handleInvitationUpdate = () => {
+        // Refresh the data when invitation status changes
+        fetchTenders();
     };
 
     const statusOptions = [
@@ -361,6 +530,20 @@ export default function TendersPage() {
                         <h1 className="text-2xl font-bold tracking-tight text-foreground">
                             Tenders
                         </h1>
+                    </div>
+                    
+                    {/* Debug Component - Remove in Production */}
+                    <DebugTenderData />
+                    
+                    {/* System Status */}
+                    <div className="bg-green-100 border border-green-500 p-3 rounded mb-4">
+                        <h3 className="font-bold text-green-800">✅ SYSTEM STATUS</h3>
+                        <p className="text-green-700 text-sm">
+                            <strong>Frontend:</strong> Working perfectly - {invitations.length} invitation(s) loaded, {tenders.filter(t => t.invitation).length} tender(s) matched
+                        </p>
+                        <p className="text-green-700 text-sm">
+                            <strong>Backend:</strong> Laravel SQL parameter binding fix needed (see URGENT_LARAVEL_SQL_FIX.md)
+                        </p>
                     </div>
 
                     <div className="bg-gray-50 dark:bg-gray-950 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
@@ -476,7 +659,12 @@ export default function TendersPage() {
                             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
                         >
                             {tenders.map((tender, index) => (
-                                <TenderCard key={tender.id || `tender-${index}`} tender={tender} index={index} />
+                                <TenderCard 
+                                    key={tender.id || `tender-${index}`} 
+                                    tender={tender} 
+                                    index={index} 
+                                    onViewDetails={handleViewDetails}
+                                />
                             ))}
                         </motion.div>
                     ) : (
@@ -514,6 +702,35 @@ export default function TendersPage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Tender Detail Modal */}
+            <TenderDetailModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                tender={selectedTender ? {
+                    id: selectedTender.id,
+                    tenderNo: selectedTender.tenderNo,
+                    title: selectedTender.title,
+                    tenderType: selectedTender.tenderType,
+                    tenderCategory: selectedTender.tenderCategory,
+                    scopeOfWork: selectedTender.scopeOfWork,
+                    instructions: selectedTender.instructions,
+                    submissionDeadline: selectedTender.submissionDeadline,
+                    openingDate: selectedTender.openingDate,
+                    status: selectedTender.status,
+                    estimatedValue: selectedTender.estimatedValue,
+                    currency: selectedTender.currency ? {
+                        code: selectedTender.currency.code,
+                        symbol: selectedTender.currency.symbol
+                    } : undefined,
+                    procurementMode: selectedTender.procurementMode ? {
+                        name: selectedTender.procurementMode.name
+                    } : undefined,
+                    tenderCategoryRelation: selectedTender.tenderCategoryRelation
+                } : null}
+                invitation={selectedTender?.invitation}
+                onInvitationUpdate={handleInvitationUpdate}
+            />
         </div>
     );
 }

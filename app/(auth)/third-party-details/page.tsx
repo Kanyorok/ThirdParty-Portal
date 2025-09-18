@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
@@ -23,6 +24,14 @@ import { Button } from '@/components/common/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/common/form';
 import { Input } from '@/components/common/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/common/select';
+import { useEnums } from '@/hooks/use-enums';
+
+interface Country {
+    id: number;
+    name: string;
+    code: string;
+    iso2?: string;
+}
 
 const formSchema = z.object({
     ThirdPartyName: z.string()
@@ -42,9 +51,7 @@ const formSchema = z.object({
     VATNumber: z.string()
         .max(20, 'VAT number must be less than 20 characters')
         .optional(),
-    Country: z.string()
-        .min(2, 'Country is required')
-        .max(50, 'Country name must be less than 50 characters'),
+    Country: z.string().min(2, 'Country is required'),
     PhysicalAddress: z.string()
         .min(5, 'Physical address is required')
         .max(200, 'Address must be less than 200 characters'),
@@ -73,10 +80,7 @@ const businessTypes = [
     { value: 'NGO', label: 'Non-Profit Organization' },
 ];
 
-const thirdPartyTypes = [
-    { value: 'S', label: 'Supplier' },
-    { value: 'T', label: 'Tenant' },
-];
+// Removed hardcoded thirdPartyTypes; now fetched dynamically via useEnums("third-party-types")
 
 //animation variants
 const containerVariants: Variants = {
@@ -187,8 +191,10 @@ const formFields = [
     {
         name: 'Country' as const,
         label: 'Country',
-        placeholder: 'Enter country',
+        placeholder: 'Select country',
         required: true,
+        type: 'select',
+        options: [], // will be populated dynamically from countries API
         icon: MapPin,
         gridSpan: 'col-span-full sm:col-span-1',
     },
@@ -233,7 +239,8 @@ const formFields = [
         placeholder: 'Select type',
         required: true,
         type: 'select',
-        options: thirdPartyTypes,
+        // options will be injected dynamically from hook data in render
+        options: [],
         gridSpan: 'col-span-full sm:col-span-1',
     },
 ];
@@ -243,6 +250,10 @@ export default function RegisterThirdPartyDetails() {
     const searchParams = useSearchParams();
     const userId = searchParams.get('user_id');
 
+    // Fetch dynamic third party types
+    const { data: thirdPartyTypeOptions, isLoading: thirdPartyTypesLoading, error: thirdPartyTypesError, refetch: refetchThirdPartyTypes } = useEnums('third-party-types');
+
+    const [countries, setCountries] = useState<Country[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -270,6 +281,25 @@ export default function RegisterThirdPartyDetails() {
         return form.formState.isValid;
     }, [form.formState.isValid]);
 
+    const fetchCountries = useCallback(async () => {
+        try {
+            const response = await fetch('/api/v1/countries');
+            if (!response.ok) {
+                throw new Error('Failed to fetch countries.');
+            }
+            const { data }: { data: Country[] } = await response.json();
+            setCountries(data);
+
+            // Set default country name if form doesn't have one
+            if (data.length > 0 && !form.getValues('Country')) {
+                form.setValue('Country', data[0].name, { shouldValidate: true });
+            }
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Error fetching countries.';
+            console.error('Fetch countries error:', errorMessage);
+        }
+    }, [form]);
+
     const handleError = useCallback((errorMessage: string) => {
         setError(errorMessage);
         // Auto-clear error after 10 seconds
@@ -280,7 +310,10 @@ export default function RegisterThirdPartyDetails() {
         if (!userId) {
             handleError('User ID is missing. Please complete step 1 first.');
         }
-    }, [userId, handleError]);
+        
+        // Fetch countries on component mount
+        fetchCountries();
+    }, [userId, handleError, fetchCountries]);
 
     const onSubmit = async (data: FormData) => {
         if (!userId) {
@@ -298,7 +331,7 @@ export default function RegisterThirdPartyDetails() {
                 user_id: userId,
             };
 
-            const response = await fetch('http://localhost:8000/api/third-parties/register-details', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/register-details`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -323,10 +356,16 @@ export default function RegisterThirdPartyDetails() {
 
             setSuccess(responseData.message || 'Company details registered successfully!');
 
+            // Proactively clear any lingering auth session then redirect to signin
+            try {
+                await signOut({ redirect: false });
+            } catch {
+                // no-op: if not signed in, this is safe to ignore
+            }
             // Auto-redirect after success
             setTimeout(() => {
-                router.push('/signin');
-            }, 3000);
+                router.replace('/signin?registrationSuccess=true');
+            }, 1000);
 
         } catch (err) {
             console.error('Registration error:', err);
@@ -448,7 +487,15 @@ export default function RegisterThirdPartyDetails() {
                                             variants={formFieldVariants}
                                             className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6"
                                         >
-                                            {formFields.map((fieldConfig) => (
+                                            {formFields.map((fieldConfig) => {
+                                                const isThirdPartyType = fieldConfig.name === 'ThirdPartyType';
+                                                const isCountry = fieldConfig.name === 'Country';
+                                                const dynamicOptions = isThirdPartyType 
+                                                    ? thirdPartyTypeOptions 
+                                                    : isCountry
+                                                    ? countries.map(country => ({ value: country.name, label: country.name }))
+                                                    : fieldConfig.options;
+                                                return (
                                                 <FormField
                                                     key={fieldConfig.name}
                                                     control={form.control}
@@ -466,12 +513,24 @@ export default function RegisterThirdPartyDetails() {
                                                             </FormLabel>
                                                             <FormControl>
                                                                 {fieldConfig.type === 'select' ? (
-                                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                                    <Select onValueChange={(value) => {
+                                                                        // Country now stores the country name (string)
+                                                                        field.onChange(value);
+                                                                    }} value={String(field.value)}>
                                                                         <SelectTrigger className="h-12 border-slate-200 rounded-2xl focus:border-slate-400 focus:ring-0 transition-all duration-200 hover:border-slate-300">
                                                                             <SelectValue placeholder={fieldConfig.placeholder} />
                                                                         </SelectTrigger>
                                                                         <SelectContent className="rounded-2xl border-slate-200">
-                                                                            {fieldConfig.options?.map((option) => (
+                                                                            {isThirdPartyType && thirdPartyTypesLoading && (
+                                                                                <div className="px-3 py-2 text-sm text-slate-500">Loading...</div>
+                                                                            )}
+                                                                            {isThirdPartyType && thirdPartyTypesError && (
+                                                                                <div className="px-3 py-2 text-sm text-red-500 flex flex-col gap-2">
+                                                                                    <span>Failed to load options.</span>
+                                                                                    <button type="button" onClick={refetchThirdPartyTypes} className="underline text-blue-600 text-left">Retry</button>
+                                                                                </div>
+                                                                            )}
+                                                                            {!thirdPartyTypesLoading && dynamicOptions?.map((option) => (
                                                                                 <SelectItem
                                                                                     key={option.value}
                                                                                     value={option.value}
@@ -497,7 +556,8 @@ export default function RegisterThirdPartyDetails() {
                                                         </FormItem>
                                                     )}
                                                 />
-                                            ))}
+                                                );
+                                            })}
                                         </motion.div>
 
                                         {/* Submit Button */}

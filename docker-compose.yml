@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_EXTERNAL_API_URL=${NEXT_PUBLIC_EXTERNAL_API_URL}
+        - EXTERNAL_API_URL=${EXTERNAL_API_URL}
+        - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+        - NEXTAUTH_URL=${NEXTAUTH_URL}
+        - API_BASE_URL=${API_BASE_URL}
+        - SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS}
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    command: node server.js
+    restart: unless-stopped

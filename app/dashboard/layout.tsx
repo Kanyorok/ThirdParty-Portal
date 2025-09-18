@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { Separator } from "@/components/common/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/common/sidebar";
 import { getSidebarVariant, getSidebarCollapsible, getContentLayout } from "@/lib/layout-preferences";
@@ -13,14 +14,26 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
+    const session = await getServerSession(authOptions);
+
+    // Critical security check - redirect unauthorized users
+    if (!session || !session.user || !session.accessToken) {
+        console.log('Unauthorized access attempt to dashboard - redirecting to signin');
+        redirect('/signin?error=SessionExpired');
+    }
+
+    // Additional validation - check if user is active and approved
+    if (!session.user.isActive || !session.user.isApproved) {
+        console.log('User not active or approved - redirecting to signin');
+        redirect('/signin?error=AccountNotApproved');
+    }
+
     const cookieStore = await cookies();
     const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
     const sidebarVariant = await getSidebarVariant();
     const sidebarCollapsible = await getSidebarCollapsible();
     const contentLayout = await getContentLayout();
-
-    const session = await getServerSession(authOptions);
 
     return (
         <NextAuthProvider session={session} attribute={"data-theme"} defaultTheme="dark" enableSystem={true}>

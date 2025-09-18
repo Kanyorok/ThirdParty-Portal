@@ -58,7 +58,7 @@ export function RegisterForm() {
             <Input
               id="firstName"
               type="text"
-              placeholder="Kasongo"
+              placeholder="e.g. Mary"
               {...register("firstName")}
               aria-invalid={!!errors.firstName}
               className={resolveInputStyles("firstName", !!errors.firstName)}
@@ -75,7 +75,7 @@ export function RegisterForm() {
             <Input
               id="lastName"
               type="text"
-              placeholder="Kaongo"
+              placeholder="e.g. Ochieng"
               {...register("lastName")}
               aria-invalid={!!errors.lastName}
               className={resolveInputStyles("lastName", !!errors.lastName)}
