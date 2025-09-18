@@ -14,7 +14,13 @@ class EvaluatorDashboardController extends Controller
 
      public function index()
     {
-        $tenderSuppliers = TenderSupplier::with(['tender', 'supplier'])->get();
+        // Only show suppliers whose bids have been marked as responsive
+        $tenderSuppliers = TenderSupplier::with(['tender', 'supplier', 'bidResponsiveness'])
+            ->whereHas('bidResponsiveness', function ($query) {
+                $query->where('IsResponsive', true);
+            })
+            ->get();
+            
         $data = [];
         foreach ($tenderSuppliers as $item) {
             array_push($data, [
@@ -24,6 +30,7 @@ class EvaluatorDashboardController extends Controller
                 'Role' => TenderCommitteeMember::where('TenderID', $item->tender->Id)->where('UserID', Auth::id())->pluck('Role')->first(),
                 'HasEvaluated' => TenderCommitteeMember::where('TenderID', $item->tender->Id)->where('UserID', Auth::id())->pluck('HasEvaluated')->first(),
                 'supplierID' => $item->supplier->Id,
+                'responsiveness_status' => $item->bidResponsiveness ? ($item->bidResponsiveness->IsResponsive ? 'Responsive' : 'Non-Responsive') : 'Not Checked',
                 //'Status'=>TenderCommitteeMember::where('TenderID',$item->tender->Id)->where('UserID',Auth::id())->pluck('HasEvaluated')->first(),
             ]);
 

@@ -123,18 +123,20 @@ class PrequalificationEvaluationController extends Controller
                     'ModifiedBy'=>$userId,
                 ]);
                 // ensure supplier row exists with required audit fields
-                $supplier = Supplier::firstOrCreate(
-                    ['ThirdPartyID'=>$app->SupplierID, 'RoundID'=>$roundId],
+                $supplier = Supplier::updateOrCreate(
+                    ['ThirdPartyID' => $app->SupplierID, 'RoundID' => $roundId],
                     [
-                        'Active_Status'=>1,
-                        'CreatedOn'=>$now,
-                        'CreatedBy'=>$userId,
+                        'Active_Status' => 1,
+                        'SupplierCategoryID' => $app->CategoryID, // Add category mapping
+                        'CreatedOn' => $now,
+                        'CreatedBy' => $userId,
+                        'ModifiedOn' => $now,
+                        'ModifiedBy' => $userId,
                     ]
                 );
-                $supplier->Active_Status = 1;
-                $supplier->ModifiedOn = $now;
-                $supplier->ModifiedBy = $userId;
-                $supplier->save();
+                
+                // Log the creation for debugging
+                \Log::info("Prequalified supplier: ThirdPartyID={$app->SupplierID}, RoundID={$roundId}, SupplierID={$supplier->Id}");
             }
         });
 
@@ -147,27 +149,46 @@ class PrequalificationEvaluationController extends Controller
     /**
      * Individually prequalify a supplier even if failed (under review scenario)
      */
-    public function prequalifySupplier(int $thirdPartyId, int $roundId): RedirectResponse|\Illuminate\Http\JsonResponse
+    public function prequalifySupplier(int $roundId, int $thirdPartyId): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $now = Carbon::now();
         $userId = Auth::id();
-        DB::transaction(function () use ($thirdPartyId, $roundId, $now, $userId) {
-            ThirdParties::where('Id',$thirdPartyId)->update([
-                'IsPrequalified'=>1,
-                'ModifiedOn'=>$now,
-                'ModifiedBy'=>$userId,
+        
+        // Find the application to get the CategoryID
+        $application = PrequalificationApplication::where('SupplierID', $thirdPartyId)
+            ->where('RoundID', $roundId)
+            ->first();
+            
+        if (!$application) {
+            if (request()->expectsJson()) {
+                return response()->json(['status'=>'error','message'=>'No application found for this supplier in this round.']);
+            }
+            return back()->with('error', 'No application found for this supplier in this round.');
+        }
+        
+        DB::transaction(function () use ($roundId, $thirdPartyId, $now, $userId, $application) {
+            ThirdParties::where('Id', $thirdPartyId)->update([
+                'IsPrequalified' => 1,
+                'ModifiedOn' => $now,
+                'ModifiedBy' => $userId,
             ]);
+            
             Supplier::updateOrCreate(
-                ['ThirdPartyID'=>$thirdPartyId,'RoundID'=>$roundId],
+                ['ThirdPartyID' => $thirdPartyId, 'RoundID' => $roundId],
                 [
-                    'Active_Status'=>1,
-                    'ModifiedOn'=>$now,
-                    'CreatedOn'=>$now,
-                    'CreatedBy'=>$userId,
-                    'ModifiedBy'=>$userId,
+                    'Active_Status' => 1,
+                    'SupplierCategoryID' => $application->CategoryID, // Add this missing field!
+                    'CreatedOn' => $now,
+                    'CreatedBy' => $userId,
+                    'ModifiedOn' => $now,
+                    'ModifiedBy' => $userId,
                 ]
             );
+            
+            // Log the creation for debugging
+            \Log::info("Individual prequalification: RoundID={$roundId}, ThirdPartyID={$thirdPartyId}, CategoryID={$application->CategoryID}");
         });
+        
         if (request()->expectsJson()) {
             return response()->json(['status'=>'success','message'=>'Supplier prequalified.']);
         }

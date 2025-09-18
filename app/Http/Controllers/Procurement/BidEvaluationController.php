@@ -44,12 +44,23 @@ class BidEvaluationController extends Controller
             $section->criteria = $criteriaList;
         }
 
+        // Check if this supplier's bid is responsive before allowing evaluation
+        $tenderSupplier = TenderSupplier::where('TenderID', $TenderId)
+            ->where('SupplierID', $supplierID)
+            ->with('bidResponsiveness')
+            ->first();
+            
+        if (!$tenderSupplier || !$tenderSupplier->bidResponsiveness || !$tenderSupplier->bidResponsiveness->IsResponsive) {
+            return redirect()->back()->with('error', 'This bid must be marked as responsive before it can be evaluated. Please complete the responsiveness check first.');
+        }
+
         $supplier = Supplier::find($supplierID)->SupplierName ?? 'Unknown Supplier';
         return view('procurement.tendering.bidopeningandevaluation.evaluation.evaluate', compact(
             'TenderId',
             'tender',
             'tenderSections',
-            'supplier'
+            'supplier',
+            'tenderSupplier'
         ));
 
     }

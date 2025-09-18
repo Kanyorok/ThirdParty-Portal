@@ -13,7 +13,7 @@
     <div class="card-body">
         <div class="row mb-3">
             <div class="col-md-8">
-                <p class="mb-1"><strong>Supplier:</strong> {{ $application->supplier->ThirdPartyName }}</p>
+                <p class="mb-1"><strong>Supplier:</strong> {{ $application->supplier->thirdParty->ThirdPartyName ?? 'N/A' }}</p>
                 <p class="mb-1"><strong>Total (Computed):</strong> {{ number_format($grandTotal ?? $result->TotalScore, 2) }}%</p>
                 <p class="mb-1"><strong>Stored Total:</strong> {{ number_format($result->TotalScore, 2) }}%</p>
                 <p class="mb-1"><strong>Decision:</strong>

@@ -91,9 +91,9 @@
                             @foreach ($suppliers as $item)
                                 <tr>
                                     <td>{{$loop->index+1}}</td>
-                                    <td>{{$item->supplier->SupplierName}}</td>
-                                    <td>{{$item->supplier->ContactEmail}}</td>
-                                    <td>{{$item->supplier->ContactPhone}}</td>
+                                    <td>{{$item->supplier->thirdParty->ThirdPartyName ?? 'N/A'}}</td>
+                                    <td>{{$item->supplier->thirdParty->Email ?? 'N/A'}}</td>
+                                    <td>{{$item->supplier->thirdParty->Phone ?? 'N/A'}}</td>
                                 </tr>
                             @endforeach
                             <!-- More suppliers -->
