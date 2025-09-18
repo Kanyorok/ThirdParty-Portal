@@ -2,7 +2,10 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Auth\User;
+use App\Models\Core\Country;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Bank extends Model
 {
@@ -38,5 +41,20 @@ class Bank extends Model
     public function branches()
     {
         return $this->hasMany(BankBranch::class, 'BankID', 'BankID');
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'CountryID', 'Id');
+    }
+
+    public function createdByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function modifiedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
 }

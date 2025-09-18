@@ -62,14 +62,25 @@
                                    value="{{ old('BranchCode', $branch->BranchCode ?? '') }}">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">City ID</label>
-                            <input type="number" name="CityID" class="form-control"
-                                   value="{{ old('CityID', $branch->CityID ?? '') }}">
+                            <label class="form-label">City</label>
+                            <select name="CityID" class="form-select select2-city">
+                                @if(old('CityID', $branch->CityID ?? false))
+                                    <option value="{{ old('CityID', $branch->CityID ?? '') }}" selected>
+                                        {{ optional(\App\Models\Core\Locality::find(old('CityID', $branch->CityID ?? '')))->Name }}
+                                    </option>
+                                @else
+                                    <option value="" selected disabled>Select City</option>
+                                @endif
+                            </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Country ID</label>
-                            <input type="number" name="CountryID" class="form-control"
-                                   value="{{ old('CountryID', $branch->CountryID ?? '') }}">
+                            <label class="form-label">Country</label>
+                            <select name="CountryID" class="form-select select2-country">
+                                <option value="" disabled>Select Country</option>
+                                @foreach(\App\Models\Core\Country::active()->ordered()->get(['Id','Name']) as $c)
+                                    <option value="{{ $c->Id }}" {{ (old('CountryID', $branch->CountryID ?? '') == $c->Id) ? 'selected' : '' }}>{{ $c->Name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Address 1</label>
@@ -120,4 +131,33 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    (function(){
+        if (window.jQuery && $.fn.select2) {
+            $('.select2-country').select2({
+                width: '100%',
+                placeholder: 'Select Country',
+                allowClear: true
+            });
+            $('.select2-city').select2({
+                width: '100%',
+                placeholder: 'Select City',
+                allowClear: true,
+                ajax: {
+                    delay: 250,
+                    url: '{{ route('locality.select2') }}',
+                    data: function (params) {
+                        return { q: params.term, country: $('.select2-country').find(':selected').data('code') };
+                    },
+                    processResults: function (data) {
+                        return { results: (data || []).map(function(item){ return {id: item.ID, text: item.Name}; }) };
+                    }
+                }
+            });
+        }
+    })();
+</script>
 @endsection

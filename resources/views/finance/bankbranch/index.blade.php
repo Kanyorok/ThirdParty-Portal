@@ -28,8 +28,8 @@
                     <th>Branch Code</th>
                     <th>Address1</th>
                     <th>Address2</th>
-                    <th>CityID</th>
-                    <th>CountryID</th>
+                    <th>City</th>
+                    <th>Country</th>
                     <th>ZipCode</th>
                     <th>Phone</th>
                     <th>Email</th>
@@ -43,8 +43,8 @@
                         <td>{{ $branch->BranchCode ?? '—' }}</td>
                         <td>{{ $branch->Address1 ?? '—' }}</td>
                         <td>{{ $branch->Address2 ?? '—' }}</td>
-                        <td>{{ $branch->CityID ?? '—' }}</td>
-                        <td>{{ $branch->CountryID ?? '—' }}</td>
+                        <td>{{ $branch->city?->Name ?? '—' }}</td>
+                        <td>{{ $branch->country?->Name ?? '—' }}</td>
                         <td>{{ $branch->ZipCode ?? '—' }}</td>
                         <td>{{ $branch->Phone ?? '—' }}</td>
                         <td>{{ $branch->EmailID ?? '—' }}</td>

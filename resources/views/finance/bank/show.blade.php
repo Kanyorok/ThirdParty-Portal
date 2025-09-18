@@ -15,7 +15,9 @@
                 <dt class="col-md-3">Bank Code</dt><dd class="col-md-9">{{ $bank->BankCode ?? '—' }}</dd>
                 <dt class="col-md-3">SWIFT Code</dt><dd class="col-md-9">{{ $bank->SwiftCode ?? '—' }}</dd>
                 <dt class="col-md-3">Clearing Code</dt><dd class="col-md-9">{{ $bank->ClearingCode ?? '—' }}</dd>
-                <dt class="col-md-3">Country ID</dt><dd class="col-md-9">{{ $bank->CountryID ?? '—' }}</dd>
+                <dt class="col-md-3">Country</dt><dd class="col-md-9">{{ $bank->country?->Name ?? '—' }}</dd>
+                <dt class="col-md-3">Created By</dt><dd class="col-md-9">{{ $bank->createdByUser?->Name ?? ($bank->CreatedBy ?? '—') }}</dd>
+                <dt class="col-md-3">Modified By</dt><dd class="col-md-9">{{ $bank->modifiedByUser?->Name ?? ($bank->ModifiedBy ?? '—') }}</dd>
                 <dt class="col-md-3">Email</dt><dd class="col-md-9">{{ $bank->EmailID ?? '—' }}</dd>
                 <dt class="col-md-3">Phone</dt><dd class="col-md-9">{{ $bank->Phone ?? '—' }}</dd>
                 <dt class="col-md-3">Website</dt><dd class="col-md-9">{{ $bank->Website ?? '—' }}</dd>

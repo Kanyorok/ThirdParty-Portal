@@ -22,7 +22,7 @@
             @endif
 
             <form action="{{ route('finance.bank.store') }}" method="POST" novalidate>
-                @csrf
+        @csrf
 
                 {{-- Bank Info --}}
                 <div class="card mb-3 border-0 shadow-sm rounded-3">
@@ -59,14 +59,19 @@
                         <h6 class="mb-0 text-primary"><i class="fas fa-address-book me-1"></i> Contact Info</h6>
                     </div>
                     <div class="card-body row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Country ID</label>
-                            <input type="number" name="CountryID" class="form-control" value="{{ old('CountryID') }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="EmailID" class="form-control" value="{{ old('EmailID') }}" required>
-                        </div>
+                         <div class="col-md-6">
+                             <label class="form-label">Country</label>
+                             <select name="CountryID" class="form-select select2-country" required>
+                                 <option value="" disabled selected>Select Country</option>
+                                 @foreach(\App\Models\Core\Country::active()->ordered()->get(['Id','Name']) as $c)
+                                     <option value="{{ $c->Id }}" {{ old('CountryID') == $c->Id ? 'selected' : '' }}>{{ $c->Name }}</option>
+                                 @endforeach
+                             </select>
+                         </div>
+                         <div class="col-md-6">
+                             <label class="form-label">Email</label>
+                             <input type="email" name="EmailID" class="form-control" value="{{ old('EmailID') }}" required>
+                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Phone</label>
                             <input name="Phone" class="form-control" value="{{ old('Phone') }}" required>
@@ -96,4 +101,18 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    (function(){
+        if (window.jQuery && $.fn.select2) {
+            $('.select2-country').select2({
+                width: '100%',
+                placeholder: 'Select Country',
+                allowClear: true
+            });
+        }
+    })();
+</script>
 @endsection
