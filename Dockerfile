@@ -15,8 +15,9 @@ RUN npm install -g npm@11.6.0
 # Copy package file and install dependencies (ignore lockfile)
 COPY package.json ./
 
-# Avoid Tailwind oxide native binary; let CSS toolchain use JS fallback
-ENV TAILWIND_DISABLE_OXIDE=1
+# Avoid Tailwind oxide native binary; force Lightning CSS WASM fallback
+ENV TAILWIND_DISABLE_OXIDE=1 \
+    CSS_TRANSFORMER_WASM=1
 
 # Use npm install instead of npm ci to handle lock file mismatches
 RUN npm install --legacy-peer-deps
