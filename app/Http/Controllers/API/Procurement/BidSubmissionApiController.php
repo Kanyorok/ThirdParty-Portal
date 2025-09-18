@@ -262,11 +262,11 @@ class BidSubmissionApiController extends Controller
      */
     private function getSystemUser(): User
     {
-        // Get first available active user, or create a system user if needed
-        $user = User::where('IsActive', true)->first();
+        // Get first available user from the database
+        $user = User::whereNull('DeletedOn')->first();
         
         if (!$user) {
-            // Fallback: get any user from the database
+            // Fallback: get any user (even if soft deleted)
             $user = User::first();
         }
         
