@@ -152,6 +152,7 @@ use App\Policies\Insurance\InsuranceProductPolicy;
 use App\Policies\Insurance\InsuranceProductRiderPolicy;
 use App\Policies\Insurance\CommissionRulePolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
+
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\ItemCategoryPolicy;

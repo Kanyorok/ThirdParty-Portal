@@ -39,16 +39,6 @@
         </div>
 
         <div class="mb-3">
-            <label for="Status" class="form-label">Status:</label>
-            <select class="form-control" name="Status">
-                <option value="">Select Status</option>
-                @foreach($status as $stat)
-                    <option value="{{ $stat->ID }}">{{ $stat->Description }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="mb-3">
 
             <div class="d-flex justify-content-end mt-4">
         <button type="submit" class="btn btn-success">Save Category</button>
