@@ -43,7 +43,7 @@ class TenderSection extends Model
 
     public function tender()
     {
-        return $this->belongsTo(Tender::class, 'TenderRef', 'TenderRef');
+        return $this->belongsTo(Tender::class, 'TenderID', 'Id');
     }
 
     public function criteria()
@@ -58,11 +58,38 @@ class TenderSection extends Model
 
     public function sections()
     {
-        return $this->belongsTo(Section::class, 'SectionID', 'id');
+        return $this->belongsTo(Section::class, 'SectionID', 'Id');
     }
 
     public function bids()
     {
         return $this->hasMany(BidSubmission::class, 'TenderRef', 'TenderRef');
+    }
+
+    /**
+     * Helper method to validate if section weights sum to 100% for a tender
+     */
+    public static function validateWeightsForTender($tenderId)
+    {
+        $totalWeight = self::where('TenderID', $tenderId)
+            ->where('IsActive', true)
+            ->sum('Weight');
+
+        return [
+            'is_valid' => abs($totalWeight - 100) < 0.01,
+            'total_weight' => $totalWeight
+        ];
+    }
+
+    /**
+     * Get sections with criteria for a specific tender
+     */
+    public static function getTenderSectionsWithCriteria($tenderId)
+    {
+        return self::with(['sections.criteria'])
+            ->where('TenderID', $tenderId)
+            ->where('IsActive', true)
+            ->orderBy('Weight', 'desc')
+            ->get();
     }
 }

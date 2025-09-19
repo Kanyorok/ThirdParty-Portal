@@ -28,16 +28,16 @@
             @error('title')
             <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
-        </div>
+                </div>
 
         <!-- Tender Type -->
         <div class="mb-3">
             <label class="form-label fw-bold">Tender Type: <span class="text-danger">*</span></label>
-            <div>
+                    <div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input @error('tender_type') is-invalid @enderror" type="radio" name="tender_type" id="openTender" value="op" {{ old('tender_type') == 'op' ? 'checked' : '' }} required>
                     <label class="form-check-label" for="openTender">Open Tender (Public posting)</label>
-                </div>
+                    </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input @error('tender_type') is-invalid @enderror" type="radio" name="tender_type" id="restrictedTender" value="rs" {{ old('tender_type') == 'rs' ? 'checked' : '' }} required>
                     <label class="form-check-label" for="restrictedTender">Restricted Tender (Selected vendors only)</label>
@@ -49,8 +49,8 @@
         </div>
 
         <!-- Category and Requisition -->
-        <div class="row">
-            <div class="col-md-4 mb-3">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
                 <label for="tenderCategory" class="form-label fw-bold">Tender Category: <span class="text-danger">*</span></label>
                 <select class="form-select @error('tender_category_id') is-invalid @enderror" id="tenderCategory" name="tender_category_id" required>
                     <option selected disabled>-- Select Category --</option>
@@ -61,32 +61,32 @@
                 @error('tender_category_id')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-            <div class="col-md-4 mb-3">
+                    </div>
+                    <div class="col-md-4 mb-3">
                 <label for="itemCategory" class="form-label fw-bold">Item Category <span class="text-danger">*</span></label>
                 <select class="form-select @error('item_category_id') is-invalid @enderror" id="itemCategory" name="item_category_id" required>
                     <option selected disabled>-- Item Categories --</option>
                     @foreach ($allItemsCategories as $item)
                     <option value="{{$item->Id}}" {{ old('item_category_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}}</option>
                     @endforeach
-                </select>
+                        </select>
                 @error('item_category_id')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-            <div class="col-md-4 mb-3">
+                    </div>
+                    <div class="col-md-4 mb-3">
                 <label for="currencyType" class="form-label fw-bold">Currency <span class="text-danger">*</span></label>
                 <select class="form-select @error('currency_id') is-invalid @enderror" id="currencyType" name="currency_id" required>
                     <option selected disabled>-- Select Your Currency --</option>
                     @foreach ($allCurrency as $item)
                     <option value="{{$item->Id}}" {{ old('currency_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}} ({{$item->Code}})</option>
                     @endforeach
-                </select>
+                        </select>
                 @error('currency_id')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-        </div>
+                    </div>
+                </div>
 
         <!-- Tender Items Tabs -->
         <ul class="nav nav-tabs mt-4" id="itemEntryTabs" role="tablist">
@@ -115,7 +115,7 @@
                         <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
                         @endforeach
                     </select>
-                </div>
+        </div>
 
                 <div class="row mb-3">
                     <div class="col-md-9">
@@ -123,13 +123,13 @@
                         <select class="form-select" id="planItemSelect">
                             <option selected disabled>-- Select Item --</option>
                         </select>
-                    </div>
+            </div>
                     <div class="col-md-3 d-flex align-items-end">
                         <button type="button" class="btn btn-primary w-100" onclick="addPlanItemToGrid()">➕ Add to
                             Grid
-                        </button>
-                    </div>
-                </div>
+                </button>
+            </div>
+</div>
 
                 <!-- Dynamic Plan Items Grid -->
                 <div class="mb-3">
@@ -168,17 +168,17 @@
                     </tbody>
                 </table>
                 <button type="button" class="btn btn-sm btn-primary" onclick="addManualItemRow()">➕ Add Item</button>
-            </div>
-        </div>
+    </div>
+</div>
 
         <!-- Scope -->
-        <div class="mb-3">
+                    <div class="mb-3">
             <label for="scopeOfWork" class="form-label fw-bold">Scope of Work <span class="text-danger">*</span></label>
             <textarea class="form-control @error('scope_of_work') is-invalid @enderror" id="scopeOfWork" name="scope_of_work" rows="3" required>{{ old('scope_of_work') }}</textarea>
             @error('scope_of_work')
             <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
-        </div>
+                    </div>
 
         <!-- Instructions -->
         <div class="mb-3">
@@ -187,31 +187,31 @@
             @error('instructions')
             <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
-        </div>
+                    </div>
 
         <!-- Dates -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                 <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline: <span class="text-danger">*</span></label>
                 <input type="date" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
                 @error('submission_deadline')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-            <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
                 <label for="openingDate" class="form-label fw-bold">Opening Date: <span class="text-danger">*</span></label>
                 <input type="date" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
                 @error('opening_date')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-        </div>
+                        </div>
+                    </div>
 
         <!-- Upload -->
-        <div class="mb-3">
+                    <div class="mb-3">
             <label for="tenderDocuments" class="form-label fw-bold">Attach Tender Document:</label>
             <input class="form-control" type="file" id="tenderDocuments" name="documents[]" multiple>
-        </div>
+                    </div>
 
         <!-- Restricted Suppliers -->
         <div class="mb-3" id="restrictedSuppliersSection" style="display: none;">
@@ -219,18 +219,18 @@
             <select class="form-select" id="suppliersList" name="suppliers[]" multiple>
                 <!-- Filled dynamically -->
             </select>
-        </div>
+                    </div>
 
         <!-- Buttons -->
         <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary">Save Tender</button>
-        </div>
-    </form>
+                    </div>
+                </form>
 
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
         const openTender = document.getElementById('openTender');
         const restricted = document.getElementById('restrictedTender');
         const section = document.getElementById('restrictedSuppliersSection');
@@ -397,9 +397,9 @@
             option.disabled = true;
             option.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
             suppliersList.appendChild(option);
-            return;
-        }
-
+        return;
+    }
+    
         filteredSuppliers.forEach(supplier => {
             const option = document.createElement('option');
             option.value = supplier.Id;

@@ -128,8 +128,11 @@ Route::get('/tender-clarifications/pending', [TenderClarificationApiController::
 Route::put('/tender-clarifications/{id}/respond', [TenderClarificationApiController::class, 'respondToClarification']);
 
 // Bid Submission APIs
-Route::post('/bid-submissions', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'submitBid']);
+Route::post('/bid-submissions', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'store']);
 Route::get('/bid-submissions', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'getSupplierBids']);
+Route::get('/bid-submissions/existing', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'getExistingBid']);
+// Legacy endpoint for existing integrations
+Route::post('/bid-submissions/legacy', [\App\Http\Controllers\API\Procurement\BidSubmissionApiController::class, 'submitBid']);
 
 // Supplier Management APIs for Tender Creation
 Route::get('/suppliers/for-tender', function(Request $request) {
@@ -145,8 +148,9 @@ Route::get('/suppliers/for-tender', function(Request $request) {
         'filtered_by_category' => false
     ]);
 });
-Route::get('/suppliers/categories', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getSupplierCategories']);
-Route::get('/suppliers/portal-registered', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getPortalRegisteredSuppliers']);
+// Temporarily commented out - SupplierApiController does not exist
+// Route::get('/suppliers/categories', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getSupplierCategories']);
+// Route::get('/suppliers/portal-registered', [\App\Http\Controllers\API\Procurement\SupplierApiController::class, 'getPortalRegisteredSuppliers']);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
     Route::get('/thirdpartyuser', function (Request $request) {
@@ -281,9 +285,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
     ->prefix('prequalification')
     ->name('api.prequalification.')
     ->group(function () {
-        Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
-        Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
-    });
+    Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
+    Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
+});
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     // Admin and Public Routes for Prequalification Periods
