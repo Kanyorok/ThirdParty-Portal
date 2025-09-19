@@ -14,6 +14,7 @@ use App\Services\RegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Facades\Log;
 
 class ThirdPartyAuthController extends Controller
 {
@@ -35,6 +36,17 @@ class ThirdPartyAuthController extends Controller
                 'redirectUrl' => '/register/third-party-details?user_id=' . $userData->UserID,
             ], 201);
         } catch (\Exception $e) {
+            // Force-write to single channel so it goes to storage/logs/laravel.log
+            Log::channel('single')->error('Third-party registration failed', [
+                'error' => $e->getMessage(),
+                'exception' => get_class($e),
+                'ip' => $request->ip(),
+                'forwarded_for' => $request->header('X-Forwarded-For'),
+                'user_agent' => $request->userAgent(),
+                'url' => $request->fullUrl(),
+                'route' => optional($request->route())->getName(),
+                'payload' => $request->except(['Password', 'Password_confirmation']),
+            ]);
             return response()->json([
                 'message' => __('auth.registration_failed'),
                 'error' => config('app.debug') ? $e->getMessage() : null,
