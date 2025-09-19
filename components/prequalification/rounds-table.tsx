@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { ChevronLeft, ChevronRight, FilePlus2, Lock } from "lucide-react"
 import { Button } from "@/components/common/button"
@@ -15,6 +16,22 @@ import { Round } from "@/types/types"
 
 function formatDateRange(start: string, end: string) {
     return `${format(new Date(start), "MMM d, yyyy")} — ${format(new Date(end), "MMM d, yyyy")}`
+}
+
+function toTime(value?: string): number | null {
+    if (!value) return null
+    const t = new Date(value).getTime()
+    return Number.isFinite(t) ? t : null
+}
+
+function rangesOverlap(aStart?: string, aEnd?: string, bStart?: string, bEnd?: string): boolean {
+    const as = toTime(aStart)
+    const ae = toTime(aEnd)
+    const bs = toTime(bStart)
+    const be = toTime(bEnd)
+    if (as == null || ae == null || bs == null || be == null) return false
+    // Overlap if max(start) <= min(end)
+    return Math.max(as, bs) <= Math.min(ae, be)
 }
 
 export default function RoundsTable({
@@ -36,6 +53,7 @@ export default function RoundsTable({
 }) {
     const { data: session } = useSession()
     const accessToken = session?.accessToken as string | undefined
+    const router = useRouter()
     const [openRoundId, setOpenRoundId] = useState<string | null>(null)
     const [appliedRoundIds, setAppliedRoundIds] = useState<Set<string>>(new Set())
     // Removed submittingRoundId because we now always open the full application form (categories required)
@@ -82,9 +100,29 @@ export default function RoundsTable({
                     const availableCategories = r.categories?.filter(cat => !cat.has_applied) || [];
                     const canApplyToMore = availableCategories.length > 0;
                     
-                    const backendCanApply = (r as any).canApply !== undefined ? Boolean((r as any).canApply) : true;
+                    // Prefer backend decision if provided
+                    const backendCanApply = (r as any).canApply !== undefined ? Boolean((r as any).canApply) : undefined;
+
+                    // Additional frontend guardrails based on dates and overlaps (requested logic)
+                    const now = Date.now();
+                    const startMs = toTime(r.startDate) ?? 0;
+                    const endMs = toTime(r.endDate) ?? 0;
+                    const windowOpen = startMs <= now && now <= endMs;
+
+                    // Disallow if start date not yet reached
+                    const blockedByNotStarted = startMs > now;
+
+                    // Disallow if there is another round overlapping the same date range
+                    // and backend didn't explicitly allow this round
+                    const hasOverlappingSibling = rounds.some(other => other.id !== r.id && rangesOverlap(r.startDate, r.endDate, other.startDate, other.endDate));
+                    const blockedByOverlap = hasOverlappingSibling && !hasAnyApplication;
+
+                    // Effective flag: default allow, except when not started or overlap; if backend provided canApply, honor it
+                    const effectiveCanApply = backendCanApply !== undefined
+                        ? backendCanApply
+                        : (!blockedByNotStarted && !blockedByOverlap && windowOpen);
                     
-                    if (backendCanApply && hasAnyApplication && !canApplyToMore) {
+                    if (effectiveCanApply && hasAnyApplication && !canApplyToMore) {
                         return (
                             <span
                                 title={`Applied to all categories (${appliedCategories.length})`}
@@ -95,7 +133,7 @@ export default function RoundsTable({
                         )
                     }
                     
-                    if (backendCanApply && hasAnyApplication && canApplyToMore) {
+                    if (effectiveCanApply && hasAnyApplication && canApplyToMore) {
                         return (
                             <div className="flex flex-col gap-1">
                                 <span className="text-xs text-green-600 font-medium">
@@ -116,7 +154,7 @@ export default function RoundsTable({
                         )
                     }
                     
-                    if (!backendCanApply || createdByOwner) {
+                    if (!effectiveCanApply || createdByOwner) {
                         return (
                             <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={createdByOwner ? 'Owner created round' : 'Not eligible to apply'}>
                                 <Lock className="h-3 w-3 mr-1" />
@@ -237,8 +275,14 @@ export default function RoundsTable({
                 defaultRoundId={openRoundId || undefined}
                 onOpenChange={(o) => { if (!o) setOpenRoundId(null) }}
                 onSuccess={({ roundId, applicationId }) => {
-                    setAppliedRoundIds(prev => new Set(prev).add(roundId))
+                    setAppliedRoundIds(prev => {
+                        const next = new Set(prev)
+                        next.add(roundId)
+                        return next
+                    })
                     toast.success('Application submitted', { description: applicationId ? `Reference: ${applicationId}` : undefined })
+                    // Refresh server-rendered rounds to update applied counts and categories
+                    try { router.refresh() } catch {}
                     setOpenRoundId(null)
                 }}
             >
