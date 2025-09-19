@@ -661,6 +661,172 @@ Personal workspace including schedule and tickets.
 
 ---
 
+## Appendix A: Detailed Module Procedures
+
+### A.1 Procurement
+
+This chapter provides end-to-end, procedural guidance for all Procurement functions. Menu names are shown as navigation hints; route names (in italics) are included where helpful.
+
+#### A.1.1 Roles & Permissions
+- Ensure your user has Procurement roles with permissions for: Department Needs, Plan Maintain, Set Method, Schedule, Submit/Approve, RFQs/Evaluations, Tendering, Suppliers, Purchase Orders, Goods Receipts, Contracts, Reports.
+- Approvers must have appropriate approval permissions (Department Needs approvals; Plan approvals; Awards; PO approvals, etc.).
+
+#### A.1.2 Department Needs (Raise Needs and Approvals)
+Navigation: Procurement > Department Needs  (departmental plan)
+
+Raise Needs (Department Users)
+1) Go to Procurement > Department Needs (List)  (route: procurementdepartmentalplan.index)
+2) Click Create to open the new Department Need page  (procurementdepartmentalplan.create)
+3) Fill Header fields: Department, Financial Year/Period, Priority, Description.
+4) Add Lines: select Category/Subcategory, Item, Quantity, UOM, Estimated Cost. Save each line.
+5) Save draft (procurementdepartmentalplan.store). You can re-open and edit lines (updateLine) or delete the draft (destroy).
+6) View lines: procurementdepartmentalplan.view; Data table: procurementdepartmentalplan.data.
+
+Submit For Approval
+7) When complete, click Submit for Approval (as configured by your process) or notify approver to review via Department Need Approval.
+
+Approval (Approvers)
+8) Go to Procurement > Approvals > Department Need Approval (department-need-approval.index)
+9) Open a need (show) to review header and lines; check attachments and comments.
+10) Approve or Reject (update/destroy) with remarks. The status updates and the need becomes available for consolidation.
+
+Troubleshooting
+- If items are missing, ensure Item Master/Category/Subcategory exist (Inventory module).
+- If approval buttons are missing, verify your role has approval permissions.
+
+#### A.1.3 Plan Maintain and Consolidation
+Navigation: Procurement > Plan
+
+Plan Maintain (Planners)
+1) Go to Procurement > Plan Maintain (procurementplanmaintain.index)
+2) Create Draft Plan (procurementplanmaintain.store)
+3) Add/Update Items in the plan (edit). Import from Department Needs via dedicated actions where provided (planning.editDraft / planning.updateDraftItems).
+4) Use “Planning > Edit Draft Items” to bulk edit draft line items.
+5) Save frequently. Use “Show” (procurementplanmaintain.show) for a summary.
+
+Consolidated Dashboard
+6) Go to Procurement > Dashboard (dashboard.index)
+7) Review consolidated needs; drill to specific items (dashboard.show)
+8) Export consolidated data (dashboard.export) for management review.
+
+Map to Budget/Timelines/Execution
+9) Map to Budget (maptobudget.*): assign budget lines or cost centers as per finance guidelines.
+10) Define Timelines (plantimeline.*) and Calendar-based plans (calenderbased.*) to sequence procurement events.
+11) Monitor execution (executiondashboard.*) to track progression from plan to completion.
+
+#### A.1.4 Set Method
+Navigation: Procurement > Plan > Set Method
+1) Open Set Method (procurement-set-method.index)
+2) Select a Plan. Load plan items (getPlanItems) and assign procurement methods per line (e.g., Open Tender, RFQ, Direct Purchase).
+3) Save. Ensure methods align with policy and thresholds.
+
+#### A.1.5 Plan Schedule
+Navigation: Procurement > Plan > Schedule
+1) Open Schedule (Procurement-Plan-Schedule.index)
+2) Create schedule for a Plan (create): set milestones, due dates, responsibilities.
+3) Review/Edit schedule entries (edit/view). Save.
+
+#### A.1.6 Submit Plan for Approval & Approval Inbox
+Navigation: Procurement > Plan > Submit for Approval; Procurement > Plan > Approval Inbox
+1) Submit: open Submission (Procurement-Plan-Submission.index), select plan, review summary, and Submit (update).
+2) Approvers: open Approval Inbox (approvalinbox.*) or Planning > Approval (planning.approval.*) to fetch plan details (getPlanDetails) and Submit Decision (submitDecision).
+3) Approved plans progress to execution; rejected plans return with comments.
+
+#### A.1.7 RFQs: Creation, Supplier Responses, Evaluation, Award
+Navigation: Procurement > RFQs
+
+Setup Lines & Create RFQ
+1) Create RFQ (rfqs.create) and fill header (title, reference, close date, evaluation method, currency).
+2) Add Lines (RFQLinesController: rfqlines.create/store) or via line categories (linecategories.store) and requisition categories endpoints.
+3) Optionally fetch requisition items to prefill RFQ lines.
+
+Supplier Responses (Internal Recording/Portal Intake)
+4) View RFQ Responses list (rfqresponses.index). Create/record responses received (store/edit/update/destroy) as applicable.
+5) Fetch RFQ Suppliers (getSuppliers) to confirm invited vendors.
+6) Get related requisition items (rfqs/{rfqId}/requisition-items) if needed.
+
+Evaluation & Consolidation
+7) Open Evaluation dashboard (evaluations.index/create). Capture scores/criteria per supplier.
+8) Use Consolidated view (evaluations.consolidated) to compare and finalize recommendations.
+9) Award supplier (evaluations.award) for selected RFQ.
+
+Committee & Governance (RFQ)
+10) Manage RFQ Committee (rfqcommittee.store and related views). Configure evaluation setup (rfqcriteriasetup.evaluations / save).
+
+#### A.1.8 RFQ Criteria & Sections Setup (Evaluation Design)
+Navigation: Procurement > RFQ Criteria Setup
+1) Define Sections (rfqsettingsections.index/store/show/update/destroy).
+2) Define Criteria (rfqsettingcriterias.*) and attach to sections.
+3) Use Evaluation Setup page to align weightings and scoring rules (rfqcriteriasetup.evaluations).
+4) Save evaluation configuration to apply across RFQs.
+
+#### A.1.9 Tendering: Initiation to Award
+Navigation: Procurement > Tendering
+
+Tender Setup
+1) Initiate Tender (initiatetender.*): create tender, define category (tendercategory.*), type (tendertype.*), evaluation criteria (tenderevaluations.*).
+2) Submit for Initiation Approval as required (initiateapprove.*).
+3) Approve/Reject Tender (tender.approve/tender.reject).
+
+Opening & Decryption
+4) Conduct Opening (tenderopening.*) to log submission openings.
+5) Decrypt (tenderdecrypt.*) when applicable to reveal technical/financial envelopes securely.
+
+Committee & Roles
+6) Manage Tender Committee (tendercommittee.*); add members (tendercommittee.save).
+7) Record Member Responses (memberresponse.*). Assign evaluator roles (assignrole.*).
+
+Evaluation & Scores
+8) Define criteria (evaluationcriteria.*) and record bid evaluations (bidevaluation.*).
+9) Evaluators Dashboard (evaluationdashboard.*) and Consolidated Scores (bidscores.*). Drilldown: bidscores.drilldown.
+10) Bid Responsiveness (bidresponsiveness.*) including bulk updates.
+
+Awards
+11) View/Manage Awards (procawards.*); unified award views (awards.unified). Approve/Reject awards (awards.approve/awards.reject).
+
+#### A.1.10 Prequalification & Supplier Management
+Navigation: Procurement > Suppliers; Procurement > Prequalification
+
+Suppliers
+1) Manage Suppliers list (suppliers.*) including create/edit/show.
+
+Prequalification
+2) Manage Prequalification Criteria (preqcriteria.*) and Sections.
+3) Applications/Evaluations (preqevaluation.*), with Evaluator-only submissions (middleware role:evaluator).
+4) Evaluation Approval (preqevalapproval.*) and Prequalified Suppliers (preqsuppliers.*).
+5) Public/API rounds (“prequalification.rounds.*”) available for portal/frontend integration.
+
+#### A.1.11 Purchase Orders (PO)
+Navigation: Procurement > Purchase Orders
+1) List POs (purchaseOrder.index). Create/Link RFQ (purchaseOrder.linkRFQ; getRFQItems).
+2) Approvals: submit approval (purchaseOrder.approval) and approve (purchaseOrder.approve).
+3) Fetch Suppliers (purchaseOrder.getSuppliers). Save and print as needed.
+
+#### A.1.12 Goods Receipts
+Navigation: Procurement > Goods Receipts
+1) View GRNs (procurementreceipts.index). Create GRN (create) and Save (store).
+2) Fetch Lines by GRN/PO (fetchLinesByGRN). Update Line (updateLine) and Post (postReceipt).
+3) Delete erroneous GRN (destroy). Ensure GRN aligns with delivered quantities.
+
+#### A.1.13 Contracts & Lifecycle
+Navigation: Procurement > Contracts
+1) List Contracts (contracts.index). Create (contracts.create/store) and View (contracts.view/edit/update).
+2) Approval Queue (contracts.approve_index) and Approval submission (contracts.approve/submit).
+3) Link LPO (contracts.lpo.link) to tie award to purchasing.
+4) Lifecycle: View/Amend/Terminate/Execute (contractcycle.*) including submit of amendments/termination.
+
+#### A.1.14 Reports
+Navigation: Procurement > Reports
+1) Open Reports index (procurement-reports.index) and choose a report.
+2) Export using procurement-reports.export with selected format.
+
+#### A.1.15 Tips & Best Practices
+- Maintain master data (items, categories, suppliers) before starting.
+- Align procurement method thresholds with policy; ensure documentation at each stage.
+- Use committee and evaluation configuration to standardize scoring.
+- Keep audit trail via comments, attachments, and reports.
+
+
 ## 5. Troubleshooting & FAQs
 
 - I cannot see a module or menu: Check with admin if your role grants access.
