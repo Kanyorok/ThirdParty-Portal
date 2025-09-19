@@ -6,7 +6,7 @@
 @endif
 
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">Record Tenant Payment (Supports Partials)</h4>
+  <p><small>Note: partial payment is applicable</small></p>
 
   <form action="{{ route('rentreceipt.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
@@ -23,7 +23,7 @@
               @foreach ($invoices as $invoice)
                 <option value="{{ $invoice->Id }}"
                   data-invoicenumber="{{ $invoice->InvoiceNumber ?? 'N/A' }}"
-                  data-tenantid-name="{{ $invoice->lease->tenant->TenantName ?? 'N/A' }}"
+                  data-tenantid-name="{{ $invoice->lease->tenant->thirdParty->TradingName ?? 'N/A' }}"
                   data-billingmonth-name="{{ $invoice->BillingMonth ?? 'N/A' }}"
                   data-invoicedate-name="{{ $invoice->InvoiceDate ?? 'N/A' }}"
                   data-invoicedate-id="{{ $invoice->InvoiceDate ?? 'N/A' }}"

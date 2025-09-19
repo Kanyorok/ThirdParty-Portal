@@ -53,7 +53,6 @@ class PropertyInvoice extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }
-
     public function modifiedByUser()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
