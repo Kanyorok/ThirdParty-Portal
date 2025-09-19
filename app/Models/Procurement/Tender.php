@@ -20,6 +20,8 @@ use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\procurement\TenderItems;
 use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\TenderSection;
+use App\Models\Procurement\TenderSupplier;
 use App\Traits\Model\UserActorTrait;
 
 class Tender extends Model
@@ -135,6 +137,52 @@ class Tender extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(\App\Models\Procurement\BidSubmission::class, 'TenderRef', 'TenderNo');
+    }
+
+    public function tenderSections()
+    {
+        return $this->hasMany(TenderSection::class, 'TenderID', 'Id');
+    }
+
+    public function tenderSuppliers(): HasMany
+    {
+        return $this->hasMany(TenderSupplier::class, 'TenderID', 'Id');
+    }
+
+    /**
+     * Get evaluation readiness status
+     */
+    public function getEvaluationReadiness()
+    {
+        if ($this->tenderSections->isEmpty()) {
+            return ['ready' => false, 'message' => 'No evaluation sections assigned'];
+        }
+
+        $totalWeight = $this->tenderSections->where('IsActive', true)->sum('Weight');
+        if (abs($totalWeight - 100) > 0.01) {
+            return ['ready' => false, 'message' => "Section weights sum to {$totalWeight}%, should be 100%"];
+        }
+
+        $responsiveBids = $this->submissions()
+            ->where('BidStatus', 'responsive')
+            ->where('IsResponsive', true)
+            ->count();
+
+        if ($responsiveBids === 0) {
+            return ['ready' => false, 'message' => 'No responsive bids available for evaluation'];
+        }
+
+        return [
+            'ready' => true,
+            'message' => "Ready: {$responsiveBids} responsive bid(s), {$this->tenderSections->count()} section(s)",
+            'responsive_bids' => $responsiveBids,
+            'sections_count' => $this->tenderSections->count()
+        ];
     }
 
     // public function creator(): BelongsTo

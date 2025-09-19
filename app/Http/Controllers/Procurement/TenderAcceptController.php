@@ -14,15 +14,15 @@ class TenderAcceptController extends Controller
     //
         public function index()
     {
-        // Resolve the current employee identifier that is stored in UserID column
-        $employeeId = optional(Auth::user())->EmployeeId ?? optional(Auth::user()?->employee)->Id;
+        // Get the current user ID (not EmployeeId) as committee members are stored by User ID
+        $currentUserId = Auth::id();
 
-        $tenders = TenderCommitteeMember::where('UserID', $employeeId)
+        $tenders = TenderCommitteeMember::where('UserID', $currentUserId)
             ->where(function($q){ $q->whereNull('Response')->orWhere('Response', 0); })
             ->with(['tender', 'createdBy'])
             ->get();
 
-        $rfq = RFQCommitteeMember::where('UserID', $employeeId)
+        $rfq = RFQCommitteeMember::where('UserID', $currentUserId)
             ->where(function($q){ $q->whereNull('Response')->orWhere('Response', 0); })
             ->with(['rfq', 'createdBy'])
             ->get();
@@ -40,12 +40,12 @@ class TenderAcceptController extends Controller
     try {
         DB::beginTransaction();
 
-        // Match records by employee identifier used in committee tables
-        $employeeId = optional(Auth::user())->EmployeeId ?? optional(Auth::user()?->employee)->Id;
+        // Get current user ID to match committee records
+        $currentUserId = Auth::id();
 
         // Validate response input to only accept 1 (accept) or 2 (decline)
         $validated = $request->validate([
-            'tender_id' => 'nullable|exists:t_Tender,Id',
+            'tender_id' => 'nullable|exists:t_Tenders,Id',
             'tender_response' => 'nullable|in:1,2',
             'tender_comments' => 'nullable|string|max:1000',
             'rfq_id' => 'nullable|exists:t_RFQ,Id',
@@ -55,21 +55,25 @@ class TenderAcceptController extends Controller
 
         // Update tender committee response if submitted
         if ($request->filled('tender_id') && $request->filled('tender_response')) {
-            TenderCommitteeMember::where('UserID', $employeeId)
+            TenderCommitteeMember::where('UserID', $currentUserId)
                 ->where('TenderID', $request->tender_id)
                 ->update([
                     'Response' => (int)$request->tender_response,
                     'reason' => $request->tender_comments,
+                    'ModifiedBy' => $currentUserId,
+                    'ModifiedOn' => now(),
                 ]);
         }
 
         // Update RFQ committee response if submitted
         if ($request->filled('rfq_id') && $request->filled('rfq_response')) {
-            RFQCommitteeMember::where('UserID', $employeeId)
+            RFQCommitteeMember::where('UserID', $currentUserId)
                 ->where('RFQID', $request->rfq_id)
                 ->update([
                     'Response' => (int)$request->rfq_response,
                     'reason' => $request->rfq_comments,
+                    'ModifiedBy' => $currentUserId,
+                    'ModifiedOn' => now(),
                 ]);
         }
 

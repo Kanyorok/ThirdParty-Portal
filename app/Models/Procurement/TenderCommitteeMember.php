@@ -55,7 +55,7 @@ class TenderCommitteeMember extends Model
         'DeletedOn',
     ];
 
-    protected $primaryKey = 'Id';
+    protected $primaryKey = 'id';
 
     public function committee()
     {
