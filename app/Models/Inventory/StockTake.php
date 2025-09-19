@@ -8,7 +8,6 @@ use App\Models\Core\Branch;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Inventory\store;
 
 
 class StockTake extends Model
@@ -40,12 +39,12 @@ class StockTake extends Model
 
     public function branch()
     {
-        return $this->belongsTo(Store::class, 'BranchId', 'Id');
+        return $this->belongsTo(Branch::class, 'BranchId', 'Id');
     }
 
     public function store()
     {
-        return $this->belongsTo(Branch::class, 'StoreId', 'Id');
+        return $this->belongsTo(Store::class, 'StoreId', 'Id');
     }
 
     public function createdby()
