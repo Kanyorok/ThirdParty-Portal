@@ -41,6 +41,8 @@ class LocalitySeeder extends Seeder
 
         $countries = null;
 
+        $countries = null;
+
         try {
             $this->command->info('Loading countries data (large file)…');
             $fileContent = file_get_contents($local);
@@ -223,8 +225,14 @@ class LocalitySeeder extends Seeder
                                     $cityInsertData
                                 );
                             }
+
+                            // Free per-iteration arrays ASAP
+                            unset($majorCities);
                         }
                     }
+
+                    // Free per-country arrays ASAP
+                    unset($majorStates);
                 }
             }
 

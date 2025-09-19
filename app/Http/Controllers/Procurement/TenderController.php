@@ -32,6 +32,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Throwable;
+use App\Models\Procurement\TenderInvitation;
+use App\Mail\TenderInvitation as TenderInvitationMail;
+use Illuminate\Support\Facades\Mail;
 
 class TenderController extends Controller
 {
@@ -117,7 +120,8 @@ class TenderController extends Controller
             ];
         }
 
-        $suppliers = Supplier::select('Id', 'ThirdPartyName', 'CategoryId')->get();
+        // Get suppliers with their supplier categories and item categories mapping
+        $suppliers = $this->getPrequalifiedSuppliers();
 
         activity()
             ->performedOn(new Tender())
@@ -254,7 +258,7 @@ class TenderController extends Controller
             return $qty * $price;
         });
 
-        $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier')->get();
+        $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier.thirdParty')->get();
         $tenderCategory = TenderCategory::find($tender->tender_category_id);
         $itemCategory = ItemCategories::find($tender->item_category_id);
         $currency = Currency::find($tender->currency_id);
@@ -597,6 +601,253 @@ class TenderController extends Controller
 
     public function approveTender(Request $request)
     {
-        // Check if the user has permission to approve tenders using the enum
+        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+        
+        // Validate the request
+        $request->validate([
+            'tender_id' => 'required|exists:t_Tenders,Id',
+            'reason' => 'required|string|max:1000',
+        ]);
+        
+        try {
+            DB::beginTransaction();
+            
+            // Find the tender
+            $tender = Tender::findOrFail($request->tender_id);
+            
+            // Update the approval status and related fields
+            $tender->update([
+                'ApprovalStatus' => TenderApprovalStatusEnum::APPROVED,
+                'ApprovalRemarks' => $request->reason,
+                'Status' => TenderStatusEnum::Published, // Approve and publish as mentioned in the modal
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+            
+            // Handle restricted tender invitations
+            $invitationsSent = 0;
+            if ($tender->isRestricted()) {
+                $invitationsSent = $this->sendRestrictedTenderInvitations($tender);
+            }
+            
+            // Log the approval activity
+            activity()
+                ->performedOn($tender)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'action' => 'approve',
+                    'approval_remarks' => $request->reason,
+                    'previous_status' => 'Pending',
+                    'new_status' => 'Approved',
+                    'tender_type' => $tender->TenderType->value,
+                    'invitations_sent' => $invitationsSent
+                ])
+                ->log('Tender approved and published with ID: ' . $tender->Id . ($invitationsSent > 0 ? ". Invitations sent to {$invitationsSent} suppliers." : ''));
+            
+            DB::commit();
+            
+            $successMessage = 'Tender approved and published successfully.';
+            if ($invitationsSent > 0) {
+                $successMessage .= " Invitations sent to {$invitationsSent} suppliers.";
+            }
+            
+            return redirect()->route('initiatetender.index')->with('success', $successMessage);
+        } catch (Throwable $th) {
+            DB::rollBack();
+            Log::error("--- APPROVE TENDER ERROR --- " . $th->getMessage());
+            Log::error($th);
+            return redirect()->route('initiatetender.index')->with('error', 'Failed to approve Tender. Please try again.');
+        }
+    }
+
+    public function rejectTender(Request $request)
+    {
+        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+        
+        // Validate the request
+        $request->validate([
+            'tender_id' => 'required|exists:t_Tenders,Id',
+            'reason' => 'required|string|max:1000',
+        ]);
+        
+        try {
+            DB::beginTransaction();
+            
+            // Find the tender
+            $tender = Tender::findOrFail($request->tender_id);
+            
+            // Update the approval status and related fields
+            $tender->update([
+                'ApprovalStatus' => TenderApprovalStatusEnum::REJECTED,
+                'ApprovalRemarks' => $request->reason,
+                'Status' => TenderStatusEnum::Draft, // Keep as draft when rejected
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+            
+            // Log the rejection activity
+            activity()
+                ->performedOn($tender)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'action' => 'reject',
+                    'rejection_remarks' => $request->reason,
+                    'previous_status' => 'Pending',
+                    'new_status' => 'Rejected'
+                ])
+                ->log('Tender rejected with ID: ' . $tender->Id);
+            
+            DB::commit();
+            
+            return redirect()->route('initiatetender.index')->with('success', 'Tender rejected successfully.');
+        } catch (Throwable $th) {
+            DB::rollBack();
+            Log::error("--- REJECT TENDER ERROR --- " . $th->getMessage());
+            Log::error($th);
+            return redirect()->route('initiatetender.index')->with('error', 'Failed to reject Tender. Please try again.');
+        }
+    }
+
+    /**
+     * Get prequalified suppliers based on active prequalification rounds
+     */
+    private function getPrequalifiedSuppliers()
+    {
+        // Find active prequalification rounds
+        $activeRounds = \App\Models\Procurement\Prequalification\PrequalificationRound::where('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Open)
+            ->where('StartDate', '<=', now())
+            ->where('EndDate', '>=', now())
+            ->pluck('RoundID');
+
+        if ($activeRounds->isEmpty()) {
+            return collect([]); // No active rounds, no suppliers available
+        }
+
+        // FIXED: Query t_Suppliers directly instead of looking for approved applications
+        // This matches the working SQL query logic
+        $prequalifiedSuppliers = \App\Models\ThirdParies\Supplier::whereIn('RoundID', $activeRounds)
+            ->where('Active_Status', 1)
+            ->whereNotNull('SupplierCategoryID')
+            ->with(['thirdParty', 'supplierCategory.itemCategories'])
+            ->get();
+
+        $suppliers = collect();
+        
+        foreach ($prequalifiedSuppliers as $supplier) {
+            if (!$supplier->thirdParty) continue;
+            
+            $thirdParty = $supplier->thirdParty;
+            
+            // Build list of item category IDs this supplier can serve
+            $itemCategoryIds = [];
+            
+            // Through supplier's category -> item categories mapping
+            if ($supplier->supplierCategory && $supplier->supplierCategory->itemCategories) {
+                foreach ($supplier->supplierCategory->itemCategories as $itemCategory) {
+                    // Add the parent category ID
+                    $itemCategoryIds[] = $itemCategory->Id;
+                    
+                    // Also add all subcategory IDs for this parent category
+                    $subcategories = \App\Models\Inventory\ItemCategories::where('ParentId', $itemCategory->Id)->pluck('Id');
+                    foreach ($subcategories as $subcategoryId) {
+                        $itemCategoryIds[] = $subcategoryId;
+                    }
+                }
+            }
+
+            $suppliers->push([
+                'Id' => $supplier->Id,
+                'SupplierName' => $thirdParty->ThirdPartyName,
+                'ThirdPartyName' => $thirdParty->ThirdPartyName,
+                'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
+                'CategoryId' => null, // No longer used - categories come from SupplierCategory mapping
+                'SupplierCategoryID' => $supplier->SupplierCategoryID, // From the supplier record
+                'ItemCategoryIds' => array_unique($itemCategoryIds), // All categories this supplier can serve
+                'RoundID' => $supplier->RoundID,
+                'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
+                'ThirdPartyID' => $supplier->ThirdPartyID,
+            ]);
+        }
+
+        // Remove duplicates based on supplier ID (a supplier might have multiple records)
+        return $suppliers->unique('Id')->values();
+    }
+
+    /**
+     * Send invitations to selected suppliers for restricted tenders
+     */
+    private function sendRestrictedTenderInvitations(Tender $tender): int
+    {
+        $invitationsSent = 0;
+        
+        try {
+            // Get all selected suppliers for this tender from t_TenderSuppliers
+            $selectedSuppliers = TenderSupplier::where('TenderID', $tender->Id)
+                ->with(['supplier.thirdParty'])
+                ->get();
+
+            if ($selectedSuppliers->isEmpty()) {
+                Log::warning("No suppliers found for restricted tender ID: {$tender->Id}");
+                return 0;
+            }
+
+            foreach ($selectedSuppliers as $tenderSupplier) {
+                if (!$tenderSupplier->supplier || !$tenderSupplier->supplier->thirdParty) {
+                    Log::warning("Missing supplier or thirdParty data for TenderSupplier ID: {$tenderSupplier->id}");
+                    continue;
+                }
+
+                $supplier = $tenderSupplier->supplier;
+                $thirdParty = $supplier->thirdParty;
+                
+                // Skip if no email address
+                if (!$thirdParty->Email) {
+                    Log::warning("No email address for supplier {$thirdParty->ThirdPartyName} (ID: {$supplier->Id})");
+                    continue;
+                }
+
+                // Create invitation record in t_TenderInvitations
+                $invitation = TenderInvitation::create([
+                    'TenderId' => $tender->Id,
+                    'SupplierId' => $supplier->Id,
+                    'InvitationDate' => now(),
+                    'ResponseStatus' => TenderInvitation::STATUS_PENDING,
+                    'ResponseDate' => null,
+                    'DeclineReason' => null,
+                    'ConfirmationAttachment' => null,
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
+
+                // Send email invitation
+                try {
+                    Mail::to($thirdParty->Email)
+                        ->send(new TenderInvitationMail($tender, $supplier));
+                    
+                    $invitationsSent++;
+                    
+                    Log::info("Tender invitation sent to {$thirdParty->ThirdPartyName} ({$thirdParty->Email}) for tender {$tender->TenderNo}");
+                    
+                } catch (Exception $emailException) {
+                    Log::error("Failed to send email to {$thirdParty->Email}: " . $emailException->getMessage());
+                    
+                    // Update invitation record to indicate email failure (but keep the record)
+                    $invitation->update([
+                        'DeclineReason' => 'Email sending failed: ' . $emailException->getMessage(),
+                        'ModifiedOn' => now(),
+                    ]);
+                }
+            }
+            
+            Log::info("Restricted tender invitations process completed. Total sent: {$invitationsSent}");
+            
+        } catch (Exception $e) {
+            Log::error("Error in sendRestrictedTenderInvitations: " . $e->getMessage());
+            throw $e; // Re-throw to be caught by the main transaction
+        }
+
+        return $invitationsSent;
     }
 }

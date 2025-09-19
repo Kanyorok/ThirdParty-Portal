@@ -9,7 +9,18 @@
             <h4 class="mb-0 text-primary">My Prequalification Evaluations</h4>
             <form method="POST" id="bulkPrequalifyForm" class="d-flex align-items-center gap-2">
                 @csrf
-                <input type="number" min="1" class="form-control form-control-sm" placeholder="Round ID" name="round_id" style="width:120px" required>
+                <select class="form-select form-select-sm" name="round_id" style="width:200px" required>
+                    <option value="">Select Active Round</option>
+                    @php
+                        $activeRounds = \App\Models\Procurement\Prequalification\PrequalificationRound::where('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Open)
+                            ->where('StartDate', '<=', now())
+                            ->where('EndDate', '>=', now())
+                            ->get();
+                    @endphp
+                    @foreach($activeRounds as $round)
+                    <option value="{{ $round->RoundID }}">{{ $round->Title }} (ID: {{ $round->RoundID }})</option>
+                    @endforeach
+                </select>
                 <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check-double me-1"></i> Bulk Prequalify (Passed)</button>
             </form>
         </div>

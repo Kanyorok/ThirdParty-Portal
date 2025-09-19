@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
 use App\Models\Core\Currency;
@@ -18,6 +19,7 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\procurement\TenderItems;
+use App\Models\Procurement\TenderAward;
 use App\Traits\Model\UserActorTrait;
 
 class Tender extends Model
@@ -99,12 +101,12 @@ class Tender extends Model
 
     public function invitations(): HasMany
     {
-        return $this->hasMany(TenderInvitation::class, 'TenderID');
+        return $this->hasMany(TenderInvitation::class, 'TenderId');
     }
 
     public function invitedSuppliers(): BelongsToMany
     {
-        return $this->belongsToMany(Supplier::class, 't_TenderInvitations', 'TenderID', 'SupplierID')
+        return $this->belongsToMany(Supplier::class, 't_TenderInvitations', 'TenderId', 'SupplierId')
             ->using(TenderInvitation::class)
             ->withPivot([
                 'InvitationID',
@@ -112,7 +114,7 @@ class Tender extends Model
                 'ResponseStatus',
                 'ResponseDate',
                 'DeclineReason',
-                'ConfirmationAttachmentPath'
+                'ConfirmationAttachment'
             ]);
     }
     public function currency(): BelongsTo
@@ -220,5 +222,21 @@ class Tender extends Model
     public function getRouteKeyName(): string
     {
         return 'TenderID';
+    }
+
+    /**
+     * Get all awards for this tender (HasMany relationship)
+     */
+    public function awards(): HasMany
+    {
+        return $this->hasMany(TenderAward::class, 'TenderID', 'Id');
+    }
+
+    /**
+     * Get the single award for this tender (HasOne relationship)
+     */
+    public function award(): HasOne
+    {
+        return $this->hasOne(TenderAward::class, 'TenderID', 'Id');
     }
 }

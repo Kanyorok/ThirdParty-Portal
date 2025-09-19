@@ -231,11 +231,11 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const open = document.getElementById('openTender');
+        const openTender = document.getElementById('openTender');
         const restricted = document.getElementById('restrictedTender');
         const section = document.getElementById('restrictedSuppliersSection');
 
-        open.addEventListener('change', () => section.style.display = 'none');
+        openTender.addEventListener('change', () => section.style.display = 'none');
         restricted.addEventListener('change', () => section.style.display = 'block');
 
         updateManualItemSelects();
@@ -385,7 +385,11 @@
     function populateSuppliers(categoryId = null) {
         suppliersList.innerHTML = '';
         const filteredSuppliers = categoryId ?
-            suppliers.filter(supplier => String(supplier.CategoryId) === String(categoryId)) :
+            suppliers.filter(supplier => {
+                // Check if supplier can serve this item category (parent) or any of its subcategories
+                // The supplier's ItemCategoryIds should include both parent and subcategory IDs
+                return supplier.ItemCategoryIds && supplier.ItemCategoryIds.includes(parseInt(categoryId));
+            }) :
             suppliers;
 
         if (filteredSuppliers.length === 0) {
@@ -404,16 +408,7 @@
         });
     }
 
-    openTender.addEventListener('change', () => {
-        suppliersSection.style.display = 'none';
-        suppliersList.innerHTML = '';
-        itemCategory.value = '';
-    });
-
-    restrictedTender.addEventListener('change', () => {
-        suppliersSection.style.display = 'block';
-        populateSuppliers(itemCategory.value || null);
-    });
+    // Remove duplicate event handlers - already handled in first script block
 
     itemCategory.addEventListener('change', () => {
         if (restrictedTender.checked) {

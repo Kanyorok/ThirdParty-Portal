@@ -198,22 +198,25 @@
 
             fetch(`/procurement/requisition/${requisitionId}/categories`)
                 .then(response => response.json())
-                .then(data => {
-                    if (!data || data.length === 0) {
+                .then(payload => {
+                    const categories = Array.isArray(payload)
+                        ? payload
+                        : (payload && Array.isArray(payload.categories) ? payload.categories : []);
+
+                    if (!categories.length) {
                         const option = document.createElement('option');
                         option.value = "";
                         option.textContent = "⚠️ No items available for the attached requisition.";
                         categoryDropdown.appendChild(option);
-                        categoryDropdown.disabled = false;
                     } else {
-                        data.forEach(cat => {
+                        categories.forEach(cat => {
                             const option = document.createElement('option');
                             option.value = cat.Id;
                             option.textContent = cat.Name;
                             categoryDropdown.appendChild(option);
                         });
-                        categoryDropdown.disabled = false;
                     }
+                    categoryDropdown.disabled = false;
                 })
                 .catch(error => {
                     console.error('Error loading categories:', error);
@@ -258,6 +261,20 @@
             printWindow.print();
             printWindow.close();
         }
+    </script>
+    <script>
+        // Prevent aria-hidden focus conflict when hiding modals (e.g., close button focused)
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('hide.bs.modal', function (event) {
+                const modal = event.target;
+                if (modal && modal.classList.contains('modal')) {
+                    const active = document.activeElement;
+                    if (active && modal.contains(active) && typeof active.blur === 'function') {
+                        active.blur();
+                    }
+                }
+            });
+        });
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

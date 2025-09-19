@@ -15,6 +15,7 @@ use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
+use App\Http\Controllers\API\Procurement\SupplierRFQController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -41,6 +42,8 @@ Route::post('auth/validate-token', function (Request $request) {
         ],
     ]);
 })->middleware('auth:sanctum')->name('auth.validate-token');
+use App\Http\Controllers\Procurement\TenderApiController;
+use App\Http\Controllers\Procurement\TenderInvitationController;
 
 Route::prefix('third-party-auth')->group(function () {
     Route::post('login', [ThirdPartyAuthController::class, 'login']);
@@ -52,15 +55,70 @@ Route::prefix('third-party-auth')->group(function () {
 // step 2: Register company info (associated third party)
 Route::post('third-parties/register-details', [ThirdPartyController::class, 'store']);
 
-// Tenders
-// Route::get('/tenders', [TenderApiController::class, 'index']);
-// Route::post('/tenders', [TenderApiController::class, 'store']);
-// Route::put('/tenders/{id}', [TenderApiController::class, 'update']);
-// Route::delete('/tenders/{id}', [TenderApiController::class, 'destroy']);
-// Route::post('/tenders/{tenderId}/items', [TenderApiController::class, 'addItem']);
-// Route::delete('/tenders/{tenderId}/items/{itemId}', [TenderApiController::class, 'deleteItem']);
-// Route::post('/tenders/{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
-// Route::delete('/tenders/{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
+// Health check endpoint
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now(),
+        'service' => 'BRERP API'
+    ]);
+});
+
+// Test endpoint for debugging (NO AUTH REQUIRED)
+Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $request) {
+    try {
+        $thirdPartyId = $request->query('third_party_id', 1); // Default to ID 1 for testing
+        
+        // Get supplier ID from third party ID
+        $supplier = \App\Models\ThirdParies\Supplier::whereHas('thirdParty', function($query) use ($thirdPartyId) {
+            $query->where('Id', $thirdPartyId);
+        })->first();
+
+        if (!$supplier) {
+            return response()->json([
+                'debug' => 'No supplier found',
+                'third_party_id' => $thirdPartyId,
+                'third_parties_count' => \App\Models\ThirdParies\ThirdParty::count(),
+                'suppliers_count' => \App\Models\ThirdParies\Supplier::count(),
+                'sample_third_party' => \App\Models\ThirdParies\ThirdParty::first()
+            ]);
+        }
+
+        // Fetch tender invitations
+        $invitations = \App\Models\Procurement\TenderInvitation::where('SupplierId', $supplier->Id)
+            ->with(['tender'])
+            ->take(5)
+            ->get();
+
+        return response()->json([
+            'debug' => 'Debug endpoint working',
+            'third_party_id' => $thirdPartyId,
+            'supplier_found' => $supplier ? $supplier->Id : null,
+            'invitations_count' => $invitations->count(),
+            'invitations' => $invitations->map(function($inv) {
+                return [
+                    'InvitationID' => $inv->InvitationID,
+                    'TenderId' => (int) $inv->TenderId,
+                    'ResponseStatus' => strtolower($inv->ResponseStatus),
+                    'tender_title' => $inv->tender ? $inv->tender->Title : 'No tender loaded'
+                ];
+            })
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'debug' => 'Error in debug endpoint',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+
+// TEMPORARY: Test APIs without auth for debugging
+Route::apiResource('tenders', TenderApiController::class);
+Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
+Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
     Route::get('/thirdpartyuser', function (Request $request) {
@@ -97,6 +155,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
 
     Route::middleware('thirdparty.approved')->group(function () {
         Route::apiResource('third-party-categories', ThirdPartyCategoryController::class);
+    });
+    
+    // Additional tender-related routes (still need auth)
+    Route::prefix('tenders')->group(function () {
+        Route::post('{tenderId}/items', [TenderApiController::class, 'addItem']);
+        Route::delete('{tenderId}/items/{itemId}', [TenderApiController::class, 'deleteItem']);
+        Route::post('{tenderId}/suppliers', [TenderApiController::class, 'addSupplier']);
+        Route::delete('{tenderId}/suppliers/{supplierId}', [TenderApiController::class, 'deleteSupplier']);
     });
 });
 
@@ -173,6 +239,13 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
         });
+
+        // Supplier RFQ endpoints (supplier portal)
+        Route::get('rfq-suppliers', [SupplierRFQController::class, 'listInvitations']);
+        Route::get('rfq-suppliers/{rfq}', [SupplierRFQController::class, 'getInvitation']);
+        Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
+        Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
+        Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications']);
     });
 
 // Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage

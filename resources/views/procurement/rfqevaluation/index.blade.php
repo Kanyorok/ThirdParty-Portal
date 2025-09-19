@@ -52,7 +52,7 @@
                 <td>{{ $Index + 1 }}</td>
                 <td>{{ $evaluation->CommitteeMemberName }}</td>
                 <td>{{ $rfqNumber }}</td>
-                <td>{{ $supplier->SupplierName ?? 'N/A' }}</td>
+                <td>{{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}</td>
                 <td>{{ number_format($response->TotalPayable ?? 0, 2) }}</td>
                 <td>{{ $response->DurationDays ?? '-' }} Days</td>
                 <td>{{ $weightedTotal }}%</td>
@@ -87,7 +87,7 @@
             ->where('SupplierId', $supplierId)
             ->where('RFQId', $evaluation->RFQId)
             ->first();
-        $groupedBySection = $evalGroup->groupBy(fn($e) => $e->rfqCriteria?->section?->SectionName ?? 'Uncategorized');
+        $groupedBySection = $evalGroup->groupBy(fn($e) => $e->rfqCriteriaUnscoped?->section?->SectionName ?? 'Uncategorized');
       @endphp
       <!-- View Modal -->
       <div class="modal fade" id="viewModal-{{ $evaluation->Id }}-{{ $supplierId }}" tabindex="-1"
@@ -121,7 +121,7 @@
                 <hr>
               <div class="card mb-4">
                 <div class="card-header bg-light fw-bold">
-                  Supplier: {{ $supplier->SupplierName ?? 'N/A' }}
+                  Supplier: {{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}
                 </div>
                 <div class="card-body">
                   <p><strong>Total Quoted:</strong> KES {{ number_format($response->TotalPayable ?? 0, 2) }}</p>
@@ -171,7 +171,8 @@
                         @php
                           $firstEntry = $criteriaList->first();
                           $sectionName = $firstEntry->rfqCriteriaUnscoped?->section?->SectionName ?? 'Uncategorized';
-                          $sectionWeight = $firstEntry->rfqCriteriaUnscoped?->weightedSection?->Weight ?? 0;
+                          $sectionId = $firstEntry->rfqCriteriaUnscoped?->SectionID ?? null;
+                          $sectionWeight = $sectionId ? ($rfqSectionWeights[$evaluation->RFQId][$sectionId] ?? 0) : 0;
                           $sectionTotal = 0;
                           $maxScorePerCriteria = 10;
                           $totalMaxSectionScore = $maxScorePerCriteria * $criteriaList->count();
@@ -189,7 +190,7 @@
                           @endphp
                           <tr>
                             <td></td>
-                            <td>{{ $entry->criteria->CriteriaName ?? 'N/A' }}</td>
+                            <td>{{ $entry->rfqCriteriaUnscoped?->criteria?->CriteriaName ?? 'N/A' }}</td>
                             <td>{{ $maxScorePerCriteria }}</td>
                             <td>{{ $entry->Score }}</td>
                             <td>{{ $entry->Comments ?? '-' }}</td>

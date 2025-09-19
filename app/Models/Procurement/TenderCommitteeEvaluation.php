@@ -57,7 +57,7 @@ class TenderCommitteeEvaluation extends Model
 
     public function tenderCommittee()
     {
-        return $this->belongsTo(TenderCommittee::class, 'TenderCommitteeID', 'Id');
+        return $this->belongsTo(TenderCommittee::class, 'CommitteeID', 'Id');
     }
 
     public function createdBy()
@@ -75,11 +75,6 @@ class TenderCommitteeEvaluation extends Model
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
     }
 
-    public function tenderCommitteeMembers()
-    {
-        return $this->hasMany(TenderCommitteeMember::class, 'TenderCommitteeID', 'Id');
-    }
-
     public function tender()
     {
         return $this->belongsTo(Tender::class, 'TenderID', 'Id');
@@ -87,22 +82,17 @@ class TenderCommitteeEvaluation extends Model
 
     public function tenderCommitteeMember()
     {
-        return $this->belongsTo(TenderCommitteeMember::class, 'TenderCommitteeMemberID', 'Id');
+        return $this->belongsTo(TenderCommitteeMember::class, 'MemberID', 'Id');
     }
-
-    public function tenderCommitteeEvaluations()
+    
+    public function section()
     {
-        return $this->hasMany(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
+        return $this->belongsTo(\App\Models\procurement\Section::class, 'SectionID', 'Id');
     }
-
-    public function tenderCommitteeMemberEvaluations()
+    
+    public function criteria()
     {
-        return $this->hasMany(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
-    }
-
-    public function tenderCommitteeMemberEvaluation()
-    {
-        return $this->belongsTo(TenderCommitteeEvaluation::class, 'TenderCommitteeMemberID', 'Id');
+        return $this->belongsTo(\App\Models\procurement\Criteria::class, 'CriteriaID', 'Id');
     }
 
     public static function getPrimaryKey(): string

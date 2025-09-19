@@ -101,14 +101,26 @@
                                        class="btn btn-sm btn-outline-info me-1" title="View Journal Lines">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    @php $isPosted = strtolower($recurring->ApprovalStatus ?? '') === 'posted'; @endphp
                                     <a href="{{ route('recurrentjournal.edit', $recurring->Id) }}"
-                                       class="btn btn-sm btn-outline-warning" title="Edit">
+                                       class="btn btn-sm btn-outline-warning me-1 {{ $isPosted ? 'disabled' : '' }}"
+                                       title="Edit" aria-disabled="{{ $isPosted ? 'true' : 'false' }}"
+                                       style="{{ $isPosted ? 'pointer-events:none; opacity:.65;' : '' }}">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="{{ route('recurrentjournal.destroy', $recurring->Id) }}"
-                                       class="btn btn-sm btn-outline-danger" title="Edit">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isPosted ? 'disabled' : '' }}"
+                                            title="Delete"
+                                            {{ $isPosted ? 'disabled' : '' }}
+                                            @if(!$isPosted)
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{ $recurring->RefNo ?? ('#'.$recurring->Id) }}"
+                                                data-route="{{ route('recurrentjournal.destroy', $recurring->Id) }}"
+                                            @endif
+                                    >
                                         <i class="fas fa-trash-alt"></i>
-                                    </a>
+                                    </button>
                                 </td>
                             </tr>
 
@@ -133,6 +145,8 @@
             </div>
         </div>
     </div>
+
+    @include('components.modals.delete-confirm')
 @endsection
 
 @section('styles')

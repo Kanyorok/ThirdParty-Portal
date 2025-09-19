@@ -179,6 +179,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::delete('/rfqresponses/{id}', [RFQResponseController::class, 'destroy'])->name('rfqresponses.destroy');
     Route::get('/rfq-responses/{rfqId}', [RFQEvaluationController::class, 'getRFQResponses'])->name('rfq.responses');
     Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
+    Route::get('/rfqresponses/find-existing', [RFQResponseController::class, 'findExisting']);
 
     // RFQ Evaluation routes
     Route::get('/rfq-evaluations', [RFQEvaluationController::class, 'index'])->name('evaluations.index');
@@ -215,9 +216,7 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('bidevaluation', BidEvaluationController::class);
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
-    Route::resource('procurementreports', ProcurementReportsController::class);
-    Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
-    Route::resource('bidscores', BidScoreConsolidationController::class);
+    Route::get('bidscores/{tenderId}/{supplierId}/drilldown', [BidScoreConsolidationController::class, 'show'])->name('bidscores.drilldown');
     Route::resource('procurementreports', ProcurementReportsController::class);
 
     //Tender Creteria setup
@@ -440,9 +439,14 @@ Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
 
 Route::resource('bidresponsiveness', TenderBidResponsivenessController::class)->except(['create']);
 Route::get('bidresponsiveness/create/{tenderSupplier}', [TenderBidResponsivenessController::class, 'create'])->name('bidresponsiveness.create');
+Route::post('bidresponsiveness/bulk', [TenderBidResponsivenessController::class, 'bulkUpdate'])->name('bidresponsiveness.bulk');
 
-Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender']); //->name('awards.view');
-Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq']); //->name('awards.view');
+Route::get('/awards-tender/view/{id}', [AwardsController::class, 'view_tender'])->name('awards.tender');
+Route::get('/awards-rfq/view/{id}', [AwardsController::class, 'view_rfq'])->name('awards.rfq');
+Route::get('/awards/unified/{id}', [AwardsController::class, 'showUnifiedAward'])->name('awards.unified');
+Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->name('awards.switch-type');
+Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
+Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
 
 Route::resource('procawards', AwardsController::class);
 

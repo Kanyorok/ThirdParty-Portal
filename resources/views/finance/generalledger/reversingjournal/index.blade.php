@@ -75,14 +75,21 @@
                                        class="btn btn-sm btn-outline-primary" title="View Journal Entry">
                                         <i class="fas fa-book-open"></i>
                                     </a>
-                                    <a href="{{ route('journalentry.edit', 1) }}"
-                                       class="btn btn-sm btn-outline-warning" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{{ route('journalentry.destroy', 1) }}"
-                                       class="btn btn-sm btn-outline-danger" title="Edit">
+                                    @php $isPosted = strtolower($reversal->ApprovalStatus ?? '') === 'posted'; @endphp
+                                    <!-- Edit removed as requested -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isPosted ? 'disabled' : '' }}"
+                                            title="Delete"
+                                            {{ $isPosted ? 'disabled' : '' }}
+                                            @if(!$isPosted)
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{ $reversal->RefNo ?? ('#'.$reversal->Id) }}"
+                                                data-route="{{ route('reversingjournal.destroy', $reversal->Id) }}"
+                                            @endif
+                                    >
                                         <i class="fas fa-trash-alt"></i>
-                                    </a>
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -106,6 +113,8 @@
             </div>
         </div>
     </div>
+
+    @include('components.modals.delete-confirm')
 @endsection
 
 @section('styles')

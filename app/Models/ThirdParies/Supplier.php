@@ -20,19 +20,20 @@ class Supplier extends ThirdParties
 
     // Limit fillable to actual supplier table columns to avoid parent fillables bleeding in
     protected $fillable = [
+        'RoundID',
         'ThirdPartyID',
         'RoundID',
     'CategoryId',
-        'IsPrequalified',
         'Active_Status',
+        'SupplierCategoryID',
+        'CreatedBy',
         'CreatedOn',
+        'ModifiedBy',
         'ModifiedOn',
-    'CreatedBy',
-    'ModifiedBy',
+        'DeletedBy',
     ];
 
     protected $casts = [
-        'IsPrequalified' => 'boolean',
     'Active_Status' => 'boolean',
     'CategoryId' => 'integer',
     ];
@@ -78,13 +79,39 @@ class Supplier extends ThirdParties
 
     public function scopeApprovedAndPrequalified($query)
     {
-        // Simplified: treat Active_Status true & IsPrequalified true as approved
-        return $query
-            ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
-            ->where('IsPrequalified', true)
-            ->where('Active_Status', 1);
+    // Treat Active_Status true as approved/active supplier row for the round/category
+    return $query
+        ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
+        ->where('Active_Status', 1);
     }
 
+    /**
+     * Relationship to ThirdParty (for supplier names and details)
+     */
+    public function thirdParty()
+    {
+        return $this->belongsTo(ThirdParties::class, 'ThirdPartyID', 'Id');
+    }
+
+    /**
+     * Relationship to SupplierCategory via SupplierCategoryID
+     */
+    public function supplierCategory()
+    {
+        return $this->belongsTo(\App\Models\ThirdParty\SupplierCategory::class, 'SupplierCategoryID', 'SupplierCategoryID');
+    }
+
+    /**
+     * Relationship to PrequalificationRound via RoundID
+     */
+    public function round()
+    {
+        return $this->belongsTo(\App\Models\Procurement\Prequalification\PrequalificationRound::class, 'RoundID', 'RoundID');
+    }
+
+    /**
+     * Many-to-many relationship to SupplierCategories through pivot table
+     */
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(

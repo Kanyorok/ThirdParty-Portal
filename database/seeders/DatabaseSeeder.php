@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CodeDetailSeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(CurrencySeeder::class);
-        $this->call(LocalitySeeder::class);
+        //$this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(CommitteeSeeder::class);
@@ -61,7 +61,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PropertyFloorSeeder::class);
         $this->call(PropertyUnitSeeder::class);
 
-        $this->call(TenantRegistrySeeder::class);
+        //$this->call(TenantRegistrySeeder::class);
         $this->call(FinanceGLTypeGroupSeeder::class);
         $this->call(FinanceGLSubAccountTypeSeeder::class);
         $this->call(FinanceGLAccountsSeeder::class);
@@ -83,6 +83,17 @@ class DatabaseSeeder extends Seeder
         $this->call(LegalLoanSecuritiesSeeder::class);
         $this->call(LegalCaseCounselSeeder::class);
         $this->call(LegalCaseOutcomeSeeder::class);
+        $this->call(RegulatoryObligationsSeeder::class);
+        $this->call(ComplianceMastersSeeder::class);
+        $this->call(ComplianceObligationsSeeder::class);
+        $this->call(ComplianceControlsSeeder::class);
+        $this->call(ComplianceIncidentsSeeder::class);
+        $this->call(ComplianceFilingsSeeder::class);
+
+        $this->call(SystemBankSettingSeeder::class);
+        $this->call(BanksSeeder::class);
+        $this->call(BankBranchesSeeder::class);
+
 
 //         $this->call(RegulatoryObligationsSeeder::class);
 //         $this->call(ComplianceMastersSeeder::class);
