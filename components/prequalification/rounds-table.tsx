@@ -83,9 +83,8 @@ export default function RoundsTable({
                     const canApplyToMore = availableCategories.length > 0;
                     
                     const backendCanApply = (r as any).canApply !== undefined ? Boolean((r as any).canApply) : true;
-                    const effectiveCanApply = backendCanApply && canApplyToMore && !createdByOwner;
                     
-                    if (hasAnyApplication && !canApplyToMore) {
+                    if (backendCanApply && hasAnyApplication && !canApplyToMore) {
                         return (
                             <span
                                 title={`Applied to all categories (${appliedCategories.length})`}
@@ -96,7 +95,7 @@ export default function RoundsTable({
                         )
                     }
                     
-                    if (hasAnyApplication && canApplyToMore) {
+                    if (backendCanApply && hasAnyApplication && canApplyToMore) {
                         return (
                             <div className="flex flex-col gap-1">
                                 <span className="text-xs text-green-600 font-medium">
@@ -117,7 +116,7 @@ export default function RoundsTable({
                         )
                     }
                     
-                    if (!effectiveCanApply) {
+                    if (!backendCanApply || createdByOwner) {
                         return (
                             <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={createdByOwner ? 'Owner created round' : 'Not eligible to apply'}>
                                 <Lock className="h-3 w-3 mr-1" />
