@@ -23,7 +23,7 @@ use Throwable;
 
 class TransactionTransferService
 {
-    protected function getHQBranchId(): int
+public function getHQBranchId(): int
     {
         $hqBranch = Branch::where('IsHQ', 1)->first();
         if (!$hqBranch) {

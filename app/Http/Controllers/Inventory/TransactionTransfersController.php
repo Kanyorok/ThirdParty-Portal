@@ -137,7 +137,7 @@ class TransactionTransfersController extends Controller
                 ->get();
         } elseif ($type === 'procurement') {
             $statusIds = DB::table('t_CodeDetails')
-                ->where('CodeID', 'a')
+                ->where('CodeID', 'RequisitionStatus')->Where('Description', 'Pending')
                 ->pluck('ID');
 
             $requisitions = Requisitions::whereIn('StatusID', $statusIds)
@@ -154,62 +154,78 @@ class TransactionTransfersController extends Controller
     }
 public function getRequisitionDetails(Request $request, $id)
 {
-    $type = $request->query('type');
+    try {
+        $type = $request->query('type');
 
-    if ($type === 'interbranch') {
-        $requisition = InterBranchRequisition::with([
-            'fromBranch',
-            'toBranch',
-            'items.item.price', // eager load price relationship
-            'items.item.uom'    // eager load UOM
-        ])->findOrFail($id);
+        if ($type === 'interbranch') {
+            $requisition = InterBranchRequisition::with([
+                'fromBranch',
+                'toBranch',
+                'items.item.price',
+                'items.item.uom'
+            ])->findOrFail($id);
 
-        $items = $requisition->items->map(function ($item) {
-            $actualPrice = $item->item?->price?->ActualPrice ?? 0;
-
-            return [
-                'Item' => $item->Item,
-                'ItemCode' => $item->item->ItemCode ?? '',
-                'ItemName' => $item->item->ItemName ?? '',
-                'UnitCost' => $actualPrice, 
-                'UOM' => $item->item->UOM,
-                'UOMCode' => $item->item->uom?->Code ?? 'N/A',
-                'PriceID' => $item->item->ItemPrice, 
-                'ApprovedQty' => $item->ApprovedQty,
-            ];
-        });
-
-        return response()->json([
-            'Id' => $requisition->Id,
-            'from_branch' => $requisition->fromBranch,
-            'to_branch' => $requisition->toBranch,
-            'items' => $items,
-        ]);
-    }
-
-        if ($type === 'procurement') {
-            $requisition = Requisitions::with('requisitionLines.item')->findOrFail($id);
-            $branch = $requisition->BranchID ? Branch::find($requisition->BranchID) : null;
-
-            $items = $requisition->requisitionLines->map(function ($line) {
+            $items = $requisition->items->map(function ($item) {
                 return [
-                    'Item' => $line->Item,
-                    'ItemCode' => $line->item->ItemCode ?? '',
-                    'ItemName' => $line->item->ItemName ?? $line->Description,
-                    'UOM' => $line->item->UOM ?? $line->UOM,
-                    'UOMCode' => $line->item->uom->Code ?? 'N/A',
-                    'ApprovedQty' => $line->Quantity,
+                    'Id'          => $item->Id,
+                    'Item'        => $item->Item, // raw item field
+                    'ItemCode'    => $item->item->ItemCode ?? '',
+                    'ItemName'    => $item->item->ItemName ?? '',
+                    'UnitCost'    => $item->item?->price?->ActualPrice ?? 0, // ExpectedPrice → UnitCost
+                    'UOM'         => $item->UOM, // keep as is from line
+                    'UOMCode'     => $item->item?->uom?->Code ?? 'N/A',
+                    'PriceID'     => $item->item?->ItemPrice,
+                    'ApprovedQty' => $item->ApprovedQty ?? $item->Quantity, // fallback to Quantity
                 ];
             });
 
             return response()->json([
-                'Id' => $requisition->Id,
-                'from_branch' => null,
-                'to_branch' => $branch,
-                'items' => $items,
+                'Id'         => $requisition->Id,
+                'from_branch'=> $requisition->fromBranch,
+                'to_branch'  => $requisition->toBranch,
+                'items'      => $items,
             ]);
         }
 
-        return response()->json([], 400);
+        if ($type === 'procurement') {
+            $requisition = Requisitions::with([
+                'requisitionLines.item.price',
+                'requisitionLines.item.uom'
+            ])->findOrFail($id);
+
+            $branch = $requisition->BranchID ? Branch::find($requisition->BranchID) : null;
+
+            $items = $requisition->requisitionLines->map(function ($line) {
+                return [
+                    'Id'          => $line->Id,
+                    'Item'        => $line->Item, // raw item field
+                    'ItemCode'    => $line->item?->ItemCode ?? '',
+                    'ItemName'    => $line->item?->ItemName ?? '',
+                    'UnitCost'    => $line->ExpectedPrice, // ExpectedPrice → UnitCost
+                    'UOM'         => $line->UOM ?? $line->item?->UOM,
+                    'UOMCode'     => $line->item?->uom?->Code ?? 'N/A',
+                    'PriceID'     => $line->ExpectedPrice,
+                    'ApprovedQty' => $line->Quantity, // fill with Quantity
+                ];
+            });
+
+            return response()->json([
+                'Id'         => $requisition->Id,
+                'from_branch'=> null,
+                'to_branch'  => $branch,
+                'items'      => $items,
+            ]);
+        }
+
+        return response()->json(['error' => 'Invalid type'], 400);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
+
+
 }
