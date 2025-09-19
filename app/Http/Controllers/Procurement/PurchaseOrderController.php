@@ -618,7 +618,7 @@ public function prequalifiedSuppliersByCategory($categoryId): JsonResponse
             $fromPivot = DB::table('t_ThirdParties as tp')
                 ->leftJoin('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
                 ->whereIn('tp.Id', $thirdPartyIds)
-                ->selectRaw('COALESCE(s.Id, 0) as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName) as SupplierName, COALESCE(tp.Address, '\'\') as Address')
+                ->selectRaw("COALESCE(s.Id, 0) as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName) as SupplierName, COALESCE(tp.Address, '') as Address")
                 ->orderBy('SupplierName')
                 ->get();
         }
@@ -629,7 +629,7 @@ public function prequalifiedSuppliersByCategory($categoryId): JsonResponse
             $fromDirect = DB::table('t_Suppliers as s')
                 ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
                 ->whereIn('s.CategoryId', $categoryIds)
-                ->selectRaw('s.Id as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName, s.SupplierName) as SupplierName, COALESCE(tp.Address, '\'\') as Address')
+                ->selectRaw("s.Id as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName, s.SupplierName) as SupplierName, COALESCE(tp.Address, '') as Address")
                 ->orderBy('SupplierName')
                 ->get();
         } catch (\Throwable $e) {}
