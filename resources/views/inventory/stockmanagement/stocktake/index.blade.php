@@ -23,7 +23,7 @@
     @foreach($stocks as $stock)
       <tr>
           <td>{{$loop->iteration}}</td>
-          <td>{{ $stock->branch->Name ?? '-'}}</td>
+          <td>{{$stock->branch->Name ?? '-'}}</td>
           <td>{{$stock->store->StoreName ?? '-'}}</td>
           <td>{{$stock->countedby->Name ?? 'N/A'}}</td>
           <td>{{ \Carbon\Carbon::parse($stock->CountDate)->format('d/m/Y') ?? '-'}}</td>

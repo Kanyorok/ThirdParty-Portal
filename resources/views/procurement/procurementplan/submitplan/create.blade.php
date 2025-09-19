@@ -98,13 +98,14 @@
                     <td>{{ $item->MergedQty }}</td>
                     <td>{{ number_format($item->EstimatedUnitCost, 0) }}</td>
                     <td>
-                        @if ($item->budgetline->Description)
-                            {{ $item->budgetline->Description }}
+                        @php $bl = $item->budgetline; @endphp
+                        @if ($bl && !empty($bl->Description))
+                            {{ $bl->Description }}
                         @else
                             <span class="text-danger">Unlinked</span>
                         @endif
                     </td>
-                    <td>{{ $item->ProcurementMode->Description ?? '—' }}</td>
+                    <td>{{ $item->procurementMode->Description ?? '—' }}</td>
                     <td>
                         @if ($item->schedulePlan && $item->schedulePlan->periods->isNotEmpty())
                             @foreach ($item->schedulePlan->periods as $period)

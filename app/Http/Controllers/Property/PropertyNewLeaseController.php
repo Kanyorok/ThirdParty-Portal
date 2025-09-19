@@ -144,7 +144,7 @@ class PropertyNewLeaseController extends Controller
     public function edit($Id)
     {
         $this->authorize(PermissionEnum::PropertyNewLeaseUpdate, PropertyNewLease::class);
-        $newlease = PropertyNewLease::where('isActive', true)->findOrFail($Id);
+        $newlease = PropertyNewLease::findOrFail($Id);
         $properties = PropertyRegistry::with('getBlockByProperty.floor.units')->get();
         $newtenants = PropertyNewLease::with('tenant')->get();
         $codes = CodeDetail::where('CodeID', 'PaymentFrequency')->get();
@@ -217,8 +217,12 @@ class PropertyNewLeaseController extends Controller
         $this->authorize(PermissionEnum::PropertyNewLeaseDelete, PropertyNewLease::class);
         $newlease = PropertyNewLease::findOrFail($Id);
 
-        PropertyLeaseSchedule::where('LeaseNumber', $newlease->Id)->delete();
+        if ($newlease->invoices()->exists()) {
+            return redirect()->back()
+            ->withErrors(['error' => 'This lease is in use and cannot be deleted.']);
+        } 
 
+        PropertyLeaseSchedule::where('LeaseNumber', $newlease->Id)->delete();
         $newlease->delete();
 
         activity()

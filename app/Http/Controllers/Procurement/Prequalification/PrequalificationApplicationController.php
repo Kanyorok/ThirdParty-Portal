@@ -172,7 +172,7 @@ class PrequalificationApplicationController extends Controller
             };
 
             // Build output rounds with categories array
-            $data = $availableRounds->map(function ($round) use ($categoriesByRound, $appsByKey, $catStatuses, $mapStatus) {
+            $data = $availableRounds->map(function ($round) use ($categoriesByRound, $appsByKey, $catStatuses, $mapStatus, $applications, $supplierId) {
                 $roundId = $round->RoundID;
                 $roundCats = $categoriesByRound->get($roundId, collect());
                 $cats = $roundCats->map(function ($cat) use ($roundId, $appsByKey, $catStatuses, $mapStatus) {
@@ -197,17 +197,22 @@ class PrequalificationApplicationController extends Controller
                         'name' => $cat->CategoryName,
                         'description' => $cat->Description,
                         'has_applied' => $hasApplied,
+                        'hasApplied' => $hasApplied, // alias for frontend normalization
                         'status' => $hasApplied ? $status : 'NOT_APPLIED',
                         'progress_percent' => (float) $progress,
                     ];
 
                     if ($hasApplied) {
                         $out['application_id'] = (string) $app->ApplicationID;
+                        $out['applicationId'] = (string) $app->ApplicationID; // alias
                         $out['application_date'] = $app->SubmittedOn ? $app->SubmittedOn->format('Y-m-d') : null;
+                        $out['applicationDate'] = $out['application_date']; // alias
                         $out['stage'] = $stage;
                         $out['stage_label'] = $stageLabel;
                         $out['updated_on'] = $updatedOn;
+                        $out['updatedOn'] = $updatedOn; // alias
                         $out['decision_date'] = $decisionDate;
+                        $out['decisionDate'] = $decisionDate; // alias
                         if ($status === 'REJECTED') {
                             $out['rejection_reason'] = $statusRow->RejectionReason ?? null;
                         }
@@ -215,6 +220,18 @@ class PrequalificationApplicationController extends Controller
 
                     return $out;
                 })->values();
+
+                // Compute round-level eligibility helpers
+                $now = now();
+                $windowOpen = (!$round->StartDate || $round->StartDate <= $now) && (!$round->EndDate || $round->EndDate >= $now);
+                $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status;
+                $statusOpen = strtolower((string) $statusValue) === 'open' || (defined('App\\Enums\\Procurement\\PrequalificationRoundEnum::Open') && (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value);
+                $hasCategories = $cats->count() > 0;
+                $roundAppsCount = $applications->where('RoundID', $roundId)->count();
+                $hasUnapplied = $cats->contains(function ($c) { return empty($c['has_applied']); });
+                $supplierHasNoAppsInRound = $roundAppsCount === 0;
+                $backendCanApply = $supplierId !== null && $windowOpen && $statusOpen && $hasCategories;
+                $canApply = $backendCanApply && ($hasUnapplied || $supplierHasNoAppsInRound);
 
                 return [
                     'id' => (int) $round->RoundID,
@@ -224,6 +241,11 @@ class PrequalificationApplicationController extends Controller
                     'endDate' => $round->EndDate ? $round->EndDate->format('Y-m-d') : null,
                     'maxVendors' => $round->MaxVendors,
                     'categories' => $cats,
+                    'canApply' => (bool) $canApply,
+                    'canApplyToMore' => (bool) $hasUnapplied,
+                    'categoryCount' => $cats->count(),
+                    'appliedCount' => $cats->where('has_applied', true)->count(),
+                    'unappliedCount' => $cats->where('has_applied', false)->count(),
                 ];
             })->values();
 
