@@ -11,6 +11,7 @@ enum TenderStatusEnum: string
     case Draft = 'dr';
     case Published = 'pb';
     case Closed = 'cl';
+    case Awarded = 'aw';
 
     public function colorClass(): string
     {
@@ -18,6 +19,7 @@ enum TenderStatusEnum: string
             self::Draft => 'bg-primary',
             self::Published => 'bg-warning text-dark',
             self::Closed => 'bg-gray',
+            self::Awarded => 'bg-success',
         };
     }
 
@@ -27,6 +29,7 @@ enum TenderStatusEnum: string
             self::Draft => 'Draft',
             self::Published => 'Published',
             self::Closed => 'Closed',
+            self::Awarded => 'Awarded',
         };
     }
 
@@ -36,6 +39,7 @@ enum TenderStatusEnum: string
             self::Draft => 'bg-info-soft text-info',
             self::Published => 'bg-success-soft text-success',
             self::Closed => 'bg-secondary-soft text-secondary',
+            self::Awarded => 'bg-primary-soft text-primary',
             default => 'bg-light text-dark',
         };
     }

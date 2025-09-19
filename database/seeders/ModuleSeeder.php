@@ -166,6 +166,11 @@ class ModuleSeeder extends Seeder
             //Awards
             ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index'],
 
+            // Contracts
+            ['ModuleID' => 306600, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 306610, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 306600, 'Route' => 'contracts.index'],
+            ['ModuleID' => 306620, 'Name' => 'Contract Lifecycle', 'Icon' => null, 'Description' => '', 'ParentID' => 306600, 'Route' => 'contracts.lifecycle.index'],
+            ['ModuleID' => 306630, 'Name' => 'Legal Integration', 'Icon' => null, 'Description' => '', 'ParentID' => 306600, 'Route' => 'contracts.legal.index'],
 
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],

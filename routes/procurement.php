@@ -513,26 +513,31 @@ Route::resource('procawards', AwardsController::class);
 Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.index');
 Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');
 Route::post('contracts', [ContractsController::class, 'store'])->name('contracts.store');
-Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('contracts.view');
+Route::get('contracts/{id}', [ContractsController::class, 'show'])->name('contracts.show');
 Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
 Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
 
 // Contracts - Approval Queue
-Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approve_index');
-Route::get('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
-Route::post('contracts/{id}/approve', [ContractsController::class, 'submitApproval'])->name('contracts.approve.submit');
+Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approvalQueue');
+Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
+
+// Contract Creation from Awards
+Route::get('contracts/create-from-award/{awardId}', [ContractsController::class, 'createFromAward'])->name('contracts.createFromAward');
 
 // Contracts - LPO Link
 Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link');
 
+// Contract Legal Integration
+Route::get('contracts/legal/integration', [ContractsController::class, 'legalIntegration'])->name('contracts.legal.index');
+
 // Contracts Lifecycle
-Route::get('contracts/lifecycle', [ContractsLifecycleController::class, 'index'])->name('contractcycle.index');
-Route::get('contracts/lifecycle/{id}/view', [ContractsLifecycleController::class, 'view'])->name('contractcycle.view');
-Route::get('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('contractcycle.amend');
-Route::post('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('contractcycle.amend.submit');
-Route::get('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('contractcycle.terminate');
-Route::post('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('contractcycle.terminate.submit');
-Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('contractcycle.execution');
+Route::get('contracts/lifecycle', [ContractsLifecycleController::class, 'index'])->name('contracts.lifecycle.index');
+Route::get('contracts/lifecycle/{id}/view', [ContractsLifecycleController::class, 'view'])->name('contracts.lifecycle.view');
+Route::get('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('contracts.lifecycle.amend');
+Route::post('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('contracts.lifecycle.amend.submit');
+Route::get('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('contracts.lifecycle.terminate');
+Route::post('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('contracts.lifecycle.terminate.submit');
+Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('contracts.lifecycle.execution');
 
 
 Route::resource('deliverynotes', DeliveryController::class);

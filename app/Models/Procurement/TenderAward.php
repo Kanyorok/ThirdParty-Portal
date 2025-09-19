@@ -2,6 +2,7 @@
 
 namespace App\Models\Procurement;
 
+use App\Enums\TenderStatusEnum;
 use App\Models\Auth\User;
 use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
@@ -45,6 +46,21 @@ class TenderAward extends Model
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',
+        // Contract Management Fields
+        'ContractStatus',
+        'ContractRef',
+        'ContractValue',
+        'ContractRequestRef',
+        'PaymentTerms',
+        'DeliveryTerms',
+        'SpecialConditions',
+        'ContractApprovalRemarks',
+        'ContractApprovedBy',
+        'ContractApprovedOn',
+        // Contract Lifecycle Fields
+        'TerminationReason',
+        'TerminationDate',
+        'SettlementDetails',
     ];
 
     protected $casts = [
@@ -60,6 +76,10 @@ class TenderAward extends Model
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
+        // Contract Management Casts
+        'ContractValue' => 'decimal:2',
+        'ContractApprovedOn' => 'datetime',
+        'TerminationDate' => 'date',
     ];
 
     // Relationships
@@ -116,6 +136,29 @@ class TenderAward extends Model
         return $this->AwardStatus === self::STATUS_PENDING;
     }
 
+    public function getContractStatusBadgeAttribute()
+    {
+        return match ($this->ContractStatus) {
+            'Draft Created' => ['text' => 'Draft', 'class' => 'bg-info'],
+            'Under Review' => ['text' => 'Under Review', 'class' => 'bg-warning text-dark'],
+            'Approved' => ['text' => 'Contract Approved', 'class' => 'bg-success'],
+            'Sent to Legal' => ['text' => 'With Legal', 'class' => 'bg-primary'],
+            'Executed' => ['text' => 'Executed', 'class' => 'bg-dark'],
+            'Terminated' => ['text' => 'Terminated', 'class' => 'bg-danger'],
+            default => ['text' => 'Pending Contract', 'class' => 'bg-secondary'],
+        };
+    }
+
+    public function hasContract()
+    {
+        return !empty($this->ContractStatus) && $this->ContractStatus !== 'Pending Contract';
+    }
+
+    public function isContractReady()
+    {
+        return $this->AwardStatus === self::STATUS_APPROVED && !$this->hasContract();
+    }
+
     // Methods
     public function approve(User $user, ?string $remarks = null)
     {
@@ -129,7 +172,7 @@ class TenderAward extends Model
 
         // Update tender status to awarded
         $this->tender->update([
-            'Status' => 'Awarded',
+            'Status' => TenderStatusEnum::Awarded,
             'ModifiedBy' => $user->Id,
         ]);
     }

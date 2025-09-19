@@ -78,6 +78,11 @@
                                                     onclick="rejectAward({{ $award->Id }})" title="Reject">
                                                 <i class="fas fa-times"></i>
                                             </button>
+                                        @elseif($award->is_approved)
+                                            <a href="{{ route('contracts.createFromAward', $award->Id) }}" 
+                                               class="btn btn-sm btn-primary" title="Create Contract">
+                                                <i class="fas fa-file-contract"></i> Contract
+                                            </a>
                                         @endif
                                     </div>
                                 </td>
@@ -156,13 +161,13 @@
     <script>
         function approveAward(awardId) {
             const form = document.getElementById('approveForm');
-            form.action = `/procurement/awards/${awardId}/approve`;
+            form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', awardId);
             new bootstrap.Modal(document.getElementById('approveModal')).show();
         }
         
         function rejectAward(awardId) {
             const form = document.getElementById('rejectForm');
-            form.action = `/procurement/awards/${awardId}/reject`;
+            form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', awardId);
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
     </script>
