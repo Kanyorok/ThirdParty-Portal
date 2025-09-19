@@ -27,7 +27,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaseschedule->lease->tenant->TenantName ?? '-' }}" readonly>
+                        value="{{ $leaseschedule->lease->tenant->thirdParty->TradingName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
