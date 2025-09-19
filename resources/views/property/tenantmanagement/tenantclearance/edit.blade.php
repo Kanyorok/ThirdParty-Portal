@@ -7,7 +7,6 @@
 @section('content')
     <div class="container mt-5" style="max-width: 800px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold">Edit Tenant Clearance</h3>
         </div>
 
         <form method="POST" action="{{ route('tenantclearance.update', $clearancetenant->Id) }}" enctype="multipart/form-data">
