@@ -306,7 +306,33 @@ class RFQEvaluationController extends Controller
             ]
         );
 
-        return back()->with('success', 'Award saved.');
+        // Notify supplier portal API
+        try {
+            $payload = [
+                'rfqId' => (int) $rfqId,
+                'supplierId' => (int) $supplierId,
+                'status' => 'Awarded',
+                'awardedOn' => now()->toISOString(),
+                'comments' => $request->input('Comments'),
+            ];
+
+            $endpoint = config('services.procurement_supplier_portal.endpoint', 'http://localhost:3000/api/procurement/rfq-suppliers');
+            $apiKey = config('services.procurement_supplier_portal.key');
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->post($endpoint, $payload);
+
+            if (!$response->successful()) {
+                \Log::warning('Supplier award notify failed', ['rfqId' => $rfqId, 'supplierId' => $supplierId, 'status' => $response->status(), 'body' => $response->body()]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Supplier award notify exception', ['rfqId' => $rfqId, 'supplierId' => $supplierId, 'error' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Award saved and supplier notified.');
     }
 
     public function create()

@@ -16,7 +16,7 @@
             <div class="card-body text-center">
                 <h6 class="card-title text-muted">Highest Score</h6>
                 <h4 class="text-success mb-0">
-                    {{ count($scores) > 0 ? number_format($scores[0]['total_score'], 1) . '%' : 'N/A' }}
+                    {{ count($scores) > 0 ? number_format($scores[0]['total_weighted_score'] ?? $scores[0]['total_score'] ?? 0, 1) . '%' : 'N/A' }}
                 </h4>
             </div>
         </div>
@@ -27,7 +27,9 @@
                 <h6 class="card-title text-muted">Avg Score</h6>
                 <h4 class="text-info mb-0">
                     @php
-                        $avgScore = count($scores) > 0 ? collect($scores)->avg('total_score') : 0;
+                        $avgScore = count($scores) > 0 ? collect($scores)->avg(function($score) {
+                            return $score['total_weighted_score'] ?? $score['total_score'] ?? 0;
+                        }) : 0;
                     @endphp
                     {{ number_format($avgScore, 1) }}%
                 </h4>
@@ -64,18 +66,25 @@
         <tbody>
             @foreach($scores as $index => $score)
                 @php
+                    $totalScore = $score['total_weighted_score'] ?? $score['total_score'] ?? 0;
+                    $supplierName = $score['bidder_name'] ?? ($score['supplier']->SupplierName ?? 'Unknown');
+                    $supplierId = $score['bidder_id'] ?? ($score['supplier']->Id ?? null);
+                    $technicalScore = $score['technical_score'] ?? 0;
+                    $financialScore = $score['financial_score'] ?? 0;
+                    $isResponsive = $score['is_responsive'] ?? true; // Default to true for evaluated bids
+                    
                     $grade = 'F';
                     $gradeClass = 'bg-danger';
-                    if ($score['total_score'] >= 90) { $grade = 'A+'; $gradeClass = 'bg-success'; }
-                    elseif ($score['total_score'] >= 85) { $grade = 'A'; $gradeClass = 'bg-success'; }
-                    elseif ($score['total_score'] >= 80) { $grade = 'A-'; $gradeClass = 'bg-info'; }
-                    elseif ($score['total_score'] >= 75) { $grade = 'B+'; $gradeClass = 'bg-info'; }
-                    elseif ($score['total_score'] >= 70) { $grade = 'B'; $gradeClass = 'bg-warning text-dark'; }
-                    elseif ($score['total_score'] >= 65) { $grade = 'B-'; $gradeClass = 'bg-warning text-dark'; }
-                    elseif ($score['total_score'] >= 60) { $grade = 'C'; $gradeClass = 'bg-secondary'; }
+                    if ($totalScore >= 90) { $grade = 'A+'; $gradeClass = 'bg-success'; }
+                    elseif ($totalScore >= 85) { $grade = 'A'; $gradeClass = 'bg-success'; }
+                    elseif ($totalScore >= 80) { $grade = 'A-'; $gradeClass = 'bg-info'; }
+                    elseif ($totalScore >= 75) { $grade = 'B+'; $gradeClass = 'bg-info'; }
+                    elseif ($totalScore >= 70) { $grade = 'B'; $gradeClass = 'bg-warning text-dark'; }
+                    elseif ($totalScore >= 65) { $grade = 'B-'; $gradeClass = 'bg-warning text-dark'; }
+                    elseif ($totalScore >= 60) { $grade = 'C'; $gradeClass = 'bg-secondary'; }
                 @endphp
                 
-                <tr class="{{ $index === 0 ? 'table-success' : ($score['total_score'] < 70 ? 'table-light' : '') }}">
+                <tr class="{{ $index === 0 ? 'table-success' : ($totalScore < 70 ? 'table-light' : '') }}">
                     <td class="text-center">
                         @if($index === 0)
                             <span class="badge bg-warning text-dark fs-6">🥇 1st</span>
@@ -90,35 +99,38 @@
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="avatar-circle bg-primary text-white me-2" style="width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">
-                                {{ strtoupper(substr($score['supplier']->SupplierName, 0, 2)) }}
+                                {{ strtoupper(substr($supplierName, 0, 2)) }}
                             </div>
                             <div>
-                                <strong>{{ $score['supplier']->SupplierName }}</strong>
+                                <strong>{{ $supplierName }}</strong>
                                 @if($index === 0)
                                     <br><small class="badge bg-success">Top Performer</small>
+                                @endif
+                                @if(isset($score['recommendation']))
+                                    <br><small class="badge bg-{{ $score['recommendation']['class'] }}">{{ $score['recommendation']['status'] }}</small>
                                 @endif
                             </div>
                         </div>
                     </td>
                     <td class="text-center">
                         <div class="progress mb-1" style="height: 20px;">
-                            <div class="progress-bar bg-info" style="width: {{ $score['technical_score'] }}%;">
-                                {{ number_format($score['technical_score'], 1) }}%
+                            <div class="progress-bar bg-info" style="width: {{ $technicalScore }}%;">
+                                {{ number_format($technicalScore, 1) }}%
                             </div>
                         </div>
                     </td>
                     <td class="text-center">
                         <div class="progress mb-1" style="height: 20px;">
-                            <div class="progress-bar bg-warning" style="width: {{ $score['financial_score'] }}%;">
-                                {{ number_format($score['financial_score'], 1) }}%
+                            <div class="progress-bar bg-warning" style="width: {{ $financialScore }}%;">
+                                {{ number_format($financialScore, 1) }}%
                             </div>
                         </div>
                     </td>
                     <td class="text-center">
                         <div class="d-flex flex-column">
-                            <strong class="fs-5">{{ number_format($score['total_score'], 1) }}%</strong>
+                            <strong class="fs-5">{{ number_format($totalScore, 1) }}%</strong>
                             <div class="progress" style="height: 8px;">
-                                <div class="progress-bar bg-primary" style="width: {{ $score['total_score'] }}%;"></div>
+                                <div class="progress-bar bg-primary" style="width: {{ $totalScore }}%;"></div>
                             </div>
                         </div>
                     </td>
@@ -126,19 +138,19 @@
                         <span class="badge {{ $gradeClass }} fs-6">{{ $grade }}</span>
                     </td>
                     <td class="text-center">
-                        <span class="badge {{ $score['is_responsive'] ? 'bg-success' : 'bg-danger' }}">
-                            {{ $score['is_responsive'] ? '✅ Yes' : '❌ No' }}
+                        <span class="badge {{ $isResponsive ? 'bg-success' : 'bg-danger' }}">
+                            {{ $isResponsive ? '✅ Yes' : '❌ No' }}
                         </span>
                     </td>
                     @if(!isset($existingAward))
                         <td class="text-center">
-                            @if($score['is_responsive'])
+                            @if($isResponsive && $supplierId)
                                 <input type="radio" name="winning_supplier_id" 
-                                       value="{{ $score['supplier']->Id }}" 
+                                       value="{{ $supplierId }}" 
                                        {{ $index === 0 ? 'checked' : '' }}
                                        class="form-check-input"
                                        style="transform: scale(1.2);"
-                                       onchange="updateHiddenScores({{ $score['technical_score'] }}, {{ $score['financial_score'] }}, {{ $score['total_score'] }})">
+                                       onchange="updateHiddenScores({{ $technicalScore }}, {{ $financialScore }}, {{ $totalScore }})">
                             @else
                                 <input type="radio" disabled title="Non-responsive bidder" class="form-check-input">
                                 <small class="text-muted d-block">Non-responsive</small>
@@ -153,9 +165,15 @@
 
 @if(!isset($existingAward) && count($scores) > 0)
     <!-- Hidden fields for selected supplier scores -->
-    <input type="hidden" name="technical_score" id="technical_score" value="{{ $scores[0]['technical_score'] ?? 0 }}">
-    <input type="hidden" name="financial_score" id="financial_score" value="{{ $scores[0]['financial_score'] ?? 0 }}">
-    <input type="hidden" name="total_score" id="total_score" value="{{ $scores[0]['total_score'] ?? 0 }}">
+    @php
+        $firstScore = $scores[0];
+        $firstTechnical = $firstScore['technical_score'] ?? 0;
+        $firstFinancial = $firstScore['financial_score'] ?? 0;
+        $firstTotal = $firstScore['total_weighted_score'] ?? $firstScore['total_score'] ?? 0;
+    @endphp
+    <input type="hidden" name="technical_score" id="technical_score" value="{{ $firstTechnical }}">
+    <input type="hidden" name="financial_score" id="financial_score" value="{{ $firstFinancial }}">
+    <input type="hidden" name="total_score" id="total_score" value="{{ $firstTotal }}">
 @endif
 
 @if(empty($scores))

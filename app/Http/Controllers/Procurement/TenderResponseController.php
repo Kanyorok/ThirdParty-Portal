@@ -20,7 +20,14 @@ class TenderResponseController extends Controller
 
     public function create(){
         $tenders = Tender::select('Id','TenderNo')->get();
-        $suppliers = Supplier::select('Id','SupplierName')->get();
+        
+        // Fix: Get supplier names from the related ThirdParty table
+        $suppliers = Supplier::select('t_Suppliers.Id')
+            ->join('t_ThirdParties', 't_Suppliers.ThirdPartyID', '=', 't_ThirdParties.Id')
+            ->selectRaw('t_Suppliers.Id, COALESCE(t_ThirdParties.TradingName, t_ThirdParties.ThirdPartyName) as SupplierName')
+            ->whereNull('t_Suppliers.DeletedOn')
+            ->get();
+            
         return view('procurement.tendering.suppliermanagement.invitationresponsetracking.create', compact('tenders', 'suppliers'));
     }
      public function storeResponse(Request $request)

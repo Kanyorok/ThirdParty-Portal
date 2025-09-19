@@ -65,7 +65,7 @@
                                 <button class="btn btn-danger" name="IsResponsive" value="0">
                                     <i class="fas fa-times"></i> Mark as Non-Responsive
                                 </button>
-                                <a href="{{ route('bidresponsiveness.index') }}" class="btn btn-secondary">
+                                <a href="{{ route('bid-responsiveness.index') }}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left"></i> Cancel
                                 </a>
                             </div>

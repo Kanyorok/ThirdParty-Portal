@@ -22,6 +22,8 @@ class PurchaseOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'SourceType' => ['nullable', 'in:DIRECT,RFQ,TENDER'],
+            'SourceId' => ['nullable', 'integer'],
 
             'supplier' => ['required'],
             'pODate' => ['required', 'date'],
