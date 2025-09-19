@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { ChevronLeft, ChevronRight, FilePlus2, Lock } from "lucide-react"
 import { Button } from "@/components/common/button"
@@ -52,6 +53,7 @@ export default function RoundsTable({
 }) {
     const { data: session } = useSession()
     const accessToken = session?.accessToken as string | undefined
+    const router = useRouter()
     const [openRoundId, setOpenRoundId] = useState<string | null>(null)
     const [appliedRoundIds, setAppliedRoundIds] = useState<Set<string>>(new Set())
     // Removed submittingRoundId because we now always open the full application form (categories required)
@@ -273,8 +275,14 @@ export default function RoundsTable({
                 defaultRoundId={openRoundId || undefined}
                 onOpenChange={(o) => { if (!o) setOpenRoundId(null) }}
                 onSuccess={({ roundId, applicationId }) => {
-                    setAppliedRoundIds(prev => new Set(prev).add(roundId))
+                    setAppliedRoundIds(prev => {
+                        const next = new Set(prev)
+                        next.add(roundId)
+                        return next
+                    })
                     toast.success('Application submitted', { description: applicationId ? `Reference: ${applicationId}` : undefined })
+                    // Refresh server-rendered rounds to update applied counts and categories
+                    try { router.refresh() } catch {}
                     setOpenRoundId(null)
                 }}
             >

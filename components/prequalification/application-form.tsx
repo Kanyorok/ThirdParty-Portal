@@ -288,7 +288,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     status: (statusCode || "O") as string,
                     deadline,
                     applicantCount: r.applicantCount,
-                    hasApplied: Boolean((r as { hasApplied?: boolean }).hasApplied) || Boolean((r as { applicationId?: unknown }).applicationId),
+                    hasApplied: Boolean((r as any).hasApplied || (r as any).appliedCount > 0 || (r as any).applicationId),
                     applicationId: (r as { applicationId?: unknown }).applicationId ? String((r as { applicationId?: unknown }).applicationId) : undefined,
                 };
             }).filter(r => r.id);
@@ -538,7 +538,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                     </div>
                                 )}
                             </div>
-                            {selectedRoundId && (!rounds[0]?.hasApplied) && (
+                            {selectedRoundId && (
                                 <div className="space-y-4 pt-6 transition-all duration-300 ease-in-out animate-in slide-in-from-bottom-4">
                                     <div className="flex items-center justify-between">
                                         <Label htmlFor="categories" id="categories-label" className="text-base font-semibold flex items-center gap-2">
@@ -550,7 +550,11 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                     {categoriesLoadingState === "loading" && <LoadingSkeleton />}
                                     {categoriesLoadingState === "error" && <ErrorState error={categoryError} onRetry={fetchCategories} />}
                                     {categoriesLoadingState === "success" && categories.length > 0 && (
-                                        <CategorySelector categories={categories} selectedIds={selectedCategoryIds} onToggle={handleToggleCategory} error={form.formState.errors.categoryIds?.message} />
+                                        rounds[0]?.hasApplied ? (
+                                            <WarningState message="You have already applied to this round. Categories are locked." />
+                                        ) : (
+                                            <CategorySelector categories={categories} selectedIds={selectedCategoryIds} onToggle={handleToggleCategory} error={form.formState.errors.categoryIds?.message} />
+                                        )
                                     )}
                                     {categoriesLoadingState === "success" && categories.length === 0 && (
                                         <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50 dark:border-gray-800 dark:bg-gray-900/10">
