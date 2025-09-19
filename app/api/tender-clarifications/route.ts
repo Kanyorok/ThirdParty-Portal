@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
-          signal: AbortSignal.timeout(10000) // 10 seconds timeout
+          signal: AbortSignal.timeout(20000) // 10 seconds timeout
         });
 
         if (response.ok) {
@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
         }
       } catch (error) {
         console.warn('External API not available for clarifications, using mock data:', error);
+        console.warn('ERP URL attempted:', `${externalApiUrl}/api/tender-clarifications?${queryParams}`);
       }
     }
 
@@ -141,7 +142,7 @@ export async function GET(request: NextRequest) {
       {
         id: 3,
         tenderId: tenderId,
-        supplierId: 2, // Different supplier
+        supplierId: 2,
         question: "Are there any preferred brands for the networking equipment?",
         questionDate: "2024-11-18T16:20:00.000Z",
         response: "We do not have preferred brands, but all equipment must meet the ISO standards specified in section 4.2 of the tender document.",
@@ -153,6 +154,44 @@ export async function GET(request: NextRequest) {
         createdOn: "2024-11-18T16:20:00.000Z",
         modifiedBy: "procurement",
         modifiedOn: "2024-11-19T08:30:00.000Z",
+      },
+      {
+        id: 4,
+        tenderId: tenderId,
+        supplierId: 1,
+        question: "What is the payment schedule for this project? Are milestone payments available?",
+        questionDate: new Date(Date.now() - 3600000).toISOString(),
+        response: "Payment terms are Net 30 days from invoice date. Milestone payments are available upon completion of each phase as outlined in Section 7. Early payment discount of 2% applies if paid within 10 days.",
+        responseDate: new Date(Date.now() - 1800000).toISOString(),
+        responseBy: "Finance Department",
+        status: "answered",
+        isPublic: true,
+        createdBy: "supplier",
+        createdOn: new Date(Date.now() - 3600000).toISOString(),
+        modifiedBy: "procurement",
+        modifiedOn: new Date(Date.now() - 1800000).toISOString(),
+      },
+      {
+        id: 5,
+        tenderId: tenderId,
+        supplierId: 3,
+        question: "Are site visits required before bid submission? If so, when can they be scheduled?",
+        questionDate: new Date(Date.now() - 1800000).toISOString(),
+        status: "pending",
+        isPublic: false,
+        createdBy: "supplier3@example.com",
+        createdOn: new Date(Date.now() - 1800000).toISOString(),
+      },
+      {
+        id: 6,
+        tenderId: tenderId,
+        supplierId: 2,
+        question: "Can you clarify the warranty requirements? The document mentions 2 years but doesn't specify coverage.",
+        questionDate: new Date(Date.now() - 900000).toISOString(),
+        status: "pending",
+        isPublic: false,
+        createdBy: "supplier2@example.com",
+        createdOn: new Date(Date.now() - 900000).toISOString(),
       },
     ];
 
@@ -240,7 +279,7 @@ export async function PUT(request: NextRequest) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(responsePayload),
-          signal: AbortSignal.timeout(10000)
+          signal: AbortSignal.timeout(20000)
         });
 
         if (response.ok) {
@@ -326,16 +365,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare payload for external API
-    // The backend will resolve thirdPartyId to supplierId
+    // Prepare payload for external API using Laravel's expected field names (snake_case)
     const clarificationPayload = {
-      tenderId,
-      thirdPartyId, // Send thirdPartyId instead of supplierId
+      tender_id: parseInt(tenderId.toString()), // Laravel expects integer
+      third_party_id: thirdPartyId, // Laravel expects snake_case
       question: question.trim(),
-      questionDate: new Date().toISOString(),
+      question_date: new Date().toISOString(),
       status: 'pending',
-      isPublic: isPublic || false,
+      is_public: isPublic || false,  // Laravel expects snake_case
       attachments: attachments || [],
+      created_by: session.user.id,
+      created_on: new Date().toISOString(),
+      
+      // Also include camelCase versions for backwards compatibility
+      tenderId: parseInt(tenderId.toString()),
+      thirdPartyId,
+      questionDate: new Date().toISOString(),
+      isPublic: isPublic || false,
       createdBy: session.user.id,
       createdOn: new Date().toISOString(),
     };
@@ -355,7 +401,7 @@ export async function POST(request: NextRequest) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(clarificationPayload),
-          signal: AbortSignal.timeout(10000) // 10 seconds timeout
+          signal: AbortSignal.timeout(20000) // 10 seconds timeout
         });
 
         if (response.ok) {
