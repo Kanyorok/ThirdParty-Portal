@@ -3,6 +3,8 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\ItemCategories;
+use App\Models\Core\CodeDetail;
 use App\Models\DMS\Image;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
@@ -36,6 +38,16 @@ class ItemMasterListService
             // Category or subcategory logic
             $item->Category = $data['SubCategory'] ?? $data['Category'];
 
+            // Ensure item is inactive if category is inactive
+            $category = ItemCategories::find($item->Category);
+            $inactiveId = CodeDetail::where('CodeID', 'ItemStatus')
+                ->where('Description', 'Inactive')
+                ->value('Id');
+
+            if ($category && $category->status->Description === 'Inactive') {
+                $item->Status = $inactiveId;
+            }
+
             $item->save();
 
             // Generate ItemCode and update
@@ -60,6 +72,16 @@ class ItemMasterListService
             $item->ModifiedOn = Carbon::now();
 
             $item->Category = $data['SubCategory'] ?? $data['Category'];
+
+            // Ensure item is inactive if new category is inactive
+            $category = ItemCategories::find($item->Category);
+            $inactiveId = CodeDetail::where('CodeID', 'ItemStatus')
+                ->where('Description', 'Inactive')
+                ->value('Id');
+
+            if ($category && $category->status->Description === 'Inactive') {
+                $item->Status = $inactiveId;
+            }
 
             // Remove existing image
             if ($removeImage && $item->ImageId) {

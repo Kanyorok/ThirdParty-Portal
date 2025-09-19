@@ -100,6 +100,7 @@ class ItemMasterList extends Model
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
     
+    
 
     public function price()
     {
