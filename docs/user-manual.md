@@ -827,6 +827,475 @@ Navigation: Procurement > Reports
 - Keep audit trail via comments, attachments, and reports.
 
 
+### A.2 Inventory
+
+Covers Item Master, SKU, Stores, Inter-Branch Requisitions, Transactions (Receipts, Transfers, Adjustments, Approvals), Stock Take, Stock Consumption, UOM/Conversions, Price Management, and Reports.
+
+#### A.2.1 Master Data: Categories, Subcategories, Item Master, SKU, Stores
+Navigation: Inventory > Item Category/Subcategory; Item Master List; SKU; Stores
+1) Item Categories (itemcategory.*): create/edit/delete categories used for grouping.
+2) Subcategories (itemsubcategory.*): create/edit/delete subcategories; link to categories.
+3) Item Master List (itemmasterlist.*): create items with descriptions, default UOM, tracking options.
+4) SKU (sku.*): create stock keeping units; assign item, store, current price, and min/max.
+5) Stores (stores.*): create/edit stores and assign to branches.
+
+#### A.2.2 Inter-Branch Requisition & Approval
+Navigation: Inventory > InterBranch Requisition; InterBranch Requisition Approval
+1) Create Requisition (interbranchrequisition.create/store): choose source/destination branch/store; add items/quantities.
+2) Auxiliary data: get categories/subcategories/items by branch; get item codes and details via helper routes.
+3) Edit/Show/Destroy as needed; submit for processing.
+4) Approval (interbranchrequisitionapproval.index/submit): approver reviews and decides (approve/reject) in bulk or per item.
+
+#### A.2.3 Inventory Transactions
+Navigation: Inventory > Transactions
+1) Receipts (transactionsreceipts.*): record inbound stock (transfer receipts, purchase receipts), add lines, update, post, and print if provided.
+2) Transfers (transactionstransfers.*): create transfer document (source/destination), add lines; fetch requisitions by type; finalize.
+3) Adjustments (transactionsadjustment.*): record positive/negative adjustments with reason; approval where enabled.
+4) Approvals (transactionsapproval.*): approver processes pending transactions (approve/reject) and reviews detail pages.
+
+#### A.2.4 Stock Take & Consumption
+Navigation: Inventory > Stock Take; Stock Consumption
+1) Stock Take (stocktake.*): start a count, add counted items/quantities, edit lines, submit finalization; branch/store filters help scope.
+2) Stock Consumption (stockconsumption.*): record issues to departments/projects; supports fetching stores/UOM options.
+
+#### A.2.5 UOM and Conversions
+Navigation: Inventory > Unit of Measure; UOM Conversion
+1) UOM (unitofmeasure.*): define base UOMs.
+2) UOM Conversion (uomconversion.*): define conversion factors between UOMs.
+
+#### A.2.6 Price Management
+Navigation: Inventory > Price Management
+1) Manage prices (pricemanagement.*): create/edit item prices; import via template (download sample), upload CSV/Excel.
+
+#### A.2.7 Reports
+Navigation: Inventory > Reports
+1) Choose report and export (inventory-reports.*).
+
+Tips
+- Keep master data clean and consistent (UOMs, stores, items) to avoid transaction errors.
+- Use branch/store filters to narrow working context.
+
+
+### A.3 Property Management
+
+Manages Property Registry/Structure, Tenants & Leases, Billing & Receipting, Maintenance, Settings, and Reports.
+
+#### A.3.1 Registry and Structural Mapping
+Navigation: Property > Registry; Structural Mapping
+1) Categories/Types (propertycategory.* / propertytype.*): maintain master lists.
+2) Property Registry (PropertyRegistry.*): create property with locality and metadata; upload attachments.
+3) Structure: Blocks (addblock.*), Floors (addfloor.*), Units (addunit.*). Use helper routes to fetch blocks/floors by property.
+
+#### A.3.2 Tenants & Leases
+Navigation: Property > Tenant & Lease
+1) Tenants (addtenant.*): create tenant profiles with KYC; update as needed.
+2) Lease Maintenance (addlease.*): create lease for a unit, set terms and rent schedule; edit/renew/terminate via dedicated pages.
+3) Lease Schedule (schedulelease.*): generate invoices per schedule; fetch tenant property/lease via helpers; print schedule.
+4) Renewals (renewlease.*): manage lease renewals; fetch property/lease by tenant.
+5) Termination (terminatelease.*): create termination request with end date/remarks.
+6) Tenant Clearance (tenantclearance.*): finalize tenant exit workflow.
+
+#### A.3.3 Billing & Receipting
+Navigation: Property > Billing & Receipting
+1) Rent Invoices (rentinvoice.*): create/update/delete invoices; review list.
+2) Rent Receipts (rentreceipt.*): record tenant payments; view amount paid so far (amountPaid); print receipt (pdf route).
+3) Tenant Ledger (tenantledger.*): view ledger; export PDF (tenantledger.pdf).
+4) Rent Dashboard (rentdashboard.*): KPIs and trends.
+
+#### A.3.4 Maintenance & Work Completion
+Navigation: Property > Maintenance
+1) Maintenance Requests (maintenancerequest.*): log new request; attach details; edit/update.
+2) Assign (assignrequest.*): assign requests to staff/contractor; track progress.
+3) Dashboard (maintenancedashboard.*): monitor status.
+4) Work Completion (workcompletion.*): record completion details and close.
+
+#### A.3.5 Settings & Reports
+1) Settings (propertysettings.*): manage property/unit related settings.
+2) Reports (property-reports.*): export via reports pages.
+
+Tips
+- Ensure schedules match lease payment frequency to avoid invoice gaps.
+- Use attachments for proof of ownership, inspections, and handover forms.
+
+
+### A.4 Fleet Management
+
+Covers Vehicles, Documents, Assignments, Drivers (permanent/contracted), Licenses, Trip Logs, Route Planner, Maintenance Schedules, Repair Logs, Service Alerts, Alert Rules, Fuel Logs, Running Costs, Compliance/Inspection, Settings, Reports.
+
+#### A.4.1 Vehicle & Document Management
+Navigation: Fleet > Vehicles; Documents
+1) Vehicles (fleet.vehicles.*): create/edit vehicles; deactivate when retired; models-by-make helper.
+2) Vehicle Documents (fleet.documents.*): upload insurance, logbook, service docs.
+3) Assignments (fleet.assignments.*): assign vehicle to drivers/departments.
+
+#### A.4.2 Driver Management & Licenses
+Navigation: Fleet > Drivers; Contracted Drivers; License Tracking
+1) Drivers (fleet.drivers.*) and Contracted Drivers (fleet.contracted_drivers.*): CRUD, deactivate contracted drivers.
+2) Driver Assignments (fleet.driver_assignments.*): assign drivers; (un)assign inspections.
+3) License Tracking (fleet.licenses.* / contracted_driver_licenses.*): monitor expiry; update renewals.
+
+#### A.4.3 Trip Logs & Route Planner
+Navigation: Fleet > Trip Logs; Route Planner
+1) Trip Logs (fleet.trip_logs.*): create trips, fetch available vehicles/drivers.
+2) Route Planner (route_planner.*): plan routes and waypoints for optimization.
+
+#### A.4.4 Maintenance, Repairs, Service Alerts
+Navigation: Fleet > Maintenance Schedule; Repair Logs; Service Alerts
+1) Maintenance Schedule (fleet.maintenance_schedule.*): create/edit/cancel; track.
+2) Repair Logs (fleet.repair_logs.*): record repairs; show/edit/destroy.
+3) Service Alerts (fleet.alerts.*): view and acknowledge; Alert Rules (fleet.alert_rules.*): define thresholds (mileage/time).
+
+#### A.4.5 Fuel & Running Costs; GPS & Telematics
+Navigation: Fleet > Fuel Logs; Fuel Types; Running Costs; GPS/Telematics
+1) Fuel Logs (fleet.fuel_logs.*): record fueling events.
+2) Fuel Types (fueltypes.*): manage list.
+3) Running Costs (fleet.running_costs.*): log recurring costs.
+4) GPS (fleet.gps.*): live dashboard and movement history.
+5) Telematics (fleet.telematics.*): device registry.
+
+#### A.4.6 Compliance/Inspection
+Navigation: Fleet > Compliance > Inspection Schedule
+1) Inspection Schedule (fleet.inspection_schedule.*): plan and track inspections; edit/update; destroy old entries.
+
+#### A.4.7 Reports
+Navigation: Fleet > Reports (fleet-reports.*)
+
+Tips
+- Keep driver license and insurance trackers updated to avoid compliance breaches.
+- Use available drivers/vehicles helpers to avoid clashes.
+
+
+### A.5 Document Management (DMS)
+
+Central repository with file-level operations, tagging, permissions, legal hold, search, and reports.
+
+#### A.5.1 Repository & Files
+Navigation: DMS > Repo; Files
+1) Repository (repo.*): create, manage visibility and permissions (repo.visibility, repo-permissions), move files across repositories (repo-move).
+2) Files (files.*): upload, preview (file.preview/embed-preview), check-outs, moves, downloads; manage document tags (document-tags.*).
+
+#### A.5.2 Tagging & Search
+Navigation: DMS > File Tags; Search
+1) Tags (file-tags.*): manage tags; Tagging Rules (tagging-rules.*) to automate.
+2) Search (dms.search): global search across repos/files.
+
+#### A.5.3 Legal Hold
+Navigation: DMS > Legal Hold
+1) Create legal hold; add/remove files; release (legal-hold.release).
+
+#### A.5.4 Reports
+Navigation: DMS > Reports (dms-reports.*)
+
+Tips
+- Use check-out for version-safe edits and audit.
+- Employ tagging rules for classification consistency.
+
+
+### A.6 Legal
+
+Manages legal documents, contracts, clauses, templates/drafts, cases, evidence, counsels, outcomes, obligations/assignments, search requests, securities, IP & tracking, and extensive compliance (obligations, tasks, calendar, controls, incidents, filings, setup), plus reports.
+
+#### A.6.1 Documents & Contracts
+Navigation: Legal > Documents; Contracts
+1) Documents (documents.*): CRUD; nested Dispatches and Execution Logs.
+2) Contracts (maintenance.*): manage contract records.
+3) Clauses (clauses.*), Templates (templates.*), Drafts (drafts.*): maintain content libraries.
+
+#### A.6.2 Cases & Disputes
+Navigation: Legal > Cases
+1) Cases (cases.*): create and manage; add Evidence (cases.evidence.*); Counsels (disputes.counsels.*); Outcomes (disputes.outcomes.*).
+
+#### A.6.3 Obligations & Assignments
+Navigation: Legal > Obligations
+1) Obligations (obligations.*): main list; getObligations for details; assign users via obligations.assignments.*
+2) Document-level obligations (documents.obligations.*) tie obligations to source documents.
+
+#### A.6.4 Search Requests & Securities
+Navigation: Legal > Search Requests; Securities
+1) Search Requests (search_requests.*): submit and store findings/approval status (store_findings.*).
+2) Loan Securities (securities.*): maintain collateral/legal security records.
+
+#### A.6.5 Intellectual Property & IP Tracking
+Navigation: Legal > Intellectual; IP Tracking
+1) IP (intellectual.*): manage IP assets; raise disputes (intellectual.raiseDispute).
+2) IP Tracking (ip-tracking.*): monitor status/actions of IP cases.
+
+#### A.6.6 Compliance Suite
+Navigation: Legal > Compliance (Obligations, Tasks, Calendar, Controls, Incidents, Filings); Setup
+1) Compliance Obligations (legal.compliance.obligations.*) & tasks (legal.compliance.tasks.*)
+2) Compliance Calendar (legal.compliance.calendar.*)
+3) Compliance Controls (legal.compliance.controls.*) and upload evidence
+4) Incidents (legal.compliance.incidents.*) + dashboard
+5) Filings (legal.compliance.filings.*) + Templates
+6) Setup (legal.setup.*): regulatory bodies, areas, control types, severity levels, filing types, formats, policy categories, training types
+
+#### A.6.7 Reports
+Navigation: Legal > Reports (legal-reports.*)
+
+Tips
+- Use assignments and calendar to ensure obligations are tracked and executed.
+- Evidence uploads are key for audits/compliance.
+
+
+### A.7 Insurance (Bancassurance)
+
+Manages referrals, customers & KYC, policies (proposal → underwriting → issuance → renewals), premiums, claims (assessment, closure, payments), commissions (rules/tiers/earned/payouts), providers/products/riders, pricing, lifecycle, settings, reports.
+
+#### A.7.1 Referrals & Assignment
+Navigation: Insurance > Bancassurance > Referrals
+1) Create referral (create/store); assign (assign/list) to officers; view performance.
+
+#### A.7.2 Customers & Communications
+Navigation: Insurance > Customers
+1) Customers (bancassurance.customers.*): check for existing, create, edit; portfolio view; referral defaults.
+2) Beneficiaries (bancassurance.customers.beneficiaries.*): add beneficiaries.
+3) Communications (bancassurance.customers.communication.*): log calls, emails, visits, sms.
+
+#### A.7.3 Policy Lifecycle
+Navigation: Insurance > Policies; Underwriting
+1) Policies (bancassurance.policies.*): create proposals; review list; submit for underwriting (submitUnderwriting); capture feedback; issue (storeIssuance); endorsements; renewals.
+2) Underwriting (bancassurance.underwriting.*): review/submit decisions.
+
+#### A.7.4 Premiums & Receipts
+Navigation: Insurance > Premiums
+1) Premiums (bancassurance.premiums.*): CRUD; print receipts.
+
+#### A.7.5 Claims & Payments
+Navigation: Insurance > Claims; Claims Payments
+1) Claims (bancassurance.claims.*): index, assess, update; close via closure flows; initiate payments in Claim Payments.
+2) Claim Payments (bancassurance.claims.payments.*): list unpaid approved claims; store payments.
+
+#### A.7.6 Commissions
+Navigation: Insurance > Commissions
+1) Rules (commissions.rules.*) and Tiers (bancassurance.commissions.tiers.*): configure structure.
+2) Earned (bancassurance.commissions.earned.*) and Payouts (bancassurance.commissions.payouts.*): track and process payments.
+
+#### A.7.7 Providers, Products, Riders, Pricing, Lifecycle, Settings
+1) Providers (bancassurance.insurers.*): CRUD, manage mapped products, detach.
+2) Products (bancassurance.products.*) & Riders (bancassurance.riders.*): manage offerings.
+3) Pricing (bancassurance.pricing.*): pricing rules per product/provider.
+4) Lifecycle (bancassurance.lifecycle.*): toggle status.
+5) Settings (bancassurance.settings.*): system settings for insurance.
+
+#### A.7.8 Reports
+Navigation: Insurance > Reports (insurance-reports.*)
+
+Tips
+- Keep underwriting feedback loops tight to speed issuance.
+- Use portfolio view for cross-sell/upsell insights.
+
+
+### A.8 HRM
+
+Manages departments, employees, and internal committees.
+
+#### A.8.1 Departments & Employees
+Navigation: HRM > Departments; Employees
+1) Departments (departments.*): maintain org structure.
+2) Employees (employees.*): CRUD employee records; manage statuses.
+
+#### A.8.2 Internal Committees
+Navigation: HRM > Employee Internal Committees
+1) Manage committee membership (employeescommittee.*); bulk remove endpoint provided (employeescommittee.remove).
+
+Tips
+- Keep departments current to power filters and reporting in other modules.
+
+
+### A.9 Finance
+
+Comprehensive finance operations: GL, AP, AR, Banks (accounts, cashbook, transfers, transactions, cheques/books), Tax, Integrations, Petty Cash, and Reports.
+
+#### A.9.1 Chart of Accounts & Segments
+Navigation: Finance > COA/Segments
+1) Segments (segments.* / coasegment.*): define segment order, length, and values; helpers to save orders and GL-type mappings.
+2) Chart of Accounts (chartofaccounts.*): create GL accounts; view dynamic/ledger reports.
+3) GL Mapping (glpostingmap.*): map operational transaction types to GL; fetch transaction types and list GL accounts.
+
+#### A.9.2 General Ledger
+Navigation: Finance > GL
+1) Journal Entry (journalentry.*): create/post journals; reversing/recurrent journals (reversingjournal.*, recurrentjournal.*).
+2) Ledger reports (ledgerreporting.*, ledgerreport.*), Trial Balance (trialbalance.*).
+
+#### A.9.3 Accounts Payable (AP)
+Navigation: Finance > AP
+1) Invoice Entry (invoiceentry.*): create invoices; fetch POs/GRNs; save; approve/reject.
+2) Credit/Debit Notes (creditnote.*, debitnote.*)
+3) Payment Vouchers (paymentvoucher.*): approve/reject; post in Payment Processing.
+4) Payment Processing (paymentprocessing.*): index/create/voucher view; post vouchers (voucher.post).
+
+#### A.9.4 Accounts Receivable (AR)
+Navigation: Finance > AR
+1) Invoice Generation (invoicegeneration.*): create/post; approve/reject.
+2) Receipts Posting (receiptsposting.*): index/create/store; find customers API; AR drilldowns.
+3) Customer Master/Statement (customermaster.*, customerstatement.*).
+
+#### A.9.5 Bank Management
+Navigation: Finance > Bank, Bank Branch, Bank Account Setup, Cashbook, Transfers, Transactions, Cheques/Books
+1) Banks (finance.bank.*) & Branches (finance.bankbranch.*) including by-bank lists and CRUD.
+2) Bank Accounts (finance.bankaccountsetup.*)
+3) Cashbook (cashbook.*): create payment/receipt; post/void; mapping preview; specialized create flows.
+4) Bank Transfers (banktransfers.*): full CRUD; post/void.
+5) Bank Transactions (banktransactions.*): full CRUD; post/void.
+6) Chequebooks (chequebooks.*) and Cheques (cheques.*): manage leaves and lifecycle (deposit, clear, bounce, cancel); spoil leaves as needed.
+
+#### A.9.6 Tax Management
+Navigation: Finance > Tax
+1) Jurisdictions (taxjurisdiction.*), Types (taxtypes.*), Rule Config (taxruleconfig.*), Summary (taxsummaryreport.*), eFiling (efiling.*), Return Generator (taxreturngenerator.*), GL Mapping (taxglmapping.*).
+
+#### A.9.7 Petty Cash
+Navigation: Finance > Petty Cash
+1) Petty Cash Floats (pettyfloats.*): setup floats.
+2) Petty Cash (pettycash.*): disbursement/replenishment/refund; post/void; submit/approve/reject; replenishment wizard.
+
+#### A.9.8 Integrations
+Navigation: Finance > Integrations
+1) PO→Invoice Sync (integration.po_invoice_sync.*)
+2) Salary Journal Templates (salary-journal-templates.*)
+
+#### A.9.9 Reports
+Navigation: Finance > Reports (finance-reports.*)
+
+Tips
+- Use posting/approval flows consistently for audit readiness.
+- Segment/GL mapping consistency is critical for accurate reporting.
+
+
+### A.10 Budget Line & Analytics
+
+End-to-end budgeting: setup & mapping, workspace (periods, projections, entry by GL line), approvals, consolidation, top-down allocation, reallocation, limits, analytics, admin & integration, reports.
+
+#### A.10.1 Setup & Structure
+Navigation: Budget > Setup & Structure
+1) Budget Lines (budgetlinemapping.*) and GL Mapping (budgetglmapping.*)
+2) Activities Master (activitymaster.*)
+3) Rates (rates.*)
+
+#### A.10.2 Budgeting Workspace
+Navigation: Budget > Workspace
+1) Periods (budgetperiod.*): create period; attach GLs; delete attachments/budget as needed.
+2) Activities (budgetactivities.*)
+3) Projections (budgetprojections.*): store/delete projections; get product types per budget line.
+4) Entry by GL Line (entrybyglline.*) with GL View.
+
+#### A.10.3 Approvals, Consolidation, Top-Down
+Navigation: Budget > Submit for Approval; Approvals; Consolidation; Top-Down Allocation
+1) Submit (submitapproval.*); Approvals (budgetapproval.*) with approve/reject.
+2) Consolidation (budgetconsolidation.*); Top-Down Allocation (topdownallocation.*) including display helper.
+
+#### A.10.4 Reallocation & Limits
+Navigation: Budget & Analytics > Reallocation; Limits
+1) Reallocation (budgetandanalytics.reallocation.*): index/create/store/allocate; AJAX endpoints for budget-lines and budget-line.details.
+2) Limits (budgetandanalytics.limits.*): index/create/store; show/update limits; optional edit/update/destroy routes.
+
+#### A.10.5 Analytics & Admin
+Navigation: Budget > Analytics & Admin
+1) Dashboards: analyticsdashboard, kpidashboards, trendsdashboards; BI reports (e.g., branchperformance, productprofitability, etc.).
+2) Admin/Integration: cbssync, datasynclogs.
+
+#### A.10.6 Reports
+Navigation: Budget > Reports (budgetline-reports.*)
+
+Tips
+- Establish mapping and activities first to avoid rework later.
+- Use reallocation and limits to control budget governance post-approval.
+
+
+### A.11 Settings
+
+Manages users, roles, branches, code lists, currencies, localities, integrations, teams, team members, meeting rooms.
+
+#### A.11.1 Users & Roles
+Navigation: Settings > Users; Roles
+1) Users (users.*): CRUD; user-level actions (activities, password reset/sync, SMS).
+2) Roles (roles.*): CRUD; AJAX show; map permissions as needed.
+3) User Roles by Branch (user_roles.*): assign/remove via dedicated routes.
+
+#### A.11.2 Lists & Localities
+Navigation: Settings > Lists
+1) Currencies (currencies.index)
+2) Code Lists (code-lists.*) with order endpoint (code-lists.order)
+3) Localities (localities.*) and select2 endpoint (locality.select2)
+
+#### A.11.3 Teams & Meetings
+Navigation: Settings > Teams; Meeting Rooms
+1) Teams (teams.*) and Team Users (team-users.*)
+2) Team/Users Bulk Notification endpoints provided
+3) Meeting Rooms (meeting-room.*)
+
+#### A.11.4 Branches & Integrations
+Navigation: Settings > Branches; Integrations
+1) Branches (branches.*)
+2) Integrations (settings.integrations) and POST IntegrationController
+
+Tips
+- Keep roles minimal and permission-scoped; use team messaging for internal comms.
+
+
+### A.12 Third Party (External Parties & Supplier Portal)
+
+#### A.12.1 Parties (Internal Web)
+Navigation: Third Party > Parties
+1) Parties (thirdparty.parties.*): list/create/edit/delete; bulk actions.
+
+#### A.12.2 Supplier Portal (API-driven)
+1) Auth: third-party-auth login/register, verify, resend verification, logout.
+2) Third Party CRUD (third-parties.*), Bank Details, Categories (with middleware for approved users).
+3) Procurement Supplier APIs: supplier categories, suppliers, RFQ invitations/responses/clarifications.
+
+Tips
+- Ensure third-party user Active/Approved flags are set for access.
+
+
+### A.13 CRM (Customer Relationship Management)
+
+Detailed front-office operations: calls, contacts, tickets, clients, leads, email, marketing, feedback, product development, debt collection, boards, reports.
+
+#### A.13.1 Calls & Contacts
+Navigation: CRM > Call; Contact
+1) Calls: start incoming calls; mark unreachable or reschedule.
+2) Contacts: view/add calls and emails; attach to leads/clients; manage unattached contacts.
+
+#### A.13.2 Tickets
+Navigation: CRM > Tickets
+1) Tickets: create/update; watchers; comments; upload docs; workflows/activities; resolve/restore.
+
+#### A.13.3 Clients & Leads
+Navigation: CRM > Clients; Leads
+1) Clients: summary, activities, relations, discussions; client contacts; feedback; tickets/tasks; schedule (meetings/calls); notes/email/sms.
+2) Leads: onboarding; status; activities; watch/assign; schedule; contacts; mail/sms; tasks/tickets; products; analytics.
+
+#### A.13.4 Email & Boards
+Navigation: CRM > Email; Board
+1) Emails: conversations summary; reply drafts; edit drafts; attachments; send drafts.
+2) Boards/Committees: board meetings, notifications, SMS; manage committees.
+
+#### A.13.5 Marketing & Feedback
+Navigation: CRM > Marketing; Feedback
+1) Competitors: products/descriptions, LLM fetch
+2) Campaigns: approvals, workflow, submit, contacts, progress
+3) Lists: upload, filters, leads/clients membership
+4) Planner: global/branch/manager/CEO planners; activities calendar; workflows; documents
+5) Socials: manage social posts and comments
+6) Feedback: surveys, questions/answers, submissions; reviews
+
+#### A.13.6 Product Development & Debt Collection
+Navigation: CRM > Product Development; Debt Collection
+1) Product Dev: comments, features, submit, (dis/en)able comments, workflows, activities, document uploads
+2) Debt Collection: loan assignments/tasks; schedule; collaterals/guarantors (sms/email); messaging
+
+#### A.13.7 Base Utilities
+Navigation: CRM > Base
+1) Products select2; documents; tasks; notes; discussions; SMS summary
+
+#### A.13.8 Reports
+Navigation: CRM > Reports (crm-reports.*)
+
+Tips
+- Use select2 endpoints for fast entity lookup.
+- Leverage planners to coordinate field activities.
+
+
 ## 5. Troubleshooting & FAQs
 
 - I cannot see a module or menu: Check with admin if your role grants access.
