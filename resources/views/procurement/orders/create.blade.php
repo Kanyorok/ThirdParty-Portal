@@ -173,7 +173,6 @@
                     <thead class="table-light">
                     <tr>
                         <th style="width: 3%; min-width: 30px;">#</th>
-                        <th style="width: 10%; min-width: 100px;">Item Type <span class="text-danger">*</span></th>
                         <th style="width: 15%; min-width: 150px;">Item Name <span class="text-danger">*</span></th>
                         <th style="width: 20%; min-width: 200px;">Item Description</th>
                         <th style="width: 5%; min-width: 80px;">Quantity <span class="text-danger">*</span></th>
@@ -186,14 +185,6 @@
                     <tbody id="item-rows">
                     <tr>
                         <td class="line-no">1.</td>
-                        <td class="text-start">
-                            <select class="form-select form-select-sm type" name="type[]" id="Type" required>
-                                <option disabled selected>Select Type</option>
-                                @foreach ($itemTypes as $type)
-                                    <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
-                                @endforeach
-                            </select>
-                        </td>
                         <td class="text-start">
                             <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item" required>
                                 <option disabled selected>Select Item Code</option>
@@ -267,11 +258,7 @@
     </script>
 
     <script>
-        const itemTypeOptions = `{!! collect($itemTypes ?? [])->map(function($type) {
-            $id = is_array($type) ? ($type['Id'] ?? '') : ($type->Id ?? '');
-            $name = is_array($type) ? ($type['TypeName'] ?? '') : ($type->TypeName ?? '');
-            return "<option value='" . e($id) . "'>" . e($name) . "</option>";
-        })->implode('') !!}`;
+        const itemTypeOptions = ``;
     </script>
 
     <script>
@@ -388,11 +375,6 @@
                             <tr>
                                 <td class="line-no">${rowNo}.</td>
                                 <td class="text-start">
-                                    <select class="form-select form-select-sm type" name="type[]" required>
-                                        ${itemTypeOptions}
-                                    </select>
-                                </td>
-                                <td class="text-start">
                                     <select class="form-select form-select-sm itemCode" name="itemCode[]" required>
                                         <option value="${it.itemCode}" selected>${it.itemName}</option>
                                     </select>
@@ -483,8 +465,7 @@
         // });
 
         $(function () {
-            // Handle item type change using event delegation
-
+            // Removed item type change handler (no longer used)
             $('form#purchaseOrdersForm').submit(async function (e) {
                 // alert($('#RequisitionID').val());
                 e.preventDefault();
@@ -495,36 +476,7 @@
             });
 
 
-            $(document).on('change', '.type', function () {
-                let row = $(this).closest('tr');
-                let type = $(this).val();
-
-                if (type !== '') {
-                    $.ajax({
-                        url: `/procurement/requisitionItem/getItem/${type}`,
-                        type: 'GET',
-                        success: function (response) {
-
-                            console.log(response)
-                            let itemCodeSelect = row.find('.itemCode');
-                            itemCodeSelect.empty().append(
-                                '<option value="">Select Item</option>');
-
-                            $.each(response.data, function (key, item) {
-                                itemCodeSelect.append(
-                                    `<option value="${item.Id}">${item.ItemName}</option>`
-                                );
-                            });
-                        },
-                        error: function (response) {
-                            alert('Failed to load items');
-                            console.log(response);
-                        }
-                    });
-                } else {
-                    row.find('.itemCode').empty().append('<option value="">Select Item</option>');
-                }
-            });
+            // Type-based item filtering removed
 
             ////fetching suppliers
 
@@ -604,7 +556,7 @@
                 let totalTax = 0;
 
                 // Loop through each row to calculate totals
-                $('#po-items tr').each(function () {
+                $('#item-rows tr').each(function () {
                     let row = $(this);
                     let qty = parseFloat(row.find('.quantity').val()) || 0;
                     let price = parseFloat(row.find('.unit-price').val()) || 0;
@@ -637,12 +589,10 @@
             }
 
 
-            $(document).ready(function () {
-                calculateSummaryTotals();
-            });
+            $(document).ready(function () { calculateSummaryTotals(); });
 
             function updateLineNumbers() {
-                $('#po-items tr').each(function (index) {
+                $('#item-rows tr').each(function (index) {
                     $(this).find('.line-no').text((index + 1) + '.');
                 });
             }
@@ -655,12 +605,6 @@
             const row = `
         <tr>
             <td class="line-no">${rowCount}.</td>
-            <td class="text-start">
-                <select class="form-select form-select-sm type" name="type[]" id="Type" required>
-                    <option disabled selected>Select Type</option>
-                    ${itemTypeOptions}
-                </select>
-            </td>
             <td class="text-start">
                 <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item" required>
                     <option disabled selected>Select Item Code</option>
@@ -680,14 +624,15 @@
                 <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
             </td>
         </tr>`;
-            document.getElementById('po-items').insertAdjacentHTML('beforeend', row);
+            document.getElementById('item-rows').insertAdjacentHTML('beforeend', row);
             updateLineNumbers();
+            calculateSummaryTotals();
         });
 
         // Remove row handler
         $(document).on('click', '.remove-row', function () {
             // Only remove if more than one row remains
-            if ($('#po-items tr').length > 1) {
+            if ($('#item-rows tr').length > 1) {
                 $(this).closest('tr').remove();
                 updateLineNumbers();
                 calculateSummaryTotals();

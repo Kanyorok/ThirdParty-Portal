@@ -588,31 +588,57 @@ public function prequalifiedSuppliersByCategory($categoryId): JsonResponse
     try {
         $categoryId = (int) $categoryId;
 
-        $data = collect();
+        // Build list: selected category + its immediate children
+        $categoryIds = collect([$categoryId]);
+        try {
+            $children = DB::table('t_ItemCategories')->where('ParentId', $categoryId)->pluck('Id');
+            $categoryIds = $categoryIds->concat($children)->unique()->values();
+        } catch (\Throwable $e) {}
 
-        // Prefer the new pivot if present
-        if (Schema::hasTable('t_ThirdParty_SupplierCategory')) {
-            $data = DB::table('t_ThirdParty_SupplierCategory as p')
-                ->join('t_ThirdParties as tp', 'tp.Id', '=', 'p.third_party_id')
+        // Map ItemCategoryIDs to SupplierCategoryIDs via pivot
+        $supplierCategoryIds = collect();
+        try {
+            $supplierCategoryIds = DB::table('t_SupplierCategory_ItemCategory')
+                ->whereIn('ItemCategoryID', $categoryIds)
+                ->whereNull('DeletedOn')
+                ->pluck('SupplierCategoryID');
+        } catch (\Throwable $e) {}
+
+        // Third-party ids from t_ThirdParty_SupplierCategory for those SupplierCategoryIDs
+        $thirdPartyIds = collect();
+        try {
+            $thirdPartyIds = DB::table('t_ThirdParty_SupplierCategory')
+                ->whereIn('SupplierCategoryID', $supplierCategoryIds)
+                ->pluck('ThirdPartyID');
+        } catch (\Throwable $e) {}
+
+        // Candidates from pivot mapping
+        $fromPivot = collect();
+        if ($thirdPartyIds->isNotEmpty()) {
+            $fromPivot = DB::table('t_ThirdParties as tp')
                 ->leftJoin('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
-                ->where('p.supplier_category_id', $categoryId)
-                ->selectRaw('COALESCE(s.Id, 0) as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName) as SupplierName, COALESCE(tp.Address, \'\') as Address')
-                ->orderBy('SupplierName')
-                ->get();
-        } elseif (Schema::hasTable('t_Suppliers')) {
-            // Fallback to legacy SupplierCategoryID on t_Suppliers
-            $data = DB::table('t_Suppliers as s')
-                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                ->where('s.SupplierCategoryID', $categoryId)
-                ->selectRaw('s.Id as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName, s.SupplierName) as SupplierName, COALESCE(tp.Address, \'\') as Address')
+                ->whereIn('tp.Id', $thirdPartyIds)
+                ->selectRaw('COALESCE(s.Id, 0) as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName) as SupplierName, COALESCE(tp.Address, '\'\') as Address')
                 ->orderBy('SupplierName')
                 ->get();
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $data,
-        ]);
+        // Also include suppliers directly mapped by CategoryId in t_Suppliers
+        $fromDirect = collect();
+        try {
+            $fromDirect = DB::table('t_Suppliers as s')
+                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                ->whereIn('s.CategoryId', $categoryIds)
+                ->selectRaw('s.Id as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName, s.SupplierName) as SupplierName, COALESCE(tp.Address, '\'\') as Address')
+                ->orderBy('SupplierName')
+                ->get();
+        } catch (\Throwable $e) {}
+
+        $data = $fromPivot->concat($fromDirect)
+            ->unique(function ($row) { return ($row->SupplierId ?: 0) . '|' . ($row->SupplierName ?? ''); })
+            ->values();
+
+        return response()->json(['success' => true, 'data' => $data]);
     } catch (\Throwable $e) {
         \Log::error('Failed to fetch prequalified suppliers by category', ['categoryId' => $categoryId, 'error' => $e->getMessage()]);
         return response()->json([
