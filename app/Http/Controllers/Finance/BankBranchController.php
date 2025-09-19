@@ -7,6 +7,8 @@ use App\Models\Finance\BankBranch;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Locality;
+use App\Models\Core\Country;
+use Illuminate\Http\JsonResponse;
 
 class BankBranchController extends Controller
 {
@@ -116,5 +118,28 @@ public function update(Request $request, $id)
     {
         $branches = BankBranch::with('bank')->orderBy('BranchName')->paginate(20);
         return view('finance.bankbranch.index_all', compact('branches'));
+    }
+
+    /**
+     * Return cities (localities) for a given country for Select2.
+     */
+    public function getCities(Request $request): JsonResponse
+    {
+        $countryId = $request->integer('countryId');
+        $term = trim((string) $request->get('q', ''));
+
+        $query = Locality::query()->where('IsActive', 1);
+
+        if ($countryId) {
+            $query->where('CountryId', $countryId);
+        }
+
+        if ($term !== '') {
+            $query->where('Name', 'like', "%{$term}%");
+        }
+
+        $localities = $query->orderBy('Name')->get(['ID','Name']);
+
+        return response()->json($localities);
     }
 }

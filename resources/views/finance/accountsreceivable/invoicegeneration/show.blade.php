@@ -47,12 +47,12 @@
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">Bill To</h6>
-                            <div class="fs-6 fw-semibold mt-2">{{ $invoice->customer->TenantName ?? '—' }}</div>
-                            <div class="small">{{ $invoice->customer->PostalAddress ?? '—' }}</div>
-                            <div class="small text-muted mt-2">Email: <span class="text-dark">{{ $invoice->customer->EmailAddress ?? '—' }}</span></div>
-                            <div class="small text-muted">Phone: <span class="text-dark">{{ $invoice->customer->PhoneNumber ?? '—' }}</span></div>
-                            <div class="small text-muted">ID/Reg: <span class="text-dark">{{ $invoice->customer->IDRegistrationNo ?? '—' }}</span></div>
-                            <div class="small text-muted">Nationality: <span class="text-dark">{{ $invoice->customer->Nationality ?? '—' }}</span></div>
+                            <div class="fs-6 fw-semibold mt-2">{{ $invoice->customer->ThirdPartyName ?? '—' }}</div>
+                            <div class="small">{{ $invoice->customer->PhysicalAddress ?? '—' }}</div>
+                            <div class="small text-muted mt-2">Email: <span class="text-dark">{{ $invoice->customer->Email ?? '—' }}</span></div>
+                            <div class="small text-muted">Phone: <span class="text-dark">{{ $invoice->customer->Phone ?? '—' }}</span></div>
+                            <div class="small text-muted">Reg No.: <span class="text-dark">{{ $invoice->customer->RegistrationNumber ?? '—' }}</span></div>
+                            <div class="small text-muted">Country: <span class="text-dark">{{ $invoice->customer->country?->Name ?? '—' }}</span></div>
                             <div class="mt-2 small text-muted">Request: {{ $invoice->RequestID }}</div>
                         </div>
                     </div>
@@ -227,7 +227,14 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancel</button>
-                        <button class="btn btn-success" type="submit"><i class="fas fa-check-circle"></i> Approve</button>
+                        <button type="submit" class="btn btn-success"
+                        onclick="if(this.form.checkValidity()){
+                            this.disabled = true;
+                            this.innerHTML = '<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Please Wait...';
+                            this.form.submit();
+                        }">
+                    <i class="fas fa-check-circle me-1"></i> Approve
+                </button>
                     </div>
                 </form>
             </div>
@@ -256,7 +263,14 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-light" data-bs-dismiss="modal" type="button">Cancel</button>
-                        <button class="btn btn-danger" type="submit"><i class="fas fa-times-circle"></i> Reject</button>
+                        <button type="submit" class="btn btn-danger"
+                        onclick="if(this.form.checkValidity()){
+                            this.disabled = true;
+                            this.innerHTML = '<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Please Wait...';
+                            this.form.submit();
+                        }">
+                    <i class="fas fa-times-circle me-1"></i> Reject
+                </button>
                     </div>
                 </form>
             </div>

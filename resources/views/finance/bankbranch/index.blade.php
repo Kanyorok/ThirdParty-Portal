@@ -24,12 +24,13 @@
         <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
+                    <th>#</th>
                     <th>Branch Name</th>
                     <th>Branch Code</th>
                     <th>Address1</th>
-                    <th>Address2</th>
-                    <th>City</th>
+                    {{-- <th>Address2</th> --}}
                     <th>Country</th>
+                    <th>City</th>
                     <th>ZipCode</th>
                     <th>Phone</th>
                     <th>Email</th>
@@ -39,10 +40,11 @@
             <tbody>
                 @forelse($branches as $branch)
                     <tr>
+                        <td>{{$loop->iteration}}</td>
                         <td>{{ $branch->BranchName }}</td>
                         <td>{{ $branch->BranchCode ?? '—' }}</td>
                         <td>{{ $branch->Address1 ?? '—' }}</td>
-                        <td>{{ $branch->Address2 ?? '—' }}</td>
+                        {{-- <td>{{ $branch->Address2 ?? '—' }}</td> --}}
                         <td>{{ $branch->city?->Name ?? '—' }}</td>
                         <td>{{ $branch->country?->Name ?? '—' }}</td>
                         <td>{{ $branch->ZipCode ?? '—' }}</td>

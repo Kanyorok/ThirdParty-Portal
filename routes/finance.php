@@ -235,6 +235,10 @@ Route::middleware('auth')->prefix('finance')->name('finance.')->group(function (
     Route::resource('bankbranch', BankBranchController::class)
         ->except(['index'])
         ->names('bankbranch');
+
+    // AJAX: Get cities for a selected country (used by Bank Branch create/edit)
+    Route::get('bankbranch/cities', [BankBranchController::class, 'getCities'])
+        ->name('bankbranch.cities');
 });
 
 

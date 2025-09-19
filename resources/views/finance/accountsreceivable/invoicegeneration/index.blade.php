@@ -33,7 +33,7 @@
                                 <td>{{ $loop->iteration + ($invoices->currentPage() - 1) * $invoices->perPage() }}</td>
                                 <td>{{ $invoice->RequestID }}</td>
                                 <td>{{ $invoice->InvoiceTitle }}</td>
-                                <td>{{ $invoice->customer->TenantName ?? '—' }}</td>
+                                <td>{{ $invoice->customer->ThirdPartyName ?? '—' }}</td>
                                 <td>{{ $invoice->source->Name ?? '—' }}</td>
                                 <td>{{ $invoice->InvoiceNumber }}</td>
                                 <td>

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceInvoice;
-use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ReceiptsPostingController extends Controller
 {
@@ -28,10 +30,17 @@ class ReceiptsPostingController extends Controller
     public function findCustomer(Request $request)
     {
         $request->validate([
-            'id_number' => 'required|string'
+            'id_number' => 'required|string|min:2'
         ]);
 
-        $customer = PropertyNewTenant::where('IDRegistrationNo', $request->id_number)->first();
+        $q = trim((string) $request->id_number);
+        $customer = ThirdParties::query()
+            ->where('RegistrationNumber', $q)
+            ->orWhere('TaxPIN', $q)
+            ->orWhere('Email', $q)
+            ->orWhere('Phone', $q)
+            ->orWhere('ThirdPartyName', 'like', "%{$q}%")
+            ->first();
 
         if (!$customer) {
             return response()->json(['error' => 'Customer not found'], 404);
@@ -40,6 +49,7 @@ class ReceiptsPostingController extends Controller
         $invoices = FinanceInvoice::with('currency')
             ->where('CustomerID', $customer->Id)
             ->where('IsPaid', false)
+            ->where('ApprovalStatus', 'posted')
             ->whereColumn('TotalAmount', '>', 'AmountPaid')
             ->orderBy('InvoiceDate')
             ->get()
@@ -47,27 +57,38 @@ class ReceiptsPostingController extends Controller
                 return [
                     'id'        => $inv->Id,
                     'number'    => $inv->InvoiceNumber,
-                    'issue_date'=> $inv->InvoiceDate->format('Y-m-d'),
-                    'due_date'  => $inv->DueDate->format('Y-m-d'),
+                    'issue_date'=> optional($inv->InvoiceDate)->format('Y-m-d'),
+                    'due_date'  => optional($inv->DueDate)->format('Y-m-d'),
                     'currency'  => [
-                        'code'   => $inv->currency->Code,
-                        'symbol' => $inv->currency->Symbol
+                        'code'   => $inv->currency->Code ?? null,
+                        'symbol' => $inv->currency->Symbol ?? null
                     ],
-                    'total'     => (float)$inv->TotalAmount,
-                    'paid'      => (float)$inv->AmountPaid,
+                    'total'     => (float) ($inv->TotalAmount ?? 0),
+                    'paid'      => (float) ($inv->AmountPaid ?? 0),
                 ];
             });
+
+        if ($invoices->isEmpty()) {
+            return response()->json(['error' => 'No invoices found for this customer'], 404);
+        }
+
+
+        $status = is_object($customer->Status ?? null) && method_exists($customer->Status, 'label')
+            ? $customer->Status->label()
+            : ((string) ($customer->Status ?? ''));
 
         return response()->json([
             'customer' => [
                 'id'        => $customer->Id,
-                'name'      => $customer->TenantName,
-                'id_number' => $customer->IDRegistrationNo,
-                'email'     => $customer->EmailAddress,
-                'phone'     => $customer->PhoneNumber,
-                'status'    => $customer->IsActive ? 'Active' : 'Inactive',
-                'currency'  => [ 'code' => $invoices->first()?->currency['code'] ?? 'KES',
-                    'symbol' => $invoices->first()?->currency['symbol'] ?? 'KSh' ]
+                'name'      => $customer->ThirdPartyName,
+                'id_number' => $customer->RegistrationNumber ?? $customer->TaxPIN ?? $q,
+                'email'     => $customer->Email,
+                'phone'     => $customer->Phone,
+                'status'    => $status ?: '—',
+                'currency'  => [
+                    'code'   => $invoices->first()?->currency['code'] ?? 'KES',
+                    'symbol' => $invoices->first()?->currency['symbol'] ?? 'KSh'
+                ]
             ],
             'invoices' => $invoices
         ]);
@@ -78,68 +99,7 @@ class ReceiptsPostingController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'CustomerId'     => 'required|integer|exists:Customer,Id',
-            'AmountReceived' => 'required|numeric|min:0.01',
-            'PaymentMethod'  => 'required|string',
-            'ReferenceNo'    => 'nullable|string|max:100',
-            'ValueDate'      => 'required|date',
-            'PostingDate'    => 'required|date',
-            'Remarks'        => 'nullable|string',
-            'Allocations'    => 'nullable|json'
-        ]);
-
-        DB::transaction(function () use ($request) {
-            // 1. Save receipt
-            $receipt = new Receipt();
-            $receipt->CustomerID    = $request->CustomerId;
-            $receipt->AmountReceived= $request->AmountReceived;
-            $receipt->PaymentMethod = $request->PaymentMethod;
-            $receipt->ReferenceNo   = $request->ReferenceNo;
-            $receipt->ValueDate     = $request->ValueDate;
-            $receipt->PostingDate   = $request->PostingDate;
-            $receipt->Remarks       = $request->Remarks;
-            $receipt->CreatedBy     = auth()->id();
-            $receipt->save();
-
-            $allocations = json_decode($request->Allocations, true) ?? [];
-
-            // 2. Loop allocations
-            foreach ($allocations as $alloc) {
-                $invoice = FinanceInvoice::find($alloc['invoice_id']);
-                if (!$invoice) continue;
-
-                $amount = min($alloc['allocate'], ($invoice->TotalAmount - $invoice->AmountPaid));
-
-                $allocation = new ReceiptAllocation();
-                $allocation->ReceiptID  = $receipt->Id;
-                $allocation->InvoiceID  = $invoice->Id;
-                $allocation->Amount     = $amount;
-                $allocation->save();
-
-                // 3. Update invoice paid amounts
-                $invoice->AmountPaid += $amount;
-                if ($invoice->AmountPaid >= $invoice->TotalAmount) {
-                    $invoice->IsPaid = true;
-                }
-                $invoice->save();
-            }
-
-            // 4. If unapplied and create credit
-            $applied = array_sum(array_column($allocations, 'allocate'));
-            $unapplied = $request->AmountReceived - $applied;
-            if ($unapplied > 0 && $request->has('CreateCredit')) {
-                // You may insert into a CustomerCredit table
-                DB::table('CustomerCredit')->insert([
-                    'CustomerID' => $request->CustomerId,
-                    'Amount'     => $unapplied,
-                    'CreatedBy'  => auth()->id(),
-                    'CreatedOn'  => now(),
-                ]);
-            }
-        });
-
-        return redirect()->route('receiptsposting.index')
-            ->with('success', 'Receipt successfully recorded.');
+        // Not implemented in this iteration; search/display uses ThirdParties and pending invoices at create page
+        return back()->with('info', 'Receipt posting is not implemented yet in this module.');
     }
 }

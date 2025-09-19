@@ -62,24 +62,27 @@
                                    value="{{ old('BranchCode', $branch->BranchCode ?? '') }}">
                         </div>
                         <div class="col-md-4">
+                            <label class="form-label">Country</label>
+                            <select id="countrySelect" name="CountryID" class="form-select" required>
+                                <option value="" disabled>Select Country</option>
+                                @foreach(\App\Models\Core\Country::active()->ordered()->get(['Id','Name']) as $c)
+                                    <option value="{{ $c->Id }}" 
+                                        {{ (old('CountryID', $branch->CountryID ?? '') == $c->Id) ? 'selected' : '' }}>
+                                        {{ $c->Name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label">City</label>
-                            <select name="CityID" class="form-select select2-city">
-                                @if(old('CityID', $branch->CityID ?? false))
-                                    <option value="{{ old('CityID', $branch->CityID ?? '') }}" selected>
-                                        {{ optional(\App\Models\Core\Locality::find(old('CityID', $branch->CityID ?? '')))->Name }}
+                            <select id="citySelect" name="CityID" class="form-select" required>
+                                @if($branch->CityID)
+                                    <option value="{{ $branch->CityID }}" selected>
+                                        {{ optional(\App\Models\Core\Locality::find($branch->CityID))->Name }}
                                     </option>
                                 @else
                                     <option value="" selected disabled>Select City</option>
                                 @endif
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Country</label>
-                            <select name="CountryID" class="form-select select2-country">
-                                <option value="" disabled>Select Country</option>
-                                @foreach(\App\Models\Core\Country::active()->ordered()->get(['Id','Name','CountryCode']) as $c)
-                                    <option value="{{ $c->Id }}" data-code="{{ $c->CountryCode }}" {{ (old('CountryID', $branch->CountryID ?? '') == $c->Id) ? 'selected' : '' }}>{{ $c->Name }}</option>
-                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -122,9 +125,8 @@
                             this.innerHTML = '<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Please Wait...';
                             this.form.submit();
                         }">
-                    <i class="fas fa-save me-1"></i> Update Branch
-                </button>
-            
+                        <i class="fas fa-save me-1"></i> Update Branch
+                    </button>
                 </div>
 
             </form>
@@ -135,69 +137,29 @@
 
 @section('scripts')
 <script>
-    (function(){
-        if (window.jQuery && $.fn.select2) {
-            $('.select2-country').select2({
-                width: '100%',
-                placeholder: 'Select Country',
-                allowClear: true
-            });
-            var $country = $('.select2-country');
-            var $city = $('.select2-city');
+document.addEventListener('DOMContentLoaded', function() {
+    const countrySelect = document.getElementById('countrySelect');
+    const citySelect = document.getElementById('citySelect');
 
-            $city.select2({
-                width: '100%',
-                placeholder: 'Select City',
-                allowClear: true,
-                minimumInputLength: 0,
-                ajax: {
-                    delay: 250,
-                    url: '{{ route('locality.select2') }}',
-                    dataType: 'json',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                    data: function (params) {
-                        return { q: (params.term || ''), countryId: $country.val() };
-                    },
-                    processResults: function (data) {
-                        var results = (data || []).map(function(item){ return {id: item.ID, text: item.Name}; });
-                        if (results.length === 0) {
-                            return { results: [{ id: '', text: 'No cities found', disabled: true }] };
-                        }
-                        return { results: results };
-                    }
-                }
-            });
+    countrySelect.addEventListener('change', function() {
+        const countryId = this.value;
+        citySelect.innerHTML = '<option disabled selected>Loading...</option>';
 
-            // When country changes, clear and proactively load cities
-            $country.on('change', function(){
-                $city.val(null).trigger('change');
-                if ($(this).val()) {
-                    $city.prop('disabled', false);
-                    var id = $country.val();
-                    if (id) {
-                        $.ajax({
-                            url: '{{ route('locality.select2') }}',
-                            dataType: 'json',
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                            data: { q: '', countryId: id },
-                            success: function(data){
-                                var opts = ['<option value="" disabled selected>Select City</option>'];
-                                (data || []).forEach(function(item){
-                                    opts.push('<option value="'+ item.ID +'">'+ item.Name +'</option>');
-                                });
-                                $city.html(opts.join(''));
-                                $city.select2('open');
-                            },
-                            error: function(){
-                                $city.html('<option value="" disabled selected>No cities found</option>');
-                            }
-                        });
-                    }
-                } else {
-                    $city.prop('disabled', true);
-                }
+        fetch(`/getCities?countryId=${countryId}`)
+            .then(res => res.json())
+            .then(data => {
+                citySelect.innerHTML = '<option value="" disabled selected>Select City</option>';
+                data.forEach(city => {
+                    let opt = document.createElement('option');
+                    opt.value = city.ID;
+                    opt.textContent = city.Name;
+                    citySelect.appendChild(opt);
+                });
+            })
+            .catch(() => {
+                citySelect.innerHTML = '<option disabled selected>Error loading cities</option>';
             });
-        }
-    })();
+    });
+});
 </script>
 @endsection

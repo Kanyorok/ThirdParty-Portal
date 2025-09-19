@@ -6,6 +6,7 @@ use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\Core\Module;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -140,7 +141,7 @@ class FinanceInvoice extends Model
     }
 
     public function customer(){
-        return $this->belongsTo(PropertyNewTenant::class,'CustomerID','Id');
+        return $this->belongsTo(ThirdParties::class,'CustomerID','Id');
     }
 
     public function source(){

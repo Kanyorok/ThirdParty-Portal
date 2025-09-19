@@ -4,6 +4,8 @@ namespace App\Models\Finance;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\Currency;
+use App\Models\Finance\FinanceGLAccounts;
+use Illuminate\Support\Facades\Auth;
 
 class BankAccount extends Model
 {
@@ -34,8 +36,8 @@ class BankAccount extends Model
 
     protected static function booted()
     {
-        static::creating(function ($m) { $m->CreatedBy  = auth()->id(); });
-        static::updating(function ($m) { $m->ModifiedBy = auth()->id(); });
+        static::creating(function ($m) { $m->CreatedBy  = Auth::id(); });
+        static::updating(function ($m) { $m->ModifiedBy = Auth::id(); });
     }
 
     public function bank()
@@ -51,5 +53,10 @@ class BankAccount extends Model
     public function currency()
     {
         return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
+    }
+
+    public function glAccount()
+    {
+        return $this->belongsTo(FinanceGLAccounts::class, 'GLAccountID', 'Id');
     }
 }

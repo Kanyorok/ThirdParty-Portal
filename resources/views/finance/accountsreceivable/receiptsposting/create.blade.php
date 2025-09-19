@@ -3,6 +3,12 @@
 
 @section('content')
     <div class="container my-3">
+        <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.8); z-index: 2000;">
+            <div class="text-center">
+                <div class="spinner-border text-info" role="status" style="width: 4rem; height: 4rem;"></div>
+                <div class="mt-2 text-muted">Searching…</div>
+            </div>
+        </div>
         <form action="{{ route('receiptsposting.store') }}" method="post" enctype="multipart/form-data" id="receiptForm">
             @csrf
 
@@ -26,8 +32,8 @@
                     <div class="border rounded-3 p-3 mb-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-4">
-                                <label class="form-label small text-muted">Customer ID Number</label>
-                                <input type="text" class="form-control" id="searchIdNumber" placeholder="e.g., 12345678" autocomplete="off">
+                                <label class="form-label small text-muted">Search Customer (Reg No./Tax PIN/Email/Phone/Name)</label>
+                                <input type="text" class="form-control" id="searchIdNumber" placeholder="e.g., REG123456 / P123456789 / email@domain.com / +2547... / Acme" autocomplete="off">
                                 <div class="invalid-feedback">Please enter an ID number to search.</div>
                             </div>
                             <div class="col-md-3">
@@ -36,7 +42,7 @@
                                 </button>
                             </div>
                             <div class="col-md-5 text-md-end">
-                                <span id="searchHint" class="small text-muted">Enter the ID number, then click Find.</span>
+                                <span id="searchHint" class="small text-muted">Enter a registration number, Tax PIN, email, phone or name, then click Find.</span>
                                 <span id="searchSpinner" class="small ms-2 d-none">
                 <i class="fas fa-spinner fa-spin"></i> searching…
               </span>
@@ -220,6 +226,7 @@
         const btnSearch = document.getElementById('btnSearchCustomer');
         const idInput   = document.getElementById('searchIdNumber');
         const spinner   = document.getElementById('searchSpinner');
+        const overlay   = document.getElementById('loadingOverlay');
         const hint      = document.getElementById('searchHint');
 
         const custCard  = document.getElementById('customerCard');
@@ -344,6 +351,7 @@
 
             btnSearch.disabled = true;
             setHidden(spinner, false);
+            overlay.classList.remove('d-none');
             hint.textContent = 'Searching…';
 
             try {
@@ -367,14 +375,15 @@
                 toast('Customer loaded. You can now allocate payments.','Success');
             } catch (err){
                 if (err.message === 'NOT_FOUND'){
-                    resetAll('Customer not found. Try a different ID.');
-                    flash('No customer matched that ID. Please try another.','danger');
+                    resetAll('Customer not found or no posted unpaid invoices.');
+                    flash('Customer not found or no posted unpaid invoices.','danger');
                 } else {
                     resetAll('Lookup failed. Please try again.');
                     flash('Lookup failed. Check your connection and try again.','danger');
                 }
             } finally {
                 setHidden(spinner, true);
+                overlay.classList.add('d-none');
                 btnSearch.disabled = false;
             }
         }

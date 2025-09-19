@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Banks')
 
-@section('content') 
+@section('content')
 <div class="container my-3">
     <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
         <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
@@ -80,13 +80,13 @@
                                 title="View More {{ $bank->BankName }}  Details">
                                  <i class="fas fa-eye"></i>
                              </a>
-                             
+
                              <a href="{{ route('finance.bank.edit', $bank->BankID) }}"
                                 class="btn btn-sm btn-outline-primary me-1"
                                 title="Edit  {{ $bank->BankName }}">
                                  <i class="fas fa-edit"></i>
                              </a>
-                             
+
                              <button type="button"
                                      class="btn btn-sm btn-outline-danger custom-delete-btn"
                                      title="Delete {{ $bank->BankName }}"
@@ -96,7 +96,7 @@
                                      data-route="{{ route('finance.bank.destroy', $bank->BankID) }}">
                                  <i class="fas fa-trash-alt"></i>
                              </button>
-                             
+
                         </td>
                     </tr>
                 @empty

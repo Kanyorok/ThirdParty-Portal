@@ -32,7 +32,7 @@ class InvoiceGenerationController extends Controller
             'ApprovalStatus',
         ])
             ->with([
-                'customer:Id,TenantName',
+                'customer:Id,ThirdPartyName',
                 'source:ModuleID,Name',
                 'currency:Id,Code'
             ])
@@ -49,7 +49,7 @@ class InvoiceGenerationController extends Controller
     public function show($id)
     {
         $invoice = FinanceInvoice::with([
-            'customer:Id,TenantName,PhoneNumber,EmailAddress,PostalAddress,IDRegistrationNo,Nationality',
+            'customer.country',
             'source:ModuleID,Name',
             'currency:Id,Code,Symbol,Name',
             'lines:Id,InvoiceID,InvoiceLineName,Description,UnitCost,Quantity,Tax,TaxAmount,Discount,Total'
@@ -77,7 +77,7 @@ class InvoiceGenerationController extends Controller
 
                 // Load the invoice with the same relations, and lock row for update
                 $invoice = FinanceInvoice::with([
-                    'customer:Id,TenantName',
+                    'customer:Id,ThirdPartyName',
                     'currency:Id,Name,Code,Symbol',
                     'createdBy:Id,Name',
                 ])
