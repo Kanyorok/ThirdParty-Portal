@@ -19,7 +19,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->tenant->TenantName ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->tenant->thirdParty->TradingName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -122,8 +122,8 @@
                 on <strong>{{ $newlease->ModifiedOn ? Carbon::parse($newlease->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
             </div>
             <div>
-                <a href="{{ route('addlease.index') }}" class="btn btn-sm btn-dark">Back</a>
                 <a href="{{ route('addlease.edit', $newlease->Id) }}" class="btn btn-sm btn-dark">Edit</a>
+                <a href="{{ route('addlease.index') }}" class="btn btn-sm btn-dark">Back</a>
             </div>
         </div>
     </div>

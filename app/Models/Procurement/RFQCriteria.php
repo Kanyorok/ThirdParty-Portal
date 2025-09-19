@@ -60,9 +60,9 @@ class RFQCriteria extends Model
 
     public function weightedSection()
     {
-        // Map to RFQSection by SectionID and RFQID (keep relation name for consumers)
-        return $this->belongsTo(RFQSection::class, 'SectionID', 'SectionID')
-            ->whereColumn('t_RFQSection.RFQID', 't_RFQCriteria.RFQID');
+        // Per-instance scoped relation: avoid cross-table whereColumn to prevent SQL binding errors on eager loads
+        return $this->hasOne(RFQSection::class, 'SectionID', 'SectionID')
+            ->where('t_RFQSection.RFQID', $this->RFQID);
     }
 
 }

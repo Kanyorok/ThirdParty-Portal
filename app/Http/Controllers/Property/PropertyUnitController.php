@@ -79,7 +79,7 @@ class PropertyUnitController extends Controller
         $floors = PropertyFloor::all();
         $blocks = PropertyBlock::all();
         $properties = PropertyRegistry::all();
-        $lineentries = PropertyRegistry::with('getBlockByProperty')->get();
+        $lineentries = PropertyRegistry::with('getBlockByProperty.floor')->get();
 
         return view('property.propertyregistry.structuralmapping.addunit.edit', compact('blocks', 'properties', 'lineentries', 'unit', 'floors'));
     }
