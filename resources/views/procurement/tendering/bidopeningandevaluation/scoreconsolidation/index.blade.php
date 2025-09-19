@@ -128,6 +128,45 @@
         </div>
     @endif
 
+    <!-- Drill-Down Options -->
+    @if(!$consolidatedScores->isEmpty())
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="fw-bold">🔍 Detailed Analysis</h5>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-list-alt fa-3x text-primary mb-3"></i>
+                                        <h6 class="card-title">Section-wise Analysis</h6>
+                                        <p class="card-text small">View scores broken down by evaluation sections across all evaluators</p>
+                                        <a href="{{ route('bidscores.section-drilldown', $tender->Id) }}" class="btn btn-primary">
+                                            <i class="fas fa-chart-bar"></i> View Section Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-info">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-users fa-3x text-info mb-3"></i>
+                                        <h6 class="card-title">Evaluator-wise Analysis</h6>
+                                        <p class="card-text small">View individual evaluator performance and scoring patterns</p>
+                                        <a href="{{ route('bidscores.evaluator-drilldown', $tender->Id) }}" class="btn btn-info">
+                                            <i class="fas fa-user-friends"></i> View Evaluator Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Action Buttons -->
     <div class="d-flex gap-2 justify-content-end mb-5">
         @if(!$consolidatedScores->isEmpty())
@@ -149,9 +188,9 @@
 
 <script>
 function forwardForAward() {
-    if (confirm('Are you sure you want to forward the top bidder for award?')) {
-        // Add your forward for award logic here
-        alert('Feature coming soon: Forward for award functionality');
+    if (confirm('Forward this tender for award processing? This will redirect you to the award creation page where you can create the official award.')) {
+        const tenderId = {{ $tender->Id }};
+        window.location.href = '{{ route('awards.create-from-consolidation', ['tenderId' => ':tenderId']) }}'.replace(':tenderId', tenderId);
     }
 }
 

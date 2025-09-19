@@ -62,14 +62,23 @@ class PriceManagementController extends Controller
 
     public function update(PriceManagementRequest $request, $id)
     {
-        $price = PriceManagement::findOrFail($id);
+        $oldPrice = PriceManagement::findOrFail($id);
         $this->authorize('update', PriceManagement::class);
 
-        // Pass only validated data — FormRequest already skips ItemID/UOM for update
-        $this->priceService->update($price, $request->validated());
+        $oldPrice->update([
+            'DeletedOn' => now(),
+            'DeletedBy' => auth()->id(),
+        ]);
+
+        $data = $request->validated();
+        $data['PriceID'] = $oldPrice->PriceID; 
+        $data['ItemID'] = $oldPrice->ItemID;   
+        $data['UOM']  = $oldPrice->UOM;   
+
+        $this->priceService->create($data);
 
         return redirect()->route('pricemanagement.index')
-            ->with('success', 'Price updated!');
+            ->with('success', 'Price updated (new version created)!');
     }
 
     public function destroy($id)

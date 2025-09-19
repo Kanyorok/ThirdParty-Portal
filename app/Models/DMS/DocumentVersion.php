@@ -45,4 +45,61 @@ class DocumentVersion extends Model
     {
         return $this->hasMany(DocumentAttribute::class, 'VersionId');
     }
+
+    /**
+     * Get the content of this document version
+     * Blob field contains encrypted content that needs to be decrypted
+     */
+    public function getContent(): string
+    {
+        // First try to get encrypted content from Blob field (database storage)
+        if (!empty($this->Blob)) {
+            try {
+                // Decrypt the content using EncryptionService
+                return (new \App\Services\DMS\EncryptionService())->decrypt($this->Blob);
+            } catch (\Exception $e) {
+                \Log::error("Failed to decrypt document content from Blob field", [
+                    'error' => $e->getMessage(),
+                    'version_id' => $this->Id
+                ]);
+                // Fall through to file system approach
+            }
+        }
+        
+        // Fallback to file system storage using Path (legacy approach)
+        if (!empty($this->Path)) {
+            try {
+                // Try to read encrypted content from storage and decrypt it
+                $encryptedContent = \Storage::disk($this->Disk->value)->get($this->Path);
+                return (new \App\Services\DMS\EncryptionService())->decrypt($encryptedContent);
+            } catch (\Exception $e) {
+                \Log::error("Failed to read and decrypt document content from path: {$this->Path}", [
+                    'error' => $e->getMessage(),
+                    'version_id' => $this->Id
+                ]);
+            }
+        }
+        
+        // If both methods fail, return empty string
+        return '';
+    }
+
+    /**
+     * Check if this document version has content available
+     */
+    public function hasContent(): bool
+    {
+        // Check if Blob has content
+        if (!empty($this->Blob)) {
+            return true;
+        }
+        
+        // Check if file exists at Path
+        if (!empty($this->Path)) {
+            $fullPath = storage_path('app/' . $this->Path);
+            return file_exists($fullPath);
+        }
+        
+        return false;
+    }
 }

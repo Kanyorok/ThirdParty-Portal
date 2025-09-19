@@ -19,7 +19,7 @@
                                 <option value="">-- Select Lease --</option>
                                 @foreach ($newtenants as $newtenant)
                                     <option value="{{ $newtenant->Id }}">
-                                        LSno: {{ $newtenant->LeaseNumber }} — Name: {{ $newtenant->tenant->TenantName }}
+                                        LSno: {{ $newtenant->LeaseNumber }} — Name: {{ $newtenant->tenant->thirdParty->TradingName }}
                                     </option>
                                 @endforeach
                             </select>
@@ -59,8 +59,8 @@
 
                     <!-- Document Upload -->
                     <div class="mb-3">
-                        <label class="form-label">Upload Supporting Documents</label>
-                        <input type="file" name="Document[]" class="form-control" multiple>
+                        <label class="form-label">Upload Supporting Documents<span class="text-danger">*</span></label>
+                        <input type="file" name="Document[]" class="form-control" multiple required>
                         <small class="text-muted">e.g. Lease Document, Contract Termination Documents</small>
                     </div>
 

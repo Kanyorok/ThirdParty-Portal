@@ -33,7 +33,7 @@
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-calculator"></i> View Consolidated Scores
                                 </button>
-                                <a href="{{ route('procurement.index') }}" class="btn btn-secondary">
+                                <a href="{{ route('evaluationdashboard.index') }}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                                 </a>
                             </div>
