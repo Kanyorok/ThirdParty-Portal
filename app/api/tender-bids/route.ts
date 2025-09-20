@@ -391,29 +391,42 @@ export async function POST(request: NextRequest) {
             console.error('Failed to parse 403 business error response:', parseError);
             useMockResponse = true;
           }
+        } else if (response.status === 409) {
+          // Duplicate submission or already submitted
+          try {
+            const conflict = await response.json();
+            return NextResponse.json({
+              error: "Duplicate submission",
+              message: conflict.message || "A bid has already been submitted for this tender",
+              existing_submission_id: conflict.existing_submission_id || conflict.existing_bid_id,
+              submitted_at: conflict.submitted_at,
+              details: conflict,
+            }, { status: 409 });
+          } catch (parseError) {
+            return NextResponse.json({
+              error: "Duplicate submission",
+              message: "A bid has already been submitted for this tender",
+            }, { status: 409 });
+          }
         } else {
-          // Handle other non-success responses
+          // Handle other non-success responses (e.g., 5xx) and surface to client
           let errorMessage = `ERP API responded with status: ${response.status}`;
           try {
             const text = await response.text();
             console.log('🔍 BID SUBMISSION API - ERP error response:', response.status, text.substring(0, 300));
-            
-            // Try to parse as JSON first
             try {
               const errorData = JSON.parse(text);
               errorMessage = errorData.message || errorMessage;
-              console.log('❌ BID SUBMISSION API - Parsed error:', errorData);
-            } catch (jsonParseError) {
-              // Response is not JSON (probably HTML error page)
-              console.log('❌ BID SUBMISSION API - Non-JSON response, using fallback');
-              errorMessage = `ERP API error (${response.status})`;
+            } catch {
+              errorMessage = text || errorMessage;
             }
-          } catch (textError) {
-            console.error('❌ BID SUBMISSION API - Failed to read error response:', textError);
-            errorMessage = `ERP API error (${response.status})`;
+          } catch {
+            // keep default errorMessage
           }
-          console.warn('ERP API error for bid submission:', errorMessage);
-          useMockResponse = true;
+          return NextResponse.json({
+            error: 'ERP API error',
+            message: errorMessage,
+          }, { status: response.status >= 500 ? 502 : response.status });
         }
       } catch (error) {
         console.warn('External API not available for bid submission, using mock response:', error);

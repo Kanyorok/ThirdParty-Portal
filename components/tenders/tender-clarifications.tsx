@@ -86,43 +86,6 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
       const data = await response.json();
       const clarificationsData = data.data || [];
       
-      // Debug: Log the actual data structure to help identify field name issues
-      console.log('🔍 CLARIFICATIONS DEBUG - Total count:', clarificationsData.length);
-      console.log('🔍 CLARIFICATIONS DEBUG - Raw data:', clarificationsData);
-      
-      // Check for undefined IDs that cause key conflicts
-      const undefinedIds = clarificationsData.filter((c: any) => c.id === undefined || c.id === null);
-      if (undefinedIds.length > 0) {
-        console.warn('⚠️ CLARIFICATIONS WITH UNDEFINED IDs:', undefinedIds.length, undefinedIds);
-      }
-      
-      if (clarificationsData.length > 0) {
-        console.log('🔍 FIRST CLARIFICATION:', clarificationsData[0]);
-        
-        // Check each clarification for responses
-        clarificationsData.forEach((c: any, index: number) => {
-          console.log(`🔍 CLARIFICATION ${index + 1}:`, {
-            id: c.id,
-            clarificationId: c.clarificationId,
-            question: c.question?.substring(0, 50) + '...',
-            // Portal expected fields
-            response: c.response,
-            Response: c.Response,
-            // ERP DATABASE ACTUAL FIELDS (from API)
-            answer: c.answer,        // ACTUAL lowercase field!
-            Answer: c.Answer,        // Backup capitalized
-            answerDate: c.answerDate, // ACTUAL lowercase field!
-            AnswerDate: c.AnswerDate, // Backup capitalized
-            hasResponse: !!(c.response || c.Response || c.answer || c.Answer),
-            status: c.status,
-            Status: c.Status
-          });
-        });
-        
-        const responseCount = clarificationsData.filter((c: any) => c.response || c.Response || c.answer || c.Answer).length;
-        console.log('🔍 RESPONSE COUNT (including actual ERP answer field):', responseCount);
-      }
-      
       setClarifications(clarificationsData);
       setIsMockMode(!!data.fallback); // Set mock mode indicator
       setLastRefresh(new Date()); // Update refresh timestamp

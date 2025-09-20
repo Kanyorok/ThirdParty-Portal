@@ -84,15 +84,11 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
   useEffect(() => {
     const checkExistingBid = async () => {
       try {
-        console.log('🔍 CHECKING FOR EXISTING BID - Tender ID:', tender.id);
         const response = await fetch(`/api/tender-bids?checkExisting=true&tenderId=${tender.id}`);
         const data = await response.json();
         
-        console.log('📋 EXISTING BID CHECK - Response:', data);
-        
         if (data.success && data.hasExistingBid && data.existingBid) {
           const existing = data.existingBid;
-          console.log('✅ FOUND EXISTING BID - Pre-populating form:', existing);
           
           // Pre-populate form with existing bid data
           const populatedData = {
@@ -103,7 +99,6 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
             paymentTerms: existing.paymentTerms || existing.PaymentTerms || "",
           };
           
-          console.log('🎯 FORM POPULATION DEBUG - Setting bid data:', populatedData);
           setBidData(populatedData);
           
           setExistingBidId(existing.id || existing.Id);
@@ -114,11 +109,9 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
           } else {
             toast.success(`✅ Final bid already submitted on ${new Date(existing.createdOn || existing.CreatedOn).toLocaleDateString()}`);
           }
-        } else {
-          console.log('📄 NO EXISTING BID - Starting fresh bid');
         }
       } catch (error) {
-        console.error('❌ ERROR CHECKING EXISTING BID:', error);
+        // Silent fail for existing bid check
         // Don't show error to user - just proceed with empty form
       } finally {
         setIsLoadingExisting(false);
@@ -226,13 +219,6 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
   };
 
   const validateBid = () => {
-    console.log('🔍 FRONTEND VALIDATION - Checking values:', {
-      tenderId: tender.id,
-      bidAmount: bidData.bidAmount,
-      currency: bidData.currency,
-      validityPeriod: bidData.validityPeriod,
-      deliveryPeriod: bidData.deliveryPeriod
-    });
 
     if (!tender.id) {
       toast.error("Tender ID is missing");
@@ -282,7 +268,11 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
   };
 
   const handleSubmit = async (type: 'draft' | 'final') => {
-    console.log('🚀 SUBMIT DEBUG - Starting submission:', { type, documentsCount: documents.length });
+    // Prevent resubmission if a final bid already exists
+    if (existingBidId && !isEditingDraft) {
+      toast.error("You have already submitted a final bid for this tender. No further changes are allowed.");
+      return;
+    }
     
     // Basic validation for both draft and final
     if (!tender.id) {
@@ -313,22 +303,7 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
     try {
       const formData = new FormData();
       
-      // Debug: Log all values before appending
-      console.log('🔍 FRONTEND DEBUG - Values being sent:', {
-        tenderId: tender.id,
-        tenderIdType: typeof tender.id,
-        bidAmount: bidData.bidAmount,
-        bidAmountType: typeof bidData.bidAmount,
-        currency: bidData.currency,
-        currencyType: typeof bidData.currency,
-        validityPeriod: bidData.validityPeriod,
-        validityPeriodType: typeof bidData.validityPeriod,
-        deliveryPeriod: bidData.deliveryPeriod,
-        deliveryPeriodType: typeof bidData.deliveryPeriod,
-        paymentTerms: bidData.paymentTerms,
-        status: type === 'draft' ? 'draft' : 'submitted',
-        documentsCount: documents.length
-      });
+      // Build form data
       
       formData.append('tenderId', String(tender.id));
       formData.append('bidAmount', String(bidData.bidAmount));
@@ -350,14 +325,10 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
       });
 
       const data = await response.json();
-      console.log('📦 SUBMIT DEBUG - Response data:', data);
 
       if (!response.ok) {
-        console.log('❌ SUBMIT DEBUG - Response not OK, status:', response.status);
-        
         if (response.status === 422 && data.errors) {
           // Handle validation errors from ERP
-          console.log('📋 VALIDATION ERRORS from ERP:', data.errors);
           const errorMessages = [];
           
           if (data.errors.tender_id) errorMessages.push(`Tender: ${data.errors.tender_id[0]}`);
@@ -372,7 +343,6 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
           throw new Error(errorMessage);
         } else if (response.status === 403) {
           // Handle business logic errors from ERP (like expired deadlines)
-          console.log('🚫 BUSINESS ERROR from ERP:', data);
           
           if (data.submission_deadline) {
             const deadline = new Date(data.submission_deadline).toLocaleString();
@@ -380,6 +350,9 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
           } else {
             throw new Error(data.message || 'This action is not allowed');
           }
+        } else if (response.status >= 500 || response.status === 502) {
+          // ERP server error surfaced by proxy
+          throw new Error('ERP is currently unavailable. Please try again in a moment.');
         } else {
           throw new Error(data.message || data.error || 'Failed to submit bid');
         }
@@ -396,7 +369,6 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
           : "🎉 Bid submitted successfully to ERP! Your documents have been encrypted and stored securely."
         );
         
-      console.log('✅ SUBMIT DEBUG - Showing success message:', message);
       toast.success(message);
 
       // Reset form if final submission
@@ -418,7 +390,6 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
       }
 
     } catch (error) {
-      console.error('Error submitting bid:', error);
       toast.error(
         error instanceof Error 
           ? error.message 
@@ -664,7 +635,7 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
             <Button
               onClick={() => handleSubmit('draft')}
               variant="outline"
-              disabled={isSubmitting || isLoadingExisting || (existingBidId && !isEditingDraft)}
+              disabled={isSubmitting || isLoadingExisting}
               className="flex-1"
             >
               {isSubmitting && submitType === 'draft' ? (
@@ -682,7 +653,7 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
             
             <Button
               onClick={() => handleSubmit('final')}
-              disabled={isSubmitting || isLoadingExisting || (existingBidId && !isEditingDraft)}
+              disabled={isSubmitting || isLoadingExisting}
               className="flex-1"
             >
               {isSubmitting && submitType === 'final' ? (

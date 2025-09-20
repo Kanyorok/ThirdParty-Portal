@@ -50,13 +50,7 @@ export default function ERPResponseInterface({ clarifications, onResponseSubmitt
   // Filter pending clarifications
   const pendingClarifications = clarifications.filter(c => c.status === 'pending');
   
-  // Debug: Log clarifications data to help troubleshoot key prop issues
-  console.log('🔍 ERP RESPONSE DEBUG - Pending clarifications:', pendingClarifications.map(c => ({
-    id: c.id,
-    tenderId: c.tenderId,
-    hasId: c.id !== undefined && c.id !== null,
-    idType: typeof c.id
-  })));
+  // (debug removed)
 
   const handleSubmitResponse = async () => {
     if (!selectedClarification || !response.trim()) {

@@ -65,6 +65,8 @@ function DialogContent({
         )}
         {...props}
       >
+        {/* Ensure an accessible description exists to avoid warnings */}
+        <DialogPrimitive.Description className="sr-only" />
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
