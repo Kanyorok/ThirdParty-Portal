@@ -137,7 +137,7 @@ class TransactionTransfersController extends Controller
                 ->get();
         } elseif ($type === 'procurement') {
             $statusIds = DB::table('t_CodeDetails')
-                ->where('CodeID', 'RequisitionStatus')->Where('Description', 'Pending')
+                ->where('CodeID', 'RequisitionStatus')->Where('Description', 'Approved')
                 ->pluck('ID');
 
             $requisitions = Requisitions::whereIn('StatusID', $statusIds)
@@ -168,14 +168,14 @@ public function getRequisitionDetails(Request $request, $id)
             $items = $requisition->items->map(function ($item) {
                 return [
                     'Id'          => $item->Id,
-                    'Item'        => $item->Item, // raw item field
+                    'Item'        => $item->Item, 
                     'ItemCode'    => $item->item->ItemCode ?? '',
                     'ItemName'    => $item->item->ItemName ?? '',
-                    'UnitCost'    => $item->item?->price?->ActualPrice ?? 0, // ExpectedPrice → UnitCost
-                    'UOM'         => $item->UOM, // keep as is from line
+                    'UnitCost'    => $item->item?->price?->ActualPrice ?? 0, 
+                    'UOM'         => $item->UOM, 
                     'UOMCode'     => $item->item?->uom?->Code ?? 'N/A',
                     'PriceID'     => $item->item?->ItemPrice,
-                    'ApprovedQty' => $item->ApprovedQty ?? $item->Quantity, // fallback to Quantity
+                    'ApprovedQty' => $item->ApprovedQty ?? $item->Quantity, 
                 ];
             });
 
@@ -198,14 +198,14 @@ public function getRequisitionDetails(Request $request, $id)
             $items = $requisition->requisitionLines->map(function ($line) {
                 return [
                     'Id'          => $line->Id,
-                    'Item'        => $line->Item, // raw item field
+                    'Item'        => $line->Item, 
                     'ItemCode'    => $line->item?->ItemCode ?? '',
                     'ItemName'    => $line->item?->ItemName ?? '',
-                    'UnitCost'    => $line->ExpectedPrice, // ExpectedPrice → UnitCost
+                    'UnitCost'    => $line->ExpectedPrice, 
                     'UOM'         => $line->UOM ?? $line->item?->UOM,
                     'UOMCode'     => $line->item?->uom?->Code ?? 'N/A',
                     'PriceID'     => $line->ExpectedPrice,
-                    'ApprovedQty' => $line->Quantity, // fill with Quantity
+                    'ApprovedQty' => $line->Quantity, 
                 ];
             });
 
