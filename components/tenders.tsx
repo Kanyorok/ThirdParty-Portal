@@ -29,7 +29,7 @@ import { Input } from "@/components/common/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select";
 import { Separator } from '@/components/common/separator';
 import TenderDetailModal from "./tenders/tender-detail-modal";
-import DebugTenderData from "./debug-tender-data";
+import { getBaseUrl } from "@/lib/api-base";
 
 interface Tender {
     id: number;              // Database Id (t_Tenders.Id)
@@ -120,7 +120,7 @@ interface TenderWithInvitation extends Tender {
     invitation?: TenderInvitation;
 }
 
-const BASE_URL = 'http://localhost:8000/api';
+const API_ROOT = `${getBaseUrl()}/api`;
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -365,7 +365,7 @@ export default function TendersPage() {
             }
 
             // Build the final URL string
-            const tenderUrl = `${BASE_URL}/tenders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+            const tenderUrl = `${API_ROOT}/tenders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
             // Fetch both tenders and invitations simultaneously
             const [tendersResponse, invitationsResponse] = await Promise.allSettled([
@@ -407,35 +407,37 @@ export default function TendersPage() {
             // Handle invitations response (non-critical - don't fail if invitations can't be loaded)
             let invitationsData: TenderInvitation[] = [];
             if (invitationsResponse.status === 'fulfilled' && invitationsResponse.value.ok) {
-                const invData = await invitationsResponse.value.json();
-                
-                // Check if data structure matches expected format
-                if (invData.data && Array.isArray(invData.data)) {
-                    // Try different data extraction methods based on Laravel response format
-                    if (invData.data[0] && invData.data[0].invitation) {
-                        // Format: { data: [{ invitation: {...}, tender: {...} }] }
-                        invitationsData = invData.data.map((item: any) => item.invitation);
-                    } else if (invData.data[0] && (invData.data[0].TenderId || invData.data[0].tenderId)) {
-                        // Format: { data: [{ TenderId: ..., ResponseStatus: ... }] }
-                        invitationsData = invData.data;
-                    } else {
-                        console.warn('⚠️ Unknown invitation data format:', invData.data[0]);
-                        invitationsData = [];
-                    }
+                const invData = await invitationsResponse.value.json().catch(() => null);
+
+                // Normalize to an array of invitation-like objects
+                let items: any[] = [];
+                if (Array.isArray(invData?.data)) items = invData.data as any[];
+                else if (Array.isArray(invData)) items = invData as any[];
+
+                if (items.length === 0) {
+                    invitationsData = [];
+                } else if (items[0]?.invitation) {
+                    invitationsData = items.map((item: any) => item.invitation);
+                } else if (items[0]?.TenderId != null || items[0]?.tenderId != null) {
+                    invitationsData = items as any[] as TenderInvitation[];
                 } else {
-                    console.warn('⚠️ Invalid invitation API response structure:', invData);
+                    if (process.env.NODE_ENV !== 'production') {
+                        console.info('Invitation response shape not recognized; ignoring. Example item:', items[0]);
+                    }
                     invitationsData = [];
                 }
                 
                 setInvitations(invitationsData);
                 
                 // Show a notice if using fallback data
-                if (invData.fallback) {
+                if ((invData as any)?.fallback) {
                     console.info('Using mock tender invitation data - external API not available');
                 }
             } else {
                 // Log invitation fetch error but don't fail the whole operation
-                console.warn("Failed to fetch tender invitations:", invitationsResponse);
+                if (process.env.NODE_ENV !== 'production') {
+                    console.warn("Failed to fetch tender invitations:", invitationsResponse);
+                }
             }
 
             // Merge tenders with invitations
@@ -532,19 +534,7 @@ export default function TendersPage() {
                         </h1>
                     </div>
                     
-                    {/* Debug Component - Remove in Production */}
-                    <DebugTenderData />
-                    
-                    {/* System Status */}
-                    <div className="bg-green-100 border border-green-500 p-3 rounded mb-4">
-                        <h3 className="font-bold text-green-800">✅ SYSTEM STATUS</h3>
-                        <p className="text-green-700 text-sm">
-                            <strong>Frontend:</strong> Working perfectly - {invitations.length} invitation(s) loaded, {tenders.filter(t => t.invitation).length} tender(s) matched
-                        </p>
-                        <p className="text-green-700 text-sm">
-                            <strong>Backend:</strong> Laravel SQL parameter binding fix needed (see URGENT_LARAVEL_SQL_FIX.md)
-                        </p>
-                    </div>
+                    {/* Debug UI removed for production cleanliness */}
 
                     <div className="bg-gray-50 dark:bg-gray-950 p-6 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
                         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Filter Tenders</h2>

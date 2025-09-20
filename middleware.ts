@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
 const AUTH_PAGES = new Set(["/signin", "/signup", "/forgot-password", "/reset-password"]) 
-const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://127.0.0.1:8000"
+const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
 
 // Cache for token validation to avoid excessive backend calls
 const tokenValidationCache = new Map<string, { valid: boolean; timestamp: number }>()
@@ -17,6 +17,7 @@ async function validateTokenWithBackend(accessToken: string): Promise<boolean> {
   }
 
   try {
+    if (!EXTERNAL_API_BASE) return true
     const response = await fetch(`${EXTERNAL_API_BASE}/api/auth/validate-token`, {
       method: 'POST',
       headers: {

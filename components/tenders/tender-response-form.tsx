@@ -6,6 +6,7 @@ import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
 import { Alert, AlertDescription } from "@/components/common/alert";
 import { toast } from "sonner";
+import { getBaseUrl } from "@/lib/api-base";
 import { 
   CheckCircle, 
   XCircle, 
@@ -80,7 +81,7 @@ export default function TenderResponseForm({
       };
       
       const invitationId = invitation?.InvitationID || invitation?.invitationID;
-      const apiUrl = `http://localhost:8000/api/tender-invitations/${invitationId}`;
+      const apiUrl = `${getBaseUrl()}/api/tender-invitations/${invitationId}`;
       
       const response = await fetch(apiUrl, {
         method: 'PUT',
@@ -291,13 +292,6 @@ export default function TenderResponseForm({
               </AlertDescription>
             </Alert>
             
-            {/* Issue Identified: SQL Parameter Binding in Laravel Backend */}
-            <div className="bg-green-100 border border-green-500 p-3 rounded text-sm mb-4">
-              <strong className="text-green-800">✅ ISSUE IDENTIFIED:</strong> Laravel SQL parameter binding problem.
-              <p className="text-green-700 text-xs mt-1">
-                Laravel backend needs to fix SQL query generation. See URGENT_LARAVEL_SQL_FIX.md for details.
-              </p>
-            </div>
 
             <div className="space-y-4">
               <div className="flex gap-4">
