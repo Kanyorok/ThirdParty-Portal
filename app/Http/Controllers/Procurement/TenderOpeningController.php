@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
+use App\Enums\TenderStatusEnum;
 use App\Services\Procurement\EncryptedBidDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -130,7 +131,7 @@ class TenderOpeningController extends Controller
             // Initialize ceremony (but don't open bids yet - that will be done individually)
             $tender->update([
                 'OpeningDate' => now(), // Mark ceremony as started
-                'Status' => 'opening_in_progress' // You may need to add this status
+                'Status' => TenderStatusEnum::OpeningInProgress,
             ]);
 
             // Log ceremony initialization
@@ -381,9 +382,11 @@ class TenderOpeningController extends Controller
                 ], 400);
             }
 
-            // Update tender status to indicate ceremony completion
+            // Update tender status to Closed after successful opening of all bids
             $tender->update([
-                'Status' => 'opened' // Or your appropriate status
+                'Status' => \App\Enums\TenderStatusEnum::Closed,
+                'ModifiedBy' => $request->user()->Id,
+                'ModifiedOn' => now(),
             ]);
 
             // Log ceremony completion

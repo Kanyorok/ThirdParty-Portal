@@ -227,9 +227,16 @@ class BidSubmissionApiController extends Controller
                 
                 // Update bid with encrypted document information
                 if (!empty($encryptedDocumentsData)) {
+                    // Write human-readable JSON to EncryptedDocuments (NVARCHAR(MAX))
+                    // Write base64 envelope for backward compatibility
+                    // Write raw VARBINARY envelope to new column
+                    $base64Envelope = encrypt($masterEncryptionKey);
+                    $rawEnvelope = base64_decode($base64Envelope);
+
                     $bid->update([
                         'EncryptedDocuments' => json_encode($encryptedDocumentsData),
-                        'EncryptionKey' => encrypt($masterEncryptionKey), // Encrypt the master key
+                        'EncryptionKey' => $base64Envelope,
+                        'EncryptionEnvelope' => DB::raw("CONVERT(VARBINARY(MAX), 0x" . bin2hex($rawEnvelope) . ")"),
                         'ModifiedBy' => Auth::id() ?? 1,
                         'ModifiedOn' => now(),
                     ]);
@@ -312,14 +319,17 @@ class BidSubmissionApiController extends Controller
             ], 403);
         }
         
-        // Check deadline
-        if ($tender->SubmissionDeadline && Carbon::now()->isAfter($tender->SubmissionDeadline)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This tender is no longer accepting submissions',
-                'tender_status' => $tender->Status,
-                'submission_deadline' => $tender->SubmissionDeadline->toISOString()
-            ], 403);
+        // Allow submissions until end of the deadline day (inclusive)
+        if ($tender->SubmissionDeadline) {
+            $deadlineEnd = Carbon::parse($tender->SubmissionDeadline)->endOfDay();
+            if (Carbon::now()->greaterThan($deadlineEnd)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This tender is no longer accepting submissions',
+                    'tender_status' => $tender->Status,
+                    'submission_deadline' => $tender->SubmissionDeadline->toISOString()
+                ], 403);
+            }
         }
         
         return true;
@@ -435,6 +445,9 @@ class BidSubmissionApiController extends Controller
                 'RecordedBy' => 'Portal Submission System',
                 'Remarks' => $request->submission_notes ?? 'Submitted via supplier portal',
                 'EncryptedDocuments' => json_encode($encryptedDocs),
+                // Maintain EncryptionKey for backward compatibility (base64 string)
+                'EncryptionKey' => encrypt(Str::random(32)),
+                // Binary column left null in this flow as DMS stores encrypted content
                 'SubmissionSource' => 'portal',
                 'DocumentsAccessible' => false, // Sealed until bid opening
                 'CreatedBy' => $systemUser->Id,
@@ -634,9 +647,16 @@ class BidSubmissionApiController extends Controller
      */
     private function isTenderOpenForSubmissions(Tender $tender): bool
     {
-        // Check tender status and submission deadline
-        return $tender->Status === TenderStatusEnum::Published && 
-               ($tender->SubmissionDeadline === null || now()->lte($tender->SubmissionDeadline));
+        // Check tender status and submission deadline. Inclusive until end-of-day
+        if ($tender->Status !== TenderStatusEnum::Published) {
+            return false;
+        }
+
+        if ($tender->SubmissionDeadline === null) {
+            return true;
+        }
+
+        return Carbon::now()->lte(Carbon::parse($tender->SubmissionDeadline)->endOfDay());
     }
 
     /**
