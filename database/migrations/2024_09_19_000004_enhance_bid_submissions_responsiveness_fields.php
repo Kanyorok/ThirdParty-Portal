@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('t_BidSubmissions')) {
+            return;
+        }
         Schema::table('t_BidSubmissions', function (Blueprint $table) {
             // Add detailed responsiveness fields to match t_BidResponsiveness structure
             $table->boolean('SubmittedTimely')->nullable()->after('ReceivedOnTime');
@@ -34,6 +37,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (!Schema::hasTable('t_BidSubmissions')) {
+            return;
+        }
         Schema::table('t_BidSubmissions', function (Blueprint $table) {
             $table->dropIndex(['SubmittedTimely', 'HasMandatoryDocuments', 'IsEligible']);
             $table->dropIndex(['ResponsivenessCheckedAt']);
