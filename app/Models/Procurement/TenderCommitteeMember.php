@@ -99,6 +99,19 @@ class TenderCommitteeMember extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'UserID', 'Id');
+        // Prefer via user->employee when UserID stores User.Id
+        return $this->user()?->employee();
+    }
+
+    public function user()
+    {
+        // Standard mapping: UserID stores User.Id
+        return $this->belongsTo(User::class, 'UserID', 'Id');
+    }
+
+    public function userByEmployee()
+    {
+        // Backward-compat: some records saved Employee.Id into UserID
+        return $this->belongsTo(User::class, 'UserID', 'EmployeeId');
     }
 }

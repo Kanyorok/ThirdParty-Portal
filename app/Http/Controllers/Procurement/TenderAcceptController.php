@@ -17,7 +17,12 @@ class TenderAcceptController extends Controller
         // Get the current user ID (not EmployeeId) as committee members are stored by User ID
         $currentUserId = Auth::id();
 
-        $tenders = TenderCommitteeMember::where('UserID', $currentUserId)
+        // Match records stored either with User.Id or Employee.Id
+        $tenders = TenderCommitteeMember::where(function($q) use ($currentUserId) {
+                $q->where('UserID', $currentUserId)
+                  ->orWhereHas('user', fn($uq) => $uq->where('Id', $currentUserId))
+                  ->orWhereHas('userByEmployee', fn($uq) => $uq->where('Id', $currentUserId));
+            })
             ->where(function($q){ $q->whereNull('Response')->orWhere('Response', 0); })
             ->with(['tender', 'createdBy'])
             ->get();
