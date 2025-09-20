@@ -235,8 +235,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const restricted = document.getElementById('restrictedTender');
         const section = document.getElementById('restrictedSuppliersSection');
 
-        openTender.addEventListener('change', () => section.style.display = 'none');
-        restricted.addEventListener('change', () => section.style.display = 'block');
+        openTender.addEventListener('change', () => {
+            section.style.display = 'none';
+            suppliersList.innerHTML = '';
+        });
+        restricted.addEventListener('change', () => {
+            section.style.display = 'block';
+            const catId = document.getElementById('itemCategory').value;
+            if (catId) {
+                try { populateSuppliers(catId); } catch(e) { console.warn('Populate suppliers failed', e); }
+            }
+        });
+
+        // Initial state: if Restricted is pre-selected, show section and populate by current category
+        if (restricted.checked) {
+            section.style.display = 'block';
+            const catId = document.getElementById('itemCategory').value;
+            if (catId) {
+                try { populateSuppliers(catId); } catch(e) { console.warn('Populate suppliers failed', e); }
+            }
+        }
 
         updateManualItemSelects();
     });
@@ -384,13 +402,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function populateSuppliers(categoryId = null) {
         suppliersList.innerHTML = '';
-        const filteredSuppliers = categoryId ?
-            suppliers.filter(supplier => {
-                // Check if supplier can serve this item category (parent) or any of its subcategories
-                // The supplier's ItemCategoryIds should include both parent and subcategory IDs
-                return supplier.ItemCategoryIds && supplier.ItemCategoryIds.includes(parseInt(categoryId));
-            }) :
-            suppliers;
+        let filteredSuppliers = suppliers;
+        if (categoryId) {
+            const catNum = parseInt(categoryId);
+            filteredSuppliers = suppliers.filter(supplier => {
+                const arr = Array.isArray(supplier.ItemCategoryIds) ? supplier.ItemCategoryIds : [];
+                return arr.map(Number).includes(catNum);
+            });
+        }
 
         if (filteredSuppliers.length === 0) {
             const option = document.createElement('option');
@@ -403,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
         filteredSuppliers.forEach(supplier => {
             const option = document.createElement('option');
             option.value = supplier.Id;
-            option.textContent = supplier.ThirdPartyName;
+            option.textContent = supplier.ThirdPartyName || supplier.SupplierName || `Supplier #${supplier.Id}`;
             suppliersList.appendChild(option);
         });
     }

@@ -713,8 +713,8 @@ class TenderController extends Controller
      */
     private function getPrequalifiedSuppliers()
     {
-        // Find active prequalification rounds
-        $activeRounds = \App\Models\Procurement\Prequalification\PrequalificationRound::where('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Open)
+        // Find active prequalification rounds (DB code 'O' for Open)
+        $activeRounds = \App\Models\Procurement\Prequalification\PrequalificationRound::where('Status', 'O')
             ->where('StartDate', '<=', now())
             ->where('EndDate', '>=', now())
             ->pluck('RoundID');
@@ -724,10 +724,9 @@ class TenderController extends Controller
         }
 
         // FIXED: Query t_Suppliers directly instead of looking for approved applications
-        // This matches the working SQL query logic
+        // and derive SupplierCategory mapping via pivot if SupplierCategoryID is null
         $prequalifiedSuppliers = \App\Models\ThirdParies\Supplier::whereIn('RoundID', $activeRounds)
             ->where('Active_Status', 1)
-            ->whereNotNull('SupplierCategoryID')
             ->with(['thirdParty', 'supplierCategory.itemCategories'])
             ->get();
 
@@ -741,17 +740,51 @@ class TenderController extends Controller
             // Build list of item category IDs this supplier can serve
             $itemCategoryIds = [];
             
-            // Through supplier's category -> item categories mapping
-            if ($supplier->supplierCategory && $supplier->supplierCategory->itemCategories) {
-                foreach ($supplier->supplierCategory->itemCategories as $itemCategory) {
-                    // Add the parent category ID
-                    $itemCategoryIds[] = $itemCategory->Id;
-                    
-                    // Also add all subcategory IDs for this parent category
-                    $subcategories = \App\Models\Inventory\ItemCategories::where('ParentId', $itemCategory->Id)->pluck('Id');
-                    foreach ($subcategories as $subcategoryId) {
-                        $itemCategoryIds[] = $subcategoryId;
+            // Start item categories with supplier's direct CategoryId (if present)
+            if (!empty($supplier->CategoryId)) {
+                $itemCategoryIds[] = (int) $supplier->CategoryId;
+                // include first-level subcategories
+                $directSubcats = \App\Models\Inventory\ItemCategories::where('ParentId', $supplier->CategoryId)->pluck('Id');
+                foreach ($directSubcats as $sid) {
+                    $itemCategoryIds[] = (int) $sid;
+                }
+            }
+
+            // Build supplierCategoryIds from either direct SupplierCategoryID or pivot mapping
+            $supplierCategoryIds = collect();
+            if (!empty($supplier->SupplierCategoryID)) {
+                $supplierCategoryIds->push($supplier->SupplierCategoryID);
+            }
+            // Add any categories from pivot t_ThirdParty_SupplierCategory (in case SupplierCategoryID is NULL)
+            try {
+                $pivotCats = DB::table('t_ThirdParty_SupplierCategory')
+                    ->where('third_party_id', $supplier->ThirdPartyID)
+                    ->pluck('SupplierCategoryID');
+                $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
+            } catch (\Throwable $e) {
+                \Log::warning('Failed reading t_ThirdParty_SupplierCategory', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
+            }
+
+            $supplierCategoryIds = $supplierCategoryIds->filter()->unique()->values();
+
+            // From all supplier categories, collect mapped item categories (including subcategories)
+            if ($supplierCategoryIds->isNotEmpty()) {
+                try {
+                    $parentItemCats = DB::table('t_SupplierCategory_ItemCategory')
+                        ->whereIn('SupplierCategoryID', $supplierCategoryIds)
+                        ->whereNull('DeletedOn')
+                        ->pluck('ItemCategoryID');
+
+                    foreach ($parentItemCats as $parentCatId) {
+                        $itemCategoryIds[] = (int) $parentCatId;
+                        // include subcategories
+                        $subcategories = \App\Models\Inventory\ItemCategories::where('ParentId', $parentCatId)->pluck('Id');
+                        foreach ($subcategories as $subcategoryId) {
+                            $itemCategoryIds[] = (int) $subcategoryId;
+                        }
                     }
+                } catch (\Throwable $e) {
+                    \Log::warning('Failed reading category mappings', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
                 }
             }
 
@@ -761,7 +794,7 @@ class TenderController extends Controller
                 'ThirdPartyName' => $thirdParty->ThirdPartyName,
                 'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
                 'CategoryId' => null, // No longer used - categories come from SupplierCategory mapping
-                'SupplierCategoryID' => $supplier->SupplierCategoryID, // From the supplier record
+                'SupplierCategoryID' => $supplierCategoryIds->first(), // Prefer first mapped category if any
                 'ItemCategoryIds' => array_unique($itemCategoryIds), // All categories this supplier can serve
                 'RoundID' => $supplier->RoundID,
                 'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified

@@ -62,6 +62,7 @@ use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\RFQSettingController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 // use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\TenderAcceptController;
 use App\Http\Controllers\Procurement\TenderAssignRoleController;
