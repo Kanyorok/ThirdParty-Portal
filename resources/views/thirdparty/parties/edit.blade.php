@@ -536,6 +536,27 @@
 
                     <div class="section">
                         <h3 class="section-title">
+                            <i class="fas fa-user"></i>
+                            Primary Contact
+                        </h3>
+                        <div class="form-grid cols-2">
+                            <div class="form-field">
+                                <label class="form-label">Primary Contact</label>
+                                <div class="form-control" style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
+                                    {{ $primaryUser?->FullName ?: 'N/A' }}
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Primary Email</label>
+                                <div class="form-control" style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
+                                    {{ $primaryUser?->Email ?: 'N/A' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3 class="section-title">
                             <i class="fas fa-file-contract"></i>
                             Legal & Tax Information
                         </h3>

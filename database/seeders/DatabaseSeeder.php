@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CodeDetailSeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(CurrencySeeder::class);
-        //$this->call(LocalitySeeder::class);
+        $this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(CommitteeSeeder::class);

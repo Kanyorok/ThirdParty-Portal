@@ -738,6 +738,8 @@
                                 <th>Third Party Type</th>
                                 <th>Approval Status</th>
                                 <th>Business Type</th>
+                                <th>Primary Contact</th>
+                                <th>Primary Email</th>
                                 <th>Prequalified</th>
                                 <th>Actions</th>
                             </tr>
@@ -848,6 +850,14 @@
                 {
                     data: 'BusinessType',
                     name: 'BusinessType'
+                },
+                {
+                    data: 'PrimaryUser',
+                    name: 'PrimaryUser'
+                },
+                {
+                    data: 'PrimaryEmail',
+                    name: 'PrimaryEmail'
                 },
                 {
                     data: 'IsPrequalified',

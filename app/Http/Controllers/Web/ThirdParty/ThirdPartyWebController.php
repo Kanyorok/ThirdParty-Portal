@@ -24,7 +24,8 @@ class ThirdPartyWebController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         if ($request->ajax()) {
-            $query = ThirdParties::query()->with('types')
+            $query = ThirdParties::query()
+                ->with('types')
                 ->select([
                     'Id',
                     'ThirdPartyName',
@@ -33,6 +34,21 @@ class ThirdPartyWebController extends Controller
                     'ApprovalStatus',
                     'BusinessType',
                     'IsPrequalified',
+                ])
+                // Attach primary associated ThirdPartyUser details (latest by CreatedOn)
+                ->addSelect([
+                    'UserEmail' => ThirdPartyUser::select('Email')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                    'UserFirstName' => ThirdPartyUser::select('FirstName')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                    'UserLastName' => ThirdPartyUser::select('LastName')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
                 ]);
 
             if ($request->filled('search.value')) {
@@ -71,6 +87,8 @@ class ThirdPartyWebController extends Controller
                 ->addColumn('BusinessType', fn(ThirdParties $thirdParty) => $thirdParty->BusinessType?->label() ?? 'N/A')
                 ->addColumn('ApprovalStatus', fn(ThirdParties $thirdParty) => $thirdParty->ApprovalStatus?->label() ?? $thirdParty->ApprovalStatus?->value ?? 'N/A')
                 ->addColumn('IsPrequalified', fn(ThirdParties $thirdParty) => (bool) $thirdParty->IsPrequalified)
+                ->addColumn('PrimaryUser', fn(ThirdParties $thirdParty) => trim((string)($thirdParty->UserFirstName ?? '') . ' ' . (string)($thirdParty->UserLastName ?? '')) ?: 'N/A')
+                ->addColumn('PrimaryEmail', fn(ThirdParties $thirdParty) => $thirdParty->UserEmail ?? 'N/A')
                 ->addColumn('actions', fn(ThirdParties $thirdParty) => '<a href="' . route('thirdparty.parties.show', ['party' => $thirdParty->Id]) . '" class="btn btn-sm btn-info">View</a>')
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -113,7 +131,10 @@ class ThirdPartyWebController extends Controller
     public function show(ThirdParties $party): View
     {
         $party->loadMissing('types');
-        return view('thirdparty.parties.show', compact('party'));
+        $primaryUser = ThirdPartyUser::where('ThirdPartyId', $party->Id)
+            ->orderByDesc('CreatedOn')
+            ->first();
+        return view('thirdparty.parties.show', compact('party', 'primaryUser'));
     }
 
     public function edit(ThirdParties $party): View
@@ -121,7 +142,10 @@ class ThirdPartyWebController extends Controller
         $businessTypes = BusinessTypeEnum::cases();
         $approvalStatuses = ThirdPartyApprovalStatusEnum::cases();
         $party->loadMissing('types');
-        return view('thirdparty.parties.edit', compact('party', 'businessTypes', 'approvalStatuses'));
+        $primaryUser = ThirdPartyUser::where('ThirdPartyId', $party->Id)
+            ->orderByDesc('CreatedOn')
+            ->first();
+        return view('thirdparty.parties.edit', compact('party', 'businessTypes', 'approvalStatuses', 'primaryUser'));
     }
 
     public function update(UpdateThirdPartyRequest $request, ThirdParties $party): RedirectResponse
@@ -152,15 +176,41 @@ class ThirdPartyWebController extends Controller
                 'newStatus' => $party->Status
             ]);
 
-            // If the party status was set to Active, ensure linked users are activated
-            if (array_key_exists('Status', $data) && $data['Status'] === ThirdPartyStatusEnum::Active->value) {
-                ThirdPartyUser::where('ThirdPartyId', $party->Id)
-                    ->update(['IsActive' => 1, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
-                
-                Log::info('Users activated for party', [
-                    'partyId' => $party->Id,
-                    'activatedUsers' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
-                ]);
+            // Sync linked users' IsActive based on Status and/or ApprovalStatus edits
+            if (array_key_exists('Status', $data)) {
+                if ($data['Status'] === ThirdPartyStatusEnum::Active->value) {
+                    ThirdPartyUser::where('ThirdPartyId', $party->Id)
+                        ->update(['IsActive' => 1, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+                    Log::info('Users activated for party (via Status=Active)', [
+                        'partyId' => $party->Id,
+                        'affected' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
+                    ]);
+                } elseif ($data['Status'] === ThirdPartyStatusEnum::Inactive->value) {
+                    ThirdPartyUser::where('ThirdPartyId', $party->Id)
+                        ->update(['IsActive' => 0, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+                    Log::info('Users deactivated for party (via Status=Inactive)', [
+                        'partyId' => $party->Id,
+                        'affected' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
+                    ]);
+                }
+            }
+
+            if (array_key_exists('ApprovalStatus', $data)) {
+                if ($data['ApprovalStatus'] === ThirdPartyApprovalStatusEnum::Approved->value) {
+                    ThirdPartyUser::where('ThirdPartyId', $party->Id)
+                        ->update(['IsActive' => 1, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+                    Log::info('Users activated for party (via ApprovalStatus=Approved)', [
+                        'partyId' => $party->Id,
+                        'affected' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
+                    ]);
+                } elseif ($data['ApprovalStatus'] === ThirdPartyApprovalStatusEnum::Rejected->value) {
+                    ThirdPartyUser::where('ThirdPartyId', $party->Id)
+                        ->update(['IsActive' => 0, 'ModifiedBy' => Auth::id(), 'ModifiedOn' => now()]);
+                    Log::info('Users deactivated for party (via ApprovalStatus=Rejected)', [
+                        'partyId' => $party->Id,
+                        'affected' => ThirdPartyUser::where('ThirdPartyId', $party->Id)->count()
+                    ]);
+                }
             }
 
             return redirect()->route('thirdparty.parties.show', ['party' => $party->Id])

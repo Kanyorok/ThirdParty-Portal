@@ -17,8 +17,10 @@ class ApiCountryController extends Controller
      */
     public function list(): AnonymousResourceCollection
     {
-        // Cache countries for 1 hour since they don't change frequently
-        $countries = Cache::remember('countries_list', 3600, function () {
+        $version = (string) config('app.countries_cache_version', env('COUNTRIES_CACHE_VERSION', 'v1'));
+        $cacheKey = 'countries_list_' . $version;
+
+        $countries = Cache::remember($cacheKey, 3600, function () {
             return Country::active()
                 ->ordered()
                 ->with('currency')
