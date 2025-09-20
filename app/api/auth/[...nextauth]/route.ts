@@ -49,6 +49,9 @@ export const authOptions: NextAuthOptions = {
                 try {
                     if (!baseUrl) throw new Error("CONFIG: NEXT_PUBLIC_EXTERNAL_API_URL not set");
                     console.log('🔐 AUTH DEBUG - Attempting ERP authentication...');
+                    if (!baseUrl) {
+                        throw new Error("CONFIG: NEXT_PUBLIC_EXTERNAL_API_URL is not set")
+                    }
                     res = await fetch(`${baseUrl}/api/third-party-auth/login`, {
                         method: "POST",
                         headers: {

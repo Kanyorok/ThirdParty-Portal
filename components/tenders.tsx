@@ -426,9 +426,9 @@ export default function TendersPage() {
                     }
                     invitationsData = [];
                 }
-                
+
                 setInvitations(invitationsData);
-                
+
                 // Show a notice if using fallback data
                 if ((invData as any)?.fallback) {
                     console.info('Using mock tender invitation data - external API not available');
