@@ -417,13 +417,10 @@ export default function TendersPage() {
                 if (items.length === 0) {
                     invitationsData = [];
                 } else if (items[0]?.invitation) {
-                    // Format: { data: [{ invitation: {...}, tender: {...} }] }
                     invitationsData = items.map((item: any) => item.invitation);
                 } else if (items[0]?.TenderId != null || items[0]?.tenderId != null) {
-                    // Format: { data: [{ TenderId: ..., ResponseStatus: ... }] }
                     invitationsData = items as any[] as TenderInvitation[];
                 } else {
-                    // Unknown non-empty shape; keep silent in prod, optionally log once in dev
                     if (process.env.NODE_ENV !== 'production') {
                         console.info('Invitation response shape not recognized; ignoring. Example item:', items[0]);
                     }

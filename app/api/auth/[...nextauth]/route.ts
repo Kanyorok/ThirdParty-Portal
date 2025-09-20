@@ -41,32 +41,13 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("MISSING_FIELDS: Email and password are required")
                 }
                 
-                // Development fallback - if ERP is not available, use mock authentication
-                if (process.env.NODE_ENV === 'development') {
-                    console.log('🔐 AUTH DEBUG - Using development authentication fallback');
-                    return {
-                        id: "dev-user-123",
-                        email: credentials.email,
-                        name: "Development User", 
-                        thirdPartyId: 3, // Match your test data
-                        role: "supplier",
-                        accessToken: "dev-mock-token",
-                        organization: "Test Supplier Company",
-                        isActive: true,      // ✅ KEY FIX: Add missing isActive field
-                        isApproved: true,    // ✅ KEY FIX: Add missing isApproved field
-                        types: [
-                            {
-                                id: 1,
-                                code: "SU-GENERAL",
-                                categoryId: 1
-                            }
-                        ]
-                    }
-                }
+                // Optional dev fallback (explicit flag required)
+                const allowDevFallback = process.env.NEXT_PUBLIC_DEV_AUTH_FALLBACK === '1';
 
                 let res: Response
                 let text: string = ""
                 try {
+                    if (!baseUrl) throw new Error("CONFIG: NEXT_PUBLIC_EXTERNAL_API_URL not set");
                     console.log('🔐 AUTH DEBUG - Attempting ERP authentication...');
                     if (!baseUrl) {
                         throw new Error("CONFIG: NEXT_PUBLIC_EXTERNAL_API_URL is not set")
@@ -84,6 +65,21 @@ export const authOptions: NextAuthOptions = {
                     })
                     text = await res.text()
                 } catch (e: any) {
+                    if (allowDevFallback) {
+                        console.log('🔐 AUTH DEBUG - Using development authentication fallback');
+                        return {
+                            id: "dev-user-123",
+                            email: credentials.email,
+                            name: "Development User",
+                            thirdPartyId: 3,
+                            role: "supplier",
+                            accessToken: "dev-mock-token",
+                            organization: "Test Supplier Company",
+                            isActive: true,
+                            isApproved: true,
+                            types: [ { id: 1, code: "SU-GENERAL", categoryId: 1 } ]
+                        }
+                    }
                     throw new Error("NETWORK: Unable to reach authentication service")
                 }
                 let data: any = null
