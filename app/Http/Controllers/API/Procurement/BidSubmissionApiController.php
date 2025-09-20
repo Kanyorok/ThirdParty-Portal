@@ -227,9 +227,16 @@ class BidSubmissionApiController extends Controller
                 
                 // Update bid with encrypted document information
                 if (!empty($encryptedDocumentsData)) {
+                    // Write human-readable JSON to EncryptedDocuments (NVARCHAR(MAX))
+                    // Write base64 envelope for backward compatibility
+                    // Write raw VARBINARY envelope to new column
+                    $base64Envelope = encrypt($masterEncryptionKey);
+                    $rawEnvelope = base64_decode($base64Envelope);
+
                     $bid->update([
                         'EncryptedDocuments' => json_encode($encryptedDocumentsData),
-                        'EncryptionKey' => encrypt($masterEncryptionKey), // Encrypt the master key
+                        'EncryptionKey' => $base64Envelope,
+                        'EncryptionEnvelope' => DB::raw("CONVERT(VARBINARY(MAX), 0x" . bin2hex($rawEnvelope) . ")"),
                         'ModifiedBy' => Auth::id() ?? 1,
                         'ModifiedOn' => now(),
                     ]);
@@ -435,6 +442,9 @@ class BidSubmissionApiController extends Controller
                 'RecordedBy' => 'Portal Submission System',
                 'Remarks' => $request->submission_notes ?? 'Submitted via supplier portal',
                 'EncryptedDocuments' => json_encode($encryptedDocs),
+                // Maintain EncryptionKey for backward compatibility (base64 string)
+                'EncryptionKey' => encrypt(Str::random(32)),
+                // Binary column left null in this flow as DMS stores encrypted content
                 'SubmissionSource' => 'portal',
                 'DocumentsAccessible' => false, // Sealed until bid opening
                 'CreatedBy' => $systemUser->Id,

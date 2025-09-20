@@ -7,6 +7,7 @@ use App\Models\Procurement\VendorClarifications;
 use App\Models\Procurement\Tender;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TenderclarificationController extends Controller
 {
@@ -115,37 +116,50 @@ class TenderclarificationController extends Controller
      */
     public function update(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'clarification_id' => 'required|exists:t_VendorClarifications,ClarificationID',
             'answer' => 'required|string|min:10|max:2000',
-            'is_published_to_all' => 'boolean',
+            'is_published_to_all' => 'sometimes|boolean',
         ]);
 
-        $clarification = VendorClarifications::findOrFail($request->clarification_id);
+        $clarification = VendorClarifications::findOrFail($validated['clarification_id']);
 
         // Prevent double answering
         if ($clarification->Answer) {
-            return redirect()->back()->with('error', 'This clarification has already been answered.');
+            return redirect()->back()->withInput()->with('error', 'This clarification has already been answered.');
         }
 
-        $clarification->update([
-            'Answer' => $request->answer,
-            'AnswerDate' => now(),
-            'ISPUBLISHEDTOALL' => $request->is_published_to_all ?? false,
-            'ModifiedBy' => $request->user()->Id,
-            'ModifiedOn' => now(),
-        ]);
+        try {
+            $isPublished = $request->boolean('is_published_to_all');
+            $userId = optional($request->user())->Id ?? 1;
 
-        // Log the response
-        \Log::info('Clarification answered', [
-            'clarification_id' => $clarification->ClarificationID,
-            'tender_id' => $clarification->TenderID,
-            'answered_by' => $request->user()->Id,
-            'is_public' => $request->is_published_to_all ?? false
-        ]);
+            $clarification->Answer = trim($validated['answer']);
+            $clarification->AnswerDate = now();
+            $clarification->ISPUBLISHEDTOALL = $isPublished;
+            $clarification->ModifiedBy = $userId;
+            $clarification->ModifiedOn = now();
+            $clarification->save();
 
-        return redirect()->route('tenderclarification.index')
-                        ->with('success', 'Clarification response submitted successfully.');
+            // Log the response
+            Log::info('Clarification answered', [
+                'clarification_id' => $clarification->ClarificationID,
+                'tender_id' => $clarification->TenderID,
+                'answered_by' => $userId,
+                'is_public' => $isPublished
+            ]);
+
+            return redirect()->route('tenderclarification.index')
+                            ->with('success', 'Clarification response submitted successfully.');
+        } catch (\Throwable $e) {
+            Log::error('Failed to save clarification response', [
+                'clarification_id' => $validated['clarification_id'],
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to save response. Please try again.');
+        }
     }
 
     /**
