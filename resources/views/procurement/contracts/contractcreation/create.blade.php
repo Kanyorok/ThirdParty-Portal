@@ -129,8 +129,8 @@
                                         <input type="text" name="contract_title" class="form-control" 
                                                value="{{ old('contract_title', $award->tender->Title ?? '') }}" 
                                                placeholder="Enter contract title">
-                                    </div>
-                                    <div class="col-md-6">
+                </div>
+                <div class="col-md-6">
                                         <label class="form-label">Contract Value <span class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" name="contract_value" class="form-control" 
@@ -138,28 +138,28 @@
                                                    step="0.01" min="0" placeholder="0.00">
                                             <span class="input-group-text">{{ is_object($award->tender->Currency) ? $award->tender->Currency->Code : ($award->tender->Currency ?? 'KES') }}</span>
                                         </div>
-                                    </div>
-                                </div>
+                </div>
+            </div>
 
-                                <div class="mb-3">
+            <div class="mb-3">
                                     <label class="form-label">Contract Description <span class="text-danger">*</span></label>
                                     <textarea name="contract_description" class="form-control" rows="3" 
                                               placeholder="Provide detailed description of contract scope and deliverables">{{ old('contract_description', $award->tender->Description ?? '') }}</textarea>
-                                </div>
+            </div>
 
                                 <!-- Contract Duration -->
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
+            <div class="row mb-3">
+                <div class="col-md-6">
                                         <label class="form-label">Contract Start Date <span class="text-danger">*</span></label>
                                         <input type="date" name="start_date" class="form-control" 
                                                value="{{ old('start_date', $award->ContractStartDate ? $award->ContractStartDate->format('Y-m-d') : date('Y-m-d')) }}">
-                                    </div>
-                                    <div class="col-md-6">
+                </div>
+                <div class="col-md-6">
                                         <label class="form-label">Contract End Date <span class="text-danger">*</span></label>
                                         <input type="date" name="end_date" class="form-control" 
                                                value="{{ old('end_date', $award->ContractEndDate ? $award->ContractEndDate->format('Y-m-d') : '') }}">
-                                    </div>
-                                </div>
+                </div>
+            </div>
 
                                 <!-- Terms and Conditions -->
                                 <div class="row mb-3">
@@ -173,13 +173,13 @@
                                         <textarea name="delivery_terms" class="form-control" rows="3" 
                                                   placeholder="Specify delivery timeline, locations, and acceptance criteria">{{ old('delivery_terms', $award->DeliveryTerms ?? '') }}</textarea>
                                     </div>
-                                </div>
+            </div>
 
-                                <div class="mb-3">
+            <div class="mb-3">
                                     <label class="form-label">Special Conditions</label>
                                     <textarea name="special_conditions" class="form-control" rows="3" 
                                               placeholder="Any special conditions, penalties, or additional requirements">{{ old('special_conditions', $award->SpecialConditions ?? '') }}</textarea>
-                                </div>
+            </div>
 
                                 <!-- Action Buttons -->
                                 <div class="row">
@@ -206,7 +206,7 @@
                                 <i class="fas fa-trophy"></i> View Awards
                             </a>
                         </div>
-                    </div>
+            </div>
                 @endif
             </div>
         </div>

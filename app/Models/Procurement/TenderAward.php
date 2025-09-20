@@ -9,6 +9,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TenderAward extends Model
 {
@@ -92,10 +93,30 @@ class TenderAward extends Model
     {
         return $this->belongsTo(Supplier::class, 'WinningSupplierID', 'Id');
     }
+    
+    /**
+     * Get the winning supplier's third party details
+     */
+    public function winningThirdParty()
+    {
+        return $this->hasOneThrough(
+            \App\Models\ThirdParies\ThirdParty::class,
+            \App\Models\ThirdParies\Supplier::class,
+            'Id', // Foreign key on suppliers table
+            'Id', // Foreign key on third_parties table
+            'WinningSupplierID', // Local key on tender_awards table
+            'ThirdPartyID' // Local key on suppliers table
+        );
+    }
 
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ApprovedBy', 'Id');
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(\App\Models\Procurement\Order::class, 'AwardRef', 'Id');
     }
 
     // Scopes

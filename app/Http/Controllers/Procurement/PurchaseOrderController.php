@@ -8,6 +8,11 @@ use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\Tender;
+use App\Models\Procurement\TenderItems;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
+use App\Models\Procurement\PlanLineItem;
 use App\Services\Core\ApprovalService;
 use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
@@ -124,33 +129,74 @@ class PurchaseOrderController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-     public function create()
+    public function create()
     {
+        // Initialize collections
+        $itemTypes = collect();
+        $rfqResponses = collect();
+        $uniqueRfqs = collect();
+        $suppliers = collect();
+        $paymentTerms = collect();
+
+        // Try to get existing RFQ data (handle failures gracefully)
         try {
             $itemTypes = $this->itemService->getTypes();
+        } catch (\Exception $e) {
+            Log::warning('ItemService failed: ' . $e->getMessage());
+        }
+
+        try {
             $rfqResponses = $this->rfqService->fetchRFQ();
             $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
-            $suppliers = $this->supplierService->getSuppliers();
-            // Fetch payment terms from t_CodeDetails
-            $paymentTerms = CodeDetail::where('CodeID', 'PaymentTerm')->get(['ID', 'Description']); 
-
-            return view('procurement.orders.create', [
-                'itemTypes' => $itemTypes ?? [],
-                'rfqs' => $uniqueRfqs ?? [],
-                'rfqResponses' => $rfqResponses ?? [],
-                'suppliers' => $suppliers ?? [],
-                'paymentTerms' => $paymentTerms ?? [], // Pass payment terms to view
-            ]);
         } catch (\Exception $e) {
-            Log::error('Data fetch failed: ' . $e->getMessage());
-            return view('procurement.orders.create', [
-                'suppliers' => [],
-                'itemTypes' => [],
-                'rfqs' => [],
-                'rfqResponses' => [],
-                'paymentTerms' => [],
-            ])->with('error', 'An error occurred: ' . $e->getMessage());
+            Log::warning('RFQService failed: ' . $e->getMessage());
         }
+
+        try {
+            $suppliers = $this->supplierService->getSuppliers();
+        } catch (\Exception $e) {
+            Log::warning('SupplierService failed: ' . $e->getMessage());
+        }
+
+        try {
+            $paymentTerms = CodeDetail::where('CodeID', 'PaymentTerm')->get(['ID', 'Description']);
+        } catch (\Exception $e) {
+            Log::warning('PaymentTerms failed: ' . $e->getMessage());
+        }
+
+        // Get unified origination data (these should work)
+        try {
+            $awards = $this->getAvailableAwards();
+        } catch (\Exception $e) {
+            Log::error('getAvailableAwards failed: ' . $e->getMessage());
+            $awards = collect();
+        }
+
+        try {
+            $contracts = $this->getAvailableContracts();
+        } catch (\Exception $e) {
+            Log::error('getAvailableContracts failed: ' . $e->getMessage());
+            $contracts = collect();
+        }
+
+        try {
+            $procurementPlans = $this->getAvailableProcurementPlans();
+        } catch (\Exception $e) {
+            Log::error('getAvailableProcurementPlans failed: ' . $e->getMessage());
+            $procurementPlans = collect();
+        }
+
+        return view('procurement.orders.create', [
+            'itemTypes' => $itemTypes,
+            'rfqs' => $uniqueRfqs,
+            'rfqResponses' => $rfqResponses,
+            'suppliers' => $suppliers,
+            'paymentTerms' => $paymentTerms,
+            // NEW: Unified origination data
+            'awards' => $awards,
+            'contracts' => $contracts,
+            'procurementPlans' => $procurementPlans,
+        ]);
     }
 
     /**
@@ -160,6 +206,11 @@ class PurchaseOrderController extends Controller
     {
         try {
             $validatedData = $request->validated();
+            
+            // Check if this is a unified origination form
+            if ($request->has('origination_type')) {
+                return $this->storeUnifiedOrder($request, $validatedData);
+            }
 
             $actor = $request->user();
             if (!$actor) {
@@ -438,6 +489,648 @@ public function getRFQItems($rfqId)
 
     return response()->json(['items' => $items]);
 }
+
+    // =====================================================
+    // UNIFIED PO ORIGINATION HELPER METHODS
+    // =====================================================
+
+    /**
+     * Get available approved awards for PO creation
+     */
+    private function getAvailableAwards()
+    {
+        return TenderAward::with(['tender', 'winningSupplier.thirdParty'])
+            ->where('AwardStatus', 'Approved')
+            ->whereDoesntHave('orders') // Not yet converted to LPO
+            ->select('Id', 'TenderID', 'WinningSupplierID', 'AwardedAmount', 'AwardDate', 'ContractStatus')
+            ->orderBy('AwardDate', 'desc')
+            ->get()
+            ->map(function ($award) {
+                return [
+                    'id' => $award->Id,
+                    'tender_no' => $award->tender->TenderNo ?? 'N/A',
+                    'title' => $award->tender->Title ?? 'N/A',
+                    'supplier_name' => $award->winningSupplier->thirdParty->TradingName ?? $award->winningSupplier->thirdParty->ThirdPartyName ?? 'N/A',
+                    'awarded_amount' => $award->AwardedAmount,
+                    'award_date' => $award->AwardDate?->format('Y-m-d'),
+                    'type' => $award->tender->TenderType ?? 'Tender',
+                    'has_contract' => !empty($award->ContractStatus),
+                ];
+            });
+    }
+
+    /**
+     * Get available active contracts for PO creation
+     */
+    private function getAvailableContracts()
+    {
+        return TenderAward::with(['tender', 'winningSupplier.thirdParty'])
+            ->where('AwardStatus', 'Approved')
+            ->where('ContractStatus', 'Active')
+            ->whereDoesntHave('orders') // Not yet converted to LPO
+            ->select('Id', 'TenderID', 'WinningSupplierID', 'ContractValue', 'ContractStartDate', 'ContractEndDate', 'ContractRef')
+            ->orderBy('ContractStartDate', 'desc')
+            ->get()
+            ->map(function ($contract) {
+                return [
+                    'id' => $contract->Id,
+                    'contract_ref' => $contract->ContractRef,
+                    'tender_no' => $contract->tender->TenderNo ?? 'N/A',
+                    'title' => $contract->tender->Title ?? 'N/A',
+                    'supplier_name' => $contract->winningSupplier->thirdParty->TradingName ?? $contract->winningSupplier->thirdParty->ThirdPartyName ?? 'N/A',
+                    'contract_value' => $contract->ContractValue,
+                    'start_date' => $contract->ContractStartDate?->format('Y-m-d'),
+                    'end_date' => $contract->ContractEndDate?->format('Y-m-d'),
+                ];
+            });
+    }
+
+    /**
+     * Get available procurement plans for direct procurement (grouped by plan)
+     */
+    private function getAvailableProcurementPlans()
+    {
+        return PlanLineItem::with(['consolidatedProcurementPlan', 'item', 'branch', 'department'])
+            ->whereHas('consolidatedProcurementPlan', function ($query) {
+                $query->where('Status', 'Ap'); // Actual status in database
+            })
+            ->where('ProcurementMethod', 106) // Direct Purchase method (ID from t_CodeDetails)
+            ->whereIn('ExecutionStatus', ['Pending', 'Approved']) // Include pending and approved items
+            ->whereDoesntHave('orders') // Not yet converted to LPO
+            ->select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'EstimatedUnitCost', 'UnitOfMeasure', 'ExpectedDeliveryDate', 'BranchID', 'DepartmentID')
+            ->orderBy('ExpectedDeliveryDate')
+            ->get()
+            ->groupBy('PlanID')
+            ->map(function ($planItems, $planId) {
+                $firstItem = $planItems->first();
+                $totalEstimatedCost = $planItems->sum(function ($item) {
+                    return $item->MergedQty * $item->EstimatedUnitCost;
+                });
+                
+                return [
+                    'plan_id' => $planId,
+                    'plan_ref' => $firstItem->consolidatedProcurementPlan->ReferenceNumber ?? 'N/A',
+                    'plan_title' => $firstItem->consolidatedProcurementPlan->Title ?? 'N/A',
+                    'items_count' => $planItems->count(),
+                    'total_estimated_cost' => $totalEstimatedCost,
+                    'expected_delivery' => $firstItem->ExpectedDeliveryDate ? (is_string($firstItem->ExpectedDeliveryDate) ? $firstItem->ExpectedDeliveryDate : $firstItem->ExpectedDeliveryDate->format('Y-m-d')) : 'N/A',
+                    'branch' => $firstItem->branch->Name ?? 'N/A',
+                    'department' => $firstItem->department->Name ?? 'N/A',
+                ];
+            })
+            ->values();
+    }
+
+    // =====================================================
+    // AJAX ENDPOINTS FOR DYNAMIC DATA LOADING
+    // =====================================================
+    
+    /**
+     * AJAX: Get main item categories for a specific plan (ParentID is null)
+     */
+    public function getPlanItemCategories($planId): JsonResponse
+    {
+        try {
+            // Get main categories that have items in the plan (through sub-categories)
+            $categories = PlanLineItem::where('t_PlanLineItem.PlanID', $planId)
+                ->where('t_PlanLineItem.ProcurementMethod', 106) // Direct Purchase
+                ->whereIn('t_PlanLineItem.ExecutionStatus', ['Pending', 'Approved'])
+                ->join('t_Items', 't_PlanLineItem.ItemID', '=', 't_Items.Id')
+                ->join('t_ItemCategories as sub_cat', 't_Items.Category', '=', 'sub_cat.Id') // Sub-category where item is assigned
+                ->join('t_ItemCategories as main_cat', 'sub_cat.ParentId', '=', 'main_cat.Id') // Main category (parent)
+                ->whereNotNull('sub_cat.ParentId') // Ensure items are in sub-categories
+                ->whereNull('main_cat.ParentId') // Ensure we get main categories only
+                // ->where('main_cat.Status', 290) // Active status - removed for now
+                ->select('main_cat.Id as category_id', 'main_cat.Name as category_name', 'main_cat.Description')
+                ->distinct()
+                ->get()
+                ->map(function ($category) {
+                    return [
+                        'id' => $category->category_id,
+                        'name' => $category->category_name,
+                        'description' => $category->Description ?? ''
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'categories' => $categories
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch plan item categories: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch item categories.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX: Get prequalified suppliers for an item category
+     */
+    public function getPrequalifiedSuppliers($itemCategoryId): JsonResponse
+    {
+        try {
+            $suppliers = DB::table('t_SupplierCategory_ItemCategory as pivot')
+                ->join('t_SupplierCategories as sc', 'pivot.SupplierCategoryID', '=', 'sc.SupplierCategoryID')
+                ->join('t_ThirdParty_SupplierCategory as tpsc', 'sc.SupplierCategoryID', '=', 'tpsc.supplier_category_id')
+                ->join('t_ThirdParties as tp', 'tpsc.third_party_id', '=', 'tp.Id')
+                ->where('pivot.ItemCategoryID', $itemCategoryId)
+                ->whereNull('pivot.DeletedOn')
+                ->where('sc.IsActive', 1)
+                ->where('tp.Status', 'A') // Active suppliers (Status = 'A' for Active)
+                ->select('tp.Id', 'tp.TradingName', 'tp.ThirdPartyName', 'sc.CategoryName as supplier_category')
+                ->distinct()
+                ->get()
+                ->map(function ($supplier) {
+                    return [
+                        'id' => $supplier->Id,
+                        'name' => $supplier->TradingName ?: $supplier->ThirdPartyName,
+                        'address' => '', // Address field not available in t_ThirdParties
+                        'supplier_category' => $supplier->supplier_category
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'suppliers' => $suppliers
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch prequalified suppliers: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch prequalified suppliers.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX: Get items within a plan filtered by main category (items are in sub-categories)
+     */
+    public function getPlanItemsByCategory($planId, $mainCategoryId): JsonResponse
+    {
+        try {
+            $planItems = PlanLineItem::with(['consolidatedProcurementPlan', 'item.category', 'branch', 'department'])
+                ->where('PlanID', $planId)
+                ->where('ProcurementMethod', 106) // Direct Purchase
+                ->whereIn('ExecutionStatus', ['Pending', 'Approved'])
+                ->whereHas('item', function ($query) use ($mainCategoryId) {
+                    // Find items in sub-categories that belong to the selected main category
+                    $query->whereHas('category', function ($categoryQuery) use ($mainCategoryId) {
+                        $categoryQuery->where('ParentId', $mainCategoryId);
+                    });
+                })
+                // ->whereDoesntHave('orders') // Not yet converted to LPO - temporarily disabled
+                ->get()
+                ->map(function ($planItem) {
+                    return [
+                        'id' => $planItem->LineItemID,
+                        'plan_ref' => $planItem->consolidatedProcurementPlan->ReferenceNumber ?? 'N/A',
+                        'item_id' => $planItem->ItemID,
+                        'item_name' => $planItem->item->ItemName ?? 'N/A',
+                        'item_description' => $planItem->item->ItemDescription ?? 'N/A',
+                        'sub_category_name' => $planItem->item->category->Name ?? 'N/A',
+                        'planned_quantity' => $planItem->MergedQty,
+                        'unit_cost' => $planItem->EstimatedUnitCost,
+                        'unit_of_measure' => $planItem->UnitOfMeasure,
+                        'delivery_date' => $planItem->ExpectedDeliveryDate ? (is_string($planItem->ExpectedDeliveryDate) ? $planItem->ExpectedDeliveryDate : $planItem->ExpectedDeliveryDate->format('Y-m-d')) : 'N/A',
+                        'branch' => $planItem->branch->Name ?? 'N/A',
+                        'department' => $planItem->department->Name ?? 'N/A',
+                        'total_estimated_cost' => $planItem->MergedQty * $planItem->EstimatedUnitCost
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'items' => $planItems
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch plan items by category: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch plan items.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX: Get award details for PO creation
+     */
+    public function getAwardDetails($awardId): JsonResponse
+    {
+        try {
+            $award = TenderAward::with(['tender.items.item', 'winningSupplier.thirdParty'])
+                ->findOrFail($awardId);
+
+            $supplierData = [
+                'id' => $award->winningSupplier->Id,
+                'name' => $award->winningSupplier->thirdParty->TradingName ?? $award->winningSupplier->thirdParty->ThirdPartyName ?? 'N/A',
+                'address' => $award->winningSupplier->thirdParty->Address ?? '',
+            ];
+
+            $itemsData = $award->tender->items->map(function ($tenderItem) {
+                return [
+                    'item_id' => $tenderItem->ItemID,
+                    'item_name' => $tenderItem->item->ItemName ?? $tenderItem->ManualItemDescription,
+                    'description' => $tenderItem->item->ItemDescription ?? $tenderItem->ManualItemDescription,
+                    'quantity' => $tenderItem->QtyToTender,
+                    'unit_price' => 0, // To be filled by user
+                    'item_type_id' => $tenderItem->item->ItemTypeID ?? null,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'supplier' => $supplierData,
+                'items' => $itemsData,
+                'award' => [
+                    'tender_no' => $award->tender->TenderNo,
+                    'title' => $award->tender->Title,
+                    'awarded_amount' => $award->AwardedAmount,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch award details: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch award details.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX: Get contract details for PO creation
+     */
+    public function getContractDetails($contractId): JsonResponse
+    {
+        try {
+            $contract = TenderAward::with(['tender.items.item', 'winningSupplier.thirdParty'])
+                ->where('ContractStatus', 'Active')
+                ->findOrFail($contractId);
+
+            $supplierData = [
+                'id' => $contract->winningSupplier->Id,
+                'name' => $contract->winningSupplier->thirdParty->TradingName ?? $contract->winningSupplier->thirdParty->ThirdPartyName ?? 'N/A',
+                'address' => $contract->winningSupplier->thirdParty->Address ?? '',
+            ];
+
+            $itemsData = $contract->tender->items->map(function ($tenderItem) {
+                return [
+                    'item_id' => $tenderItem->ItemID,
+                    'item_name' => $tenderItem->item->ItemName ?? $tenderItem->ManualItemDescription,
+                    'description' => $tenderItem->item->ItemDescription ?? $tenderItem->ManualItemDescription,
+                    'quantity' => $tenderItem->QtyToTender,
+                    'unit_price' => 0, // To be filled by user based on contract terms
+                    'item_type_id' => $tenderItem->item->ItemTypeID ?? null,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'supplier' => $supplierData,
+                'items' => $itemsData,
+                'contract' => [
+                    'contract_ref' => $contract->ContractRef,
+                    'tender_no' => $contract->tender->TenderNo,
+                    'title' => $contract->tender->Title,
+                    'contract_value' => $contract->ContractValue,
+                    'delivery_terms' => $contract->DeliveryTerms,
+                    'payment_terms' => $contract->PaymentTerms,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch contract details: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch contract details.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX: Get procurement plan item details for direct procurement
+     */
+    public function getPlanItemDetails($planItemId): JsonResponse
+    {
+        try {
+            $planItem = PlanLineItem::with(['consolidatedProcurementPlan', 'item', 'branch', 'department'])
+                ->findOrFail($planItemId);
+
+            $itemData = [
+                'item_id' => $planItem->ItemID,
+                'item_name' => $planItem->item->ItemName ?? 'N/A',
+                'description' => $planItem->item->ItemDescription ?? 'N/A',
+                'quantity' => $planItem->MergedQty,
+                'estimated_unit_cost' => $planItem->EstimatedUnitCost,
+                'unit_of_measure' => $planItem->UnitOfMeasure,
+                'item_type_id' => $planItem->item->ItemTypeID ?? null,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'item' => $itemData,
+                'plan' => [
+                    'plan_ref' => $planItem->consolidatedProcurementPlan->ReferenceNumber,
+                    'title' => $planItem->consolidatedProcurementPlan->Title,
+                    'delivery_date' => $planItem->ExpectedDeliveryDate ? (is_string($planItem->ExpectedDeliveryDate) ? $planItem->ExpectedDeliveryDate : $planItem->ExpectedDeliveryDate->format('Y-m-d')) : 'N/A',
+                    'branch' => $planItem->branch->Name ?? 'N/A',
+                    'department' => $planItem->department->Name ?? 'N/A',
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch plan item details: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch plan item details.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // =====================================================
+    // UNIFIED ORDER STORAGE METHOD
+    // =====================================================
+
+    /**
+     * Store unified order based on origination type
+     */
+    private function storeUnifiedOrder(Request $request, array $validatedData): JsonResponse
+    {
+        try {
+            Log::info('Starting unified order creation', [
+                'origination_type' => $request->input('origination_type'),
+                'supplier' => $request->input('supplier'),
+                'user_id' => auth()->id()
+            ]);
+
+            $actor = $request->user();
+            if (!$actor) {
+                Log::error('No authenticated user found for unified order creation');
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+            
+            // Additional debugging for user ID
+            Log::info('Authenticated user for unified order', [
+                'user_id' => $actor->id,
+                'user_name' => $actor->name ?? 'N/A',
+                'user_email' => $actor->email ?? 'N/A',
+                'actor_id_type' => gettype($actor->id),
+                'actor_id_value' => $actor->id
+            ]);
+
+            $originationType = $request->input('origination_type');
+            
+            // Set origination-specific data
+            $originationData = $this->prepareOriginationData($request, $originationType);
+            
+            // Get user ID with multiple fallbacks and extensive debugging
+            $userId = $actor->id ?? auth()->id() ?? 1; // Fallback to user ID 1 if auth fails
+            
+            Log::info('User ID resolution debug', [
+                'actor_id' => $actor->id,
+                'auth_id' => auth()->id(),
+                'final_userId' => $userId,
+                'userId_type' => gettype($userId),
+                'actor_object' => $actor ? get_class($actor) : null,
+                'auth_user_object' => auth()->user() ? get_class(auth()->user()) : null
+            ]);
+            
+            if (!$userId) {
+                Log::error('Unable to determine user ID for order creation', [
+                    'actor' => $actor,
+                    'auth_id' => auth()->id(),
+                    'auth_user' => auth()->user()
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Authentication error: Unable to determine user ID'
+                ], 401);
+            }
+            
+            // Force userId to integer to avoid any type issues
+            $userId = (int) $userId;
+            
+            // Create the order with origination information
+            $orderData = [
+                'OrderNo' => $request->input('LPONo', 'LPO-' . uniqid()),
+                'OrderDate' => $request->input('pODate'),
+                'Terms' => $request->input('terms'),
+                'Priority' => $request->input('priority', 'Medium'),
+                'AccountID' => $request->input('supplier'),
+                'Status' => 'draft',
+                'OriginationType' => $originationType,
+                'OriginationRef' => $originationData['ref'] ?? null,
+                'ContractRef' => $originationType === 'contract' ? $request->input('contract_id') : null,
+                'AwardRef' => $originationType === 'award' ? $request->input('award_id') : null,
+                'PlanRef' => $originationType === 'direct' ? $request->input('plan_item_id') : null,
+                'ExtOrdNum' => $originationType === 'rfq' ? $request->input('rfq_id') : null,
+                'Notes' => $request->input('notes'),
+                'DeliveryTerms' => $request->input('delivery_terms'),
+                'CreatedBy' => $userId,
+                'ModifiedBy' => $userId,
+            ];
+            
+            Log::info('Order data prepared', ['orderData' => $orderData]);
+            
+            // Calculate total from line items
+            $orderData['TotalAmount'] = $this->calculateOrderTotal($request);
+            
+            Log::info('Final order data before database insert', [
+                'orderData' => $orderData,
+                'CreatedBy_value' => $orderData['CreatedBy'],
+                'ModifiedBy_value' => $orderData['ModifiedBy']
+            ]);
+            
+            // Create the order
+            try {
+                $order = Order::create($orderData);
+                Log::info('Order created successfully', ['order_id' => $order->Id]);
+            } catch (\Exception $e) {
+                Log::error('Failed to create order in database', [
+                    'error' => $e->getMessage(),
+                    'orderData' => $orderData,
+                    'sql_error' => $e->getPrevious() ? $e->getPrevious()->getMessage() : null
+                ]);
+                throw $e; // Re-throw to be caught by outer try-catch
+            }
+            
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create order',
+                ], 500);
+            }
+            
+            // Create order lines
+            $this->createOrderLines($request, $order->Id);
+            
+            // Update origination source status if needed
+            $this->updateOriginationSourceStatus($originationType, $originationData['ref'] ?? null);
+            
+            Log::info('Unified order created successfully', [
+                'order_id' => $order->Id,
+                'origination_type' => $originationType,
+                'user_id' => $actor->id,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Purchase order created successfully',
+                'route' => route('purchaseOrder.index'), // Add redirect route
+                'data' => [
+                    'order_id' => $order->Id,
+                    'order_no' => $order->OrderNo,
+                    'origination_type' => $originationType,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Unified order creation failed: ' . $e->getMessage(), [
+                'input' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create purchase order: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    
+    /**
+     * Prepare origination-specific data
+     */
+    private function prepareOriginationData(Request $request, string $originationType): array
+    {
+        switch ($originationType) {
+            case 'rfq':
+                return ['ref' => $request->input('rfq_id')];
+            case 'award':
+                return ['ref' => $request->input('award_id')];
+            case 'contract':
+                return ['ref' => $request->input('contract_id')];
+            case 'direct':
+                return ['ref' => $request->input('plan_item_id')];
+            default:
+                return [];
+        }
+    }
+    
+    /**
+     * Calculate total amount from line items
+     */
+    private function calculateOrderTotal(Request $request): float
+    {
+        $total = 0.0;
+        
+        $quantities = $request->input('quantity', []);
+        $unitPrices = $request->input('unitPrice', []);
+        $taxes = $request->input('tax', []);
+        $discounts = $request->input('discount', []);
+        
+        foreach ($quantities as $index => $quantity) {
+            $quantity = floatval($quantity);
+            $unitPrice = floatval($unitPrices[$index] ?? 0);
+            $tax = floatval($taxes[$index] ?? 0);
+            $discount = floatval($discounts[$index] ?? 0);
+            
+            if ($quantity > 0 && $unitPrice > 0) {
+                $lineTotal = $quantity * $unitPrice;
+                
+                // Apply discount
+                if ($discount > 0) {
+                    $lineTotal -= $lineTotal * ($discount / 100);
+                }
+                
+                // Apply tax
+                if ($tax > 0) {
+                    $lineTotal += $lineTotal * ($tax / 100);
+                }
+                
+                $total += $lineTotal;
+            }
+        }
+        
+        return $total;
+    }
+    
+    /**
+     * Create order line items
+     */
+    private function createOrderLines(Request $request, int $orderId): void
+    {
+        $itemCodes = $request->input('itemCode', []);
+        $descriptions = $request->input('itemDescription', []);
+        $quantities = $request->input('quantity', []);
+        $unitPrices = $request->input('unitPrice', []);
+        $taxes = $request->input('tax', []);
+        $discounts = $request->input('discount', []);
+        $lineTotals = $request->input('lineTotal', []);
+        
+        foreach ($itemCodes as $index => $itemCode) {
+            if (empty($quantities[$index]) || empty($unitPrices[$index])) {
+                continue;
+            }
+            
+            $orderLineData = [
+                'iOrderID' => $orderId,
+                'cDescription' => $descriptions[$index] ?? '',
+                'fQuantity' => floatval($quantities[$index]),
+                'fUnitPriceExcl' => floatval($unitPrices[$index]),
+                'TaxPercentage' => floatval($taxes[$index] ?? 0),
+                'DiscountPercentage' => floatval($discounts[$index] ?? 0),
+                'LineTotal' => floatval($lineTotals[$index] ?? 0),
+                'iStockCodeID' => !empty($itemCode) ? intval($itemCode) : null,
+                'cLineNotes' => '',
+                'CreatedBy' => auth()->id(),
+                'ModifiedBy' => auth()->id(),
+            ];
+            
+            OrderLines::create($orderLineData);
+        }
+    }
+    
+    /**
+     * Update origination source status
+     */
+    private function updateOriginationSourceStatus(string $originationType, $sourceRef): void
+    {
+        if (!$sourceRef) return;
+        
+        try {
+            switch ($originationType) {
+                case 'award':
+                case 'contract':
+                    // Mark award/contract as having an order created
+                    TenderAward::where('Id', $sourceRef)
+                        ->update(['ModifiedBy' => auth()->id(), 'ModifiedOn' => now()]);
+                    break;
+                    
+                case 'direct':
+                    // Mark plan item as in execution
+                    PlanLineItem::where('LineItemID', $sourceRef)
+                        ->update([
+                            'ExecutionStatus' => 'In Progress', 
+                            'ModifiedBy' => auth()->id(),
+                            'ModifiedOn' => now()
+                        ]);
+                    break;
+                    
+                // RFQ doesn't need status update as multiple POs can be created from one RFQ
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to update origination source status', [
+                'type' => $originationType,
+                'ref' => $sourceRef,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 
 
 }

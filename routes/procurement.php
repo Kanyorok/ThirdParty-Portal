@@ -44,6 +44,7 @@ use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSetMethodController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
+use App\Http\Controllers\Procurement\LPOOriginationController;
 use App\Http\Controllers\Procurement\ReportsController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
@@ -79,7 +80,7 @@ use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
 
 
-Route::namespace('Procurement')->prefix('procurement')->group(function () {
+Route::namespace('Procurement')->group(function () {
 
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
@@ -112,8 +113,41 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('purchaseOrder/approval/{id}', [PurchaseOrderController::class, 'approval'])->name('purchaseOrder.approval');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
-    Route::resource('purchaseOrder', 'PurchaseOrderController');
+    Route::resource('purchaseOrder', PurchaseOrderController::class);
     Route::get('/purchase-order/rfq-items/{rfqId}', [PurchaseOrderController::class, 'getRFQItems'])->name('purchase-order.rfq-items');
+    
+    // NEW: Unified PO Origination AJAX endpoints
+    Route::get('purchaseOrder/award-details/{id}', [PurchaseOrderController::class, 'getAwardDetails'])->name('purchaseOrder.awardDetails');
+    Route::get('purchaseOrder/contract-details/{id}', [PurchaseOrderController::class, 'getContractDetails'])->name('purchaseOrder.contractDetails');
+    Route::get('purchaseOrder/plan-item-details/{id}', [PurchaseOrderController::class, 'getPlanItemDetails'])->name('purchaseOrder.planItemDetails');
+    
+    // Enhanced Direct Procurement AJAX endpoints
+    Route::get('purchaseOrder/plan/{planId}/categories', [PurchaseOrderController::class, 'getPlanItemCategories'])->name('purchaseOrder.planCategories');
+    Route::get('purchaseOrder/category/{categoryId}/suppliers', [PurchaseOrderController::class, 'getPrequalifiedSuppliers'])->name('purchaseOrder.prequalifiedSuppliers');
+    Route::get('purchaseOrder/plan/{planId}/category/{categoryId}/items', [PurchaseOrderController::class, 'getPlanItemsByCategory'])->name('purchaseOrder.planItemsByCategory');
+
+    // LPO Origination System - 3-Model Approach
+    Route::prefix('lpo')->name('lpo.')->group(function () {
+        // LPO Origination Dashboard
+        Route::get('origination', [LPOOriginationController::class, 'index'])->name('origination.index');
+        
+        // Contract-Based LPO Origination
+        Route::get('origination/contract-based', [LPOOriginationController::class, 'showContractBasedOptions'])->name('origination.contract-based');
+        Route::get('create/contract/{contractId}', [LPOOriginationController::class, 'createFromContract'])->name('create.contract');
+        
+        // Award-Based LPO Origination  
+        Route::get('origination/award-based', [LPOOriginationController::class, 'showAwardBasedOptions'])->name('origination.award-based');
+        Route::get('create/award/{awardId}', [LPOOriginationController::class, 'createFromAward'])->name('create.award');
+        
+        // Direct Procurement LPO Origination
+        Route::get('origination/direct-procurement', [LPOOriginationController::class, 'showDirectProcurementOptions'])->name('origination.direct-procurement');
+        Route::get('create/direct-procurement/{planId}', [LPOOriginationController::class, 'createFromDirectProcurement'])->name('create.direct-procurement');
+        
+        // LPO Creation Processing Routes
+        Route::post('store/contract', [LPOOriginationController::class, 'storeContractBasedLPO'])->name('store.contract');
+        Route::post('store/award', [LPOOriginationController::class, 'storeAwardBasedLPO'])->name('store.award');
+        Route::post('store/direct-procurement', [LPOOriginationController::class, 'storeDirectProcurementLPO'])->name('store.direct-procurement');
+    });
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
@@ -513,31 +547,38 @@ Route::resource('procawards', AwardsController::class);
 Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.index');
 Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');
 Route::post('contracts', [ContractsController::class, 'store'])->name('contracts.store');
-Route::get('contracts/{id}', [ContractsController::class, 'show'])->name('contracts.show');
-Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
-Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
 
-// Contracts - Approval Queue
+// Contracts - Approval Queue (specific routes before generic)
 Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approvalQueue');
-Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
 
-// Contract Creation from Awards
+// Contract Creation from Awards (specific routes before generic)
 Route::get('contracts/create-from-award/{awardId}', [ContractsController::class, 'createFromAward'])->name('contracts.createFromAward');
 
-// Contracts - LPO Link
-Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link');
-
-// Contract Legal Integration
+// Contract Legal Integration (specific routes before generic)
 Route::get('contracts/legal/integration', [ContractsController::class, 'legalIntegration'])->name('contracts.legal.index');
 
-// Contracts Lifecycle
-Route::get('contracts/lifecycle', [ContractsLifecycleController::class, 'index'])->name('contracts.lifecycle.index');
-Route::get('contracts/lifecycle/{id}/view', [ContractsLifecycleController::class, 'view'])->name('contracts.lifecycle.view');
-Route::get('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('contracts.lifecycle.amend');
-Route::post('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('contracts.lifecycle.amend.submit');
-Route::get('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('contracts.lifecycle.terminate');
-Route::post('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('contracts.lifecycle.terminate.submit');
-Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('contracts.lifecycle.execution');
+// Contracts Lifecycle (specific routes before generic - MOVED UP!)
+Route::prefix('contracts/lifecycle')->name('contracts.lifecycle.')->group(function () {
+    Route::get('/', [ContractsLifecycleController::class, 'index'])->name('index');
+    Route::get('{id}/view', [ContractsLifecycleController::class, 'view'])->name('view')->where('id', '[0-9]+');
+    Route::get('{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('amend')->where('id', '[0-9]+');
+    Route::post('{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('amend.submit')->where('id', '[0-9]+');
+    Route::get('{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('terminate')->where('id', '[0-9]+');
+    Route::post('{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('terminate.submit')->where('id', '[0-9]+');
+    Route::get('{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('execution')->where('id', '[0-9]+');
+});
+
+    // Generic Contract CRUD Routes (MOVED TO END - after specific routes)
+    Route::get('contracts/{id}', [ContractsController::class, 'show'])->name('contracts.show')->where('id', '[0-9]+');
+    Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit')->where('id', '[0-9]+');
+    Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update')->where('id', '[0-9]+');
+    Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve')->where('id', '[0-9]+');
+
+// Contracts - LPO Link
+    Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link')->where('id', '[0-9]+');
+
+    // Enhanced Goods Receipt Notes (GRN) System
+    require __DIR__ . '/enhanced_grn.php';
 
 
 Route::resource('deliverynotes', DeliveryController::class);
