@@ -319,14 +319,17 @@ class BidSubmissionApiController extends Controller
             ], 403);
         }
         
-        // Check deadline
-        if ($tender->SubmissionDeadline && Carbon::now()->isAfter($tender->SubmissionDeadline)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This tender is no longer accepting submissions',
-                'tender_status' => $tender->Status,
-                'submission_deadline' => $tender->SubmissionDeadline->toISOString()
-            ], 403);
+        // Allow submissions until end of the deadline day (inclusive)
+        if ($tender->SubmissionDeadline) {
+            $deadlineEnd = Carbon::parse($tender->SubmissionDeadline)->endOfDay();
+            if (Carbon::now()->greaterThan($deadlineEnd)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This tender is no longer accepting submissions',
+                    'tender_status' => $tender->Status,
+                    'submission_deadline' => $tender->SubmissionDeadline->toISOString()
+                ], 403);
+            }
         }
         
         return true;
@@ -644,9 +647,16 @@ class BidSubmissionApiController extends Controller
      */
     private function isTenderOpenForSubmissions(Tender $tender): bool
     {
-        // Check tender status and submission deadline
-        return $tender->Status === TenderStatusEnum::Published && 
-               ($tender->SubmissionDeadline === null || now()->lte($tender->SubmissionDeadline));
+        // Check tender status and submission deadline. Inclusive until end-of-day
+        if ($tender->Status !== TenderStatusEnum::Published) {
+            return false;
+        }
+
+        if ($tender->SubmissionDeadline === null) {
+            return true;
+        }
+
+        return Carbon::now()->lte(Carbon::parse($tender->SubmissionDeadline)->endOfDay());
     }
 
     /**
