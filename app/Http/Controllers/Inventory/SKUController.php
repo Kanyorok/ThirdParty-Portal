@@ -34,8 +34,10 @@ class SKUController extends Controller
         $this->authorize('create', StockItem::class);
 
         $branches = Branch::all();
-        $categories = ItemCategories::whereNull('ParentId')->get();
-        $stores = []; // Will be loaded via AJAX
+        $categories = ItemCategories::whereNull('ParentId')
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get();
+        $stores = Store::all();
 
         return view('inventory.itemmaster.sku.create', compact('branches', 'stores', 'categories'));
     }
@@ -68,14 +70,18 @@ class SKUController extends Controller
         $this->authorize('update', $item);
 
         $branches = Branch::all();
-        $categories = ItemCategories::whereNull('ParentId')->get();
+        $categories = ItemCategories::whereNull('ParentId')
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get();
         $stores = Store::where('BranchID', $item->Branch)->get();
 
         $category = $item->item->category;
         $parentCategoryId = $category->parent ? $category->parent->Id : $category->Id;
         $subcategoryId = $category->parent ? $category->Id : null;
 
-        $items = ItemMasterList::where('Category', $subcategoryId ?? $parentCategoryId)->get();
+        $items = ItemMasterList::where('Category', $subcategoryId ?? $parentCategoryId)
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get();
 
         return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores', 'categories', 'items'));
     }
@@ -124,32 +130,33 @@ class SKUController extends Controller
         $categoryId = $request->get('category_id');
         $subcategoryId = $request->get('subcategory_id');
 
-        $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)->get(['Id', 'ItemName']);
+        $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get(['Id', 'ItemName']);
         return response()->json($items);
     }
 
     public function getItemDetails(Request $request)
-        {
-            $itemId = $request->get('item_id');
+    {
+        $itemId = $request->get('item_id');
 
-            if (!$itemId) {
-                return response()->json(['error' => 'Item ID is required'], 400);
-            }
-
-            $item = ItemMasterList::with('uom')->find($itemId);
-
-            if (!$item) {
-                return response()->json(['error' => 'Item not found'], 404);
-            }
-
-            return response()->json([
-                'UnitCost' => $item->price?->ActualPrice ?? 0,
-                'PriceID' => $item->price?->Id ?? null,
-                'UOM' => [
-                    'id' => $item->UOM,
-                    'name' => $item->uom?->Name ?? 'N/A'
-                ]
-            ]);
+        if (!$itemId) {
+            return response()->json(['error' => 'Item ID is required'], 400);
         }
 
+        $item = ItemMasterList::with('uom')->find($itemId);
+
+        if (!$item) {
+            return response()->json(['error' => 'Item not found'], 404);
+        }
+
+        return response()->json([
+            'UnitCost' => $item->price?->ActualPrice ?? 0,
+            'PriceID' => $item->price?->Id ?? null,
+            'UOM' => [
+                'id' => $item->UOM,
+                'name' => $item->uom?->Name ?? 'N/A'
+            ]
+        ]);
+    }
 }

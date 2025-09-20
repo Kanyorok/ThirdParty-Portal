@@ -133,8 +133,7 @@
                                                    value="{{ old("items.{$index}.Remarks", $lineObject->Remarks) }}">
                                         </div>
                                         <div class="col-md-1 d-flex align-items-end">
-                                            <button type="button" class="btn btn-danger btn-sm remove-item-btn">✖
-                                            </button>
+                                            <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">✖</button>
                                         </div>
                                     </div>
                                 </div>
@@ -143,7 +142,7 @@
                     </div>
 
                     <div class="text-end">
-                        <button type="submit" class="btn btn-success">Update Requisition</button>
+                         <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Requisition</button>
                     </div>
                 </div>
             </div>

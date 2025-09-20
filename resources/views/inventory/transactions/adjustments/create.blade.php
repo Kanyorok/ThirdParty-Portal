@@ -146,8 +146,7 @@
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
-
-        <button type="submit" class="btn btn-primary">✅ Submit Adjustment</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">✅ Submit Adjustment</button>
     </form>
 </div>
 

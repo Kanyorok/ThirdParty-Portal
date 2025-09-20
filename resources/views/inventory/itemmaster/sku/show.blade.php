@@ -37,9 +37,9 @@
                 <div class="col-md-4">
                     <p><strong>Min Stock Level:</strong> {{ $item->Min }}</p>
                 </div>
-                <div class="col-md-4">
+                {{-- <div class="col-md-4">
                     <p><strong>Max Stock Level:</strong> {{ $item->Max }}</p>
-                </div>
+                </div> --}}
                 <div class="col-md-4">
                     <p><strong>Reorder Qty:</strong> {{ $item->Reorder }}</p>
                 </div>

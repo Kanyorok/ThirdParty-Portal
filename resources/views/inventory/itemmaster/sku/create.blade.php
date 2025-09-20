@@ -112,27 +112,30 @@
                                 {{-- Stores will be loaded dynamically --}}
                             </select>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="currentQty" class="form-label">Current Qty</label>
-                                <input type="number" class="form-control" name="CurrentQty" id="currentQty" value="0"
-                                       required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="Min" class="form-label">Min Stock Level</label>
-                                <input type="number" class="form-control" name="Min" id="Min" value="0">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="Reorder" class="form-label">Reorder Qty</label>
-                                <input type="number" class="form-control" name="Reorder" id="Reorder" value="0">
-                            </div>
-                        </div>
+                       <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="currentQty" class="form-label">Current Qty</label>
+                        <input type="number" class="form-control" name="CurrentQty" id="currentQty" 
+                            value="0" min="0" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="Min" class="form-label">Min Stock Level</label>
+                        <input type="number" class="form-control" name="Min" id="Min" 
+                            value="0" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="Reorder" class="form-label">Reorder Qty</label>
+                        <input type="number" class="form-control" name="Reorder" id="Reorder" 
+                            value="0" min="0">
+                    </div>
+                </div>
 
-                        <div class="row mb-3">
+
+                        {{-- <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="Max" class="form-label">Max Stock Level</label>
                                 <input type="number" class="form-control" name="Max" id="Max" value="0">
-                            </div>
+                            </div> --}}
                             <div class="col-md-6">
                                 <label for="LastReceived" class="form-label">Last Received Date</label>
                                 <input type="date" class="form-control" name="LastReceived" id="LastReceived" required>
@@ -146,8 +149,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end">
-
-                            <button type="submit" class="btn btn-success px-4">Save Item</button>
+                            <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Item</button>
                             <button type="Cancel" class="btn btn-secondary px-4">Cancel</button>
                         </div>
                 </form>

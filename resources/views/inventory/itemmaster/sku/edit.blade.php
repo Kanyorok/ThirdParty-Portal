@@ -117,12 +117,12 @@
                                 </div>
                             </div>
 
-                            <div class="row mb-3">
+                            {{-- <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="maxStockLevel" class="form-label">Max Stock Level</label>
                                     <input type="number" name="Max" class="form-control" id="maxStockLevel"
                                            value="{{ $item->Max }}">
-                                </div>
+                                </div> --}}
                                 <div class="col-md-6">
                                     <label for="lastReceivedDate" class="form-label">Last Received Date</label>
                                     <input type="date" name="LastReceived" class="form-control" id="lastReceivedDate"
@@ -138,7 +138,7 @@
                             </div>
 
                             <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-warning px-4">Update Item</button>
+                                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Item</button>
                                 <a href="{{ route('sku.index') }}" class="btn btn-danger px-4 ms-2">Cancel</a>
                             </div>
 

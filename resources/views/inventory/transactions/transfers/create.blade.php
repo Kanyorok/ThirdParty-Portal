@@ -79,7 +79,7 @@
                 </div>
 
                 <div id="ajax-error" class="alert alert-danger d-none"></div>
-                <button type="submit" class="btn btn-primary" id="submitBtn">✅ Submit Transfer</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Transfer</button>
             </div>
         </form>
     </div>

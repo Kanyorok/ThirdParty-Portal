@@ -57,7 +57,7 @@
             <input type="text" name="Remarks" class="form-control" placeholder="Optional">
           </div>
           <div class="col-md-4 d-flex align-items-end justify-content-end">
-            <button type="submit" class="btn btn-success mt-2">💾 Save Mapping</button>
+            <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Save Mapping</button>
           </div>
         </div>
 

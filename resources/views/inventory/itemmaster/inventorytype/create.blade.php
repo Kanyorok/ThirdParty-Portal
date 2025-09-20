@@ -25,7 +25,7 @@
             <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" checked>
             <label class="form-check-label" for="Status">Is Active</label>
         </div>
-    <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save</button>
     </form>
 </div>
 
