@@ -220,10 +220,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 305100, 'Name' => 'Tender Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305110, 'Name' => 'Tender Initiation', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'initiatetender.index'],
             //['ModuleID' => 305120, 'Name' => 'Initiation Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'initiateapprove.index'],
-            ['ModuleID' => 305130, 'Name' => 'Tender Category', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tendercategory.index'],
-            ['ModuleID' => 305140, 'Name' => 'Tender Type', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tendertype.index'],
-            ['ModuleID' => 305160, 'Name' => 'Tender Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tenderevaluations.index'],
-
+            ['ModuleID' => 305130, 'Name' => 'Tender Category', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tendercategory.index'],           ['ModuleID' => 305160, 'Name' => 'Tender Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tenderevaluations.index'],
             // Suppliers
             ['ModuleID' => 305200, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305210, 'Name' => 'Response Tracking', 'Icon' => null, 'Description' => '', 'ParentID' => 305200, 'Route' => 'tenderresponse.index'],
@@ -238,9 +235,6 @@ class ModuleSeeder extends Seeder
 
             // Evaluation
             ['ModuleID' => 305400, 'Name' => 'Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
-            //['ModuleID' => 305410, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'tendercommittee.index'],
-            //['ModuleID' => 305430, 'Name' => 'Assign Roles', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'assignrole.index'],
-            ['ModuleID' => 305440, 'Name' => 'Evaluators Dashboard', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'evaluationdashboard.index'],
             ['ModuleID' => 305450, 'Name' => 'Consolidated Scores', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'bidscores.index'],
 
             ['ModuleID' => 306000, 'Name' => 'Quotations', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],

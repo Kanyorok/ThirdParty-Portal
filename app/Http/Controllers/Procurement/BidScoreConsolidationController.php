@@ -22,8 +22,14 @@ class BidScoreConsolidationController extends Controller
         $tenderId = $request->get('tender_id');
         
         if (!$tenderId) {
-            // If no tender specified, show tender selection or default view
-            $tenders = Tender::select('Id', 'Title', 'TenderNo')->get();
+            // If no tender specified, show only tenders that have passed responsiveness check
+            $tenders = Tender::whereHas('submissions', function($query) {
+                    $query->where('IsResponsive', true)
+                          ->whereIn('BidStatus', ['responsive', 'evaluated']);
+                })
+                ->select('Id', 'Title', 'TenderNo')
+                ->orderByDesc('OpeningDate')
+                ->get();
             return view('procurement.tendering.bidopeningandevaluation.scoreconsolidation.select', compact('tenders'));
         }
         
