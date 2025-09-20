@@ -58,46 +58,8 @@ return new class extends Migration {
         Lead::query()->update(['CountryId' => null, 'LocationID' => null]);
         Competitor::query()->update(['CountryId' => null, 'LocationID' => null]);
         PropertyRegistry::query()->update(['CountryId' => null, 'LocationId' => null]);
-
-        DB::table('t_Localities')->delete();
-
-        Schema::table('t_Localities', static function (Blueprint $table) {
-            $table->foreignId('CountryId')->nullable(false)->change();
-        });
-
-        Artisan::call('db:seed', [
-            '--class' => 'LocalitySeeder',
-            '--force' => true
-        ]);
-
-        $country = Country::query()->where('CountryCode', 'KE')->first();
-
-        $location = $country?->localities()->whereLike('Name', '%Nairobi%')->whereNotNull('LocalityID')->first();
-        if (!$location instanceof Locality) {
-            $location = $country?->localities()->whereNotNull('LocalityID')->first();
-        }
-
-        if (!$country instanceof Country) {
-            dd($country);
-        }        
-        Lead::query()->update(['CountryId' => $country->Id, 'LocationID' => $location->ID]);
-        Competitor::query()->update(['CountryId' => $country->Id, 'LocationID' => $location->ID]);
-        PropertyRegistry::query()->update(['CountryId' => $country->Id, 'LocationId' => $location->ID]);
-
-        Schema::table('t_Leads', static function (Blueprint $table) {
-            $table->foreignId('CountryId')->nullable(false)->change();
-            $table->unsignedBigInteger('LocationID')->nullable(false)->change();
-        });
-
-        Schema::table('t_Competitors', static function (Blueprint $table) {
-            $table->foreignId('CountryId')->nullable(false)->change();
-            $table->unsignedBigInteger('LocationID')->nullable(false)->change();
-        });
-
-        Schema::table('t_PropertyRegistry', static function (Blueprint $table) {
-            $table->foreignId('CountryId')->nullable()->change();
-            $table->foreignId('LocationId')->nullable()->change();
-        });
+        // Note: LocalitySeeder should be run separately after migration
+        // This ensures fast migration execution and proper data seeding
 
     }
 
