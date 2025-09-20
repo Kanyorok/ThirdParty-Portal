@@ -6,6 +6,7 @@ import { Button } from "@/components/common/button";
 import { Textarea } from "@/components/common/textarea";
 import { Alert, AlertDescription } from "@/components/common/alert";
 import { toast } from "sonner";
+import { getBaseUrl } from "@/lib/api-base";
 import { 
   CheckCircle, 
   XCircle, 
@@ -80,7 +81,7 @@ export default function TenderResponseForm({
       };
       
       const invitationId = invitation?.InvitationID || invitation?.invitationID;
-      const apiUrl = `http://localhost:8000/api/tender-invitations/${invitationId}`;
+      const apiUrl = `${getBaseUrl()}/api/tender-invitations/${invitationId}`;
       
       const response = await fetch(apiUrl, {
         method: 'PUT',
