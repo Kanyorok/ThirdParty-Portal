@@ -291,14 +291,6 @@ export default function TenderResponseForm({
               </AlertDescription>
             </Alert>
             
-            {/* Issue Identified: SQL Parameter Binding in Laravel Backend */}
-            <div className="bg-green-100 border border-green-500 p-3 rounded text-sm mb-4">
-              <strong className="text-green-800">✅ ISSUE IDENTIFIED:</strong> Laravel SQL parameter binding problem.
-              <p className="text-green-700 text-xs mt-1">
-                Laravel backend needs to fix SQL query generation. See URGENT_LARAVEL_SQL_FIX.md for details.
-              </p>
-            </div>
-
             <div className="space-y-4">
               <div className="flex gap-4">
                 <Button
