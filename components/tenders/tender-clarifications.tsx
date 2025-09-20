@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import ERPResponseInterface from "./erp-response-interface";
 
 interface TenderClarification {
   id: number;
@@ -31,11 +32,24 @@ interface TenderClarification {
   supplierId: number;
   question: string;
   questionDate: string;
+  // Portal expected field names
   response?: string;
+  Response?: string;
   responseDate?: string;
+  ResponseDate?: string;
   responseBy?: string;
+  ResponseBy?: string;
+  // ERP DATABASE ACTUAL FIELD NAMES
+  answer?: string;           // ACTUAL API field name (lowercase)!
+  answerDate?: string;       // ACTUAL API field name (lowercase)!
+  clarificationId?: number;  // ACTUAL API field name for ID!
+  Answer?: string;           // Backup capitalized version
+  AnswerDate?: string;       // Backup capitalized version
+  AnswerBy?: string;         // Possible ERP field name
   status: 'pending' | 'answered' | 'closed';
+  Status?: 'pending' | 'answered' | 'closed';
   isPublic: boolean;
+  IsPublic?: boolean;
   attachments?: string[];
   createdBy: string;
   createdOn: string;
@@ -70,7 +84,46 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
       }
 
       const data = await response.json();
-      setClarifications(data.data || []);
+      const clarificationsData = data.data || [];
+      
+      // Debug: Log the actual data structure to help identify field name issues
+      console.log('🔍 CLARIFICATIONS DEBUG - Total count:', clarificationsData.length);
+      console.log('🔍 CLARIFICATIONS DEBUG - Raw data:', clarificationsData);
+      
+      // Check for undefined IDs that cause key conflicts
+      const undefinedIds = clarificationsData.filter((c: any) => c.id === undefined || c.id === null);
+      if (undefinedIds.length > 0) {
+        console.warn('⚠️ CLARIFICATIONS WITH UNDEFINED IDs:', undefinedIds.length, undefinedIds);
+      }
+      
+      if (clarificationsData.length > 0) {
+        console.log('🔍 FIRST CLARIFICATION:', clarificationsData[0]);
+        
+        // Check each clarification for responses
+        clarificationsData.forEach((c: any, index: number) => {
+          console.log(`🔍 CLARIFICATION ${index + 1}:`, {
+            id: c.id,
+            clarificationId: c.clarificationId,
+            question: c.question?.substring(0, 50) + '...',
+            // Portal expected fields
+            response: c.response,
+            Response: c.Response,
+            // ERP DATABASE ACTUAL FIELDS (from API)
+            answer: c.answer,        // ACTUAL lowercase field!
+            Answer: c.Answer,        // Backup capitalized
+            answerDate: c.answerDate, // ACTUAL lowercase field!
+            AnswerDate: c.AnswerDate, // Backup capitalized
+            hasResponse: !!(c.response || c.Response || c.answer || c.Answer),
+            status: c.status,
+            Status: c.Status
+          });
+        });
+        
+        const responseCount = clarificationsData.filter((c: any) => c.response || c.Response || c.answer || c.Answer).length;
+        console.log('🔍 RESPONSE COUNT (including actual ERP answer field):', responseCount);
+      }
+      
+      setClarifications(clarificationsData);
       setIsMockMode(!!data.fallback); // Set mock mode indicator
       setLastRefresh(new Date()); // Update refresh timestamp
     } catch (error) {
@@ -203,7 +256,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
             </Badge>
             {clarifications.length > 0 && (
               <Badge variant="outline" className="text-xs">
-                {clarifications.length} question{clarifications.length !== 1 ? 's' : ''}
+                {clarifications.length} question{clarifications.length !== 1 ? 's' : ''} | {clarifications.filter(c => c.response || c.Response || c.answer || c.Answer).length} answered
               </Badge>
             )}
           </div>
@@ -235,6 +288,12 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
           </Button>
         </div>
       </div>
+
+      {/* ERP Response Interface - For Procurement Staff */}
+      <ERPResponseInterface 
+        clarifications={clarifications}
+        onResponseSubmitted={() => fetchClarifications()}
+      />
 
       {/* New Clarification Form */}
       {showNewClarification && (
@@ -333,18 +392,18 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
               </CardContent>
             </Card>
           ) : (
-            clarifications.map((clarification) => (
-              <Card key={clarification.id} className="relative">
+            clarifications.map((clarification, index) => (
+              <Card key={`clarification-${clarification.clarificationId || clarification.id || index}-${clarification.tenderId || 'unknown'}-${index}`} className="relative">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge className={cn("text-xs", getStatusColor(clarification.status))}>
-                        {getStatusIcon(clarification.status)}
-                        <span className="ml-1 capitalize">{clarification.status}</span>
+                      <Badge className={cn("text-xs", getStatusColor(clarification.status || clarification.Status || 'pending'))}>
+                        {getStatusIcon(clarification.status || clarification.Status || 'pending')}
+                        <span className="ml-1 capitalize">{clarification.status || clarification.Status || 'pending'}</span>
                       </Badge>
                       
-                      <Badge variant={clarification.isPublic ? "default" : "secondary"} className="text-xs">
-                        {clarification.isPublic ? (
+                      <Badge variant={(clarification.isPublic || clarification.IsPublic) ? "default" : "secondary"} className="text-xs">
+                        {(clarification.isPublic || clarification.IsPublic) ? (
                           <>
                             <Users className="h-3 w-3 mr-1" />
                             Public
@@ -358,7 +417,7 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
                       </Badge>
 
                       {/* Show if response has been published to all suppliers */}
-                      {clarification.response && clarification.isPublic && (
+                      {(clarification.response || clarification.Response || clarification.answer || clarification.Answer) && (clarification.isPublic || clarification.IsPublic) && (
                         <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
                           <Globe className="h-3 w-3 mr-1" />
                           Published to All
@@ -366,8 +425,8 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
                       )}
 
                       {/* Show if this is a new response (within last 24 hours) */}
-                      {clarification.responseDate && 
-                       new Date().getTime() - new Date(clarification.responseDate).getTime() < 86400000 && (
+                      {(clarification.responseDate || clarification.ResponseDate || clarification.answerDate || clarification.AnswerDate) && 
+                       new Date().getTime() - new Date(clarification.responseDate || clarification.ResponseDate || clarification.answerDate || clarification.AnswerDate!).getTime() < 86400000 && (
                         <Badge variant="outline" className="text-xs bg-green-50 text-green-700 animate-pulse">
                           New Response
                         </Badge>
@@ -391,33 +450,47 @@ export default function TenderClarifications({ tenderId }: TenderClarificationsP
                     </div>
                   </div>
 
-                  {/* Response */}
-                  {clarification.response && (
+                  {/* ERP Response */}
+                  {(clarification.response || clarification.Response || clarification.answer || clarification.Answer) && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-600">Response</span>
+                          <span className="text-sm font-medium text-green-600">ERP Response</span>
+                          {(clarification.isPublic || clarification.IsPublic) && (
+                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                              <Globe className="h-3 w-3 mr-1" />
+                              Visible to All Suppliers
+                            </Badge>
+                          )}
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {clarification.responseDate && 
-                            format(new Date(clarification.responseDate), 'PPP')
+                          {(clarification.responseDate || clarification.ResponseDate || clarification.answerDate || clarification.AnswerDate) && 
+                            format(new Date(clarification.responseDate || clarification.ResponseDate || clarification.answerDate || clarification.AnswerDate!), 'MMM dd, HH:mm')
                           }
                         </span>
                       </div>
-                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                        <p className="text-sm whitespace-pre-wrap">{clarification.response}</p>
-                        {clarification.responseBy && (
-                          <p className="text-xs text-green-700 mt-2 font-medium">
-                            — {clarification.responseBy}
-                          </p>
-                        )}
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200 shadow-sm">
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                          {clarification.response || clarification.Response || clarification.answer || clarification.Answer}
+                        </p>
+                        <div className="mt-3 pt-2 border-t border-green-200">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-green-700 font-medium">
+                              — {clarification.responseBy || clarification.ResponseBy || clarification.AnswerBy || 'Procurement Team'}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-green-600">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>Official ERP Response</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
 
                   {/* Pending status */}
-                  {clarification.status === 'pending' && (
+                  {(clarification.status === 'pending' || clarification.Status === 'pending') && !(clarification.response || clarification.Response || clarification.answer || clarification.Answer) && (
                     <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                       <div className="flex items-center gap-2 text-yellow-800">
                         <Clock className="h-4 w-4" />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Button } from "@/components/common/button";
 import { Input } from "@/components/common/input";
@@ -59,6 +59,10 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
   const [documents, setDocuments] = useState<DocumentUpload[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitType, setSubmitType] = useState<'draft' | 'final' | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [existingBidId, setExistingBidId] = useState<number | null>(null);
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const documentTypes = [
@@ -76,8 +80,59 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
     { code: "GBP", symbol: "£", name: "British Pound" },
   ];
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
+  // Check for existing bid on component load
+  useEffect(() => {
+    const checkExistingBid = async () => {
+      try {
+        console.log('🔍 CHECKING FOR EXISTING BID - Tender ID:', tender.id);
+        const response = await fetch(`/api/tender-bids?checkExisting=true&tenderId=${tender.id}`);
+        const data = await response.json();
+        
+        console.log('📋 EXISTING BID CHECK - Response:', data);
+        
+        if (data.success && data.hasExistingBid && data.existingBid) {
+          const existing = data.existingBid;
+          console.log('✅ FOUND EXISTING BID - Pre-populating form:', existing);
+          
+          // Pre-populate form with existing bid data
+          const populatedData = {
+            bidAmount: existing.bidAmount?.toString() || existing.BidAmount?.toString() || "",
+            currency: existing.currency || existing.Currency || tender.currency?.code || "KES",
+            validityPeriod: existing.validityPeriod?.toString() || existing.ValidityPeriod?.toString() || "90",
+            deliveryPeriod: existing.deliveryPeriod?.toString() || existing.DeliveryPeriod?.toString() || "30",
+            paymentTerms: existing.paymentTerms || existing.PaymentTerms || "",
+          };
+          
+          console.log('🎯 FORM POPULATION DEBUG - Setting bid data:', populatedData);
+          setBidData(populatedData);
+          
+          setExistingBidId(existing.id || existing.Id);
+          setIsEditingDraft((existing.status || existing.Status) === 'draft');
+          
+          if ((existing.status || existing.Status) === 'draft') {
+            toast.info(`📝 Draft bid loaded from ${new Date(existing.modifiedOn || existing.ModifiedOn).toLocaleDateString()}. You can edit and resubmit.`);
+          } else {
+            toast.success(`✅ Final bid already submitted on ${new Date(existing.createdOn || existing.CreatedOn).toLocaleDateString()}`);
+          }
+        } else {
+          console.log('📄 NO EXISTING BID - Starting fresh bid');
+        }
+      } catch (error) {
+        console.error('❌ ERROR CHECKING EXISTING BID:', error);
+        // Don't show error to user - just proceed with empty form
+      } finally {
+        setIsLoadingExisting(false);
+      }
+    };
+
+    if (tender.id) {
+      checkExistingBid();
+    } else {
+      setIsLoadingExisting(false);
+    }
+  }, [tender.id, tender.currency]);
+
+  const processFiles = (files: FileList | null) => {
     if (!files) return;
 
     Array.from(files).forEach(file => {
@@ -111,12 +166,43 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
       };
 
       setDocuments(prev => [...prev, newDocument]);
+      toast.success(`File ${file.name} added successfully.`);
     });
+  };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    processFiles(files);
+    
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = e.dataTransfer.files;
+    processFiles(files);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
   };
 
   const removeDocument = (id: string) => {
@@ -140,17 +226,35 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
   };
 
   const validateBid = () => {
-    if (!bidData.bidAmount || parseFloat(bidData.bidAmount) <= 0) {
+    console.log('🔍 FRONTEND VALIDATION - Checking values:', {
+      tenderId: tender.id,
+      bidAmount: bidData.bidAmount,
+      currency: bidData.currency,
+      validityPeriod: bidData.validityPeriod,
+      deliveryPeriod: bidData.deliveryPeriod
+    });
+
+    if (!tender.id) {
+      toast.error("Tender ID is missing");
+      return false;
+    }
+
+    if (!bidData.bidAmount || bidData.bidAmount.trim() === '' || parseFloat(bidData.bidAmount) <= 0) {
       toast.error("Please enter a valid bid amount");
       return false;
     }
 
-    if (!bidData.validityPeriod || parseInt(bidData.validityPeriod) <= 0) {
+    if (!bidData.currency || bidData.currency.trim() === '') {
+      toast.error("Please select a currency");
+      return false;
+    }
+
+    if (!bidData.validityPeriod || bidData.validityPeriod.trim() === '' || parseInt(bidData.validityPeriod) <= 0) {
       toast.error("Please enter a valid validity period");
       return false;
     }
 
-    if (!bidData.deliveryPeriod || parseInt(bidData.deliveryPeriod) <= 0) {
+    if (!bidData.deliveryPeriod || bidData.deliveryPeriod.trim() === '' || parseInt(bidData.deliveryPeriod) <= 0) {
       toast.error("Please enter a valid delivery period");
       return false;
     }
@@ -178,6 +282,27 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
   };
 
   const handleSubmit = async (type: 'draft' | 'final') => {
+    console.log('🚀 SUBMIT DEBUG - Starting submission:', { type, documentsCount: documents.length });
+    
+    // Basic validation for both draft and final
+    if (!tender.id) {
+      toast.error("Tender ID is missing");
+      return;
+    }
+
+    if (!bidData.bidAmount || bidData.bidAmount.trim() === '' || parseFloat(bidData.bidAmount) <= 0) {
+      toast.error("Please enter a valid bid amount");
+      return;
+    }
+
+    // For draft: allow submission with basic data, but warn about missing documents
+    if (type === 'draft') {
+      if (documents.length === 0) {
+        toast.warning("⚠️ Saving draft without documents. You can add documents later.");
+      }
+    }
+    
+    // For final: require full validation
     if (type === 'final' && !validateBid()) {
       return;
     }
@@ -187,12 +312,30 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
 
     try {
       const formData = new FormData();
-      formData.append('tenderId', tender.id);
-      formData.append('bidAmount', bidData.bidAmount);
-      formData.append('currency', bidData.currency);
-      formData.append('validityPeriod', bidData.validityPeriod);
-      formData.append('deliveryPeriod', bidData.deliveryPeriod);
-      formData.append('paymentTerms', bidData.paymentTerms);
+      
+      // Debug: Log all values before appending
+      console.log('🔍 FRONTEND DEBUG - Values being sent:', {
+        tenderId: tender.id,
+        tenderIdType: typeof tender.id,
+        bidAmount: bidData.bidAmount,
+        bidAmountType: typeof bidData.bidAmount,
+        currency: bidData.currency,
+        currencyType: typeof bidData.currency,
+        validityPeriod: bidData.validityPeriod,
+        validityPeriodType: typeof bidData.validityPeriod,
+        deliveryPeriod: bidData.deliveryPeriod,
+        deliveryPeriodType: typeof bidData.deliveryPeriod,
+        paymentTerms: bidData.paymentTerms,
+        status: type === 'draft' ? 'draft' : 'submitted',
+        documentsCount: documents.length
+      });
+      
+      formData.append('tenderId', String(tender.id));
+      formData.append('bidAmount', String(bidData.bidAmount));
+      formData.append('currency', String(bidData.currency));
+      formData.append('validityPeriod', String(bidData.validityPeriod));
+      formData.append('deliveryPeriod', String(bidData.deliveryPeriod));
+      formData.append('paymentTerms', String(bidData.paymentTerms));
       formData.append('status', type === 'draft' ? 'draft' : 'submitted');
 
       // Add documents
@@ -207,16 +350,54 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
       });
 
       const data = await response.json();
+      console.log('📦 SUBMIT DEBUG - Response data:', data);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to submit bid');
+        console.log('❌ SUBMIT DEBUG - Response not OK, status:', response.status);
+        
+        if (response.status === 422 && data.errors) {
+          // Handle validation errors from ERP
+          console.log('📋 VALIDATION ERRORS from ERP:', data.errors);
+          const errorMessages = [];
+          
+          if (data.errors.tender_id) errorMessages.push(`Tender: ${data.errors.tender_id[0]}`);
+          if (data.errors.bid_amount) errorMessages.push(`Bid Amount: ${data.errors.bid_amount[0]}`);
+          if (data.errors.third_party_id) errorMessages.push(`Supplier: ${data.errors.third_party_id[0]}`);
+          if (data.errors.bid_documents) errorMessages.push(`Documents: ${data.errors.bid_documents[0]}`);
+          
+          const errorMessage = errorMessages.length > 0 
+            ? errorMessages.join(', ') 
+            : data.message || 'Validation failed';
+            
+          throw new Error(errorMessage);
+        } else if (response.status === 403) {
+          // Handle business logic errors from ERP (like expired deadlines)
+          console.log('🚫 BUSINESS ERROR from ERP:', data);
+          
+          if (data.submission_deadline) {
+            const deadline = new Date(data.submission_deadline).toLocaleString();
+            throw new Error(`${data.message || 'Submission not allowed'} (Deadline was: ${deadline})`);
+          } else {
+            throw new Error(data.message || 'This action is not allowed');
+          }
+        } else {
+          throw new Error(data.message || data.error || 'Failed to submit bid');
+        }
       }
 
-      toast.success(
-        type === 'draft' 
-          ? "Bid saved as draft successfully!" 
-          : "Bid submitted successfully! Your documents have been encrypted and stored securely."
-      );
+      // Show appropriate success message based on whether fallback was used
+      const message = data.fallback ? 
+        (type === 'draft' 
+          ? "Bid saved as draft successfully! (Mock mode - ERP not connected)" 
+          : "Bid submitted successfully! (Mock mode - ERP not connected)"
+        ) : 
+        (type === 'draft' 
+          ? "✅ Bid saved as draft successfully in ERP!" 
+          : "🎉 Bid submitted successfully to ERP! Your documents have been encrypted and stored securely."
+        );
+        
+      console.log('✅ SUBMIT DEBUG - Showing success message:', message);
+      toast.success(message);
 
       // Reset form if final submission
       if (type === 'final') {
@@ -228,6 +409,12 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
           paymentTerms: "",
         });
         setDocuments([]);
+        setExistingBidId(data.data?.bid_id || data.data?.Id || null);
+        setIsEditingDraft(false); // Final submission, no longer editing draft
+      } else if (type === 'draft') {
+        // For draft saves, update the existing bid ID if we got one back
+        setExistingBidId(data.data?.bid_id || data.data?.Id || existingBidId);
+        setIsEditingDraft(true); // Still in draft mode
       }
 
     } catch (error) {
@@ -245,6 +432,38 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
 
   return (
     <div className="space-y-6">
+      {/* Loading State */}
+      {isLoadingExisting && (
+        <Alert className="border-gray-200 bg-gray-50">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Loading:</strong> Checking for existing bids...
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Draft Editing Notice */}
+      {!isLoadingExisting && isEditingDraft && (
+        <Alert className="border-yellow-200 bg-yellow-50">
+          <FileText className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Editing Draft Bid:</strong> You are editing a previously saved draft. 
+            You can update the details and save again or submit as final.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Final Bid Notice */}
+      {!isLoadingExisting && existingBidId && !isEditingDraft && (
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Bid Already Submitted:</strong> You have already submitted a final bid for this tender. 
+            No further changes are allowed.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Security Notice */}
       <Alert className="border-blue-200 bg-blue-50">
         <Shield className="h-4 w-4" />
@@ -339,17 +558,35 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+          <div 
+            className={cn(
+              "border-2 border-dashed rounded-lg p-8 transition-all duration-200 cursor-pointer",
+              isDragging 
+                ? "border-blue-500 bg-blue-50" 
+                : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+            )}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={handleUploadClick}
+          >
             <div className="text-center">
-              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-2">
-                Drop files here or click to upload
+              <Upload className={cn(
+                "h-10 w-10 mx-auto mb-4 transition-colors",
+                isDragging ? "text-blue-500" : "text-gray-400"
+              )} />
+              <p className="text-lg font-medium text-gray-700 mb-2">
+                {isDragging ? "Drop files here" : "Upload Supporting Documents"}
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Drag and drop files here, or click to browse
               </p>
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
+                variant={isDragging ? "default" : "outline"}
+                onClick={handleUploadClick}
                 disabled={isSubmitting}
+                className="pointer-events-none"
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Select Files
@@ -427,25 +664,25 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
             <Button
               onClick={() => handleSubmit('draft')}
               variant="outline"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoadingExisting || (existingBidId && !isEditingDraft)}
               className="flex-1"
             >
               {isSubmitting && submitType === 'draft' ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2" />
-                  Saving...
+                  {isEditingDraft ? 'Updating...' : 'Saving...'}
                 </div>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save as Draft
+                  {isEditingDraft ? 'Update Draft' : 'Save as Draft'}
                 </>
               )}
             </Button>
             
             <Button
               onClick={() => handleSubmit('final')}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoadingExisting || (existingBidId && !isEditingDraft)}
               className="flex-1"
             >
               {isSubmitting && submitType === 'final' ? (

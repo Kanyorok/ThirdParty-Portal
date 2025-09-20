@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/ca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/common/tabs";
 import { Badge } from "@/components/common/badge";
 import { Separator } from "@/components/common/separator";
-import { ScrollArea } from "@/components/common/scroll-area";
 import {
   Calendar,
   DollarSign,
@@ -27,7 +26,6 @@ import { cn } from "@/lib/utils";
 import TenderResponseForm from "./tender-response-form";
 import TenderClarifications from "./tender-clarifications";
 import TenderBidForm from "./tender-bid-form";
-import ClarificationDemo from "./clarification-demo";
 
 interface Tender {
   id: number;              // Database Id (t_Tenders.Id)
@@ -135,23 +133,23 @@ export default function TenderDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-[98vw] w-full h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0 pb-4 border-b">
           <DialogTitle className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">{tender.title}</h2>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-2xl font-bold truncate">{tender.title}</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {tender.tenderNo}
               </p>
             </div>
-            <Badge className={cn("ml-4", getStatusColor(tender.status))}>
+            <Badge className={cn("ml-4 flex-shrink-0", getStatusColor(tender.status))}>
               {getStatusText(tender.status)}
             </Badge>
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
+          <TabsList className="grid w-full grid-cols-5 flex-shrink-0 bg-muted rounded-md">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="response">Response</TabsTrigger>
             <TabsTrigger value="clarifications">Clarifications</TabsTrigger>
@@ -159,8 +157,8 @@ export default function TenderDetailModal({
             <TabsTrigger value="documents">Documents</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="h-[600px] mt-4">
-            <TabsContent value="overview" className="space-y-6">
+          <div className="flex-1 mt-4 overflow-y-auto">
+            <TabsContent value="overview" className="space-y-6 px-4 py-2">
               {/* Invitation Status */}
               {invitation && (
                 <Card>
@@ -298,35 +296,33 @@ export default function TenderDetailModal({
               )}
             </TabsContent>
 
-            <TabsContent value="response">
-              <TenderResponseForm
-                tender={tender}
-                invitation={invitation}
-                onUpdate={onInvitationUpdate}
-              />
+            <TabsContent value="response" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
+              <div className="px-4 py-2">
+                <TenderResponseForm
+                  tender={tender}
+                  invitation={invitation}
+                  onUpdate={onInvitationUpdate}
+                />
+              </div>
             </TabsContent>
 
-            <TabsContent value="clarifications">
-              <div className="space-y-6">
-                <ClarificationDemo 
-                  tenderId={tender.id.toString()} 
-                  onResponse={() => {
-                    // This will trigger a refresh of the clarifications
-                    window.location.reload();
-                  }}
-                />
+            <TabsContent value="clarifications" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
+              <div className="px-4 py-2">
                 <TenderClarifications tenderId={tender.id.toString()} />
               </div>
             </TabsContent>
 
-            <TabsContent value="bidding">
-              <TenderBidForm tender={{
-                ...tender,
-                id: tender.id.toString()
-              }} />
+            <TabsContent value="bidding" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
+              <div className="px-4 py-2">
+                <TenderBidForm tender={{
+                  ...tender,
+                  id: tender.id.toString()
+                }} />
+              </div>
             </TabsContent>
 
-            <TabsContent value="documents">
+            <TabsContent value="documents" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
+              <div className="px-4 py-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -371,8 +367,9 @@ export default function TenderDetailModal({
                   </div>
                 </CardContent>
               </Card>
+              </div>
             </TabsContent>
-          </ScrollArea>
+          </div>
         </Tabs>
       </DialogContent>
     </Dialog>
