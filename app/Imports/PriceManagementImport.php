@@ -32,6 +32,7 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
         }
 
         try {
+            // Resolve UOM
             $uomId = null;
             if (!empty($data['uom'])) {
                 $uom = UnitOfMeasure::where('Code', $data['uom'])->first();
@@ -42,19 +43,10 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
                 }
             }
 
-
-            PriceManagement::where('ItemID', $item->Id)
-                ->where('ItemCode', $itemCode)
-                ->where('DeletedOn', null)
-                ->update([
-                    'DeletedOn' => now(),
-                    'DeletedBy' => auth()->id() ?? 1,
-            ]);
-
-
-            $created = PriceManagement::create([
-                'PriceID'       => $data['priceid'] ?? null,
+            // Normalize incoming row
+            $newData = [
                 'ItemID'        => $item->Id,
+                'ItemCode'      => $itemCode,
                 'UOM'           => $uomId,
                 'ActualPrice'   => (float) $actualPrice,
                 'CurrencyCode'  => $data['currencycode'] ?? 'KES',
@@ -62,21 +54,60 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
                 'EffectiveTo'   => $this->parseDate($data['effectiveto'] ?? null),
                 'IsDefault'     => isset($data['isdefault']) ? (int) $data['isdefault'] : 0,
                 'Source'        => $data['source'] ?? null,
-                'CreatedBy'     => auth()->id() ?? 1,
-                'CreatedOn'     => now(),
-                'ModifiedBy'    => auth()->id() ?? 1,
-                'ModifiedOn'    => now(),
-                'ItemCode'      => $itemCode,
+            ];
+
+            // Find the latest active price for this item
+            $latest = PriceManagement::where('ItemID', $item->Id)
+                ->whereNull('DeletedOn')
+                ->latest('CreatedOn')
+                ->first();
+
+            if ($latest) {
+                // Compare all business fields
+                $hasChanges = false;
+                foreach ($newData as $field => $val) {
+                    if (($latest->$field ?? null) != ($val ?? null)) {
+                        $hasChanges = true;
+                        break;
+                    }
+                }
+
+                if (!$hasChanges) {
+                    // Nothing changed → skip
+                    Log::info("⏭ No changes for ItemCode: {$itemCode}, skipping");
+                    return;
+                }
+
+                // Soft delete old record
+                $latest->update([
+                    'DeletedOn' => now(),
+                    'DeletedBy' => auth()->id() ?? 1,
+                ]);
+
+                // Reuse PriceID
+                $priceId = $latest->PriceID;
+            } else {
+                $priceId = $data['priceid'] ?? null;
+            }
+
+            // Create new price record
+            $created = PriceManagement::create(array_merge($newData, [
+                'PriceID'    => $priceId,
+                'CreatedBy'  => auth()->id() ?? 1,
+                'CreatedOn'  => now(),
+                'ModifiedBy' => auth()->id() ?? 1,
+                'ModifiedOn' => now(),
+            ]));
+
+            // Update item’s active price pointer
+            $item->update([
+                'ItemPrice' => $created->Id,
             ]);
 
-            $item->update([
-    'ItemPrice' => $created->Id
-]);
-
-            Log::info("✅ PriceManagement created successfully", $created->toArray());
+            Log::info("✅ PriceManagement created/updated for ItemCode: {$itemCode}", $created->toArray());
 
         } catch (\Exception $e) {
-            Log::error("❌ Insert failed: " . $e->getMessage(), $data);
+            Log::error("❌ Import failed: " . $e->getMessage(), $data);
         }
     }
 

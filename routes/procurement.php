@@ -221,6 +221,10 @@ Route::namespace('Procurement')->group(function () {
     Route::post('/procurement/rfq-evaluations/store', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
     Route::get('/rfq-suppliers/{rfqId}', [RFQResponseController::class, 'getSuppliers']);
 
+    // Consolidated scoring view and award action
+    Route::get('/rfq-evaluations/consolidated/{rfq}', [RFQEvaluationController::class, 'consolidated'])->name('evaluations.consolidated');
+    Route::post('/rfq-evaluations/{rfq}/award/{supplier}', [RFQEvaluationController::class, 'awardSupplier'])->name('evaluations.award');
+
     //GoodsReceipts
     Route::get('/procurementreceipts', [GoodsReceiptController::class, 'index'])->name('procurementreceipts.index');
     Route::get('/procurementreceipts/create', [GoodsReceiptController::class, 'create'])->name('procurementreceipts.create');

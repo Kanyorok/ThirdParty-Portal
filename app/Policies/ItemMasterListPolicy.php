@@ -36,7 +36,7 @@ class ItemMasterListPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, ItemMasterList $itemMasterList): bool
+    public function update(User $user): bool
     {
         return $user->can(PermissionEnum::MasterListUpdate->value);
     }

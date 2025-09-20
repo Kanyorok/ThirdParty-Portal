@@ -32,7 +32,7 @@
           <td>{{ $leaserenewal->NewEndDate ? \Carbon\Carbon::parse($leaserenewal->NewEndDate)->format('d/m/Y') : '-' }}</td>
           <td>{{ $leaserenewal->paymentFrequency->Description ?? '-' }}</td>
           <td><a href="{{ route('renewlease.show', $leaserenewal->Id) }}"
-                 class="btn btn-sm btn-outline-secondary">View</a>
+                 class="btn btn-sm btn-info">View</a>
               <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-warning">Edit</a>
               <form action="{{ route('renewlease.destroy', $leaserenewal->Id) }}" method="POST" class="d-inline">
                   @csrf

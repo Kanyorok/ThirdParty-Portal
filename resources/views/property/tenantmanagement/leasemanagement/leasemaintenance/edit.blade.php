@@ -24,7 +24,7 @@
           <!-- Tenant -->
          <div class="col-md-4">
             <label class="form-label">Tenant</label>
-            <input type="text" class="form-control" value="{{ $newlease->tenant->TenantName ?? '' }}" disabled>
+            <input type="text" class="form-control" value="{{ $newlease->tenant->thirdParty->TradingName ?? '' }}" disabled>
             <input type="hidden" name="Tenant" value="{{ $newlease->Tenant }}">
           </div>
 
@@ -90,32 +90,32 @@
           <!-- Financials -->
           <div class="row g-3 mb-3">
             <div class="col-md-4">
-              <label class="form-label">Monthly Rent (KES)</label>
+              <label class="form-label">Monthly Rent</label>
               <input type="number" name="MonthlyRent" class="form-control"
                      value="{{ old('MonthlyRent', $newlease->MonthlyRent) }}">
             </div>
             <div class="col-md-4">
-              <label class="form-label">Deposit (KES)</label>
+              <label class="form-label">Deposit</label>
               <input type="number" name="Deposit" class="form-control"
                      value="{{ old('Deposit', $newlease->Deposit) }}">
             </div>
             <div class="col-md-4">
-              <label class="form-label">Service Charge (KES)</label>
+              <label class="form-label">Service Charge</label>
               <input type="number" name="ServiceCharge" class="form-control"
                      value="{{ old('ServiceCharge', $newlease->ServiceCharge) }}">
             </div>
             <div class="col-md-4">
-              <label class="form-label">Parking Fee (KES)</label>
+              <label class="form-label">Parking Fee</label>
               <input type="number" name="ParkingFee" class="form-control"
                      value="{{ old('ParkingFee', $newlease->ParkingFee) }}">
             </div>
             <div class="col-md-4">
-              <label class="form-label">Other Charges (KES)</label>
+              <label class="form-label">Other Charges</label>
               <input type="number" name="OtherCharges" class="form-control"
                      value="{{ old('OtherCharges', $newlease->OtherCharges) }}">
             </div>
             <div class="col-md-4">
-              <label class="form-label">Due Day<span class="text-danger">*</span></label>
+              <label class="form-label">Due Date<span class="text-danger">*</span></label>
               <input type="number" name="DueDay" class="form-control"
                      min="1" max="28"
                      value="{{ old('DueDay', $newlease->DueDay) }}">
@@ -155,9 +155,9 @@
 
   <script>
     const routes = {
-      getBlocks: "{{ route('getblockbyproperty', ['PropertyId' => '__ID__']) }}",
-      getFloors: "{{ route('getfloorbyblock', ['BlockId' => '__ID__']) }}",
-      getUnits: "{{ route('getunitbyfloor', ['FloorId' => '__ID__']) }}"
+      getBlocks: "{{ route('getblockbyproperty.lease', ['PropertyId' => '__ID__']) }}",
+      getFloors: "{{ route('getfloorbyblock.lease', ['BlockId' => '__ID__']) }}",
+      getUnits: "{{ route('getunitbyfloor.lease', ['FloorId' => '__ID__']) }}"
     };
 
     document.addEventListener('DOMContentLoaded', function () {

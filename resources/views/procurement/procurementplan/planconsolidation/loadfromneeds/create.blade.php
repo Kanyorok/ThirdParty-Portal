@@ -127,11 +127,10 @@
                             <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
                             <td>{{ $need->Justification }}</td>
                             <td>
-                                <select name="budget_line_id[{{ $need->Id }}]" class="form-select" required>
-                                    <option selected disabled>Select Budget Line</option>
+                                <select name="budget_line_id[{{ $need->Id }}]" class="form-select budget-select" required {{ old('selected_needs') && !in_array($need->Id, old('selected_needs', [])) ? 'disabled' : '' }}>
+                                    <option disabled {{ old('budget_line_id.'.$need->Id) ? '' : 'selected' }}>Select Budget Line</option>
                                     @foreach($budgetLines as $budgetLine)
-                                        <option
-                                            value="{{ $budgetLine->Id }}">{{ $budgetLine->LineName }}</option>
+                                        <option value="{{ $budgetLine->Id }}" @selected(old('budget_line_id.'.$need->Id) == $budgetLine->Id)>{{ $budgetLine->LineName }}</option>
                                     @endforeach
                                 </select>
                             </td>
@@ -207,6 +206,7 @@
         const checkboxes = document.querySelectorAll('.need-checkbox');
         const selectAll = document.getElementById('selectAll');
         const submitBtn = document.getElementById('submitBtn');
+        const getBudgetSelectFor = (cb) => cb.closest('tr')?.querySelector('.budget-select');
 
         if (!selectAll || checkboxes.length === 0) return;
 
@@ -215,7 +215,14 @@
         selectAll.parentNode.replaceChild(newSelectAll, selectAll);
 
         newSelectAll.addEventListener('change', function () {
-            checkboxes.forEach(cb => cb.checked = newSelectAll.checked);
+            checkboxes.forEach(cb => {
+                cb.checked = newSelectAll.checked;
+                const select = getBudgetSelectFor(cb);
+                if (select) {
+                    select.disabled = !cb.checked;
+                    if (!cb.checked) select.selectedIndex = 0;
+                }
+            });
             toggleSubmitButton();
         });
 
@@ -225,6 +232,11 @@
                     newSelectAll.checked = false;
                 } else if (Array.from(checkboxes).every(c => c.checked)) {
                     newSelectAll.checked = true;
+                }
+                const select = getBudgetSelectFor(cb);
+                if (select) {
+                    select.disabled = !cb.checked;
+                    if (!cb.checked) select.selectedIndex = 0;
                 }
                 toggleSubmitButton();
             });
@@ -237,6 +249,14 @@
             }
         }
 
+        // Initialize selects on load
+        checkboxes.forEach(cb => {
+            const select = getBudgetSelectFor(cb);
+            if (select) {
+                select.disabled = !cb.checked;
+                if (!cb.checked) select.selectedIndex = 0;
+            }
+        });
         toggleSubmitButton();
     }
 
