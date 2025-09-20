@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { getBaseUrl } from "@/lib/api-base";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Button } from "@/components/common/button";
 
@@ -11,7 +12,7 @@ export default function ApiDebugTest() {
   const testTendersApi = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/tenders', {
+      const response = await fetch(`${getBaseUrl()}/api/tenders`, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ export default function ApiDebugTest() {
   const testInvitationsApi = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/tender-invitations?third_party_id=1', {
+      const response = await fetch(`${getBaseUrl()}/api/tender-invitations?third_party_id=1`, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -65,7 +66,7 @@ export default function ApiDebugTest() {
   const testDebugApi = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/debug/tender-invitations?third_party_id=1', {
+      const response = await fetch(`${getBaseUrl()}/api/debug/tender-invitations?third_party_id=1`, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

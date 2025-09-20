@@ -29,6 +29,7 @@ import { Input } from "@/components/common/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/common/select";
 import { Separator } from '@/components/common/separator';
 import TenderDetailModal from "./tenders/tender-detail-modal";
+import { getBaseUrl } from "@/lib/api-base";
 
 interface Tender {
     id: number;              // Database Id (t_Tenders.Id)
@@ -119,7 +120,7 @@ interface TenderWithInvitation extends Tender {
     invitation?: TenderInvitation;
 }
 
-const BASE_URL = 'http://localhost:8000/api';
+const API_ROOT = `${getBaseUrl()}/api`;
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -364,7 +365,7 @@ export default function TendersPage() {
             }
 
             // Build the final URL string
-            const tenderUrl = `${BASE_URL}/tenders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+            const tenderUrl = `${API_ROOT}/tenders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
             // Fetch both tenders and invitations simultaneously
             const [tendersResponse, invitationsResponse] = await Promise.allSettled([

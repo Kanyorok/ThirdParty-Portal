@@ -26,7 +26,7 @@ export interface UserNavUIProps extends React.HTMLAttributes<HTMLDivElement> {
     onLogout: () => void
     onOpenChange: (open: boolean) => void
 }
-const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://127.0.0.1:8000"
+const baseUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
 const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "your-dev-secret-key-change-in-production"
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -68,6 +68,9 @@ export const authOptions: NextAuthOptions = {
                 let text: string = ""
                 try {
                     console.log('🔐 AUTH DEBUG - Attempting ERP authentication...');
+                    if (!baseUrl) {
+                        throw new Error("CONFIG: NEXT_PUBLIC_EXTERNAL_API_URL is not set")
+                    }
                     res = await fetch(`${baseUrl}/api/third-party-auth/login`, {
                         method: "POST",
                         headers: {
