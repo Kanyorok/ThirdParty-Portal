@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Finance;
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceInvoice;
 use App\Models\ThirdParty\ThirdParties;
+use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,10 @@ class ReceiptsPostingController extends Controller
     }
 
     public function create(){
-        return view('finance.accountsreceivable.receiptsposting.create');
+        $paymentMethods = CodeDetail::where('CodeID', 'PaymentMethod')
+            ->orderBy('Description')
+            ->get(['ID','Value','Description']);
+        return view('finance.accountsreceivable.receiptsposting.create', compact('paymentMethods'));
     }
 
     public function show($id){

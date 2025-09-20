@@ -135,10 +135,12 @@
                                         <div class="col-md-4">
                                             <label for="paymentMethod" class="form-label">Payment Method</label>
                                             <select class="form-select" id="paymentMethod" name="PaymentMethod">
-                                                <option value="Bank Transfer">Bank Transfer</option>
-                                                <option value="Cash">Cash</option>
-                                                <option value="Cheque">Cheque</option>
-                                                <option value="Mobile Money">Mobile Money</option>
+                                              <option value="">-- select --</option>
+                                              @foreach(($paymentMethods ?? []) as $pm)
+                                                <option value="{{ $pm->Value }}" {{ old('PaymentMethod')===$pm->Value ? 'selected' : '' }}>
+                                                  {{ $pm->Description }}
+                                                </option>
+                                              @endforeach
                                             </select>
                                         </div>
 
