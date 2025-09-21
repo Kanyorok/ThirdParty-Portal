@@ -11,9 +11,14 @@
                 <strong>Your Role:</strong> {{ $userRole }}
             </p>
         </div>
-        <a href="{{ route('evaluationdashboard.index') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('tender-criteria', $tender->Id) }}" class="btn btn-primary">
+                <i class="fas fa-sliders-h"></i> Configure Sections & Criteria
+            </a>
+            <a href="{{ route('evaluationdashboard.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -90,14 +95,18 @@
                                     <div class="small">
                                         <i class="fas fa-list"></i> {{ $section->criteria->count() }} criteria
                                         @if($section->criteria->count() > 0)
-                                            <div class="mt-1">
-                                                @foreach($section->criteria->take(3) as $criteria)
-                                                    <span class="badge bg-light text-dark me-1">{{ $criteria->CriteriaName }}</span>
-                                                @endforeach
-                                                @if($section->criteria->count() > 3)
-                                                    <span class="text-muted">+{{ $section->criteria->count() - 3 }} more</span>
-                                                @endif
+                                            <div class="mt-2">
+                                                <ul class="list-unstyled mb-0">
+                                                    @foreach($section->criteria as $criteria)
+                                                        <li class="mb-1">
+                                                            <i class="fas fa-check text-success me-1"></i>
+                                                            {{ $criteria->CriteriaName }}
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
                                             </div>
+                                        @else
+                                            <div class="text-muted mt-1">No criteria configured</div>
                                         @endif
                                     </div>
                                 </div>

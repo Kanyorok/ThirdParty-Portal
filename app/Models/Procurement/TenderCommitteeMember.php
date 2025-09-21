@@ -55,11 +55,11 @@ class TenderCommitteeMember extends Model
         'DeletedOn',
     ];
 
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'Id';
 
     public function committee()
     {
-        return $this->belongsTo(TenderCommittee::class, 'TenderCommitteeID', 'Id');
+        return $this->belongsTo(TenderCommittee::class, 'CommitteeID', 'Id');
     }
 
     public function createdBy()

@@ -61,10 +61,10 @@
                                     <div class="card-body">
                                         <h6><i class="fas fa-link"></i> Useful Links</h6>
                                         <div class="d-grid gap-2">
-                                            <a href="#" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ route('memberresponse.index') }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-reply"></i> Member Response
                                             </a>
-                                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                            <a href="{{ route('tendercommittee.index') }}" class="btn btn-sm btn-outline-secondary">
                                                 <i class="fas fa-users"></i> Committee Status
                                             </a>
                                         </div>

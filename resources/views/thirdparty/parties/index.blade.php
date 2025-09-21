@@ -734,6 +734,7 @@
                                 </th>
                                 <th>ID</th>
                                 <th>Company Name</th>
+                                <th>Trading Name</th>
                                 <th>Country</th>
                                 <th>Third Party Type</th>
                                 <th>Approval Status</th>
@@ -814,6 +815,11 @@
                 {
                     data: 'ThirdPartyName',
                     name: 'ThirdPartyName'
+                },
+                {
+                    data: 'TradingName',
+                    name: 'TradingName',
+                    render: function(data){ return data || 'N/A'; }
                 },
                 {
                     data: 'Country',

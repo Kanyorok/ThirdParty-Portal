@@ -58,10 +58,9 @@ class ModuleSeeder extends Seeder
         $existing = DB::table('t_Modules')->pluck('ModuleID');
         $incomingIds = $incoming->pluck('ModuleID');
 
-        // Delete modules that are not in seeder anymore (cascade: permissions and role_has_permissions)
-        $toDeleteModuleIds = DB::table('t_Modules')
-            ->whereNotIn('ModuleID', $incomingIds)
-            ->pluck('ModuleID');
+        // SAFETY: Avoid deleting modules to prevent breaking FKs/permissions in live DB.
+        // Instead, we only upsert the full canonical list; stale rows can be handled via a separate maintenance task.
+        $toDeleteModuleIds = collect();
 
         if ($toDeleteModuleIds->isNotEmpty()) {
             $permTable = config('permission.table_names.permissions', 't_Permissions');
@@ -96,7 +95,7 @@ class ModuleSeeder extends Seeder
                 }
             }
 
-            // Align category master references before removing modules
+            // Repoint dependent FK references before removing modules
             if (Schema::hasTable('t_CategoryMaster')) {
                 $fallbackModuleId = DB::table('t_Modules')
                     ->whereIn('ModuleID', $incomingIds)
@@ -108,6 +107,34 @@ class ModuleSeeder extends Seeder
                     ->whereIn('Code', $delIds)
                     ->update(['Code' => $fallbackModuleId]);
             }
+                }
+            }
+
+            // Finance: repoint ModuleID FK in finance tables before delete
+            if (Schema::hasTable('t_FinanceModuleTransactions')) {
+                $fallbackModuleId = DB::table('t_Modules')
+                    ->whereIn('ModuleID', $incomingIds)
+                    ->orderBy('ModuleID')
+                    ->value('ModuleID');
+                if ($fallbackModuleId) {
+                    foreach ($toDeleteModuleIds->chunk(500) as $delIds) {
+                        DB::table('t_FinanceModuleTransactions')
+                            ->whereIn('ModuleID', $delIds)
+                            ->update(['ModuleID' => $fallbackModuleId]);
+                    }
+                }
+            }
+            if (Schema::hasTable('t_FinanceGlTransactionsMapping')) {
+                $fallbackModuleId = DB::table('t_Modules')
+                    ->whereIn('ModuleID', $incomingIds)
+                    ->orderBy('ModuleID')
+                    ->value('ModuleID');
+                if ($fallbackModuleId) {
+                    foreach ($toDeleteModuleIds->chunk(500) as $delIds) {
+                        DB::table('t_FinanceGlTransactionsMapping')
+                            ->whereIn('ModuleID', $delIds)
+                            ->update(['ModuleID' => $fallbackModuleId]);
+                    }
                 }
             }
 
@@ -235,6 +262,9 @@ class ModuleSeeder extends Seeder
 
             // Evaluation
             ['ModuleID' => 305400, 'Name' => 'Evaluation', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
+            //['ModuleID' => 305410, 'Name' => 'Appoint Committee', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'tendercommittee.index'],
+            //['ModuleID' => 305430, 'Name' => 'Assign Roles', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'assignrole.index'],
+            ['ModuleID' => 305440, 'Name' => 'Evaluators Dashboard', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'evaluationdashboard.index'],
             ['ModuleID' => 305450, 'Name' => 'Consolidated Scores', 'Icon' => null, 'Description' => '', 'ParentID' => 305400, 'Route' => 'bidscores.index'],
 
             ['ModuleID' => 306000, 'Name' => 'Quotations', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
@@ -267,17 +297,7 @@ class ModuleSeeder extends Seeder
 
         ]);
 
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
     protected function _inventory(bool $fresh): Collection
@@ -320,17 +340,7 @@ class ModuleSeeder extends Seeder
 
         ]);
 
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
     protected function _budgetline(bool $fresh): Collection
@@ -462,17 +472,7 @@ class ModuleSeeder extends Seeder
             /* ['ModuleID' => 50510, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' =>],
              ['ModuleID' => 50520, 'Name' => 'Analytics', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' => 'propertyanalytics.index'],*/
         ]);
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
 
@@ -534,17 +534,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'fleet-reports.index'],
         ]);
 
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
     protected function _documentManagement(bool $fresh): Collection
@@ -560,17 +550,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);
 
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
     protected function _legal(bool $fresh): Collection
@@ -597,17 +577,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 899000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal-reports.index'],
         ]);
 
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
     protected function _insurance(bool $fresh): Collection
@@ -651,17 +621,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
         ]);
 
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
     protected function _finance(bool $fresh): Collection
@@ -751,17 +711,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1199000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'finance-reports.index', 'ParentID' => 1100000],
         ]);
 
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
     protected function _hrm(bool $fresh): Collection
@@ -777,17 +727,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1003000, 'Name' => 'Committees', 'Icon' => '<i class="fas fa-building"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => 'tendercommittee.index'],
             ['ModuleID' => 1099000, 'Name' => 'Financial Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => null],
         ]);
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
 
@@ -802,17 +742,7 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 98004000, 'Name' => 'Code Details', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.lists'],
             ['ModuleID' => 98005000, 'Name' => 'Integrations', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.integrations'],
         ]);
-        if ($fresh) {
-            $data = $values;
-        } else {
-            $data = collect();
-            foreach ($values as $value) {
-                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
-                    $data->add($value);
-                }
-            }
-        }
-        return $data;
+        return $values;
     }
 
     protected function _myAccount(bool $fresh): Collection

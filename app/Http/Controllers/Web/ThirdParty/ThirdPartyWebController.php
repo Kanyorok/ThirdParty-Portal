@@ -29,6 +29,7 @@ class ThirdPartyWebController extends Controller
                 ->select([
                     'Id',
                     'ThirdPartyName',
+                    'TradingName',
                     'Country',
                     'ThirdPartyType', // legacy
                     'ApprovalStatus',
