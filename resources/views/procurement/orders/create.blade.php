@@ -54,7 +54,7 @@
                             <label class="form-check-label" for="srcRFQ">RFQ</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="SourceType" id="srcTender" value="TENDER" disabled>
+                            <input class="form-check-input" type="radio" name="SourceType" id="srcTender" value="TENDER">
                             <label class="form-check-label" for="srcTender">Tender</label>
                         </div>
                     </div>
@@ -96,6 +96,28 @@
                     @error('pODate')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
+                </div>
+            </div>
+
+            <!-- Tender Selection -->
+            <div class="row mb-4 source-tender d-none">
+                <div class="col-md-4">
+                    <label>Tender No <span class="text-danger">*</span></label>
+                    <select class="form-control" id="tenderNo">
+                        <option selected disabled>Select Tender</option>
+                        @foreach(($awardedTenders ?? []) as $t)
+                            @php $disabled = in_array($t->Id, ($convertedTenderIds ?? [])) ? 'disabled' : ''; @endphp
+                            <option value="{{ $t->TenderNo }}" data-tender-id="{{ $t->Id }}" data-supplier-id="{{ $t->SupplierId }}" {{ $disabled }}>{{ $t->TenderNo }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label>LPO Number <span class="text-danger">*</span></label>
+                    <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
+                </div>
+                <div class="col-md-4">
+                    <label>Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate') }}" required/>
                 </div>
             </div>
 
@@ -268,6 +290,7 @@
             const mode = $('input[name="SourceType"]:checked').val();
             if (mode === 'RFQ') {
                 $('.source-rfq').removeClass('d-none');
+                $('.source-tender').addClass('d-none');
                 $('#supplier').prop('disabled', true); // auto in RFQ
                 $('.direct-only').addClass('d-none');
                 // Load awarded RFQs live to ensure latest awards appear
@@ -299,8 +322,28 @@
                         // On failure, leave whatever was server-rendered
                         // and do not block the user
                     });
+            } else if (mode === 'TENDER') {
+                $('.source-rfq').addClass('d-none');
+                $('.source-tender').removeClass('d-none');
+                $('#supplier').prop('disabled', true);
+                $('.direct-only').addClass('d-none');
+                const $ref = $('#tenderNo');
+                $ref.empty().append('<option selected disabled>Loading awarded tenders...</option>');
+                fetch('/procurement/purchase-order/awarded-tenders')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $ref.empty().append('<option selected disabled>Select Tender</option>');
+                        if (!success) return;
+                        const converted = (window.convertedTenderIds || []);
+                        (data || []).forEach(t => {
+                            const dis = converted.includes(t.Id) ? 'disabled' : '';
+                            $ref.append(`<option value="${t.TenderNo}" data-tender-id="${t.Id}" data-supplier-id="${t.SupplierId}" ${dis}>${t.TenderNo}</option>`);
+                        });
+                    })
+                    .catch(() => {});
             } else {
                 $('.source-rfq').addClass('d-none');
+                $('.source-tender').addClass('d-none');
                 $('#supplier').prop('disabled', false);
                 $('#SourceId').val('');
                 $('.direct-only').removeClass('d-none');
@@ -395,6 +438,81 @@
                     });
                 })
                 .catch(console.error);
+        });
+
+        // Tender selection: auto-fill supplier, set SourceId, fetch items
+        $(document).on('change', '#tenderNo', function () {
+            const tenderNo = $(this).val();
+            const opt = $(this).find('option:selected');
+            const tenderId = parseInt(opt.data('tender-id'));
+            const supplierId = parseInt(opt.data('supplier-id'));
+            if (!isNaN(tenderId)) {
+                $('#SourceId').val(tenderId);
+            } else {
+                $('#SourceId').val('');
+            }
+
+            const $supplier = $('#supplier');
+            $supplier.empty().append('<option selected disabled>Select supplier</option>');
+
+            if (!isNaN(supplierId)) {
+                // Try fetch supplier list to resolve display name/address
+                fetch('/procurement/purchaseOrder/getSuppliers')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        let name = `Supplier #${supplierId}`;
+                        let addr = '';
+                        if (success && Array.isArray(data)) {
+                            const found = data.find(s => parseInt(s.SupplierId) === supplierId || parseInt(s.Id) === supplierId);
+                            if (found) {
+                                name = found.SupplierName || found.Name || name;
+                                addr = found.Address || '';
+                            }
+                        }
+                        $supplier.append(`<option value="${supplierId}" selected data-address="${addr}">${name}</option>`);
+                        $supplier.prop('disabled', true);
+                        $('input[name="address"]').val(addr);
+                    })
+                    .catch(() => {
+                        $supplier.append(`<option value="${supplierId}" selected>Supplier #${supplierId}</option>`);
+                        $supplier.prop('disabled', true);
+                    });
+            }
+
+            if (!isNaN(tenderId)) {
+                fetch(`/procurement/purchase-order/tender-items/${tenderId}?supplierId=${supplierId || ''}`)
+                    .then(r => r.json())
+                    .then(({items}) => {
+                        if (!items || !items.length) return;
+                        const $tbody = $('#item-rows');
+                        $tbody.empty();
+                        items.forEach((it, idx) => {
+                            const rowNo = idx + 1;
+                            const html = `
+                                <tr>
+                                    <td class="line-no">${rowNo}.</td>
+                                    <td class="text-start">
+                                        <select class="form-select form-select-sm itemCode" name="itemCode[]" required>
+                                            <option value="${it.itemCode}" selected>${it.itemName}</option>
+                                        </select>
+                                    </td>
+                                    <td class="text-start">
+                                        <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="2" readonly>${it.itemName}</textarea>
+                                    </td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" value="${it.quantity}" required></td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" value="${it.unitPrice || 0}" required></td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" step="any"></td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly></td>
+                                    <td class="text-center align-middle">
+                                        <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
+                                    </td>
+                                </tr>`;
+                            $tbody.append(html);
+                        });
+                    })
+                    .catch(console.error);
+            }
         });
 
         // Load item categories for direct helper

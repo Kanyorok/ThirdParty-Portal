@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Core\CodeDetail;
 use App\Models\ThirdParty\SupplierCategory;
+use Illuminate\Support\Facades\Log;
 
 class PurchaseOrderController extends Controller
 {
@@ -42,6 +43,8 @@ class PurchaseOrderController extends Controller
             'prequalifiedSuppliersByCategory',
             'getRFQItems',
             'getAwardedRFQs',
+            'getAwardedTenders',
+            'getTenderItems',
         ]);
 //        $this->authorizeResource(Order::class);
     }
@@ -201,6 +204,24 @@ class PurchaseOrderController extends Controller
                 ->pluck('SourceId')
                 ->toArray();
 
+            // Tenders that have awards (t_TenderAwards) and eligible for conversion
+            $awardedTenders = collect();
+            try {
+                $awardedTenders = DB::table('t_TenderAwards as ta')
+                    ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                    ->select('t.Id', 't.TenderNo', DB::raw('ta.WinningSupplierID as SupplierId'))
+                    ->get();
+            } catch (\Throwable $e) {
+                \Log::warning('Skipping TenderAwards join for awarded tenders', ['error' => $e->getMessage()]);
+                $awardedTenders = collect();
+            }
+
+            $convertedTenderIds = DB::table('t_Orders')
+                ->where('SourceType', 'TENDER')
+                ->whereNotNull('SourceId')
+                ->pluck('SourceId')
+                ->toArray();
+
             return view('procurement.orders.create', [
                 'itemTypes' => $itemTypes ?? [],
                 'rfqs' => $uniqueRfqs ?? [],
@@ -209,6 +230,8 @@ class PurchaseOrderController extends Controller
                 'paymentTerms' => $paymentTerms ?? [], // Pass payment terms to view
                 'awardedRfqs' => $awardedRfqs ?? [],
                 'convertedRFQIds' => $convertedRFQIds ?? [],
+                'awardedTenders' => $awardedTenders ?? [],
+                'convertedTenderIds' => $convertedTenderIds ?? [],
             ]);
         } catch (\Exception $e) {
             \Log::error('Data fetch failed: ' . $e->getMessage());
@@ -582,6 +605,47 @@ public function getRFQItems($rfqId): JsonResponse
         return response()->json(['items' => []], 200);
     }
 }
+
+    public function getAwardedTenders(): JsonResponse
+    {
+        try {
+            $rows = DB::table('t_TenderAwards as ta')
+                ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                ->select('t.Id', 't.TenderNo', DB::raw('ta.WinningSupplierID as SupplierId'))
+                ->get();
+            return response()->json(['success' => true, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            \Log::error('getAwardedTenders failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'data' => []], 200);
+        }
+    }
+
+    public function getTenderItems($tenderId): JsonResponse
+    {
+        try {
+            $supplierId = (int) request()->query('supplierId');
+            // Use tender items definition
+            $items = DB::table('t_TenderItems as ti')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'ti.ItemID')
+                ->where('ti.TenderID', (int) $tenderId)
+                ->selectRaw('COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ti.ManualItemDescription) as itemName, COALESCE(it.ItemType, \'\') as itemType, COALESCE(ti.QtyToTender, ti.PlannedQty) as quantity, COALESCE(it.ItemPrice, 0) as unitPrice')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'itemCode' => (int) $row->itemCode,
+                        'itemName' => $row->itemName,
+                        'itemType' => $row->itemType,
+                        'quantity' => (float) $row->quantity,
+                        'unitPrice' => (float) $row->unitPrice,
+                    ];
+                });
+
+            return response()->json(['items' => $items]);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to fetch Tender items', ['tenderId' => $tenderId, 'error' => $e->getMessage()]);
+            return response()->json(['items' => []], 200);
+        }
+    }
 
 public function prequalifiedSuppliersByCategory($categoryId): JsonResponse
 {
