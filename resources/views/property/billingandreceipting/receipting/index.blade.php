@@ -39,7 +39,7 @@
                   @csrf
                   @method('DELETE')
                   <button type="submit" class="btn btn-sm btn-danger"
-                    onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete
+                    onclick="return confirm('Are you sure you want to delete this lease schedule?');">Return 
                   </button>
                 </form>
               </td>

@@ -200,6 +200,9 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('maintenancerequest', [PropertyMaintenanceRequestController::class, 'index'])->name('maintenancerequest.index');
     Route::get('maintenancerequest/create', [PropertyMaintenanceRequestController::class, 'create'])->name('maintenancerequest.create');
     Route::post('maintenancerequest', [PropertyMaintenanceRequestController::class, 'store'])->name('maintenancerequest.store');
+    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyMaintenanceRequestController::class, 'getBlockByProperty'])->name('getblockbyproperty.maintenance');
+    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyMaintenanceRequestController::class, 'getFloorByBlock'])->name('getfloorbyblock.maintenance');
+    Route::get('/propertyaddlease/Units/{FloorId}', [PropertyMaintenanceRequestController::class, 'getUnitByFloor'])->name('getunitbyfloor.maintenance');
     Route::get('maintenancerequest/show/{Id}', [PropertyMaintenanceRequestController::class, 'show'])->name('maintenancerequest.show');
     Route::get('maintenancerequest/edit/{Id}', [PropertyMaintenanceRequestController::class, 'edit'])->name('maintenancerequest.edit');
     Route::put('maintenancerequest/edit/{Id}', [PropertyMaintenanceRequestController::class, 'update'])->name('maintenancerequest.update');
