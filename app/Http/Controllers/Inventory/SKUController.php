@@ -47,6 +47,7 @@ class SKUController extends Controller
         $this->authorize('create', StockItem::class);
 
         $data = $request->validated();
+        $data['Status'] = 1; 
 
         try {
             $skuCode = $this->stockItemService->create($data);
@@ -56,12 +57,16 @@ class SKUController extends Controller
         }
     }
 
+
     public function show($id)
     {
         $item = StockItem::with(['item', 'store', 'uom'])->findOrFail($id);
+        $categories = ItemCategories::whereNull('ParentId')
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get();
         $this->authorize('view', $item);
 
-        return view('inventory.itemmaster.sku.show', compact('item'));
+        return view('inventory.itemmaster.sku.show', compact('item', 'categories'));
     }
 
     public function edit($id)
@@ -104,7 +109,7 @@ class SKUController extends Controller
     public function destroy($id)
     {
         $item = StockItem::findOrFail($id);
-        $this->authorize('delete', $item);
+        $this->authorize('destroy', $item);
 
         try {
             $this->stockItemService->delete($item);
@@ -135,6 +140,8 @@ class SKUController extends Controller
             ->get(['Id', 'ItemName']);
         return response()->json($items);
     }
+
+    
 
     public function getItemDetails(Request $request)
     {
