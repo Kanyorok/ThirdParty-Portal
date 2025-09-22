@@ -59,9 +59,9 @@
                 <div class="col-md-6">
                     <dl class="row">
                         <dt class="col-sm-6">Opening Date:</dt>
-                        <dd class="col-sm-6">{{ $tender->OpeningDate ? \Carbon\Carbon::parse($tender->OpeningDate)->format('d M Y, H:i') : 'Not set' }}</dd>
+                        <dd class="col-sm-6">{{ $tender->OpeningDate ? \Carbon\Carbon::parse($tender->OpeningDate)->format('d/m/Y H:i') : 'Not set' }}</dd>
                         <dt class="col-sm-6">Submission Deadline:</dt>
-                        <dd class="col-sm-6">{{ $tender->SubmissionDeadline ? \Carbon\Carbon::parse($tender->SubmissionDeadline)->format('d M Y, H:i') : 'Not set' }}</dd>
+                        <dd class="col-sm-6">{{ $tender->SubmissionDeadline ? \Carbon\Carbon::parse($tender->SubmissionDeadline)->format('d/m/Y H:i') : 'Not set' }}</dd>
                         <dt class="col-sm-6">Responsive Bids:</dt>
                         <dd class="col-sm-6">
                             <span class="badge bg-info">{{ $responsiveBids->count() }} bids</span>
@@ -196,7 +196,7 @@
                                         <div class="small">
                                             <div><strong>Source:</strong> {{ ucfirst($bid->SubmissionSource ?? 'manual') }}</div>
                                             @if($bid->ReceivedAt)
-                                                <div><strong>Received:</strong> {{ \Carbon\Carbon::parse($bid->ReceivedAt)->format('d M Y, H:i') }}</div>
+                                                <div><strong>Received:</strong> {{ \Carbon\Carbon::parse($bid->ReceivedAt)->format('d/m/Y H:i') }}</div>
                                             @endif
                                             @if($bid->DeliveryPeriod)
                                                 <div><strong>Delivery:</strong> {{ $bid->DeliveryPeriod }} days</div>
