@@ -31,7 +31,7 @@ class AddEmployeeRequest extends FormRequest
             'FirstName' => ['required', 'string', 'max:250'],
             'MiddleName' => ['nullable', 'string', 'max:250'],
             'LastName' => ['required', 'string', 'max:250'],
-            'Phone' => ['required', (new Phone)->country('KE')],
+            'Phone' => ['required'],// (new Phone)->country('KE')],
             'Email' => ['required', Rule::email()
                 ->rfcCompliant(strict: false)
                 ->validateMxRecord()
@@ -126,7 +126,7 @@ class AddEmployeeRequest extends FormRequest
 
     public function getPhoneNumber(): string
     {
-        $phone = (new PhoneNumber($this->validated('Phone'), 'KE'))->formatE164();
+        $phone = '';//(new PhoneNumber($this->validated('Phone'), 'KE'))->formatE164();
         if (User::where('Phone', $phone)->exists() || Employee::where('Phone', $phone)->exists()) {
             throw ValidationException::withMessages(['Phone' => 'phone already exists']);
         }

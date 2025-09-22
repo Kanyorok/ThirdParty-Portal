@@ -212,6 +212,7 @@
                         }, 3000)
                     },
                     error: function (request) {
+                        console.log(request);
                         $("#progress-bar").parent().addClass('d-none');
                         formRequest(request, true);
                         saveBtn.prop('disable', false).removeClass('disabled').prop('type', 'submit').html(btnContent);
