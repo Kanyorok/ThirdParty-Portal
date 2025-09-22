@@ -7,7 +7,6 @@
 <div class="container mt-4" style="max-width: 1200px;">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Maintenance Completion</h4>
         <a href="{{ route('workcompletion.create') }}" class="btn btn-success">
             <i class="bi bi-plus-circle"></i> Log Completion
         </a>

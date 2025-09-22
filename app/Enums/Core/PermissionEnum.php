@@ -401,6 +401,7 @@ enum PermissionEnum: string
     case PropertyReceiptUpdate = 'propertyreceipt-update';
     case PropertyReceiptDelete = 'propertyreceipt-delete';
     case PropertyReceiptView = 'propertyreceipt-view';
+    case PropertyReceiptPrint = 'propertyreceipt-print';
 
         //Property Maintenance Request
     case PropertyMaintenanceRequestCreate = 'propertymaintenancerequest-create';
@@ -825,7 +826,7 @@ enum PermissionEnum: string
             [self::PropertyLeaseScheduleCreate,self::PropertyLeaseScheduleUpdate,self::PropertyLeaseScheduleDelete,self::PropertyLeaseScheduleView,self::PropertyLeaseSchedulePrint],
             [self::PropertyLeaseRenewalCreate,self::PropertyLeaseRenewalUpdate,self::PropertyLeaseRenewalDelete,self::PropertyLeaseRenewalView],
             [self::PropertyInvoiceCreate,self::PropertyInvoiceUpdate,self::PropertyInvoiceDelete,self::PropertyInvoiceView],
-            [self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView],
+            [self::PropertyReceiptCreate,self::PropertyReceiptUpdate,self::PropertyReceiptDelete,self::PropertyReceiptView, self::PropertyReceiptPrint],
             [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
             [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
@@ -848,7 +849,7 @@ enum PermissionEnum: string
             [self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView, self::PropertyLeaseSchedulePrint],
             [self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView],
             [self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView],
-            [self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView],
+            [self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint],
             [self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView],
             [self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView],
@@ -1027,7 +1028,7 @@ enum PermissionEnum: string
             self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView, self::PropertyLeaseSchedulePrint,
             self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView,
             self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView,
-            self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView,
+            self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint,
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView,
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView,
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView
@@ -1185,7 +1186,7 @@ enum PermissionEnum: string
             self::PropertyLeaseScheduleCreate, self::PropertyLeaseScheduleUpdate, self::PropertyLeaseScheduleDelete, self::PropertyLeaseScheduleView, self::PropertyLeaseSchedulePrint => 'Property Lease Schedule',
             self::PropertyLeaseRenewalCreate, self::PropertyLeaseRenewalUpdate, self::PropertyLeaseRenewalDelete, self::PropertyLeaseRenewalView => 'Property Lease Renewal',
             self::PropertyInvoiceCreate, self::PropertyInvoiceUpdate, self::PropertyInvoiceDelete, self::PropertyInvoiceView => 'Property Invoice',
-            self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView => 'Property Receipt',
+            self::PropertyReceiptCreate, self::PropertyReceiptUpdate, self::PropertyReceiptDelete, self::PropertyReceiptView, self::PropertyReceiptPrint => 'Property Receipt',
             self::PropertyMaintenanceRequestCreate, self::PropertyMaintenanceRequestUpdate, self::PropertyMaintenanceRequestDelete, self::PropertyMaintenanceRequestView => 'Property Maintenance Request',
             self::PropertyMaintenanceAssignCreate, self::PropertyMaintenanceAssignUpdate, self::PropertyMaintenanceAssignDelete, self::PropertyMaintenanceAssignView => 'Property Maintenance Assign',
             self::PropertyMaintenanceWorkCompletionCreate, self::PropertyMaintenanceWorkCompletionUpdate, self::PropertyMaintenanceWorkCompletionDelete, self::PropertyMaintenanceWorkCompletionView => 'Property Maintenance Work Completion',
