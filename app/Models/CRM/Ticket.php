@@ -9,17 +9,17 @@ use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use App\Models\DMS\Image;
 use App\Services\StaticListsService;
+use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ticket extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
@@ -81,11 +81,6 @@ class Ticket extends Model
     public function assignee(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'Owner', 'OwnerID')->withTrashed();
-    }
-
-    public function watchers(): HasMany
-    {
-        return $this->hasMany(TicketUsers::class, 'TicketID', 'Id');
     }
 
     public function comments(): MorphMany
