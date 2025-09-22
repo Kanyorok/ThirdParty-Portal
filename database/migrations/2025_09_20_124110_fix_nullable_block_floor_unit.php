@@ -34,20 +34,29 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('t_MaintenanceRequest', function (Blueprint $table) {
-            // Roll back: drop foreign keys again
+            // Drop foreign keys first
             $table->dropForeign(['Block']);
             $table->dropForeign(['Floor']);
             $table->dropForeign(['Unit']);
+        });
 
-            // Make them NOT NULL again (original state)
+        // Ensure no NULLs remain before altering columns
+        DB::table('t_MaintenanceRequest')
+            ->whereNull('Block')->update(['Block' => 1]); // <-- use valid Id
+        DB::table('t_MaintenanceRequest')
+            ->whereNull('Floor')->update(['Floor' => 1]);
+        DB::table('t_MaintenanceRequest')
+            ->whereNull('Unit')->update(['Unit' => 1]);
+
+        Schema::table('t_MaintenanceRequest', function (Blueprint $table) {
             $table->unsignedBigInteger('Block')->nullable(false)->change();
             $table->unsignedBigInteger('Floor')->nullable(false)->change();
             $table->unsignedBigInteger('Unit')->nullable(false)->change();
 
-            // Re-apply original foreign keys
             $table->foreign('Block')->references('Id')->on('t_PropertyBlock');
             $table->foreign('Floor')->references('Id')->on('t_PropertyFloor');
             $table->foreign('Unit')->references('Id')->on('t_PropertyUnit');
         });
     }
+
 };
