@@ -114,8 +114,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
-    // Explicit show and approval routes
-    Route::get('purchaseOrder/{id}', [PurchaseOrderController::class, 'show'])->name('purchaseOrder.show');
+    // Explicit show and approval routes (restrict {id} to numeric to avoid catching 'create')
+    Route::get('purchaseOrder/{id}', [PurchaseOrderController::class, 'show'])->whereNumber('id')->name('purchaseOrder.show');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
     Route::get('/purchase-order/rfq-items/{rfqId}', [PurchaseOrderController::class, 'getRFQItems'])->name('purchase-order.rfq-items');
     Route::get('/purchase-order/items/{item}', [PurchaseOrderController::class, 'getItemDetails'])->name('purchase-order.item-details');
