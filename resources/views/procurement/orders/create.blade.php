@@ -218,9 +218,11 @@
     <script>
         // Prepare RFQ responses for JS (for supplier filtering)
         const rfqResponses = @json($rfqResponses);
+        const prefillContract = @json($prefillContract ?? null);
     </script>
 
     <script>
+        @php($itemTypes = collect($itemTypes))
         const itemTypeOptions = `{!! $itemTypes->map(function($type) {
         return "<option value='{$type->Id}'>{$type->TypeName}</option>";
     })->implode('') !!}`;
@@ -251,6 +253,24 @@
             });
             // Clear address field
             $('input[name="address"]').val('');
+        });
+
+        // If coming from contract, preselect reference & supplier
+        $(function(){
+            if (prefillContract && prefillContract.ref) {
+                const $ref = $('#refNo');
+                if ($ref.length) {
+                    $ref.val(prefillContract.ref).trigger('change');
+                    setTimeout(function(){
+                        if (prefillContract.supplierId) {
+                            $('#supplier').val(prefillContract.supplierId).trigger('change');
+                        }
+                        if (prefillContract.address) {
+                            $('input[name="address"]').val(prefillContract.address);
+                        }
+                    }, 250);
+                }
+            }
         });
 
         // Autopopulate address when supplier is selected (no AJAX needed)

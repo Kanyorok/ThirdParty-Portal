@@ -13,6 +13,7 @@ use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Orders\OrderService;
 use App\Services\Procurement\RFQ\RFQService;
+use App\Models\Procurement\RFQResponse;
 use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -115,7 +116,7 @@ class PurchaseOrderController extends Controller
             // dd($details);
             return view('procurement.orders.index', compact('details'));
         } catch (\Exception $e) {
-            Log::error('Create page failed: ' . $e->getMessage());
+            \Log::error('Create page failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
         }
 //        return view("procurement.orders.index");
@@ -127,12 +128,63 @@ class PurchaseOrderController extends Controller
      public function create()
     {
         try {
-            $itemTypes = $this->itemService->getTypes();
+            $itemTypes = collect($this->itemService->getTypes());
             $rfqResponses = $this->rfqService->fetchRFQ();
             $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
             $suppliers = $this->supplierService->getSuppliers();
             // Fetch payment terms from t_CodeDetails
             $paymentTerms = CodeDetail::where('CodeID', 'PaymentTerm')->get(['ID', 'Description']); 
+
+            // Optional contract prefill support: if contractId is present, pre-select reference and supplier
+            $prefillContract = null;
+            $contractId = request('contractId');
+            if (!empty($contractId)) {
+                try {
+                    $contractRow = DB::table('t_TenderAwards as ta')
+                        ->leftJoin('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                        ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                        ->select(
+                            'ta.Id as ContractId',
+                            'ta.ContractRef',
+                            'ta.WinningSupplierID as SupplierId',
+                            DB::raw("COALESCE(s.SupplierName, '') as SupplierName"),
+                            DB::raw("COALESCE(s.Address, '') as Address")
+                        )
+                        ->where('ta.Id', (int) $contractId)
+                        ->first();
+
+                    if ($contractRow && !empty($contractRow->ContractRef)) {
+                        // Ensure RFQ references contain the contract ref so the existing dev dropdown can select it
+                        $uniqueRfqs = collect($uniqueRfqs);
+                        $exists = $uniqueRfqs->contains(function ($r) use ($contractRow) {
+                            return ($r->RFQNumber ?? null) === ($contractRow->ContractRef ?? null);
+                        });
+                        if (!$exists) {
+                            $uniqueRfqs = $uniqueRfqs->prepend((object) ['RFQNumber' => $contractRow->ContractRef]);
+                        }
+
+                        // Inject synthetic rfqResponse entry so supplier filtering works
+                        $rfqResponsesCol = collect($rfqResponses ?? []);
+                        $rfqResponsesCol = $rfqResponsesCol->prepend((object) [
+                            'RFQNumber'    => $contractRow->ContractRef,
+                            'SupplierId'   => (int) ($contractRow->SupplierId ?? 0),
+                            'SupplierID'   => (int) ($contractRow->SupplierId ?? 0),
+                            'SupplierName' => $contractRow->SupplierName ?? '',
+                            'Address'      => $contractRow->Address ?? '',
+                        ]);
+                        $rfqResponses = $rfqResponsesCol->values();
+
+                        $prefillContract = [
+                            'ref'          => $contractRow->ContractRef,
+                            'supplierId'   => (int) ($contractRow->SupplierId ?? 0),
+                            'supplierName' => $contractRow->SupplierName ?? '',
+                            'address'      => $contractRow->Address ?? '',
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Contract prefill failed', ['error' => $e->getMessage()]);
+                }
+            }
 
             return view('procurement.orders.create', [
                 'itemTypes' => $itemTypes ?? [],
@@ -140,9 +192,10 @@ class PurchaseOrderController extends Controller
                 'rfqResponses' => $rfqResponses ?? [],
                 'suppliers' => $suppliers ?? [],
                 'paymentTerms' => $paymentTerms ?? [], // Pass payment terms to view
+                'prefillContract' => $prefillContract,
             ]);
         } catch (\Exception $e) {
-            Log::error('Data fetch failed: ' . $e->getMessage());
+            \Log::error('Data fetch failed: ' . $e->getMessage());
             return view('procurement.orders.create', [
                 'suppliers' => [],
                 'itemTypes' => [],
@@ -170,7 +223,7 @@ class PurchaseOrderController extends Controller
             if (!DB::table('t_CodeDetails')->where('ID', $validatedData['terms'])->where('CodeID', 'PaymentTerm')->exists()) {
                 Log::error('Invalid payment term ID provided.', [
                     'terms' => $validatedData['terms'],
-                    'user_id' => $actor->id ?? null,
+                    'user_id' => $actor->Id ?? null,
                 ]);
                 return response()->json([
                     'message' => 'Invalid payment term selected.',
@@ -191,7 +244,7 @@ class PurchaseOrderController extends Controller
             if ($POAdd['status'] !== 'success') {
                 Log::error('Failed to create PO.', [
                     'input' => $validatedData,
-                    'user_id' => $actor->id ?? null,
+                    'user_id' => $actor->Id ?? null,
                     'service_response' => $POAdd,
                 ]);
 
@@ -294,13 +347,13 @@ class PurchaseOrderController extends Controller
             return view('procurement.orders.show', compact('orderInfo', 'lineInfo'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . auth()->id());
+            \Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . (auth()->user()->Id ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
+            \Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
             return redirect()->back()->with('error', 'Order not found.');
         } catch (\Exception $e) {
-            Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            \Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to fetch order.');
         }
     }
@@ -366,13 +419,13 @@ class PurchaseOrderController extends Controller
             return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . auth()->id());
+            \Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . (auth()->user()->Id ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
+            \Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
             return redirect()->back()->with('error', 'Order not found.');
         } catch (\Exception $e) {
-            Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            \Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to fetch order.');
         }
 
@@ -393,21 +446,21 @@ class PurchaseOrderController extends Controller
                 'data' => $RFQData,
             ]);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . auth()->id());
+            \Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . (auth()->user()->Id ?? 'guest'));
 
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access.',
             ], 403);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
+            \Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'message' => 'RFQ not found.',
             ], 404);
         } catch (\Exception $e) {
-            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), [
+            \Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
 
