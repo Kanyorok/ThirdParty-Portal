@@ -15,6 +15,15 @@ class ItemMasterListSeeder extends Seeder
         $now = Carbon::now();
         $createdBy = 1;
 
+        $activeStatusId = DB::table('t_CodeDetails')
+            ->where('CodeID', 'ItemStatus')
+            ->where('Description', 'Active')
+            ->value('ID');
+
+        if (!$activeStatusId) {
+            throw new \Exception("Active status not found in t_CodeDetails. Please seed it first.");
+        }
+
         // Foreign keys
         $itemTypeId = DB::table('t_ItemTypes')->where('TypeName', 'Stock')->value('Id');
         $inventoryTypeId = DB::table('t_InventoryTypes')->where('Type', 'Consumable')->value('Id');
@@ -89,6 +98,7 @@ class ItemMasterListSeeder extends Seeder
                 'Category' => $category->Id,
                 'ItemDescription' => "$name for office use",
                 'BarCode' => $barCode,
+                'Status' => $activeStatusId,
                 'CreatedBy' => $createdBy,
                 'ModifiedBy' => $createdBy,
                 'CreatedOn' => $now,

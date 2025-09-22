@@ -7,9 +7,10 @@
 
 <a href="{{ route('PropertyRegistry.create') }}" class="btn btn-primary mb-3">Add Property</a>
 
-<h4 class="fw-bold mb-3">📋 Registered Properties</h4>
+<p><small>This screen displays a list of all registered properties</small></p>
+
 @if($properties->count())
-     <div class="container mt-4">
+    <div class="container mt-4">
         <table id="propertyregistry" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>
@@ -18,7 +19,7 @@
         <th>Type</th>
         <th>Category</th>
         <th>Country</th>
-        <th>Town/City</th>
+          <th>Town/City</th>
         <th>Status</th>
         <th>Action</th>
       </tr>
@@ -28,14 +29,14 @@
       <tr>
         <td>{{ $loop->iteration }}</td>
         <td>{{ $property->PropertyName?? '-' }}</td>
-        <td>{{ $property->type->PropertyTypeName ?? '-' }}</td>
-        <td>{{ $property->propertyCategory->Name?? '-' }}</td>
+          <td>{{ $property->type->PropertyTypeName ?? '-' }}</td>
+          <td>{{ $property->propertyCategory->Name?? '-' }}</td>
         <td>{{ $property->Country?? '-' }}</td>
-        <td>{{ $property->propertyLocality->Name?? '-' }}</td>
+          <td>{{ $property->propertyLocality->Name?? '-' }}</td>
         <td><span class="badge bg-success">Active</span></td>
-        <td>
-          <a href="{{ route('PropertyRegistry.show', $property->Id) }}" class="btn btn-sm btn-info">👁 View</a>
-            <a href="{{ route('PropertyRegistry.edit', $property->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+          <td>
+              <a href="{{ route('PropertyRegistry.show', $property->Id) }}" class="btn btn-sm btn-info">👁 View</a>
+              <a href="{{ route('PropertyRegistry.edit', $property->Id) }}" class="btn btn-sm btn-warning">Edit</a>
               <form action="{{ route('PropertyRegistry.destroy', $property->Id) }}" method="POST" class="d-inline">
                   @csrf
                   @method('DELETE')

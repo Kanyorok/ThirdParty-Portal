@@ -1,10 +1,10 @@
 @php use App\Models\Auth\User; @endphp
 @extends('layouts.app')
 
-@section('title','My Schedule')
+@section('title', 'My Schedule')
 @section('styles')
-    {{--<link rel="stylesheet" href="{{ asset('assets/libs/fullcalendar/fullcalendar.min.css') }}">
-    <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'>--}}
+    {{-- <link rel="stylesheet" href="{{ asset('assets/libs/fullcalendar/fullcalendar.min.css') }}">
+      <link href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css' rel='stylesheet'> --}}
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
@@ -71,10 +71,10 @@
             }
         }
 
-  /* Hide event time completely */
-    
-  .fc-event-time {
-        display: none !important;
+        /* Hide event time completely */
+
+        .fc-event-time {
+            display: none !important;
     }
 
     /* Allow event title to wrap */
@@ -110,8 +110,6 @@
         font-size: 0.85em;
         line-height: 1.2em;
     }
-
-
     </style>
 @endsection
 @section('content')
@@ -119,9 +117,9 @@
         <div class="col-6 mb-1"></div>
         <div class="col-6 mb-1">
             <div class="float-end">
-                {{--<button type="button" class="btn btn-outline-primary modal-create-call-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled call</button>
-                <button type="button" class="btn btn-outline-primary modal-create-meeting-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled meeting</button>--}}
-                @can('meetings',User::class)
+                {{-- <button type="button" class="btn btn-outline-primary modal-create-call-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled call</button>
+                        <button type="button" class="btn btn-outline-primary modal-create-meeting-schedule"><i class="fas fa-calendar-plus"></i>&nbsp; add scheduled meeting</button> --}}
+                @can('meetings', User::class)
                     <button type="button" class="btn btn-outline-primary m-1" id="triggerStaffMeetingBtn"><i
                             class="fas fa-calendar-plus"></i>&nbsp; Staff Meeting
                     </button>
@@ -141,20 +139,20 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">..</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @can('meetings',User::class)
+                    @can('meetings', User::class)
                         <div class="onboarding-content with-gradient d-none modal-item" id="createStaffMeetingModal">
-                            <form action="{{ route('user-meetings.store') }}" method="post"
-                                  id="createStaffMeetingForm" class="row">
+                            <form action="{{ route('user-meetings.store') }}" method="post" id="createStaffMeetingForm"
+                                  class="row">
                                 @csrf
                                 <div class="col-md-6 col-12 mb-3">
                                     <label for="StaffMeetingTitle" class="form-label">Title <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control" required id="StaffMeetingTitle"
-                                           name="StaffMeetingTitle" placeholder="Title">
+                                           name="StaffMeetingTitle"
+                                           placeholder="Title">
                                     <p id="StaffMeetingTitle_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
@@ -163,7 +161,7 @@
                                             class="text-danger">*</span></label>
                                     <select class="form-control" name="StaffMeetingLocation" required
                                             id="StaffMeetingLocation">
-                                        @foreach($rooms as $room)
+                                        @foreach ($rooms as $room)
                                             <option value="{{ $room->RoomID }}">{{ $room->Name }} - {{ $room->RoomID }}
                                                 ({{ $room->Capacity }})
                                             </option>
@@ -184,7 +182,8 @@
                                     <label class="form-label" for="StaffMeetingEnd">End <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control flatpickr-datetime " id="StaffMeetingEnd"
-                                           name="StaffMeetingEnd" placeholder="Select end..">
+                                           name="StaffMeetingEnd"
+                                           placeholder="Select end..">
                                     <p id="StaffMeetingEnd_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
@@ -192,115 +191,113 @@
                                     <label for="StaffMeetingUsers" class="form-label">Users & Teams </label>
                                     <select class="form-control " name="StaffMeetingUsers[]" id="StaffMeetingUsers"
                                             required multiple>
-                                        <option value="{{ auth()->user()->UserID }}"
-                                                selected>{{  auth()->user()->Name }}
-                                            - {{  auth()->user()->UserID }}</option>
+                                        <option value="{{ auth()->user()->UserID }}" selected>{{ auth()->user()->Name }}
+                                            - {{ auth()->user()->UserID }}</option>
                                     </select>
-                                    <p id="StaffMeetingUsers_error"
-                                       class="invalid-feedback d-none error col-12" role="alert"></p>
+                                    <p id="StaffMeetingUsers_error" class="invalid-feedback d-none error col-12"
+                                       role="alert"></p>
                                 </div>
                                 <div class="mb-3 col-12">
                                     <label class="form-label" for="StaffMeetingAgenda">Agenda <span class="text-danger">*</span></label>
                                     <textarea name="StaffMeetingAgenda" id="StaffMeetingAgenda" rows="4"
-                                              class="form-control" required minlength="2"></textarea>
+                                              class="form-control" required
+                                              minlength="2"></textarea>
                                     <p id="StaffMeetingAgenda_error" class="invalid-feedback d-none error col-12"
                                        role="alert"></p>
                                 </div>
                                 <hr>
                                 <div class="mt-4">
-                                    <button type="button" class="btn btn-secondary float-start"
-                                            data-bs-dismiss="modal">
+                                    <button type="button" class="btn btn-secondary float-start" data-bs-dismiss="modal">
                                         cancel
                                     </button>
                                     <button class="btn btn-primary float-end" id="createStaffMeetingBtn" type="submit">
-                                        <i
-                                            class="fas fa-save"></i> schedule staff meeting
+                                        <i class="fas fa-save"></i> schedule staff meeting
                                     </button>
                                 </div>
                             </form>
                         </div>
                     @endcan
                     {{--
-                    <!--todo @deprecated -->
-                    <div class="onboarding-content with-gradient d-none modal-item" id="createScheduleModal">
-                        <form action="{{ route('schedule.store') }}" method="post"
-                              id="createScheduleForm">
-                            @csrf
-                            <input type="hidden" name="_type" id="scheduleType" class="d-none">
-                            <div class="mb-3">
-                                <label for="client" class="form-label">Member(s)</label>
-                                <select class="form-control clients" name="client[]" id="client">
-                                </select>
-                                <p id="client_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label for="branches" class="form-label">Branches(s)</label>
-                                <select class="form-control" name="branches[]" multiple id="branches">
-                                    @foreach($branches as $branch)
-                                        <option
-                                            value="{{ $branch->OurBranchID }}">{{ \Illuminate\Support\Str::title($branch->BranchName) }}</option>
-                                    @endforeach
-                                </select>
-                                <p id="branches_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="schedule_title">Title </label>
-                                <input type="text" class="form-control" id="schedule_title" name="schedule_title" placeholder="Title">
-                                <p id="schedule_title_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="schedule_location">Location </label>
-                                <input type="text" class="form-control" id="schedule_location" name="schedule_location" placeholder="Location">
-                                <p id="schedule_location_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="schedule_start">Start </label>
-                                <input type="text" class="form-control flatpickr-datetime" id="schedule_start" name="schedule_start" placeholder="Select start..">
-                                <p id="schedule_start_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="schedule_end">End </label>
-                                <input type="text" class="form-control flatpickr-datetime " id="schedule_end" name="schedule_end" placeholder="Select end..">
-                                <p id="schedule_end_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" for="notes">Notes </label>
-                                <textarea name="notes" id="notes" rows="3" class="form-control" required minlength="2"></textarea>
-                                <p id="notes_end_error" class="invalid-feedback d-none error col-12" role="alert"></p>
-                            </div>
-                            <hr>
-                            <div class="mt-4">
-                                <button type="button" class="btn btn-secondary float-start"
-                                        data-bs-dismiss="modal">
-                                    cancel
-                                </button>
-                                <button class="btn btn-primary float-end" id="createScheduleBtn" type="submit"><i
-                                        class="fas fa-save"></i> add schedule
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="onboarding-content d-none modal-item text-center" id="deleteScheduleModal">
-                        <h4 class="text-danger">
-                            Cancel Schedule <b id="deleteScheduleTitle"></b> ?
-                        </h4>
-                        <div class="mt-2 mb-2">
-                            You are about to cancel this schedule, confirm below ?
-                        </div>
-                        <hr>
-                        <form id="deleteScheduleForm" method="post"> @csrf @method('delete')
-                            <div class="mt-4">
-                                <button type="button" class="btn btn-success float-start"
-                                        data-bs-dismiss="modal">
-                                    no, keep
-                                </button>
-                                <button class="btn btn-danger float-end" id="deleteScheduleBtn" type="submit"><i
-                                        class="fas fa-trash"></i> yes, cancel
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    --}}
+                              <!--todo @deprecated -->
+                              <div class="onboarding-content with-gradient d-none modal-item" id="createScheduleModal">
+                                  <form action="{{ route('schedule.store') }}" method="post"
+                                        id="createScheduleForm">
+                                      @csrf
+                                      <input type="hidden" name="_type" id="scheduleType" class="d-none">
+                                      <div class="mb-3">
+                                          <label for="client" class="form-label">Member(s)</label>
+                                          <select class="form-control clients" name="client[]" id="client">
+                                          </select>
+                                          <p id="client_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                      </div>
+                                      <div class="mb-3">
+                                          <label for="branches" class="form-label">Branches(s)</label>
+                                          <select class="form-control" name="branches[]" multiple id="branches">
+                                              @foreach ($branches as $branch)
+                                                  <option
+                                                      value="{{ $branch->OurBranchID }}">{{ \Illuminate\Support\Str::title($branch->BranchName) }}</option>
+                                              @endforeach
+                                          </select>
+                                          <p id="branches_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                      </div>
+                                      <div class="mb-3">
+                                          <label class="form-label" for="schedule_title">Title </label>
+                                          <input type="text" class="form-control" id="schedule_title" name="schedule_title" placeholder="Title">
+                                          <p id="schedule_title_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                      </div>
+                                      <div class="mb-3">
+                                          <label class="form-label" for="schedule_location">Location </label>
+                                          <input type="text" class="form-control" id="schedule_location" name="schedule_location" placeholder="Location">
+                                          <p id="schedule_location_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                      </div>
+                                      <div class="mb-3">
+                                          <label class="form-label" for="schedule_start">Start </label>
+                                          <input type="text" class="form-control flatpickr-datetime" id="schedule_start" name="schedule_start" placeholder="Select start..">
+                                          <p id="schedule_start_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                      </div>
+                                      <div class="mb-3">
+                                          <label class="form-label" for="schedule_end">End </label>
+                                          <input type="text" class="form-control flatpickr-datetime " id="schedule_end" name="schedule_end" placeholder="Select end..">
+                                          <p id="schedule_end_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                      </div>
+                                      <div class="mb-3">
+                                          <label class="form-label" for="notes">Notes </label>
+                                          <textarea name="notes" id="notes" rows="3" class="form-control" required minlength="2"></textarea>
+                                          <p id="notes_end_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                                      </div>
+                                      <hr>
+                                      <div class="mt-4">
+                                          <button type="button" class="btn btn-secondary float-start"
+                                                  data-bs-dismiss="modal">
+                                              cancel
+                                          </button>
+                                          <button class="btn btn-primary float-end" id="createScheduleBtn" type="submit"><i
+                                                  class="fas fa-save"></i> add schedule
+                                          </button>
+                                      </div>
+                                  </form>
+                              </div>
+                              <div class="onboarding-content d-none modal-item text-center" id="deleteScheduleModal">
+                                  <h4 class="text-danger">
+                                      Cancel Schedule <b id="deleteScheduleTitle"></b> ?
+                                  </h4>
+                                  <div class="mt-2 mb-2">
+                                      You are about to cancel this schedule, confirm below ?
+                                  </div>
+                                  <hr>
+                                  <form id="deleteScheduleForm" method="post"> @csrf @method('delete')
+                                      <div class="mt-4">
+                                          <button type="button" class="btn btn-success float-start"
+                                                  data-bs-dismiss="modal">
+                                              no, keep
+                                          </button>
+                                          <button class="btn btn-danger float-end" id="deleteScheduleBtn" type="submit"><i
+                                                  class="fas fa-trash"></i> yes, cancel
+                                          </button>
+                                      </div>
+                                  </form>
+                              </div>
+                              --}}
                 </div>
             </div>
         </div>
@@ -315,8 +312,11 @@
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
         let $Modal = $('#scheduleActionsModal');
-        const _type = $('#scheduleType'), windowLocation = window.location.toString();
-        let start = null, end = null, client = null;
+        const _type = $('#scheduleType'),
+            windowLocation = window.location.toString();
+        let start = null,
+            end = null,
+            client = null;
         $(function () {
             window.calendar = new FullCalendar.Calendar(document.getElementById('fullcalendar'), {
                 initialView: 'timeGridWeek',
@@ -325,12 +325,11 @@
                 navLinks: true,
                 height: 700,
                 nowIndicator: true,
-                businessHours: [
-                    {
-                        daysOfWeek: [1, 2, 3, 4, 5],
-                        startTime: '08:00',
-                        endTime: '18:00',
-                    },
+                businessHours: [{
+                    daysOfWeek: [1, 2, 3, 4, 5],
+                    startTime: '08:00',
+                    endTime: '18:00',
+                },
                     {
                         daysOfWeek: [6],
                         startTime: '08:00',
@@ -359,15 +358,18 @@
                         headers: {
                             'X-CSRF-TOKEN': window.csrf_token,
                             'accept': 'application/json'
-                        }, success: function (response) {
+                        },
+                        success: function (response) {
                             successCallback(response.data);
-                        }, error: function (xhr, status, error) {
+                        },
+                        error: function (xhr, status, error) {
                             failureCallback(error);
                         }
                     });
                 },
                 select: function (info) {
-                    showCreateModal(moment(info.start.valueOf()).format('YYYY-MM-DD HH:mm'), moment(info.end.valueOf()).format('YYYY-MM-DD HH:mm'), 'call')
+                    showCreateModal(moment(info.start.valueOf()).format('YYYY-MM-DD HH:mm'), moment(info.end.valueOf())
+                        .format('YYYY-MM-DD HH:mm'), 'call')
                 },
                 eventChange: function (eventInfo) {
                     if (!eventInfo.event.extendedProps.permission.editable) {
@@ -390,19 +392,30 @@
                     $.ajax({
                         url: windowLocation.replace('#', '') + "/" + eventInfo.event._def.publicId,
                         type: 'PUT',
-                        data: [{name: '_token', value: window.csrf_token}, {
+                        data: [{
+                            name: '_token',
+                            value: window.csrf_token
+                        }, {
                             name: 'schedule_start',
                             value: start.format('YYYY-MM-DD HH:mm')
-                        }, {name: 'schedule_end', value: ended.format('YYYY-MM-DD HH:mm')}, {
+                        }, {
+                            name: 'schedule_end',
+                            value: ended.format('YYYY-MM-DD HH:mm')
+                        }, {
                             name: 'notes',
                             value: eventInfo.event.extendedProps.description
-                        }, {name: 'client[]', value: 'RI'}],
+                        }, {
+                            name: 'client[]',
+                            value: 'RI'
+                        }],
                         headers: {
                             'X-CSRF-TOKEN': window.csrf_token,
                             'accept': 'application/json'
-                        }, success: function (response) {
+                        },
+                        success: function (response) {
                             nSuccess(response.message);
-                        }, error: function (xhr, status, error) {
+                        },
+                        error: function (xhr, status, error) {
                             nWarning('Schedule moving failed');
                             eventInfo.revert();
                         }
@@ -410,7 +423,8 @@
                 },
                 eventClick: function (eventInfo) {
                     let event = eventInfo.event;
-                    showOffCanvasMain(event.extendedProps.icon + ' ' + event.title, windowLocation.replace('#', '') + '/' + event._def.publicId);
+                    showOffCanvasMain(event.extendedProps.icon + ' ' + event.title, windowLocation.replace('#', '') +
+                        '/' + event._def.publicId);
                 }
             });
             window.calendar.render();
@@ -439,16 +453,21 @@
                 minimumInputLength: 2,
                 dropdownParent: $Modal,
                 ajax: {
-                    url: '{!! route('users.select2', ['with_teams'=>'rzr.co.ke', 'add_all'=>'rzr.co.ke']) !!}',
+                    url: '{!! route('users.select2', ['with_teams' => 'rzr.co.ke', 'add_all' => 'rzr.co.ke']) !!}',
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {
-                        return {q: $.trim(params.term)};
+                        return {
+                            q: $.trim(params.term)
+                        };
                     },
                     processResults: function (data) {
                         return {
                             results: $.map(data, function (item) {
-                                return {text: item.Name, id: item.UserID}
+                                return {
+                                    text: item.Name,
+                                    id: item.UserID
+                                }
                             })
                         };
                     },
@@ -542,100 +561,99 @@
         });
 
         /*function showCreateModal(start_time, end_time, type) {
-       if (start !== null){
-           start.destroy();
-       }
-       if (end !== null){
-           end.destroy();
-       }
-       if (client !== null){
-           client.select2('destroy');
-       }
+             if (start !== null){
+                 start.destroy();
+             }
+             if (end !== null){
+                 end.destroy();
+             }
+             if (client !== null){
+                 client.select2('destroy');
+             }
 
-       _type.val(type);
-       if(type === 'meeting'){
-           $(".modal-title").html('Schedule a meeting.');
-           $('#schedule_location').val('').parent('div').removeClass('d-none');
-           $('#schedule_title').val('').parent('div').removeClass('d-none');
-           $('#branches').val('').parent('div').removeClass('d-none');
-           //$('#schedule_title').removeAttr("readonly").val('');
-           client = $('#client').val([]).attr('multiple',"multiple").change().select2({
-               placeholder: "Choose a client...", minimumInputLength: 2,
-               dropdownParent: $Modal,
-               ajax: {
-                   url: '{ {route('clients.select2')}}',
-                   dataType: 'json',
-                   delay: 250,
-                   data: function (params) {
-                       return {q: $.trim(params.term)};
-                   },
-                   processResults: function (data) {
-                       return {
-                           results: $.map(data, function (item) {
-                               return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
-                           })
-                       };
-                   },
-                   cache: true
-               }
-           });
-       } else if (type === 'call') {
-           $(".modal-title").html('Schedule a call.');
-           $('#schedule_location').val('').parent('div').addClass('d-none');
-           $('#schedule_title').val('').parent('div').addClass('d-none');
-           $('#branches').val('').parent('div').addClass('d-none');
-           //$('#schedule_title').attr("readonly","readonly").val('');
-           client = $('#client').val([]).removeAttr("multiple").change().select2({
-               placeholder: "Choose a client...", minimumInputLength: 2,
-               dropdownParent: $Modal,
-               ajax: {
-                   url: '{ {route('clients.select2')}}',
-                   dataType: 'json',
-                   delay: 250,
-                   data: function (params) {
-                       return {q: $.trim(params.term)};
-                   },
-                   processResults: function (data) {
-                       return {
-                           results: $.map(data, function (item) {
-                               return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
-                           })
-                       };
-                   },
-                   cache: true
-               }
-           });
-       } else {
-           nWarning('Unknown type of schedule.');
-           return;
-       }
+             _type.val(type);
+             if(type === 'meeting'){
+                 $(".modal-title").html('Schedule a meeting.');
+                 $('#schedule_location').val('').parent('div').removeClass('d-none');
+                 $('#schedule_title').val('').parent('div').removeClass('d-none');
+                 $('#branches').val('').parent('div').removeClass('d-none');
+                 //$('#schedule_title').removeAttr("readonly").val('');
+                 client = $('#client').val([]).attr('multiple',"multiple").change().select2({
+                     placeholder: "Choose a client...", minimumInputLength: 2,
+                     dropdownParent: $Modal,
+                     ajax: {
+                         url: '{ {route('clients.select2')}}',
+                         dataType: 'json',
+                         delay: 250,
+                         data: function (params) {
+                             return {q: $.trim(params.term)};
+                         },
+                         processResults: function (data) {
+                             return {
+                                 results: $.map(data, function (item) {
+                                     return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
+                                 })
+                             };
+                         },
+                         cache: true
+                     }
+                 });
+             } else if (type === 'call') {
+                 $(".modal-title").html('Schedule a call.');
+                 $('#schedule_location').val('').parent('div').addClass('d-none');
+                 $('#schedule_title').val('').parent('div').addClass('d-none');
+                 $('#branches').val('').parent('div').addClass('d-none');
+                 //$('#schedule_title').attr("readonly","readonly").val('');
+                 client = $('#client').val([]).removeAttr("multiple").change().select2({
+                     placeholder: "Choose a client...", minimumInputLength: 2,
+                     dropdownParent: $Modal,
+                     ajax: {
+                         url: '{ {route('clients.select2')}}',
+                         dataType: 'json',
+                         delay: 250,
+                         data: function (params) {
+                             return {q: $.trim(params.term)};
+                         },
+                         processResults: function (data) {
+                             return {
+                                 results: $.map(data, function (item) {
+                                     return {text: item.Name + ' - ' + item.ClientID, id: item.ClientID}
+                                 })
+                             };
+                         },
+                         cache: true
+                     }
+                 });
+             } else {
+                 nWarning('Unknown type of schedule.');
+                 return;
+             }
 
-       $("#schedule_start").val(start_time);
-       start = flatpickr("#schedule_start", {
-           enableTime: true,
-           altInput: true,
-           minDate: moment().format('YYYY-MM-DD hh:mm'),
-           defaultDate: start_time,
-           minuteIncrement: 1,
-           altFormat: "F j, Y H:i",
-           dateFormat: "Y-m-d H:i",
-       });
+             $("#schedule_start").val(start_time);
+             start = flatpickr("#schedule_start", {
+                 enableTime: true,
+                 altInput: true,
+                 minDate: moment().format('YYYY-MM-DD hh:mm'),
+                 defaultDate: start_time,
+                 minuteIncrement: 1,
+                 altFormat: "F j, Y H:i",
+                 dateFormat: "Y-m-d H:i",
+             });
 
-       $("#schedule_end").val(end_time);
-       end = flatpickr("#schedule_end", {
-           enableTime: true,
-           altInput: true,
-           minuteIncrement: 1,
-           minDate: moment().add(2,'m').format('YYYY-MM-DD hh:mm'),
-           defaultDate: end_time,
-           altFormat: "F j, Y H:i",
-           dateFormat: "Y-m-d H:i",
-       });
+             $("#schedule_end").val(end_time);
+             end = flatpickr("#schedule_end", {
+                 enableTime: true,
+                 altInput: true,
+                 minuteIncrement: 1,
+                 minDate: moment().add(2,'m').format('YYYY-MM-DD hh:mm'),
+                 defaultDate: end_time,
+                 altFormat: "F j, Y H:i",
+                 dateFormat: "Y-m-d H:i",
+             });
 
-       $(".modal-item").addClass('d-none');
-       $('#createScheduleModal').removeClass('d-none');
-       $Modal.modal('show');
-   }*/
-
+             $(".modal-item").addClass('d-none');
+             $('#createScheduleModal').removeClass('d-none');
+             $Modal.modal('show');
+         }*/
     </script>
 @endsection

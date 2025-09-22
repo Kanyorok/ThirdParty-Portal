@@ -1,59 +1,90 @@
 @extends('layouts.app')
-@section('title', 'Trip Management')
+@section('title', 'Register New Vehicle')
+@section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+@endsection
 @section('content')
-<div class="container mt-5">
-<h2>Registered Vehicles</h2>
-<a href="{{route ('vehicle-registry.create')}}" class="btn btn-primary mb-3">Add New Vehicle</a>
- 
-    <table class="table table-bordered table-striped">
-<thead class="thead-dark">
-<tr>
-<th>#</th>
-<th>Registration Number</th>
-<th>Make</th>
-<th>Model</th>
-<th>Year</th>
-<th>Type</th>
-<th>Color</th>
-<th>Chassis No.</th>
-<th>Engine No.</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>KDA 123A</td>
-<td>Toyota</td>
-<td>Hilux</td>
-<td>2021</td>
-<td>Pickup</td>
-<td>White</td>
-<td>JT121A9876X001234</td>
-<td>2KD-FTV123456</td>
-</tr>
-<tr>
-<td>2</td>
-<td>KCF 456B</td>
-<td>Isuzu</td>
-<td>NQR</td>
-<td>2019</td>
-<td>Truck</td>
-<td>Blue</td>
-<td>ISU9X001789</td>
-<td>4HG1-FTV458964</td>
-</tr>
-<tr>
-<td>3</td>
-<td>KDH 789C</td>
-<td>Nissan</td>
-<td>Caravan</td>
-<td>2020</td>
-<td>Van</td>
-<td>Silver</td>
-<td>NSN1C7890K1234</td>
-<td>ZD30-123999A</td>
-</tr>
-</tbody>
-</table>
-</div>
+    <div class="container py-4">
+
+        <!-- Fleet Make/Brand List Header + Add Button -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Vehicle Registry List</h4>
+            <a href="{{ route('vehicle-registry.create') }}" class="btn btn-primary">Add New</a>
+        </div>
+
+        <!-- Fleet Model Table -->
+        <div class="card">
+            <div class="card-body">
+
+                <div class="table-responsive">
+                    <table id="vehicleRegistryTable" class="table table-bordered table-striped align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Registration No</th>
+                            <th>Model</th>
+                            <th>Make</th>
+                            <th>Type</th>
+                            <th>Color</th>
+                            <th>Year</th>
+                            <th>Chassis No</th>
+                            <th>Engine No</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($vehicles as $vehicle)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $vehicle->RegistrationNo }}</td>
+                                <td>{{ $vehicle->model->ModelName ?? 'N/A' }}</td>
+                                <td>{{ $vehicle->brand->BrandName ?? 'N/A' }}</td>
+                                <td>{{ $vehicle->vehicleType->Description ?? 'N/A' }}</td>
+                                <td>{{ $vehicle->Color ?? 'N/A' }}</td>
+                                <td>{{ $vehicle->Year ?? 'N/A' }}</td>
+                                <td>{{ $vehicle->ChassisNo ?? 'N/A' }}</td>
+                                <td>{{ $vehicle->EngineNo ?? 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ route('vehicle-registry.show', $vehicle->Id) }}"
+                                       class="btn btn-sm btn-info">View</a>
+                                    <a href="{{ route('vehicle-registry.edit', $vehicle->Id) }}"
+                                       class="btn btn-sm btn-warning">Edit</a>
+                                    <form action="{{ route('vehicle-registry.destroy', $vehicle->Id) }}"
+                                          method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this vehicle?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section('scripts')
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                @if(!$vehicles->isEmpty())
+                $('#vehicleRegistryTable').DataTable({
+                    pageLength: 10,
+                    ordering: true,
+                    searching: true,
+                    lengthChange: true,
+                    language: {
+                        emptyTable: ""
+                    }
+                });
+                @endif
+            });
+        </script>
+    @endsection
 @endsection

@@ -6,8 +6,8 @@
 @section('content')
 <div class="container mt-4">
 <a href="{{ route('addtenant.create') }}" class="btn btn-primary mb-3">Add Tenant</a>
-    <h4 class="fw-bold mb-3">Registered Tenants</h4>
 
+    <p><small>The list below consists of all tenants both active and inactive</small></p>
     @if($newtenants->count())
         <table id="addtenant" class="table table-bordered table-striped align-middle">
     <thead class="table-light">

@@ -20,6 +20,7 @@ use App\Models\Communication\Email;
 use App\Models\Communication\EmailConversation;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
+use App\Models\Fleet\FleetDriver;
 use App\Models\CRM\Contact;
 use App\Models\CRM\Lead;
 use App\Models\DMS\Image;
@@ -100,6 +101,13 @@ class CRMEmailService
         return self::create($actor, $subject, $body, $priorityEnum, [[$user->Name => $user->Email]], User::getPrimaryKey(), $user->Id, $cc, replyTo: $replyTo);
     }
 
+    public static function createDriver(FleetDriver $driver, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $replyTo = null): CRMEmailService
+    {
+        return self::create($actor, $subject, $body, $priorityEnum, [[$driver->FullName => $driver->Email]], FleetDriver::getPrimaryKey(), $driver->Id, $cc, replyTo: $replyTo);
+    }
+
+
+
     public static function createBoard(Board $board, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal): CRMEmailService
     {
         return self::create($actor, $subject, $body, $priorityEnum, [[$board->Name => $board->Email]], Board::getPrimaryKey(), $board->Id, $cc);
@@ -108,31 +116,31 @@ class CRMEmailService
     /**
      * @throws Exception
      */
-  public static function dt(Builder|MorphMany $query, array $with = []): JsonResponse
-{
-    $query->lock('WITH(NOLOCK)');
-    if (!empty($with)) {
-        $query->with($with);
-    }
+    public static function dt(Builder|MorphMany $query, array $with = []): JsonResponse
+    {
+        $query->lock('WITH(NOLOCK)');
+        if (!empty($with)) {
+            $query->with($with);
+        }
 
-    return Datatables::of($query->select('*'))
-        ->addIndexColumn()
-        ->addColumn('id', fn (Email $email) => $email->EmailID) // 👈 required for JS
-        ->addColumn('action', function (Email $email) {
-            return '<button class="btn btn-sm btn-primary view-email" data-id="' . $email->EmailID . '">
+        return Datatables::of($query->select('*'))
+            ->addIndexColumn()
+            ->addColumn('id', fn(Email $email) => $email->EmailID) // 👈 required for JS
+            ->addColumn('action', function (Email $email) {
+                return '<button class="btn btn-sm btn-primary view-email" data-id="' . $email->EmailID . '">
                         <i class="fas fa-eye"></i> View
                     </button>';
-        })
-        ->editColumn('Type', fn(Email $email) => $email->Type->name)
-        ->editColumn('CreatedOn', fn(Email $email) => $email->CreatedOn?->format('F d, Y h:i A'))
-        ->editColumn('Dated', function (Email $email) {
-            return $email->Dated instanceof Carbon
-                ? $email->Dated->format('F d, Y h:i A')
-                : $email->CreatedOn?->format('F d, Y h:i A');
-        })
-        ->rawColumns(['action'])
-        ->make();
-}
+            })
+            ->editColumn('Type', fn(Email $email) => $email->Type->name)
+            ->editColumn('CreatedOn', fn(Email $email) => $email->CreatedOn?->format('F d, Y h:i A'))
+            ->editColumn('Dated', function (Email $email) {
+                return $email->Dated instanceof Carbon
+                    ? $email->Dated->format('F d, Y h:i A')
+                    : $email->CreatedOn?->format('F d, Y h:i A');
+            })
+            ->rawColumns(['action'])
+            ->make();
+    }
 
     public static function testConfig(string $host, int $port, EmailEncryptionEnum $encryption, string $username, #[SensitiveParameter] string $password): bool
     {
@@ -145,16 +153,36 @@ class CRMEmailService
                 'timeout' => 5,
                 'host' => $host,
                 'port' => $port,
-                'encryption' => $encryption,
+                'encryption' => $encryption->value, // Ensure it's a string (e.g., 'tls', 'ssl')
                 'username' => $username,
                 'password' => $password,
             ]));
-            return ($mailer->sendNow(new TestMail()) instanceof SentMessage);
-        } catch (Exception|RuntimeException) {
+
+            return $mailer->sendNow(new TestMail()) instanceof SentMessage;
+
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+            Log::error('Mail transport error', [
+                'host' => $host,
+                'port' => $port,
+                'encryption' => $encryption->value,
+                'username' => $username,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('General mail config error', [
+                'host' => $host,
+                'port' => $port,
+                'encryption' => $encryption->value,
+                'username' => $username,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return false;
     }
+
 
     public function getParty(): string
     {

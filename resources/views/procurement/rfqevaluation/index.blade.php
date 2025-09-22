@@ -58,8 +58,7 @@
                             <td>{{ $weightedTotal }}%</td>
                             <td><strong>{{ $rankCounter }}</strong></td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary"
-                                        data-bs-toggle="modal"
+                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
                                         data-bs-target="#viewModal-{{ $evaluation->Id }}-{{ $supplier->Id }}">
                                     View
                                 </button>
@@ -81,7 +80,6 @@
         @php
             $grouped = $evaluation->evaluations->groupBy('SupplierId');
         @endphp
-
         @foreach ($grouped as $supplierId => $evalGroup)
             @php
                 $supplier = $evalGroup->first()->supplier;
@@ -91,8 +89,7 @@
                     ->first();
                 $groupedBySection = $evalGroup->groupBy(fn($e) => $e->rfqCriteria?->section?->SectionName ?? 'Uncategorized');
             @endphp
-
-                    <!-- View Modal -->
+                <!-- View Modal -->
             <div class="modal fade" id="viewModal-{{ $evaluation->Id }}-{{ $supplierId }}" tabindex="-1"
                  aria-labelledby="viewModalLabel-{{ $evaluation->Id }}-{{ $supplierId }}" aria-hidden="true">
                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -101,7 +98,6 @@
                             <h5 class="modal-title mb-0" id="viewModalLabel-{{ $evaluation->Id }}-{{ $supplierId }}">
                                 Evaluation Details for RFQ #{{ $evaluation->rfq->RFQNumber ?? 'N/A' }}
                             </h5>
-
                             <div class="d-flex align-items-center gap-2 d-print-none">
                                 <button type="button" class="btn btn-sm btn-outline-secondary"
                                         onclick="printModal('{{ $evaluation->Id }}-{{ $supplierId }}')">
@@ -110,8 +106,8 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                         </div>
-
                         <div class="modal-body">
+                            <!-- RFQ & Committee Info -->
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <p><strong>Committee Member:</strong> {{ $evaluation->CommitteeMemberName }}</p>
@@ -119,19 +115,20 @@
                                 </div>
                                 <div class="col-md-6">
                                     <p><strong>RFQ Comment:</strong> {{ $evaluation->RFQComment ?? 'None' }}</p>
-                                    <p><strong>Confirmed:</strong> {{ $evaluation->Confirmation ? '✅ Yes' : '❌ No' }}</p>
+                                    <p><strong>Confirmed:</strong> {{ $evaluation->Confirmation ? '✅ Yes' : '❌ No' }}
+                                    </p>
                                 </div>
                             </div>
-
+                            <hr>
                             <div class="card mb-4">
                                 <div class="card-header bg-light fw-bold">
                                     Supplier: {{ $supplier->SupplierName ?? 'N/A' }}
                                 </div>
                                 <div class="card-body">
-                                    <p><strong>Total Quoted:</strong> KES {{ number_format($response->TotalPayable ?? 0, 2) }}</p>
+                                    <p><strong>Total Quoted:</strong>
+                                        KES {{ number_format($response->TotalPayable ?? 0, 2) }}</p>
                                     <p><strong>Delivery Time:</strong> {{ $response->DurationDays ?? 'N/A' }} Days</p>
-
-                                    @if($response && $response->items->count())
+                                    @if ($response && $response->items->count())
                                         <h6 class="mt-3">Quoted Items</h6>
                                         <table class="table table-sm table-bordered">
                                             <thead class="table-light">
@@ -144,7 +141,7 @@
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            @foreach($response->items as $item)
+                                            @foreach ($response->items as $item)
                                                 <tr>
                                                     <td>{{ $item->ItemName ?? 'N/A' }}</td>
                                                     <td>{{ $item->uom->Name ?? 'N/A' }}</td>
@@ -156,7 +153,6 @@
                                             </tbody>
                                         </table>
                                     @endif
-
                                     <h6 class="mt-4">Evaluation Breakdown</h6>
                                     <table class="table table-sm table-bordered">
                                         <thead class="table-light">
@@ -173,8 +169,7 @@
                                             $grandTotal = 0;
                                             $grandWeightedTotal = 0;
                                         @endphp
-
-                                        @foreach($groupedBySection as $section => $criteriaList)
+                                        @foreach ($groupedBySection as $section => $criteriaList)
                                             @php
                                                 $firstEntry = $criteriaList->first();
                                                 $sectionName = $firstEntry->rfqCriteriaUnscoped?->section?->SectionName ?? 'Uncategorized';
@@ -183,14 +178,13 @@
                                                 $maxScorePerCriteria = 10;
                                                 $totalMaxSectionScore = $maxScorePerCriteria * $criteriaList->count();
                                             @endphp
-
                                             <tr class="table-secondary fw-bold">
                                                 <td colspan="5">
                                                     {{ $sectionName }}
-                                                    <span class="text-muted">(Section Weight: {{ $sectionWeight }}%)</span>
+                                                    <span
+                                                        class="text-muted">(Section Weight: {{ $sectionWeight }}%)</span>
                                                 </td>
                                             </tr>
-
                                             @foreach ($criteriaList as $entry)
                                                 @php
                                                     $sectionTotal += $entry->Score;
@@ -204,21 +198,19 @@
                                                     <td>{{ $entry->Comments ?? '-' }}</td>
                                                 </tr>
                                             @endforeach
-
                                             @php
-                                                $sectionWeightedScore = $totalMaxSectionScore > 0
-                                                    ? round(($sectionTotal / $totalMaxSectionScore) * $sectionWeight, 2)
-                                                    : 0;
+                                                $sectionWeightedScore =
+                                                    $totalMaxSectionScore > 0
+                                                        ? round(($sectionTotal / $totalMaxSectionScore) * $sectionWeight, 2)
+                                                        : 0;
                                                 $grandWeightedTotal += $sectionWeightedScore;
                                             @endphp
-
                                             <tr class="fw-bold bg-light">
                                                 <td colspan="3" class="text-end">Subtotal for {{ $sectionName }}</td>
                                                 <td>{{ $sectionTotal }}</td>
                                                 <td class="text-muted">Weighted: {{ $sectionWeightedScore }}%</td>
                                             </tr>
                                         @endforeach
-
                                         <tr class="fw-bold bg-secondary text-white">
                                             <td colspan="3" class="text-end">Total Score</td>
                                             <td>{{ $grandTotal }}</td>

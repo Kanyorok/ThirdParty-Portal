@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Property;
 use App\Enums\Core\PostingEnum;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionRequest;
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionService;
@@ -23,7 +22,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionCreate, PropertyMaintenanceWorkCompletion::class);
+        // $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionCreate, PropertyMaintenanceWorkCompletion::class);
         $assignments = PropertyMaintenanceAssign::where('Status','!=',PostingEnum::Completed)->with('request')->get();
         $finalstatus = CodeDetail::where('CodeID', 'FinalStatus')->get();
         return view('property.maintenanceandissues.workcompletion.create', compact('assignments', 'finalstatus'));
@@ -31,16 +30,16 @@ class PropertyMaintenanceWorkCompletionController extends Controller
 
     public function store(PropertyMaintenanceWorkCompletionRequest $request)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionCreate, PropertyMaintenanceWorkCompletion::class);
+        // $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionCreate, PropertyMaintenanceWorkCompletion::class);
 
         $validated = $request->validated();
 
         $requestNumber = PropertyMaintenanceAssign::findOrFail($validated['RequestNumber']);
-        $finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);$finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);
-        $document = $request->file('Document');
+        $finalstatus = CodeDetail::findOrFail((int)$validated['FinalStatus']);
 
         $user = Auth::user();
 
+        foreach ($request->file('Document', []) as $uploadedFile) {
         $workCompletion = PropertyMaintenanceWorkCompletionService::create(
             $requestNumber,
             $validated['CompletionDate'],
@@ -48,17 +47,18 @@ class PropertyMaintenanceWorkCompletionController extends Controller
             $validated['PartsUsed'],
             $validated['Cost'],
             $finalstatus,
-            auth()->user(),
-            $document
+            Auth::user(),
+            $uploadedFile
         );
-        
+        }
+
         return redirect()->route('workcompletion.index')->with('success', 'Work completion created successfully');
 
     }
     public function edit($Id)
     {
         //Check if user has permission to edit tender categories
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignUpdate, PropertyMaintenanceAssign::class);
+        //$this->authorize(PermissionEnum::PropertyMaintenanceAssignUpdate, PropertyMaintenanceAssign::class);
         $workCompletion = PropertyMaintenanceWorkCompletion::findOrFail($Id);
         $assignments = PropertyMaintenanceAssign::with('request')->get();
         $finalstatus = CodeDetail::where('CodeID', 'FinalStatus')->get();
@@ -67,9 +67,9 @@ class PropertyMaintenanceWorkCompletionController extends Controller
 
     public function update(PropertyMaintenanceWorkCompletionRequest $request, $Id)
     {
-      $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionUpdate, PropertyMaintenanceWorkCompletion::class);
+        // $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionUpdate, PropertyMaintenanceWorkCompletion::class);
         $validated = $request->validated();
-        
+
             $workCompletions = PropertyMaintenanceWorkCompletion::findOrFail($Id);
 
             $document = $request->file('Document');
@@ -82,7 +82,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
                 $validated['PartsUsed'],
                 $validated['Cost'],
                 $finalstatus,
-                auth()->user(),
+                Auth::user(),
                 $document
             );
 
@@ -90,7 +90,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
     }
     public function show($Id)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionView, PropertyMaintenanceWorkCompletion::class);
+        //  $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionView, PropertyMaintenanceWorkCompletion::class);
         $workCompletion = PropertyMaintenanceWorkCompletion::with('request', 'finalstatus')->findOrFail($Id);
         return view('property.maintenanceandissues.workcompletion.show', compact('workCompletion'));
     }
@@ -99,7 +99,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
     public function destroy($Id)
     {
         //Check if user has permission to delete property categories
-        $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionDelete, PropertyMaintenanceWorkCompletion::class);
+        // $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionDelete, PropertyMaintenanceWorkCompletion::class);
         try {
             $workCompletion = PropertyMaintenanceWorkCompletion::findOrFail($Id);
             $workCompletion->delete();

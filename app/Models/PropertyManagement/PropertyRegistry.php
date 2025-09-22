@@ -4,13 +4,14 @@ namespace App\Models\PropertyManagement;
 
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\Locality;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\Auth\User;
 class PropertyRegistry extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
     //
     protected $table = 't_PropertyRegistry';
     const CREATED_AT = 'CreatedOn';
@@ -65,4 +66,17 @@ class PropertyRegistry extends Model
     {
         return $this->hasMany(PropertyAttachments::class, 'PropertyID', 'Id');
     }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+
+
+
 }

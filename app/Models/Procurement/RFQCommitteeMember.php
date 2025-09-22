@@ -93,14 +93,17 @@ class RFQCommitteeMember extends Model
     {
         return 'RFQCommitteeMemberID';
     }
+
     public function employee()
     {
         return $this->user?->employee();
     }
+
     public function getCommitteeMemberNameAttribute(): string
     {
         return $this->employee?->full_name ?? 'Unknown';
     }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'UserID', 'EmployeeId');

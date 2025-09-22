@@ -23,14 +23,16 @@ class MaintenanceRequest extends FormRequest
     {
         return [
             'Property' => 'required|exists:t_PropertyRegistry,Id',
-            'Block' => 'required|exists:t_PropertyBlock,Id',
-            'Floor' => 'required|exists:t_PropertyFloor,Id',
-            'Unit' => 'required|exists:t_PropertyUnit,Id',
+            'Block' => 'nullable|exists:t_PropertyBlock,Id',
+            'Floor' => 'nullable|exists:t_PropertyFloor,Id',
+            'Unit' => 'nullable|exists:t_PropertyUnit,Id',
             'ReportedBy' => 'required|string|max:50',
             'IssueType' => 'required|exists:t_CodeDetails,ID',
             'Priority' => 'required|exists:t_CodeDetails,ID',
             'IssueDescription' => 'required|string|max:255',
-            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'Document' => 'nullable|array',
+            'Document.*' => 'file|max:9000',
         ];
     }
+
 }

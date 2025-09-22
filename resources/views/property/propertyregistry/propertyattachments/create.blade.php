@@ -1,13 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Item Sub Category')
+@section('title', 'Add Property Attachment')
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📂 Add Property Attachment</h4>
-
     <form action="{{ route('attachments.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
   <div class="card shadow">
-    <div class="card-header bg-light fw-bold">➕ Upload Document</div>
+      <div class="card-header bg-light fw-bold">Upload Document</div>
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-6">
@@ -38,7 +36,7 @@
           </div>
         <div class="col-md-6">
           <label class="form-label">Upload File</label>
-          <input type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
+            <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
         </div>
       </div>
 
@@ -46,7 +44,9 @@
         <label class="form-label">Description / Notes </label>
           <textarea class="form-control" rows="2" placeholder="Optional notes..." name="Description"></textarea>
       </div>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">📎 Upload Document</button>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Upload Document
+        </button>
     </form>
     </div>
   </div>

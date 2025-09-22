@@ -2,7 +2,7 @@
 @section('title', 'Rent Collection Dashboard')
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-4">Rent Collection Dashboard</h4>
+    <p><small>The information below is an overview of lease financial transactions (Invoice and Payments)</small></p>
 
     <!-- Summary Cards -->
     <div class="row mb-4">
@@ -103,9 +103,9 @@
                 @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $tenant }}</td>
-                    <td>{{ $property }}</td>
-                    <td>{{ $unit }}</td>
+                    <td>{{ $tenant ?? '-'}}</td>
+                    <td>{{ $property ?? '-'}}</td>
+                    <td>{{ $unit ?? '-'}}</td>
                     <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') }}</td>
                     <td>KES {{ number_format($due) }}</td>
                     <td>KES {{ number_format($paid) }}</td>

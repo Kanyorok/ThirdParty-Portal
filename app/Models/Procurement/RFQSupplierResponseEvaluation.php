@@ -17,6 +17,7 @@ class RFQSupplierResponseEvaluation extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
+
     public static function getPrimaryKey(): string
     {
         return 'RFQSupplierResponseEvaluationsId';
@@ -46,6 +47,7 @@ class RFQSupplierResponseEvaluation extends Model
     {
         return $this->belongsTo(RFQSettingCriteria::class, 'CriteriaId', 'id');
     }
+
     public function getTotalQuotedAttribute()
     {
         if (!$this->relationLoaded('rfqEvaluation')) {
@@ -56,12 +58,14 @@ class RFQSupplierResponseEvaluation extends Model
             ->where('RFQId', $this->rfqEvaluation->RFQId ?? 0)
             ->value('TotalPayable');
     }
+
     public function getDeliveryTimeAttribute()
     {
         return RFQResponse::where('SupplierId', $this->SupplierId)
             ->where('RFQId', $this->rfqEvaluation->RFQId ?? 0)
             ->value('DurationDays');
     }
+
     public function rfqCriteria()
     {
         return $this->hasOne(RFQCriteria::class, 'CriteriaID', 'CriteriaId')
@@ -71,6 +75,7 @@ class RFQSupplierResponseEvaluation extends Model
                 }
             });
     }
+
     public function rfqCriteriaUnscoped()
     {
         return $this->belongsTo(RFQCriteria::class, 'CriteriaId', 'CriteriaID');

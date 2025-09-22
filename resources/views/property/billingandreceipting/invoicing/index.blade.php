@@ -7,7 +7,8 @@
 @section('content')
 <div class="container mt-4">
     <a href="{{ route('rentinvoice.create') }}" class="btn btn-primary mb-3">New Invoice</a>
-    <h4 class="fw-bold mb-3">Rent Invoices</h4>
+
+    <p><small>This is a list of raised invoices</small></p>
 
     @if($invoices->count())
         <table class="table table-bordered table-striped align-middle" id="invoicesTable">
@@ -53,7 +54,7 @@
                     </td>
 
                     <td>
-                        <a href="{{ route('rentinvoice.show', $invoice->Id) }}" class="btn btn-sm btn-outline-primary">👁 View</a>
+                        <a href="{{ route('rentinvoice.show', $invoice->Id) }}" class="btn btn-sm btn-outline-primary">View</a>
                         <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <form action="{{ route('rentinvoice.destroy', $invoice->Id) }}" method="POST" class="d-inline">
                             @csrf

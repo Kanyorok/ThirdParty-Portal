@@ -30,25 +30,25 @@
                             <td>{{$item->Description}}</td>
                             <td>
                                 <a
-                                        href="#"
-                                        class="btn btn-sm btn-outline-primary"
-                                        title="Edit"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editCriteriaModal"
-                                        data-id="{{ $item->id }}"
-                                        data-name="{{ $item->CriteriaName }}"
-                                        data-desc="{{ $item->Description }}"
+                                    href="#"
+                                    class="btn btn-sm btn-outline-primary"
+                                    title="Edit"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editCriteriaModal"
+                                    data-id="{{ $item->id }}"
+                                    data-name="{{ $item->CriteriaName }}"
+                                    data-desc="{{ $item->Description }}"
                                 >
                                     <i class="fas fa-edit"></i>
                                 </a>
 
                                 <button
-                                        class="btn btn-sm btn-outline-danger"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#deleteCriteriaModal"
-                                        data-id="{{ $item->id }}"
-                                        data-name="{{ $item->CriteriaName }}"
-                                        title="Delete"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteCriteriaModal"
+                                    data-id="{{ $item->id }}"
+                                    data-name="{{ $item->CriteriaName }}"
+                                    title="Delete"
                                 >
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
@@ -64,7 +64,8 @@
     </div>
 
     <!-- Add Criteria Modal -->
-    <div class="modal fade" id="addCriteriaModal" tabindex="-1" aria-labelledby="addCriteriaModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addCriteriaModal" tabindex="-1" aria-labelledby="addCriteriaModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
@@ -73,20 +74,24 @@
                 </div>
 
                 <form action="{{ route('rfqsettingcriterias.store') }}" method="POST">
-                @csrf
+                    @csrf
                     @method('POST')
                     <input type="hidden" name="section_id" value="{{ $sectionID }}">
 
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Criteria Name</label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. Experience, Compliance">
-                            @error('name')<div class="text-danger mt-2">{{ $message }}</div>@enderror
+                            <input type="text" name="name" class="form-control"
+                                   placeholder="e.g. Experience, Compliance">
+                            @error('name')
+                            <div class="text-danger mt-2">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Description</label>
-                            <textarea name="desc" class="form-control" rows="2" placeholder="Optional description"></textarea>
-                            @error('desc')<div class="text-danger mt-2">{{ $message }}</div>@enderror
+                            <textarea name="desc" class="form-control" rows="2"
+                                      placeholder="Optional description"></textarea>
+                            @error('desc')
+                            <div class="text-danger mt-2">{{ $message }}</div>@enderror
                         </div>
                     </div>
 
@@ -100,7 +105,8 @@
     </div>
 
     <!-- Edit Criteria Modal -->
-    <div class="modal fade" id="editCriteriaModal" tabindex="-1" aria-labelledby="editCriteriaModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editCriteriaModal" tabindex="-1" aria-labelledby="editCriteriaModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
@@ -116,12 +122,14 @@
                         <div class="mb-3">
                             <label class="form-label">Criteria Name</label>
                             <input type="text" id="editCriteriaName" name="name" class="form-control">
-                            @error('name')<div class="text-danger mt-2">{{ $message }}</div>@enderror
+                            @error('name')
+                            <div class="text-danger mt-2">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Description</label>
                             <textarea id="editCriteriaDesc" name="desc" class="form-control" rows="2"></textarea>
-                            @error('desc')<div class="text-danger mt-2">{{ $message }}</div>@enderror
+                            @error('desc')
+                            <div class="text-danger mt-2">{{ $message }}</div>@enderror
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -134,7 +142,8 @@
     </div>
 
     <!-- Delete Criteria Modal -->
-    <div class="modal fade" id="deleteCriteriaModal" tabindex="-1" aria-labelledby="deleteCriteriaModalLabel" aria-hidden="true">
+    <div class="modal fade" id="deleteCriteriaModal" tabindex="-1" aria-labelledby="deleteCriteriaModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">

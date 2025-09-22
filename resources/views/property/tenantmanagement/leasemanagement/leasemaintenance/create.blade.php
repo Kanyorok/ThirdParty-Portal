@@ -10,8 +10,7 @@
             </ul>
         </div>
     @endif
-<div class="container mt-4">
-    <h4 class="fw-bold mb-3">New Lease Agreement</h4>
+    <div class="container mt-4">
 
     <form method="POST" action="{{ route('addlease.store') }}" enctype="multipart/form-data">
         @csrf
@@ -23,19 +22,15 @@
                 <!-- Tenant Selection -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Select Tenant</label>
-            <select name="Tenant" class="form-select" required>
+                        <label class="form-label">Select Tenant<span class="text-danger">*</span></label>
+                        <select name="Tenant" class="form-select" required>
                 <option value="">-- Select Tenant --</option>
                 @foreach ($newtenants as $newtenant)
-                    <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
+                                <option value="{{ $newtenant->Id }}">{{ $newtenant->TenantName }}</option>
                 @endforeach
-            </select>
+                        </select>
                     </div>
-                </div>
-
-                <!-- Property Hierarchy -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">Select Property<span class="text-danger">*</span></label>
                         <select name="PropertyID" id="property-select" class="form-select" required>
                             <option value="">-- Select Property --</option>
@@ -43,27 +38,30 @@
                                 <option value="{{ $property->Id }}">{{ $property->PropertyName }}</option>
                             @endforeach
                         </select>
+                    </div>
           </div>
 
-          <div class="col-md-4">
+                <!-- Property Hierarchy -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
               <label class="form-label">Select Block<span class="text-danger">*</span></label>
               <select name="BlockID" id="block-select" class="form-select" required>
                   <option value="">-- Select Block --</option>
               </select>
-          </div>
+                    </div>
 
-          <div class="col-md-4">
+                    <div class="col-md-4">
               <label class="form-label">Select Floor<span class="text-danger">*</span></label>
               <select name="FloorID" id="floor-select" class="form-select" required>
                   <option value="">-- Select Floor --</option>
               </select>
-          </div>
+                    </div>
 
-                    <div class="col-md-6 mt-3">
+                    <div class="col-md-4">
                         <label class="form-label">Select Unit<span class="text-danger">*</span></label>
                         <select name="Unit" id="unit-select" class="form-select" required>
                             <option value="">-- Select Unit --</option>
-            </select>
+                        </select>
                     </div>
                 </div>
 
@@ -88,54 +86,63 @@
                     </div>
                 </div>
 
-        <!-- Financials -->
-        <div class="row g-3 mb-3">
-          <div class="col-md-4">
-            <label class="form-label">Monthly Rent (KES)<span class="text-danger">*</span></label>
-            <input type="number" class="form-control" placeholder="e.g. 25000" name="MonthlyRent" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Deposit (KES)<span class="text-danger">*</span></label>
-            <input type="number" class="form-control" placeholder="e.g. 25000" name="Deposit" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Serive Charge (KES)<span class="text-danger">*</span></label>
-            <input type="number" class="form-control" placeholder="e.g. 5000" name="ServiceCharge" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Parking Fee (KES)<span class="text-danger">*</span></label>
-            <input type="number" class="form-control" placeholder="e.g. 1000" name="ParkingFee" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Other charges (KES)<span class="text-danger">*</span></label>
-            <input type="number" class="form-control" placeholder="e.g. 250" name="OtherCharges" required>
-          </div>
+                <!-- Financials -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Monthly Rent (KES)<span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" placeholder="e.g. 25000" name="MonthlyRent" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Deposit (KES)<span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" placeholder="e.g. 25000" name="Deposit" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Serive Charge (KES)<span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" placeholder="e.g. 5000" name="ServiceCharge" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Parking Fee (KES)<span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" placeholder="e.g. 1000" name="ParkingFee" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Other charges (KES)<span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" placeholder="e.g. 250" name="OtherCharges" required>
+                    </div>
           <div class="col-md-4">
             <label class="form-label">Due Day<span class="text-danger">*</span></label>
-            <input type="number" class="form-control" placeholder="e.g. 5" name="DueDay" required>
+              <input type="number"
+                     class="form-control"
+                     placeholder="due should be between 1 and 28"
+                     name="DueDay"
+                     min="1"
+                     max="28"
+                     required>
+              <small class="text-muted">Must be between 1 and 28</small>
           </div>
-        </div>
 
-                <!-- Terms and Document -->
-                <div class="mb-3">
-                    <label class="form-label">Special Terms & Conditions</label>
-                    <textarea class="form-control" rows="3" placeholder="Optional terms or notes..."
-                              name="SpecialTerms"></textarea>
+
+                    <!-- Terms and Document -->
+                    <div class="mb-3">
+                        <label class="form-label">Special Terms & Conditions</label>
+                        <textarea class="form-control" rows="3" placeholder="Optional terms or notes..."
+                                  name="SpecialTerms"></textarea>
+                    </div>
+
+                    <!-- Document Upload -->
+                    <div class="mb-3">
+                        <label class="form-label">Upload Lease Document</label>
+                        <input type="file" name="Document[]" class="form-control" multiple>
+                        <small class="text-muted">e.g. upload Lease Document</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Lease
+                    </button>
+
                 </div>
-
-                      <!-- Document Upload -->
-                <div class="mb-3">
-                    <label class="form-label">Upload Lease Document</label>
-                    <input type="file" name="Document" class="form-control" multiple>
-                    <small class="text-muted">e.g. upload Lease Document</small>
-                </div>
-
-                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Lease</button>
-
             </div>
-        </div>
     </form>
-</div>
+    </div>
 
     <script>
         // Define routes with placeholders

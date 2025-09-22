@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockItemRequest;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\ItemCategories;
-use App\Models\Inventory\Store;
 use App\Models\Inventory\ItemMasterList;
+use App\Models\Inventory\Store;
 use App\Models\Core\Branch;
 use App\Services\Inventory\StockItemService;
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class SKUController extends Controller
     {
         $this->authorize('viewAny', StockItem::class);
 
-        $items = StockItem::all();
+        $items = StockItem::with(['item', 'store', 'uom'])->get(); // Eager load relationships
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
@@ -33,9 +33,9 @@ class SKUController extends Controller
     {
         $this->authorize('create', StockItem::class);
 
-        $categories = ItemCategories::whereNull('ParentId')->get();
         $branches = Branch::all();
-        $stores = [];
+        $categories = ItemCategories::whereNull('ParentId')->get();
+        $stores = []; // Will be loaded via AJAX
 
         return view('inventory.itemmaster.sku.create', compact('branches', 'stores', 'categories'));
     }
@@ -48,7 +48,7 @@ class SKUController extends Controller
 
         try {
             $skuCode = $this->stockItemService->create($data);
-            return redirect()->route('sku.index')->with('success', 'Stock item added successfully with SKU: ' . $skuCode);
+            return redirect()->route('sku.index')->with('success', "Stock item added successfully with SKU: $skuCode");
         } catch (\Exception $e) {
             return back()->withErrors('Failed to create stock item: ' . $e->getMessage())->withInput();
         }
@@ -56,7 +56,7 @@ class SKUController extends Controller
 
     public function show($id)
     {
-        $item = StockItem::findOrFail($id);
+        $item = StockItem::with(['item', 'store', 'uom'])->findOrFail($id);
         $this->authorize('view', $item);
 
         return view('inventory.itemmaster.sku.show', compact('item'));
@@ -64,17 +64,18 @@ class SKUController extends Controller
 
     public function edit($id)
     {
-        $item = StockItem::findOrFail($id);
+        $item = StockItem::with('item.category.parent')->findOrFail($id);
         $this->authorize('update', $item);
 
-        $categories = ItemCategories::whereNull('ParentId')->get();
         $branches = Branch::all();
+        $categories = ItemCategories::whereNull('ParentId')->get();
         $stores = Store::where('BranchID', $item->Branch)->get();
 
-        $categoryId = $item->item->category->parent ? $item->item->category->parent->Id : $item->item->category->Id;
-        $subcategoryId = $item->item->category->parent ? $item->item->category->Id : null;
+        $category = $item->item->category;
+        $parentCategoryId = $category->parent ? $category->parent->Id : $category->Id;
+        $subcategoryId = $category->parent ? $category->Id : null;
 
-        $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)->get();
+        $items = ItemMasterList::where('Category', $subcategoryId ?? $parentCategoryId)->get();
 
         return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores', 'categories', 'items'));
     }
@@ -97,7 +98,7 @@ class SKUController extends Controller
     public function destroy($id)
     {
         $item = StockItem::findOrFail($id);
-        $this->authorize('destroy', $item); 
+        $this->authorize('delete', $item);
 
         try {
             $this->stockItemService->delete($item);
@@ -107,7 +108,6 @@ class SKUController extends Controller
         }
     }
 
-    // AJAX: get stores by branch
     public function getStores(Request $request)
     {
         $branchId = $request->get('BranchID');
@@ -119,7 +119,6 @@ class SKUController extends Controller
         return response()->json($stores);
     }
 
-    // AJAX: get items by category or subcategory
     public function getItemsByCategoryOrSubcategory(Request $request)
     {
         $categoryId = $request->get('category_id');
@@ -128,4 +127,29 @@ class SKUController extends Controller
         $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)->get(['Id', 'ItemName']);
         return response()->json($items);
     }
+
+    public function getItemDetails(Request $request)
+    {
+        $itemId = $request->get('item_id');
+
+        if (!$itemId) {
+            return response()->json(['error' => 'Item ID is required'], 400);
+        }
+
+        $item = ItemMasterList::with('uom')->find($itemId);
+
+        if (!$item) {
+            return response()->json(['error' => 'Item not found'], 404);
+        }
+
+        return response()->json([
+            'UnitCost' => $item->price?->ActualPrice ?? 0,
+            'PriceID' => $item->price?->Id ?? null,
+            'UOM' => [
+                'id' => $item->UOM,
+                'name' => $item->uom?->Name ?? 'N/A'
+            ]
+        ]);
+    }
+
 }

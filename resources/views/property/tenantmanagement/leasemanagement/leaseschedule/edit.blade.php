@@ -11,37 +11,38 @@
             </ul>
         </div>
     @endif
-    <h1>Edit Lease Schedule</h1>
     <form action="{{ route('schedulelease.update', $leaseschedules->Id) }}" method="POST">
         @csrf
         @method('PUT')
-                <div class="row g-3 mb-3">
-                                        <div class="col-md-6">
-                        <label class="form-label">Select Lease Number</label>
-                            <select id="lease-select" name="LeaseId" class="form-select" required>
-                                <option value="">-- Select Lease --</option>
-                                @foreach ($newleases as $lease)
-                                    <option 
-                                        value="{{ $lease->Id }}"
-                                        data-leasenumber="{{ $lease->LeaseNumber }}"
-                                        data-tenant-id="{{ $lease->Tenant }}"
-                                        data-tenant-name="{{ $lease->tenant->TenantName ?? 'N/A' }}"
-                                        data-property-name="{{ $lease->property->PropertyName ?? 'N/A' }}"
-                                        data-frequency-id="{{ $lease->PaymentFrequency }}"
-                                        data-frequency-name="{{ $lease->code->Description ?? 'N/A' }}"
-                                        @if(old('LeaseId', $leaseschedules->LeaseNumber) == $lease->Id) selected @endif
-                                    >
-                                        {{ $lease->LeaseNumber }}
-                                    </option>
-                                @endforeach
-                            </select>
-                    </div>
-                    <!-- Auto-filled Tenant -->
-                    <div class="col-md-6">
-                        <label class="form-label">Tenant</label>
-                        <input type="text" id="tenant-display" class="form-control" readonly value="{{ old('TenantName', $leaseschedules->lease->tenant->TenantName ?? '') }}">
-                        <input type="hidden" name="TenantId" id="tenant-id" value="{{ old('TenantId', $leaseschedules->lease->tenant->Id ?? '') }}">
-                    </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Select Lease Number</label>
+                <select id="lease-select" name="LeaseId" class="form-select" required>
+                    <option value="">-- Select Lease --</option>
+                    @foreach ($newleases as $lease)
+                        <option
+                            value="{{ $lease->Id }}"
+                            data-leasenumber="{{ $lease->LeaseNumber }}"
+                            data-tenant-id="{{ $lease->Tenant }}"
+                            data-tenant-name="{{ $lease->tenant->TenantName ?? 'N/A' }}"
+                            data-property-name="{{ $lease->property->PropertyName ?? 'N/A' }}"
+                            data-frequency-id="{{ $lease->PaymentFrequency }}"
+                            data-frequency-name="{{ $lease->code->Description ?? 'N/A' }}"
+                            @if(old('LeaseId', $leaseschedules->LeaseNumber) == $lease->Id) selected @endif
+                        >
+                            {{ $lease->LeaseNumber }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <!-- Auto-filled Tenant -->
+            <div class="col-md-6">
+                <label class="form-label">Tenant</label>
+                <input type="text" id="tenant-display" class="form-control" readonly
+                       value="{{ old('TenantName', $leaseschedules->lease->tenant->TenantName ?? '') }}">
+                <input type="hidden" name="TenantId" id="tenant-id"
+                       value="{{ old('TenantId', $leaseschedules->lease->tenant->Id ?? '') }}">
+            </div>
 
             <!-- Auto-filled Property -->
             <div class="col-md-6">

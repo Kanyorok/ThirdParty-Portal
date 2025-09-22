@@ -5,6 +5,7 @@
         .modal {
             z-index: 1055; /* Ensure modal is above backdrop */
         }
+
         .modal-backdrop {
             z-index: 1040; /* Ensure backdrop is below modal */
         }
@@ -19,16 +20,20 @@
             </ul>
         </div>
     @endif
-    <div class="card mt-4">
-        <div class="mb-2 d-flex justify-content-between">
-            <a href="javascript:void(0)" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addRateModal">
-                + New Rate
-            </a>
-        </div>
-        <div class="card-header bg-secondary text-white">📈Product Rates</div>
+    <div class="mb-0 d-flex justify-content-between">
+        <a href="javascript:void(0)" class="btn btn-success btn-sm" data-bs-toggle="modal"
+           data-bs-target="#addRateModal">
+            + New Rate
+        </a>
+    </div>
+    <div class="card mt-2">
+
+        {{--        <div class="card-header bg-secondary text-white">📈Product Rates</div>--}}
         <p class="text-muted">
-            This form allows you to configure and manage financial rates for products imported from the Core Banking System (CBS).
-            Specify the rate type (e.g., interest, tax, discount), applicable product and source of the rate. These settings will directly impact budget drivers and projections tied to each product.
+            This form allows you to configure and manage financial rates for products imported from the Core Banking
+            System (CBS).
+            Specify the rate type (e.g., interest, tax, discount), applicable product and source of the rate. These
+            settings will directly impact budget drivers and projections tied to each product.
         </p>
         <div class="card-body">
             <table class="table table-bordered table-striped">
@@ -45,13 +50,14 @@
                 <tbody>
                 @foreach ($driverRates as $item)
                     <tr>
-                        <td>{{ $loop->iteration }}. </td>
-                        <td>{{ $item->productType->Name }}</td>
+                        <td>{{ $loop->iteration }}.</td>
+                        <td>{{ $item->productType->Description }}</td>
                         <td>{{ $item->rateType->RateTypeName }}</td>
                         <td>{{ $item->RateValue }}</td>
                         <td>{{ $item->Source }}</td>
                         <td>
-                            <a href="{{route('yieldexpenserate.edit', $item->Id)}}" class="btn btn-sm btn-secondary">✏️</a>
+                            <a href="{{route('yieldexpenserate.edit', $item->Id)}}"
+                               class="btn btn-sm btn-secondary">✏️</a>
                             <button type="button"
                                     class="btn btn-sm btn-danger custom-delete-btn"
                                     data-bs-toggle="modal"
@@ -111,7 +117,8 @@
                             <!-- Rate Value -->
                             <div class="mb-4 col-md-6">
                                 <label class="form-label">Rate Value (%)</label>
-                                <input type="number" step="0.01" class="form-control" name="RateValue" placeholder="e.g. 10.5" required>
+                                <input type="number" step="0.01" class="form-control" name="RateValue"
+                                       placeholder="e.g. 10.5" required>
                                 @error('RateValue')
                                 <div class="text-danger">{{ $message }}</div>
                                 @endif
@@ -120,7 +127,8 @@
                             <!-- Source -->
                             <div class="mb-4 col-md-6">
                                 <label class="form-label">Source</label>
-                                <input type="text" class="form-control" name="Source" placeholder="e.g. CBS, Manual" required>
+                                <input type="text" class="form-control" name="Source" placeholder="e.g. CBS, Manual"
+                                       required>
                                 @error('Source')
                                 <div class="text-danger">{{ $message }}</div>
                                 @endif
@@ -128,8 +136,10 @@
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
+                            </button>
+                            <button type="submit" class="btn btn-success"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Saving...'; this.form.submit(); }">
                                 💾 Save Driver Rate
                             </button>
                         </div>

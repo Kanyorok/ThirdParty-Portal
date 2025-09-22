@@ -3,14 +3,12 @@
 
 @section('content')
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">Complete Maintenance Request</h4>
-
   <form action="{{ route('workcompletion.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="card shadow">
       <div class="card-header bg-light fw-bold">Work Execution & Resolution</div>
       <div class="card-body">
-        
+
         <!-- Request Selection -->
         <div class="row g-3 mb-3">
           <div class="col-md-6">
@@ -29,57 +27,46 @@
               @endforeach
             </select>
           </div>
-        </div>
-
         <!-- Auto-filled Property Info -->
-        <div class="row g-3 mb-3">
-          <div class="col-md-3">
+            <div class="col-md-6">
             <label class="form-label">Property</label>
             <input type="text" id="property-display" class="form-control" readonly>
             <input type="hidden" name="Property" id="property-id" value="{{ old('Property') }}">
           </div>
-          <div class="col-md-3">
+        </div>
+
+          <div class="row g-3 mb-3">
+              <div class="col-md-4">
             <label class="form-label">Block</label>
             <input type="text" id="block-display" class="form-control" readonly>
             <input type="hidden" name="Block" id="block-id" value="{{ old('Block') }}">
           </div>
-          <div class="col-md-3">
+              <div class="col-md-4">
             <label class="form-label">Floor</label>
             <input type="text" id="floor-display" class="form-control" readonly>
             <input type="hidden" name="Floor" id="floor-id" value="{{ old('Floor') }}">
           </div>
-          <div class="col-md-3">
+              <div class="col-md-4">
             <label class="form-label">Unit</label>
             <input type="text" id="unit-display" class="form-control" readonly>
             <input type="hidden" name="Unit" id="unit-id" value="{{ old('Unit') }}">
           </div>
         </div>
 
-        <!-- Completion Date -->
         <div class="row g-3 mb-3">
-          <div class="col-md-4">
+            <div class="col-md-3">
             <label class="form-label">Completion Date</label>
             <input type="date" class="form-control" name="CompletionDate" value="{{ old('CompletionDate', date('Y-m-d')) }}" required>
           </div>
-        </div>
-
-        <!-- Work Summary -->
-        <div class="mb-3">
-          <label class="form-label">Work Done Summary</label>
-          <textarea class="form-control" rows="3" name="WorkDoneSummary" placeholder="e.g. Replaced leaking pipe and sealed joints." required>{{ old('WorkDoneSummary') }}</textarea>
-        </div>
-
-        <!-- Cost and Status -->
-        <div class="row g-3 mb-3">
-          <div class="col-md-4">
+            <div class="col-md-3">
             <label class="form-label">Parts Used (Optional)</label>
             <input type="text" class="form-control" name="PartsUsed" placeholder="e.g. 3/4” Pipe, Valve" value="{{ old('PartsUsed') }}">
           </div>
-          <div class="col-md-4">
-            <label class="form-label">Cost (KES)</label>
+            <div class="col-md-3">
+                <label class="form-label">Cost</label>
             <input type="number" class="form-control" name="Cost" placeholder="e.g. 1500" value="{{ old('Cost') }}">
           </div>
-          <div class="col-md-4">
+            <div class="col-md-3">
             <label class="form-label">Final Status</label>
             <select class="form-select" name="FinalStatus" required>
               <option value="">--Select a status--</option>
@@ -91,11 +78,19 @@
             </select>
           </div>
         </div>
-        
-        <!-- Document Upload -->
+          <!-- Document Upload -->
         <div class="mb-3">
             <label class="form-label">Upload Relevant Documents</label>
-            <input type="file" name="Document" class="form-control" multiple>
+            <input type="file" name="Document[]" class="form-control" multiple>
+        </div>
+
+          <!-- Work Summary -->
+          <div class="mb-3">
+              <label class="form-label">Work Done Summary</label>
+              <textarea class="form-control" rows="3" name="WorkDoneSummary"
+                        placeholder="e.g. Replaced leaking pipe and sealed joints."
+                        required>{{ old('WorkDoneSummary') }}</textarea>
+          </div>
         </div>
 
         <!-- Submit -->

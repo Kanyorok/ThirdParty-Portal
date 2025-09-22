@@ -3,7 +3,7 @@
 @section('content')
     <div class="card mt-4">
 
-        <div class="card-header bg-dark text-white">📑 Budget Entries by Line (Manual Entry)</div>
+        {{--        <div class="card-header bg-dark text-white">📑 Budget Entries by Line (Manual Entry)</div>--}}
         <div class="card-body">
             <!-- Filters -->
             <form class="row g-3 mb-3">

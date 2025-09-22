@@ -56,23 +56,12 @@ class TransactionTransferPolicy
     {
         return $user->can(PermissionEnum::TransactionTransferRestore->value);
     }
-    //  public function approve(User $user, TransactionTransfer $transfer): bool
-    // {
-    // Don't allow approving if already approved or rejected
-    // if (
-    //  $transfer->Status === Transfers::Approved->value ||
-    //  $transfer->Status === Transfers::Rejected->value
-    //) {
-    // return false;
-    // }
 
-    // Don't allow approving your own requisition
-    // if ($requisition->CreatedBy === $user->Id) {
-    //    return false;
-    // }
+    public function approve(User $user): bool
+    {
 
-    // Must have the approval permission
-    // return $user->can(PermissionEnum::TransactionTransferApproval->value);
-    //}
+        return $user->can(PermissionEnum::TransactionTransferApproval->value);
+    }
+
 
 }

@@ -66,6 +66,7 @@
                                 <th>#</th>
                                 <th>Item Name</th>
                                 <th>Item Code</th>
+                                <th>Unit Cost</th>
                                 <th>UOM</th>
                                 <th>Approved Qty</th>
                                 <th>Dispatched Qty</th>
@@ -180,6 +181,11 @@
                                 <input type="hidden" name="items[${index}][item]" value="${item.Item}">
                             </td>
                             <td>${item.ItemCode}</td>
+                            <td>
+                                <input type="number" class="form-control" name="items[${index}][unit_cost]" value="${item.UnitCost}" readonly>
+                                <input type="hidden" name="items[${index}][unit_id]" value="${item.PriceID}">
+                            </td>
+
                             <td>
                                 <input type="text" class="form-control" value="${item.UOMCode}" readonly>
                                 <input type="hidden" name="items[${index}][uom]" value="${item.UOM}">

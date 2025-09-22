@@ -6,7 +6,7 @@ use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\Auth\User;
 class PropertyLeaseSchedule extends Model
 {
     use SoftDeletes, UserActorTrait;
@@ -38,8 +38,19 @@ class PropertyLeaseSchedule extends Model
     {
         return $this->belongsTo(PropertyNewLease::class, 'LeaseNumber', 'Id');
     }
-     public function paymentFrequency()
+
+    public function paymentFrequency()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
     }
 }

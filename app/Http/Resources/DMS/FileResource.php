@@ -68,7 +68,8 @@ class FileResource extends JsonResource
             ],
             'links' => [
                 'detail' => route('files.show', [$this->resource->repository->RepositoryId, $this->DocumentId]),
-                'summary' => route('files.edit', [$this->resource->repository->RepositoryId, $this->DocumentId])
+                'summary' => route('files.edit', [$this->resource->repository->RepositoryId, $this->DocumentId]),
+                'move' => route('file-move.index', ['document' => $this->DocumentId])
             ]
         ], $extra);
     }

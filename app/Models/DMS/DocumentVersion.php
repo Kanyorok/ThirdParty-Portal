@@ -6,15 +6,16 @@ use App\Enums\DMS\DisksEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentVersion extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
 
     protected $table = 't_DocumentVersions';
     protected $primaryKey = 'Id';
@@ -38,5 +39,10 @@ class DocumentVersion extends Model
     public function document(): BelongsTo
     {
         return $this->belongsTo(Document::class, 'DocumentId');
+    }
+
+    public function attributes(): HasMany
+    {
+        return $this->hasMany(DocumentAttribute::class, 'VersionId');
     }
 }

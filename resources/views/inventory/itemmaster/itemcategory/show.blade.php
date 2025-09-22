@@ -15,16 +15,19 @@
 
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">{{ $category->Name }}</h5>
             <p class="card-text"><strong>Category Code:</strong> {{ $category->CategoryCode }}</p>
+            <p class="card-text"><strong>Category Name:</strong> {{ $category->Name }}</p>
             <p class="card-text"><strong>Description:</strong> {{ $category->Description }}</p>
 
-            <p class="card-text">
-                <strong>Parent Category:</strong>
-                {{ $category->parent ? $category->parent->Name : 'None (Top-Level Category)' }}
-            </p>
+            @if($category->parent)
+                <p class="card-text">
+                    <strong>Parent Category:</strong>
+                    {{ $category->parent->Name }}
+                </p>
+            @endif
 
-            <p class="card-text"><strong>Status:</strong> {{ $category->Status ? 'Active' : 'Inactive' }}</p>
+            <p class="card-text"><strong>Status:</strong> {{ $category->status->Description ?? 'N/A' }}</p>
+
 
             <a href="{{ route('itemcategory.edit', $category->Id) }}" class="btn btn-warning">Edit</a>
             <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">Back to List</a>

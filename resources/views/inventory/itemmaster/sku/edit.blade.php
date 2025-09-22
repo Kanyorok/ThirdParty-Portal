@@ -87,7 +87,7 @@
                                 </div>
                             </div>
 
-                            <div class="mb-3">
+                            {{-- <div class="mb-3">
                                 @foreach(['Batch', 'Serial', 'Perishable', 'Saleable', 'Purchasable'] as $field)
                                     <div class="form-check form-check-inline">
                                         <input type="hidden" name="{{ $field }}" value="0">
@@ -96,7 +96,7 @@
                                         <label class="form-check-label">Is {{ ucfirst($field) }}</label>
                                     </div>
                                 @endforeach
-                            </div>
+                            </div> --}}
 
 
                             <div class="row mb-3">

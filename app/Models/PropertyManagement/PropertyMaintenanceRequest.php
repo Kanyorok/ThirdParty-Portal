@@ -8,7 +8,7 @@ use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\Auth\User;
 class PropertyMaintenanceRequest extends Model
 {
     //
@@ -64,5 +64,15 @@ class PropertyMaintenanceRequest extends Model
     public function priority()
     {
         return $this->belongsTo(CodeDetail::class, 'Priority', 'ID');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
     }
 }

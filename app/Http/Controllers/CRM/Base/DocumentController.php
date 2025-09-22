@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 
 class DocumentController extends Controller
 {
@@ -23,6 +24,7 @@ class DocumentController extends Controller
     /**
      * Appendable Html Content for Content
      * @throws AuthorizationException
+     * @deprecated
      */
     public function show(Image $image): View
     {
@@ -34,6 +36,7 @@ class DocumentController extends Controller
     /**
      * Download Content
      * @throws AuthorizationException
+     * @deprecated
      */
     public function edit(Request $request, Image $image)
     {
@@ -49,6 +52,7 @@ class DocumentController extends Controller
     /**
      * Remove the specified resource from storage.
      * @throws AuthorizationException
+     * @deprecated
      */
     public function destroy(Request $request, Image $image): JsonResponse
     {
@@ -58,14 +62,15 @@ class DocumentController extends Controller
         try {
             DB::transaction(static function () use ($image, $actor) {
                 $image->forceFill([
-                                   'DeletedBy' => $actor->Id,
-                                   'DeletedOn' => now(),
-                                  ])->save();
+                    'DeletedBy' => $actor->Id,
+                    'DeletedOn' => now(),
+                ])->save();
                 activity()->causedBy($actor)->performedOn($image->source)->event('delete')->log('trashed attached document : ' . $image->Name);
             });
         } catch (Exception $e) {
             Log::error('Error removing attachment :  ' . $e->getMessage());
             return $this->errored('unexpected error, try again later');
+        } catch (Throwable $e) {
         }
 
         return $this->succeeded('attachment removed successfully');

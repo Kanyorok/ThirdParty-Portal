@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Segment Type')
+@section('title', 'Add COA Segment')
 @section('content')
     <div class="container mt-4">
         <h4 class="mb-4">➕ Add New Segment Type</h4>

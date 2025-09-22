@@ -7,7 +7,8 @@
 @section('content')
     <div class="container mt-4">
         <a href="{{ route('terminatelease.create') }}" class="btn btn-primary mb-3">Terminate Lease</a>
-        <h4 class="fw-bold mb-3">Lease Terminations</h4>
+
+        <p><small>This is a list of terminated leases</small></p>
 
         @if($leaseterminations->count())
             <table id="leasetermination" class="table table-bordered table-striped align-middle">

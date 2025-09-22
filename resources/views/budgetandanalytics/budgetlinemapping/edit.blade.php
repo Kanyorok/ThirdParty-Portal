@@ -3,9 +3,9 @@
 @section('content')
     <div class="container mt-4">
         <div class="card shadow-sm rounded-4">
-            <div class="card-header bg-dark text-white mb-0">
-                ✏️ Edit Budget Line Mapping
-            </div>
+            {{--            <div class="card-header bg-dark text-white mb-0">--}}
+            {{--                ✏️ Edit Budget Line Mapping--}}
+            {{--            </div>--}}
             <div class="card-body">
                 @if ($errors->any())
                     <div class="alert alert-danger rounded-3">
@@ -79,7 +79,7 @@
 
                     <div class="mb-3">
                         <label for="GLS" class="form-label">GL Accounts <span class="text-danger">*</span></label>
-                        <select class="form-select" name="GLS[]" id="GLS" multiple required>
+                        <select class="form-select" name="GLS[]" id="GLS" multiple required size="10">
                             @foreach($gls as $gl)
                                 <option
                                     value="{{ $gl->Id }}" {{ in_array($gl->Id, $selectedGLs ?? []) ? 'selected' : '' }}>{{ $gl->Description }}</option>

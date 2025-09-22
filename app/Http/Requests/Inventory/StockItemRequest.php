@@ -27,12 +27,14 @@ class StockItemRequest extends FormRequest
     public function rules()
     {
         return [
-            'Batch' => 'required|boolean',
+            //'Batch' => 'required|boolean',
             'ItemID' => 'required|exists:t_Items,Id',
-            'Serial' => 'required|boolean',
-            'Perishable' => 'required|boolean',
-            'Saleable' => 'required|boolean',
-            'Purchasable' => 'required|boolean',
+            'UOM' => 'nullable|exists:t_UOM,Id',
+            'UnitCost' => 'nullable|numeric|min:0',
+            // 'Serial' => 'required|boolean',
+            // 'Perishable' => 'required|boolean',
+            // 'Saleable' => 'required|boolean',
+            // 'Purchasable' => 'required|boolean',
             'Store' => 'nullable|exists:t_Stores,Id', 
             'Branch' => 'required|integer|exists:t_Branches,Id',
             'CurrentQty' => 'required|integer|min:0',

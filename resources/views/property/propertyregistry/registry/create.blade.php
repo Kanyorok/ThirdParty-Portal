@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Property Management')
+@section('title', 'Add New Property')
 @section('content')
 @if ($errors->any())
         <div class="alert alert-danger">
@@ -11,11 +11,10 @@
         </div>
     @endif
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">🏢 Add New Property</h4>
 <form action="{{ route('propertyregistry.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
   <div class="card shadow">
-    <div class="card-header bg-light fw-bold">➕ Property Registration</div>
+      <div class="card-header bg-light fw-bold">Property Registration</div>
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-4">
@@ -74,7 +73,7 @@
       </div>
         <div class="col-md-6">
           <label class="form-label">Upload Documents (PDF, JPG)</label>
-          <input type="file" class="form-control" multiple>
+            <input type="file" name="file[]" class="form-control" multiple>
         </div>
       </div>
 
@@ -82,8 +81,8 @@
         <label class="form-label">Property Description</label>
         <textarea class="form-control" rows="3" name="PropertyDescription"></textarea>
       </div>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-            💾 Save Property
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Property
         </button>
         <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-secondary">Cancel</a>
         </form>

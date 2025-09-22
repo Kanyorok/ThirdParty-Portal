@@ -8,7 +8,6 @@ use App\Models\Procurement\DepartmentNeed;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
-
 class ConsolidatedDashboardController extends Controller
 {
     public function index(Request $request)
@@ -41,7 +40,13 @@ class ConsolidatedDashboardController extends Controller
         $years = ['All Years', 2025, 2026, 2027];
 
         return view('procurement.procurementplan.planconsolidation.dashboard.index', compact(
-            'needs', 'branches', 'departments', 'years', 'branch', 'department', 'year'
+            'needs',
+            'branches',
+            'departments',
+            'years',
+            'branch',
+            'department',
+            'year'
         ));
     }
 

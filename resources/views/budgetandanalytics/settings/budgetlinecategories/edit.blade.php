@@ -5,9 +5,9 @@
 @section('content')
     <div class="container mt-4">
         <div class="card shadow-sm rounded-4">
-            <div class="card-header bg-dark text-white mb-0">
-                ✏️ Edit Budget Line Category
-            </div>
+            {{--            <div class="card-header bg-dark text-white mb-0">--}}
+            {{--                ✏️ Edit Budget Line Category--}}
+            {{--            </div>--}}
             <div class="card-body">
 
                 {{-- Display validation errors --}}

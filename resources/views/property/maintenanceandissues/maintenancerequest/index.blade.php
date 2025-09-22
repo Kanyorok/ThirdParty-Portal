@@ -7,7 +7,7 @@
 <div class="container mt-4">
 
 <a href="{{ route('maintenancerequest.create') }}" class="btn btn-primary mb-3">New Request</a>
-  <h4 class="fw-bold mb-3">Maintenance Requests</h4>
+    <p><small>This is a list of raised maintenance requests</small></p>
   <table id='Maintenancerequest' class="table table-bordered table-striped align-middle">
     <thead class="table-light">
       <tr>

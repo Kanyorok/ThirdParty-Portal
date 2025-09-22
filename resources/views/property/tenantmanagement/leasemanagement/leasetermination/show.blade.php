@@ -4,57 +4,71 @@
 @section('title', 'Lease Termination Details')
 
 @section('content')
-    <div class="container mt-5" style="max-width: 800px;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold">Lease Termination Details</h3>
-            <a href="{{ route('terminatelease.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
-        </div>
+    <div class="container mt-4" style="max-width: 1000px;">
 
-        <form>
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label">Lease Number</label>
-                        <input type="text" class="form-control"
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body">
+
+                {{-- Termination Information --}}
+                <h6 class="mb-3 text-dark">Lease Termination Information</h6>
+                <hr>
+                <div class="row g-3 text-dark">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Lease Number</label>
+                        <input type="text" class="form-control bg-light text-dark"
                                value="{{ $leasetermination->lease->LeaseNumber ?? '-' }}" readonly>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Termination Date</label>
-                        <input type="text" class="form-control"
-                               value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}"
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Termination Date</label>
+                        <input type="text" class="form-control bg-light text-dark"
+                               value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d M Y') : '-' }}"
                                readonly>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Termination Reason</label>
-                        <input type="text" class="form-control"
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Termination Reason</label>
+                        <input type="text" class="form-control bg-light text-dark"
                                value="{{ $leasetermination->code->Description ?? '-' }}" readonly>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Remarks</label>
-                        <textarea class="form-control" rows="3"
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Remarks</label>
+                        <textarea class="form-control bg-light text-dark" rows="3"
                                   readonly>{{ $leasetermination->Remarks ?? '—' }}</textarea>
                     </div>
 
-                    @if($leasetermination->ClearanceDocument)
-                        <div class="mb-3">
-                            <label class="form-label">Clearance Document</label>
-                            <div>
-                                <a href="{{ asset('storage/' . $leasetermination->ClearanceDocument) }}" target="_blank"
-                                   class="btn btn-outline-info btn-sm">
-                                    View Uploaded Document
-                                </a>
-                            </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Attached Documents</label>
+                        <div class="p-3 border rounded bg-light text-dark">
+                            @forelse($leasetermination->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                            @empty
+                                <span class="text-muted">No documents attached.</span>
+                            @endforelse
                         </div>
-                    @endif
-                </div>
-
-                <div class="card-footer bg-light d-flex justify-content-end">
-                    <a href="{{ route('terminatelease.index') }}" class="btn btn-outline-secondary">Back</a>
+                    </div>
                 </div>
             </div>
-        </form>
+
+            {{-- Footer with Audit Info + Back --}}
+            <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
+                <div>
+                    Created by <strong>{{ $leasetermination->createdByUser->Name ?? '-' }}</strong>
+                    on
+                    <strong>{{ $leasetermination->CreatedOn ? Carbon::parse($leasetermination->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                    | Modified by <strong>{{ $leasetermination->modifiedByUser->Name ?? '-' }}</strong>
+                    on
+                    <strong>{{ $leasetermination->ModifiedOn ? Carbon::parse($leasetermination->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+                </div>
+                <div>
+                    <a href="{{ route('terminatelease.index') }}" class="btn btn-sm btn-dark">Back</a>
+                </div>
+            </div>
+        </div>
     </div>
+@endsection
+
+@section('scripts')
+    @include('snippets.actions.preview-files')
 @endsection

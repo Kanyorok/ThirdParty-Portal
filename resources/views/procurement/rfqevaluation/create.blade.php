@@ -4,14 +4,14 @@
 
 @section('content')
     <div class="container py-4">
-        @if(session('success'))
+        @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 
-        @if(session('error'))
+        @if (session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -32,15 +32,17 @@
                 <div class="col-sm-4">
                     <select class="form-select" id="rfq-select" name="RFQId" required>
                         <option value="">Select DropDown Or Search</option>
-                        @foreach($rfqs as $rfq)
-                            <option value="{{ $rfq->Id }}" data-comments="{{ $rfq->Comments }}">{{ $rfq->RFQNumber }}</option>
+                        @foreach ($rfqs as $rfq)
+                            <option value="{{ $rfq->Id }}"
+                                    data-comments="{{ $rfq->Comments }}">{{ $rfq->RFQNumber }}</option>
                         @endforeach
                     </select>
                     <div class="invalid-feedback">Please select an RFQ number.</div>
                 </div>
                 <label class="col-sm-2 col-form-label">RFQ Comments</label>
                 <div class="col-sm-4">
-                    <input type="text" class="form-control" id="rfq-total-comments" name="RFQComments" placeholder="" readonly />
+                    <input type="text" class="form-control" id="rfq-total-comments" name="RFQComments" placeholder=""
+                           readonly/>
                 </div>
             </div>
 
@@ -48,12 +50,13 @@
             <div class="mb-3 row">
                 <label class="col-sm-2 col-form-label">Committee Member <span class="text-danger">*</span></label>
                 <div class="col-sm-4">
-                    <input type="text" class="form-control" name="CommitteeMember" id="committee-member" readonly required />
+                    <input type="text" class="form-control" name="CommitteeMember" id="committee-member" readonly
+                           required/>
                     <div class="invalid-feedback">Committee member information is required.</div>
                 </div>
                 <label hidden class="col-sm-2 col-form-label">UserID <span class="text-danger">*</span></label>
                 <div class="col-sm-4">
-                    <input type="hidden" class="form-control" name="UserID" id="user-id" readonly required />
+                    <input type="hidden" class="form-control" name="UserID" id="user-id" readonly required/>
                     <div class="invalid-feedback">User ID is required.</div>
                 </div>
             </div>
@@ -85,7 +88,8 @@
 
             <!-- Confirmation Checkbox -->
             <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" value="1" id="confirmCheck" name="Confirmation" required>
+                <input class="form-check-input" type="checkbox" value="1" id="confirmCheck" name="Confirmation"
+                       required>
                 <label class="form-check-label" for="confirmCheck">
                     I confirm that this scoring is done independently and fairly. <span class="text-danger">*</span>
                 </label>
@@ -117,7 +121,8 @@
                 let isValid = true;
 
                 // Check if all score inputs have values
-                const scoreInputs = evaluationFormsContainer.querySelectorAll('input[name^="Evaluations"][name$="[Score]"]');
+                const scoreInputs = evaluationFormsContainer.querySelectorAll(
+                    'input[name^="Evaluations"][name$="[Score]"]');
                 scoreInputs.forEach(input => {
                     if (!input.value || input.value < 1 || input.value > 10) {
                         isValid = false;
@@ -172,7 +177,10 @@
                 fetch(`/procurement/rfq-responses/${rfqId}`)
                     .then(response => response.json())
                     .then(data => {
-                        const { responses, criteria } = data;
+                        const {
+                            responses,
+                            criteria
+                        } = data;
 
                         if (responses.length > 0) {
                             supplierTableBody.innerHTML = '';
@@ -180,14 +188,14 @@
 
                             responses.forEach((response, index) => {
                                 const status = response.TotalPayable ? 'Approved' : 'No Reply';
-                                const viewQuoteButton = response.TotalPayable
-                                    ? `<button
+                                const viewQuoteButton = response.TotalPayable ?
+                                    `<button
                                                 type="button"
                                                 class="btn btn-sm btn-link view-quote-btn"
                                                 data-response='${JSON.stringify(response).replace(/'/g, '"')}'>
                                             View Quote
-                                        </button>`
-                                    : `<button type="button" class="btn btn-sm btn-link disabled">View Quote</button>`;
+                                        </button>` :
+                                    `<button type="button" class="btn btn-sm btn-link disabled">View Quote</button>`;
 
                                 const action = viewQuoteButton;
 
@@ -249,12 +257,14 @@
                                 evaluationFormsContainer.innerHTML += formHtml;
                             });
                         } else {
-                            supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No supplier details found for the selected RFQ</td></tr>';
+                            supplierTableBody.innerHTML =
+                                '<tr><td colspan="5" class="text-center">No supplier details found for the selected RFQ</td></tr>';
                         }
                     })
                     .catch(error => {
                         console.error('Error fetching RFQ responses:', error);
-                        supplierTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Failed to load supplier details. Please try again.</td></tr>';
+                        supplierTableBody.innerHTML =
+                            '<tr><td colspan="5" class="text-center">Failed to load supplier details. Please try again.</td></tr>';
                     });
             });
         });

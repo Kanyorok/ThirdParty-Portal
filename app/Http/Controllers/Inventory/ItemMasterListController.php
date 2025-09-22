@@ -14,6 +14,8 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\PriceManagement;
+use App\Models\Core\CodeDetail;
+use App\Http\Requests\Inventory\ItemMasterListRequest;
 
 
 class ItemMasterListController extends Controller
@@ -30,10 +32,18 @@ class ItemMasterListController extends Controller
                 ->addColumn('InventoryType', fn($item) => optional($item->inventoryType)->Type ?? '—')
                 ->addColumn('UOM', fn($item) => optional($item->uom)->Code ?? '—')
                 ->addColumn('Status', function ($item) {
-                    return $item->Status == 1
-                        ? '<span class="badge bg-success">Active</span>'
-                        : '<span class="badge bg-warning">Inactive</span>';
+                    if ($item->status && $item->status->Description) {
+                        $desc = $item->status->Description;
+                        $badgeClass = match (strtolower($desc)) {
+                            'active' => 'bg-success',
+                            'inactive' => 'bg-secondary',
+                            default => 'bg-warning',
+                        };
+                        return '<span class="badge ' . $badgeClass . '">' . e($desc) . '</span>';
+                    }
+                    return '<span class="badge bg-warning">Unknown</span>';
                 })
+
                 ->addColumn('ItemPrice', fn($item) => optional($item->price)->ActualPrice ?? '—')
                 ->addColumn('Action', function ($item) {
                     return '
@@ -56,8 +66,10 @@ class ItemMasterListController extends Controller
     {
         $this->authorize('create', ItemMasterList::class);
 
+
         return view('inventory.itemmaster.itemmasterlist.create', [
             'categories' => ItemCategories::whereNull('ParentId')->get(),
+            'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
             'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
             'price' => PriceManagement::all(),
@@ -76,7 +88,7 @@ class ItemMasterListController extends Controller
             'ItemType' => 'required|integer|exists:t_ItemTypes,Id',
             'Category' => 'required|integer|exists:t_ItemCategories,Id',
             'UOM' => 'required|integer|exists:t_UOM,Id',
-            'Status' => 'boolean',
+            'Status' => 'integer|exists:t_CodeDetails,ID',
             'InventoryType' => 'required|integer|exists:t_InventoryTypes,Id',
             'ItemPrice' => 'nullable|integer|exists:t_Pricing,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -145,6 +157,7 @@ class ItemMasterListController extends Controller
         return view('inventory.itemmaster.itemmasterlist.edit', [
             'item' => $item,
             'categories' => ItemCategories::whereNull('ParentId')->get(),
+            'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
             'subcategories' => ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)->get(),
             'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
@@ -164,7 +177,7 @@ class ItemMasterListController extends Controller
             'ItemType' => 'required|integer|exists:t_ItemTypes,Id',
             'Category' => 'required|integer|exists:t_ItemCategories,Id',
             'UOM' => 'required|integer|exists:t_UOM,Id',
-            'Status' => 'boolean',
+            'Status' => 'nullable|integer|exists:t_CodeDetails,ID',
             'ItemPrice' => 'nullable|integer|exists:t_Pricing,Id',
             'InventoryType' => 'required|integer|exists:t_InventoryTypes,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',

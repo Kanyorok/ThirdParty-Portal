@@ -1,12 +1,12 @@
 @extends('layouts.app')
 @section('title', 'Purchase Orders')
 @section('styles')
-<link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
-<style>
+    <link rel="stylesheet" href="{{ asset('assets/plugins/select2/css/select2.min.css') }}">
+    <style>
     .select2-container {
         width: 100% !important;
     }
-</style>
+    </style>
 @endsection
 @section('content')
 
@@ -40,25 +40,26 @@
                         </thead>
                         <tbody>
                         @forelse($details as $item)
-                          <tr>
-                              <td>{{ $loop->iteration }}</td>
-                              <td>{{ $item->OrderNo }}</td>
-                              <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d-m-Y') }}</td>
-                              <td>{{ $item->ExtOrdNum }}</td>
-                              <td>{{ $item->Priority }}</td>
-                              <td>{{ $item->BranchID }}</td>
-                              <td>{{ number_format($item->UnitPrice, 2) }}</td>
-                              <td>{{ $item->ordercount }}</td>
-                              <td>{{ $item->CreatedBy }}</td>
-                              <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
-                              <td> <a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info btn-sm">View</a>
-                                  <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
-                              </td>
-                          </tr>
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $item->OrderNo }}</td>
+                                <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d-m-Y') }}</td>
+                                <td>{{ $item->ExtOrdNum }}</td>
+                                <td>{{ $item->Priority }}</td>
+                                <td>{{ $item->BranchID }}</td>
+                                <td>{{ number_format($item->UnitPrice, 2) }}</td>
+                                <td>{{ $item->ordercount }}</td>
+                                <td>{{ $item->CreatedBy }}</td>
+                                <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
+                                <td><a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info btn-sm">View</a>
+                                    <a href="{{ route('purchaseOrder.approval', $item->Id) }}"
+                                       class="btn btn-success btn-sm">Approve</a>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="15" class="text-center">No orders found.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="15" class="text-center">No orders found.</td>
+                            </tr>
                         @endforelse
                         </tbody>
                     </table>
@@ -69,33 +70,48 @@
 
     <!-- Modal for Show Order -->
     <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="orderModalLabel">Purchase Order Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" id="orderModalBody">
-            <!-- Order details will be loaded here -->
-          </div>
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderModalLabel">Purchase Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="orderModalBody">
+                    <!-- Order details will be loaded here -->
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
 @endsection
 
-@section('scripts')
+@push('scripts')
     <script>
-        $(document).on('click', '.view-order', function() {
-            var orderId = $(this).data('id');
-            var url = "{{ url('procurement/purchaseOrder') }}/" + orderId;
-            $('#orderModalBody').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-            $('#orderModal').modal('show');
-            $.get(url, function(data) {
-                $('#orderModalBody').html(data);
-            }).fail(function() {
-                $('#orderModalBody').html('<div class="alert alert-danger">Failed to load order details.</div>');
+        function initOrdersPage() {
+            // Use off/on to avoid duplicate handlers when partials reload
+            $(document).off('click', '.view-order').on('click', '.view-order', function () {
+                var orderId = $(this).data('id');
+                var url = "{{ url('procurement/purchaseOrder') }}" + "/" + orderId;
+                $('#orderModalBody').html(
+                    '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>'
+                );
+                $('#orderModal').modal('show');
+                $.get(url, function (data) {
+                    $('#orderModalBody').html(data);
+                }).fail(function () {
+                    $('#orderModalBody').html('<div class="alert alert-danger">Failed to load order details.</div>');
+                });
             });
+        }
+
+        // Initial attach on full page load
+        $(function () {
+            initOrdersPage();
+        });
+
+        // Re-run when partial content is loaded via fragment navigation
+        document.addEventListener('partial:loaded', function (e) {
+            initOrdersPage();
         });
     </script>
-@endsection
+@endpush

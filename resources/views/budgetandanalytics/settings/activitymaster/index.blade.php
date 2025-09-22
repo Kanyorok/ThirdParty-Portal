@@ -2,10 +2,10 @@
 @section('title', 'Budget Activity Master')
 
 @section('content')
-    <div class="card p-4">
-        <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">
-            📊 Budget Activity Master
-        </div>
+    <div class="card p-2">
+        {{--        <div class="card-header bg-dark text-white py-4 mb-0" style="font-size: 20px; font-weight: bold;">--}}
+        {{--            📊 Budget Activity Master--}}
+        {{--        </div>--}}
 
         <div class="card-body mb-0">
             <p class="text-muted mb-2">
@@ -74,7 +74,7 @@
                         @endforeach
                     @else
                         <tr>
-                            <td colspan="5" class="text-center text-muted">No budget activities found.</td>
+                            <td colspan="6" class="text-center text-muted">No budget activities found.</td>
                         </tr>
                     @endif
                     </tbody>

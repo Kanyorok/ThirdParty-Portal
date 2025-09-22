@@ -25,6 +25,7 @@
                             <th>Category Code</th>
                             <th>Category Name</th>
                             <th>Description</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
@@ -35,6 +36,18 @@
                                 <td>{{ $category->CategoryCode }}</td>
                                 <td>{{ $category->Name }}</td>
                                 <td>{{ $category->Description }}</td>
+                                <td>
+                                    @php $desc = $category->status->Description ?? null; @endphp
+
+                                    @if($desc === 'Active')
+                                        <span class="badge bg-success">Active</span>
+                                    @elseif($desc === 'Inactive')
+                                        <span class="badge bg-warning">Inactive</span>
+                                    @else
+                                        <span class="badge bg-secondary">Unknown</span>
+                                    @endif
+                                </td>
+
                                 <td>
                                     <a href="{{ route('itemcategory.show', $category->Id) }}"
                                        class="btn btn-secondary btn-sm">View</a>

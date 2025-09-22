@@ -17,6 +17,8 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Inventory\StockTransaction;
+
 use Throwable;
 
 class TransactionTransferService
@@ -119,6 +121,7 @@ class TransactionTransferService
                 'TransferId' => $transfer->Id,
                 'Item' => $itemId,
                 'ApprovedQty' => $itemData['approved_qty'],
+                'UnitCost' => $itemData['unit_cost'] ?? null,
                 'UOM' => $itemData['uom'],
                 'DispatchedQty' => $dispatchedQty,
                 'Remarks' => $itemData['remarks'] ?? null,
@@ -128,11 +131,13 @@ class TransactionTransferService
                 'ModifiedOn' => now(),
             ]);
 
+
             activity()->performedOn($created)->causedBy(Auth::user())
                 ->withProperties(['attributes' => $itemData])
                 ->log('Created Transaction Transfer Item');
         }
     }
+
 
     public function approve(int $id): void
     {
@@ -171,6 +176,61 @@ class TransactionTransferService
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
                 ]);
+
+                $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
+                    ->orderByDesc('id')
+                    ->value('SKUID');
+
+                if ($latestSKU) {
+                    $number = (int)preg_replace('/[^0-9]/', '', $latestSKU);
+                    $nextNumber = str_pad($number + 1, 3, '0', STR_PAD_LEFT);
+                } else {
+                    $nextNumber = '001';
+                }
+
+                $skuId = 'SKU' . $nextNumber;
+
+                $lastToQty = StockTransaction::where('ItemID', $item->Item)
+                    ->where('BranchID', $transfer->FromBranch)
+                    ->orderByDesc('TransactionDate')
+                    ->orderByDesc('id')
+                    ->value('BalanceQty');
+
+                if ($lastToQty === null) {
+                    $lastToQty = StockItem::where('ItemID', $item->Item)
+                        ->where('Branch', $transfer->FromBranch)
+                        ->value('CurrentQty') ?? 0;
+                }
+
+                $newToQty = $lastToQty - $item->DispatchedQty;
+
+                $dispatchedQty = $item->DispatchedQty;
+                $totalCost = ($item->UnitCost ?? 0) * $dispatchedQty;
+
+                // Make totalCost negative if it's a stock-out
+                if ($dispatchedQty > 0) {
+                    $totalCost *= -1;
+                }
+                StockTransaction::create([
+                    'SKUID' => $skuId,
+                    'TransactionType' => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transaction Transfer')->value('ID'),
+                    'ItemID' => $item->Item,
+                    'StoreID' => $stockFrom->Store ?? null,
+                    'BranchID' => $transfer->FromBranch,
+                    'UnitCost' => $item->UnitCost,
+                    'UOMID' => $item->uom->Id,
+                    'QuantityIn' => 0,
+                    'QuantityOut' => $item->DispatchedQty,
+                    'BalanceQty' => $newToQty,
+                    'TotalCost' => $totalCost,
+                    'TransactionDate' => now(),
+                    'ReferenceID' => $transfer->Id,
+                    'Remarks' => 'Transfer to Branch ID ' . $transfer->ToBranch,
+                    'CreatedBy' => Auth::id(),
+                    'CreatedDate' => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
             }
 
             Workflow::create([
@@ -191,7 +251,7 @@ class TransactionTransferService
 
             activity()->performedOn($transfer)->causedBy(Auth::user())
                 ->withProperties(['attributes' => $transfer->toArray()])
-                ->log('Approved Transaction Transfer: stock deducted only from FromBranch');
+                ->log('Approved Transaction Transfer: stock deducted and transaction recorded');
 
             DB::commit();
         } catch (Throwable $th) {

@@ -26,9 +26,9 @@ class PropertyTenantClearanceService
     public static function create(
         PropertyLeaseTermination $Lease,
         DateTime $ExitDate,
-        bool $FinalInspection,
-        bool $AllDuesPaid,
-        bool $KeysReturned,
+        bool     $FinalInspection,
+        bool     $AllDuesPaid,
+        bool     $KeysReturned,
         CodeDetail $DepositRefunded,
         string $AdditionalNotes = null,
         TenantClearanceEnum $Status,
@@ -51,11 +51,11 @@ class PropertyTenantClearanceService
 
 
         if ($document) {
-        $clearance->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::TenantClearanceView->value],
-            $user
+            $clearance->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::TenantClearanceView->value],
+                $user
             );
         }
 
@@ -91,11 +91,11 @@ class PropertyTenantClearanceService
         ]);
 
         if ($document) {
-        $LeaseId->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::TenantClearanceView->value],
-            $user
+            $LeaseId->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::TenantClearanceView->value],
+                $user
             );
         }
 

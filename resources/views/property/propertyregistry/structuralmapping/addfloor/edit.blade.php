@@ -10,12 +10,11 @@
             </ul>
         </div>
     @endif
-    <h1>Edit Floor</h1>
     <form action="{{ route('addfloor.update', $floor->Id) }}" method="POST">
         @csrf
         @method('PUT')
         <div class="card shadow">
-            <div class="card-header bg-light fw-bold">➕ Floor Setup</div>
+            <div class="card-header bg-light fw-bold">Floor Setup</div>
             <div class="card-body">
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
@@ -50,10 +49,10 @@
                         <textarea name="FloorNotes" class="form-control"
                                   rows="4">{{ old('FloorNotes', $floor->FloorNotes) }}</textarea>
                     </div>
-                    <button type="submit" class="btn btn-success">Update Floor</button>
-                    <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
     </div>
+    <button type="submit" class="btn btn-success">Update Floor</button>
+    <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
     </div>
     </div>
 

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Segment Configuration')
+@section('title', 'COA Segments')
 @section('content')
     @if ($errors->any())
         <div class="alert alert-danger">

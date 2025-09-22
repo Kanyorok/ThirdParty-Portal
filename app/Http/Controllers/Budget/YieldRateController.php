@@ -6,6 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetDriverRates;
 use App\Models\Budget\BudgetPeriodTypes;
+use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetRates;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ class YieldRateController extends Controller
         $driverRates = BudgetDriverRates::with('productType', 'periodType', 'rateType')->get();
 
         $periodTypes = BudgetPeriodTypes::select('Id', 'PeriodType')->get();
-        $productTypes = BudgetProductType::select('Id', 'Name')->get();
+        $productTypes = BudgetProduct::select('Id', 'Description as Name')->get();
         $rateTypes = BudgetRates::select('Id', 'RateTypeName')->get();
 
         return view('budgetandanalytics.yieldexpenserate.index', compact(
@@ -46,7 +47,7 @@ class YieldRateController extends Controller
         //Validate request
         $validated = $request->validate([
             // 'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
-            'ProductTypeID' => 'required|integer|exists:t_BudgetProductTypes,id',
+            'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
             'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
             'RateValue' => 'required|numeric|min:0|max:100',
             // 'EffectiveDate'  => 'required|date',
@@ -75,6 +76,7 @@ class YieldRateController extends Controller
             return back()->with('success', 'Driver created successfully');
         } catch (Throwable $th) {
             DB::rollBack();
+            return $th->getMessage();
             Log::error('Failed to Update period:' . $th->getMessage());
 
             return back()->withErrors(['error' => 'Failed to create driver'])->withInput();
@@ -112,7 +114,7 @@ class YieldRateController extends Controller
     {
         $driverRate = BudgetDriverRates::findOrFail($id);
         $periodTypes = BudgetPeriodTypes::select('Id', 'PeriodType')->get();
-        $productTypes = BudgetProductType::select('Id', 'Name')->get();
+        $productTypes = BudgetProduct::select('Id', 'Description as Name')->get();
         $rateTypes = BudgetRates::select('Id', 'RateTypeName')->get();
 
         return view('budgetandanalytics.yieldexpenserate.edit', compact(
@@ -131,7 +133,7 @@ class YieldRateController extends Controller
         //Validate request
         $validated = $request->validate([
             // 'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
-            'ProductTypeID' => 'required|integer|exists:t_BudgetProductTypes,id',
+            'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
             'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
             'RateValue' => 'required|numeric|min:0|max:100',
             // 'EffectiveDate'  => 'required|date',

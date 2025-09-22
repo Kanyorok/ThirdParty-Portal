@@ -66,6 +66,8 @@
                     <th>#</th>
                     <th>Item Code</th>
                     <th>Item Name</th>
+                    <th>UOM</th>
+                    <th>Unit Cost</th>
                     <th>Current Qty</th>
                     <th>Adjustment Qty</th>
                     <th>New Qty</th>
@@ -75,16 +77,31 @@
                 <tbody>
                 @php $oldItems = old('items'); @endphp
 
+
+
                 @if ($oldItems)
                     @foreach ($oldItems as $index => $item)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
                             <td>
-                                <input type="text" class="form-control" value="{{ $item['ItemCode'] ?? '' }}" readonly>
-                                <input type="hidden" name="items[{{ $index }}][Item]" value="{{ $item['Item'] }}">
+                            <td>{{ (int) $index + 1 }}</td>
                             </td>
                             <td>
+                                <input type="text" class="form-control" value="{{ $item['ItemCode'] ?? '' }}" readonly>
+                                <input type="hidden" name="items[{{ $index }}][Item]" value="{{ $item['Item'] ?? '' }}">
+                            </td>
+
+                            <td>
                                 <input type="text" class="form-control" value="{{ $item['ItemName'] ?? '' }}" readonly>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" value="${uom.Code ?? ''}" readonly>
+                                <input type="hidden" name="items[${index}][UOM]" value="${uom.Id ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="text" class="form-control" value="{{ $item['UnitCost'] ?? '' }}" readonly>
+                                <input type="hidden" name="items[{{ $index }}][UnitCost]"
+                                       value="{{ $item['UnitCost'] }}">
                             </td>
                             <td>
                                 <input type="number" class="form-control current-qty"
@@ -149,6 +166,7 @@
         const currentQty = parseFloat(row.querySelector('.current-qty')?.value) || 0;
         const adjustmentQty = parseFloat(input.value) || 0;
         const newQty = currentQty + adjustmentQty;
+
         row.querySelector('.new-qty').value = newQty;
 
         const feedbackDiv = row.querySelector('.adjustment-qty-feedback');
@@ -172,33 +190,50 @@
                 tbody.innerHTML = '';
 
                 data.forEach((stock, index) => {
+                    const item = stock.item || {};
+                    const uom = stock.uom || {};
+                    const uomCode = uom.Code ?? '';
+                    const uomId = uom.Id ?? '';
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${index + 1}</td>
                         <td>
-                            <input type="text" class="form-control" value="${stock.item?.ItemCode ?? ''}" readonly>
+                            <input type="text" class="form-control" value="${item.ItemCode ?? ''}" readonly>
                             <input type="hidden" name="items[${index}][Item]" value="${stock.ItemID}">
-                            <input type="hidden" name="items[${index}][ItemCode]" value="${stock.item?.ItemCode ?? ''}">
+                            <input type="hidden" name="items[${index}][ItemCode]" value="${item.ItemCode ?? ''}">
                         </td>
                         <td>
-                            <input type="text" class="form-control" value="${stock.item?.ItemName ?? ''}" readonly>
-                            <input type="hidden" name="items[${index}][ItemName]" value="${stock.item?.ItemName ?? ''}">
+                            <input type="text" class="form-control" value="${item.ItemName ?? ''}" readonly>
+                            <input type="hidden" name="items[${index}][ItemName]" value="${item.ItemName ?? ''}">
+                        </td>
+                        <td>
+                            <input type="text" class="form-control" value="${uom.Code ?? ''}" readonly>
+                            <input type="hidden" name="items[${index}][UOM]" value="${uom.Id ?? ''}">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" value="${stock.UnitCost}" readonly>
+                            <input type="hidden" name="items[${index}][UnitCost]" value="${stock.UnitCost}">
                         </td>
                         <td>
                             <input type="number" class="form-control current-qty" value="${stock.CurrentQty}" readonly>
                             <input type="hidden" name="items[${index}][CurrentQty]" value="${stock.CurrentQty}">
                         </td>
                         <td>
-                            <input type="number" class="form-control adjustment-qty" name="items[${index}][AdjustmentQty]" placeholder="+/-" onchange="calculateNewQty(this)">
+                            <input type="number" step="any" class="form-control adjustment-qty" name="items[${index}][AdjustmentQty]" placeholder="+/-" onchange="calculateNewQty(this)">
                             <div class="invalid-feedback adjustment-qty-feedback"></div>
                         </td>
-                        <td><input type="number" class="form-control new-qty" readonly></td>
+                        <td>
+                            <input type="number" class="form-control new-qty" readonly>
+                        </td>
                         <td>
                             <input type="text" class="form-control" name="items[${index}][Remarks]" placeholder="Optional remarks">
                             <div class="invalid-feedback remarks-feedback"></div>
                         </td>
                     `;
                     tbody.appendChild(row);
+
+                    // Trigger calculation on input
                     row.querySelector('.adjustment-qty').addEventListener('input', function () {
                         calculateNewQty(this);
                     });
@@ -211,7 +246,9 @@
         $('.select2').select2({placeholder: 'Select user', allowClear: true});
 
         const oldBranchId = "{{ old('Branch') }}";
-        if (oldBranchId && !@json(old('items'))) {
+        const oldItems = @json(old('items'));
+
+        if (oldBranchId && !oldItems) {
             $('#branch').val(oldBranchId).trigger('change');
         } else {
             document.querySelectorAll('.adjustment-qty').forEach(input => {

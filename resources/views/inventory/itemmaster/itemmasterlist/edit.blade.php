@@ -129,10 +129,16 @@
                        accept=".pdf,.doc,.docx,.xls,.xlsx">
             </div>
             <div class="col-md-4">
-                <label for="Status" class="form-label">Active?</label>
-                <input type="hidden" name="Status" value="0">
-                <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status"
-                    {{ old('Status', $item->Status) == 1 ? 'checked' : '' }}>
+                <label for="Status" class="form-label">Item Status</label>
+                <select class="form-control" name="Status">
+                    <option value="">Select Status</option>
+                    @foreach($status as $stat)
+                        <option value="{{ $stat->ID }}"
+                            {{ old('Status', $item->Status) == $stat->ID ? 'selected' : '' }}>
+                            {{ $stat->Description }}
+                        </option>
+                    @endforeach
+                </select>
 
             </div>
         </div>

@@ -3,7 +3,7 @@
 @section('content')
 
     <div class="card mt-4">
-        <div class="card-header bg-dark text-white">✏️ Edit Budget Line Entry</div>
+        {{--        <div class="card-header bg-dark text-white">✏️ Edit Budget Line Entry</div>--}}
         <div class="card-body">
             <form action="{{ route('entrybyglline.update', $entry->Id) }}" method="POST">
                 @csrf
@@ -69,7 +69,7 @@
                                 <input type="number"
                                        value="{{ old('monthly_allocations.'.$key, $entry->allocations->where('Month', str_pad($key, 2, '0', STR_PAD_LEFT))->first()->Allocation ?? 0) }}"
                                        min="0" name="monthly_allocations[{{ $key }}]" class="form-control"
-                                       placeholder="0.00">
+                                       placeholder="0.00" step="0.01" required>
                             </div>
                         @endforeach
                     </div>

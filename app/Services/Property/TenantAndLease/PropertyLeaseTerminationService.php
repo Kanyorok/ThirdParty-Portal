@@ -45,11 +45,11 @@ class PropertyLeaseTerminationService
             ]);
 
             if ($document) {
-            $termination->newDocument(
-                ModulesEnum::Property,
-                $document,
-                [PermissionEnum::PropertyLeaseTerminationView->value],
-                $user
+                $termination->newDocument(
+                    ModulesEnum::Property,
+                    $document,
+                    [PermissionEnum::PropertyLeaseTerminationView->value],
+                    $user
                 );
             }
 

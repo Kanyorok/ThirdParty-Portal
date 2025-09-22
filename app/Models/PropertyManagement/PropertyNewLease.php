@@ -8,6 +8,7 @@ use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
 
 class PropertyNewLease extends Model
 {
@@ -47,6 +48,7 @@ class PropertyNewLease extends Model
     {
         return 'LeaseId';
     }
+
     protected $casts = [
         'Status' => PropertyNewLeaseEnum::class,
     ];
@@ -79,5 +81,16 @@ class PropertyNewLease extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+
 
 }

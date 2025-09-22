@@ -31,7 +31,7 @@ class PropertyFloorController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
+        //$this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
         $lineentries = PropertyRegistry::with('getBlockByProperty')->get();
 
 
@@ -53,7 +53,7 @@ class PropertyFloorController extends Controller
 
     public function store(PropertyFloorRequest $request)
     {
-        $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
+        //$this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
         //dd($request->all());
 
         $validated = $request->validated();
@@ -63,8 +63,8 @@ class PropertyFloorController extends Controller
                 PropertyBlock::findOrFail($validated['BlockID']),
                 $validated['FloorLabel'],
                 $validated['FloorNotes'] ?? '',
-                auth()->user()
-            ); 
+                Auth::user()
+            );
             return redirect()->route('addfloor.index')->with('success', 'Floor added!');
         } catch (Exception $e) {
             return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
@@ -74,7 +74,7 @@ class PropertyFloorController extends Controller
     public function edit($id)
     {
         //Check if user has permission to edit tender categories
-        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyFloor::class);
+        // $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyFloor::class);
         $floor = PropertyFloor::findOrFail($id);
         $blocks = PropertyBlock::all();
         $properties = PropertyRegistry::all();
@@ -85,7 +85,7 @@ class PropertyFloorController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyFloor::class);
+        // $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyFloor::class);
         $validated = $request->validate([
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
@@ -123,7 +123,7 @@ class PropertyFloorController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyFloor::class);
+        // $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyFloor::class);
         try {
             $floor = PropertyFloor::findOrFail($id);
             $floor->delete();

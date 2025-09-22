@@ -8,6 +8,7 @@ use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\StockItem;
+use App\Models\Inventory\StockTransaction;
 use App\Models\Inventory\TransactionReceipt;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -66,7 +67,6 @@ class TransactionReceiptService
                     'ModifiedOn' => now(),
                 ]
             );
-            // ✅ Update InventoryHold entries for this transfer to Delivered and soft-delete them
             $sourceCodeId = CodeDetail::where('CodeID', 'Source')
                 ->where('Description', 'Transaction Transfer')
                 ->value('ID');
@@ -126,6 +126,8 @@ class TransactionReceiptService
             $receiptItem = $receipt->items()->create([
                 'item' => $itemId,
                 'Store' => $storeId,
+                'UnitCost' => $itemData['unit_cost'] ?? null,
+                'UOM' => $itemData['uom'],
                 'ReceivedQty' => $itemData['received_qty'],
                 'DispatchedQty' => $itemData['dispatched_qty'] ?? null,
                 'Discrepancy' => isset($itemData['dispatched_qty'], $itemData['received_qty'])
@@ -142,6 +144,67 @@ class TransactionReceiptService
             $stock->ModifiedBy = Auth::id();
             $stock->ModifiedOn = now();
             $stock->save();
+
+
+            //Generate SKU ID
+            $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
+                ->orderByDesc('id')
+                ->value('SKUID');
+
+            if ($latestSKU) {
+                $number = (int)preg_replace('/[^0-9]/', '', $latestSKU);
+                $nextNumber = $number + 1;
+            } else {
+                $nextNumber = 1;
+            }
+
+            $skuId = 'SKU' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+            $receiptTypeId = CodeDetail::where('CodeID', 'Source')
+                ->where('Description', 'Transaction Receipts')
+                ->value('ID');
+
+            $lastToQty = StockTransaction::where('SKUID', $skuId)
+                ->where('BranchID', $toBranchId)
+                ->where('StoreID', $storeId)
+                ->orderByDesc('TransactionDate')
+                ->orderByDesc('id')
+                ->value('BalanceQty');
+
+            if ($lastToQty === null) {
+                $lastToQty = $stock->CurrentQty - $itemData['received_qty'];
+            }
+
+            $newToQty = $lastToQty + $itemData['received_qty'];
+
+            StockTransaction::create([
+                'SKUID' => $skuId,
+                'TransactionType' => CodeDetail::where('CodeID', 'Source')->where('Description', 'Transfer Receipts')->value('ID'),
+                'ReferenceID' => $receipt->Id,
+                'ItemID' => $itemId,
+                'StoreID' => $storeId,
+                'BranchID' => $toBranchId,
+                'UnitCost' => $itemData['unit_cost'] ?? 0,
+                'UOMID' => $itemData['uom'],
+                'QuantityIn' => $itemData['received_qty'],
+                'QuantityOut' => 0,
+                'BalanceQty' => $newToQty,
+                'TransactionDate' => now(),
+                'TotalCost' => ($itemData['unit_cost'] ?? 0) * ($itemData['received_qty'] ?? 0),
+                'Remarks' => 'Transfer From Branch ID ' . ($receipt->transfer->FromBranch ?? 'Unknown'),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+            Log::info('Stock transaction recorded', [
+                'ItemID' => $itemId,
+                'StoreID' => $storeId,
+                'QuantityIn' => $itemData['received_qty'],
+                'TransactionType' => 'Receipt',
+                'ReferenceID' => $receipt->Id,
+            ]);
+
 
             $damagedQty = (float)($itemData['damaged_qty'] ?? 0);
             if ($damagedQty > 0) {
@@ -173,6 +236,7 @@ class TransactionReceiptService
                     'ModifiedOn' => now(),
                 ]);
             }
+
 
             activity()
                 ->causedBy(auth()->user())

@@ -17,20 +17,22 @@ class ItemCategoryService
         do {
             try {
                 $category = DB::transaction(function () use (&$data) {
-
                     $isSubcategory = !empty($data['ParentId']);
-
-                    $categoryCode = $this->generateCategoryCode($isSubcategory);
-
-                    $data['CategoryCode'] = $categoryCode;
+                    $data['CategoryCode'] = $this->generateCategoryCode($isSubcategory);
                     $data['CreatedBy'] = auth()->id();
                     $data['ModifiedBy'] = auth()->id();
                     $data['CreatedOn'] = now();
                     $data['ModifiedOn'] = now();
-                    $data['Status'] = true;
+
+                    // If no status is selected, default to the first "Active" ID
+                    if (empty($data['Status'])) {
+                        $data['Status'] = CodeDetail::where('CodeID', 'CategoryStatus')
+                            ->where('Description', 'Active')
+                            ->value('ID');
+                    }
 
                     return ItemCategories::create($data);
-                }, 5); // Retry deadlocks up to 5 times
+                }, 5);
 
                 // Activity log after successful creation
                 activity()

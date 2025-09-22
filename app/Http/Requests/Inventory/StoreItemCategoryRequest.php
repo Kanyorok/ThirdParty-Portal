@@ -3,12 +3,8 @@
 
 namespace App\Http\Requests\Inventory;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class StoreItemCategoryRequest extends FormRequest
 {
@@ -33,6 +29,7 @@ class StoreItemCategoryRequest extends FormRequest
             'Name' => 'required|string|max:255',
             'Description' => 'nullable|string',
             'ParentId' => 'nullable|exists:t_ItemCategories,Id',
+            'Status' => 'nullable|exists:t_CodeDetails,ID',
         ];
     }
 }

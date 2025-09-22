@@ -8,7 +8,8 @@
 
 <a href="{{ route('addunit.create') }}" class="btn btn-primary mb-3">Add Unit</a>
 
-  <h4 class="fw-bold mb-3">📋 Property Units</h4>
+    <p><small>The list below is of different units per floor</small></p>
+
     @if($units->count())
         <table id="propertyunits" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
@@ -29,14 +30,14 @@
     @foreach($units as $unit)
       <tr>
           <td>{{ $loop->iteration }}</td>
-          <td>{{ $unit->property->PropertyName }}</td>
+          <td>{{ $unit->property->PropertyName ?? '-'}}</td>
           <td>{{ $unit->blocks?->BlockName ?? 'N/A' }}</td>
           <td>{{ $unit->floors?->FloorLabel ?? 'N/A' }}</td>
-          <td>{{ $unit->UnitCode }}</td>
-          <td>{{ $unit->UnitSize }}</td>
-          <td>{{ $unit->IsRentable ? 'Yes' : 'No' }}</td>
-          <td>{{ $unit->CurrentStatus ? 'Vacant' : 'Occupied' }}</td>
-          <td>{{ $unit->Remarks }}</td>
+          <td>{{ $unit->UnitCode ?? '-'}}</td>
+          <td>{{ $unit->UnitSize ?? '-'}}</td>
+          <td>{{ $unit->IsRentable ? 'Yes' : 'No' ?? '-'}}</td>
+          <td>{{ $unit->CurrentStatus ? 'Vacant' : 'Occupied' ?? '-'}}</td>
+          <td>{{ $unit->Remarks ?? '-'}}</td>
         <td>
             <a href="{{ route('addunit.edit', $unit->Id) }}" class="btn btn-sm btn-warning">Edit</a>
             <form action="{{ route('addunit.destroy', $unit->Id) }}" method="POST" class="d-inline">

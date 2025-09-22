@@ -6,7 +6,8 @@
     @endsection
 <div class="container mt-4">
 <a href="{{ route('renewlease.create') }}" class="btn btn-primary mb-3">Renew Lease</a>
-  <h4 class="fw-bold mb-3">📋 Lease Renewals</h4>
+
+    <p><small>This is a list of renewals</small></p>
 
     @if($leaserenewals->count())
         <table class="table table-bordered table-striped align-middle" id="LeaseRenewal">
@@ -30,13 +31,16 @@
           <td>{{ $leaserenewal->NewStartDate ? \Carbon\Carbon::parse($leaserenewal->NewStartDate)->format('d/m/Y') : '-' }}</td>
           <td>{{ $leaserenewal->NewEndDate ? \Carbon\Carbon::parse($leaserenewal->NewEndDate)->format('d/m/Y') : '-' }}</td>
           <td>{{ $leaserenewal->paymentFrequency->Description ?? '-' }}</td>
-          <td><a href="{{ route('renewlease.show', $leaserenewal->Id) }}" class="btn btn-sm btn-outline-secondary">View</a>
-            <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-            <form action="{{ route('renewlease.destroy', $leaserenewal->Id) }}" method="POST" class="d-inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete</button>
-            </form>
+          <td><a href="{{ route('renewlease.show', $leaserenewal->Id) }}"
+                 class="btn btn-sm btn-outline-secondary">View</a>
+              <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+              <form action="{{ route('renewlease.destroy', $leaserenewal->Id) }}" method="POST" class="d-inline">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn btn-sm btn-danger"
+                          onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete
+                  </button>
+              </form>
           </td>
       </tr>
     @endforeach

@@ -71,6 +71,26 @@ Br ERP provides a comprehensive suite of features covering all critical business
     - Audit trail tracking
     - Industry-specific compliance support
 
+### 11. **Third-party Portal Endpoints**
+
+| Method | Endpoint                                                      |
+|--------|---------------------------------------------------------------|
+| POST   | `/api/third-parties`                                          |
+| POST   | `/api/third-parties-bank-details`                             |
+| DELETE | `/api/third-parties-bank-details/{third_parties_bank_detail}` |
+| PUT    | `/api/third-parties/{third_party}`                            |
+| DELETE | `/api/third-parties/{third_party}`                            |
+| POST   | `/api/third-parties/{third_party}/approve`                    |
+| POST   | `/api/third-parties/{third_party}/reject`                     |
+| PATCH  | `/api/third-parties/{third_party}/status`                     |
+| POST   | `/api/third-party-auth/login`                                 |
+| POST   | `/api/third-party-auth/logout`                                |
+| POST   | `/api/third-party-auth/register`                              |
+| POST   | `/api/third-party-categories`                                 |
+| DELETE | `/api/third-party-categories/{third_party_category}`          |
+| GET    | `/api/third-party-profile`                                    |
+| PUT    | `/api/third-party-profile`                                    |
+| DELETE | `/api/third-party-profile`                                    |
 ---
 
 ### Additional Features:

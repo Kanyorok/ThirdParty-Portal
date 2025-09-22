@@ -32,18 +32,18 @@ class PropertyUnitSeeder extends Seeder
                 // Seed 2 units per floor
                 for ($i = 1; $i <= 2; $i++) {
                     PropertyUnit::create([
-                        'PropertyID'     => $property->Id,
-                        'BlockID'        => $block->Id,
-                        'FloorID'        => $floor->Id,
-                        'UnitCode'       => $block->BlockName . '-' . $floor->FloorLabel . '-U' . $i,
-                        'UnitSize'       => rand(40, 120), // size in square meters
-                        'IsRentable'     => true,
-                        'CurrentStatus'  => '1',
-                        'Remarks'        => 'Standard unit',
-                        'CreatedBy'      => 2,
-                        'ModifiedBy'     => 2,
-                        'CreatedOn'      => $now,
-                        'ModifiedOn'     => $now,
+                        'PropertyID' => $property->Id,
+                        'BlockID' => $block->Id,
+                        'FloorID' => $floor->Id,
+                        'UnitCode' => $block->BlockName . '-' . $floor->FloorLabel . '-U' . $i,
+                        'UnitSize' => rand(40, 120), // size in square meters
+                        'IsRentable' => true,
+                        'CurrentStatus' => '1',
+                        'Remarks' => 'Standard unit',
+                        'CreatedBy' => 2,
+                        'ModifiedBy' => 2,
+                        'CreatedOn' => $now,
+                        'ModifiedOn' => $now,
                     ]);
                 }
             }

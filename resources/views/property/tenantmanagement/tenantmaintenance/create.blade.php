@@ -53,23 +53,22 @@
             <input type="text" class="form-control" name="PostalAddress" placeholder="e.g. P.O. Box 1234 - Nairobi">
         </div>
         <div class="col-md-6">
-          <label class="form-label">Remarks</label>
-            <input type="text" class="form-control" name="Remarks" placeholder="Optional">
-        </div>
-          <div>
-              <label class="form-label">Status<span class="text-danger">*</span></label>
+            <label class="form-label">Status<span class="text-danger">*</span></label>
               <select class="form-select" name="IsActive">
                   <option value="1">Active</option>
                   <option value="0">Inactive</option>
               </select>
-          </div>
-      </div>
-
+        </div>
       <!-- Document Upload -->
       <div class="mb-3">
         <label class="form-label">Upload Supporting Documents</label>
         <input type="file" name="Document" class="form-control" multiple>
         <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
+      </div>
+          <div>
+              <label class="form-label">Remarks</label>
+              <textarea name="Remarks" class="form-control" placeholder="Optional" rows="3"></textarea>
+          </div>
       </div>
         <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Tenant</button>
     </form>

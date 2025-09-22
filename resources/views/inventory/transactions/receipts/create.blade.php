@@ -62,6 +62,8 @@
                         <thead>
             <tr>
                 <th>Product</th>
+                <th>UOM</th>
+                <th>Unit Cost</th>
                 <th>Dispatched Qty</th>
                 <th>Qty Received</th>
                 <th>Discrepancy</th>
@@ -79,6 +81,19 @@
                                         <input type="hidden" name="items[{{ $index }}][item]"
                                                value="{{ $item['item'] }}">
                                     </td>
+
+                                    <td>
+                                        <input type="number" name="items[{{ $index }}][uom]"
+                                               class="form-control uom"
+                                               value="{{ $item['uom'] ?? '' }}" readonly>
+                                    </td>
+
+                                    <td>
+                                        <input type="number" name="items[{{ $index }}][unit_cost]"
+                                               class="form-control unit-cost"
+                                               value="{{ $item['unit_cost'] ?? 0 }}" readonly>
+                                    </td>
+
                                     <td>
                                         <input type="number" name="items[{{ $index }}][dispatched_qty]"
                                                class="form-control dispatched-qty"
@@ -151,34 +166,50 @@
                         const stores = item.stores ?? [];
 
                         const row = `
-            <tr>
-              <td>
-                ${item.item?.ItemName ?? 'N/A'}
-                <input type="hidden" name="items[${index}][item]" value="${item.Item ?? item.item?.Id ?? ''}">
-              </td>
-              <td>
-                <input type="number" name="items[${index}][dispatched_qty]" class="form-control dispatched-qty" value="${dispatchedQty}" readonly>
-              </td>
-              <td>
-                <input type="number" name="items[${index}][received_qty]" class="form-control received-qty" min="0" value="${dispatchedQty}">
-              </td>
-              <td>
-                <input type="number" name="items[${index}][discrepancy]" class="form-control discrepancy" value="0" readonly>
-              </td>
-              <td>
-                <input type="number" name="items[${index}][damaged_qty]" class="form-control" min="0" value="0">
-              </td>
-              <td>
-                <select name="items[${index}][store_id]" class="form-select">
-                  <option value="">-- Select Store --</option>
-                  ${stores.map(store => `<option value="${store.Id}">${store.StoreName}</option>`).join('')}
-                </select>
-              </td>
-              <td>
-                <input type="text" name="items[${index}][remarks]" class="form-control">
-              </td>
-            </tr>
-          `;
+                        <tr>
+                            <td>
+                                ${item.item?.ItemName ?? 'N/A'}
+                                <input type="hidden" name="items[${index}][item]" value="${item.Item ?? item.item?.Id ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="text" class="form-control" value="${item.UOMCode ?? ''}" readonly>
+                                <input type="hidden" name="items[${index}][uom]" value="${item.UOM ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="number" class="form-control" name="items[${index}][unit_cost]" value="${item.UnitCost ?? 0}" readonly>
+                                <input type="hidden" name="items[${index}][price_id]" value="${item.PriceID ?? 0}">
+                            </td>
+
+                            <td>
+                                <input type="number" name="items[${index}][dispatched_qty]" class="form-control dispatched-qty" value="${dispatchedQty}" readonly>
+                            </td>
+
+                            <td>
+                                <input type="number" name="items[${index}][received_qty]" class="form-control received-qty" min="0" value="${dispatchedQty}">
+                            </td>
+
+                            <td>
+                                <input type="number" name="items[${index}][discrepancy]" class="form-control discrepancy" value="0" readonly>
+                            </td>
+
+                            <td>
+                                <input type="number" name="items[${index}][damaged_qty]" class="form-control" min="0" value="0">
+                            </td>
+
+                            <td>
+                                <select name="items[${index}][store_id]" class="form-select">
+                                    <option value="">-- Select Store --</option>
+                                    ${stores.map(store => `<option value="${store.Id}">${store.StoreName}</option>`).join('')}
+                                </select>
+                            </td>
+
+                            <td>
+                                <input type="text" name="items[${index}][remarks]" class="form-control">
+                            </td>
+                        </tr>
+                    `;
                         tableBody.innerHTML += row;
                     });
                 })
@@ -209,6 +240,5 @@
             });
         });
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endsection
+

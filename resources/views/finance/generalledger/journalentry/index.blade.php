@@ -1,53 +1,140 @@
 @extends('layouts.app')
-@section('title', 'Journal Entries')
+@section('title', 'Journal Entry')
 @section('content')
-    <div class="container mt-4">
-        <h4 class="mb-4">📑 Journal Entries</h4>
-
-        <!-- Add New Entry Button -->
-        <div class="mb-3">
-            <a href="{{ route('journalentry.create') }}" class="btn btn-primary">➕ New Journal Entry</a>
+    <div class="container my-3">
+        <!-- Card for Journal Entries -->
+        <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
+            <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary">📒 Journal Entries</h5>
+                <a href="{{ route('journalentry.create') }}" class="btn btn-info btn-sm p-2">
+                    <i class="fas fa-plus me-1"></i> New Journal Entry
+                </a>
+            </div>
+            <div class="card-body p-3">
+                <!-- Journal Entries Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle table-striped1"
+                           style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"
+                    >
+                        <thead class="table-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Reference</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Total Debit</th>
+                            <th scope="col">Total Credit</th>
+                            <th scope="col">Approval</th>
+                            <th scope="col" class="text-center">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @forelse($journalEntries as $journalEntry)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $journalEntry->RefNo ?? '-' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($journalEntry->JournalDate)->format('Y-m-d') }}</td>
+                                <td>{{ $journalEntry->Description ?? '-' }}</td>
+                                <td>
+                                    {{ number_format($journalEntry->journalLines->sum(function($line) {
+                                        return floatval($line->Debit);
+                                    }), 2) }}
+                                </td>
+                                <td>
+                                    {{ number_format($journalEntry->journalLines->sum(function($line) {
+                                        return floatval($line->Credit);
+                                    }), 2) }}
+                                </td>
+                                <td>
+                                    @php
+                                        $statusClass = match($journalEntry->ApprovalStatus) {
+                                            'posted' => 'bg-success',
+                                            'rejected' => 'bg-danger',
+                                            'draft' => 'bg-secondary',
+                                            default => 'bg-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $statusClass }}">
+                                        {{ ucfirst($journalEntry->ApprovalStatus) ?? 'Pending' }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route('journalentry.show', $journalEntry->Id) }}"
+                                       class="btn btn-sm btn-outline-info me-1" title="View Journal Entry">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('journalentry.edit', $journalEntry->Id) }}"
+                                       class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('journalentry.destroy',  $journalEntry->Id) }}" method="POST"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Are you sure you want to delete this journal entry?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="p-0">
+                                    <div class="text-center p-4 border rounded-3 bg-light">
+                                        <p class="mb-3 text-muted fs-5">
+                                            <i class="fas fa-info-circle me-2 text-info"></i>
+                                            <i>No journal entries have been added yet.</i>
+                                        </p>
+                                        <a href="{{ route('journalentry.create') }}" class="btn btn-info px-4 py-2">
+                                            <i class="fas fa-plus-circle me-2"></i> Add Journal Entry
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-
-        <!-- Journal Entries Table -->
-        <table class="table table-bordered table-hover">
-            <thead class="table-light">
-            <tr>
-                <th>Date</th>
-                <th>Reference</th>
-                <th>Description</th>
-                <th>Total Debit</th>
-                <th>Total Credit</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>2025-06-01</td>
-                <td>JV20240601</td>
-                <td>Salary Payment - May</td>
-                <td>100,000.00</td>
-                <td>100,000.00</td>
-                <td><span class="badge bg-success">Posted</span></td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-secondary">View</a>
-                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                </td>
-            </tr>
-            <tr>
-                <td>2025-06-02</td>
-                <td>JV20240602</td>
-                <td>Interest Income Accrual</td>
-                <td>50,000.00</td>
-                <td>50,000.00</td>
-                <td><span class="badge bg-secondary">Draft</span></td>
-                <td>
-                    <a href="#" class="btn btn-sm btn-secondary">View</a>
-                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
     </div>
+@endsection
+
+@section('styles')
+    <style>
+        /* Custom hover effect for table rows */
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+            transition: background-color 0.2s ease;
+        }
+
+        /* Compact button styling */
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* Ensure table cells are compact */
+        .table-sm th, .table-sm td {
+            padding: 0.5rem;
+        }
+
+        /* Card shadow and border */
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        /* Responsive table on small screens */
+        @media (max-width: 576px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+
+            .btn-sm {
+                padding: 0.2rem 0.4rem;
+            }
+        }
+    </style>
 @endsection

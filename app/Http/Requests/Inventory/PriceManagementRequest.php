@@ -6,19 +6,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class PriceManagementRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize(): bool
     {
-
         return true;
     }
 
-    public function rules()
+    public function rules(): array
     {
-        return [
-
-            'ItemID' => 'required|exists:t_Items,Id',
-            'UOM' => 'required|exists:t_UOM,Id',
-            'EstimatedPrice' => 'required|numeric|min:0',
+        $rules = [
             'ActualPrice' => 'required|numeric|min:0',
             'CurrencyCode' => 'required|string|max:10',
             'EffectiveFrom' => 'required|date',
@@ -26,5 +21,12 @@ class PriceManagementRequest extends FormRequest
             'IsDefault' => 'boolean',
             'Source' => 'nullable|string|max:255',
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['ItemID'] = 'required|exists:t_Items,Id';
+            $rules['UOM'] = 'required|exists:t_UOM,Id';
+        }
+
+        return $rules;
     }
 }

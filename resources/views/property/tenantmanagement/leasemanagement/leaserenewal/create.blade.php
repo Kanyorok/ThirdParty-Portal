@@ -2,7 +2,7 @@
 @section('title', 'Renew Lease Agreement')
 
 @section('content')
-@if ($errors->any())
+    @if ($errors->any())
     <div class="alert alert-danger">
         <ul class="mb-0">
             @foreach ($errors->all() as $error)
@@ -10,18 +10,21 @@
             @endforeach
         </ul>
     </div>
-@endif
+    @endif
 
-@if(session('error'))
-    <script>alert("{{ session('error') }}");</script>
-@endif
+    @if (session('error'))
+        <script>
+            alert("{{ session('error') }}");
+        </script>
+    @endif
 
-@if(session('success'))
-    <script>alert("{{ session('success') }}");</script>
-@endif
+    @if (session('success'))
+        <script>
+            alert("{{ session('success') }}");
+        </script>
+    @endif
 
-<div class="container mt-4">
-    <h4 class="fw-bold mb-3">Renew Lease Agreement</h4>
+    <div class="container mt-4">
 
     <form action="{{ route('renewlease.store') }}" method="POST">
         @csrf
@@ -35,16 +38,13 @@
                         <select id="lease-select" name="LeaseId" class="form-select" required>
                             <option value="">-- Select Lease --</option>
                             @foreach ($newleases as $lease)
-                                <option 
-                                    value="{{ $lease->Id }}"
-                                    data-leasenumber="{{ $lease->LeaseNumber }}"
-                                    data-tenant-id="{{ $lease->Tenant }}"
-                                    data-tenant-name="{{ $lease->tenant->TenantName ?? 'N/A' }}"
-                                    data-property-id="{{ $lease->PropertyID }}"
-                                    data-property-name="{{ $lease->property->PropertyName ?? 'N/A' }}"
-                                    data-frequency-id="{{ $lease->PaymentFrequency }}"
-                                    data-frequency-name="{{ $lease->code->Description ?? 'N/A' }}"
-                                >
+                                <option value="{{ $lease->Id }}" data-leasenumber="{{ $lease->LeaseNumber }}"
+                                        data-tenant-id="{{ $lease->Tenant }}"
+                                        data-tenant-name="{{ $lease->tenant->TenantName ?? 'N/A' }}"
+                                        data-property-id="{{ $lease->PropertyID }}"
+                                        data-property-name="{{ $lease->property->PropertyName ?? 'N/A' }}"
+                                        data-frequency-id="{{ $lease->PaymentFrequency }}"
+                                        data-frequency-name="{{ $lease->code->Description ?? 'N/A' }}">
                                     {{ $lease->LeaseNumber }}
                                 </option>
                             @endforeach
@@ -78,15 +78,18 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <label class="form-label">End Date of Current Lease<span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="EndDateCurrentLease" value="EndDateCurrentLease" placeholder="22/06/2025">
+                        <input type="date" class="form-control" name="EndDateCurrentLease" value="EndDateCurrentLease"
+                               placeholder="22/06/2025">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">New Start Date<span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="NewStartDate" value="NewStartDate" placeholder="22/06/2025">
+                        <input type="date" class="form-control" name="NewStartDate" value="NewStartDate"
+                               placeholder="22/06/2025">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">New End Date<span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="NewEndDate" value="NewEndDate" placeholder="22/06/2100">
+                        <input type="date" class="form-control" name="NewEndDate" value="NewEndDate"
+                               placeholder="22/06/2100">
                     </div>
                 </div>
 
@@ -113,27 +116,30 @@
                 <!-- Remarks -->
                 <div class="mb-3">
                     <label class="form-label">Remarks or Changes</label>
-                    <textarea class="form-control" name="Remarks" rows="2" placeholder="E.g. rent increased by KES 2,500"></textarea>
+                    <textarea class="form-control" name="Remarks" rows="2"
+                              placeholder="E.g. rent increased by KES 2,500"></textarea>
                 </div>
 
                 <!-- Submit -->
-                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">🔁 Renew Lease</button>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Renew Lease
+                </button>
             </div>
         </div>
     </form>
-</div>
+    </div>
 
-<!-- Auto-fill Script -->
-<script>
-    document.getElementById('lease-select').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber');
-        document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id');
-        document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name');
-        document.getElementById('property-id').value = selected.getAttribute('data-property-id');
-        document.getElementById('property-display').value = selected.getAttribute('data-property-name');
-        document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id');
-        document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name');
+    <!-- Auto-fill Script -->
+    <script>
+        document.getElementById('lease-select').addEventListener('change', function () {
+            const selected = this.options[this.selectedIndex];
+            document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber');
+            document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id');
+            document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name');
+            document.getElementById('property-id').value = selected.getAttribute('data-property-id');
+            document.getElementById('property-display').value = selected.getAttribute('data-property-name');
+            document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id');
+            document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name');
     });
-</script>
+    </script>
 @endsection

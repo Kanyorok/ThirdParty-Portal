@@ -23,21 +23,21 @@
 
           <div class="col-md-4">
             <label class="form-label">Select Block</label>
-            <select name="Block" id="block-select" class="form-select" required>
+              <select name="Block" id="block-select" class="form-select">
               <option value="">-- Select Block --</option>
             </select>
           </div>
 
           <div class="col-md-4">
             <label class="form-label">Select Floor</label>
-            <select name="Floor" id="floor-select" class="form-select" required>
+              <select name="Floor" id="floor-select" class="form-select">
               <option value="">-- Select Floor --</option>
             </select>
           </div>
 
           <div class="col-md-6 mt-3">
             <label class="form-label">Select Unit</label>
-            <select name="Unit" id="unit-select" class="form-select" required>
+              <select name="Unit" id="unit-select" class="form-select">
               <option value="">-- Select Unit --</option>
             </select>
           </div>
@@ -78,9 +78,11 @@
         <!-- Document Upload -->
         <div class="mb-3">
             <label class="form-label">Upload Relevant Documents</label>
-            <input type="file" name="Document" class="form-control" multiple>
+            <input type="file" name="Document[]" class="form-control" multiple>
         </div>
-        <button type="submit" class="btn btn-success">Submit Request</button>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Request
+        </button>
     </form>
     </div>
   </div>

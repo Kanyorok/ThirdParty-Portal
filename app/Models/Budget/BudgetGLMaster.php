@@ -20,6 +20,6 @@ class BudgetGLMaster extends Model
     }
 
     protected $table = 't_BudgetGLMaster';
-    protected $primaryKey = 'Id';
+    protected $primaryKey = 'BudgetGLID';
 
 }

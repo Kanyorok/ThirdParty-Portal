@@ -36,7 +36,7 @@ class BudgetGLLineEntryController extends Controller
     public function create()
     {
 
-        $budgets = Budget::select('Id', 'Name')->get();
+        $budgets = Budget::select('Id', 'Name', 'From', 'To')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $budgetLines = BudgetLine::select('Id', 'LineName')->get();
 

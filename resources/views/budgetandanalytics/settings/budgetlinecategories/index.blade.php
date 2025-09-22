@@ -2,11 +2,16 @@
 @section('title', 'Budget Line Categories')
 
 @section('content')
-    <div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <a href="{{ route('budgetlinecategories.create') }}" class="btn btn-primary bg-info text-dark">
+            +Create Category
+        </a>
+    </div>
+    <div class="card p-2">
 
-        <div class="card-header bg-dark text-white mb-0">
-            📂 Budget Line Categories
-        </div>
+        {{--        <div class="card-header bg-dark text-white mb-0">--}}
+        {{--            📂 Budget Line Categories--}}
+        {{--        </div>--}}
 
         <div class="card-body">
             <p class="text-muted mb-3">
@@ -27,12 +32,8 @@
                     </ul>
                 </div>
             @endif
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <a href="{{ route('budgetlinecategories.create') }}" class="btn btn-primary bg-light text-dark">
-                    +Create Category
-                </a>
-            </div>
-            @if(count($budgetLineCategories))
+
+        @if(count($budgetLineCategories))
                 <table class="table table-bordered table-striped">
                     <thead>
                     <tr>

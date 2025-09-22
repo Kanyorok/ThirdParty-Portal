@@ -4,7 +4,6 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>🧩 RFQ Section Settings</h4>
             <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addRfqSectionModal">
                 + Assign Sections to RFQ
             </a>
@@ -33,16 +32,19 @@
                             <a href="{{ route('rfqcriterias.show', $rfq->Id) }}"
                                class="btn btn-sm btn-outline-{{ $rfq->criteria_count > 0 ? 'primary' : 'danger' }}">
                                 {{ $rfq->criteria_count ?? 0 }}
-                                <i class="fa fa-eye" style="font-size: 18px; color: {{ $rfq->criteria_count > 0 ? 'rgb(63, 63, 252)' : 'red' }}"></i>
+                                <i class="fa fa-eye"
+                                   style="font-size: 18px; color: {{ $rfq->criteria_count > 0 ? 'rgb(63, 63, 252)' : 'red' }}"></i>
 
-                                @if(($rfq->criteria_count ?? 0) == 0)
-                                    <span class="badge bg-danger ms-1" data-bs-toggle="tooltip" title="No criteria assigned">!</span>
+                                @if (($rfq->criteria_count ?? 0) == 0)
+                                    <span class="badge bg-danger ms-1" data-bs-toggle="tooltip"
+                                          title="No criteria assigned">!</span>
                                 @endif
                             </a>
                         </td>
                         <td>{{ $rfq->sections->sum('Weight') ?? 0 }}%</td>
                         <td>
-                            <a href="{{ route('rfqcriterias.show', $rfq->Id) }}" class="btn btn-sm btn-outline-primary">Setup Criteria</a>
+                            <a href="{{ route('rfqcriterias.show', $rfq->Id) }}" class="btn btn-sm btn-outline-primary">Setup
+                                Criteria</a>
                         </td>
                     </tr>
                 @endforeach
@@ -52,7 +54,8 @@
     </div>
 
     <!-- Add RFQ Section Modal -->
-    <div class="modal fade" id="addRfqSectionModal" tabindex="-1" aria-labelledby="addRfqSectionModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addRfqSectionModal" tabindex="-1" aria-labelledby="addRfqSectionModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
@@ -61,7 +64,7 @@
                 </div>
 
                 <form action="{{ route('rfqcriteriasetup.evaluations.save') }}" method="POST">
-                @csrf
+                    @csrf
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Select RFQ</label>
@@ -89,9 +92,9 @@
                                     </td>
                                     <td>{{ $section->SectionName }}</td>
                                     <td>
-                                        <input type="number" class="form-control"
-                                               name="weights[{{ $section->id }}]"
-                                               step="0.01" value="0.00">
+                                        <input type="number" class="form-control" name="weights[{{ $section->id }}]"
+                                               step="0.01"
+                                               value="0.00">
                                     </td>
                                 </tr>
                             @endforeach
