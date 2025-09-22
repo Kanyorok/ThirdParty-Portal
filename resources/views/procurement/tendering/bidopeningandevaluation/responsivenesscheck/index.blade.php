@@ -30,14 +30,14 @@
                     <label for="tender" class="form-label fw-bold">Tender with Opened Bids:</label>
                     <select name="tender" class="form-select" id="tenderSelect" onchange="this.form.submit()">
                         <option value="">-- Select Tender --</option>
-                        @foreach($tenders as $tender)
+                            @foreach($tenders as $tender)
                             @if($tender && $tender->TenderNo)
                                 <option value="{{ $tender->TenderNo }}" 
                                     {{ ($selectedTender && $selectedTender->TenderNo === $tender->TenderNo) ? 'selected' : '' }}>
                                     {{ $tender->TenderNo }} - {{ $tender->Title ?? 'Unknown Title' }}
                                 </option>
                             @endif
-                        @endforeach
+                            @endforeach
                         </select>
                     </div>
                 <div class="col-md-4">
@@ -195,7 +195,7 @@
                                                 onclick="editResponsiveness({{ $submission->Id }})">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
-                                    @else
+                                        @else
                                         <!-- Ready for responsiveness check -->
                                         <div class="btn-group w-100" role="group">
                                             <button class="btn btn-sm btn-primary" 
@@ -207,7 +207,7 @@
                                                 <i class="fas fa-eye"></i> Drill Down
                                             </button>
                                         </div>
-                                    @endif
+                                        @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -455,7 +455,7 @@
         // Validate required fields
         if (!formData.get('submitted_timely') || !formData.get('has_mandatory_documents') || !formData.get('is_eligible')) {
             alert('Please complete all required fields.');
-            return;
+                return;
         }
 
         const checkData = {
@@ -682,6 +682,6 @@
     // Edit responsiveness (placeholder)
     function editResponsiveness(bidId) {
         showDetailedCheck(bidId);
-    }
+        }
     </script>
 @endsection

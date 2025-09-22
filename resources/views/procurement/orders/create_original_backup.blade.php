@@ -1,28 +1,48 @@
 @extends('layouts.app')
-@section('title', 'Purchase Order')
+@section('title', 'Create Purchase Order - Unified System')
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         .select2-container {
             width: 100% !important;
         }
-
-        /*input,*/
-        /*textarea {*/
-        /*    background: transparent;*/
-        /*    !*border: none; !* optional: removes border too *!*!*/
-        /*    outline: none; !* optional: removes outline on focus *!*/
-        /*    box-shadow: none; !* optional: removes inner shadows *!*/
-        /*}*/
-
+        .origination-card {
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .origination-card.selected {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+        }
+        .origination-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        .form-section {
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+        }
+        .source-info-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .item-row {
+            border: 1px solid #e9ecef;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .readonly-input {
+            background-color: #f8f9fa !important;
+        }
     </style>
 @endsection
-@section('content')
-    {{--    <div class="mb-3"> --}}
-    {{--        <h1 class="h3 d-inline align-middle">@yield('title')</h1> --}}
-    {{--    </div> --}}
 
-    <div class="container">
+@section('content')
+<div class="container-fluid">
         <div class="d-flex justify-content-end align-items-center my-3">
             <a href="{{ route('purchaseOrder.index') }}" class="btn btn-secondary">
                 <i class="fa fa-arrow-left"></i> Back to Orders

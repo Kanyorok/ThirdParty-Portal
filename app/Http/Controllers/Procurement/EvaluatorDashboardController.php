@@ -18,7 +18,7 @@ class EvaluatorDashboardController extends Controller
     /**
      * Show evaluator dashboard with responsive bids ready for evaluation
      */
-    public function index()
+     public function index()
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
 

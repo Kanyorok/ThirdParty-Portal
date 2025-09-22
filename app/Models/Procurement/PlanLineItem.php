@@ -9,6 +9,7 @@ use App\Models\Inventory\ItemMasterList;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Core\CodeDetail;
 
 class PlanLineItem extends Model
@@ -114,5 +115,10 @@ class PlanLineItem extends Model
     public function schedulePlan()
     {
         return $this->belongsTo(SchedulePlan::class, 'LineItemID', 'PlanLineId');
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(\App\Models\Procurement\Order::class, 'PlanRef', 'LineItemID');
     }
 }
