@@ -73,7 +73,7 @@ class Order extends Model
      */
     public function orderLines(): HasMany
     {
-        return $this->hasMany(OrderLines::class, 'OrderID', 'Id');
+        return $this->hasMany(OrderLines::class, 'iOrderID', 'Id');
     }
 
     /**
@@ -194,5 +194,14 @@ class Order extends Model
     public function scopeActive($query)
     {
         return $query->whereNull('DeletedOn');
+    }
+
+    /**
+     * Recalculate and update the total amount based on order lines
+     */
+    public function recalculateTotalAmount(): void
+    {
+        $total = $this->orderLines()->sum('LineTotal');
+        $this->update(['TotalAmount' => $total]);
     }
 }

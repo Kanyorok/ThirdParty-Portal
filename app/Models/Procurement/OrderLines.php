@@ -55,7 +55,7 @@ class OrderLines extends Model
      */
     public function order()
     {
-        return $this->belongsTo(Order::class, 'OrderID', 'Id');
+        return $this->belongsTo(Order::class, 'iOrderID', 'Id');
     }
 
     /**
@@ -63,7 +63,7 @@ class OrderLines extends Model
      */
     public function item()
     {
-        return $this->belongsTo(\App\Models\Inventory\ItemMasterList::class, 'ItemID', 'Id');
+        return $this->belongsTo(\App\Models\Inventory\ItemMasterList::class, 'iStockCodeID', 'Id');
     }
 
     /**
@@ -71,7 +71,7 @@ class OrderLines extends Model
      */
     public function calculateLineTotal(): float
     {
-        $subtotal = $this->Quantity * $this->UnitPrice;
+        $subtotal = $this->fQuantity * $this->fUnitPriceExcl;
         $taxAmount = $subtotal * ($this->TaxPercentage / 100);
         $discountAmount = $subtotal * ($this->DiscountPercentage / 100);
         
@@ -83,6 +83,6 @@ class OrderLines extends Model
      */
     public function getFormattedTotalAttribute(): string
     {
-        return number_format($this->TotalAmount, 2);
+        return number_format($this->LineTotal, 2);
     }
 }

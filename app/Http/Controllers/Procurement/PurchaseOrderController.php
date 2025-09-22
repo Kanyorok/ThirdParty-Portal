@@ -8,6 +8,7 @@ use App\Http\Requests\Orders\ApproveOrderRequest;
 use App\Http\Requests\Orders\PurchaseOrderRequest;
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
+use App\Models\Procurement\OrderLines;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderItems;
@@ -22,7 +23,7 @@ use App\Services\ThirdParty\SupplierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-// use Illuminate\Support\Facades\Log; // using global \Log facade calls inline to avoid import confusion
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Core\CodeDetail;
@@ -1047,6 +1048,9 @@ public function getRFQItems($rfqId)
             // Create order lines
             $this->createOrderLines($request, $order->Id);
             
+            // Recalculate total amount based on actual line items
+            $order->recalculateTotalAmount();
+            
             // Update origination source status if needed
             $this->updateOriginationSourceStatus($originationType, $originationData['ref'] ?? null);
             
@@ -1114,21 +1118,15 @@ public function getRFQItems($rfqId)
         foreach ($quantities as $index => $quantity) {
             $quantity = floatval($quantity);
             $unitPrice = floatval($unitPrices[$index] ?? 0);
-            $tax = floatval($taxes[$index] ?? 0);
-            $discount = floatval($discounts[$index] ?? 0);
+            $taxPercentage = floatval($taxes[$index] ?? 0);
+            $discountPercentage = floatval($discounts[$index] ?? 0);
             
             if ($quantity > 0 && $unitPrice > 0) {
-                $lineTotal = $quantity * $unitPrice;
-                
-                // Apply discount
-                if ($discount > 0) {
-                    $lineTotal -= $lineTotal * ($discount / 100);
-                }
-                
-                // Apply tax
-                if ($tax > 0) {
-                    $lineTotal += $lineTotal * ($tax / 100);
-                }
+                $subtotal = $quantity * $unitPrice;
+                $discountAmount = $subtotal * ($discountPercentage / 100);
+                $taxableAmount = $subtotal - $discountAmount;
+                $taxAmount = $taxableAmount * ($taxPercentage / 100);
+                $lineTotal = $taxableAmount + $taxAmount;
                 
                 $total += $lineTotal;
             }
@@ -1155,14 +1153,26 @@ public function getRFQItems($rfqId)
                 continue;
             }
             
+            // Calculate line total properly
+            $quantity = floatval($quantities[$index]);
+            $unitPrice = floatval($unitPrices[$index]);
+            $taxPercentage = floatval($taxes[$index] ?? 0);
+            $discountPercentage = floatval($discounts[$index] ?? 0);
+            
+            $subtotal = $quantity * $unitPrice;
+            $discountAmount = $subtotal * ($discountPercentage / 100);
+            $taxableAmount = $subtotal - $discountAmount;
+            $taxAmount = $taxableAmount * ($taxPercentage / 100);
+            $lineTotal = $taxableAmount + $taxAmount;
+            
             $orderLineData = [
                 'iOrderID' => $orderId,
                 'cDescription' => $descriptions[$index] ?? '',
-                'fQuantity' => floatval($quantities[$index]),
-                'fUnitPriceExcl' => floatval($unitPrices[$index]),
-                'TaxPercentage' => floatval($taxes[$index] ?? 0),
-                'DiscountPercentage' => floatval($discounts[$index] ?? 0),
-                'LineTotal' => floatval($lineTotals[$index] ?? 0),
+                'fQuantity' => $quantity,
+                'fUnitPriceExcl' => $unitPrice,
+                'TaxPercentage' => $taxPercentage,
+                'DiscountPercentage' => $discountPercentage,
+                'LineTotal' => $lineTotal,
                 'iStockCodeID' => !empty($itemCode) ? intval($itemCode) : null,
                 'cLineNotes' => '',
                 'CreatedBy' => auth()->id(),

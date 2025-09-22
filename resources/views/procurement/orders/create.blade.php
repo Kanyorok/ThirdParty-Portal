@@ -1987,23 +1987,9 @@
             return false;
         }
         
-        // Validate delivery terms if required
-        const deliveryTerms = $('#delivery_terms').val();
-        if (!deliveryTerms || deliveryTerms.trim() === '') {
-            // Optional but warn user
-            if (!confirm('Delivery terms are not specified. Continue anyway?')) {
-                return false;
-            }
-        }
+        // Delivery terms are optional - no validation needed
         
-        // Check address if required
-        const address = $('#address').val();
-        if (!address || address.trim() === '') {
-            // Optional but warn user
-            if (!confirm('Delivery address is not specified. Continue anyway?')) {
-                return false;
-            }
-        }
+        // Delivery address is optional - no validation needed
         
         return true;
     }
