@@ -150,8 +150,14 @@
                     <input class="form-control" type="file" name="file" accept=".csv,.xlsx,.xls" required>
                 </div>
                 <div class="alert alert-info small">
-                    Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo,
-                        Currency, IsDefault</code>
+                    Ensure your file has headers: <code>ItemCode, UOM, ActualPrice, CurrencyCode, EffectiveFrom, EffectiveTo, IsDefault, Source</code>
+                    <br>
+                    Notes:
+                    <ul class="mb-0">
+                        <li>UOM can be the UOM <strong>Code</strong> (e.g. PCS) or numeric <strong>Id</strong>. If omitted, the item's default UOM is used.</li>
+                        <li>Dates may be Excel serial numbers or strings (YYYY-MM-DD).</li>
+                        <li>IsDefault accepts TRUE/FALSE, 1/0, Yes/No.</li>
+                    </ul>
                     <br>
                     <a href="{{ route('pricemanagement.sample') }}" class="btn btn-sm btn-outline-primary mt-2">
                         📥 Download Template
