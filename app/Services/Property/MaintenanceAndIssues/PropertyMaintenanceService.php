@@ -25,7 +25,7 @@ class PropertyMaintenanceService
     }
    public static function create(
         PropertyRegistry $Property,
-        ?int $Block = null,
+        ?PropertyBlock $Block = null,
         ?PropertyFloor $Floor = null,
         ?PropertyUnit  $Unit = null,
         string   $ReportedBy,

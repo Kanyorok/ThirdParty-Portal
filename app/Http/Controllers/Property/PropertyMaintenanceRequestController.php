@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -63,9 +64,10 @@ class PropertyMaintenanceRequestController extends Controller
         $Unit     = !empty($validated['Unit']) ? PropertyUnit::find($validated['Unit']) : null;
         $IssueType = CodeDetail::findOrFail($validated['IssueType']);
         $Priority  = CodeDetail::findOrFail($validated['Priority']);
-        foreach ($request->file('Document', []) as $uploadedFile) {
 
-        $maintenancerequest = PropertyMaintenanceService::create(
+        $uploadedFile = $request->file('Document')[0] ?? null;
+            
+        $maintenanceRequest = PropertyMaintenanceService::create(
                     $Property,
                     $Block,
                     $Floor,
@@ -77,7 +79,17 @@ class PropertyMaintenanceRequestController extends Controller
                     Auth::user(),
                     $uploadedFile
         );
-    }
+
+        if ($request->hasFile('Document')) {
+            foreach (array_slice($request->file('Document'), 1) as $uploadedFile) {
+                $maintenanceRequest->maintenancerequest->newDocument(
+                    ModulesEnum::Property,
+                    $uploadedFile,
+                    [PermissionEnum::PropertyMaintenanceAssignView->value],
+                    $request->user()
+                );
+            }
+        }
 
         return redirect()->route('maintenancerequest.index')->with('success', 'Maintenance request created successfully');
 
@@ -122,7 +134,7 @@ class PropertyMaintenanceRequestController extends Controller
                 Auth::user(),
             );
 
-            foreach ($request->file('Document', []) as $uploadedFile) {
+            $uploadedFile = $request->file('Document')[0] ?? null;
             $maintenance = PropertyMaintenanceService::update(
                 $maintenancerequest,
                 $Property,
@@ -136,6 +148,16 @@ class PropertyMaintenanceRequestController extends Controller
                 Auth::user(),
                 $uploadedFile
             );
+
+            if ($request->hasFile('Document')) {
+            foreach (array_slice($request->file('Document'), 1) as $uploadedFile) {
+                $maintenance->maintenancerequest->newDocument(
+                    ModulesEnum::Property,
+                    $uploadedFile,
+                    [PermissionEnum::PropertyMaintenanceAssignView->value],
+                    $request->user()
+                );
+            }
         }
 
             DB::commit();
@@ -154,6 +176,12 @@ class PropertyMaintenanceRequestController extends Controller
         $this->authorize(PermissionEnum::PropertyMaintenanceRequestDelete, PropertyMaintenanceRequest::class);
         try {
             $maintenancerequest = PropertyMaintenanceRequest::findOrFail($Id);
+
+            if ($maintenancerequest->requestId()->exists()) {
+                return redirect()->back()
+                ->withErrors(['error' => 'This Maintenance request is in use and cannot be deleted.']);
+            }
+
             $maintenancerequest->delete();
 
             return redirect()->route('maintenancerequest.index')
