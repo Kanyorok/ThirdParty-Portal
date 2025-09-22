@@ -105,7 +105,13 @@ class ThirdParties extends Model
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(SupplierCategory::class, 't_ThirdParty_SupplierCategory', 'third_party_id', 'supplier_category_id');
+        // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
+        return $this->belongsToMany(
+            SupplierCategory::class,
+            't_ThirdParty_SupplierCategory',
+            'third_party_id',
+            'supplier_category_id'
+        );
     }
 
     public function country(): BelongsTo

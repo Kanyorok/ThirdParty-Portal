@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('t_TenderAwards', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('TenderID')->constrained('t_Tenders', 'Id');
-            $table->foreignId('WinningSupplierID')->constrained('t_Suppliers', 'Id');
+            $table->unsignedBigInteger('TenderID');
+            $table->unsignedBigInteger('WinningSupplierID');
             $table->decimal('AwardedAmount', 18, 2)->nullable();
             $table->text('AwardJustification');
             $table->date('AwardDate');
@@ -43,6 +43,17 @@ return new class extends Migration
             $table->index('AwardDate');
             $table->index('AwardStatus');
         });
+
+        if (Schema::hasTable('t_Tenders')) {
+            Schema::table('t_TenderAwards', function (Blueprint $table) {
+                $table->foreign('TenderID')->references('Id')->on('t_Tenders');
+            });
+        }
+        if (Schema::hasTable('t_Suppliers')) {
+            Schema::table('t_TenderAwards', function (Blueprint $table) {
+                $table->foreign('WinningSupplierID')->references('Id')->on('t_Suppliers');
+            });
+        }
     }
 
     /**

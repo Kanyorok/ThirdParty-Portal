@@ -11,22 +11,29 @@ use App\Models\Procurement\TenderSection;
 use App\Enums\Core\PermissionEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class EvaluatorDashboardController extends Controller
 {
     /**
      * Show evaluator dashboard with responsive bids ready for evaluation
      */
-    public function index()
+     public function index()
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
 
         // Get current user ID for committee membership check (committees store User ID, not Employee ID)
         $currentUserId = Auth::id();
 
-        // Get tenders where user is a committee member and has accepted
-        $tenderIds = TenderCommitteeMember::where('UserID', $currentUserId)
-            ->where('Response', 1) // Accepted appointment
+        // Get tenders where user is a committee member and has accepted (support dual mapping)
+        $tenderIds = TenderCommitteeMember::where(function ($q) use ($currentUserId) {
+                $q->where('UserID', $currentUserId)
+                  ->orWhereHas('userByEmployee', function ($uq) use ($currentUserId) {
+                      $uq->where('Id', $currentUserId);
+                  });
+            })
+            ->where('IsActive', 1)
+            ->where('Response', 1)
             ->pluck('TenderID');
 
         if ($tenderIds->isEmpty()) {
@@ -113,17 +120,32 @@ class EvaluatorDashboardController extends Controller
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
 
-        // Verify user is committee member for this tender
+        // Verify user is accepted & active committee member for this tender (supports direct TenderID or Committee ReferenceId)
         $currentUserId = Auth::id();
-        $committeeMember = TenderCommitteeMember::where('TenderID', $tenderId)
-            ->where('UserID', $currentUserId)
-            ->where('Response', 1)
+        $membership = DB::table('t_TenderCommitteeMembers as m')
+            ->leftJoin('t_TenderCommittee as c', 'c.Id', '=', 'm.CommitteeID')
+            ->join('t_Users as u', function($join){
+                $join->on('u.Id', '=', 'm.UserID')
+                     ->orOn('u.EmployeeId', '=', 'm.UserID');
+            })
+            ->where('u.Id', $currentUserId)
+            ->where(function($q) use ($tenderId){
+                $q->where('m.TenderID', $tenderId)
+                  ->orWhere('c.ReferenceId', $tenderId);
+            })
+            ->where('m.IsActive', 1)
+            ->where('m.Response', 1)
+            ->whereNull('m.DeletedOn')
+            ->select('m.Id')
             ->first();
 
-        if (!$committeeMember) {
+        if (!$membership) {
             return redirect()->route('evaluationdashboard.index')
                 ->with('error', 'You are not authorized to evaluate this tender.');
         }
+
+        // Load the full committee member model for use in the view
+        $committeeMember = TenderCommitteeMember::find($membership->Id);
 
         $tender = Tender::with(['tenderSections.sections.criteria', 'submissions'])
             ->findOrFail($tenderId);
@@ -147,7 +169,7 @@ class EvaluatorDashboardController extends Controller
             'sections' => $tender->tenderSections, // TenderSection pivot models with weights
             'responsiveBids' => $responsiveBids,
             'committeeMember' => $committeeMember,
-            'userRole' => $committeeMember->Role
+            'userRole' => $committeeMember->Role ?? 'Member'
         ]);
     }
 

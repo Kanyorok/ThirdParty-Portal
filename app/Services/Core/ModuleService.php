@@ -6,6 +6,7 @@ use App\Models\Auth\User;
 use App\Models\Core\Module;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 class ModuleService
@@ -126,11 +127,16 @@ class ModuleService
      */
     private static function buildNavbarItem(Module $module, Collection $allModules): array
     {
+        $routeUrl = 'javascript:void(0)';
+        if (is_string($module->Route) && Route::has($module->Route)) {
+            try { $routeUrl = route($module->Route); } catch (\Throwable $e) { $routeUrl = 'javascript:void(0)'; }
+        }
+
         $item = [
             'id' => $module->ModuleID,
             'name' => $module->Name,
             'icon' => $module->Icon ?? 'fa fa-circle-o',
-            'route' => is_string($module->Route) ? route($module->Route) : 'javascript:void(0)',
+            'route' => $routeUrl,
             'description' => $module->Description ?? '',
             'children' => []
         ];

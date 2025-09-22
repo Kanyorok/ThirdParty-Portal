@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CodeDetailSeeder::class);
         $this->call(SysFilterSeeder::class);
         $this->call(CurrencySeeder::class);
-        //$this->call(LocalitySeeder::class);
+        $this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(CommitteeSeeder::class);
@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UnitOfMeasureSeeder::class);
         $this->call(ItemMasterListSeeder::class);
         // $this->call(DepartmentNeedsSeeder::class);
-        $this->call(SupplierSeeder::class);
+        // $this->call(SupplierSeeder::class);
         $this->call(BudgetMasterSeeder::class);
         $this->call(BudgetPeriodTypeSeeder::class);
         //        $this->call(BudgetPeriodSeeder::class);
@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
         $this->call(FinanceGLAccountsSeeder::class);
         $this->call(FinanceSegmentOrderSeeder::class);
         $this->call(OrderLinesSeeder::class);
-        $this->call(OrderSeeder::class);
+        // $this->call(OrderSeeder::class);
         // $this->call(GoodsReceiptsSeeder::class);
 
         $this->call(FinanceTransactionTypesSeeder::class);

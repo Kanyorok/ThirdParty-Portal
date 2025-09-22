@@ -199,7 +199,7 @@ function switchType() {
     updateItemSelector(selectedType);
     
     // Redirect to the unified interface with new type
-    window.location.href = `/procurement/awards/unified/${currentTenderId}?type=${selectedType}`;
+    window.location.href = `{{ url('/procurement/awards/unified') }}/${currentTenderId}?type=${selectedType}`;
 }
 
 function switchItem() {
@@ -208,7 +208,7 @@ function switchItem() {
     const currentType = document.getElementById('typeSelector').value;
     
     if (selectedId && selectedId !== '{{ $tender->Id }}') {
-        window.location.href = `/procurement/awards/unified/${selectedId}?type=${currentType}`;
+        window.location.href = `{{ url('/procurement/awards/unified') }}/${selectedId}?type=${currentType}`;
     }
 }
 

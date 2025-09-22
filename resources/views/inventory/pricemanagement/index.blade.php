@@ -150,8 +150,7 @@
                     <input class="form-control" type="file" name="file" accept=".csv,.xlsx,.xls" required>
                 </div>
                 <div class="alert alert-info small">
-                    Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo,
-                        Currency, IsDefault</code>
+                    Ensure your file has headers: <code>ItemCode, UOMCode, Price, EffectiveFrom, EffectiveTo, Currency, IsDefault</code>
                     <br>
                     <a href="{{ route('pricemanagement.sample') }}" class="btn btn-sm btn-outline-primary mt-2">
                         📥 Download Template

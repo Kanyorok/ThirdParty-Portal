@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('t_BidSubmissions')) {
+            return;
+        }
         Schema::table('t_BidSubmissions', function (Blueprint $table) {
             // Add structured bid business fields
             $table->decimal('BidAmount', 15, 2)->nullable()->after('SupplierId');
@@ -38,6 +41,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (!Schema::hasTable('t_BidSubmissions')) {
+            return;
+        }
         Schema::table('t_BidSubmissions', function (Blueprint $table) {
             $table->dropIndex(['TenderRef', 'BidStatus']);
             $table->dropIndex(['IsResponsive', 'BidStatus']);

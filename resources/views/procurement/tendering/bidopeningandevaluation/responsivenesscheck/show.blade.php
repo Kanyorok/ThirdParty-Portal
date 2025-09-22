@@ -96,11 +96,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <h6 class="text-muted">Created</h6>
-                                <p>{{ $bidResponsiveness->CreatedOn ? $bidResponsiveness->CreatedOn->format('M d, Y - h:i A') : 'N/A' }}</p>
+                                <p>{{ $bidResponsiveness->CreatedOn ? $bidResponsiveness->CreatedOn->format('d/m/Y H:i') : 'N/A' }}</p>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-muted">Last Modified</h6>
-                                <p>{{ $bidResponsiveness->ModifiedOn ? $bidResponsiveness->ModifiedOn->format('M d, Y - h:i A') : 'N/A' }}</p>
+                                <p>{{ $bidResponsiveness->ModifiedOn ? $bidResponsiveness->ModifiedOn->format('d/m/Y H:i') : 'N/A' }}</p>
                             </div>
                         </div>
                     </div>

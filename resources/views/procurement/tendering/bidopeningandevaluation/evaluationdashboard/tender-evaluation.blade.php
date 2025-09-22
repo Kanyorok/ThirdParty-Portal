@@ -11,9 +11,14 @@
                 <strong>Your Role:</strong> {{ $userRole }}
             </p>
         </div>
-        <a href="{{ route('evaluationdashboard.index') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('tender-criteria', $tender->Id) }}" class="btn btn-primary">
+                <i class="fas fa-sliders-h"></i> Configure Sections & Criteria
+            </a>
+            <a href="{{ route('evaluationdashboard.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -54,9 +59,9 @@
                 <div class="col-md-6">
                     <dl class="row">
                         <dt class="col-sm-6">Opening Date:</dt>
-                        <dd class="col-sm-6">{{ $tender->OpeningDate ? \Carbon\Carbon::parse($tender->OpeningDate)->format('d M Y, H:i') : 'Not set' }}</dd>
+                        <dd class="col-sm-6">{{ $tender->OpeningDate ? \Carbon\Carbon::parse($tender->OpeningDate)->format('d/m/Y H:i') : 'Not set' }}</dd>
                         <dt class="col-sm-6">Submission Deadline:</dt>
-                        <dd class="col-sm-6">{{ $tender->SubmissionDeadline ? \Carbon\Carbon::parse($tender->SubmissionDeadline)->format('d M Y, H:i') : 'Not set' }}</dd>
+                        <dd class="col-sm-6">{{ $tender->SubmissionDeadline ? \Carbon\Carbon::parse($tender->SubmissionDeadline)->format('d/m/Y H:i') : 'Not set' }}</dd>
                         <dt class="col-sm-6">Responsive Bids:</dt>
                         <dd class="col-sm-6">
                             <span class="badge bg-info">{{ $responsiveBids->count() }} bids</span>
@@ -90,14 +95,18 @@
                                     <div class="small">
                                         <i class="fas fa-list"></i> {{ $section->criteria->count() }} criteria
                                         @if($section->criteria->count() > 0)
-                                            <div class="mt-1">
-                                                @foreach($section->criteria->take(3) as $criteria)
-                                                    <span class="badge bg-light text-dark me-1">{{ $criteria->CriteriaName }}</span>
-                                                @endforeach
-                                                @if($section->criteria->count() > 3)
-                                                    <span class="text-muted">+{{ $section->criteria->count() - 3 }} more</span>
-                                                @endif
+                                            <div class="mt-2">
+                                                <ul class="list-unstyled mb-0">
+                                                    @foreach($section->criteria as $criteria)
+                                                        <li class="mb-1">
+                                                            <i class="fas fa-check text-success me-1"></i>
+                                                            {{ $criteria->CriteriaName }}
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
                                             </div>
+                                        @else
+                                            <div class="text-muted mt-1">No criteria configured</div>
                                         @endif
                                     </div>
                                 </div>
@@ -187,7 +196,7 @@
                                         <div class="small">
                                             <div><strong>Source:</strong> {{ ucfirst($bid->SubmissionSource ?? 'manual') }}</div>
                                             @if($bid->ReceivedAt)
-                                                <div><strong>Received:</strong> {{ \Carbon\Carbon::parse($bid->ReceivedAt)->format('d M Y, H:i') }}</div>
+                                                <div><strong>Received:</strong> {{ \Carbon\Carbon::parse($bid->ReceivedAt)->format('d/m/Y H:i') }}</div>
                                             @endif
                                             @if($bid->DeliveryPeriod)
                                                 <div><strong>Delivery:</strong> {{ $bid->DeliveryPeriod }} days</div>

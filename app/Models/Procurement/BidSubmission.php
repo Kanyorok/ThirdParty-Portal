@@ -8,6 +8,7 @@ use App\Models\DMS\Document;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class BidSubmission extends Model
 {
@@ -36,6 +37,7 @@ class BidSubmission extends Model
         'Remarks',
         'EncryptedDocuments', 
         'EncryptionKey',
+        'EncryptionEnvelope',
         'SubmissionSource', // 'manual' or 'portal'
         'DocumentsAccessible', // Controls if documents can be viewed before ceremony
         'BidOpeningDate',
@@ -102,6 +104,10 @@ class BidSubmission extends Model
         'HasMandatoryDocuments' => 'boolean',
         'IsEligible' => 'boolean',
         'ResponsivenessCheckedAt' => 'datetime',
+        // Keep these as plain strings in SQL Server to avoid truncation via automatic casting
+        // JSON encode/decode is handled at the controller/service layer
+        'EncryptedDocuments' => 'string',
+        'EncryptionKey' => 'string',
     ];
 
     // Relationships
@@ -311,7 +317,7 @@ class BidSubmission extends Model
             'BidStatus' => 'responsive',
             'ResponsivenessRemarks' => $remarks,
             'ResponsivenessCheckedAt' => now(),
-            'ResponsivenessCheckedBy' => auth()->id()
+            'ResponsivenessCheckedBy' => Auth::id()
         ]);
     }
 
@@ -322,7 +328,7 @@ class BidSubmission extends Model
             'BidStatus' => 'non-responsive',
             'ResponsivenessRemarks' => $remarks,
             'ResponsivenessCheckedAt' => now(),
-            'ResponsivenessCheckedBy' => auth()->id()
+            'ResponsivenessCheckedBy' => Auth::id()
         ]);
     }
 
@@ -331,7 +337,7 @@ class BidSubmission extends Model
      */
     public function performDetailedResponsivenessCheck(array $criteria, string $overallRemarks = null, ?User $checkedBy = null): void
     {
-        $checkedBy = $checkedBy ?? auth()->user();
+        $checkedBy = $checkedBy ?? Auth::user();
         
         // Determine overall responsiveness based on all criteria
         $isResponsive = ($criteria['submitted_timely'] ?? true) &&

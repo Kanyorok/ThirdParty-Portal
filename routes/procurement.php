@@ -44,6 +44,7 @@ use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSetMethodController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
+use App\Http\Controllers\Procurement\LPOOriginationController;
 use App\Http\Controllers\Procurement\ReportsController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
@@ -54,14 +55,11 @@ use App\Http\Controllers\Procurement\RFQEvaluationController;
 use App\Http\Controllers\Procurement\RFQLinesController;
 use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQSectionController;
-use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
-use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\RFQSettingController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
-use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 // use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\TenderAcceptController;
 use App\Http\Controllers\Procurement\TenderAssignRoleController;
@@ -80,7 +78,7 @@ use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
 
 
-Route::namespace('Procurement')->prefix('procurement')->group(function () {
+Route::namespace('Procurement')->group(function () {
 
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
@@ -111,14 +109,52 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
     Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     Route::get('purchaseOrder/approval/{id}', [PurchaseOrderController::class, 'approval'])->name('purchaseOrder.approval');
+    Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
-    Route::resource('purchaseOrder', 'PurchaseOrderController');
+    // Explicit show and approval routes (restrict {id} to numeric to avoid catching 'create')
+    Route::get('purchaseOrder/{id}', [PurchaseOrderController::class, 'show'])->whereNumber('id')->name('purchaseOrder.show');
+    Route::resource('purchaseOrder', PurchaseOrderController::class);
     Route::get('/purchase-order/rfq-items/{rfqId}', [PurchaseOrderController::class, 'getRFQItems'])->name('purchase-order.rfq-items');
-    Route::get('/purchase-order/items/{item}', [PurchaseOrderController::class, 'getItemDetails'])->name('purchase-order.item-details');
-    Route::get('/supplier-categories', [SupplierCategoryApiController::class, 'index']);
-    Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
     Route::get('/purchase-order/awarded-rfqs', [PurchaseOrderController::class, 'getAwardedRFQs'])->name('purchase-order.awarded-rfqs');
+    Route::get('/purchase-order/awarded-tenders', [PurchaseOrderController::class, 'getAwardedTenders'])->name('purchase-order.awarded-tenders');
+    Route::get('/purchase-order/tender-items/{tenderId}', [PurchaseOrderController::class, 'getTenderItems'])->name('purchase-order.tender-items');
+    Route::get('/purchase-order/items/{item}', [PurchaseOrderController::class, 'getItemDetails'])->name('purchase-order.item-details');
+    Route::get('/purchase-order/payment-terms', [PurchaseOrderController::class, 'getPaymentTerms'])->name('purchase-order.payment-terms');
+    Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
+    
+    // NEW: Unified PO Origination AJAX endpoints
+    Route::get('purchaseOrder/award-details/{id}', [PurchaseOrderController::class, 'getAwardDetails'])->name('purchaseOrder.awardDetails');
+    Route::get('purchaseOrder/contract-details/{id}', [PurchaseOrderController::class, 'getContractDetails'])->name('purchaseOrder.contractDetails');
+    Route::get('purchaseOrder/plan-item-details/{id}', [PurchaseOrderController::class, 'getPlanItemDetails'])->name('purchaseOrder.planItemDetails');
+    
+    // Enhanced Direct Procurement AJAX endpoints
+    Route::get('purchaseOrder/plan/{planId}/categories', [PurchaseOrderController::class, 'getPlanItemCategories'])->name('purchaseOrder.planCategories');
+    Route::get('purchaseOrder/category/{categoryId}/suppliers', [PurchaseOrderController::class, 'getPrequalifiedSuppliers'])->name('purchaseOrder.prequalifiedSuppliers');
+    Route::get('purchaseOrder/plan/{planId}/category/{categoryId}/items', [PurchaseOrderController::class, 'getPlanItemsByCategory'])->name('purchaseOrder.planItemsByCategory');
+
+    // LPO Origination System - 3-Model Approach
+    Route::prefix('lpo')->name('lpo.')->group(function () {
+        // LPO Origination Dashboard
+        Route::get('origination', [LPOOriginationController::class, 'index'])->name('origination.index');
+        
+        // Contract-Based LPO Origination
+        Route::get('origination/contract-based', [LPOOriginationController::class, 'showContractBasedOptions'])->name('origination.contract-based');
+        Route::get('create/contract/{contractId}', [LPOOriginationController::class, 'createFromContract'])->name('create.contract');
+        
+        // Award-Based LPO Origination  
+        Route::get('origination/award-based', [LPOOriginationController::class, 'showAwardBasedOptions'])->name('origination.award-based');
+        Route::get('create/award/{awardId}', [LPOOriginationController::class, 'createFromAward'])->name('create.award');
+        
+        // Direct Procurement LPO Origination
+        Route::get('origination/direct-procurement', [LPOOriginationController::class, 'showDirectProcurementOptions'])->name('origination.direct-procurement');
+        Route::get('create/direct-procurement/{planId}', [LPOOriginationController::class, 'createFromDirectProcurement'])->name('create.direct-procurement');
+        
+        // LPO Creation Processing Routes
+        Route::post('store/contract', [LPOOriginationController::class, 'storeContractBasedLPO'])->name('store.contract');
+        Route::post('store/award', [LPOOriginationController::class, 'storeAwardBasedLPO'])->name('store.award');
+        Route::post('store/direct-procurement', [LPOOriginationController::class, 'storeDirectProcurementLPO'])->name('store.direct-procurement');
+    });
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
@@ -225,6 +261,8 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('bidevaluation', BidEvaluationController::class);
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
+    Route::post('bidscores/{tenderId}/consolidate', [BidScoreConsolidationController::class, 'storeConsolidation'])
+        ->name('bidscores.consolidate');
     Route::get('bidscores/{tenderId}/section-drilldown', [BidScoreConsolidationController::class, 'sectionDrilldown'])->name('bidscores.section-drilldown');
     Route::get('bidscores/{tenderId}/evaluator-drilldown', [BidScoreConsolidationController::class, 'evaluatorDrilldown'])->name('bidscores.evaluator-drilldown');
     Route::get('bidscores/{tenderId}/{supplierId}/drilldown', [BidScoreConsolidationController::class, 'show'])->name('bidscores.drilldown');
@@ -522,26 +560,38 @@ Route::resource('procawards', AwardsController::class);
 Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.index');
 Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');
 Route::post('contracts', [ContractsController::class, 'store'])->name('contracts.store');
-Route::get('contracts/{id}/view', [ContractsController::class, 'view'])->name('contracts.view');
-Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit');
-Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update');
 
-// Contracts - Approval Queue
-Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approve_index');
-Route::get('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
-Route::post('contracts/{id}/approve', [ContractsController::class, 'submitApproval'])->name('contracts.approve.submit');
+// Contracts - Approval Queue (specific routes before generic)
+Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approvalQueue');
+
+// Contract Creation from Awards (specific routes before generic)
+Route::get('contracts/create-from-award/{awardId}', [ContractsController::class, 'createFromAward'])->name('contracts.createFromAward');
+
+// Contract Legal Integration (specific routes before generic)
+Route::get('contracts/legal/integration', [ContractsController::class, 'legalIntegration'])->name('contracts.legal.index');
+
+// Contracts Lifecycle (specific routes before generic - MOVED UP!)
+Route::prefix('contracts/lifecycle')->name('contracts.lifecycle.')->group(function () {
+    Route::get('/', [ContractsLifecycleController::class, 'index'])->name('index');
+    Route::get('{id}/view', [ContractsLifecycleController::class, 'view'])->name('view')->where('id', '[0-9]+');
+    Route::get('{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('amend')->where('id', '[0-9]+');
+    Route::post('{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('amend.submit')->where('id', '[0-9]+');
+    Route::get('{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('terminate')->where('id', '[0-9]+');
+    Route::post('{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('terminate.submit')->where('id', '[0-9]+');
+    Route::get('{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('execution')->where('id', '[0-9]+');
+});
+
+    // Generic Contract CRUD Routes (MOVED TO END - after specific routes)
+    Route::get('contracts/{id}', [ContractsController::class, 'show'])->name('contracts.show')->where('id', '[0-9]+');
+    Route::get('contracts/{id}/edit', [ContractsController::class, 'edit'])->name('contracts.edit')->where('id', '[0-9]+');
+    Route::put('contracts/{id}', [ContractsController::class, 'update'])->name('contracts.update')->where('id', '[0-9]+');
+    Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve')->where('id', '[0-9]+');
 
 // Contracts - LPO Link
-Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link');
+    Route::get('contracts/{id}/lpo', [ContractsController::class, 'linkLPO'])->name('contracts.lpo.link')->where('id', '[0-9]+');
 
-// Contracts Lifecycle
-Route::get('contracts/lifecycle', [ContractsLifecycleController::class, 'index'])->name('contractcycle.index');
-Route::get('contracts/lifecycle/{id}/view', [ContractsLifecycleController::class, 'view'])->name('contractcycle.view');
-Route::get('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'amend'])->name('contractcycle.amend');
-Route::post('contracts/lifecycle/{id}/amend', [ContractsLifecycleController::class, 'submitAmendment'])->name('contractcycle.amend.submit');
-Route::get('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'terminate'])->name('contractcycle.terminate');
-Route::post('contracts/lifecycle/{id}/terminate', [ContractsLifecycleController::class, 'submitTermination'])->name('contractcycle.terminate.submit');
-Route::get('contracts/lifecycle/{id}/execute', [ContractsLifecycleController::class, 'monitorExecution'])->name('contractcycle.execution');
+    // Enhanced Goods Receipt Notes (GRN) System
+    require __DIR__ . '/enhanced_grn.php';
 
 
 Route::resource('deliverynotes', DeliveryController::class);
