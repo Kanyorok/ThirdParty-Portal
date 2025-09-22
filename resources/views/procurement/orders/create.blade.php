@@ -74,7 +74,12 @@
                         <option selected disabled>Select RFQ</option>
                         @foreach($awardedRfqs as $ar)
                             @php $disabled = in_array($ar->Id, $convertedRFQIds ?? []) ? 'disabled' : ''; @endphp
-                            <option value="{{ $ar->RFQNumber }}" data-rfq-id="{{ $ar->Id }}" data-supplier-id="{{ $ar->SupplierId }}" {{ $disabled }}>{{ $ar->RFQNumber }}</option>
+                            <option value="{{ $ar->RFQNumber }}"
+                                    data-rfq-id="{{ $ar->Id }}"
+                                    data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
+                                    data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
+                                    data-supplier-legacy-id="{{ $ar->SupplierId }}"
+                                    {{ $disabled }}>{{ $ar->RFQNumber }}</option>
                         @endforeach
                         @php $awardedNos = collect($awardedRfqs ?? [])->pluck('RFQNumber')->toArray(); @endphp
                         @foreach($rfqs as $rfq)
@@ -311,6 +316,37 @@
 
     <script>
 
+        // Utility: rebuild line items from payload
+        function populateItems(items) {
+            const $tbody = $('#item-rows');
+            $tbody.empty();
+            const addRow = (idx, it) => {
+                const $tr = $('<tr/>');
+                $tr.append(`<td class="line-no">${idx + 1}.</td>`);
+                const $itemTd = $('<td class="text-start"/>');
+                const $select = $('<select class="form-select form-select-sm itemCode" name="itemCode[]" required/>');
+                const optionText = it.itemName || `Item #${it.itemCode || ''}`;
+                const optionVal = Number.isFinite(it.itemCode) ? it.itemCode : 0;
+                $select.append(`<option value="${optionVal}" selected>${optionText}</option>`);
+                $itemTd.append($select);
+                $tr.append($itemTd);
+                $tr.append('<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;"></textarea></td>');
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${it.quantity ?? ''}"></td>`);
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
+                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" step="any"></td>');
+                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>');
+                const lineTotal = (+it.quantity || 0) * (+it.unitPrice || 0);
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly value="${lineTotal.toFixed(2)}"></td>`);
+                $tr.append('<td class="text-center align-middle"><button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button></td>');
+                $tbody.append($tr);
+            };
+            (items || []).forEach((it, idx) => addRow(idx, it));
+            if ((items || []).length === 0) {
+                // keep one blank row
+                addRow(0, { itemCode: 0, itemName: '', quantity: '', unitPrice: '' });
+            }
+        }
+
         // Source mode toggling
         function applySourceMode() {
             const mode = $('input[name="SourceType"]:checked').val();
@@ -339,6 +375,7 @@
                 $('#supplier').prop('disabled', false);
                 $('#SourceId').val('');
                 $('.direct-only').removeClass('d-none');
+                populateItems([]);
             }
         }
         $(document).on('change', 'input[name="SourceType"]', applySourceMode);
@@ -350,6 +387,8 @@
             const rfqOption = $(this).find('option:selected');
             const rfqId = parseInt(rfqOption.data('rfq-id'));
             const awardedSupplierId = parseInt(rfqOption.data('supplier-id'));
+            const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id'));
+            const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : awardedSupplierId;
             if (!isNaN(rfqId)) {
                 $('#SourceId').val(rfqId);
             } else {
@@ -360,13 +399,31 @@
             $supplier.empty().append('<option selected disabled>Select supplier</option>');
 
             if (!isNaN(awardedSupplierId)) {
-                const awardResp = rfqResponses.find(r => (r.RFQNumber === selectedRFQNo) && (parseInt(r.SupplierId) === awardedSupplierId));
+                const awardResp = rfqResponses.find(r => (r.RFQNumber === selectedRFQNo) && (parseInt(r.SupplierId) === matchThirdPartyId));
                 const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : `Supplier #${awardedSupplierId}`;
                 const address = awardResp ? (awardResp.Address || awardResp.TradingAddress || '') : '';
                 $supplier.append(`<option value="${awardedSupplierId}" selected data-address="${address}">${displayName}</option>`);
                 $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);
-                $('<input>').attr({type:'hidden', name:'supplier', value:String(awardedSupplierId)}).appendTo('#purchaseOrdersForm');
+                if ($("input[name='supplier']").length === 0) {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(awardedSupplierId)}).appendTo('#purchaseOrdersForm');
+                } else {
+                    $("input[name='supplier']").val(String(awardedSupplierId));
+                }
+
+                // Fetch RFQ items for this supplier (use ThirdPartyId as rr.SupplierId in t_RFQResponse)
+                if (!isNaN(rfqId) && Number.isFinite(matchThirdPartyId)) {
+                    fetch(`/purchase-order/rfq-items/${rfqId}?supplierId=${matchThirdPartyId}`)
+                        .then(r => r.json())
+                        .then(({items}) => populateItems(items || []))
+                        .catch(() => populateItems([]));
+                } else if (!isNaN(rfqId)) {
+                    // fallback without supplier filter
+                    fetch(`/purchase-order/rfq-items/${rfqId}`)
+                        .then(r => r.json())
+                        .then(({items}) => populateItems(items || []))
+                        .catch(() => populateItems([]));
+                }
             } else {
                 // No award: list suppliers from responses for this RFQ
                 const suppliers = rfqResponses.filter(r => r.RFQNumber === selectedRFQNo);
@@ -380,6 +437,16 @@
                 });
                 $supplier.prop('disabled', false);
                 $('input[name="address"]').val('');
+                // Populate items for first found supplier (optional)
+                if (!isNaN(rfqId) && suppliers.length > 0) {
+                    const thirdParty = parseInt(suppliers[0].SupplierId);
+                    if (Number.isFinite(thirdParty)) {
+                        fetch(`/purchase-order/rfq-items/${rfqId}?supplierId=${thirdParty}`)
+                            .then(r => r.json())
+                            .then(({items}) => populateItems(items || []))
+                            .catch(() => populateItems([]));
+                    }
+                }
             }
         });
 

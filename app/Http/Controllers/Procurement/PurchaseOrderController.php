@@ -56,7 +56,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);}
+            ]);} 
         catch(\Exception $e){
             return response()->json([
                 'success' => false,
@@ -105,7 +105,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $suppliers,
-            ]);}
+            ]);} 
         catch(\Exception $e){
             Log::error('Error fetching suppliers: ' . $e->getMessage());
 
@@ -169,7 +169,16 @@ class PurchaseOrderController extends Controller
             try {
                 $awardedFromRFQAward = DB::table('t_RFQAward as a')
                     ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
-                    ->select('r.Id', 'r.RFQNumber', 'a.SupplierId')
+                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'a.SupplierId')
+                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                    ->select(
+                        'r.Id',
+                        'r.RFQNumber',
+                        'a.SupplierId',
+                        DB::raw('tp.Id as ThirdPartyId'),
+                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                    )
                     ->get();
             } catch (\Throwable $e) {
                 \Log::warning('Skipping RFQAward join for awarded RFQs', ['error' => $e->getMessage()]);
@@ -182,8 +191,17 @@ class PurchaseOrderController extends Controller
                 $awardedFromTender = DB::table('t_TenderAwards as ta')
                     ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
                     ->join('t_RFQ as r', 'r.RFQNumber', '=', 't.TenderNo')
+                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
                     ->where('ta.AwardStatus', '=', 'Approved')
-                    ->select('r.Id', 'r.RFQNumber', DB::raw('ta.WinningSupplierID as SupplierId'))
+                    ->select(
+                        'r.Id',
+                        'r.RFQNumber',
+                        DB::raw('ta.WinningSupplierID as SupplierId'),
+                        DB::raw('tp.Id as ThirdPartyId'),
+                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                    )
                     ->get();
             } catch (\Throwable $e) {
                 \Log::warning('Skipping TenderAwards join for awarded RFQs', ['error' => $e->getMessage()]);
@@ -218,14 +236,16 @@ class PurchaseOrderController extends Controller
             // Executed contracts for Contract-based source selection
             $contracts = DB::table('t_TenderAwards as ta')
                 ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
-                ->where('ta.ContractStatus', 'Executed')
+                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                ->where('ta.ContractStatus', '=', 'Executed')
                 ->orderByDesc('ta.ContractApprovedOn')
                 ->select(
                     'ta.Id as Id',
                     'ta.ContractRef as ContractRef',
                     'ta.WinningSupplierID as SupplierId',
-                    DB::raw("COALESCE(s.SupplierName, '') as SupplierName"),
-                    DB::raw("COALESCE(s.Address, '') as Address")
+                    DB::raw('tp.Id as ThirdPartyId'),
+                    DB::raw("tp.TradingName as SupplierName"),
+                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
                 )
                 ->get();
 
@@ -237,12 +257,14 @@ class PurchaseOrderController extends Controller
                     $contractRow = DB::table('t_TenderAwards as ta')
                         ->leftJoin('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
                         ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                        ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
                         ->select(
                             'ta.Id as ContractId',
                             'ta.ContractRef',
                             'ta.WinningSupplierID as SupplierId',
-                            DB::raw("COALESCE(s.SupplierName, '') as SupplierName"),
-                            DB::raw("COALESCE(s.Address, '') as Address")
+                            DB::raw('tp.Id as ThirdPartyId'),
+                            DB::raw("tp.TradingName as SupplierName"),
+                            DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
                         )
                         ->where('ta.Id', (int) $contractId)
                         ->first();
@@ -261,8 +283,8 @@ class PurchaseOrderController extends Controller
                         $rfqResponsesCol = collect($rfqResponses ?? []);
                         $rfqResponsesCol = $rfqResponsesCol->prepend((object) [
                             'RFQNumber'    => $contractRow->ContractRef,
-                            'SupplierId'   => (int) ($contractRow->SupplierId ?? 0),
-                            'SupplierID'   => (int) ($contractRow->SupplierId ?? 0),
+                            'SupplierId'   => (int) ($contractRow->ThirdPartyId ?? 0),
+                            'SupplierID'   => (int) ($contractRow->ThirdPartyId ?? 0),
                             'SupplierName' => $contractRow->SupplierName ?? '',
                             'Address'      => $contractRow->Address ?? '',
                         ]);
@@ -271,6 +293,7 @@ class PurchaseOrderController extends Controller
                         $prefillContract = [
                             'ref'          => $contractRow->ContractRef,
                             'supplierId'   => (int) ($contractRow->SupplierId ?? 0),
+                            'thirdPartyId' => (int) ($contractRow->ThirdPartyId ?? 0),
                             'supplierName' => $contractRow->SupplierName ?? '',
                             'address'      => $contractRow->Address ?? '',
                         ];
@@ -594,23 +617,34 @@ class PurchaseOrderController extends Controller
     }
 public function getRFQItems($rfqId)
 {
-    $rfqResponse = RFQResponse::with(['items.item'])->where('RFQID', $rfqId)->first();
+    try {
+        $supplierId = (int) request()->query('supplierId');
 
-    if (!$rfqResponse) {
-        return response()->json(['items' => []]);
+        // Pull response items for this RFQ (optionally filtered by supplier), and map to catalog items by name
+        $items = DB::table('t_ResponseItems as ri')
+            ->join('t_RFQResponse as rr', 'ri.RfqResponseId', '=', 'rr.Id')
+            ->where('rr.RFQId', (int) $rfqId)
+            ->when($supplierId > 0, function ($q) use ($supplierId) {
+                $q->where('rr.SupplierId', $supplierId);
+            })
+            ->leftJoin('t_Items as it', 'it.ItemName', '=', 'ri.ItemName')
+            ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ri.ItemName) as itemName, COALESCE(it.ItemType, '') as itemType, ri.Quantity as quantity, ri.QuotedPrice as unitPrice")
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'itemCode' => (int) $row->itemCode,
+                    'itemName' => $row->itemName,
+                    'itemType' => $row->itemType,
+                    'quantity' => (float) $row->quantity,
+                    'unitPrice' => (float) $row->unitPrice,
+                ];
+            });
+
+        return response()->json(['items' => $items]);
+    } catch (\Throwable $e) {
+        \Log::error('Failed to fetch RFQ items', ['rfqId' => $rfqId, 'error' => $e->getMessage()]);
+        return response()->json(['items' => []], 200);
     }
-
-    $items = $rfqResponse->items->map(function ($item) {
-        return [
-            'itemCode' => $item->ItemCode,
-            'itemName' => $item->item->ItemName ?? '',
-            'itemType' => $item->item->ItemType ?? '',
-            'quantity' => $item->Quantity,
-            'unitPrice' => $item->UnitPrice,
-        ];
-    });
-
-    return response()->json(['items' => $items]);
 }
 
 
