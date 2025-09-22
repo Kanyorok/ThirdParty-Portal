@@ -42,8 +42,8 @@ class SupplierCategory extends Model
         return $this->belongsToMany(
             Supplier::class,
             't_ThirdParty_SupplierCategory',
-            'SupplierCategoryID',
-            'ThirdPartyID'
+            'supplier_category_id',
+            'third_party_id'
         )->withTimestamps();
     }
 
