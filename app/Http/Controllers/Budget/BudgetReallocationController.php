@@ -18,6 +18,7 @@ use App\Models\Core\Branch;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class BudgetReallocationController extends Controller
@@ -27,6 +28,36 @@ class BudgetReallocationController extends Controller
         $reallocations = BudgetReallocation::orderBy('CreatedOn', 'desc')->get();
         return view('budgetandanalytics.reallocation.index', compact('reallocations'));
     }
+
+    public function show($id)
+    {
+        $realloc = BudgetReallocation::with([
+            'budget',
+            'fromLine.department',
+            'toLine.department',
+            'branch',
+            'department',
+            'createdBy',
+            'approvedBy'
+        ])->findOrFail($id);
+    
+        // Load associated budget limits
+        $limits = BudgetLineLedgerLimit::where('ReallocationID', $realloc->id)
+            ->orderBy('EffectiveFrom')
+            ->get();
+    
+        // Separate into from/to line collections
+        $fromLimits = $limits->where('BudgetLineID', $realloc->FromBudgetLineID);
+        $toLimits   = $limits->where('BudgetLineID', $realloc->ToBudgetLineID);
+    
+        return view('budgetandanalytics.reallocation.show', compact(
+            'realloc',
+            'limits',
+            'fromLimits',
+            'toLimits'
+        ));
+    }
+    
 
     public function create()
     {
@@ -271,7 +302,7 @@ class BudgetReallocationController extends Controller
                 'ReallocationType' => $validated['ReallocationType'] ?? null,
                 'Amount'           => $validated['Amount'],
                 'Justification'    => $validated['Justification'],
-                'CreatedBy'        => auth()->id(),
+                'CreatedBy'        => Auth::id(),
                 'CreatedOn'        => now(),
             ]);
             // Helper to insert pending monthly limits
@@ -296,7 +327,7 @@ class BudgetReallocationController extends Controller
                         'EffectiveFrom'  => $month->copy()->startOfMonth()->toDateString(),
                         'EffectiveTo'    => $month->copy()->endOfMonth()->toDateString(),
                         'IsActive'       => false, // pending approval
-                        'CreatedBy'      => auth()->id(),
+                        'CreatedBy'      => Auth::id(),
                         'CreatedOn'      => now(),
                     ]);
                 }
@@ -318,20 +349,69 @@ class BudgetReallocationController extends Controller
     /**
      * Approve and apply the reallocation
      */
-    public function approve($id)
+    public function approve($id, Request $request)
     {
+        $request->validate([
+            'ApprovalReason' => 'nullable|string|max:1000',
+        ]);
+
         $realloc = BudgetReallocation::findOrFail($id);
 
-        // Deduct from source
-        $this->adjustLineAmount($realloc->FromBudgetLineID, -$realloc->Amount, $realloc->BranchID);
+        DB::transaction(function () use ($realloc, $request) {
+            // Deactivate previously active limits (including initial ones with NULL ReallocationID)
+            $newLimits = BudgetLineLedgerLimit::where('ReallocationID', $realloc->id)->get();
+            $limitsByLine = $newLimits->groupBy('BudgetLineID');
+            foreach ($limitsByLine as $lineId => $rows) {
+                $effectiveFromDates = $rows->pluck('EffectiveFrom')->unique()->values();
+                if ($effectiveFromDates->isNotEmpty()) {
+                    BudgetLineLedgerLimit::where('BudgetID', $realloc->BudgetID)
+                        ->where('BranchID', $realloc->BranchID)
+                        ->where('BudgetLineID', $lineId)
+                        ->where('LimitType', 'Monthly')
+                        ->where('IsActive', 1)
+                        ->whereIn('EffectiveFrom', $effectiveFromDates)
+                        ->where(function($q) use ($realloc) {
+                            $q->whereNull('ReallocationID')
+                              ->orWhere('ReallocationID', '!=', $realloc->id);
+                        })
+                        ->update(['IsActive' => false]);
+                }
+            }
 
-        // Add to target
-        $this->adjustLineAmount($realloc->ToBudgetLineID, $realloc->Amount, $realloc->BranchID);
+            // Activate limits for this reallocation
+            BudgetLineLedgerLimit::where('ReallocationID', $realloc->id)->update(['IsActive' => true]);
 
-        $realloc->Status = 'Approved';
+            // Adjust activity/manual amounts
+            $this->adjustLineAmount($realloc->FromBudgetLineID, -$realloc->Amount, $realloc->BranchID);
+            $this->adjustLineAmount($realloc->ToBudgetLineID, $realloc->Amount, $realloc->BranchID);
+
+            // Update reallocation header
+            $realloc->Status = 'approved';
+            $realloc->ApprovalReason = $request->input('ApprovalReason');
+            $realloc->ApprovedBy = Auth::id();
+            $realloc->ApprovedOn = now();
+            $realloc->save();
+        });
+
+        return redirect()->route('budgetandanalytics.reallocation.show', ['id' => $realloc->id])
+            ->with('success', 'Reallocation approved successfully.');
+    }
+    public function reject($id, Request $request)
+    {
+        $request->validate([
+            'ApprovalReason' => 'required|string|max:1000',
+        ]);
+
+        $realloc = BudgetReallocation::findOrFail($id);
+
+        $realloc->Status = 'rejected';
+        $realloc->ApprovalReason = $request->input('ApprovalReason');
+        $realloc->ApprovedBy = Auth::id();
+        $realloc->ApprovedOn = now();
         $realloc->save();
 
-        return back()->with('success', 'Reallocation approved and budget lines updated.');
+        return redirect()->route('budgetandanalytics.reallocation.show', ['id' => $realloc->id])
+            ->with('success', 'Reallocation rejected.');
     }
 
     /**

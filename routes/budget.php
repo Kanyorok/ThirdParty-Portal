@@ -190,6 +190,7 @@ Route::prefix('budgetandanalytics/reallocation')
         Route::get('/create', [BudgetReallocationController::class, 'create'])->name('create');
         Route::post('/store', [BudgetReallocationController::class, 'store'])->name('store');
         Route::get('/allocate', [BudgetReallocationController::class, 'allocate'])->name('allocate');
+        Route::get('/{id}', [BudgetReallocationController::class, 'show'])->name('show');
 
         // Optional future routes
         Route::get('/{id}/review', [BudgetReallocationController::class, 'review'])->name('review');
