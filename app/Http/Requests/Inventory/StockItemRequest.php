@@ -40,9 +40,8 @@ class StockItemRequest extends FormRequest
             'CurrentQty' => 'required|integer|min:0',
             'Min' => 'required|integer|min:0',
             'Reorder' => 'required|integer|min:0',
-            'Max' => 'required|integer|min:0',
-            'LastReceived' => 'nullable|date',
-            'Status' => 'required|boolean',
+            'LastReceived' => ['required', 'date', 'before_or_equal:today'],
+            'Status' => 'nullable|boolean',
         ];
     }
 }

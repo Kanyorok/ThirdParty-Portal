@@ -99,7 +99,8 @@
                     </table>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Update Transfer</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Transfer</button>
+
                 <a href="{{ route('transactionstransfers.index') }}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>

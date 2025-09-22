@@ -20,8 +20,9 @@
     <form action="{{ route('itemmasterlist.store') }}" method="POST" enctype="multipart/form-data" id="itemMasterListForm">
         @csrf
 
+        {{-- Row 1 --}}
         <div class="row mb-3">
-             <div class="col-md-4">
+            <div class="col-md-4">
                 <label for="BarCode" class="form-label">Bar Code</label>
                 <input type="text" name="BarCode" id="BarCode" class="form-control" value="{{ old('BarCode') }}" required>
             </div>
@@ -29,9 +30,6 @@
                 <label for="ItemName" class="form-label">Item Name</label>
                 <input type="text" name="ItemName" id="ItemName" class="form-control" value="{{ old('ItemName') }}" required>
             </div>
-        </div>
-
-        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="ItemType" class="form-label">Item Type</label>
                 <select name="ItemType" id="ItemType" class="form-select" required>
@@ -42,8 +40,11 @@
                         </option>
                     @endforeach
                 </select>
-
             </div>
+        </div>
+
+        {{-- Row 2 --}}
+        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="Category" class="form-label">Parent Category</label>
                 <select name="Category" id="category" class="form-select" required>
@@ -59,9 +60,6 @@
                     <option value="">-- Select SubCategory --</option>
                 </select>
             </div>
-        </div>
-
-        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
                 <select name="UOM" id="UOM" class="form-select" required>
@@ -72,39 +70,43 @@
                         </option>
                     @endforeach
                 </select>
-
             </div>
+        </div>
+
+        {{-- Row 3 --}}
+        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="InventoryType" class="form-label">Inventory Type</label>
                 <select name="InventoryType" id="InventoryType" class="form-select" required>
                     <option selected disabled>Select Inventory Type</option>
                     @foreach($inventoryTypes as $inventoryType)
-                        <option
-                            value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
+                        <option value="{{ $inventoryType->Id }}" {{ old('InventoryType') == $inventoryType->Id ? 'selected' : '' }}>
                             {{ $inventoryType->Type }}
                         </option>
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-4">
+                <label for="ImageUpload" class="form-label">Item Image</label>
+                <input type="file" name="ImageUpload" id="ImageUpload" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="DocumentUpload" class="form-label">Upload Document (PDF, DOCX, XLSX, etc.)</label>
+                <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control"
+                       accept=".pdf,.doc,.docx,.xls,.xlsx">
+            </div>
         </div>
 
+        {{-- Full-width Row --}}
         <div class="mb-3">
             <label for="ItemDescription" class="form-label">Item Description</label>
             <textarea name="ItemDescription" id="ItemDescription" class="form-control" rows="3">{{ old('ItemDescription') }}</textarea>
         </div>
 
-        <div class="mb-3">
-            <label for="ImageUpload" class="form-label">Item Image</label>
-            <input type="file" name="ImageUpload" id="ImageUpload" class="form-control">
-        </div>
-        <div class="mb-3">
-            <label for="DocumentUpload" class="form-label">Upload Document (PDF, DOCX, XLSX, etc.)</label>
-            <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control"
-                   accept=".pdf,.doc,.docx,.xls,.xlsx">
-        </div>
-
-
-        <button type="submit" class="btn btn-primary">✅ Save Item</button>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+            ✅ Save Item
+        </button>
     </form>
 </div>
 
@@ -113,10 +115,6 @@
 @section('scripts')
 <script>
     $(document).ready(function () {
-        $("#subcategory").change(function () {
-            console.log('changed')
-            console.log($(this).val())
-        });
         $('#category').change(function () {
             let categoryId = $(this).val();
             $('#subcategory').html('<option value="">Loading...</option>');

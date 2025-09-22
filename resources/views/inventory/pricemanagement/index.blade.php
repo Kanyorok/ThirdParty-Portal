@@ -102,9 +102,9 @@
                         <th>UOM</th>
                         <th>Estimated Price</th>
                         <th>Currency</th>
-                        <th>Effective From</th>
-                        <th>Effective To</th>
-                        <th>Default</th>
+                        {{-- <th>Effective From</th> --}}
+                        {{-- <th>Effective To</th>
+                        <th>Default</th> --}}
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -117,9 +117,9 @@
                         <td>{{ $price->uom->Code ?? '-' }}</td>
                         <td>{{ number_format($price->ActualPrice, 2) }}</td>
                         <td>{{ $price->CurrencyCode }}</td>
-                        <td>{{ $price->EffectiveFrom ? \Carbon\Carbon::parse($price->EffectiveFrom)->format('Y-m-d') : '—' }}</td>
+                        {{-- <td>{{ $price->EffectiveFrom ? \Carbon\Carbon::parse($price->EffectiveFrom)->format('Y-m-d') : '—' }}</td>
                         <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
-                        <td>{!! $price->IsDefault ? '✔️' : '' !!}</td>
+                        <td>{!! $price->IsDefault ? '✔️' : '' !!}</td> --}}
                         <td>
                             <a href="{{ route('pricemanagement.edit', $price->Id) }}" class="btn btn-sm btn-info">Edit</a>
                             <form action="{{ route('pricemanagement.destroy', $price->Id) }}" method="POST"

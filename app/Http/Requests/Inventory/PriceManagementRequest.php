@@ -24,7 +24,7 @@ class PriceManagementRequest extends FormRequest
     $rules = [
         'ActualPrice'    => 'required|numeric|min:0',
         'CurrencyCode'   => 'required|string|max:10',
-        'EffectiveFrom'  => 'required|date',
+        'EffectiveFrom'  => 'nullable|date',
         'EffectiveTo'    => 'nullable|date|after_or_equal:EffectiveFrom',
         'IsDefault'      => 'boolean',
         'Source'         => 'nullable|string|max:255',
