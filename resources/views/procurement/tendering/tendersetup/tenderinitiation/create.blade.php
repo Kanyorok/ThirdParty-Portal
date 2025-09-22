@@ -17,6 +17,12 @@
 </style>
 <div class="container mt-4">
     <h4 class="mb-4">Tender Initiation Form</h4>
+    <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
+        <i class="fa fa-info-circle me-2"></i>
+        <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.">
+            <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
+        </span>
+    </div>
     <form action="{{ route('initiatetender.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('POST')

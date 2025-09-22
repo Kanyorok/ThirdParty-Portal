@@ -54,7 +54,7 @@
                             <label class="form-check-label" for="srcRFQ">RFQ</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="SourceType" id="srcTender" value="TENDER" disabled>
+                            <input class="form-check-input" type="radio" name="SourceType" id="srcTender" value="TENDER">
                             <label class="form-check-label" for="srcTender">Tender</label>
                         </div>
                     </div>
@@ -92,10 +92,32 @@
                 </div>
                 <div class="col-md-4">
                     <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate') }}" required/>
+                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
                     @error('pODate')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
+                </div>
+            </div>
+
+            <!-- Tender Selection -->
+            <div class="row mb-4 source-tender d-none">
+                <div class="col-md-4">
+                    <label>Tender No <span class="text-danger">*</span></label>
+                    <select class="form-control" id="tenderNo">
+                        <option selected disabled>Select Tender</option>
+                        @foreach(($awardedTenders ?? []) as $t)
+                            @php $disabled = in_array($t->Id, ($convertedTenderIds ?? [])) ? 'disabled' : ''; @endphp
+                            <option value="{{ $t->TenderNo }}" data-tender-id="{{ $t->Id }}" data-supplier-id="{{ $t->SupplierId }}" {{ $disabled }}>{{ $t->TenderNo }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label>LPO Number <span class="text-danger">*</span></label>
+                    <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
+                </div>
+                <div class="col-md-4">
+                    <label>Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
                 </div>
             </div>
 
@@ -106,6 +128,7 @@
                     <select class="form-control supplier @error('supplier') is-invalid @enderror" id="supplier" name="supplier">
                         <option selected disabled>Select supplier</option>
                     </select>
+                    <input type="hidden" id="supplierHidden" />
                     @error('supplier')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
@@ -148,9 +171,9 @@
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms <span class="text-danger">*</span></label>
-                    <select class="form-control terms @error('terms') is-invalid @enderror" name="terms" required>
+                    <select class="form-control terms @error('terms') is-invalid @enderror" name="terms" id="terms" required>
                         <option selected disabled>Select Payment Term</option>
-                        @foreach ($paymentTerms as $term)
+                        @foreach (($paymentTerms ?? []) as $term)
                             <option value="{{ $term->ID }}" {{ old('terms') == $term->ID ? 'selected' : '' }}>{{ $term->Description }}</option>
                         @endforeach
                     </select>
@@ -160,11 +183,11 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end mb-3">
-                <button type="button" class="btn btn-outline-primary" id="add-row">
-                    + Add Item
-                </button>
-            </div>
+        <div class="d-flex justify-content-end mb-3">
+            <button type="button" class="btn btn-outline-primary" id="add-row">
+                + Add Item
+            </button>
+        </div>
 
 
             <!-- Line Items Table -->
@@ -268,6 +291,7 @@
             const mode = $('input[name="SourceType"]:checked').val();
             if (mode === 'RFQ') {
                 $('.source-rfq').removeClass('d-none');
+                $('.source-tender').addClass('d-none');
                 $('#supplier').prop('disabled', true); // auto in RFQ
                 $('.direct-only').addClass('d-none');
                 // Load awarded RFQs live to ensure latest awards appear
@@ -299,8 +323,28 @@
                         // On failure, leave whatever was server-rendered
                         // and do not block the user
                     });
+            } else if (mode === 'TENDER') {
+                $('.source-rfq').addClass('d-none');
+                $('.source-tender').removeClass('d-none');
+                $('#supplier').prop('disabled', true);
+                $('.direct-only').addClass('d-none');
+                const $ref = $('#tenderNo');
+                $ref.empty().append('<option selected disabled>Loading awarded tenders...</option>');
+                fetch('/procurement/purchase-order/awarded-tenders')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $ref.empty().append('<option selected disabled>Select Tender</option>');
+                        if (!success) return;
+                        const converted = (window.convertedTenderIds || []);
+                        (data || []).forEach(t => {
+                            const dis = converted.includes(t.Id) ? 'disabled' : '';
+                            $ref.append(`<option value="${t.TenderNo}" data-tender-id="${t.Id}" data-supplier-id="${t.SupplierId}" ${dis}>${t.TenderNo}</option>`);
+                        });
+                    })
+                    .catch(() => {});
             } else {
                 $('.source-rfq').addClass('d-none');
+                $('.source-tender').addClass('d-none');
                 $('#supplier').prop('disabled', false);
                 $('#SourceId').val('');
                 $('.direct-only').removeClass('d-none');
@@ -335,11 +379,13 @@
             // If we have an awarded supplier, lock it; otherwise list suppliers in responses
             if (!isNaN(awardedSupplierId)) {
                 const awardResp = rfqResponses.find(r => (r.RFQNumber === selectedRFQNo) && (parseInt(r.SupplierId) === awardedSupplierId));
-                const displayName = awardResp ? (awardResp.SupplierName || awardResp.Name) : `Supplier #${awardedSupplierId}`;
-                const address = awardResp ? (awardResp.Address || '') : '';
+                const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : `Supplier #${awardedSupplierId}`;
+                const address = awardResp ? (awardResp.Address || awardResp.TradingAddress || '') : '';
                 $supplier.append(`<option value="${awardedSupplierId}" selected data-address="${address}">${displayName}</option>`);
                 $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);
+                // Ensure a value is posted under required name
+                $('<input>').attr({type:'hidden', name:'supplier', value:String(awardedSupplierId)}).appendTo('#purchaseOrdersForm');
             } else {
                 // No award: list suppliers from responses for this RFQ
                 const suppliers = rfqResponses.filter(r => r.RFQNumber === selectedRFQNo);
@@ -366,7 +412,7 @@
             fetch(itemsUrl)
                 .then(r => r.json())
                 .then(({items}) => {
-                    if (!items || !items.length) return;
+                if (!items || !items.length) return;
                     const $tbody = $('#item-rows');
                     $tbody.empty();
                     items.forEach((it, idx) => {
@@ -397,6 +443,83 @@
                 .catch(console.error);
         });
 
+        // Tender selection: auto-fill supplier, set SourceId, fetch items
+        $(document).on('change', '#tenderNo', function () {
+            const tenderNo = $(this).val();
+            const opt = $(this).find('option:selected');
+            const tenderId = parseInt(opt.data('tender-id'));
+            const supplierId = parseInt(opt.data('supplier-id'));
+            if (!isNaN(tenderId)) {
+                $('#SourceId').val(tenderId);
+            } else {
+                $('#SourceId').val('');
+            }
+
+            const $supplier = $('#supplier');
+            $supplier.empty().append('<option selected disabled>Select supplier</option>');
+
+            if (!isNaN(supplierId)) {
+                // Try fetch supplier list to resolve display name/address
+                fetch('/procurement/purchaseOrder/getSuppliers')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        let name = `Supplier #${supplierId}`;
+                        let addr = '';
+                        if (success && Array.isArray(data)) {
+                            const found = data.find(s => parseInt(s.SupplierId) === supplierId || parseInt(s.Id) === supplierId);
+                            if (found) {
+                                name = found.SupplierName || found.Name || name;
+                                addr = found.Address || '';
+                            }
+                        }
+                        $supplier.append(`<option value="${supplierId}" selected data-address="${addr}">${name}</option>`);
+                        $supplier.prop('disabled', true);
+                        $('input[name="address"]').val(addr);
+                        $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
+                    })
+                    .catch(() => {
+                        $supplier.append(`<option value="${supplierId}" selected>Supplier #${supplierId}</option>`);
+                        $supplier.prop('disabled', true);
+                        $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
+                    });
+            }
+
+            if (!isNaN(tenderId)) {
+                fetch(`/procurement/purchase-order/tender-items/${tenderId}?supplierId=${supplierId || ''}`)
+                    .then(r => r.json())
+                    .then(({items}) => {
+                        if (!items || !items.length) return;
+                        const $tbody = $('#item-rows');
+                        $tbody.empty();
+                        items.forEach((it, idx) => {
+                            const rowNo = idx + 1;
+                            const html = `
+                                <tr>
+                                    <td class="line-no">${rowNo}.</td>
+                                    <td class="text-start">
+                                        <select class="form-select form-select-sm itemCode" name="itemCode[]" required>
+                                            <option value="${it.itemCode}" selected>${it.itemName}</option>
+                                        </select>
+                                    </td>
+                                    <td class="text-start">
+                                        <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="2" readonly>${it.itemName}</textarea>
+                                    </td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" value="${it.quantity}" required></td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" value="${it.unitPrice || 0}" required></td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" step="any"></td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>
+                                    <td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly></td>
+                                    <td class="text-center align-middle">
+                                        <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
+                                    </td>
+                                </tr>`;
+                            $tbody.append(html);
+                        });
+                    })
+                    .catch(console.error);
+            }
+        });
+
         // Load item categories for direct helper
         function loadItemCategories() {
             fetch('/procurement/supplier-categories')
@@ -408,6 +531,8 @@
                 .catch(console.error)
         }
         loadItemCategories();
+
+        // Payment terms are server-rendered from t_CodeDetails(CodeID='PaymentTerm')
 
         // On category change, fetch prequalified suppliers helper
         $(document).on('change', '#itemCategory', function () {
@@ -469,6 +594,16 @@
             $('form#purchaseOrdersForm').submit(async function (e) {
                 // alert($('#RequisitionID').val());
                 e.preventDefault();
+                // Ensure supplier is included when select is disabled
+                const supVal = $('#supplier').val();
+                if (supVal && $("input[name='supplier']").length === 0) {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supVal)}).appendTo('#purchaseOrdersForm');
+                }
+                // Ensure refNo is provided to backend (use LPONo)
+                const lpoNo = $('input[name="LPONo"]').first().val();
+                if (lpoNo && $("input[name='refNo']").length === 0) {
+                    $('<input>').attr({type:'hidden', name:'refNo', value:String(lpoNo)}).appendTo('#purchaseOrdersForm');
+                }
                 if (await saveForm($(this), $('#saveOrder'), true, true, true)) {
                     $Modal.modal('hide');
                 }
@@ -628,6 +763,19 @@
             updateLineNumbers();
             calculateSummaryTotals();
         });
+
+        // Hide Add Item button for RFQ/Tender modes where items are auto-filled
+        function toggleAddItemButton() {
+            const mode = $('input[name="SourceType"]:checked').val();
+            const $btn = $('#add-row');
+            if (mode === 'RFQ' || mode === 'TENDER') {
+                $btn.addClass('d-none');
+            } else {
+                $btn.removeClass('d-none');
+            }
+        }
+        $(document).on('change', 'input[name="SourceType"]', toggleAddItemButton);
+        toggleAddItemButton();
 
         // Remove row handler
         $(document).on('click', '.remove-row', function () {

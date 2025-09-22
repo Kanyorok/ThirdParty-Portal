@@ -132,6 +132,8 @@ class TenderOpeningController extends Controller
             $tender->update([
                 'OpeningDate' => now(), // Mark ceremony as started
                 'Status' => TenderStatusEnum::OpeningInProgress,
+                'ModifiedBy' => $request->user()->Id,
+                'ModifiedOn' => now(),
             ]);
 
             // Log ceremony initialization

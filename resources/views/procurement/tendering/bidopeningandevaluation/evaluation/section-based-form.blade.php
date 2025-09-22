@@ -258,7 +258,7 @@
                 <ul class="list-group">
                     @foreach($allMembers as $member)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ $member->employee->full_name ?? 'Unknown' }}
+                            {{ $member->user->employee->full_name ?? 'Unknown' }}
                             <div>
                                 <span class="badge bg-primary">{{ $member->Role }}</span>
                                 @if($member->HasEvaluated)

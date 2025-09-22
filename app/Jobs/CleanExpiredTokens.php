@@ -15,8 +15,7 @@ class CleanExpiredTokens implements ShouldQueue
 
     public function handle(): void
     {
-        // Built-in Sanctum table name and columns
-        DB::table('personal_access_tokens')
+        DB::table('t_SYSPersonalAccessTokens')
             ->where('created_at', '<', now()->subDay())
             ->delete();
     }

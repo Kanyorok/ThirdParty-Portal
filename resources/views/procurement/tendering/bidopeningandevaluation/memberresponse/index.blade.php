@@ -16,9 +16,11 @@
                 <select class="form-select" name="tender_id" id="tender_id" required>
                     <option value="" disabled selected>-- Select Tender --</option>
                     @foreach ($tenders as $entry)
-                        <option value="{{ $entry->tender->Id }}">
-                            {{ $entry->tender->TenderNo ?? 'No Tender No' }} - {{ $entry->tender->Title ?? 'No Title' }}
-                        </option>
+                        @if($entry->tender)
+                            <option value="{{ $entry->tender->Id }}">
+                                {{ $entry->tender->TenderNo ?? 'No Tender No' }} - {{ $entry->tender->Title ?? 'No Title' }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
             </div>
@@ -57,9 +59,11 @@
                 <select class="form-select" name="rfq_id" id="rfq_id" required>
                     <option value="" disabled selected>-- Select RFQ --</option>
                     @foreach ($rfq as $entry)
-                        <option value="{{ $entry->rfq->Id }}">
-                            {{ $entry->rfq->RFQNumber ?? 'No RFQ Number' }}
-                        </option>
+                        @if($entry->rfq)
+                            <option value="{{ $entry->rfq->Id }}">
+                                {{ $entry->rfq->RFQNumber ?? 'No RFQ Number' }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
             </div>

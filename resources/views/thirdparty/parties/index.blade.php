@@ -734,10 +734,13 @@
                                 </th>
                                 <th>ID</th>
                                 <th>Company Name</th>
+                                <th>Trading Name</th>
                                 <th>Country</th>
                                 <th>Third Party Type</th>
                                 <th>Approval Status</th>
                                 <th>Business Type</th>
+                                <th>Primary Contact</th>
+                                <th>Primary Email</th>
                                 <th>Prequalified</th>
                                 <th>Actions</th>
                             </tr>
@@ -814,6 +817,11 @@
                     name: 'ThirdPartyName'
                 },
                 {
+                    data: 'TradingName',
+                    name: 'TradingName',
+                    render: function(data){ return data || 'N/A'; }
+                },
+                {
                     data: 'Country',
                     name: 'Country'
                 },
@@ -848,6 +856,14 @@
                 {
                     data: 'BusinessType',
                     name: 'BusinessType'
+                },
+                {
+                    data: 'PrimaryUser',
+                    name: 'PrimaryUser'
+                },
+                {
+                    data: 'PrimaryEmail',
+                    name: 'PrimaryEmail'
                 },
                 {
                     data: 'IsPrequalified',

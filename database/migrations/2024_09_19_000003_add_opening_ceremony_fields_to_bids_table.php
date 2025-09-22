@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('t_BidSubmissions')) {
+            return;
+        }
         Schema::table('t_BidSubmissions', function (Blueprint $table) {
             // Opening ceremony specific fields
             $table->enum('CeremonyType', ['public', 'recorded', 'private'])->nullable()->after('OpenedBy');
@@ -24,6 +27,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (!Schema::hasTable('t_BidSubmissions')) {
+            return;
+        }
         Schema::table('t_BidSubmissions', function (Blueprint $table) {
             $table->dropIndex(['OpenedAt', 'CeremonyType']);
             $table->dropColumn([

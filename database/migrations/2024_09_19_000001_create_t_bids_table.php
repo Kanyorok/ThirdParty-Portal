@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id('Id');
             
             // Business fields
-            $table->foreignId('TenderId')->constrained('t_Tenders', 'Id');
-            $table->foreignId('SupplierId')->constrained('t_Suppliers', 'Id');
+            $table->unsignedBigInteger('TenderId');
+            $table->unsignedBigInteger('SupplierId');
             $table->decimal('BidAmount', 15, 2);
             $table->string('Currency', 3);
             $table->integer('ValidityPeriod');
@@ -33,6 +33,18 @@ return new class extends Migration
             $table->index(['TenderId', 'Status']);
             $table->index('SupplierId');
         });
+
+        // Add FKs only if referenced tables already exist (supports flexible migration ordering)
+        if (Schema::hasTable('t_Tenders')) {
+            Schema::table('t_Bids', function (Blueprint $table) {
+                $table->foreign('TenderId')->references('Id')->on('t_Tenders');
+            });
+        }
+        if (Schema::hasTable('t_Suppliers')) {
+            Schema::table('t_Bids', function (Blueprint $table) {
+                $table->foreign('SupplierId')->references('Id')->on('t_Suppliers');
+            });
+        }
     }
 
     public function down()

@@ -27,7 +27,7 @@
                 <th>#</th>
                 <th>Order No</th>
                 <th>Order Date</th>
-                <th>RFQ No</th>
+                <th>LPO No</th>
                 <th>Priority</th>
                 <th>Branch</th>
                 <th>Order Amount</th>
@@ -50,7 +50,7 @@
                   <td>{{ $item->ordercount }}</td>
                   <td>{{ $item->CreatedBy }}</td>
                   <td>{{ \Carbon\Carbon::parse($item->CreatedOn)->format('d-m-Y H:i') }}</td>
-                  <td> <a href="{{ route('purchaseOrder.show', $item->Id) }}" class="btn btn-info btn-sm">View</a>
+                  <td> <a href="#" class="btn btn-info btn-sm view-order" data-id="{{ $item->Id }}">View</a>
                     <a href="{{ route('purchaseOrder.approval', $item->Id) }}" class="btn btn-success btn-sm">Approve</a>
                   </td>
                 </tr>
@@ -67,7 +67,7 @@
   </div>
 
   <!-- Modal for Show Order -->
-  <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+  <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-xl">
       <div class="modal-content">
         <div class="modal-header">
@@ -87,16 +87,23 @@
   <script>
     function initOrdersPage() {
       // Use off/on to avoid duplicate handlers when partials reload
-      $(document).off('click', '.view-order').on('click', '.view-order', function() {
+      $(document).off('click', '.view-order').on('click', '.view-order', function(e) {
+        e.preventDefault();
         var orderId = $(this).data('id');
         var url = "{{ url('procurement/purchaseOrder') }}" + "/" + orderId;
-        $('#orderModalBody').html(
-          '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>'
-          );
-        $('#orderModal').modal('show');
-        $.get(url, function(data) {
+        $('#orderModalBody').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+        var modalEl = document.getElementById('orderModal');
+        var modal = window.bootstrap ? window.bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+        if (modal) { modal.show(); } else { $('#orderModal').modal('show'); }
+        $.ajax({
+          url: url,
+          method: 'GET',
+          headers: { 'X-Partial': '1' },
+          timeout: 20000
+        }).done(function(data){
           $('#orderModalBody').html(data);
-        }).fail(function() {
+        }).fail(function(xhr, status, err){
+          console.error('Load order failed', status, err, xhr && xhr.responseText);
           $('#orderModalBody').html('<div class="alert alert-danger">Failed to load order details.</div>');
         });
       });

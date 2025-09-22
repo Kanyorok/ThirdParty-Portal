@@ -12,6 +12,8 @@ use App\Enums\Core\PermissionEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class TenderEvaluationController extends Controller
 {
@@ -30,12 +32,9 @@ class TenderEvaluationController extends Controller
             ->where('TenderNo', $bid->TenderRef)
             ->firstOrFail();
 
-        // Verify user is committee member
+        // Enforce membership: accepted & active for this tender
         $currentUserId = Auth::id();
-        $committeeMember = TenderCommitteeMember::where('TenderID', $tender->Id)
-            ->where('UserID', $currentUserId)
-            ->where('Response', 1)
-            ->first();
+        $committeeMember = $this->findAcceptedCommitteeMember($tender->Id, $currentUserId);
 
         if (!$committeeMember) {
             return redirect()->route('evaluationdashboard.index')
@@ -49,10 +48,16 @@ class TenderEvaluationController extends Controller
                 ->with('error', $readiness['message']);
         }
 
-        // Check if bid is ready for evaluation
-        if (!$bid->isPendingEvaluation() && !$bid->isEvaluationInProgress()) {
-            return redirect()->route('evaluationdashboard.index')
-                ->with('error', 'This bid is not ready for evaluation or has already been completed.');
+        // Enforce: if member already evaluated, block re-evaluation
+        $existingMemberId = $committeeMember->Id;
+        if ($existingMemberId) {
+            $alreadyEvaluated = TenderCommitteeEvaluation::where('TenderID', $tender->Id)
+                ->where('MemberID', $existingMemberId)
+                ->exists();
+            if ($alreadyEvaluated) {
+                return redirect()->route('evaluationdashboard.index')
+                    ->with('error', 'You have already submitted an evaluation for this tender.');
+            }
         }
 
         // Get existing evaluation scores for this committee member
@@ -66,7 +71,7 @@ class TenderEvaluationController extends Controller
         // Get all committee members for this tender (for progress tracking)
         $allMembers = TenderCommitteeMember::where('TenderID', $tender->Id)
             ->where('Response', 1)
-            ->with('employee')
+            ->with(['user.employee'])
             ->get();
 
         return view('procurement.tendering.bidopeningandevaluation.evaluation.section-based-form', [
@@ -92,19 +97,16 @@ class TenderEvaluationController extends Controller
         // Find tender
         $tender = Tender::where('TenderNo', $bid->TenderRef)->firstOrFail();
 
-        // Verify committee membership
+        // Verify committee membership (robust check)
         $currentUserId = Auth::id();
-        $committeeMember = TenderCommitteeMember::where('TenderID', $tender->Id)
-            ->where('UserID', $currentUserId)
-            ->where('Response', 1)
-            ->first();
+        $committeeMember = $this->findAcceptedCommitteeMember($tender->Id, $currentUserId);
 
         if (!$committeeMember) {
             return response()->json(['error' => 'Unauthorized: Not an accepted committee member'], 403);
         }
 
         // Debug: Log what we found
-        \Log::info('Committee Member Found:', [
+        Log::info('Committee Member Found:', [
             'id' => $committeeMember->id,
             'Id' => $committeeMember->Id ?? 'NULL',
             'primary_key' => $committeeMember->getKey(),
@@ -183,8 +185,13 @@ class TenderEvaluationController extends Controller
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
                 ];
+
+                // Include SupplierId only if the column exists in the table
+                if (Schema::hasColumn('t_TenderCommitteeEvaluations', 'SupplierId')) {
+                    $insertData['SupplierId'] = $bid->SupplierId;
+                }
                 
-                \Log::info('About to insert TenderCommitteeEvaluation with data:', $insertData);
+                Log::info('About to insert TenderCommitteeEvaluation with data:', $insertData);
 
                 // Create committee evaluation record
                 TenderCommitteeEvaluation::create($insertData);
@@ -223,7 +230,7 @@ class TenderEvaluationController extends Controller
                 ]);
 
                 // Mark committee member as having evaluated
-                $committeeMember->update([
+            $committeeMember->update([
                     'HasEvaluated' => true,
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
@@ -277,6 +284,30 @@ class TenderEvaluationController extends Controller
         }
     }
 
+    private function findAcceptedCommitteeMember(int $tenderId, int $userId): ?\App\Models\Procurement\TenderCommitteeMember
+    {
+        $row = DB::table('t_TenderCommitteeMembers as m')
+            ->leftJoin('t_TenderCommittee as c', 'c.Id', '=', 'm.CommitteeID')
+            ->join('t_Users as u', function($join) {
+                $join->on('u.Id', '=', 'm.UserID')
+                     ->orOn('u.EmployeeId', '=', 'm.UserID');
+            })
+            ->where('u.Id', $userId)
+            ->where(function($q) use ($tenderId){
+                $q->where('m.TenderID', $tenderId)
+                  ->orWhere('c.ReferenceId', $tenderId);
+            })
+            ->where('m.IsActive', 1)
+            ->where(function($q){
+                $q->whereNull('m.Response')->orWhere('m.Response', 1);
+            })
+            ->select('m.Id')
+            ->orderByDesc('m.Id')
+            ->first();
+
+        return $row ? TenderCommitteeMember::find($row->Id) : null;
+    }
+
     /**
      * Get evaluation progress for a committee member
      */
@@ -321,13 +352,13 @@ class TenderEvaluationController extends Controller
             foreach ($evaluations as $memberId => $memberEvaluations) {
                 // Calculate member's score for this bid
                 // This is a simplified version - in practice, you'd need to link evaluations to specific bids
-                $memberScore = $memberEvaluations->sum(function ($evaluation) {
+                $memberScore = $memberEvaluations->sum(function ($evaluation) use ($tender) {
                     // Apply section weight to criteria score
                     $section = $evaluation->section;
                     $tenderSection = $tender->tenderSections->firstWhere('SectionID', $section->Id);
                     $weight = $tenderSection ? $tenderSection->Weight : 0;
                     
-                    return ($evaluation->score / 10) * $weight;
+                    return ($evaluation->Score / 10) * $weight;
                 });
                 
                 $bidEvaluations[] = [

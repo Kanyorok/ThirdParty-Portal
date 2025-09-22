@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\RFQAward;
+use App\Models\Procurement\RFQEvaluation;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\TenderSupplier;
 use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\BidResponsiveness;
@@ -19,24 +22,127 @@ class AwardsController extends Controller
      */
     public function index(Request $request)
     {
-        $query = TenderAward::with(['tender', 'winningSupplier', 'approvedBy']);
+        $statusFilter = $request->get('status_filter'); // Expected: 'Pending' | 'Awarded' | null
+        $search = $request->get('search');
 
-        // Apply filters
-        if ($request->filled('status_filter')) {
-            $query->where('AwardStatus', $request->status_filter);
-        }
-
-        if ($request->filled('search')) {
-            $query->whereHas('tender', function ($q) use ($request) {
-                $q->where('TenderNo', 'like', '%' . $request->search . '%')
-                  ->orWhere('Title', 'like', '%' . $request->search . '%');
+        // Build Tender entries
+        $tenderAwards = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
+            ->get()
+            ->map(function ($award) {
+                return [
+                    'type' => 'tender',
+                    'ref_no' => $award->tender->TenderNo ?? 'N/A',
+                    'title' => $award->tender->Title ?? 'N/A',
+                    'status' => 'Awarded', // Treat any created tender award as Awarded (per requirement)
+                    'status_class' => 'bg-success',
+                    'winning_bidder' => $award->winningSupplier->SupplierName
+                        ?? ($award->winningSupplier->thirdParty->ThirdPartyName ?? '--'),
+                    'award_date' => optional($award->AwardDate)->format('Y-m-d') ?? ($award->CreatedOn?->format('Y-m-d') ?? '--'),
+                    'id' => $award->tender->Id ?? null,
+                ];
             });
+
+        // Tenders with consolidated evaluations but no award yet => Pending
+        $tendersWithEval = Tender::whereHas('submissions', function ($q) {
+                $q->where('IsResponsive', true)->whereIn('BidStatus', ['responsive', 'evaluated']);
+            })
+            ->whereExists(function($q){
+                $q->select(DB::raw(1))
+                  ->from('t_TenderCommitteeEvaluations as e')
+                  ->whereColumn('e.TenderID', 't_Tenders.Id');
+            })
+            ->with('award')
+            ->get()
+            ->filter(function ($t) { return !$t->award; })
+            ->map(function ($tender) {
+                return [
+                    'type' => 'tender',
+                    'ref_no' => $tender->TenderNo,
+                    'title' => $tender->Title,
+                    'status' => 'Pending',
+                    'status_class' => 'bg-warning text-dark',
+                    'winning_bidder' => '--',
+                    'award_date' => '--',
+                    'id' => $tender->Id,
+                ];
+            });
+
+        // RFQ awarded entries
+        $rfqAwards = RFQAward::with(['rfq', 'supplier.thirdParty'])
+            ->get()
+            ->map(function ($award) {
+                return [
+                    'type' => 'rfq',
+                    'ref_no' => $award->rfq->RFQNumber ?? 'N/A',
+                    'title' => $award->rfq->Subject ?? 'N/A',
+                    'status' => 'Awarded',
+                    'status_class' => 'bg-success',
+                    'winning_bidder' => $award->supplier->SupplierName
+                        ?? ($award->supplier->thirdParty->ThirdPartyName ?? '--'),
+                    'award_date' => ($award->CreatedOn?->format('Y-m-d')) ?? '--',
+                    'id' => $award->rfq->Id ?? null,
+                ];
+            });
+
+        // RFQs with consolidated evaluations but no award => Pending
+        $rfqsWithEval = RFQEvaluation::select('RFQId')
+            ->distinct()
+            ->get()
+            ->pluck('RFQId');
+
+        $rfqPending = RFQ::whereIn('Id', $rfqsWithEval)
+            ->whereNotExists(function($q){
+                $q->select(DB::raw(1))
+                  ->from('t_RFQAward as a')
+                  ->whereColumn('a.RFQId', 't_RFQ.Id');
+            })
+            ->get()
+            ->map(function ($rfq) {
+                return [
+                    'type' => 'rfq',
+                    'ref_no' => $rfq->RFQNumber ?? 'N/A',
+                    'title' => $rfq->Subject ?? 'N/A',
+                    'status' => 'Pending',
+                    'status_class' => 'bg-warning text-dark',
+                    'winning_bidder' => '--',
+                    'award_date' => '--',
+                    'id' => $rfq->Id,
+                ];
+            });
+
+        // Merge all
+        $items = $tenderAwards
+            ->merge($tendersWithEval)
+            ->merge($rfqAwards)
+            ->merge($rfqPending)
+            ->values();
+
+        // Apply search
+        if ($search) {
+            $needle = mb_strtolower($search);
+            $items = $items->filter(function ($row) use ($needle) {
+                return str_contains(mb_strtolower($row['ref_no']), $needle)
+                    || str_contains(mb_strtolower($row['title']), $needle)
+                    || str_contains(mb_strtolower($row['winning_bidder'] ?? ''), $needle);
+            })->values();
         }
 
-        $awards = $query->orderBy('CreatedOn', 'desc')->paginate(15);
-        
-        return view('procurement.awards.index', compact('awards'))
-            ->with('filters', $request->only(['status_filter', 'search']));
+        // Apply simplified status filter
+        if ($statusFilter === 'Pending') {
+            $items = $items->where('status', 'Pending')->values();
+        } elseif ($statusFilter === 'Awarded') {
+            $items = $items->where('status', 'Awarded')->values();
+        }
+
+        // Sort by award_date desc, then ref_no
+        $items = $items->sortByDesc(function($row){
+            return $row['award_date'] === '--' ? '' : $row['award_date'];
+        })->values();
+
+        return view('procurement.awards.index', [
+            'items' => $items,
+            'filters' => $request->only(['status_filter', 'search'])
+        ]);
     }
 
     /**

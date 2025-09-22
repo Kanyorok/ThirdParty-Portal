@@ -26,7 +26,7 @@ class PurchaseOrderRequest extends FormRequest
             'SourceId' => ['nullable', 'integer'],
 
             'supplier' => ['required'],
-            'pODate' => ['required', 'date'],
+            'pODate' => ['required', 'date', 'before_or_equal:today'],
             'priority' => ['nullable'],
             'refNo' => ['nullable'],
             'terms' => ['required', 'exists:t_CodeDetails,ID,CodeID,PaymentTerm'],
