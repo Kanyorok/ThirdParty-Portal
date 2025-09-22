@@ -16,11 +16,12 @@ class SupplierService
 
     public static function getSupplierDetails($SupplierId){
         return DB::table(DB::raw('t_Suppliers WITH (NOLOCK)'))
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 't_Suppliers.ThirdPartyID')
             ->select(
-                't_Suppliers.SupplierName as Name',
+                DB::raw('COALESCE(tp.TradingName, t_Suppliers.SupplierName) as Name'),
                 't_Suppliers.ContactEmail as Email',
                 't_Suppliers.ContactPhone as Phone',
-                't_Suppliers.Address as Address',
+                DB::raw("COALESCE(tp.Address, t_Suppliers.Address, '') as Address"),
                 't_Suppliers.CategoryId as CategoryId'
             )
             ->where('t_Suppliers.Id', $SupplierId)
@@ -28,14 +29,17 @@ class SupplierService
     }
     public static function getSuppliers(){
         return DB::table(DB::raw('t_Suppliers WITH (NOLOCK)'))
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 't_Suppliers.ThirdPartyID')
             ->select(
-                't_Suppliers.SupplierName as Name',
+                DB::raw('COALESCE(tp.TradingName, t_Suppliers.SupplierName) as SupplierName'),
                 't_Suppliers.ContactEmail as Email',
                 't_Suppliers.ContactPhone as Phone',
-                't_Suppliers.Address as Address',
+                DB::raw("COALESCE(tp.Address, t_Suppliers.Address, '') as Address"),
                 't_Suppliers.CategoryId as CategoryId',
-                't_Suppliers.Id'
-            )            ->get();
+                DB::raw('t_Suppliers.Id as SupplierId')
+            )
+            ->orderBy('SupplierName')
+            ->get();
     }
 
 }

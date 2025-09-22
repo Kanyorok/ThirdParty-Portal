@@ -152,6 +152,7 @@ use App\Policies\Insurance\InsuranceProductPolicy;
 use App\Policies\Insurance\InsuranceProductRiderPolicy;
 use App\Policies\Insurance\CommissionRulePolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
+
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\ItemCategoryPolicy;
@@ -245,6 +246,8 @@ use App\Models\Legal\LegalTemplate;
 use App\Models\Legal\LoanSecurity;
 use App\Models\Procurement\Section;
 use Illuminate\Support\Facades\View;
+use App\Models\Auth\PersonalAccessToken as CustomPersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -537,6 +540,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
         Gate::policy(FleetRepairLog::class, FleetRepairLogPolicy::class);
         Gate::policy(FleetVehicleInspection::class, FleetVehicleInspectionPolicy::class);
+
+        Sanctum::usePersonalAccessTokenModel(CustomPersonalAccessToken::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

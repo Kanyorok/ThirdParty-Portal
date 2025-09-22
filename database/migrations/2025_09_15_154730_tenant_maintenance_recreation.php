@@ -12,9 +12,9 @@ return new class extends Migration {
     {
         Schema::table('t_TenantMaintenance', function (Blueprint $table) {
             // Drop unique constraints first
-            $table->dropUnique('t_TenantMaintenance_IDRegistrationNo_unique');
-            $table->dropUnique('t_TenantMaintenance_PhoneNumber_unique');
-            $table->dropUnique('t_TenantMaintenance_EmailAddress_unique');
+            try { $table->dropUnique('t_TenantMaintenance_IDRegistrationNo_unique'); } catch (\Throwable $e) {}
+            try { $table->dropUnique('t_TenantMaintenance_PhoneNumber_unique'); } catch (\Throwable $e) {}
+            try { $table->dropUnique('t_TenantMaintenance_EmailAddress_unique'); } catch (\Throwable $e) {}
 
             $table->dropColumn([
                 'TenantName',
@@ -25,11 +25,23 @@ return new class extends Migration {
                 'PostalAddress',
             ]);
 
-            $table->foreignId('ThirdPartyId')
-                ->default(2)
-                ->after('TenantType')
-                ->constrained('t_ThirdParties', 'Id');
+            if (!Schema::hasColumn('t_TenantMaintenance', 'ThirdPartyId')) {
+                $table->unsignedBigInteger('ThirdPartyId')->after('TenantType')->nullable();
+            }
 
+        });
+
+        // Backfill nullable foreign key with an existing third party if available
+        if (!DB::table('t_ThirdParties')->where('Id', 2)->exists()) {
+            $fallbackId = DB::table('t_ThirdParties')->value('Id');
+            DB::table('t_TenantMaintenance')->whereNull('ThirdPartyId')->update(['ThirdPartyId' => $fallbackId]);
+        } else {
+            DB::table('t_TenantMaintenance')->whereNull('ThirdPartyId')->update(['ThirdPartyId' => 2]);
+        }
+
+        // Add the foreign key constraint safely
+        Schema::table('t_TenantMaintenance', function (Blueprint $table) {
+            $table->foreign('ThirdPartyId')->references('Id')->on('t_ThirdParties');
         });
     }
 

@@ -21,11 +21,10 @@ class VendorClarifications extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'VendorClarificationsId';
+        return 'ClarificationID';
     }
 
     protected $fillable = [
-        'ClarificationID',
         'TenderID',
         'VendorID',
         'Question',
@@ -38,17 +37,21 @@ class VendorClarifications extends Model
         'ModifiedBy',
         'ModifiedOn',
         'DeletedBy',
+        'DeletedOn',
     ];
 
-    // Define the data types for specific columns (optional, if you need to cast them)
+    // Define the data types for specific columns
     protected $casts = [
         'QuestionDate' => 'datetime',
         'AnswerDate' => 'datetime',
         'ISPUBLISHEDTOALL' => 'boolean',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
-    // Disable timestamps if your table doesn't have created_at and updated_at columns
-    public $timestamps = false;
+    // Use custom timestamps
+    public $timestamps = true;
 
     // Relationships
     public function tenderID()

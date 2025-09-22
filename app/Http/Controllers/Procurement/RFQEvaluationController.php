@@ -96,6 +96,245 @@ class RFQEvaluationController extends Controller
         ]);
     }
 
+    public function consolidated($rfqId, Request $request)
+    {
+        // Allow rfq override from query string (for embedded selector)
+        $rfqId = (int) ($request->input('rfq', $rfqId));
+
+        // Build list of RFQs that have evaluations (for RFQ picker)
+        $evaluatedRfqs = RFQEvaluation::select('RFQId')
+            ->distinct()
+            ->with('rfq')
+            ->get()
+            ->filter(fn($e) => !is_null($e->rfq))
+            ->map(fn($e) => ['Id' => $e->RFQId, 'RFQNumber' => $e->rfq->RFQNumber])
+            ->values();
+
+        // Default RFQ if invalid or missing
+        if (!$rfqId || !$evaluatedRfqs->pluck('Id')->contains((int) $rfqId)) {
+            $rfqId = $evaluatedRfqs->first()['Id'] ?? $rfqId;
+        }
+
+        // Load all evaluations for RFQ with nested data
+        $rfqEvaluations = RFQEvaluation::with([
+            'rfq',
+            'evaluations.rfqEvaluation',
+            'evaluations.rfqCriteriaUnscoped.criteria',
+            'evaluations.rfqCriteriaUnscoped.section',
+            'evaluations.supplier.thirdParty',
+        ])->where('RFQId', $rfqId)->get();
+
+        // Build section weights
+        $rfqSectionWeights = DB::table('t_RFQSection')
+            ->where('RFQID', $rfqId)
+            ->get()
+            ->pluck('Weight', 'SectionID')
+            ->map(fn($w) => (float)$w)
+            ->toArray();
+
+        // Compute aggregates
+        $supplierSectionScores = []; // [supplierId][sectionId] => [sumWeightedAcrossEvaluators, evaluatorCount]
+        $supplierTotals = []; // [supplierId] => [sumWeightedAcrossEvaluators, evaluatorCount]
+        $criteriaAverages = []; // [criteriaId] => [sumScores, evaluatorCount]
+        $supplierCriteriaAverages = []; // [supplierId][criteriaId] => [sumScores, evaluatorCount]
+
+        foreach ($rfqEvaluations as $evaluation) {
+            $bySupplier = $evaluation->evaluations->groupBy('SupplierId');
+            foreach ($bySupplier as $supplierId => $entries) {
+                $sectionGroups = $entries->groupBy(fn($e) => $e->rfqCriteriaUnscoped?->SectionID);
+
+                $evaluatorWeightedTotal = 0;
+                foreach ($sectionGroups as $sectionId => $criteriaList) {
+                    $weight = (float)($rfqSectionWeights[$sectionId] ?? 0);
+                    $maxTotal = $criteriaList->count() * 10;
+                    $actualTotal = $criteriaList->sum('Score');
+                    $sectionWeighted = $maxTotal > 0 ? (($actualTotal / $maxTotal) * $weight) : 0;
+
+                    $supplierSectionScores[$supplierId][$sectionId]['sum'] = ($supplierSectionScores[$supplierId][$sectionId]['sum'] ?? 0) + $sectionWeighted;
+                    $supplierSectionScores[$supplierId][$sectionId]['count'] = ($supplierSectionScores[$supplierId][$sectionId]['count'] ?? 0) + 1;
+
+                    $evaluatorWeightedTotal += $sectionWeighted;
+
+                    // criteria averages per supplier and global
+                    foreach ($criteriaList as $entry) {
+                        $critId = $entry->CriteriaId;
+                        $criteriaAverages[$critId]['sum'] = ($criteriaAverages[$critId]['sum'] ?? 0) + $entry->Score;
+                        $criteriaAverages[$critId]['count'] = ($criteriaAverages[$critId]['count'] ?? 0) + 1;
+
+                        $supplierCriteriaAverages[$supplierId][$critId]['sum'] = ($supplierCriteriaAverages[$supplierId][$critId]['sum'] ?? 0) + $entry->Score;
+                        $supplierCriteriaAverages[$supplierId][$critId]['count'] = ($supplierCriteriaAverages[$supplierId][$critId]['count'] ?? 0) + 1;
+                    }
+                }
+
+                $supplierTotals[$supplierId]['sum'] = ($supplierTotals[$supplierId]['sum'] ?? 0) + $evaluatorWeightedTotal;
+                $supplierTotals[$supplierId]['count'] = ($supplierTotals[$supplierId]['count'] ?? 0) + 1;
+            }
+        }
+
+        // Build presentation arrays
+        $evaluatorCount = $rfqEvaluations->pluck('UserCode')->unique()->count();
+        $suppliers = RFQResponse::where('RFQId', $rfqId)
+            ->with('supplier.thirdParty')
+            ->get()
+            ->keyBy('SupplierId');
+
+        // Build ordered sections with criteria list
+        $rfqSections = DB::table('t_RFQSection')
+            ->where('RFQID', $rfqId)
+            ->orderBy('SectionID')
+            ->get();
+        $sections = DB::table('t_Sections')
+            ->whereIn('Id', array_keys($rfqSectionWeights))
+            ->get()
+            ->keyBy('Id');
+        $criteriaRows = RFQCriteria::with('criteria', 'section')
+            ->where('RFQID', $rfqId)
+            ->get()
+            ->groupBy('SectionID');
+        $sectionColumns = [];
+        foreach ($rfqSections as $rfqSec) {
+            $secId = $rfqSec->SectionID;
+            $critList = ($criteriaRows[$secId] ?? collect())->values();
+            $sectionColumns[] = [
+                'id' => $secId,
+                'name' => $sections[$secId]->SectionName ?? 'Section',
+                'weight' => (float) ($rfqSectionWeights[$secId] ?? 0),
+                'criteria' => $critList->map(fn($row) => [
+                    'id' => $row->CriteriaID,
+                    'name' => $row->criteria->CriteriaName ?? 'Criteria',
+                ])->values()->all(),
+            ];
+        }
+
+        $supplierSummaries = [];
+        foreach ($supplierTotals as $supplierId => $agg) {
+            $avgTotal = $agg['count'] > 0 ? round($agg['sum'] / $agg['count'], 2) : 0;
+            $sectionBreakdown = [];
+            foreach (($supplierSectionScores[$supplierId] ?? []) as $sectionId => $secAgg) {
+                $sectionBreakdown[] = [
+                    'section_id' => $sectionId,
+                    'section_name' => $sections[$sectionId]->SectionName ?? 'Section',
+                    'weight' => $rfqSectionWeights[$sectionId] ?? 0,
+                    'score' => $secAgg['count'] > 0 ? round($secAgg['sum'] / $secAgg['count'], 2) : 0,
+                ];
+            }
+
+            $supplierSummaries[] = [
+                'supplier_id' => $supplierId,
+                'supplier_name' => ($suppliers[$supplierId]->supplier->thirdParty->ThirdPartyName ?? $suppliers[$supplierId]->supplier->thirdParty->TradingName ?? $suppliers[$supplierId]->SupplierName ?? 'N/A'),
+                'total_weighted_average' => $avgTotal,
+                'section_scores' => $sectionBreakdown,
+            ];
+        }
+
+        // Criteria averages list and per supplier averages map
+        $criteriaSummary = [];
+        $supplierCriterionAvgScores = [];
+        if (!empty($criteriaAverages)) {
+            $criteriaMeta = RFQCriteria::with('criteria')
+                ->where('RFQID', $rfqId)
+                ->get()
+                ->keyBy('CriteriaID');
+            foreach ($criteriaAverages as $critId => $agg) {
+                $criteriaSummary[] = [
+                    'criteria_id' => $critId,
+                    'criteria_name' => $criteriaMeta[$critId]->criteria->CriteriaName ?? 'Criteria',
+                    'average_score_out_of_10' => $agg['count'] > 0 ? round($agg['sum'] / $agg['count'], 2) : 0,
+                ];
+            }
+
+            foreach ($supplierCriteriaAverages as $supplierId => $critAggs) {
+                foreach ($critAggs as $critId => $agg) {
+                    $supplierCriterionAvgScores[$supplierId][$critId] = $agg['count'] > 0 ? round($agg['sum'] / $agg['count'], 1) : 0;
+                }
+            }
+        }
+
+        // Current award if any
+        $award = \App\Models\Procurement\RFQAward::where('RFQId', $rfqId)->first();
+
+        // Rank and recommendation
+        $supplierSummaries = collect($supplierSummaries)
+            ->sortByDesc('total_weighted_average')
+            ->values()
+            ->map(function ($row, $idx) {
+                $rank = $idx + 1;
+                $rec = [
+                    'status' => $rank === 1 ? 'Recommended' : ($rank === 2 ? 'Backup' : 'Not Recommended'),
+                    'class' => $rank === 1 ? 'bg-success' : ($rank === 2 ? 'bg-secondary' : 'bg-danger'),
+                ];
+                $row['rank'] = $rank;
+                $row['recommendation'] = $rec;
+                return $row;
+            })->all();
+
+        $viewData = [
+            'rfqId' => $rfqId,
+            'rfq' => $rfqEvaluations->first()->rfq ?? null,
+            'supplierSummaries' => $supplierSummaries,
+            'criteriaSummary' => $criteriaSummary,
+            'sections' => collect($sections->all())->map(fn($s) => ['id' => $s->Id, 'name' => $s->SectionName, 'weight' => $rfqSectionWeights[$s->Id] ?? 0])->values(),
+            'award' => $award,
+            'evaluatedRfqs' => $evaluatedRfqs,
+            'evaluatorCount' => $evaluatorCount,
+            'sectionColumns' => $sectionColumns,
+            'supplierCriterionAvgScores' => $supplierCriterionAvgScores,
+        ];
+
+        if ($request->boolean('embed')) {
+            return view('procurement.rfqevaluation.consolidated_embed', $viewData);
+        }
+
+        return view('procurement.rfqevaluation.consolidated', $viewData);
+    }
+
+    public function awardSupplier($rfqId, $supplierId, Request $request)
+    {
+        $request->validate([
+            'Comments' => 'nullable|string',
+        ]);
+
+        $award = \App\Models\Procurement\RFQAward::updateOrCreate(
+            ['RFQId' => (int)$rfqId],
+            [
+                'SupplierId' => (int)$supplierId,
+                'Comments' => $request->input('Comments'),
+                'CreatedBy' => auth()->id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => auth()->id(),
+                'ModifiedOn' => now(),
+            ]
+        );
+
+        // Notify supplier portal API
+        try {
+            $payload = [
+                'rfqId' => (int) $rfqId,
+                'supplierId' => (int) $supplierId,
+                'status' => 'Awarded',
+                'awardedOn' => now()->toISOString(),
+                'comments' => $request->input('Comments'),
+            ];
+
+            $endpoint = config('services.procurement_supplier_portal.endpoint', 'http://localhost:3000/api/procurement/rfq-suppliers');
+            $apiKey = config('services.procurement_supplier_portal.key');
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => $apiKey,
+            ])->post($endpoint, $payload);
+
+            if (!$response->successful()) {
+                \Log::warning('Supplier award notify failed', ['rfqId' => $rfqId, 'supplierId' => $supplierId, 'status' => $response->status(), 'body' => $response->body()]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Supplier award notify exception', ['rfqId' => $rfqId, 'supplierId' => $supplierId, 'error' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Award saved and supplier notified.');
+    }
+
     public function create()
     {
         // Load RFQs with sections (from t_Sections) and their criteria (from t_Criterias)

@@ -11,13 +11,11 @@
                 <select name="status_filter" class="form-select">
                     <option value="">All Status</option>
                     <option value="Pending" {{ ($filters['status_filter'] ?? '') === 'Pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="Approved" {{ ($filters['status_filter'] ?? '') === 'Approved' ? 'selected' : '' }}>Approved</option>
-                    <option value="Rejected" {{ ($filters['status_filter'] ?? '') === 'Rejected' ? 'selected' : '' }}>Rejected</option>
-                    <option value="Cancelled" {{ ($filters['status_filter'] ?? '') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                    <option value="Awarded" {{ ($filters['status_filter'] ?? '') === 'Awarded' ? 'selected' : '' }}>Awarded</option>
                 </select>
             </div>
             <div class="col-md-6">
-                <input type="text" name="search" class="form-control" placeholder="Search Tender Ref / Title" value="{{ $filters['search'] ?? '' }}">
+                <input type="text" name="search" class="form-control" placeholder="Search Ref / Title / Supplier" value="{{ $filters['search'] ?? '' }}">
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
@@ -43,41 +41,31 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @forelse($awards as $index => $award)
+                        @forelse($items as $index => $row)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $award->tender->TenderNo ?? 'N/A' }}</td>
-                                <td>{{ $award->tender->Title ?? 'N/A' }}</td>
+                                <td>{{ $row['ref_no'] }}</td>
+                                <td>{{ $row['title'] }}</td>
                                 <td>
-                                    @if($award->tender->TenderType === 'Open' || $award->tender->TenderType === 'Restricted')
-                                        <span class="badge bg-info">Tender</span>
+                                    @if($row['type'] === 'tender')
+                                        <span class="badge bg-primary">Tender</span>
                                     @else
-                                        <span class="badge bg-secondary">RFQ</span>
+                                        <span class="badge bg-success">RFQ</span>
                                     @endif
                                 </td>
-                                <td>
-                                    <span class="badge {{ $award->status_badge['class'] }}">
-                                        {{ $award->status_badge['text'] }}
-                                    </span>
-                                </td>
-                                <td>{{ $award->winningSupplier->SupplierName ?? '--' }}</td>
-                                <td>{{ $award->AwardDate ? $award->AwardDate->format('Y-m-d') : '--' }}</td>
+                                <td><span class="badge {{ $row['status_class'] }}">{{ $row['status'] }}</span></td>
+                                <td>{{ $row['winning_bidder'] ?? '--' }}</td>
+                                <td>{{ $row['award_date'] ?? '--' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('awards.unified', $award->tender->Id) }}" 
-                                           class="btn btn-sm btn-outline-info" title="View Award Details">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
-                                        
-                                        @if($award->is_pending)
-                                            <button type="button" class="btn btn-sm btn-success" 
-                                                    onclick="approveAward({{ $award->Id }})" title="Approve">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-danger" 
-                                                    onclick="rejectAward({{ $award->Id }})" title="Reject">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                        @if($row['type'] === 'tender')
+                                            <a href="{{ route('awards.tender', $row['id']) }}" class="btn btn-sm btn-outline-info" title="View Details">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        @else
+                                            <a href="{{ route('awards.rfq', $row['id']) }}" class="btn btn-sm btn-outline-info" title="View Details">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
                                         @endif
                                     </div>
                                 </td>
@@ -93,12 +81,7 @@
             </div>
         </div>
         
-        <!-- Pagination -->
-        @if($awards->hasPages())
-            <div class="d-flex justify-content-center mt-4">
-                {{ $awards->links() }}
-            </div>
-        @endif
+        <!-- Pagination removed because items is a collection -->
     </div>
 
     <!-- Approval Modal -->

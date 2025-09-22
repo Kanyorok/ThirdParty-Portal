@@ -57,10 +57,12 @@
                         <tr>
                             <th class="text-center">Index</th>
                             <th>Supplier</th>
+                            <th>Trading Name</th>
                             <th>Approval Status</th>
                             <th>Prequalified</th>
                             <th>Category</th>
-                            <th>Email</th>
+                            <th>Primary Contact</th>
+                            <th>Primary Email</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -89,6 +91,7 @@
                 columns: [
                     { data: 'Id', name: 'Id', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'ThirdPartyName', name: 'ThirdPartyName' },
+                    { data: 'TradingName', name: 'TradingName', render: d => d || 'N/A' },
                     { // Approval Status
                         data: 'ApprovalStatus',
                         name: 'ApprovalStatus',
@@ -111,7 +114,8 @@
                         }
                     },
                     { data: 'category_names', name: 'category_names' },
-                    { data: 'Email', name: 'Email' },
+                    { data: 'PrimaryContact', name: 'PrimaryContact', render: d => d || 'N/A' },
+                    { data: 'PrimaryEmail', name: 'PrimaryEmail' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
                 ],
                 dom: 'lfrtip',

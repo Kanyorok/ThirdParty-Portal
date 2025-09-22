@@ -105,7 +105,13 @@ class ThirdParties extends Model
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(SupplierCategory::class, 't_ThirdParty_SupplierCategory', 'third_party_id', 'supplier_category_id');
+        // Pivot uses PascalCase column names in this project
+        return $this->belongsToMany(
+            SupplierCategory::class,
+            't_ThirdParty_SupplierCategory',
+            'ThirdPartyID',
+            'SupplierCategoryID'
+        );
     }
 
     public function country(): BelongsTo

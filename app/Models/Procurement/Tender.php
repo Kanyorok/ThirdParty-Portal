@@ -20,7 +20,10 @@ use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\procurement\TenderItems;
 use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\TenderSection;
+use App\Models\Procurement\TenderSupplier;
 use App\Traits\Model\UserActorTrait;
+use Carbon\Carbon;
 
 class Tender extends Model
 {
@@ -137,6 +140,52 @@ class Tender extends Model
         return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
     }
 
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(\App\Models\Procurement\BidSubmission::class, 'TenderRef', 'TenderNo');
+    }
+
+    public function tenderSections()
+    {
+        return $this->hasMany(TenderSection::class, 'TenderID', 'Id');
+    }
+
+    public function tenderSuppliers(): HasMany
+    {
+        return $this->hasMany(TenderSupplier::class, 'TenderID', 'Id');
+    }
+
+    /**
+     * Get evaluation readiness status
+     */
+    public function getEvaluationReadiness()
+    {
+        if ($this->tenderSections->isEmpty()) {
+            return ['ready' => false, 'message' => 'No evaluation sections assigned'];
+        }
+
+        $totalWeight = $this->tenderSections->where('IsActive', true)->sum('Weight');
+        if (abs($totalWeight - 100) > 0.01) {
+            return ['ready' => false, 'message' => "Section weights sum to {$totalWeight}%, should be 100%"];
+        }
+
+        $responsiveBids = $this->submissions()
+            ->where('BidStatus', 'responsive')
+            ->where('IsResponsive', true)
+            ->count();
+
+        if ($responsiveBids === 0) {
+            return ['ready' => false, 'message' => 'No responsive bids available for evaluation'];
+        }
+
+        return [
+            'ready' => true,
+            'message' => "Ready: {$responsiveBids} responsive bid(s), {$this->tenderSections->count()} section(s)",
+            'responsive_bids' => $responsiveBids,
+            'sections_count' => $this->tenderSections->count()
+        ];
+    }
+
     // public function creator(): BelongsTo
     // {
     //     return $this->belongsTo(User::class, 'CreatedBy');
@@ -150,8 +199,9 @@ class Tender extends Model
     // Scopes
     public function scopeActiveTenders($query)
     {
+        // Active if published and deadline is today or later (inclusive day)
         return $query->where('Status', TenderStatusEnum::Published->value)
-            ->where('SubmissionDeadline', '>=', now()->toDateString());
+            ->whereDate('SubmissionDeadline', '>=', Carbon::now()->toDateString());
     }
 
     public function scopeClosedTenders($query)
@@ -174,8 +224,13 @@ class Tender extends Model
 
     public function canAcceptSubmissions(): bool
     {
-        return $this->Status === TenderStatusEnum::Published &&
-            now()->lessThan($this->SubmissionDeadline);
+        if ($this->Status !== TenderStatusEnum::Published) {
+            return false;
+        }
+        if (!$this->SubmissionDeadline) {
+            return true;
+        }
+        return Carbon::now()->lte(Carbon::parse($this->SubmissionDeadline)->endOfDay());
     }
 
     // New helper methods

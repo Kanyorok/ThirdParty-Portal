@@ -61,6 +61,7 @@ use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\RFQSettingController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\Procurement\SupplierCategoryApiController;
 // use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\TenderAcceptController;
 use App\Http\Controllers\Procurement\TenderAssignRoleController;
@@ -110,10 +111,20 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('purchaseOrder/linkRFQ', [PurchaseOrderController::class, 'linkRFQ'])->name('purchaseOrder.linkRFQ');
     Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     Route::get('purchaseOrder/approval/{id}', [PurchaseOrderController::class, 'approval'])->name('purchaseOrder.approval');
+    Route::post('purchaseOrder/approve/{id}', [PurchaseOrderController::class, 'approve'])->name('purchaseOrder.approve');
     //this route is static affecting orders/rfqLink
     Route::get('purchaseOrder/rqfDetails/{id}', [PurchaseOrderController::class, 'fetchRFQDetails'])->name('purchaseOrder.RFQ');
+    // Explicit show and approval routes
+    Route::get('purchaseOrder/{id}', [PurchaseOrderController::class, 'show'])->name('purchaseOrder.show');
     Route::resource('purchaseOrder', 'PurchaseOrderController');
     Route::get('/purchase-order/rfq-items/{rfqId}', [PurchaseOrderController::class, 'getRFQItems'])->name('purchase-order.rfq-items');
+    Route::get('/purchase-order/items/{item}', [PurchaseOrderController::class, 'getItemDetails'])->name('purchase-order.item-details');
+    Route::get('/purchase-order/awarded-tenders', [PurchaseOrderController::class, 'getAwardedTenders'])->name('purchase-order.awarded-tenders');
+    Route::get('/purchase-order/tender-items/{tenderId}', [PurchaseOrderController::class, 'getTenderItems'])->name('purchase-order.tender-items');
+    Route::get('/purchase-order/payment-terms', [PurchaseOrderController::class, 'getPaymentTerms'])->name('purchase-order.payment-terms');
+    Route::get('/supplier-categories', [SupplierCategoryApiController::class, 'index']);
+    Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
+    Route::get('/purchase-order/awarded-rfqs', [PurchaseOrderController::class, 'getAwardedRFQs'])->name('purchase-order.awarded-rfqs');
 
     //Sales Order
     Route::resource('salesOrder', 'SalesOrderController');
@@ -187,6 +198,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::post('/procurement/rfq-evaluations/store', [RFQEvaluationController::class, 'store'])->name('evaluations.store');
     Route::get('/rfq-suppliers/{rfqId}', [RFQResponseController::class, 'getSuppliers']);
 
+    // Consolidated scoring view and award action
+    Route::get('/rfq-evaluations/consolidated/{rfq}', [RFQEvaluationController::class, 'consolidated'])->name('evaluations.consolidated');
+    Route::post('/rfq-evaluations/{rfq}/award/{supplier}', [RFQEvaluationController::class, 'awardSupplier'])->name('evaluations.award');
+
     //GoodsReceipts
     Route::get('/procurementreceipts', [GoodsReceiptController::class, 'index'])->name('procurementreceipts.index');
     Route::get('/procurementreceipts/create', [GoodsReceiptController::class, 'create'])->name('procurementreceipts.create');
@@ -216,6 +231,10 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::resource('bidevaluation', BidEvaluationController::class);
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
+    Route::post('bidscores/{tenderId}/consolidate', [BidScoreConsolidationController::class, 'storeConsolidation'])
+        ->name('bidscores.consolidate');
+    Route::get('bidscores/{tenderId}/section-drilldown', [BidScoreConsolidationController::class, 'sectionDrilldown'])->name('bidscores.section-drilldown');
+    Route::get('bidscores/{tenderId}/evaluator-drilldown', [BidScoreConsolidationController::class, 'evaluatorDrilldown'])->name('bidscores.evaluator-drilldown');
     Route::get('bidscores/{tenderId}/{supplierId}/drilldown', [BidScoreConsolidationController::class, 'show'])->name('bidscores.drilldown');
     Route::resource('procurementreports', ProcurementReportsController::class);
 
@@ -319,13 +338,13 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     Route::get('/tenderresponse/create', [TenderResponseController::class, 'create'])->name('tenderresponse.create');
     Route::post('/tenderresponse', [TenderResponseController::class, 'storeResponse'])->name('tenderresponse.storeResponse');
 
-    // Route::resource('tenderclarification', TenderclarificationController::class)
-    //Route::resource('tenderclarification', TenderclarificationController::class);
+    // Enhanced Tender Clarification Management
     Route::get('/tenderclarification', [TenderclarificationController::class, 'index'])->name('tenderclarification.index');
-    //Route::get('/tenderclarification/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
+    Route::get('/tenderclarification/pending', [TenderclarificationController::class, 'pending'])->name('tenderclarification.pending');
+    Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
     Route::patch('/tenderclarification/update', [TenderclarificationController::class, 'update'])->name('tenderclarification.update');
     Route::get('/clarifications/edit', [TenderclarificationController::class, 'edit'])->name('tenderclarification.edit');
-    Route::get('/tenderclarifications/{clarification_id}/create', [TenderclarificationController::class, 'create'])->name('tenderclarification.create');
+    Route::post('/tenderclarification/bulk-action', [TenderclarificationController::class, 'bulkAction'])->name('tenderclarification.bulk-action');
 
     //Bid Submission
     // Use resourceful routes for tender submissions. Custom manual view/edit URIs remain below.
@@ -333,6 +352,54 @@ Route::namespace('Procurement')->prefix('procurement')->group(function () {
     // Custom manual routes (unique names) - keep these if you need different URIs for manual submissions
     Route::get('/bid-submission/manual/{Id}/view', [TenderSubmissionController::class, 'view'])->name('tendersubmission.view');
     Route::get('/bid-submission/manual/{Id}/edit', [TenderSubmissionController::class, 'edit'])->name('tendersubmission.manual.edit');
+
+    // Bid Opening Ceremony Routes
+    Route::post('/tender-opening/start-ceremony', [TenderOpeningController::class, 'startCeremony'])->name('tender-opening.start-ceremony');
+    Route::post('/tender-opening/open-bid/{submissionId}', [TenderOpeningController::class, 'openIndividualBid'])->name('tender-opening.open-bid');
+    Route::get('/tender-opening/bid-details/{submissionId}', [TenderOpeningController::class, 'showBidDetails'])->name('tender-opening.bid-details');
+    Route::get('/tender-opening/read-out/{submissionId}', [TenderOpeningController::class, 'showReadOutSummary'])->name('tender-opening.read-out');
+    Route::post('/tender-opening/complete-ceremony/{tenderRef}', [TenderOpeningController::class, 'completeCeremony'])->name('tender-opening.complete-ceremony');
+    Route::get('/tender-opening/access-documents/{submissionId}', [TenderOpeningController::class, 'accessDocuments'])->name('tender-opening.access-documents');
+    Route::get('/tender-opening/download/{submissionId}/{documentIndex}', [TenderOpeningController::class, 'downloadDocument'])->name('tender-opening.download-document');
+
+    // Bid Responsiveness Check Routes
+    Route::get('/bid-responsiveness', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'index'])->name('bid-responsiveness.index');
+    Route::post('/bid-responsiveness/{bidId}/check', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'checkResponsiveness'])->name('bid-responsiveness.check');
+    Route::post('/bid-responsiveness/{bidId}/detailed-check', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'detailedResponsivenessCheck'])->name('bid-responsiveness.detailed-check');
+    Route::post('/bid-responsiveness/bulk-check', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'bulkCheck'])->name('bid-responsiveness.bulk-check');
+    Route::get('/bid-responsiveness/criteria', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'getCriteria'])->name('bid-responsiveness.criteria');
+    Route::get('/bid-responsiveness/{tenderRef}/report', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'exportReport'])->name('bid-responsiveness.report');
+    
+    // Drill-down functionality for bid details and documents
+    Route::get('/bid-responsiveness/{bidId}/details', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'showBidDetails'])->name('bid-responsiveness.bid-details');
+    Route::get('/bid-responsiveness/{bidId}/document/{documentId}', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'viewDocument'])->name('bid-responsiveness.view-document');
+
+    // Tender Section Management for Evaluation Setup
+    Route::get('/tender-sections', [\App\Http\Controllers\Procurement\TenderSectionController::class, 'index'])->name('tender-sections.index');
+    Route::get('/tender-sections/assign', [\App\Http\Controllers\Procurement\TenderSectionController::class, 'show'])->name('tender-sections.show');
+    Route::post('/tender-sections', [\App\Http\Controllers\Procurement\TenderSectionController::class, 'store'])->name('tender-sections.store');
+    Route::get('/tender-sections/{tenderId}/api', [\App\Http\Controllers\Procurement\TenderSectionController::class, 'getTenderSections'])->name('tender-sections.api');
+    Route::delete('/tender-sections/{tenderId}', [\App\Http\Controllers\Procurement\TenderSectionController::class, 'destroy'])->name('tender-sections.destroy');
+
+    // Enhanced Evaluator Dashboard Routes
+    Route::get('/evaluator/tender/{tenderId}/evaluation', [\App\Http\Controllers\Procurement\EvaluatorDashboardController::class, 'showTenderEvaluation'])->name('evaluator.tender-evaluation');
+
+    // Section-based Evaluation Routes
+    Route::get('/evaluation/{bidId}/form', [\App\Http\Controllers\Procurement\TenderEvaluationController::class, 'showEvaluationForm'])->name('evaluation.form');
+    Route::post('/evaluation/{bidId}/submit', [\App\Http\Controllers\Procurement\TenderEvaluationController::class, 'submitEvaluation'])->name('evaluation.submit');
+    Route::get('/evaluation/tender/{tenderId}/summary', [\App\Http\Controllers\Procurement\TenderEvaluationController::class, 'getEvaluationSummary'])->name('evaluation.summary');
+
+    // Bid Opening Ceremony Routes (Enhanced)
+    Route::get('/bid-opening', [\App\Http\Controllers\Procurement\BidOpeningCeremonyController::class, 'index'])->name('bid-opening.index');
+    Route::post('/bid-opening/start-ceremony', [\App\Http\Controllers\Procurement\BidOpeningCeremonyController::class, 'startCeremony'])->name('bid-opening.start-ceremony');
+    Route::get('/bid-opening/{submissionId}/documents', [\App\Http\Controllers\Procurement\BidOpeningCeremonyController::class, 'accessDocuments'])->name('bid-opening.documents');
+    Route::get('/bid-opening/{submissionId}/download/{documentIndex}', [\App\Http\Controllers\Procurement\BidOpeningCeremonyController::class, 'downloadDocument'])->name('bid-opening.download');
+    Route::get('/bid-opening/{tenderRef}/summary', [\App\Http\Controllers\Procurement\BidOpeningCeremonyController::class, 'generateSummary'])->name('bid-opening.summary');
+
+    // Bid Evaluation Routes
+    Route::get('/bid-evaluation', [\App\Http\Controllers\Procurement\BidEvaluationController::class, 'index'])->name('bid-evaluation.index');
+    Route::post('/bid-evaluation/{bidId}/scores', [\App\Http\Controllers\Procurement\BidEvaluationController::class, 'updateScores'])->name('bid-evaluation.scores');
+    Route::get('/bid-evaluation/{tenderRef}/report', [\App\Http\Controllers\Procurement\BidEvaluationController::class, 'generateReport'])->name('bid-evaluation.report');
 
     //procurement Consolidation
     Route::get('/dashboard', [ConsolidatedDashboardController::class, 'index'])->name('dashboard.index');
@@ -437,7 +504,13 @@ Route::resource('preqevaluation', PrequalificationEvaluationController::class);
 Route::resource('preqevalapproval', PrequalificationEvalAprovalController::class);
 Route::resource('preqsuppliers', PrequalifiedSuppliersController::class);
 
-Route::resource('bidresponsiveness', TenderBidResponsivenessController::class)->except(['create']);
+// Legacy routes - redirect to new enhanced responsiveness check system
+Route::get('bidresponsiveness', function () {
+    return redirect()->route('bid-responsiveness.index');
+})->name('bidresponsiveness.index');
+
+// Keep the old system for backward compatibility but use the old controller
+Route::resource('bidresponsiveness-legacy', TenderBidResponsivenessController::class)->except(['create', 'index']);
 Route::get('bidresponsiveness/create/{tenderSupplier}', [TenderBidResponsivenessController::class, 'create'])->name('bidresponsiveness.create');
 Route::post('bidresponsiveness/bulk', [TenderBidResponsivenessController::class, 'bulkUpdate'])->name('bidresponsiveness.bulk');
 
@@ -447,6 +520,9 @@ Route::get('/awards/unified/{id}', [AwardsController::class, 'showUnifiedAward']
 Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->name('awards.switch-type');
 Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
 Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
+
+// Award creation from consolidated scores
+Route::get('awards/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])->name('awards.create-from-consolidation');
 
 Route::resource('procawards', AwardsController::class);
 

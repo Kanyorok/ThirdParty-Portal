@@ -11,7 +11,7 @@
                             <a href="{{ route('bidresponsiveness.edit', $bidResponsiveness) }}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
-                            <a href="{{ route('bidresponsiveness.index') }}" class="btn btn-sm btn-secondary">
+                            <a href="{{ route('bid-responsiveness.index') }}" class="btn btn-sm btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Back
                             </a>
                         </div>

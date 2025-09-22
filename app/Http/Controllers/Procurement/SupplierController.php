@@ -17,7 +17,34 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = ThirdParties::suppliers()->with(['categories','types']);
+            $query = ThirdParties::suppliers()
+                ->with(['categories','types'])
+                ->select([
+                    'Id',
+                    'ThirdPartyName',
+                    'TradingName',
+                    'ApprovalStatus',
+                    'IsPrequalified',
+                    'Email',
+                ])
+                ->addSelect([
+                    // Primary contact derived from latest ThirdPartyUser by CreatedOn
+                    'PrimaryFirstName' => DB::table('t_ThirdPartyUsers')
+                        ->select('FirstName')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                    'PrimaryLastName' => DB::table('t_ThirdPartyUsers')
+                        ->select('LastName')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                    'PrimaryEmail' => DB::table('t_ThirdPartyUsers')
+                        ->select('Email')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                ]);
 
             if ($request->filled('search.value')) {
                 $searchValue = $request->input('search.value');
@@ -48,7 +75,17 @@ class SupplierController extends Controller
                     return $supplier->IsPrequalified ? 'Yes' : 'No';
                 })
                 ->addColumn('category_names', function ($supplier) {
-                    return $supplier->categories->pluck('CategoryName')->implode(', ');
+                    return optional($supplier->categories)->pluck('CategoryName')->filter()->unique()->implode(', ');
+                })
+                ->addColumn('TradingName', function ($supplier) {
+                    return $supplier->TradingName ?? 'N/A';
+                })
+                ->addColumn('PrimaryContact', function ($supplier) {
+                    $full = trim(($supplier->PrimaryFirstName ?? '') . ' ' . ($supplier->PrimaryLastName ?? ''));
+                    return $full !== '' ? $full : 'N/A';
+                })
+                ->addColumn('PrimaryEmail', function ($supplier) {
+                    return $supplier->PrimaryEmail ?? $supplier->Email ?? 'N/A';
                 })
                 ->addColumn('actions', function ($supplier) {
                     $viewUrl = route('suppliers.show', $supplier->Id);

@@ -39,7 +39,8 @@ class PrequalificationResultsController extends Controller
         foreach ($bySection as $sectionId => $sectionEvaluations) {
             $sectionModel = $preqSections[$sectionId] ?? null;
             $sectionWeight = ($sectionModel?->Weight ?? 0) * $weightScale; // total normalized to 100
-            $criteriaCount = $sectionModel?->criteria?->count() ?: max(1, $sectionEvaluations->count());
+            // Use only actually evaluated criteria to compute the average
+            $criteriaCount = max(1, $sectionEvaluations->count());
             $perCriterionWeight = $criteriaCount > 0 ? ($sectionWeight / $criteriaCount) : 0; // portion of 100
             $sectionDisplayName = $sectionModel?->masterSection?->SectionName
                 ?? $sectionEvaluations->first()?->evaluationSection?->SectionName
