@@ -15,6 +15,8 @@ use App\Services\Procurement\Orders\OrderService;
 use App\Services\Procurement\RFQ\RFQService;
 use App\Models\Procurement\RFQResponse;
 use App\Services\ThirdParty\SupplierService;
+use Illuminate\Support\Facades\Schema;
+use App\Models\ThirdParty\SupplierCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,8 +28,24 @@ class PurchaseOrderController extends Controller
 {
     public function __construct(protected ItemService $itemService, protected SupplierService $supplierService, protected OrderService $orderService, protected RFQService $rfqService, protected DocumentApprovalService $documentApprovalService)
     {
-
-        $this->middleware('ajax')->except(['index', 'create', 'show', 'linkRFQ', 'fetchRFQDetails', 'approval', 'approve']);
+        $this->middleware('ajax')->except([
+            'index',
+            'create',
+            'show',
+            'linkRFQ',
+            'fetchRFQDetails',
+            'approval',
+            'approve',
+            // Exempt commonly used GET JSON endpoints from strict AJAX header requirement
+            'getItemDetails',
+            'getSuppliers',
+            'getSupplierDetails',
+            'prequalifiedSuppliersByCategory',
+            'getRFQItems',
+            'getAwardedRFQs',
+            'getAwardedTenders',
+            'getTenderItems',
+        ]);
 //        $this->authorizeResource(Order::class);
     }
 
@@ -128,12 +146,88 @@ class PurchaseOrderController extends Controller
      public function create()
     {
         try {
-            $itemTypes = collect($this->itemService->getTypes());
+            $itemTypes = $this->itemService->getTypes();
             $rfqResponses = $this->rfqService->fetchRFQ();
             $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
             $suppliers = $this->supplierService->getSuppliers();
-            // Fetch payment terms from t_CodeDetails
-            $paymentTerms = CodeDetail::where('CodeID', 'PaymentTerm')->get(['ID', 'Description']); 
+            // Fetch payment terms from t_CodeDetails (robust to casing/whitespace/pluralization)
+            $paymentTerms = CodeDetail::query()
+                ->where('CodeID', 'PaymentTerm')
+                ->orderBy('DisplayOrder')
+                ->get(['ID', 'Description']);
+
+            if ($paymentTerms->isEmpty()) {
+                $paymentTerms = DB::table('t_CodeDetails')
+                    ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
+                    ->orderBy('DisplayOrder')
+                    ->select('ID', 'Description')
+                    ->get();
+            }
+
+            // RFQs awarded via RFQAward
+            $awardedFromRFQAward = collect();
+            try {
+                $awardedFromRFQAward = DB::table('t_RFQAward as a')
+                    ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
+                    ->select('r.Id', 'r.RFQNumber', 'a.SupplierId')
+                    ->get();
+            } catch (\Throwable $e) {
+                \Log::warning('Skipping RFQAward join for awarded RFQs', ['error' => $e->getMessage()]);
+                $awardedFromRFQAward = collect();
+            }
+
+            // RFQs awarded via TenderAwards
+            $awardedFromTender = collect();
+            try {
+                $awardedFromTender = DB::table('t_TenderAwards as ta')
+                    ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                    ->join('t_RFQ as r', 'r.RFQNumber', '=', 't.TenderNo')
+                    ->where('ta.AwardStatus', '=', 'Approved')
+                    ->select('r.Id', 'r.RFQNumber', DB::raw('ta.WinningSupplierID as SupplierId'))
+                    ->get();
+            } catch (\Throwable $e) {
+                \Log::warning('Skipping TenderAwards join for awarded RFQs', ['error' => $e->getMessage()]);
+                $awardedFromTender = collect();
+            }
+
+            $awardedRfqs = $awardedFromRFQAward->concat($awardedFromTender)->unique('Id')->values();
+
+            // Fallback if needed
+            if ($awardedRfqs->isEmpty()) {
+                try {
+                    $rfqIds = DB::table('t_RFQAward')->pluck('RFQId')->toArray();
+                    if (!empty($rfqIds)) {
+                        $rfqsBasic = DB::table('t_RFQ')->whereIn('Id', $rfqIds)->select('Id', 'RFQNumber')->get();
+                        $supplierByRfq = DB::table('t_RFQAward')->pluck('SupplierId', 'RFQId');
+                        $awardedRfqs = $rfqsBasic->map(function ($r) use ($supplierByRfq) {
+                            $r->SupplierId = (int) ($supplierByRfq[$r->Id] ?? 0);
+                            return $r;
+                        })->values();
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Fallback fetch for awarded RFQs failed', ['error' => $e->getMessage()]);
+                }
+            }
+
+            $convertedRFQIds = DB::table('t_Orders')
+                ->where('SourceType', 'RFQ')
+                ->whereNotNull('SourceId')
+                ->pluck('SourceId')
+                ->toArray();
+
+            // Executed contracts for Contract-based source selection
+            $contracts = DB::table('t_TenderAwards as ta')
+                ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                ->where('ta.ContractStatus', 'Executed')
+                ->orderByDesc('ta.ContractApprovedOn')
+                ->select(
+                    'ta.Id as Id',
+                    'ta.ContractRef as ContractRef',
+                    'ta.WinningSupplierID as SupplierId',
+                    DB::raw("COALESCE(s.SupplierName, '') as SupplierName"),
+                    DB::raw("COALESCE(s.Address, '') as Address")
+                )
+                ->get();
 
             // Optional contract prefill support: if contractId is present, pre-select reference and supplier
             $prefillContract = null;
@@ -186,6 +280,8 @@ class PurchaseOrderController extends Controller
                 }
             }
 
+            $sourceType = $prefillContract ? 'CONTRACT' : 'RFQ';
+
             return view('procurement.orders.create', [
                 'itemTypes' => $itemTypes ?? [],
                 'rfqs' => $uniqueRfqs ?? [],
@@ -193,15 +289,40 @@ class PurchaseOrderController extends Controller
                 'suppliers' => $suppliers ?? [],
                 'paymentTerms' => $paymentTerms ?? [], // Pass payment terms to view
                 'prefillContract' => $prefillContract,
+                'sourceType' => $sourceType,
+                'contracts' => $contracts ?? collect(),
+                'awardedRfqs' => $awardedRfqs ?? collect(),
+                'convertedRFQIds' => $convertedRFQIds ?? [],
             ]);
         } catch (\Exception $e) {
             \Log::error('Data fetch failed: ' . $e->getMessage());
+            // Ensure dev-expected vars exist even on failure
+            try {
+                $paymentTerms = CodeDetail::query()
+                    ->where('CodeID', 'PaymentTerm')
+                    ->orderBy('DisplayOrder')
+                    ->get(['ID', 'Description']);
+                if ($paymentTerms->isEmpty()) {
+                    $paymentTerms = DB::table('t_CodeDetails')
+                        ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
+                        ->orderBy('DisplayOrder')
+                        ->select('ID', 'Description')
+                        ->get();
+                }
+            } catch (\Throwable $te) {
+                $paymentTerms = collect();
+            }
             return view('procurement.orders.create', [
                 'suppliers' => [],
                 'itemTypes' => [],
                 'rfqs' => [],
                 'rfqResponses' => [],
-                'paymentTerms' => [],
+                'paymentTerms' => $paymentTerms ?? [],
+                'awardedRfqs' => [],
+                'convertedRFQIds' => [],
+                'contracts' => collect(),
+                'sourceType' => 'RFQ',
+                'prefillContract' => null,
             ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }

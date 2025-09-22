@@ -114,6 +114,12 @@ Route::namespace('Procurement')->group(function () {
     Route::get('purchaseOrder/{id}', [PurchaseOrderController::class, 'show'])->whereNumber('id')->name('purchaseOrder.show');
     Route::resource('purchaseOrder', PurchaseOrderController::class);
     Route::get('/purchase-order/rfq-items/{rfqId}', [PurchaseOrderController::class, 'getRFQItems'])->name('purchase-order.rfq-items');
+    Route::get('/purchase-order/awarded-rfqs', [PurchaseOrderController::class, 'getAwardedRFQs'])->name('purchase-order.awarded-rfqs');
+    Route::get('/purchase-order/awarded-tenders', [PurchaseOrderController::class, 'getAwardedTenders'])->name('purchase-order.awarded-tenders');
+    Route::get('/purchase-order/tender-items/{tenderId}', [PurchaseOrderController::class, 'getTenderItems'])->name('purchase-order.tender-items');
+    Route::get('/purchase-order/items/{item}', [PurchaseOrderController::class, 'getItemDetails'])->name('purchase-order.item-details');
+    Route::get('/purchase-order/payment-terms', [PurchaseOrderController::class, 'getPaymentTerms'])->name('purchase-order.payment-terms');
+    Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
     
     // NEW: Unified PO Origination AJAX endpoints
     Route::get('purchaseOrder/award-details/{id}', [PurchaseOrderController::class, 'getAwardDetails'])->name('purchaseOrder.awardDetails');
