@@ -7,7 +7,6 @@ use App\Helpers\SystemHelper;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class ModuleSeeder extends Seeder
 {
@@ -22,148 +21,20 @@ class ModuleSeeder extends Seeder
             DB::table(config('permission.table_names.permissions'))->delete();
         }
 
-        $all = collect();
-        $all = $all->merge($this->_thirdParty($fresh));
-        $all = $all->merge($this->_crm($fresh));
-        $all = $all->merge($this->_procurement($fresh));
-        $all = $all->merge($this->_inventory($fresh));
-        $all = $all->merge($this->_propertyManagement($fresh));
-        $all = $all->merge($this->_fleetManagement($fresh));
-        $all = $all->merge($this->_documentManagement($fresh));
-        $all = $all->merge($this->_legal($fresh));
-        $all = $all->merge($this->_insurance($fresh));
-        $all = $all->merge($this->_hrm($fresh));
-        $all = $all->merge($this->_finance($fresh));
-        $all = $all->merge($this->_settings($fresh));
-        $all = $all->merge($this->_myAccount($fresh));
-        $all = $all->merge($this->_budgetline($fresh));
-
-        $this->syncModules($all);
-    }
-
-    private function syncModules(Collection $modules): void
-    {
-        $actor = SystemHelper::user();
-        $dated = now()->toDateTimeString();
-
-        // Normalize incoming
-        $incoming = $modules->map(function ($m) use ($actor, $dated) {
-            $m['CreatedOn'] = $m['CreatedOn'] ?? $dated;
-            $m['ModifiedOn'] = $dated;
-            $m['CreatedBy'] = $m['CreatedBy'] ?? $actor->Id;
-            $m['ModifiedBy'] = $actor->Id;
-            return $m;
-        });
-
-        $existing = DB::table('t_Modules')->pluck('ModuleID');
-        $incomingIds = $incoming->pluck('ModuleID');
-
-        // SAFETY: Avoid deleting modules to prevent breaking FKs/permissions in live DB.
-        // Instead, we only upsert the full canonical list; stale rows can be handled via a separate maintenance task.
-        $toDeleteModuleIds = collect();
-
-        if ($toDeleteModuleIds->isNotEmpty()) {
-            $permTable = config('permission.table_names.permissions', 't_Permissions');
-            $roleHasPermTable = config('permission.table_names.role_has_permissions', 'role_has_permissions');
-
-            // Find permission Ids linked to these modules
-            $permissionIds = DB::table($permTable)
-                ->whereIn('ModuleId', $toDeleteModuleIds)
-                ->pluck(DB::raw('COALESCE(Id, id) as PermId'));
-
-            if ($permissionIds->isNotEmpty()) {
-                // Reassign or nullify workflow stage references before deleting permissions
-                if (Schema::hasTable('t_WorkFlowStages')) {
-                    // Prefer assigning to an existing (kept) permission id; fallback to null
-                    $fallbackPermId = DB::table($permTable)
-                        ->whereNotIn('Id', $permissionIds)
-                        ->value('Id');
-                    if ($fallbackPermId) {
-                        DB::table('t_WorkFlowStages')
-                            ->whereIn('PermissionId', $permissionIds)
-                            ->update(['PermissionId' => $fallbackPermId]);
-                    } else {
-                        DB::table('t_WorkFlowStages')
-                            ->whereIn('PermissionId', $permissionIds)
-                            ->update(['PermissionId' => null]);
-                    }
-                }
-                // Remove role-permission links first
-                foreach ($permissionIds->chunk(500) as $pidChunk) {
-                    DB::table($roleHasPermTable)->whereIn('permission_id', $pidChunk)->delete();
-                    DB::table($permTable)->whereIn('Id', $pidChunk)->orWhereIn('id', $pidChunk)->delete();
-                }
-            }
-
-            // Repoint dependent FK references before removing modules
-            if (Schema::hasTable('t_CategoryMaster')) {
-                $fallbackModuleId = DB::table('t_Modules')
-                    ->whereIn('ModuleID', $incomingIds)
-                    ->orderBy('ModuleID')
-                    ->value('ModuleID');
-                if ($fallbackModuleId) {
-            foreach ($toDeleteModuleIds->chunk(500) as $delIds) {
-                DB::table('t_CategoryMaster')
-                    ->whereIn('Code', $delIds)
-                    ->update(['Code' => $fallbackModuleId]);
-            }
-                }
-            }
-
-            // Finance: repoint ModuleID FK in finance tables before delete
-            if (Schema::hasTable('t_FinanceModuleTransactions')) {
-                $fallbackModuleId = DB::table('t_Modules')
-                    ->whereIn('ModuleID', $incomingIds)
-                    ->orderBy('ModuleID')
-                    ->value('ModuleID');
-                if ($fallbackModuleId) {
-                    foreach ($toDeleteModuleIds->chunk(500) as $delIds) {
-                        DB::table('t_FinanceModuleTransactions')
-                            ->whereIn('ModuleID', $delIds)
-                            ->update(['ModuleID' => $fallbackModuleId]);
-                    }
-                }
-            }
-            if (Schema::hasTable('t_FinanceGlTransactionsMapping')) {
-                $fallbackModuleId = DB::table('t_Modules')
-                    ->whereIn('ModuleID', $incomingIds)
-                    ->orderBy('ModuleID')
-                    ->value('ModuleID');
-                if ($fallbackModuleId) {
-                    foreach ($toDeleteModuleIds->chunk(500) as $delIds) {
-                        DB::table('t_FinanceGlTransactionsMapping')
-                            ->whereIn('ModuleID', $delIds)
-                            ->update(['ModuleID' => $fallbackModuleId]);
-                    }
-                }
-            }
-
-            // Finally remove the modules
-            foreach ($toDeleteModuleIds->chunk(500) as $delIds) {
-                DB::table('t_Modules')->whereIn('ModuleID', $delIds)->delete();
-            }
-        }
-
-        // Ensure parent modules are inserted/updated before children to satisfy FK
-        // Upsert roots first, then children, and process in chunks to avoid SQL Server parameter limits
-        $roots = $incoming->whereNull('ParentID');
-        $children = $incoming->whereNotNull('ParentID');
-
-        foreach ($roots->chunk(150) as $chunk) {
-            DB::table('t_Modules')->upsert(
-                $chunk->toArray(),
-                ['ModuleID'],
-                ['Name','Icon','Description','ParentID','Route','ModifiedBy','ModifiedOn']
-            );
-        }
-
-        foreach ($children->chunk(150) as $chunk) {
-            DB::table('t_Modules')->upsert(
-                $chunk->toArray(),
-                ['ModuleID'],
-                ['Name','Icon','Description','ParentID','Route','ModifiedBy','ModifiedOn']
-            );
-        }
+        $this->_seed($this->_thirdParty($fresh));
+        $this->_seed($this->_crm($fresh));
+        $this->_seed($this->_procurement($fresh));
+        $this->_seed($this->_inventory($fresh));
+        $this->_seed($this->_propertyManagement($fresh));
+        $this->_seed($this->_fleetManagement($fresh));
+        $this->_seed($this->_documentManagement($fresh));
+        $this->_seed($this->_legal($fresh));
+        $this->_seed($this->_insurance($fresh));
+        $this->_seed($this->_hrm($fresh));
+        $this->_seed($this->_finance($fresh));
+        $this->_seed($this->_settings($fresh));
+        $this->_seed($this->_myAccount($fresh));
+        $this->_seed($this->_budgetline($fresh));
     }
 
     protected function _thirdParty(bool $fresh): Collection
@@ -176,7 +47,12 @@ class ModuleSeeder extends Seeder
         if ($fresh) {
             $data = $values;
         } else {
-            $data = $values; // we will upsert/delete globally; no need to filter here
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
         }
         return $data;
     }
@@ -214,7 +90,18 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'crm-reports.index'],
         ]);
 
-        return $values;
+
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
     protected function _procurement(bool $fresh): Collection
@@ -236,18 +123,21 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 302100, 'Name' => 'Requisition List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisition.create'],
             ['ModuleID' => 302300, 'Name' => 'Priority List', 'Icon' => null, 'Description' => '', 'ParentID' => 302000, 'Route' => 'requisitionItem.index'],
             ['ModuleID' => 303000, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
-            ['ModuleID' => 303100, 'Name' => 'Prequalification', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => null],
-            ['ModuleID' => 303110, 'Name' => 'Prequalification Rounds', 'Icon' => null, 'Description' => '', 'ParentID' => 303100, 'Route' => 'prequalification.prequalification-rounds.index'],
-            ['ModuleID' => 303130, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303100, 'Route' => 'prequalification.applications.index'],
-            ['ModuleID' => 303140, 'Name' => 'Evaluation & Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 303100, 'Route' => 'preqevaluation.index'],
-            ['ModuleID' => 303200, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],
+            ['ModuleID' => 303100, 'Name' => 'Suppliers List', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'suppliers.index'],
+            ['ModuleID' => 303200, 'Name' => 'Prequalification', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => null],
+            ['ModuleID' => 303210, 'Name' => 'Prequalification Rounds', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.prequalification-rounds.index'],
+            ['ModuleID' => 303230, 'Name' => 'Supplier Applications', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'prequalification.applications.index'],
+            ['ModuleID' => 303240, 'Name' => 'Evaluation & Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 303200, 'Route' => 'preqevaluation.index'],
             ['ModuleID' => 305000, 'Name' => 'Tendering', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 305060, 'Name' => 'Supplier Categories', 'Icon' => null, 'Description' => '', 'ParentID' => 303000, 'Route' => 'proc.supplier-cat.index'],
             // Tender Setup
             ['ModuleID' => 305100, 'Name' => 'Tender Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305110, 'Name' => 'Tender Initiation', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'initiatetender.index'],
             //['ModuleID' => 305120, 'Name' => 'Initiation Approval', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'initiateapprove.index'],
-            ['ModuleID' => 305130, 'Name' => 'Tender Category', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tendercategory.index'],           ['ModuleID' => 305160, 'Name' => 'Tender Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tenderevaluations.index'],
+            ['ModuleID' => 305130, 'Name' => 'Tender Category', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tendercategory.index'],
+            ['ModuleID' => 305140, 'Name' => 'Tender Type', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tendertype.index'],
+            ['ModuleID' => 305160, 'Name' => 'Tender Criteria Setup', 'Icon' => null, 'Description' => '', 'ParentID' => 305100, 'Route' => 'tenderevaluations.index'],
+
             // Suppliers
             ['ModuleID' => 305200, 'Name' => 'Suppliers', 'Icon' => null, 'Description' => '', 'ParentID' => 305000, 'Route' => null],
             ['ModuleID' => 305210, 'Name' => 'Response Tracking', 'Icon' => null, 'Description' => '', 'ParentID' => 305200, 'Route' => 'tenderresponse.index'],
@@ -275,7 +165,11 @@ class ModuleSeeder extends Seeder
 
             //Awards
             ['ModuleID' => 306500, 'Name' => 'Awards', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => 'procawards.index'],
-
+            // Contracts
+            ['ModuleID' => 306600, 'Name' => 'Contracts', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
+            ['ModuleID' => 306610, 'Name' => 'Contract Creation', 'Icon' => null, 'Description' => '', 'ParentID' => 306600, 'Route' => 'contracts.index'],
+            ['ModuleID' => 306620, 'Name' => 'Contract Lifecycle', 'Icon' => null, 'Description' => '', 'ParentID' => 306600, 'Route' => 'contracts.lifecycle.index'],
+            ['ModuleID' => 306630, 'Name' => 'Legal Integration', 'Icon' => null, 'Description' => '', 'ParentID' => 306600, 'Route' => 'contracts.legal.index'],
 
             ['ModuleID' => 307000, 'Name' => 'Purchase Order', 'Icon' => null, 'Description' => '', 'ParentID' => 300000, 'Route' => null],
             ['ModuleID' => 307100, 'Name' => 'View Purchase Orders', 'Icon' => null, 'Description' => '', 'ParentID' => 307000, 'Route' => 'purchaseOrder.index'],
@@ -297,7 +191,17 @@ class ModuleSeeder extends Seeder
 
         ]);
 
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
     protected function _inventory(bool $fresh): Collection
@@ -340,7 +244,17 @@ class ModuleSeeder extends Seeder
 
         ]);
 
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
     protected function _budgetline(bool $fresh): Collection
@@ -472,7 +386,17 @@ class ModuleSeeder extends Seeder
             /* ['ModuleID' => 50510, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' =>],
              ['ModuleID' => 50520, 'Name' => 'Analytics', 'Icon' => null, 'Description' => '', 'ParentID' => 50500, 'Route' => 'propertyanalytics.index'],*/
         ]);
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
 
@@ -534,7 +458,17 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 699000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 600000, 'Route' => 'fleet-reports.index'],
         ]);
 
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
     protected function _documentManagement(bool $fresh): Collection
@@ -550,7 +484,17 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);
 
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
     protected function _legal(bool $fresh): Collection
@@ -577,7 +521,17 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 899000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal-reports.index'],
         ]);
 
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
     protected function _insurance(bool $fresh): Collection
@@ -621,7 +575,35 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
         ]);
 
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
+    }
+
+    private function _seed(Collection $modules): void
+    {
+        $actor = SystemHelper::user();
+        $dated = now()->toDateTimeString();
+
+        // Seed parent modules
+        $modules = $modules->map(function ($module) use ($actor, $dated) {
+            $module['CreatedOn'] = $dated;
+            $module['ModifiedOn'] = $dated;
+            $module['CreatedBy'] = $actor->Id;
+            $module['ModifiedBy'] = $actor->Id;
+            return $module;
+        });
+
+        // dd($modules->toArray());
+        DB::table('t_Modules')->insert($modules->toArray());
     }
 
     protected function _finance(bool $fresh): Collection
@@ -711,7 +693,17 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1199000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'Route' => 'finance-reports.index', 'ParentID' => 1100000],
         ]);
 
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
     protected function _hrm(bool $fresh): Collection
@@ -727,7 +719,17 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1003000, 'Name' => 'Committees', 'Icon' => '<i class="fas fa-building"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => 'tendercommittee.index'],
             ['ModuleID' => 1099000, 'Name' => 'Financial Reports', 'Icon' => '<i class="fas fa-chart-pie"></i>', 'Description' => '', 'ParentID' => 1000000, 'Route' => null],
         ]);
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
 
@@ -742,7 +744,17 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 98004000, 'Name' => 'Code Details', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.lists'],
             ['ModuleID' => 98005000, 'Name' => 'Integrations', 'Icon' => null, 'Description' => '', 'ParentID' => 9800000, 'Route' => 'settings.integrations'],
         ]);
-        return $values;
+        if ($fresh) {
+            $data = $values;
+        } else {
+            $data = collect();
+            foreach ($values as $value) {
+                if (!DB::table('t_Modules')->where('ModuleID', $value['ModuleID'])->exists()) {
+                    $data->add($value);
+                }
+            }
+        }
+        return $data;
     }
 
     protected function _myAccount(bool $fresh): Collection

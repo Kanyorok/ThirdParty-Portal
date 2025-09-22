@@ -9,6 +9,7 @@ use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
 use App\Models\ThirdParty\ThirdParties;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -42,6 +43,11 @@ class Supplier extends ThirdParties
     {
         // Intentionally empty: suppress parent ThirdParties booted() logic that sets ApprovalStatus/Status
         // because t_Suppliers does not have those columns.
+    }
+
+    public function thirdParty(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\ThirdParty\ThirdParties::class, 'ThirdPartyID', 'Id');
     }
 
     public function rfqEvaluations(): HasMany
@@ -85,13 +91,6 @@ class Supplier extends ThirdParties
         ->where('Active_Status', 1);
     }
 
-    /**
-     * Relationship to ThirdParty (for supplier names and details)
-     */
-    public function thirdParty()
-    {
-        return $this->belongsTo(ThirdParties::class, 'ThirdPartyID', 'Id');
-    }
 
     /**
      * Relationship to SupplierCategory via SupplierCategoryID

@@ -58,13 +58,24 @@
                                 <td>{{ $row['award_date'] ?? '--' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        @if($row['type'] === 'tender')
-                                            <a href="{{ route('awards.tender', $row['id']) }}" class="btn btn-sm btn-outline-info" title="View Details">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                        @else
-                                            <a href="{{ route('awards.rfq', $row['id']) }}" class="btn btn-sm btn-outline-info" title="View Details">
-                                                <i class="fas fa-eye"></i> View
+                                        <a href="{{ route('awards.unified', $award->tender->Id) }}" 
+                                           class="btn btn-sm btn-outline-info" title="View Award Details">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        
+                                        @if($award->is_pending)
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                    onclick="approveAward({{ $award->Id }})" title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    onclick="rejectAward({{ $award->Id }})" title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        @elseif($award->is_approved)
+                                            <a href="{{ route('contracts.createFromAward', $award->Id) }}" 
+                                               class="btn btn-sm btn-primary" title="Create Contract">
+                                                <i class="fas fa-file-contract"></i> Contract
                                             </a>
                                         @endif
                                     </div>
@@ -139,13 +150,13 @@
     <script>
         function approveAward(awardId) {
             const form = document.getElementById('approveForm');
-            form.action = `/procurement/awards/${awardId}/approve`;
+            form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', awardId);
             new bootstrap.Modal(document.getElementById('approveModal')).show();
         }
         
         function rejectAward(awardId) {
             const form = document.getElementById('rejectForm');
-            form.action = `/procurement/awards/${awardId}/reject`;
+            form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', awardId);
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
     </script>

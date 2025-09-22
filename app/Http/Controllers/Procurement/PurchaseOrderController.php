@@ -13,16 +13,16 @@ use App\Services\Core\DocumentApprovalService;
 use App\Services\Procurement\Items\ItemService;
 use App\Services\Procurement\Orders\OrderService;
 use App\Services\Procurement\RFQ\RFQService;
+use App\Models\Procurement\RFQResponse;
 use App\Services\ThirdParty\SupplierService;
+use Illuminate\Support\Facades\Schema;
+use App\Models\ThirdParty\SupplierCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-// use Illuminate\Support\Facades\Log; // using global \Log facade calls inline to avoid import confusion
-use Illuminate\Support\Carbon\Carbon;
-use Illuminate\Support\Facades\Schema;
-use App\Models\Core\CodeDetail;
-use App\Models\ThirdParty\SupplierCategory;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon\Carbon;
+use App\Models\Core\CodeDetail;
 
 class PurchaseOrderController extends Controller
 {
@@ -101,13 +101,13 @@ class PurchaseOrderController extends Controller
 
         try {
             $suppliers = $this->supplierService->getSuppliers();
-            \Log::info('Suppliers data:', $suppliers->toArray());
+            Log::info('Suppliers data:', $suppliers->toArray());
             return response()->json([
                 'success' => true,
                 'data' => $suppliers,
             ]);}
         catch(\Exception $e){
-            \Log::error('Error fetching suppliers: ' . $e->getMessage());
+            Log::error('Error fetching suppliers: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -164,7 +164,7 @@ class PurchaseOrderController extends Controller
                     ->get();
             }
 
-            // RFQs that have awards and are eligible for conversion (t_RFQAward)
+            // RFQs awarded via RFQAward
             $awardedFromRFQAward = collect();
             try {
                 $awardedFromRFQAward = DB::table('t_RFQAward as a')
@@ -176,7 +176,7 @@ class PurchaseOrderController extends Controller
                 $awardedFromRFQAward = collect();
             }
 
-            // Also include RFQs awarded via TenderAwards (where TenderNo maps to RFQNumber)
+            // RFQs awarded via TenderAwards
             $awardedFromTender = collect();
             try {
                 $awardedFromTender = DB::table('t_TenderAwards as ta')
@@ -192,7 +192,7 @@ class PurchaseOrderController extends Controller
 
             $awardedRfqs = $awardedFromRFQAward->concat($awardedFromTender)->unique('Id')->values();
 
-            // Fallback: if still empty but t_RFQAward has rows, fetch plainly by RFQId list
+            // Fallback if needed
             if ($awardedRfqs->isEmpty()) {
                 try {
                     $rfqIds = DB::table('t_RFQAward')->pluck('RFQId')->toArray();
@@ -215,23 +215,72 @@ class PurchaseOrderController extends Controller
                 ->pluck('SourceId')
                 ->toArray();
 
-            // Tenders that have awards (t_TenderAwards) and eligible for conversion
-            $awardedTenders = collect();
-            try {
-                $awardedTenders = DB::table('t_TenderAwards as ta')
-                    ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
-                    ->select('t.Id', 't.TenderNo', DB::raw('ta.WinningSupplierID as SupplierId'))
-                    ->get();
-            } catch (\Throwable $e) {
-                \Log::warning('Skipping TenderAwards join for awarded tenders', ['error' => $e->getMessage()]);
-                $awardedTenders = collect();
+            // Executed contracts for Contract-based source selection
+            $contracts = DB::table('t_TenderAwards as ta')
+                ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                ->where('ta.ContractStatus', 'Executed')
+                ->orderByDesc('ta.ContractApprovedOn')
+                ->select(
+                    'ta.Id as Id',
+                    'ta.ContractRef as ContractRef',
+                    'ta.WinningSupplierID as SupplierId',
+                    DB::raw("COALESCE(s.SupplierName, '') as SupplierName"),
+                    DB::raw("COALESCE(s.Address, '') as Address")
+                )
+                ->get();
+
+            // Optional contract prefill support: if contractId is present, pre-select reference and supplier
+            $prefillContract = null;
+            $contractId = request('contractId');
+            if (!empty($contractId)) {
+                try {
+                    $contractRow = DB::table('t_TenderAwards as ta')
+                        ->leftJoin('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                        ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                        ->select(
+                            'ta.Id as ContractId',
+                            'ta.ContractRef',
+                            'ta.WinningSupplierID as SupplierId',
+                            DB::raw("COALESCE(s.SupplierName, '') as SupplierName"),
+                            DB::raw("COALESCE(s.Address, '') as Address")
+                        )
+                        ->where('ta.Id', (int) $contractId)
+                        ->first();
+
+                    if ($contractRow && !empty($contractRow->ContractRef)) {
+                        // Ensure RFQ references contain the contract ref so the existing dev dropdown can select it
+                        $uniqueRfqs = collect($uniqueRfqs);
+                        $exists = $uniqueRfqs->contains(function ($r) use ($contractRow) {
+                            return ($r->RFQNumber ?? null) === ($contractRow->ContractRef ?? null);
+                        });
+                        if (!$exists) {
+                            $uniqueRfqs = $uniqueRfqs->prepend((object) ['RFQNumber' => $contractRow->ContractRef]);
+                        }
+
+                        // Inject synthetic rfqResponse entry so supplier filtering works
+                        $rfqResponsesCol = collect($rfqResponses ?? []);
+                        $rfqResponsesCol = $rfqResponsesCol->prepend((object) [
+                            'RFQNumber'    => $contractRow->ContractRef,
+                            'SupplierId'   => (int) ($contractRow->SupplierId ?? 0),
+                            'SupplierID'   => (int) ($contractRow->SupplierId ?? 0),
+                            'SupplierName' => $contractRow->SupplierName ?? '',
+                            'Address'      => $contractRow->Address ?? '',
+                        ]);
+                        $rfqResponses = $rfqResponsesCol->values();
+
+                        $prefillContract = [
+                            'ref'          => $contractRow->ContractRef,
+                            'supplierId'   => (int) ($contractRow->SupplierId ?? 0),
+                            'supplierName' => $contractRow->SupplierName ?? '',
+                            'address'      => $contractRow->Address ?? '',
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Contract prefill failed', ['error' => $e->getMessage()]);
+                }
             }
 
-            $convertedTenderIds = DB::table('t_Orders')
-                ->where('SourceType', 'TENDER')
-                ->whereNotNull('SourceId')
-                ->pluck('SourceId')
-                ->toArray();
+            $sourceType = $prefillContract ? 'CONTRACT' : 'RFQ';
 
             return view('procurement.orders.create', [
                 'itemTypes' => $itemTypes ?? [],
@@ -239,14 +288,15 @@ class PurchaseOrderController extends Controller
                 'rfqResponses' => $rfqResponses ?? [],
                 'suppliers' => $suppliers ?? [],
                 'paymentTerms' => $paymentTerms ?? [], // Pass payment terms to view
-                'awardedRfqs' => $awardedRfqs ?? [],
+                'prefillContract' => $prefillContract,
+                'sourceType' => $sourceType,
+                'contracts' => $contracts ?? collect(),
+                'awardedRfqs' => $awardedRfqs ?? collect(),
                 'convertedRFQIds' => $convertedRFQIds ?? [],
-                'awardedTenders' => $awardedTenders ?? [],
-                'convertedTenderIds' => $convertedTenderIds ?? [],
             ]);
         } catch (\Exception $e) {
             \Log::error('Data fetch failed: ' . $e->getMessage());
-            // Ensure payment terms still load even if other data fails
+            // Ensure dev-expected vars exist even on failure
             try {
                 $paymentTerms = CodeDetail::query()
                     ->where('CodeID', 'PaymentTerm')
@@ -270,6 +320,9 @@ class PurchaseOrderController extends Controller
                 'paymentTerms' => $paymentTerms ?? [],
                 'awardedRfqs' => [],
                 'convertedRFQIds' => [],
+                'contracts' => collect(),
+                'sourceType' => 'RFQ',
+                'prefillContract' => null,
             ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
@@ -289,7 +342,7 @@ class PurchaseOrderController extends Controller
 
             // Ensure terms is a valid ID from t_CodeDetails
             if (!DB::table('t_CodeDetails')->where('ID', $validatedData['terms'])->where('CodeID', 'PaymentTerm')->exists()) {
-                \Log::error('Invalid payment term ID provided.', [
+                Log::error('Invalid payment term ID provided.', [
                     'terms' => $validatedData['terms'],
                     'user_id' => $actor->Id ?? null,
                 ]);
@@ -301,16 +354,16 @@ class PurchaseOrderController extends Controller
 
             // Pass the terms ID (from t_CodeDetails.ID) to addPO
             $POAdd = $this->orderService->addPO(
-                $validatedData['supplier'] ?? $request->input('supplier'),
-                $validatedData['pODate'] ?? $request->input('pODate'),
-                $validatedData['refNo'] ?? $request->input('refNo'),
-                $validatedData['priority'] ?? $request->input('priority'),
-                $validatedData['terms'] ?? $request->input('terms'), // This is the ID from t_CodeDetails
+                $validatedData['supplier'],
+                $validatedData['pODate'],
+                $validatedData['refNo'],
+                $validatedData['priority'],
+                $validatedData['terms'], // This is the ID from t_CodeDetails
                 $actor
             );
 
             if ($POAdd['status'] !== 'success') {
-                \Log::error('Failed to create PO.', [
+                Log::error('Failed to create PO.', [
                     'input' => $validatedData,
                     'user_id' => $actor->Id ?? null,
                     'service_response' => $POAdd,
@@ -325,7 +378,7 @@ class PurchaseOrderController extends Controller
             $poId = $POAdd['po_id'] ?? null;
 
             if (!$poId) {
-                \Log::error('PO created but no ID returned.', [
+                Log::error('PO created but no ID returned.', [
                     'response' => $POAdd
                 ]);
 
@@ -333,14 +386,6 @@ class PurchaseOrderController extends Controller
                     'message' => 'Purchase order created but no ID returned.',
                     'error' => 'Missing PO ID'
                 ], 500);
-            }
-
-            // If Source fields provided, update order header after creation
-            if (!empty($validatedData['SourceType']) && !empty($validatedData['SourceId'])) {
-                DB::table('t_Orders')->where('Id', $poId)->update([
-                    'SourceType' => $validatedData['SourceType'],
-                    'SourceId' => $validatedData['SourceId'],
-                ]);
             }
 
             // Process each PO line
@@ -357,7 +402,7 @@ class PurchaseOrderController extends Controller
                 );
 
                 if ($POLinesAdd['status'] !== 'success') {
-                    \Log::error('Failed to add PO line.', [
+                    Log::error('Failed to add PO line.', [
                         'index' => $index,
                         'item' => $itemCode,
                         'response' => $POLinesAdd,
@@ -374,7 +419,7 @@ class PurchaseOrderController extends Controller
                 $poId
             );
             if ($POSum['status'] !== 'success') {
-                \Log::error('Failed to calculate POs sum.', [
+                Log::error('Failed to calculate POs sum.', [
                     'po_id' => $poId,
                     'response' => $POSum,
                 ]);
@@ -392,7 +437,7 @@ class PurchaseOrderController extends Controller
             ], 200);
 
         } catch (\Throwable $e) {
-            \Log::error('Exception occurred while creating order.', [
+            Log::error('Exception occurred while creating order.', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -409,27 +454,17 @@ class PurchaseOrderController extends Controller
     public function show(Request $request, string $id)
     {
         try {
-            \Log::info('PurchaseOrderController@show start', ['id' => $id, 'ajax' => $request->ajax()]);
             $order = Order::findOrFail($id); // This will throw 404 if not found
-            // View authorization temporarily relaxed to ensure accessibility
+            $this->authorize('view', $order); // Authorize the order object itself
 
             $orderInfo = $this->orderService->fetchOrderDetails($id);
             $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
-            \Log::info('PurchaseOrderController@show fetched data', [
-                'id' => $id,
-                'hasOrderInfo' => (bool) $orderInfo,
-                'lineCount' => is_countable($lineInfo) ? count($lineInfo) : 0,
-            ]);
-
             //dd($orderInfo->terms_description);
-            if ($request->ajax() || $request->header('X-Partial') || $request->boolean('partial')) {
+            if ($request->ajax()) {
                 // Return only the inner content for modal
-                $html = view('procurement.orders.partials.show_content', compact('orderInfo', 'lineInfo'))->render();
-                \Log::info('PurchaseOrderController@show returning partial content', ['id' => $id, 'bytes' => strlen($html)]);
-                return $html;
+                return view('procurement.orders.partials.show_content', compact('orderInfo', 'lineInfo'))->render();
             }
-            \Log::info('PurchaseOrderController@show returning full view', ['id' => $id]);
             return view('procurement.orders.show', compact('orderInfo', 'lineInfo'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
@@ -497,48 +532,16 @@ class PurchaseOrderController extends Controller
 
         try {
             $order = Order::findOrFail($id); // This will throw 404 if not found
-            // View authorization temporarily relaxed to ensure accessibility
+            $this->authorize('view', $order); // Authorize the order object itself
 
             $orderInfo = $this->orderService->fetchOrderDetails($id);
             $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
-            // Approval meta: is fully approved and who approved
-            $approvalService = app(\App\Services\Core\ApprovalService::class);
-            $isFullyApproved = $approvalService->isFullyApproved('purchase_order', (int) $id, (float) ($orderInfo->OrdTotIncl ?? 0));
-            $approvedBy = [];
-            if ($isFullyApproved) {
-                $permissionId = (function($service){
-                    $ref = new \ReflectionClass($service);
-                    $method = $ref->getMethod('getApprovalGroupPermission');
-                    $method->setAccessible(true);
-                    return $method->invoke($service, 'purchase_order');
-                })($approvalService);
-                if ($permissionId) {
-                    $approverIds = \Illuminate\Support\Facades\DB::table('t_ModelRoles as mr')
-                        ->join('t_RolePermissions as rp', 'mr.role_id', '=', 'rp.role_id')
-                        ->join('t_Users as u', 'mr.model_id', '=', 'u.Id')
-                        ->where('mr.model_type', 'UserID')
-                        ->where('rp.permission_id', $permissionId)
-                        ->pluck('u.Id')
-                        ->unique()
-                        ->toArray();
-                    if (!empty($approverIds)) {
-                        $approvedBy = \Illuminate\Support\Facades\DB::table('t_Approvals as a')
-                            ->join('t_Users as u', 'a.UserId', '=', 'u.Id')
-                            ->where('a.DocType', 'purchase_order')
-                            ->where('a.DocumentId', (int) $id)
-                            ->whereIn('a.UserId', $approverIds)
-                            ->where('a.Status', 'approved')
-                            ->pluck('u.Name')
-                            ->unique()
-                            ->values()
-                            ->toArray();
-                    }
-                }
-            }
+            return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
 
-            return view('procurement.orders.approval', compact('orderInfo', 'lineInfo', 'isFullyApproved', 'approvedBy'));
-
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            \Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . (auth()->user()->Id ?? 'guest'));
+            return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             \Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
             return redirect()->back()->with('error', 'Order not found.');
@@ -552,60 +555,6 @@ class PurchaseOrderController extends Controller
     public function approve(ApproveOrderRequest $orderRequest, $id)
     {
         return $this->documentApprovalService->approve($orderRequest, $id);
-    }
-
-    public function getAwardedRFQs(): JsonResponse
-    {
-        try {
-            $fromRfqAward = collect();
-            try {
-                $fromRfqAward = DB::table('t_RFQAward as a')
-                    ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
-                    ->select('r.Id', 'r.RFQNumber', 'a.SupplierId')
-                    ->get();
-            } catch (\Throwable $e) {
-                \Log::warning('getAwardedRFQs: RFQAward join failed', ['error' => $e->getMessage()]);
-            }
-
-            $fromTender = collect();
-            try {
-                $fromTender = DB::table('t_TenderAwards as ta')
-                    ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
-                    ->join('t_RFQ as r', 'r.RFQNumber', '=', 't.TenderNo')
-                    ->where('ta.AwardStatus', '=', 'Approved')
-                    ->select('r.Id', 'r.RFQNumber', DB::raw('ta.WinningSupplierID as SupplierId'))
-                    ->get();
-            } catch (\Throwable $e) {
-                \Log::warning('getAwardedRFQs: TenderAwards join failed', ['error' => $e->getMessage()]);
-            }
-
-            $awarded = $fromRfqAward->concat($fromTender)->unique('Id')->values();
-
-            // Fallback by RFQId lookup if needed
-            if ($awarded->isEmpty()) {
-                try {
-                    $rfqIds = DB::table('t_RFQAward')->pluck('RFQId')->toArray();
-                    if (!empty($rfqIds)) {
-                        $rfqsBasic = DB::table('t_RFQ')->whereIn('Id', $rfqIds)->select('Id', 'RFQNumber')->get();
-                        $supplierByRfq = DB::table('t_RFQAward')->pluck('SupplierId', 'RFQId');
-                        $awarded = $rfqsBasic->map(function ($r) use ($supplierByRfq) {
-                            $r->SupplierId = (int) ($supplierByRfq[$r->Id] ?? 0);
-                            return $r;
-                        })->values();
-                    }
-                } catch (\Throwable $e) {
-                    \Log::warning('getAwardedRFQs: fallback failed', ['error' => $e->getMessage()]);
-                }
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $awarded,
-            ]);
-        } catch (\Throwable $e) {
-            \Log::error('getAwardedRFQs failed', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'data' => []], 200);
-        }
     }
 
     public function fetchRFQDetails($id): JsonResponse
@@ -643,157 +592,25 @@ class PurchaseOrderController extends Controller
             ], 500);
         }
     }
-public function getRFQItems($rfqId): JsonResponse
+public function getRFQItems($rfqId)
 {
-    try {
-        $supplierId = (int) request()->query('supplierId');
+    $rfqResponse = RFQResponse::with(['items.item'])->where('RFQID', $rfqId)->first();
 
-        // Pull response items for this RFQ (optionally filtered by supplier), and map to catalog items by name
-        $items = DB::table('t_ResponseItems as ri')
-            ->join('t_RFQResponse as rr', 'ri.RfqResponseId', '=', 'rr.Id')
-            ->where('rr.RFQId', (int) $rfqId)
-            ->when($supplierId > 0, function ($q) use ($supplierId) {
-                $q->where('rr.SupplierId', $supplierId);
-            })
-            ->leftJoin('t_Items as it', 'it.ItemName', '=', 'ri.ItemName')
-            ->selectRaw('COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ri.ItemName) as itemName, COALESCE(it.ItemType, \'\') as itemType, ri.Quantity as quantity, ri.QuotedPrice as unitPrice')
-            ->get()
-            ->map(function ($row) {
-                return [
-                    'itemCode' => (int) $row->itemCode,
-                    'itemName' => $row->itemName,
-                    'itemType' => $row->itemType,
-                    'quantity' => (float) $row->quantity,
-                    'unitPrice' => (float) $row->unitPrice,
-                ];
-            });
-
-        return response()->json(['items' => $items]);
-    } catch (\Throwable $e) {
-        \Log::error('Failed to fetch RFQ items', ['rfqId' => $rfqId, 'error' => $e->getMessage()]);
-        return response()->json(['items' => []], 200);
-    }
-}
-
-    public function getAwardedTenders(): JsonResponse
-    {
-        try {
-            $rows = DB::table('t_TenderAwards as ta')
-                ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
-                ->select('t.Id', 't.TenderNo', DB::raw('ta.WinningSupplierID as SupplierId'))
-                ->get();
-            return response()->json(['success' => true, 'data' => $rows]);
-        } catch (\Throwable $e) {
-            \Log::error('getAwardedTenders failed', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'data' => []], 200);
-        }
+    if (!$rfqResponse) {
+        return response()->json(['items' => []]);
     }
 
-    public function getTenderItems($tenderId): JsonResponse
-    {
-        try {
-            $supplierId = (int) request()->query('supplierId');
-            // Use tender items definition
-            $items = DB::table('t_TenderItems as ti')
-                ->leftJoin('t_Items as it', 'it.Id', '=', 'ti.ItemID')
-                ->where('ti.TenderID', (int) $tenderId)
-                ->selectRaw('COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ti.ManualItemDescription) as itemName, COALESCE(it.ItemType, \'\') as itemType, COALESCE(ti.QtyToTender, ti.PlannedQty) as quantity, COALESCE(it.ItemPrice, 0) as unitPrice')
-                ->get()
-                ->map(function ($row) {
-                    return [
-                        'itemCode' => (int) $row->itemCode,
-                        'itemName' => $row->itemName,
-                        'itemType' => $row->itemType,
-                        'quantity' => (float) $row->quantity,
-                        'unitPrice' => (float) $row->unitPrice,
-                    ];
-                });
+    $items = $rfqResponse->items->map(function ($item) {
+        return [
+            'itemCode' => $item->ItemCode,
+            'itemName' => $item->item->ItemName ?? '',
+            'itemType' => $item->item->ItemType ?? '',
+            'quantity' => $item->Quantity,
+            'unitPrice' => $item->UnitPrice,
+        ];
+    });
 
-            return response()->json(['items' => $items]);
-        } catch (\Throwable $e) {
-            \Log::error('Failed to fetch Tender items', ['tenderId' => $tenderId, 'error' => $e->getMessage()]);
-            return response()->json(['items' => []], 200);
-        }
-    }
-
-    public function getPaymentTerms(): JsonResponse
-    {
-        try {
-            $terms = DB::table('t_CodeDetails')
-                ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
-                ->orderBy('DisplayOrder')
-                ->select('ID', 'Description')
-                ->get();
-            return response()->json(['success' => true, 'data' => $terms]);
-        } catch (\Throwable $e) {
-            \Log::error('getPaymentTerms failed', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'data' => []], 200);
-        }
-    }
-
-public function prequalifiedSuppliersByCategory($categoryId): JsonResponse
-{
-    try {
-        $categoryId = (int) $categoryId;
-
-        // Build list: selected category + its immediate children
-        $categoryIds = collect([$categoryId]);
-        try {
-            $children = DB::table('t_ItemCategories')->where('ParentId', $categoryId)->pluck('Id');
-            $categoryIds = $categoryIds->concat($children)->unique()->values();
-        } catch (\Throwable $e) {}
-
-        // Map ItemCategoryIDs to SupplierCategoryIDs via pivot
-        $supplierCategoryIds = collect();
-        try {
-            $supplierCategoryIds = DB::table('t_SupplierCategory_ItemCategory')
-                ->whereIn('ItemCategoryID', $categoryIds)
-                ->whereNull('DeletedOn')
-                ->pluck('SupplierCategoryID');
-        } catch (\Throwable $e) {}
-
-        // Third-party ids from t_ThirdParty_SupplierCategory for those SupplierCategoryIDs
-        $thirdPartyIds = collect();
-        try {
-            $thirdPartyIds = DB::table('t_ThirdParty_SupplierCategory')
-                ->whereIn('SupplierCategoryID', $supplierCategoryIds)
-                ->pluck('ThirdPartyID');
-        } catch (\Throwable $e) {}
-
-        // Candidates from pivot mapping
-        $fromPivot = collect();
-        if ($thirdPartyIds->isNotEmpty()) {
-            $fromPivot = DB::table('t_ThirdParties as tp')
-                ->leftJoin('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
-                ->whereIn('tp.Id', $thirdPartyIds)
-                ->selectRaw("COALESCE(s.Id, 0) as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName) as SupplierName, COALESCE(tp.Address, '') as Address")
-                ->orderBy('SupplierName')
-                ->get();
-        }
-
-        // Also include suppliers directly mapped by CategoryId in t_Suppliers
-        $fromDirect = collect();
-        try {
-            $fromDirect = DB::table('t_Suppliers as s')
-                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                ->whereIn('s.CategoryId', $categoryIds)
-                ->selectRaw("s.Id as SupplierId, COALESCE(tp.ThirdPartyName, tp.TradingName, s.SupplierName) as SupplierName, COALESCE(tp.Address, '') as Address")
-                ->orderBy('SupplierName')
-                ->get();
-        } catch (\Throwable $e) {}
-
-        $data = $fromPivot->concat($fromDirect)
-            ->unique(function ($row) { return ($row->SupplierId ?: 0) . '|' . ($row->SupplierName ?? ''); })
-            ->values();
-
-        return response()->json(['success' => true, 'data' => $data]);
-    } catch (\Throwable $e) {
-        \Log::error('Failed to fetch prequalified suppliers by category', ['categoryId' => $categoryId, 'error' => $e->getMessage()]);
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch prequalified suppliers.',
-        ], 200);
-    }
+    return response()->json(['items' => $items]);
 }
 
 

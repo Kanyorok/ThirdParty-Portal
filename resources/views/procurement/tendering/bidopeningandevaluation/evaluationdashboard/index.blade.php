@@ -234,7 +234,7 @@
                                                         </ul>
                                                     </div>
                                                 </div>
-                                            </td>
+                    </td>
                 </tr>
                                     @endforeach
                                     
