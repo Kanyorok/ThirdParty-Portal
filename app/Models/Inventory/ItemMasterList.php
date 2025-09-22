@@ -83,7 +83,7 @@ public function inUse(): bool
 
     public function category()
     {
-        return $this->belongsTo(ItemCategories::class, 'Category');
+        return $this->belongsTo(ItemCategories::class, 'Category', 'Id');
     }
 
     public function parentCategory()
