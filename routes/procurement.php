@@ -41,6 +41,8 @@ use App\Http\Controllers\Procurement\ProcurementPlanController;
 use App\Http\Controllers\Procurement\ProcurementPlanMaintainController;
 use App\Http\Controllers\Procurement\ProcurementReportsController;
 use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
+use App\Http\Controllers\Procurement\ProcurementSetMethodController;
+use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Http\Controllers\Procurement\LPOOriginationController;
 use App\Http\Controllers\Procurement\ReportsController;
