@@ -1,521 +1,379 @@
-CREATE PROCEDURE [dbo].[p_ProcessWorkflowStages] @SystemUserId NVARCHAR(100),
-                                                 @WorkflowStagePermission BIGINT
+CREATE OR ALTER PROCEDURE [dbo].[p_ProcessWorkflowStages]
 AS
 BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRY
-        DECLARE
-            @CurrentOrder INT,
-            @PermissionId BIGINT,
-            @StageId BIGINT,
-            @Count INT,
-            @WorkflowType NVARCHAR(100),
-            @Source NVARCHAR(100),
-            @SourceId NVARCHAR(100),
-            @Now DATETIME = GETDATE(),
-            @ApprovedStatusId BIGINT,
-            @ActualApprovals INT,
-            @RequiredApprovals INT,
-            @NextStageId BIGINT,
-            @Amount DECIMAL(20, 4);
 
-        -- Lookup 'Approved' status ID
+    SET NOCOUNT ON;
+
+    DECLARE
+        @SystemUserId BIGINT,
+
+        @Now DATETIME = GETDATE(),
+
+        @CurrentOrder INT,
+
+        @PermissionId BIGINT,
+
+        @StageId BIGINT,
+
+        @Count INT,
+
+        @WorkflowType NVARCHAR(100),
+
+        @Source NVARCHAR(100),
+
+        @SourceId NVARCHAR(100),
+
+        @ApprovedStatusId BIGINT,
+
+        @ActualApprovals INT,
+
+        @RequiredApprovals INT,
+
+        @NextStageId BIGINT,
+
+        @Amount DECIMAL(20, 4),
+
+        @WorkflowStagePermission BIGINT,
+
+        @WorkflowLimit DECIMAL(18, 2);
+
+    -- Resolve SystemUserId dynamically (e.g., user with username = 'system')
+    SELECT TOP 1 @SystemUserId = Id FROM t_Users WHERE UserID = 'ERPSYS' AND DeletedOn IS NULL;
+
+    BEGIN TRY
+
+        -- Get the Approved status
 
         SELECT @ApprovedStatusId = ID
+
         FROM t_CodeDetails
+
         WHERE Description IN ('Approved', 'Approval');
+
         IF @ApprovedStatusId IS NULL
             BEGIN
+
                 RAISERROR ('Approved status not found in t_CodeDetails.', 16, 1);
+
                 RETURN;
+
             END
-            -- Get only the latest approved stage per Source + SourceID where pending is soft deleted
-            --CREATE table #ApprovalItems(
-            --          PermissionId BIGINT,
-            --          StageId BIGINT,
-            --          Source NVARCHAR(100),
-            --          SourceId NVARCHAR(100)
-            --);
+
+            -- Build list of latest approved stages per Source + SourceID
+
             ;
         WITH LatestApproved AS
                  (SELECT p.Source,
+
                          p.SourceID,
+
                          CAST(p.Stage AS BIGINT)                                                                     AS StageId,
-                         s.permissionid,
+
+                         s.PermissionId,
+
                          ROW_NUMBER() OVER (PARTITION BY p.Source, p.SourceID ORDER BY CAST(p.Stage AS BIGINT) DESC) AS rn
+
                   FROM t_WorkFlowPending p
+
                            INNER JOIN t_WorkFlowHistory h
                                       ON p.Source = h.Source
                                           AND p.SourceID = h.SourceID
                                           AND p.Stage = h.Stage
-                           INNER JOIN t_WorkFlowStages s ON p.Stage = s.Id
+
+                           INNER JOIN t_WorkFlowStages s
+                                      ON s.Id = p.Stage
+
                   WHERE h.StatusId = @ApprovedStatusId
+
                     AND p.DeletedOn IS NOT NULL)
 
-
         SELECT Source, SourceID, StageId, PermissionId
+
         INTO #ApprovalItems
+
         FROM LatestApproved
+
         WHERE rn = 1;
+
         DECLARE approval_cursor CURSOR FOR
             SELECT Source, SourceID, StageId, PermissionId FROM #ApprovalItems;
+
         OPEN approval_cursor;
+
         FETCH NEXT FROM approval_cursor INTO @Source, @SourceId, @StageId, @PermissionId;
 
-        --select @PermissionId,@StageId,'here',@WorkflowStagePermission,@SystemUserId
 
         if @PermissionId <> @WorkflowStagePermission
             BEGIN
                 RAISERROR ('Workflow stage permission doesnt match provided permission id.', 16, 1);
                 RETURN;
 
-
             END
 
         if @PermissionId is null
             BEGIN
-                RAISERROR ('Already added to pending.', 16, 1);
+                RAISERROR ('PermissionId is NULL', 16, 1);
                 RETURN;
             END
 
+
         WHILE @@FETCH_STATUS = 0
             BEGIN
-                -- Current stage metadata
 
-                SELECT @CurrentOrder = s.[Order], @PermissionId = s.PermissionId
+                -- Fetch metadata for current stage
+
+                SELECT @CurrentOrder = s.[Order],
+
+                       @PermissionId = s.PermissionId
+
                 FROM t_WorkFlowStages s
+
                 WHERE s.Id = @StageId
                   AND s.DeletedOn IS NULL;
 
-                SELECT @WorkflowType = wt.TypeID, @Count = ISNULL(s.[Count], 0)
+                SELECT @WorkflowType = wt.TypeID,
+
+                       @Count = ISNULL(s.[Count], 0)
+
                 FROM t_WorkFlowStages s
+
                          JOIN t_WorkFlowTypes wt ON s.WorkFlowTypeId = wt.Id
+
                 WHERE s.Id = @StageId;
 
-                -- Count approvals by distinct users in history (excluding soft deleted history)
+                -- Count actual approvals
+
                 SELECT @ActualApprovals = COUNT(DISTINCT h.CreatedBy)
+
                 FROM t_WorkFlowHistory h
+
                 WHERE h.Source = @Source
+
                   AND h.SourceID = @SourceId
+
                   AND h.Stage = CAST(@StageId AS NVARCHAR(50))
+
                   AND h.StatusId = @ApprovedStatusId
+
                   AND h.DeletedOn IS NULL;
 
-                -- Determine how many approvals are required
+                -- Determine required approvals based on WorkflowType
 
                 IF @WorkflowType = 'ALL'
                     BEGIN
+
                         SELECT @RequiredApprovals = COUNT(*)
+
                         FROM t_Users u
+
                         WHERE u.DeletedOn IS NULL
-                          AND u.Id in (SELECT Id FROM f_getUserWithPermission(@PermissionId))
 
-                        --             AND (
-                        --               EXISTS (SELECT 1 FROM t_ModelPermissions mp
-                        --                       WHERE mp.permission_id = @PermissionId
-                        --                         AND mp.model_type = 'UserID'
-                        --                         AND mp.model_id = u.Id)
-                        --               OR EXISTS (
-
-                        --SELECT 1 FROM t_Roles r
-                        --                          JOIN t_ModelRoles mr ON r.id = mr.role_id
-                        --                          JOIN t_RolePermissions rp ON r.id = rp.role_id
-                        --                         WHERE mr.model_id = u.Id
-                        --                            AND mr.model_type = 'UserID'
-                        --                           AND rp.permission_id = @PermissionId)
-                        --             );
-
+                          AND u.Id IN (SELECT Id FROM f_getUserWithPermission(@PermissionId));
 
                     END
+
                 ELSE
                     IF @WorkflowType = 'CNT'
-                        SET @RequiredApprovals = @Count;
+                        BEGIN
+
+                            SET @RequiredApprovals = @Count;
+
+                        END
 
                     ELSE
                         IF @WorkflowType = 'MAJ'
                             BEGIN
+
                                 SELECT @RequiredApprovals = CEILING(COUNT(*) * 1.0 / 2)
+
                                 FROM t_Users u
+
                                 WHERE u.DeletedOn IS NULL
-                                  AND u.Id in (SELECT Id FROM f_getUserWithPermission(@PermissionId))
 
-                                --AND (
-                                --  EXISTS (SELECT 1 FROM t_ModelPermissions mp
-                                --         WHERE mp.permission_id = @PermissionId
-                                --            AND mp.model_type = 'UserID'
-                                --            AND mp.model_id = u.Id)
-
-                                --  OR EXISTS (SELECT 1 FROM t_Roles r
-                                --             JOIN t_ModelRoles mr ON r.id = mr.role_id
-                                --             JOIN t_RolePermissions rp ON r.id = rp.role_id
-                                --           WHERE mr.model_id = u.Id
-                                --               AND mr.model_type = 'UserID'
-                                --               AND rp.permission_id = @PermissionId)
-
-                                --);
+                                  AND u.Id IN (SELECT Id FROM f_getUserWithPermission(@PermissionId));
 
                             END
 
                         ELSE
                             IF @WorkflowType = 'AMT'
-                                SET @RequiredApprovals = @Count;
+                                BEGIN
+
+                                    SET @RequiredApprovals = @Count;
+
+                                END
 
                             ELSE
-                                SET @RequiredApprovals = 0;
 
-                -- Only proceed if required approvals reached
+                                BEGIN
 
+                                    SET @RequiredApprovals = 0;
 
-                IF @ActualApprovals >= @RequiredApprovals AND @RequiredApprovals > 0
+                                END
+
+                -- If enough approvals, move to next stage
+
+                IF @RequiredApprovals > 0 AND @ActualApprovals >= @RequiredApprovals
                     BEGIN
-                        -- Identify next stage
 
-                        SELECT TOP 1 @NextStageId = s.Id
-                        FROM t_WorkFlowStages s
-                        WHERE s.[Order] = @CurrentOrder + 1
-                          AND s.DeletedOn IS NULL;
-                        IF @NextStageId IS NOT NULL
+                        -- Find next stage
+
+                        SELECT TOP 1 @NextStageId = s2.Id
+
+                        FROM t_WorkFlowStages s2
+
+                        WHERE s2.[Order] = @CurrentOrder + 1
+
+                          AND s2.DeletedOn IS NULL;
+
+                        --IF @NextStageId IS NOT NULL
+
+                        --if next stage doesnot exists, end here
+                        IF @NextStageId IS NULL OR @NextStageId = ''
                             BEGIN
+                                RETURN
+                                --	RAISERROR ('No Next Stage To Approve',16,1 )
+                                --	FETCH NEXT FROM approval_cursor INTO @Source, @SourceId, @StageId, @PermissionId;
+                                --CONTINUE;
+                            END
+                        BEGIN
+                            -- Get next stage metadata
 
-                                -- Get next stage metadata
+                            SELECT TOP 1 @PermissionId = s2.PermissionId,
 
-                                SELECT TOP 1 @PermissionId = s.PermissionId,
-                                             @WorkflowType = wt.TypeID,
-                                             @Count = ISNULL(s.[Count], 0)
-                                FROM t_WorkFlowStages s
-                                         JOIN t_WorkFlowTypes wt ON s.WorkFlowTypeId = wt.Id
-                                WHERE s.Id = @NextStageId;
+                                         @WorkflowType = wt2.TypeID,
 
+                                         @Count = ISNULL(s2.[Count], 0)
 
-                                IF @WorkflowType = 'ALL'
-                                    BEGIN
-                                        INSERT INTO t_WorkFlowPending
+                            FROM t_WorkFlowStages s2
 
-                                        (Source, SourceID, Stage, UserId, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn)
+                                     JOIN t_WorkFlowTypes wt2 ON s2.WorkFlowTypeId = wt2.Id
 
-                                        SELECT @Source,
-                                               @SourceId,
-                                               CAST(@NextStageId AS NVARCHAR(50)),
-                                               u.Id,
-                                               @SystemUserId,
-                                               @Now,
-                                               @SystemUserId,
-                                               @Now
+                            WHERE s2.Id = @NextStageId;
 
-                                        FROM t_Users u
+                            -- If AMT type, check amount vs limit before inserting
 
-                                        WHERE u.DeletedOn IS NULL
-                                          AND u.Id in (SELECT Id FROM f_getUserWithPermission(@PermissionId))
+                            IF @WorkflowType = 'AMT'
+                                BEGIN
 
-                                    END
+                                    -- Get Amount from source table dynamically
 
-                                ELSE
-                                    IF @WorkflowType = 'CNT'
+                                    DECLARE @sql NVARCHAR(MAX) = N'SELECT @AmountOut = ISNULL(Amount, 0)
+
+                            FROM ' + QUOTENAME(@Source) + '
+
+                            WHERE Id = @SourceID';
+
+                                    EXEC sp_executesql @sql,
+                                         N'@SourceID VARCHAR(100), @AmountOut DECIMAL(18,2) OUTPUT',
+                                         @SourceID = @SourceId,
+                                         @AmountOut = @Amount OUTPUT;
+
+                                    SELECT TOP 1 @WorkflowLimit = MaxAmount
+
+                                    FROM t_WorkFlowLimits
+
+                                    WHERE Source = @Source
+
+                                      AND PermissionId = @PermissionId
+
+                                      AND DeletedOn IS NULL;
+
+                                    IF @WorkflowLimit IS NULL
                                         BEGIN
 
-                                            DECLARE @AlreadyAssigned INT, @ToInsert INT;
+                                            PRINT 'Workflow limit is null. Skipping pending insert.';
 
-                                            SELECT @AlreadyAssigned = COUNT(*)
+                                            FETCH NEXT FROM approval_cursor INTO @Source, @SourceId, @StageId, @PermissionId;
 
-                                            FROM t_WorkFlowPending p
-
-                                            WHERE p.Source = @Source
-
-                                              AND p.SourceID = @SourceId
-
-                                              AND p.Stage = CAST(@NextStageId AS NVARCHAR(50))
-
-                                              AND p.DeletedOn IS NULL;
-
-                                            SET @ToInsert = @Count - ISNULL(@AlreadyAssigned, 0);
-
-
-                                            IF @ToInsert > 0
-                                                BEGIN
-
-                                                    INSERT INTO t_WorkFlowPending
-
-                                                    (Source, SourceID, Stage, UserId, CreatedBy, CreatedOn, ModifiedBy,
-                                                     ModifiedOn)
-
-                                                    SELECT TOP (@ToInsert) @Source,
-                                                                           @SourceId,
-                                                                           CAST(@NextStageId AS NVARCHAR(50)),
-                                                                           u.Id,
-                                                                           @SystemUserId,
-                                                                           @Now,
-                                                                           @SystemUserId,
-                                                                           @Now
-
-                                                    FROM t_Users u
-
-                                                    WHERE u.DeletedOn IS NULL
-                                                      AND u.Id in (SELECT Id FROM f_getUserWithPermission(@PermissionId))
-
-
-                                                    --AND (
-
-                                                    --      EXISTS (
-
-                                                    --          SELECT 1 FROM t_ModelPermissions mp
-
-                                                    --          WHERE mp.permission_id = @PermissionId
-
-                                                    --            AND mp.model_type = 'UserID'
-
-                                                    --            AND mp.model_id = u.Id
-
-                                                    --      )
-
-                                                    --      OR
-
-                                                    --      EXISTS (
-
-                                                    --          SELECT 1
-
-                                                    --          FROM t_Roles r
-
-                                                    --          JOIN t_ModelRoles mr ON r.id = mr.role_id
-
-                                                    --          JOIN t_RolePermissions rp ON r.id = rp.role_id
-
-                                                    --          WHERE mr.model_id = u.Id
-
-                                                    --            AND mr.model_type = 'UserID'
-
-                                                    --            AND rp.permission_id = @PermissionId
-
-                                                    --      )
-
-                                                    --  )
-
-                                                    --AND NOT EXISTS (
-
-                                                    --      SELECT 1 FROM t_WorkFlowPending p
-
-                                                    --      WHERE p.Source = @Source
-
-                                                    --        AND p.SourceID = @SourceId
-
-                                                    --        AND p.Stage = CAST(@NextStageId AS NVARCHAR(50))
-
-                                                    --        AND p.UserId = u.Id
-
-                                                    --        AND p.DeletedOn IS NULL
-
-                                                    --  )
-
-                                                    ORDER BY u.Id;
-
-                                                END
+                                            CONTINUE;
 
                                         END
 
-                                    ELSE
-                                        IF @WorkflowType = 'MAJ'
-                                            BEGIN
-                                                SELECT @RequiredApprovals = CEILING(COUNT(*) * 1.0 / 2)
+                                    IF @Amount > @WorkflowLimit
+                                        BEGIN
 
-                                                FROM t_Users u
+                                            PRINT 'Amount exceeds workflow limit. Skipping pending insert.';
 
-                                                WHERE u.DeletedOn IS NULL
-                                                  AND u.Id in (SELECT Id FROM f_getUserWithPermission(@PermissionId))
+                                            FETCH NEXT FROM approval_cursor INTO @Source, @SourceId, @StageId, @PermissionId;
 
-                                                --AND (
+                                            CONTINUE;
 
-                                                --      EXISTS (
-
-                                                --          SELECT 1 FROM t_ModelPermissions mp
-
-                                                --          WHERE mp.permission_id = @PermissionId
-
-                                                --            AND mp.model_type = 'UserID'
-
-                                                --            AND mp.model_id = u.Id
-
-                                                --      )
-
-                                                --      OR
-
-                                                --      EXISTS (
-
-                                                --          SELECT 1
-
-                                                --          FROM t_Roles r
-
-                                                --          JOIN t_ModelRoles mr ON r.id = mr.role_id
-
-                                                --          JOIN t_RolePermissions rp ON r.id = rp.role_id
-
-                                                --          WHERE mr.model_id = u.Id
-
-                                                --            AND mr.model_type = 'UserID'
-
-                                                --            AND rp.permission_id = @PermissionId
-
-                                                --      )
-
-                                                --  );
-
-                                                INSERT INTO t_WorkFlowPending
-
-                                                (Source, SourceID, Stage, UserId, CreatedBy, CreatedOn, ModifiedBy,
-                                                 ModifiedOn)
-
-                                                SELECT TOP (@RequiredApprovals) @Source,
-                                                                                @SourceId,
-                                                                                CAST(@NextStageId AS NVARCHAR(50)),
-                                                                                u.Id,
-                                                                                @SystemUserId,
-                                                                                @Now,
-                                                                                @SystemUserId,
-                                                                                @Now
-
-                                                FROM t_Users u
-
-                                                WHERE u.DeletedOn IS NULL
-                                                  AND u.Id in (SELECT Id FROM f_getUserWithPermission(@PermissionId))
-                                                  --AND (
-
-                                                  --      EXISTS (
-
-                                                  --          SELECT 1 FROM t_ModelPermissions mp
-
-                                                  --          WHERE mp.permission_id = @PermissionId
-
-                                                  --            AND mp.model_type = 'UserID'
-
-                                                  --            AND mp.model_id = u.Id
-
-                                                  --      )
-
-                                                  --      OR
-
-                                                  --      EXISTS (
-
-                                                  --          SELECT 1
-
-                                                  --          FROM t_Roles r
-
-                                                  --          JOIN t_ModelRoles mr ON r.id = mr.role_id
-
-                                                  --          JOIN t_RolePermissions rp ON r.id = rp.role_id
-
-                                                  --          WHERE mr.model_id = u.Id
-
-                                                  --            AND mr.model_type = 'UserID'
-
-                                                  --            AND rp.permission_id = @PermissionId
-
-                                                  --      )
-
-                                                  --  )
-
-                                                  AND NOT EXISTS (SELECT 1
-                                                                  FROM t_WorkFlowPending p
-
-                                                                  WHERE p.Source = @Source
-
-                                                                    AND p.SourceID = @SourceId
-
-                                                                    AND p.Stage = CAST(@NextStageId AS NVARCHAR(50))
-
-                                                                    AND p.UserId = u.Id
-
-                                                                    AND p.DeletedOn IS NULL);
-
-                                                -- AMT logic
-                                            END
-
-                                IF @WorkflowType = 'AMT'
-                                    BEGIN
-                                        DECLARE @WorkflowLimit DECIMAL(18, 2) = NULL;
-                                        -- Dynamic SQL to fetch Amount from source table (e.g., t_Tickets)
-                                        DECLARE @sql NVARCHAR(MAX);
-                                        SET @sql = N'SELECT @AmountOut = ISNULL(Amount, 0)
-											FROM ' + QUOTENAME(@Source) + '
-											WHERE Id = @SourceID';
-
-                                        EXEC sp_executesql @sql,
-                                             N'@SourceID VARCHAR(100), @AmountOut DECIMAL(18,2) OUTPUT',
-                                             @SourceID = @SourceID,
-                                             @AmountOut = @Amount OUTPUT;
-
-                                        -- Check against workflow limit
-                                        SELECT TOP 1 @WorkflowLimit = MaxAmount
-                                        FROM t_WorkFlowLimits
-                                        WHERE Source = @Source
-                                          AND PermissionId = @PermissionId
-                                          AND DeletedOn IS NULL;
-                                        -- If limit is set, and amount exceeds it — skip insert
-
-
-                                        IF @WorkflowLimit IS NULL
-                                            BEGIN
-                                                PRINT 'Workflow limit is null.';
-                                                FETCH NEXT FROM approval_cursor INTO @Source, @SourceID, @StageId,@PermissionId;
-                                                CONTINUE;
-                                            END
-                                        IF @Amount > @WorkflowLimit
-                                            BEGIN
-                                                PRINT 'Amount exceeds workflow limit. Skipping workflow pending insert.';
-                                                FETCH NEXT FROM approval_cursor INTO @Source, @SourceID, @StageId,@PermissionId;
-                                                CONTINUE;
-                                            END
-
-                                    END;
-
-                                BEGIN
-                                    INSERT INTO t_WorkFlowPending (Source, SourceID, Stage, UserId, CreatedBy,
-                                                                   CreatedOn, ModifiedBy, ModifiedOn)
-                                    SELECT @Source,
-                                           @SourceId,
-                                           CAST(@NextStageId AS NVARCHAR(50)),
-                                           u.Id,
-                                           @SystemUserId,
-                                           @Now,
-                                           @SystemUserId,
-                                           @Now
-
-                                    FROM t_Users u
-                                    WHERE u.DeletedOn IS NULL
-                                      --AND u.Id in (
-                                      --	select w.userId from t_WorkFlowStages s
-                                      --	left join t_WorkFlowLimits w on w.MaxAmount>= s.Amount
-                                      --	Where s.[Order] = @NextStageId)
-
-                                      AND u.Id in (SELECT Id FROM f_getUserWithPermission(@PermissionId))
-
-
-                                      AND NOT EXISTS (SELECT 1
-                                                      FROM t_WorkFlowPending p
-
-                                                      WHERE p.Source = @Source
-
-                                                        AND p.SourceID = @SourceId
-
-                                                        AND p.Stage = CAST(@NextStageId AS NVARCHAR(50))
-
-                                                        --AND p.UserId = u.Id
-
-                                                        AND p.DeletedOn IS NULL);
+                                        END
 
                                 END
-                            END
+
+                            -- Insert pending approvals for the next stage
+
+                            INSERT INTO t_WorkFlowPending (Source, SourceID, Stage, UserId, CreatedBy, CreatedOn,
+                                                           ModifiedBy, ModifiedOn)
+
+                            SELECT @Source,
+
+                                   @SourceId,
+
+                                   CAST(@NextStageId AS NVARCHAR(50)),
+
+                                   u.Id,
+
+                                   @SystemUserId,
+
+                                   @Now,
+
+                                   @SystemUserId,
+
+                                   @Now
+
+                            FROM t_Users u
+
+                            WHERE u.DeletedOn IS NULL
+
+                              AND u.Id IN (SELECT Id FROM f_getUserWithPermission(@PermissionId))
+
+                              AND NOT EXISTS (SELECT 1
+                                              FROM t_WorkFlowPending p
+
+                                              WHERE p.Source = @Source
+
+                                                AND p.SourceID = @SourceId
+
+                                                AND p.Stage = CAST(@NextStageId AS NVARCHAR(50))
+
+                                                AND p.UserId = u.Id
+
+                                                AND p.DeletedOn IS NULL);
+
+                        END
+
                     END
+
                 FETCH NEXT FROM approval_cursor INTO @Source, @SourceId, @StageId, @PermissionId;
+
             END
+
         CLOSE approval_cursor;
+
         DEALLOCATE approval_cursor;
+
         DROP TABLE #ApprovalItems;
+
     END TRY
     BEGIN CATCH
-        DECLARE @ErrMsg NVARCHAR(4000), @ErrSev INT, @ErrState INT;
-        SELECT @ErrMsg = ERROR_MESSAGE(), @ErrSev = ERROR_SEVERITY(), @ErrState = ERROR_STATE();
+
+        DECLARE
+            @ErrMsg NVARCHAR(4000),
+
+            @ErrSev INT,
+
+            @ErrState INT;
+
+        SELECT @ErrMsg = ERROR_MESSAGE(),
+
+               @ErrSev = ERROR_SEVERITY(),
+
+               @ErrState = ERROR_STATE();
+
         RAISERROR (@ErrMsg, @ErrSev, @ErrState);
+
     END CATCH
-END
 
---GO
---exec  p_ProcessWorkflowStages_redo @SystemUserId = 1, @WorkflowStagePermission = 16
-
+END;

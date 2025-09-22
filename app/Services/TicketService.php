@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\Core\RoleEnum;
 use App\Enums\TicketPriorityEnum;
 use App\Enums\TicketStatusEnum;
-use App\Enums\WorkflowStatus;
 use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\Team;
@@ -424,41 +423,23 @@ class TicketService extends ApprovalWorkflowService
      */
     public function reopen(User $actor, string $reason): static
     {
-        //   $status = $this->ticket->Status->name;
-
         $status = self::codeDetail(TicketStatusEnum::Approval, 'TicketStatus');
-        $this->ticket->update([
-            //'Status' => TicketStatusEnum::Approval->value,
-            'StatusId' => $status->ID,
-            'ClosedOn' => null,
-            'ModifiedBy' => $actor->Id,
-        ]);
-
-        $this->submittedAction($actor, $status, Ticket::getPrimaryKey(), $this->ticket->Id, $reason);
-
-        /*
-        //add workflow
-        Workflow::create([
-            'Source' => Ticket::getPrimaryKey(),
-            'SourceID' => $this->ticket->Id,
-            'Stage' => $status,
-            'Status' => WorkflowStatus::Submitted->value,
-            'Notes' => $reason,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);*/
-
-        activity()->causedBy($actor)->performedOn($this->ticket)->event('reopen')->log('Reopen ticket ' . $this->ticket->TicketID . ' submitted for approval.');
-
-        //event(new ReopenTicketEvent($this->ticket, $actor, $reason));
-
-        return $this;
+        if ($this->submittedAction($actor, $status, Ticket::getPrimaryKey(), $this->ticket->Id, $reason)) {
+            $this->ticket->update([
+                //'Status' => TicketStatusEnum::Approval->value,
+                'StatusId' => $status->ID,
+                'ClosedOn' => null,
+                'ModifiedBy' => $actor->Id,
+            ]);
+            activity()->causedBy($actor)->performedOn($this->ticket)->event('reopen')->log('Reopen ticket ' . $this->ticket->TicketID . ' submitted for approval.');
+            return $this;
+        }
+        throw new  ErroredException('unexpected error occurred.');
     }
 
     public function canApprove(User $actor): bool
     {
-        return true;
-        //todo fix new workflow  return in_array($actor->Id, $this->ticket->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true);
+        return in_array($actor->Id, $this->ticket->pendingWorkflows()->get('t_PendingWorkflows.UserId')->pluck('UserId')->toArray(), true);
     }
 
     public function comment(string $description, User $actor): Comment
@@ -472,77 +453,55 @@ class TicketService extends ApprovalWorkflowService
      */
     public function workflowApprove(User $actor): static
     {
-        $this->ticket->forceFill([
-            //'Status' => TicketStatusEnum::Active,
-            'ClosedOn' => null,
-        ])->save(['timestamps' => false]);
+        if ($this->approveAction($actor, TicketStatusEnum::Active->codeDetail(), Ticket::getPrimaryKey(), $this->ticket->Id, 'approved', 'StatusId')) {
+            $this->ticket->forceFill([
+                //'Status' => TicketStatusEnum::Active,
+                'ClosedOn' => null,
+            ])->save(['timestamps' => false]);
+            activity()->causedBy($actor)->performedOn($this->ticket)->event('approve')->log('Approved ticket re-open ' . $this->ticket->TicketID);
 
-        $this->approveAction($actor, TicketStatusEnum::Active->codeDetail(), Ticket::getPrimaryKey(), $this->ticket->Id, '', 'StatusId');
-
-        /* $this->ticket->pendingWorkflows()->where('Stage', TicketStatusEnum::Approval)->update([
-             'DeletedOn' => now(),
-             'DeletedBy' => $actor->Id,
-         ]);
-
-         $this->ticket->workflows()->create([
-             'Stage' => TicketStatusEnum::Approval->name,
-             'Status' => WorkflowStatus::Accepted->value,
-             'Notes' => 'Ticket Re-Open Approved',
-             'CreatedBy' => $actor->Id,
-             'ModifiedBy' => $actor->Id,
-         ]);
-
-         $owner = $this->ticket->modified;
-         if ($owner instanceof User) {
-             (new UserService($owner))->sendEmail(
-                 'Ticket Update - Approval for Reopening',
-                 '<p>Hello</p><p>This to inform you that your request to reopen ticket #<a href="' . route('tickets.show', [$this->ticket->TicketID]) . '">' . $this->ticket->TicketID . '</a> has been <b>approved</b>. Click the link below to review</p>
+            $owner = $this->ticket->modified;
+            if ($owner instanceof User) {
+                (new UserService($owner))->sendEmail(
+                    'Ticket Update - Approval for Reopening',
+                    '<p>Hello</p><p>This to inform you that your request to reopen ticket #<a href="' . route('tickets.show', [$this->ticket->TicketID]) . '">' . $this->ticket->TicketID . '</a> has been <b>approved</b>. Click the link below to review</p>
                  <p><a href="' . route('tickets.show', [$this->ticket->TicketID]) . '"> ticket details</a></p>
                  <p>Thank you for your patience.</p>'
-             );
-         }
-
-         $this->sendMessage('Hello #name, Ticket ID: #' . $this->ticket->TicketID . ' has been reopened.', $actor);*/
-
-        activity()->causedBy($actor)->performedOn($this->ticket)->event('approve')->log('Approved ticket re-open ' . $this->ticket->TicketID);
-
-        return $this;
+                );
+            }
+            return $this;
+        }
+        throw new  ErroredException('unexpected error occured.');
     }
 
+    /**
+     * @throws ErroredException
+     */
     public function workflowReject(User $actor, string $reason): static
     {
-        $this->ticket->forceFill([
-            'Status' => TicketStatusEnum::Cancelled->value,
-        ])->save(['timestamps' => false]);
+        $status = self::codeDetail(TicketStatusEnum::Cancelled, 'TicketStatus');
+        if ($this->rejectAction($actor, $status, Ticket::getPrimaryKey(), $this->ticket->Id, $reason, 'StatusId')) {
+            $this->ticket->forceFill([
+                //'Status' => TicketStatusEnum::Active,
+                'StatusId' => $status->ID,
+                'ClosedOn' => now(),
+            ])->save(['timestamps' => false]);
 
-
-        $this->ticket->pendingWorkflows()->where('Stage', TicketStatusEnum::Approval)->update([
-            'DeletedOn' => now(),
-            'DeletedBy' => $actor->Id,
-        ]);
-
-        $this->ticket->workflows()->create([
-            'Stage' => TicketStatusEnum::Approval->name,
-            'Status' => WorkflowStatus::RejectedCancel->value,
-            'Notes' => $reason,
-            'CreatedBy' => $actor->Id,
-            'ModifiedBy' => $actor->Id,
-        ]);
-
-
-        $owner = $this->ticket->modified;
-        if ($owner instanceof User) {
-            (new UserService($owner))->sendEmail(
-                'Ticket Update - Request for Reopening Denied',
-                '<p>Hello</p><p>This is to inform you that your request to reopen ticket #<a href="' . route('tickets.show', [$this->ticket->TicketID]) . '">' . $this->ticket->TicketID . '</a> has been <b style="color: #fa2f43">denied</b>.</p>
+            $owner = $this->ticket->modified;
+            if ($owner instanceof User) {
+                (new UserService($owner))->sendEmail(
+                    'Ticket Update - Request for Reopening Denied',
+                    '<p>Hello</p><p>This is to inform you that your request to reopen ticket #<a href="' . route('tickets.show', [$this->ticket->TicketID]) . '">' . $this->ticket->TicketID . '</a> has been <b style="color: #fa2f43">denied</b>.</p>
                 <p><a href="' . route('tickets.show', [$this->ticket->TicketID]) . '"> ticket details</a></p>
                 <p><b>Reason Given: </b>&nbsp;' . $reason . '</p>'
-            );
+                );
+            }
+
+            activity()->causedBy($actor)->performedOn($this->ticket)->event('reject')->log('Approved ticket re-open ' . $this->ticket->TicketID);
+            activity()->causedBy($actor)->performedOn($this->ticket)->event('approve')->log('Approved ticket re-open ' . $this->ticket->TicketID);
+            return $this;
         }
-
-        activity()->causedBy($actor)->performedOn($this->ticket)->event('reject')->log('Approved ticket re-open ' . $this->ticket->TicketID);
-
-        return $this;
+        throw new  ErroredException('unexpected error occured.');
     }
 
     public function checkOwnership(User $user): bool

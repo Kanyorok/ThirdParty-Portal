@@ -8,8 +8,11 @@ use App\Models\Core\Approval\WorkflowHistory;
 use App\Models\Core\CodeDetail;
 use BackedEnum;
 use DB;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 
 abstract class ApprovalWorkflowService
 {
@@ -61,6 +64,7 @@ abstract class ApprovalWorkflowService
          * @StatusColumn NVARCHAR(100) = 'Status',
          * @StatusID BIGINT => //
          */
+        try {
         return DB::statement("EXEC p_ProcessWorkflowAction ?, ?, ?, ?, ?, ?, ?", [
             $table,
             (string)$sourceId,
@@ -70,7 +74,33 @@ abstract class ApprovalWorkflowService
             $statusColumn,
             $status->ID
         ]);
+        } catch (QueryException $e) {
+            throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
+        } catch (Exception $e) {
+            throw new ErroredException("Unexpected Error occurred ");
+        }
+
     }
+
+    /**
+     * Extract the clean error message from SQL Server RAISERROR
+     */
+    private function _extractSqlServerError(string $errorMessage): string
+    {
+        // Pattern 1: Extract message between [SQL Server] and next bracket or end
+        if (preg_match('/\[SQL Server\]\s*(.+?)(?:\s*\[|$)/s', $errorMessage, $matches)) {
+            $errorMessage = trim($matches[1]);
+        } else if (preg_match('/SQLSTATE\[.*?\]:\s*(.+?)(?:\s*\(|$)/s', $errorMessage, $matches)) {
+            $errorMessage = trim($matches[1]);
+        }
+
+
+        $cleanMessage = preg_replace('/\(Connection:.*?\)/', '', $errorMessage);
+        $cleanMessage = preg_replace('/SQLSTATE\[.*?\]:\s*/', '', $cleanMessage);
+
+        return trim($cleanMessage) ?: 'Database operation failed';
+    }
+
 
     /**
      * @param User $actor
@@ -78,7 +108,6 @@ abstract class ApprovalWorkflowService
      * @param string $source Class::getPrimaryKey
      * @param string|int $sourceId Class primary id
      * @param string $remarks
-     * @param string $statusColumn
      * @return bool
      * @throws ErroredException
      */
@@ -91,33 +120,32 @@ abstract class ApprovalWorkflowService
             throw new ErroredException('Invalid Related Entity');
         }
 
-        WorkflowHistory::create([
-            "Source" => $table,
-            "SourceID" => (string)$sourceId,
-            "StatusId" => $status->ID,
-            "Stage" => $status->Description,
-            //"Amount",
-            "Notes" => $remarks,
-            "CreatedBy" => $actor->Id,
-            "ModifiedBy" => $actor->Id,
-        ]);
+        try {
+            WorkflowHistory::create([
+                "Source" => $table,
+                "SourceID" => (string)$sourceId,
+                "StatusId" => $status->ID,
+                "Stage" => $status->Description,
+                //"Amount",
+                "Notes" => $remarks,
+                "CreatedBy" => $actor->Id,
+                "ModifiedBy" => $actor->Id,
+            ]);
 
-        /// execute pending SP
-        DB::statement("EXEC p_ProcessWorkflowPending");
-        //$ExecPendingWorkFlow = '';
-        /// //Execeute stages SP
-        // $ExecSatgesWorkFlow = '';
-        DB::statement("EXEC p_ProcessWorkflowStages");
+            /// execute pending SP
+            DB::statement("EXEC p_ProcessWorkflowPending");
+            //$ExecPendingWorkFlow = '';
+            /// //Execeute stages SP
+            // $ExecSatgesWorkFlow = '';
+            DB::statement("EXEC p_ProcessWorkflowStages");
 
-        /*return DB::statement("EXEC p_ProcessWorkflowAction ?, ?, ?, ?, ?, ?, ?", [
-            $table,
-            (string)$sourceId,
-            $actor->Id,
-            $actor->UserID,
-            $remarks,
-            $statusColumn,
-            $status->ID
-        ]);*/
+        } catch (QueryException $e) {
+            dd($e);
+            throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
+        } catch (Exception $e) {
+            Log::error($e);
+            throw new ErroredException("Unexpected Error Occurred.");
+        }
 
 
         return true;

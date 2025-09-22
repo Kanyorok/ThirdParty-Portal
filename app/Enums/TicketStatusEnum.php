@@ -18,6 +18,9 @@ enum TicketStatusEnum: string
 
     case Approval = 'P';
 
+    /**
+     * @throws ErroredException
+     */
     public function codeDetail(): CodeDetail
     {
         $code = CodeDetail::query()->where('CodeID', 'TicketStatus')->where('Value', $this->value)->first();

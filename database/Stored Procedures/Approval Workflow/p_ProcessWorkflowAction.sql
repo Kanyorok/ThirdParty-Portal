@@ -1,5 +1,4 @@
-CREATE or ALTER PROCEDURE [dbo].[p_ProcessWorkflowAction]
-    -- @ActionType NVARCHAR(20), -- 'approve' or 'reject'
+CREATE OR ALTER PROCEDURE [dbo].[p_ProcessWorkflowAction]
     @Source NVARCHAR(255),
     @SourceID NVARCHAR(100),
     @UserID BIGINT,
@@ -7,8 +6,6 @@ CREATE or ALTER PROCEDURE [dbo].[p_ProcessWorkflowAction]
     @Notes NVARCHAR(MAX) = NULL,
     @StatusColumn NVARCHAR(100) = 'Status',
     @StatusID BIGINT
-    -- @ApprovedStatusID BIGINT = 14,  -- From t_CodeDetails
-    -- @RejectedStatusID BIGINT = 12   -- From t_CodeDetails
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -18,19 +15,17 @@ BEGIN
         @WorkFlowID BIGINT = NULL,
         @CurrentStatus NVARCHAR(50) = NULL,
         @HasPendingApprovals BIT = 0,
-        @WorkflowStagePermission BIGINT=NULL,-- addded to check perm
+        @WorkflowStagePermission BIGINT = NULL,
         @Description NVARCHAR(50),
-        @UserHasPermissions smallint= 0;
+        @UserHasPermissions SMALLINT = 0;
 
     BEGIN TRY
         BEGIN TRANSACTION;
-        -- Get current workflow info and set status ID based on action
+
+        -- Get current workflow info and permission
         SELECT @StageID = p.Stage,
                @WorkFlowID = ws.WorkFlowID,
-               @WorkflowStagePermission = ws.PermissionId-- addded to check perm
-
-        -- @StatusID = CASE @ActionType WHEN 'approve' THEN @ApprovedStatusID ELSE @RejectedStatusID END
-        --@StatusID = @StatusID
+               @WorkflowStagePermission = ws.PermissionId
         FROM dbo.t_WorkFlowPending p
                  JOIN dbo.t_WorkFlowStages ws ON p.Stage = ws.Id
         WHERE p.Source = @Source
@@ -38,48 +33,45 @@ BEGIN
           AND p.UserId = @UserID
           AND p.DeletedOn IS NULL;
 
-        -- check if user has permissions
-        declare @permissionName nvarchar(100)
-        select @permissionName = name from t_Permissions where id = @WorkflowStagePermission
-        select @UserHasPermissions = CASE
-                                         WHEN EXISTS (select 1
-                                                      from [t_Users]
-                                                      where (exists
-                                                                 (select *
-                                                                  from [t_Roles]
-                                                                           inner join [t_ModelRoles] on
-                                                                      [t_Roles].[id] = [t_ModelRoles].[role_id]
-                                                                  where [t_Users].[Id] = [t_ModelRoles].[model_id]
-                                                                    and [t_ModelRoles].[model_type] = 'UserID'
-                                                                    and exists (select *
-                                                                                from [t_Permissions]
-                                                                                         inner join [t_RolePermissions]
-                                                                                                    on [t_Permissions].[id] = [t_RolePermissions].[permission_id]
-                                                                                where [t_Roles].[id] = [t_RolePermissions].[role_id]
-                                                                                  and [name] in (@permissionName)))
-                                                          or
-                                                             exists
-                                                                 (select *
-                                                                  from [t_Permissions]
-                                                                           inner join [t_ModelPermissions] on
-                                                                      [t_Permissions].[id] = [t_ModelPermissions].[permission_id]
-                                                                  where [t_Users].[Id] = [t_ModelPermissions].[model_id]
-                                                                    and [t_ModelPermissions].[model_type] = 'UserID'
-                                                                    and [name] in (@permissionName))
+        -- Check if user has permissions
+        DECLARE @permissionName NVARCHAR(100);
+        SELECT @permissionName = name FROM t_Permissions WHERE id = @WorkflowStagePermission;
+
+        SELECT @UserHasPermissions = CASE
+                                         WHEN EXISTS (SELECT 1
+                                                      FROM [t_Users]
+                                                      WHERE (
+                                                          EXISTS (SELECT *
+                                                                  FROM [t_Roles]
+                                                                           INNER JOIN [t_ModelRoles] ON [t_Roles].[id] = [t_ModelRoles].[role_id]
+                                                                  WHERE [t_Users].[Id] = [t_ModelRoles].[model_id]
+                                                                    AND [t_ModelRoles].[model_type] = 'UserID'
+                                                                    AND EXISTS (SELECT *
+                                                                                FROM [t_Permissions]
+                                                                                         INNER JOIN [t_RolePermissions]
+                                                                                                    ON [t_Permissions].[id] = [t_RolePermissions].[permission_id]
+                                                                                WHERE [t_Roles].[id] = [t_RolePermissions].[role_id]
+                                                                                  AND [name] IN (@permissionName)))
+                                                              OR EXISTS (SELECT *
+                                                                         FROM [t_Permissions]
+                                                                                  INNER JOIN [t_ModelPermissions]
+                                                                                             ON [t_Permissions].[id] = [t_ModelPermissions].[permission_id]
+                                                                         WHERE [t_Users].[Id] = [t_ModelPermissions].[model_id]
+                                                                           AND [t_ModelPermissions].[model_type] = 'UserID'
+                                                                           AND [name] IN (@permissionName))
                                                           )
-                                                        and [t_Users].[DeletedOn] is null
-                                                        and [t_Users].Id = @UserID) THEN 1
+                                                        AND [t_Users].DeletedOn IS NULL
+                                                        AND [t_Users].Id = @UserID) THEN 1
                                          ELSE 0 END;
 
-        -- Get status value from t_CodeDetails
-        DECLARE @StatusValue NVARCHAR(50)
-
+        -- Get status value and description
+        DECLARE @StatusValue NVARCHAR(50);
         SELECT @StatusValue = Value,
                @Description = Description
         FROM t_CodeDetails
         WHERE ID = @StatusID;
 
-        -- Check if there are any pending approvals for this item
+        -- Check for other pending approvals
         SELECT @HasPendingApprovals = CASE
                                           WHEN EXISTS (SELECT 1
                                                        FROM dbo.t_WorkFlowPending
@@ -88,11 +80,9 @@ BEGIN
                                                          AND DeletedOn IS NULL) THEN 1
                                           ELSE 0 END;
 
-        -- Set current status
         SET @CurrentStatus = CASE WHEN @HasPendingApprovals = 1 THEN 'Pending' ELSE 'Completed' END;
 
-        -- Validate action
-
+        -- Validate user and permission
         IF @StageID IS NULL
             BEGIN
                 ROLLBACK TRANSACTION;
@@ -100,23 +90,20 @@ BEGIN
                 RETURN;
             END
 
-        --check if user has perm
-        if @UserHasPermissions = 0
-            begin
+        IF @UserHasPermissions = 0
+            BEGIN
                 ROLLBACK TRANSACTION;
                 SELECT 'ERROR' AS Status, 'User has no permissions' AS Message;
                 RETURN;
-            end
+            END
 
-
-        -- Record action in history
-        INSERT INTO dbo.t_WorkFlowHistory (Source, SourceID, Stage, Notes, StatusId,
-                                           CreatedBy, CreatedOn, ModifiedBy, ModifiedOn)
-        VALUES (@Source, @SourceID, @StageID, @Notes, @StatusID,
-                @UserID, GETDATE(), @UserID, GETDATE());
+        -- Record action
+        INSERT INTO dbo.t_WorkFlowHistory (Source, SourceID, Notes, StatusId,
+                                           CreatedBy, CreatedOn, ModifiedBy, ModifiedOn, Stage)
+        VALUES (@Source, @SourceID, @Notes, @StatusID,
+                @UserID, GETDATE(), @UserID, GETDATE(), @StageID);
 
         -- Mark approval as processed
-        -- chec
         UPDATE dbo.t_WorkFlowPending
         SET DeletedBy = @UserID,
             DeletedOn = GETDATE(),
@@ -126,8 +113,7 @@ BEGIN
           AND SourceID = @SourceID
           AND UserId = @UserID;
 
-        -- Update source table if rejected or final approval
-        --IF @ActionType = 'reject' OR @HasPendingApprovals = 0
+        -- Update source table status
         IF @HasPendingApprovals = 1
             BEGIN
                 DECLARE @LastApproverColumn NVARCHAR(100) = '';
@@ -143,7 +129,7 @@ BEGIN
                         SET @LastApproverColumn = ', LastApprover = @UserName';
                     END
 
-                -- Find key column name (Id or ID)
+                -- Determine key column
                 SELECT TOP 1 @KeyColumn = COLUMN_NAME
                 FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_NAME = PARSENAME(@Source, 1)
@@ -152,43 +138,48 @@ BEGIN
                 IF @KeyColumn IS NULL
                     SET @KeyColumn = 'Id';
 
-                -- Build dynamic update SQL
+                -- Build and run dynamic update SQL
                 SET @UpdateSQL = N'
-                UPDATE ' + QUOTENAME(@Source)
-                    + 'SET '
-                    + QUOTENAME(@StatusColumn) + ' =  @StatusID,
-                   ModifiedBy = @UserID,
-                    ModifiedOn = GETDATE()'
-                    + @LastApproverColumn + '
+                UPDATE ' + QUOTENAME(@Source) + '
+                SET ' + QUOTENAME(@StatusColumn) + ' = @StatusID,
+                    ModifiedBy = @UserID,
+                    ModifiedOn = GETDATE()' + @LastApproverColumn + '
                 WHERE ' + QUOTENAME(@KeyColumn) + ' = @SourceID';
 
-                -- Execute dynamic SQL
                 EXEC sp_executesql @UpdateSQL,
                      N'@StatusID NVARCHAR(50), @UserName NVARCHAR(255), @SourceID NVARCHAR(100), @UserID BIGINT',
                      @StatusID, @UserName, @SourceID, @UserID;
-
-                -- Update FinalStage if fully approved
-                -- IF @ActionType = 'approve' AND @HasPendingApprovals = 0
-                --IF @HasPendingApprovals = 0
-                --BEGIN
-                --    DECLARE @FinalStageID BIGINT;
-                --    SELECT TOP 1 @FinalStageID = ID
-                --    FROM t_CodeDetails
-                --    WHERE Value = 'FINAL' AND DeletedOn IS NULL;
-
-                --    IF @FinalStageID IS NOT NULL
-                --    BEGIN
-                --        UPDATE t_Workflows
-                --        SET FinalStage = @FinalStageID
-                --        WHERE Id = @StageID;
-                --    END
-                --END
             END
+
         COMMIT TRANSACTION;
 
+
+        DECLARE @UserEmail NVARCHAR(255);
+        SELECT @UserEmail = Email FROM t_Users WHERE Id = @UserID;
+
+        IF @UserEmail IS NOT NULL
+            BEGIN
+                DECLARE @EmailMessage NVARCHAR(MAX);
+                SET @EmailMessage =
+                    'Your workflow action for Source: ' + @Source + ', ID: ' + @SourceID + ' has been recorded as: ' +
+                    @Description + '.';
+
+                DECLARE @EmailSubject NVARCHAR(255);
+                SET @EmailSubject = 'Workflow Action Confirmation - ' + @Description;
+
+                EXEC p_sendNotificationEmail
+                     @UserID = @UserID,
+                     @Subject = @EmailSubject,
+                     @Message = @EmailMessage,
+                     @SenderId = @UserID,
+                     @Source = @Source,
+                     @SourceID = @SourceID;
+
+            END
+
+
         SELECT 'SUCCESS'                  AS Status,
-               --CASE WHEN @ActionType = 'approve' THEN 'Approval recorded' ELSE 'Rejection recorded' END AS Message,
-               @Description + ' Recorded' as Message,
+               @Description + ' Recorded' AS Message,
                @Description               AS WorkflowStatus;
     END TRY
     BEGIN CATCH
@@ -197,18 +188,7 @@ BEGIN
 
         SELECT 'ERROR' AS Status,
                ERROR_MESSAGE() AS Message,
-               NULL    AS WorkflowStatus;
+               NULL AS WorkflowStatus;
     END CATCH
 END
 
-
---exec p_ProcessWorkflowAction_redo1
----- @ActionType = 'approve',
----- 'approve' or 'reject'
---@Source = 't_Tickets',
---@SourceID = '1',
---@UserID = 2,
---@UserName  = NULL,
---@Notes  = NULL,
---@StatusColumn  = 'Status',
---@StatusID  = '32'
