@@ -34,15 +34,15 @@ class PropertyNewLeaseController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyNewLeaseCreate, PropertyNewLease::class);
-        $properties = PropertyRegistry::where('IsActive', 1)
+        $properties = PropertyRegistry::where('IsActive', true)
             ->whereHas('getBlockByProperty.floor.units', function ($query) {
-                $query->where('IsRentable', 1)
-                    ->where('CurrentStatus', 1);
+                $query->where('IsRentable', true)
+                    ->where('CurrentStatus', true);
             })
             ->with([
                 'getBlockByProperty.floor.units' => function ($query) {
-                    $query->where('IsRentable', 1)
-                        ->where('CurrentStatus', 1);
+                    $query->where('IsRentable', true)
+                        ->where('CurrentStatus', true);
                 }
             ])->get();
 
@@ -52,17 +52,17 @@ class PropertyNewLeaseController extends Controller
         return view('property.tenantmanagement.leasemanagement.leasemaintenance.create', compact('newtenants', 'properties', 'codes'));
     }
 
-    public function getBlockByProperty($propertyId)
+    public function getBlockByProperty($PropertyId)
     {
-        $blocks = PropertyBlock::where('PropertyID', $propertyId)
+        $blocks = PropertyBlock::where('PropertyID', $PropertyId)
             ->whereHas('floor.units', function ($query) {
-                $query->where('IsRentable', 1)
-                    ->where('CurrentStatus', 1);
+                $query->where('IsRentable', true)
+                    ->where('CurrentStatus', true);
             })
             ->with([
                 'floor.units' => function ($query) {
-                    $query->where('IsRentable', 1)
-                        ->where('CurrentStatus', 1);
+                    $query->where('IsRentable', true)
+                        ->where('CurrentStatus', true);
                 }
             ])
             ->get();
@@ -70,17 +70,17 @@ class PropertyNewLeaseController extends Controller
         return response()->json($blocks);
     }
 
-    public function getFloorByBlock($blockId)
+    public function getFloorByBlock($BlockId)
     {
-        $floors = PropertyFloor::where('BlockID', $blockId)
+        $floors = PropertyFloor::where('BlockID', $BlockId)
             ->whereHas('units', function ($query) {
-                $query->where('IsRentable', 1)
-                    ->where('CurrentStatus', 1);
+                $query->where('IsRentable', true)
+                    ->where('CurrentStatus', true);
             })
             ->with([
                 'units' => function ($query) {
-                    $query->where('IsRentable', 1)
-                        ->where('CurrentStatus', 1);
+                    $query->where('IsRentable', true)
+                        ->where('CurrentStatus', true);
                 }
             ])
             ->get();
@@ -88,11 +88,11 @@ class PropertyNewLeaseController extends Controller
         return response()->json($floors);
     }
 
-    public function getUnitByFloor($floorId)
+    public function getUnitByFloor($FloorId)
     {
-        $units = PropertyUnit::where('FloorId', $floorId)
-            ->where('IsRentable', 1)
-            ->where('CurrentStatus', 1)
+        $units = PropertyUnit::where('FloorId', $FloorId)
+            ->where('IsRentable', true)
+            ->where('CurrentStatus', true)
             ->get();
 
         return response()->json($units);
