@@ -56,19 +56,19 @@
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="SourceType" id="srcTender" value="TENDER" {{ ($sourceType ?? 'RFQ') === 'TENDER' ? 'checked' : '' }}>
                             <label class="form-check-label" for="srcTender">Tender</label>
-                        </div>
+            </div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="SourceType" id="srcContract" value="CONTRACT" {{ ($sourceType ?? 'RFQ') === 'CONTRACT' ? 'checked' : '' }}>
                             <label class="form-check-label" for="srcContract">Contract-based</label>
+                            </div>
+                        </div>
+                    <input type="hidden" name="SourceId" id="SourceId" />
                         </div>
                     </div>
-                    <input type="hidden" name="SourceId" id="SourceId" />
-                </div>
-            </div>
-
+                    
             <!-- RFQ Selection -->
             <div class="row mb-4 source-rfq d-none">
-                <div class="col-md-4">
+                    <div class="col-md-4">
                     <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
                     <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
                         <option selected disabled>Select RFQ</option>
@@ -82,13 +82,13 @@
                                     data-supplier-name="{{ $ar->SupplierName ?? '' }}"
                                     data-address="{{ $ar->Address ?? '' }}"
                                     {{ $disabled }}>{{ $ar->RFQNumber }}</option>
-                        @endforeach
+                            @endforeach
                         {{-- Only awarded RFQs must be listed (no non-awarded options) --}}
-                    </select>
+                        </select>
                     @error('refNo')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
-                </div>
+                    </div>
                 <div class="col-md-4">
                     <label>LPO Number <span class="text-danger">*</span></label>
                     <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
@@ -135,14 +135,14 @@
 
             <!-- Contract Selection -->
             <div class="row mb-4 source-contract d-none">
-                <div class="col-md-4">
+                    <div class="col-md-4">
                     <label>Contract Ref <span class="text-danger">*</span></label>
                     <select class="form-control" id="contractRef">
                         <option selected disabled>Select Contract</option>
                         @foreach(($contracts ?? []) as $c)
                             <option value="{{ $c->ContractRef }}" data-contract-id="{{ $c->Id }}" data-supplier-id="{{ $c->SupplierId }}" data-address="{{ $c->Address }}">{{ $c->ContractRef }} ({{ $c->SupplierName }})</option>
                         @endforeach
-                    </select>
+                        </select>
                 </div>
                 <div class="col-md-4">
                     <label>LPO Number <span class="text-danger">*</span></label>
@@ -174,7 +174,7 @@
 
             <!-- Direct mode helpers -->
             <div class="row mb-3 direct-only d-none">
-                <div class="col-md-6">
+                    <div class="col-md-6">
                     <label>Item Category (optional)</label>
                     <select id="itemCategory" class="form-control">
                         <option value="" selected>-- None --</option>
@@ -348,7 +348,58 @@
                 // keep one blank row
                 addRow(0, { itemCode: 0, itemName: '', quantity: '', unitPrice: '' });
             }
+            updateTotals();
         }
+
+        function parseNumber(val) {
+            const n = parseFloat(val);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function recalcRow($tr) {
+            const qty = parseNumber($tr.find('.quantity').val());
+            const price = parseNumber($tr.find('.unit-price').val());
+            const discountPct = parseNumber($tr.find('.discount').val());
+            const base = qty * price;
+            const discounted = base * (discountPct ? (1 - (discountPct / 100)) : 1);
+            $tr.find('.line-total').val(discounted.toFixed(2));
+        }
+
+        function updateTotals() {
+            let exclusive = 0;
+            let taxTotal = 0;
+            $('#item-rows tr').each(function () {
+                const $tr = $(this);
+                const lt = parseNumber($tr.find('.line-total').val());
+                const taxPct = parseNumber($tr.find('.tax').val());
+                exclusive += lt;
+                taxTotal += lt * (taxPct / 100);
+            });
+            const inclusive = exclusive + taxTotal;
+            $('.exclusiveTotal').val(exclusive.toFixed(2));
+            $('.taxAmount').val(taxTotal.toFixed(2));
+            $('.inclusiveTotal').val(inclusive.toFixed(2));
+        }
+
+        $(document).on('input change', '.quantity, .unit-price, .tax, .discount', function () {
+            const $tr = $(this).closest('tr');
+            recalcRow($tr);
+            updateTotals();
+        });
+
+        $(document).on('keyup blur', '.quantity, .unit-price, .tax, .discount', function () {
+            const $input = $(this);
+            if ($input.val() === '') {
+                $input.val('0');
+            }
+            const $tr = $input.closest('tr');
+            recalcRow($tr);
+            updateTotals();
+        });
+
+        $(function(){
+            updateTotals();
+        });
 
         // Source mode toggling
         function applySourceMode() {
@@ -419,7 +470,7 @@
             const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : NaN;
             if (!isNaN(rfqId)) {
                 $('#SourceId').val(rfqId);
-            } else {
+                        } else {
                 $('#SourceId').val('');
             }
 
@@ -437,21 +488,21 @@
                 $('input[name="address"]').val(address);
                 if ($("input[name='supplier']").length === 0) {
                     $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierLegacyId)}).appendTo('#purchaseOrdersForm');
-                } else {
+            } else {
                     $("input[name='supplier']").val(String(supplierLegacyId));
                 }
 
                 // Fetch RFQ items for this supplier (use ThirdPartyId as rr.SupplierId in t_RFQResponse)
                 if (!isNaN(rfqId) && Number.isFinite(matchThirdPartyId)) {
                     fetch(`/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${matchThirdPartyId}`)
-                        .then(r => r.json())
-                        .then(({items}) => populateItems(items || []))
+                .then(r => r.json())
+                        .then(({items}) => { populateItems(items || []); updateTotals(); })
                         .catch(() => populateItems([]));
                 } else if (!isNaN(rfqId)) {
                     // fallback without supplier filter
                     fetch(`/procurement/purchase-order/rfq-items/${rfqId}`)
                         .then(r => r.json())
-                        .then(({items}) => populateItems(items || []))
+                        .then(({items}) => { populateItems(items || []); updateTotals(); })
                         .catch(() => populateItems([]));
                 }
             } else {
@@ -473,7 +524,7 @@
                     if (Number.isFinite(thirdParty)) {
                         fetch(`/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${thirdParty}`)
                             .then(r => r.json())
-                            .then(({items}) => populateItems(items || []))
+                            .then(({items}) => { populateItems(items || []); updateTotals(); })
                             .catch(() => populateItems([]));
                     }
                 }
@@ -499,10 +550,10 @@
             if (!isNaN(supplierId)) {
                 const name = supplierName || `Supplier #${supplierId}`;
                 $supplier.append(`<option value="${supplierId}" selected data-address="${address}">${name}</option>`);
-                $supplier.prop('disabled', true);
+                        $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);
                 if ($("input[name='supplier']").length === 0) {
-                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
+                        $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
                 } else {
                     $("input[name='supplier']").val(String(supplierId));
                 }
@@ -511,7 +562,7 @@
             if (!isNaN(tenderId)) {
                 fetch(`/procurement/purchase-order/tender-items/${tenderId}`)
                     .then(r => r.json())
-                    .then(({items}) => populateItems(items || []))
+                    .then(({items}) => { populateItems(items || []); updateTotals(); })
                     .catch(() => populateItems([]));
             }
         });
@@ -536,7 +587,7 @@
                 $('input[name="address"]').val(address);
                 if ($("input[name='supplier']").length === 0) {
                     $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
-                } else {
+            } else {
                     $("input[name='supplier']").val(String(supplierId));
                 }
             }
@@ -544,7 +595,7 @@
             // Optional: fetch mapped contract items here if needed (kept minimal to match dev UX)
             // fetch(`/procurement/purchaseOrder/contract-details/${contractId}`)
             //     .then(r => r.json())
-            //     .then(({items}) => { /* populate items if required */ })
+            //     .then(({items}) => { populateItems(items || []); updateTotals(); })
             //     .catch(console.error);
         });
 
@@ -570,5 +621,5 @@
         // Direct helpers omitted (kept from your current dev form)
 
         // Remove row handler and totals calculation kept from your current dev form
-    </script>
+</script>
 @endsection

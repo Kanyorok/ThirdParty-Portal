@@ -351,6 +351,26 @@ class PurchaseOrderController extends Controller
         try {
             $validatedData = $request->validated();
 
+            // Derive reference number safely based on source selection when not provided
+            $referenceNumber = $validatedData['refNo'] ?? null;
+            if (empty($referenceNumber)) {
+                $sourceType = (string) $request->input('SourceType', '');
+                $sourceId = (int) $request->input('SourceId', 0);
+                try {
+                    if ($sourceType === 'RFQ' && $sourceId > 0) {
+                        $referenceNumber = (string) (DB::table('t_RFQ')->where('Id', $sourceId)->value('RFQNumber') ?? '');
+                    } elseif ($sourceType === 'TENDER' && $sourceId > 0) {
+                        $referenceNumber = (string) (DB::table('t_Tenders')->where('Id', $sourceId)->value('TenderNo') ?? '');
+                    } elseif ($sourceType === 'CONTRACT' && $sourceId > 0) {
+                        $referenceNumber = (string) (DB::table('t_TenderAwards')->where('Id', $sourceId)->value('ContractRef') ?? '');
+                    } else {
+                        $referenceNumber = $referenceNumber ?? '';
+                    }
+                } catch (\Throwable $e) {
+                    $referenceNumber = $referenceNumber ?? '';
+                }
+            }
+
             $actor = $request->user();
             if (!$actor) {
                 return response()->json(['message' => 'Unauthorized'], 401);
@@ -372,8 +392,8 @@ class PurchaseOrderController extends Controller
             $POAdd = $this->orderService->addPO(
                 $validatedData['supplier'],
                 $validatedData['pODate'],
-                $validatedData['refNo'],
-                $validatedData['priority'],
+                $referenceNumber,
+                $validatedData['priority'] ?? 'Medium',
                 $validatedData['terms'], // This is the ID from t_CodeDetails
                 $actor
             );
@@ -408,11 +428,11 @@ class PurchaseOrderController extends Controller
             foreach ($validatedData['itemCode'] as $index => $itemCode) {
                 $POLinesAdd = $this->orderService->addPOLines(
                     $itemCode,
-                    $validatedData['quantity'][$index],
-                    $validatedData['unitPrice'][$index],
-                    $validatedData['tax'][$index],
-                    $validatedData['discount'][$index],
-                    $validatedData['lineTotal'][$index],
+                    $validatedData['quantity'][$index] ?? 0,
+                    $validatedData['unitPrice'][$index] ?? 0,
+                    $validatedData['tax'][$index] ?? 0,
+                    $validatedData['discount'][$index] ?? 0,
+                    $validatedData['lineTotal'][$index] ?? 0,
                     $actor,
                     $poId
                 );
@@ -629,7 +649,15 @@ public function getRFQItems($rfqId)
             ->join('t_RFQResponse as rr', 'ri.RfqResponseId', '=', 'rr.Id')
             ->where('rr.RFQId', (int) $rfqId)
             ->when($supplierId > 0, function ($q) use ($supplierId) {
-                $q->where('rr.SupplierId', $supplierId);
+                // Support both models:
+                // 1) rr.SupplierId stores t_ThirdParties.Id (current)
+                // 2) rr.SupplierId stores t_Suppliers.Id (legacy)
+                $q->where(function ($qq) use ($supplierId) {
+                    $qq->where('rr.SupplierId', $supplierId)
+                        ->orWhereIn('rr.SupplierId', function ($sub) use ($supplierId) {
+                            $sub->from('t_Suppliers')->where('ThirdPartyID', $supplierId)->select('Id');
+                        });
+                });
             })
             ->leftJoin('t_Items as it', 'it.ItemName', '=', 'ri.ItemName')
             ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ri.ItemName) as itemName, COALESCE(it.ItemType, '') as itemType, ri.Quantity as quantity, ri.QuotedPrice as unitPrice")

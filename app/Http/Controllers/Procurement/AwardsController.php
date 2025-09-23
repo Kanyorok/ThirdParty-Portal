@@ -35,12 +35,14 @@ class AwardsController extends Controller
                     'title' => $award->tender->Title ?? 'N/A',
                     'status' => 'Awarded', // Treat any created tender award as Awarded (per requirement)
                     'status_class' => 'bg-success',
-                    'winning_bidder' => $award->winningSupplier->SupplierName
-                        ?? ($award->winningSupplier->thirdParty->ThirdPartyName ?? '--'),
+                    'winning_bidder' => $award->winningSupplier->thirdParty->TradingName
+                        ?? '--',
                     'award_date' => optional($award->AwardDate)->format('Y-m-d') ?? ($award->CreatedOn?->format('Y-m-d') ?? '--'),
                     'id' => $award->tender->Id ?? null,
                 ];
-            });
+            })
+            ->values()
+            ->toBase();
 
         // Tenders with consolidated evaluations but no award yet => Pending
         $tendersWithEval = Tender::whereHas('submissions', function ($q) {
@@ -65,7 +67,9 @@ class AwardsController extends Controller
                     'award_date' => '--',
                     'id' => $tender->Id,
                 ];
-            });
+            })
+            ->values()
+            ->toBase();
 
         // RFQ awarded entries
         $rfqAwards = RFQAward::with(['rfq', 'supplier.thirdParty'])
@@ -77,12 +81,13 @@ class AwardsController extends Controller
                     'title' => $award->rfq->Subject ?? 'N/A',
                     'status' => 'Awarded',
                     'status_class' => 'bg-success',
-                    'winning_bidder' => $award->supplier->SupplierName
-                        ?? ($award->supplier->thirdParty->ThirdPartyName ?? '--'),
+                    'winning_bidder' => $award->supplier->thirdParty->TradingName ?? '--',
                     'award_date' => ($award->CreatedOn?->format('Y-m-d')) ?? '--',
                     'id' => $award->rfq->Id ?? null,
                 ];
-            });
+            })
+            ->values()
+            ->toBase();
 
         // RFQs with consolidated evaluations but no award => Pending
         $rfqsWithEval = RFQEvaluation::select('RFQId')
@@ -108,10 +113,13 @@ class AwardsController extends Controller
                     'award_date' => '--',
                     'id' => $rfq->Id,
                 ];
-            });
+            })
+            ->values()
+            ->toBase();
 
         // Merge all
-        $items = $tenderAwards
+        $items = collect()
+            ->merge($tenderAwards)
             ->merge($tendersWithEval)
             ->merge($rfqAwards)
             ->merge($rfqPending)
