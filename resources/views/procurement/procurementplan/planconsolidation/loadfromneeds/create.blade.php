@@ -127,7 +127,7 @@
                             <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
                             <td>{{ $need->Justification }}</td>
                             <td>
-                                <select name="budget_line_id[{{ $need->Id }}]" class="form-select budget-select" required {{ old('selected_needs') && !in_array($need->Id, old('selected_needs', [])) ? 'disabled' : '' }}>
+                                <select name="budget_line_id[{{ $need->Id }}]" class="form-select budget-select" {{ old('selected_needs') && !in_array($need->Id, old('selected_needs', [])) ? 'disabled' : '' }}>
                                     <option disabled {{ old('budget_line_id.'.$need->Id) ? '' : 'selected' }}>Select Budget Line</option>
                                     @foreach($budgetLines as $budgetLine)
                                         <option value="{{ $budgetLine->Id }}" @selected(old('budget_line_id.'.$need->Id) == $budgetLine->Id)>{{ $budgetLine->LineName }}</option>

@@ -106,7 +106,7 @@
                     <td>{{ $tenant ?? '-'}}</td>
                     <td>{{ $property ?? '-'}}</td>
                     <td>{{ $unit ?? '-'}}</td>
-                    <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') }}</td>
                     <td>KES {{ number_format($due) }}</td>
                     <td>KES {{ number_format($paid) }}</td>
                     <td>

@@ -7,7 +7,7 @@
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> 
                 This RFQ has already been awarded to <strong>{{ $existingAward->winningSupplier->SupplierName }}</strong> 
-                on {{ $existingAward->AwardDate->format('M d, Y') }}.
+                on {{ $existingAward->AwardDate->format('d/m/Y') }}.
                 Status: <span class="badge {{ $existingAward->status_badge['class'] }}">{{ $existingAward->status_badge['text'] }}</span>
             </div>
         @endif
@@ -34,7 +34,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Submission Deadline</label>
-                                <input type="text" class="form-control" value="{{ $tender->SubmissionDeadline->format('Y-m-d') }}" readonly>
+                                <input type="text" class="form-control" value="{{ $tender->SubmissionDeadline->format('d/m/Y') }}" readonly>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Responsive Quotes</label>

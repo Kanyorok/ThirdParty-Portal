@@ -32,47 +32,16 @@ class PlanFromNeedsRequest extends FormRequest
             'category_id' => 'nullable|integer|exists:t_ItemCategories,Id',
             'selected_needs' => 'required|array|min:1',
             'selected_needs.*' => 'required|integer|exists:t_DepartmentNeeds,Id',
-            'budget_line_id' => 'required|array',
-            // Validate dynamically in withValidator to only enforce for checked needs
-            'budget_line_id.*' => 'nullable',
+            // Budget line optional overall; keep as array if provided
+            'budget_line_id' => 'nullable|array',
+            'budget_line_id.*' => 'nullable|integer',
         ];
     }
 
-    /**
-     * Add conditional validation ensuring each selected need has a valid budget line.
-     */
+    // Budget line optional: remove conditional enforcement
     public function withValidator($validator): void
     {
-        $validator->after(function ($validator) {
-            $selectedNeeds = $this->input('selected_needs', []);
-            $budgetLinesByNeed = $this->input('budget_line_id', []);
-
-            if (!is_array($selectedNeeds)) {
-                $selectedNeeds = [];
-            }
-            if (!is_array($budgetLinesByNeed)) {
-                $budgetLinesByNeed = [];
-            }
-
-            foreach ($selectedNeeds as $needId) {
-                $needId = (int) $needId;
-                $value = $budgetLinesByNeed[$needId] ?? null;
-
-                if (empty($value)) {
-                    $validator->errors()->add("budget_line_id.$needId", 'Please select a budget line for the checked need.');
-                    continue;
-                }
-
-                $exists = DB::table('t_BudgetLines')
-                    ->where('Id', (int) $value)
-                    ->whereNull('DeletedOn')
-                    ->exists();
-
-                if (!$exists) {
-                    $validator->errors()->add("budget_line_id.$needId", 'The selected budget line is invalid or inactive.');
-                }
-            }
-        });
+        // Intentionally left light; no per-need budget line enforcement
     }
 
     public function getPlan(): ConsolidatedProcurementPlan

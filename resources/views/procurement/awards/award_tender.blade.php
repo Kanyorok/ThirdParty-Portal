@@ -7,7 +7,7 @@
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> 
                 This tender has already been awarded to <strong>{{ $existingAward->winningSupplier->SupplierName }}</strong> 
-                on {{ $existingAward->AwardDate->format('M d, Y') }}.
+                on {{ $existingAward->AwardDate->format('d/m/Y') }}.
                 Status: <span class="badge {{ $existingAward->status_badge['class'] }}">{{ $existingAward->status_badge['text'] }}</span>
             </div>
         @endif

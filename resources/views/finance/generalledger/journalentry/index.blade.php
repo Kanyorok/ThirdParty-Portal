@@ -33,7 +33,7 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $journalEntry->RefNo ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($journalEntry->JournalDate)->format('Y-m-d') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($journalEntry->JournalDate)->format('d/m/Y') }}</td>
                                 <td>{{ $journalEntry->Description ?? '-' }}</td>
                                 <td>
                                     {{ number_format($journalEntry->journalLines->sum(function($line) {
