@@ -79,14 +79,11 @@
                                     data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
                                     data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
                                     data-supplier-legacy-id="{{ $ar->SupplierId }}"
+                                    data-supplier-name="{{ $ar->SupplierName ?? '' }}"
+                                    data-address="{{ $ar->Address ?? '' }}"
                                     {{ $disabled }}>{{ $ar->RFQNumber }}</option>
                         @endforeach
-                        @php $awardedNos = collect($awardedRfqs ?? [])->pluck('RFQNumber')->toArray(); @endphp
-                        @foreach($rfqs as $rfq)
-                            @if(!in_array($rfq->RFQNumber, $awardedNos))
-                                <option value="{{ $rfq->RFQNumber }}" {{ (($prefillContract['ref'] ?? null) === ($rfq->RFQNumber ?? null)) ? 'selected' : '' }}>{{ $rfq->RFQNumber }} (no award)</option>
-                            @endif
-                        @endforeach
+                        {{-- Only awarded RFQs must be listed (no non-awarded options) --}}
                     </select>
                     @error('refNo')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -336,7 +333,7 @@
                 $select.append(`<option value="${optionVal}" selected>${optionText}</option>`);
                 $itemTd.append($select);
                 $tr.append($itemTd);
-                $tr.append('<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;"></textarea></td>');
+                $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${optionText}</textarea></td>`);
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${it.quantity ?? ''}"></td>`);
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
                 $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" step="any"></td>');
@@ -362,6 +359,31 @@
                 $('.source-contract').addClass('d-none');
                 $('#supplier').prop('disabled', true); // auto in RFQ
                 $('.direct-only').addClass('d-none');
+                // Live refresh of awarded RFQs from t_RFQAward
+                const $ref = $('#refNo');
+                $ref.empty().append('<option selected disabled>Loading awarded RFQs...</option>');
+                fetch('/procurement/purchase-order/awarded-rfqs')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $ref.empty().append('<option selected disabled>Select RFQ</option>');
+                        if (!success) return;
+                        const converted = (window.convertedRFQIds || []);
+                        (data || []).forEach(ar => {
+                            const dis = converted.includes(ar.Id) ? 'disabled' : '';
+                            const thirdPartyId = ar.ThirdPartyId || 0;
+                            const supplierLegacyId = ar.SupplierId || '';
+                            const supplierName = ar.SupplierName || '';
+                            const address = ar.Address || '';
+                            $ref.append(`<option value="${ar.RFQNumber}"
+                                            data-rfq-id="${ar.Id}"
+                                            data-supplier-legacy-id="${supplierLegacyId}"
+                                            data-thirdparty-id="${thirdPartyId}"
+                                            data-supplier-name="${supplierName}"
+                                            data-address="${address}"
+                                            ${dis}>${ar.RFQNumber}</option>`);
+                        });
+                    })
+                    .catch(() => {});
             } else if (mode === 'TENDER') {
                 $('.source-rfq').addClass('d-none');
                 $('.source-tender').removeClass('d-none');
@@ -406,8 +428,10 @@
 
             if (Number.isFinite(supplierLegacyId)) {
                 const awardResp = rfqResponses.find(r => (r.RFQNumber === selectedRFQNo) && (parseInt(r.SupplierId) === matchThirdPartyId));
-                const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : `Supplier #${supplierLegacyId}`;
-                const address = awardResp ? (awardResp.Address || awardResp.TradingAddress || '') : '';
+                const fallbackName = rfqOption.data('supplier-name') || '';
+                const fallbackAddress = rfqOption.data('address') || '';
+                const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : (fallbackName || `Supplier #${supplierLegacyId}`);
+                const address = awardResp ? (awardResp.Address || awardResp.TradingAddress || '') : fallbackAddress;
                 $supplier.append(`<option value="${supplierLegacyId}" selected data-address="${address}">${displayName}</option>`);
                 $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);

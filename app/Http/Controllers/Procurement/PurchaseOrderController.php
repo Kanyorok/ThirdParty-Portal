@@ -185,47 +185,11 @@ class PurchaseOrderController extends Controller
                 $awardedFromRFQAward = collect();
             }
 
-            // RFQs awarded via TenderAwards
-            $awardedFromTender = collect();
-            try {
-                $awardedFromTender = DB::table('t_TenderAwards as ta')
-                    ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
-                    ->join('t_RFQ as r', 'r.RFQNumber', '=', 't.TenderNo')
-                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
-                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                    ->where('ta.AwardStatus', '=', 'Approved')
-                    ->select(
-                        'r.Id',
-                        'r.RFQNumber',
-                        DB::raw('ta.WinningSupplierID as SupplierId'),
-                        DB::raw('tp.Id as ThirdPartyId'),
-                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
-                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-                    )
-                    ->get();
-            } catch (\Throwable $e) {
-                \Log::warning('Skipping TenderAwards join for awarded RFQs', ['error' => $e->getMessage()]);
-                $awardedFromTender = collect();
-            }
-
-            $awardedRfqs = $awardedFromRFQAward->concat($awardedFromTender)->unique('Id')->values();
+            // Only list RFQs awarded via t_RFQAward (source of truth)
+            $awardedRfqs = $awardedFromRFQAward->unique('Id')->values();
 
             // Fallback if needed
-            if ($awardedRfqs->isEmpty()) {
-                try {
-                    $rfqIds = DB::table('t_RFQAward')->pluck('RFQId')->toArray();
-                    if (!empty($rfqIds)) {
-                        $rfqsBasic = DB::table('t_RFQ')->whereIn('Id', $rfqIds)->select('Id', 'RFQNumber')->get();
-                        $supplierByRfq = DB::table('t_RFQAward')->pluck('SupplierId', 'RFQId');
-                        $awardedRfqs = $rfqsBasic->map(function ($r) use ($supplierByRfq) {
-                            $r->SupplierId = (int) ($supplierByRfq[$r->Id] ?? 0);
-                            return $r;
-                        })->values();
-                    }
-                } catch (\Throwable $e) {
-                    \Log::warning('Fallback fetch for awarded RFQs failed', ['error' => $e->getMessage()]);
-                }
-            }
+            // No fallback to non-awarded RFQs; dropdown must show only awarded RFQs
 
             $convertedRFQIds = DB::table('t_Orders')
                 ->where('SourceType', 'RFQ')
@@ -647,9 +611,20 @@ class PurchaseOrderController extends Controller
 public function getRFQItems($rfqId)
 {
     try {
-        $supplierId = (int) request()->query('supplierId');
+        $supplierId = (int) request()->query('supplierId'); // ThirdPartyID if provided
+        $supplierLegacyId = (int) request()->query('supplierLegacyId'); // t_Suppliers.Id (fallback)
 
-        // Pull response items for this RFQ (optionally filtered by supplier), and map to catalog items by name
+        // Resolve ThirdPartyID from legacy supplier id if not provided directly
+        if ($supplierId <= 0 && $supplierLegacyId > 0) {
+            try {
+                $resolved = DB::table('t_Suppliers')->where('Id', $supplierLegacyId)->value('ThirdPartyID');
+                $supplierId = (int) ($resolved ?? 0);
+            } catch (\Throwable $e) {
+                $supplierId = 0;
+            }
+        }
+
+        // Pull response items for this RFQ (optionally filtered by ThirdParty supplier), and map to catalog items by name
         $items = DB::table('t_ResponseItems as ri')
             ->join('t_RFQResponse as rr', 'ri.RfqResponseId', '=', 'rr.Id')
             ->where('rr.RFQId', (int) $rfqId)
@@ -680,64 +655,21 @@ public function getRFQItems($rfqId)
     public function getAwardedRFQs(): JsonResponse
     {
         try {
-            $fromRfqAward = collect();
-            try {
-                $fromRfqAward = DB::table('t_RFQAward as a')
-                    ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
-                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'a.SupplierId')
-                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                    ->select(
-                        'r.Id',
-                        'r.RFQNumber',
-                        'a.SupplierId',
-                        DB::raw('tp.Id as ThirdPartyId'),
-                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
-                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-                    )
-                    ->get();
-            } catch (\Throwable $e) {
-                \Log::warning('getAwardedRFQs: RFQAward join failed', ['error' => $e->getMessage()]);
-            }
+            $awarded = DB::table('t_RFQAward as a')
+                ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
+                ->leftJoin('t_Suppliers as s', 's.Id', '=', 'a.SupplierId')
+                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                ->select(
+                    'r.Id',
+                    'r.RFQNumber',
+                    'a.SupplierId',
+                    DB::raw('tp.Id as ThirdPartyId'),
+                    DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                )
+                ->get();
 
-            $fromTender = collect();
-            try {
-                $fromTender = DB::table('t_TenderAwards as ta')
-                    ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
-                    ->join('t_RFQ as r', 'r.RFQNumber', '=', 't.TenderNo')
-                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
-                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                    ->where('ta.AwardStatus', '=', 'Approved')
-                    ->select(
-                        'r.Id',
-                        'r.RFQNumber',
-                        DB::raw('ta.WinningSupplierID as SupplierId'),
-                        DB::raw('tp.Id as ThirdPartyId'),
-                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
-                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-                    )
-                    ->get();
-            } catch (\Throwable $e) {
-                \Log::warning('getAwardedRFQs: TenderAwards join failed', ['error' => $e->getMessage()]);
-            }
-
-            $awarded = $fromRfqAward->concat($fromTender)->unique('Id')->values();
-
-            // Fallback by RFQId lookup if needed
-            if ($awarded->isEmpty()) {
-                try {
-                    $rfqIds = DB::table('t_RFQAward')->pluck('RFQId')->toArray();
-                    if (!empty($rfqIds)) {
-                        $rfqsBasic = DB::table('t_RFQ')->whereIn('Id', $rfqIds)->select('Id', 'RFQNumber')->get();
-                        $supplierByRfq = DB::table('t_RFQAward')->pluck('SupplierId', 'RFQId');
-                        $awarded = $rfqsBasic->map(function ($r) use ($supplierByRfq) {
-                            $r->SupplierId = (int) ($supplierByRfq[$r->Id] ?? 0);
-                            return $r;
-                        })->values();
-                    }
-                } catch (\Throwable $e) {
-                    \Log::warning('getAwardedRFQs: fallback failed', ['error' => $e->getMessage()]);
-                }
-            }
+            // No fallback to non-awarded RFQs
 
             return response()->json([
                 'success' => true,
