@@ -10,6 +10,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
+use app\Models\PropertyManagement\PropertyMaintenanceWorkCompletion;
 
 class PropertyMaintenanceAssign extends Model
 {
@@ -71,5 +72,8 @@ class PropertyMaintenanceAssign extends Model
     public function modifiedByUser()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+    public function taskcompletion(){
+        return $this->belongsTo(PropertyMaintenanceWorkCompletion::class,'RequestNumber','RequestNumber');
     }
 }

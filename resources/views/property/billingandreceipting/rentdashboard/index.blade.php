@@ -58,7 +58,7 @@
                 <option value="">All Tenants</option>
                 @foreach($tenants as $tenant)
                     <option value="{{ $tenant->Id }}" {{ request('tenant_id') == $tenant->id ? 'selected' : '' }}>
-                        {{ $tenant->TenantName }}
+                        {{ $tenant->thirdParty->TradingName }}
                     </option>
                 @endforeach
             </select>
@@ -90,10 +90,10 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody> 
                 @foreach($invoices as $invoice)
                 @php
-                    $tenant = $invoice->lease->tenant->TenantName ?? 'N/A';
+                    $tenant = $invoice->lease->tenant->thirdParty->TradingName  ?? 'N/A';
                     $property = $invoice->lease->property->PropertyName ?? 'N/A';
                     $unit = $invoice->lease->unit->UnitCode ?? 'N/A';
                     $due = $invoice->RentAmount + $invoice->ServicesCharge + $invoice->ParkingFee + $invoice->OtherCharges;

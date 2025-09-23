@@ -29,7 +29,8 @@ class PropertyRegistryController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
-        $lineentries = CategoryMaster::with('propertytypes')->get();
+        $lineentries = CategoryMaster::with('propertytypes')
+        ->where('Type', 'PropertyCategory')->get();
         $countries = Country::all();
         return view('property.propertyregistry.registry.create', compact('lineentries', 'countries'));
     }

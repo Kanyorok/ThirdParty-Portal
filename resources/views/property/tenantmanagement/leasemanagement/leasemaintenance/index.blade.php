@@ -29,7 +29,7 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width: 5%">#</th>
-                            <th>Lease Number</th>
+                            <th>Lease No.</th>
                             <th>Tenant</th>
                             <th>Property</th>
                             <th>Start Date</th>
