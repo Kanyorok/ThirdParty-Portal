@@ -233,6 +233,33 @@ class PurchaseOrderController extends Controller
                 ->pluck('SourceId')
                 ->toArray();
 
+            // Tenders that have awards (for Tender source dropdown)
+            $awardedTenders = collect();
+            try {
+                $awardedTenders = DB::table('t_TenderAwards as ta')
+                    ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                    ->select(
+                        't.Id',
+                        't.TenderNo',
+                        DB::raw('ta.WinningSupplierID as SupplierId'),
+                        DB::raw('tp.Id as ThirdPartyId'),
+                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                    )
+                    ->get();
+            } catch (\Throwable $e) {
+                \Log::warning('Skipping TenderAwards join for awarded tenders', ['error' => $e->getMessage()]);
+                $awardedTenders = collect();
+            }
+
+            $convertedTenderIds = DB::table('t_Orders')
+                ->where('SourceType', 'TENDER')
+                ->whereNotNull('SourceId')
+                ->pluck('SourceId')
+                ->toArray();
+
             // Executed contracts for Contract-based source selection
             $contracts = DB::table('t_TenderAwards as ta')
                 ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
@@ -316,6 +343,8 @@ class PurchaseOrderController extends Controller
                 'contracts' => $contracts ?? collect(),
                 'awardedRfqs' => $awardedRfqs ?? collect(),
                 'convertedRFQIds' => $convertedRFQIds ?? [],
+                'awardedTenders' => $awardedTenders ?? collect(),
+                'convertedTenderIds' => $convertedTenderIds ?? [],
             ]);
         } catch (\Exception $e) {
             \Log::error('Data fetch failed: ' . $e->getMessage());
@@ -646,6 +675,128 @@ public function getRFQItems($rfqId)
         return response()->json(['items' => []], 200);
     }
 }
+
+
+    public function getAwardedRFQs(): JsonResponse
+    {
+        try {
+            $fromRfqAward = collect();
+            try {
+                $fromRfqAward = DB::table('t_RFQAward as a')
+                    ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
+                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'a.SupplierId')
+                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                    ->select(
+                        'r.Id',
+                        'r.RFQNumber',
+                        'a.SupplierId',
+                        DB::raw('tp.Id as ThirdPartyId'),
+                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                    )
+                    ->get();
+            } catch (\Throwable $e) {
+                \Log::warning('getAwardedRFQs: RFQAward join failed', ['error' => $e->getMessage()]);
+            }
+
+            $fromTender = collect();
+            try {
+                $fromTender = DB::table('t_TenderAwards as ta')
+                    ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                    ->join('t_RFQ as r', 'r.RFQNumber', '=', 't.TenderNo')
+                    ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                    ->where('ta.AwardStatus', '=', 'Approved')
+                    ->select(
+                        'r.Id',
+                        'r.RFQNumber',
+                        DB::raw('ta.WinningSupplierID as SupplierId'),
+                        DB::raw('tp.Id as ThirdPartyId'),
+                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                    )
+                    ->get();
+            } catch (\Throwable $e) {
+                \Log::warning('getAwardedRFQs: TenderAwards join failed', ['error' => $e->getMessage()]);
+            }
+
+            $awarded = $fromRfqAward->concat($fromTender)->unique('Id')->values();
+
+            // Fallback by RFQId lookup if needed
+            if ($awarded->isEmpty()) {
+                try {
+                    $rfqIds = DB::table('t_RFQAward')->pluck('RFQId')->toArray();
+                    if (!empty($rfqIds)) {
+                        $rfqsBasic = DB::table('t_RFQ')->whereIn('Id', $rfqIds)->select('Id', 'RFQNumber')->get();
+                        $supplierByRfq = DB::table('t_RFQAward')->pluck('SupplierId', 'RFQId');
+                        $awarded = $rfqsBasic->map(function ($r) use ($supplierByRfq) {
+                            $r->SupplierId = (int) ($supplierByRfq[$r->Id] ?? 0);
+                            return $r;
+                        })->values();
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('getAwardedRFQs: fallback failed', ['error' => $e->getMessage()]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $awarded,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('getAwardedRFQs failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'data' => []], 200);
+        }
+    }
+
+    public function getAwardedTenders(): JsonResponse
+    {
+        try {
+            $rows = DB::table('t_TenderAwards as ta')
+                ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
+                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                ->select(
+                    't.Id',
+                    't.TenderNo',
+                    DB::raw('ta.WinningSupplierID as SupplierId'),
+                    DB::raw('tp.Id as ThirdPartyId'),
+                    DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                )
+                ->get();
+            return response()->json(['success' => true, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            \Log::error('getAwardedTenders failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'data' => []], 200);
+        }
+    }
+
+    public function getTenderItems($tenderId): JsonResponse
+    {
+        try {
+            // Items defined at tender level
+            $items = DB::table('t_TenderItems as ti')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'ti.ItemID')
+                ->where('ti.TenderID', (int) $tenderId)
+                ->selectRaw("COALESCE(it.Id, 0) as itemCode, COALESCE(it.ItemName, ti.ManualItemDescription) as itemName, COALESCE(it.ItemType, '') as itemType, COALESCE(ti.QtyToTender, ti.PlannedQty) as quantity, COALESCE(it.ItemPrice, 0) as unitPrice")
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'itemCode' => (int) $row->itemCode,
+                        'itemName' => $row->itemName,
+                        'itemType' => $row->itemType,
+                        'quantity' => (float) $row->quantity,
+                        'unitPrice' => (float) $row->unitPrice,
+                    ];
+                });
+
+            return response()->json(['items' => $items]);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to fetch Tender items', ['tenderId' => $tenderId, 'error' => $e->getMessage()]);
+            return response()->json(['items' => []], 200);
+        }
+    }
 
 
 }

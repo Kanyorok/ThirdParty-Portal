@@ -116,7 +116,13 @@
                         <option selected disabled>Select Tender</option>
                         @foreach(($awardedTenders ?? []) as $t)
                             @php $disabled = in_array($t->Id, ($convertedTenderIds ?? [])) ? 'disabled' : ''; @endphp
-                            <option value="{{ $t->TenderNo }}" data-tender-id="{{ $t->Id }}" data-supplier-id="{{ $t->SupplierId }}" {{ $disabled }}>{{ $t->TenderNo }}</option>
+                            <option value="{{ $t->TenderNo }}"
+                                    data-tender-id="{{ $t->Id }}"
+                                    data-supplier-id="{{ $t->SupplierId }}"
+                                    data-thirdparty-id="{{ $t->ThirdPartyId ?? 0 }}"
+                                    data-supplier-name="{{ $t->SupplierName ?? '' }}"
+                                    data-address="{{ $t->Address ?? '' }}"
+                                    {{ $disabled }}>{{ $t->TenderNo }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -386,9 +392,9 @@
             const selectedRFQNo = $(this).val();
             const rfqOption = $(this).find('option:selected');
             const rfqId = parseInt(rfqOption.data('rfq-id'));
-            const awardedSupplierId = parseInt(rfqOption.data('supplier-id'));
-            const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id'));
-            const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : awardedSupplierId;
+            const supplierLegacyId = parseInt(rfqOption.data('supplier-legacy-id')); // t_Suppliers.Id for posting
+            const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id')); // t_ThirdParties.Id for lookups/items
+            const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : NaN;
             if (!isNaN(rfqId)) {
                 $('#SourceId').val(rfqId);
             } else {
@@ -398,28 +404,28 @@
             const $supplier = $('#supplier');
             $supplier.empty().append('<option selected disabled>Select supplier</option>');
 
-            if (!isNaN(awardedSupplierId)) {
+            if (Number.isFinite(supplierLegacyId)) {
                 const awardResp = rfqResponses.find(r => (r.RFQNumber === selectedRFQNo) && (parseInt(r.SupplierId) === matchThirdPartyId));
-                const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : `Supplier #${awardedSupplierId}`;
+                const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : `Supplier #${supplierLegacyId}`;
                 const address = awardResp ? (awardResp.Address || awardResp.TradingAddress || '') : '';
-                $supplier.append(`<option value="${awardedSupplierId}" selected data-address="${address}">${displayName}</option>`);
+                $supplier.append(`<option value="${supplierLegacyId}" selected data-address="${address}">${displayName}</option>`);
                 $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);
                 if ($("input[name='supplier']").length === 0) {
-                    $('<input>').attr({type:'hidden', name:'supplier', value:String(awardedSupplierId)}).appendTo('#purchaseOrdersForm');
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierLegacyId)}).appendTo('#purchaseOrdersForm');
                 } else {
-                    $("input[name='supplier']").val(String(awardedSupplierId));
+                    $("input[name='supplier']").val(String(supplierLegacyId));
                 }
 
                 // Fetch RFQ items for this supplier (use ThirdPartyId as rr.SupplierId in t_RFQResponse)
                 if (!isNaN(rfqId) && Number.isFinite(matchThirdPartyId)) {
-                    fetch(`/purchase-order/rfq-items/${rfqId}?supplierId=${matchThirdPartyId}`)
+                    fetch(`/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${matchThirdPartyId}`)
                         .then(r => r.json())
                         .then(({items}) => populateItems(items || []))
                         .catch(() => populateItems([]));
                 } else if (!isNaN(rfqId)) {
                     // fallback without supplier filter
-                    fetch(`/purchase-order/rfq-items/${rfqId}`)
+                    fetch(`/procurement/purchase-order/rfq-items/${rfqId}`)
                         .then(r => r.json())
                         .then(({items}) => populateItems(items || []))
                         .catch(() => populateItems([]));
@@ -441,12 +447,48 @@
                 if (!isNaN(rfqId) && suppliers.length > 0) {
                     const thirdParty = parseInt(suppliers[0].SupplierId);
                     if (Number.isFinite(thirdParty)) {
-                        fetch(`/purchase-order/rfq-items/${rfqId}?supplierId=${thirdParty}`)
+                        fetch(`/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${thirdParty}`)
                             .then(r => r.json())
                             .then(({items}) => populateItems(items || []))
                             .catch(() => populateItems([]));
                     }
                 }
+            }
+        });
+
+        // Tender selection: auto-fill supplier and items
+        $(document).on('change', '#tenderNo', function () {
+            const opt = $(this).find('option:selected');
+            const tenderId = parseInt(opt.data('tender-id'));
+            const supplierId = parseInt(opt.data('supplier-id')); // t_Suppliers.Id for posting
+            const supplierName = opt.data('supplier-name') || '';
+            const address = opt.data('address') || '';
+
+            if (!isNaN(tenderId)) {
+                $('#SourceId').val(tenderId);
+            } else {
+                $('#SourceId').val('');
+            }
+
+            const $supplier = $('#supplier');
+            $supplier.empty().append('<option selected disabled>Select supplier</option>');
+            if (!isNaN(supplierId)) {
+                const name = supplierName || `Supplier #${supplierId}`;
+                $supplier.append(`<option value="${supplierId}" selected data-address="${address}">${name}</option>`);
+                $supplier.prop('disabled', true);
+                $('input[name="address"]').val(address);
+                if ($("input[name='supplier']").length === 0) {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
+                } else {
+                    $("input[name='supplier']").val(String(supplierId));
+                }
+            }
+
+            if (!isNaN(tenderId)) {
+                fetch(`/procurement/purchase-order/tender-items/${tenderId}`)
+                    .then(r => r.json())
+                    .then(({items}) => populateItems(items || []))
+                    .catch(() => populateItems([]));
             }
         });
 
