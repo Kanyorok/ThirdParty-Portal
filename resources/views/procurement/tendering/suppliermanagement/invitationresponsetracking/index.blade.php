@@ -36,7 +36,27 @@
                     {{ $invitation->TenderId }}
                 @endif
             </td>
-            <td>{{ $invitation->SupplierId  }}</td>
+            <td>
+                @php
+                    $supplierName = $invitation->SupplierId;
+                    try {
+                        // First try Supplier model (t_Suppliers) then its thirdParty relation
+                        $sup = \App\Models\ThirdParies\Supplier::with('thirdParty')->find($invitation->SupplierId);
+                        if($sup && $sup->thirdParty) {
+                            $supplierName = $sup->thirdParty->ThirdPartyName ?? ($sup->thirdParty->TradingName ?? $invitation->SupplierId);
+                        } else {
+                            // Fallback: maybe SupplierId is actually a ThirdParties Id
+                            $tp = \App\Models\ThirdParty\ThirdParties::find($invitation->SupplierId);
+                            if($tp) {
+                                $supplierName = $tp->ThirdPartyName ?? ($tp->TradingName ?? $invitation->SupplierId);
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore and show raw id
+                    }
+                @endphp
+                {{ $supplierName }}
+            </td>
             <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('d/m/Y') }}</td>
             <td>
                 @if($invitation->ResponseStatus === 'Accepted')
