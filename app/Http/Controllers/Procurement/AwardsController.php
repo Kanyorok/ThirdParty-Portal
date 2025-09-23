@@ -31,7 +31,8 @@ class AwardsController extends Controller
             ->map(function ($award) {
                 return [
                     'type' => 'tender',
-                    'ref_no' => $award->tender->TenderNo ?? 'N/A',
+                    // show TenderNo and Title together in the Ref column
+                    'ref_no' => trim((($award->tender->TenderNo ?? '') . ' - ' . ($award->tender->Title ?? ''))) ?: 'N/A',
                     'title' => $award->tender->Title ?? 'N/A',
                     'status' => 'Awarded', // Treat any created tender award as Awarded (per requirement)
                     'status_class' => 'bg-success',
@@ -59,7 +60,7 @@ class AwardsController extends Controller
             ->map(function ($tender) {
                 return [
                     'type' => 'tender',
-                    'ref_no' => $tender->TenderNo,
+                    'ref_no' => trim((($tender->TenderNo ?? '') . ' - ' . ($tender->Title ?? ''))) ?: 'N/A',
                     'title' => $tender->Title,
                     'status' => 'Pending',
                     'status_class' => 'bg-warning text-dark',

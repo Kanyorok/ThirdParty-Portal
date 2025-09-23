@@ -48,7 +48,21 @@
                                     @if($row['type'] === 'rfq' && !empty($row['t_RFQ']['RefNo']))
                                         {{ $row['t_RFQ']['RefNo'] }}
                                     @else
-                                        {{ $row['ref_no'] }}
+                                        @php
+                                            $ref = $row['ref_no'] ?? '';
+                                            // If this looks like a numeric Id and it's a tender, try to resolve to TenderNo - Title
+                                            if(($row['type'] ?? '') === 'tender' && is_numeric($ref)) {
+                                                try {
+                                                    $t = \App\Models\Procurement\Tender::find((int)$ref);
+                                                    if($t) {
+                                                        $ref = trim((($t->TenderNo ?? '') . ' - ' . ($t->Title ?? '')));
+                                                    }
+                                                } catch (\Throwable $e) {
+                                                    // swallow errors and keep original ref
+                                                }
+                                            }
+                                        @endphp
+                                        {{ $ref }}
                                     @endif
                                 </td>
                                 <td>

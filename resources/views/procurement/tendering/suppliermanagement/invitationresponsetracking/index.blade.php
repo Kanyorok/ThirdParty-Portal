@@ -26,7 +26,16 @@
     @forelse ($invitations as $index => $invitation)
         <tr>
             <td>{{ $index + 1 }}</td>
-            <td>{{ $invitation->TenderId }}</td>
+            <td>
+                @php
+                    $tender = \App\Models\Procurement\Tender::find($invitation->TenderId);
+                @endphp
+                @if($tender)
+                    {{ trim((($tender->TenderNo ?? '') . ' - ' . ($tender->Title ?? ''))) }}
+                @else
+                    {{ $invitation->TenderId }}
+                @endif
+            </td>
             <td>{{ $invitation->SupplierId  }}</td>
             <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('d/m/Y') }}</td>
             <td>
