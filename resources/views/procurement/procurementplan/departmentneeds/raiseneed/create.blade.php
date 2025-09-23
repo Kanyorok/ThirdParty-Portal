@@ -18,13 +18,22 @@
                 <select name="ItemID" id="itemDropdown" class="form-select @error('ItemID') is-invalid @enderror"
                         required>
                     <option disabled selected>Select an item</option>
+                    @php
+                        // Build a set of item IDs that already have a pending need for this department to hide them
+                        $pendingItemIds = \App\Models\Procurement\DepartmentNeed::query()
+                            ->where('DepartmentID', auth()->user()->employee->DepartmentId ?? null)
+                            ->where('Status', \App\Enums\Procurement\DepartmentNeedsEnum::Pending)
+                            ->pluck('ItemID')->toArray();
+                    @endphp
                     @foreach ($items as $item)
+                        @if(!in_array($item->Id, $pendingItemIds))
                         <option value="{{ $item->Id }}" data-category="{{ $item->category->Name ?? '' }}"
                                 data-uom="{{ $item->uom->Name ?? 'N/A' }}"
                                 data-price="{{ $item->price->ActualPrice ?? '0.00' }}"
                             {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
                             {{ $item->ItemName }}
                         </option>
+                        @endif
                     @endforeach
                 </select>
                 @error('ItemID')
@@ -121,6 +130,16 @@
 
         function fillFields() {
             const selected = itemDropdown.options[itemDropdown.selectedIndex];
+
+            // If placeholder (no explicit value or disabled), don't show the warning by default
+            if (!selected || !selected.hasAttribute('value') || selected.disabled) {
+                categoryField.value = '';
+                uomField.value = '';
+                estimatedCostField.value = '';
+                estimatedCostHidden.value = '';
+                submitBtn.disabled = true;
+                return;
+            }
             categoryField.value = selected.getAttribute('data-category') || '';
             uomField.value = selected.getAttribute('data-uom') || '';
             const priceRaw = selected.getAttribute('data-price') || '';
@@ -139,7 +158,13 @@
             }
         }
 
-        if (itemDropdown.value) fillFields();
+        // Only pre-fill if a real item (with a value attribute) is preselected (e.g., after validation errors)
+        const initSelected = itemDropdown.options[itemDropdown.selectedIndex];
+        if (initSelected && initSelected.hasAttribute('value') && !initSelected.disabled) {
+            fillFields();
+        } else {
+            submitBtn.disabled = true;
+        }
         itemDropdown.addEventListener('change', fillFields);
     });
     </script>
