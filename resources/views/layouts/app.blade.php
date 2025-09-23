@@ -225,6 +225,23 @@
   @stack('scripts')
 
   <script>
+    window.__DEFAULT_ACTIVE_ROUTE__ = @json(request()->path() ? '/' . request()->path() : '/');
+  </script>
+  <script type="module">
+    import { SidebarState } from '/js/sidebarState.js';
+    SidebarState.init({
+      rootSelector: 'nav.pc-sidebar',
+      itemSelector: 'li.pc-item',
+      linkSelector: 'a.pc-link',
+      submenuSelector: '.pc-submenu',
+      activeItemClass: 'active',
+      expandedItemClass: 'pc-trigger',
+      userKey: '{{ auth()->id() ?? "guest" }}'
+    });
+    document.addEventListener('partial:loaded', () => SidebarState.restore());
+  </script>
+
+  <script>
     // Footer DateTime (user timezone in browser)
     (function updateFooterDateTime() {
       const el = document.getElementById('footer-datetime');
@@ -436,12 +453,7 @@
             }
         }
 
-        // remove existing markers only AFTER we know the new match (avoid flicker)
-  navRoot.querySelectorAll('.pc-item.active, a.active').forEach(el => el.classList.remove('active'));
-  // Reset previous open menu states so only the current branch expands
-  navRoot.querySelectorAll('.pc-item.pc-trigger').forEach(el => el.classList.remove('pc-trigger'));
-
-  if (!match) return;
+        if (!match) return;
 
         match.classList.add('active');
   sessionStorage.setItem('activeSidebarRoute', match.dataset.route || '');
@@ -467,15 +479,7 @@
         } catch(e) {}
       }
 
-      document.addEventListener('DOMContentLoaded', highlightAndScrollActive);
-      document.addEventListener('partial:loaded', function() {
-        // allow DOM to settle
-        setTimeout(highlightAndScrollActive, 50);
-      });
-      // also run immediately in case DOMContentLoaded already fired
-      if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        setTimeout(highlightAndScrollActive, 10);
-      }
+      // SidebarState handles highlighting/expansion now.
     })();
   </script>
 </body>
