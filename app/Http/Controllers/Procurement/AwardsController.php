@@ -77,8 +77,14 @@ class AwardsController extends Controller
             ->map(function ($award) {
                 return [
                     'type' => 'rfq',
+                    // keep top-level ref_no/title for backward compatibility
                     'ref_no' => $award->rfq->RFQNumber ?? 'N/A',
-                    'title' => $award->rfq->Subject ?? 'N/A',
+                    'title' => $award->rfq->Subject ?? ($award->rfq->Comments ?? 'N/A'),
+                    // provide the raw t_RFQ shape expected by the blade
+                    't_RFQ' => [
+                        'RefNo' => $award->rfq->RFQNumber ?? '',
+                        'Comments' => $award->rfq->Comments ?? ($award->rfq->Subject ?? ''),
+                    ],
                     'status' => 'Awarded',
                     'status_class' => 'bg-success',
                     'winning_bidder' => $award->supplier->thirdParty->TradingName ?? '--',
@@ -106,7 +112,11 @@ class AwardsController extends Controller
                 return [
                     'type' => 'rfq',
                     'ref_no' => $rfq->RFQNumber ?? 'N/A',
-                    'title' => $rfq->Subject ?? 'N/A',
+                    'title' => $rfq->Subject ?? ($rfq->Comments ?? 'N/A'),
+                    't_RFQ' => [
+                        'RefNo' => $rfq->RFQNumber ?? '',
+                        'Comments' => $rfq->Comments ?? ($rfq->Subject ?? ''),
+                    ],
                     'status' => 'Pending',
                     'status_class' => 'bg-warning text-dark',
                     'winning_bidder' => '--',
@@ -176,12 +186,12 @@ class AwardsController extends Controller
     {
         $tender = Tender::findOrFail($id);
         $existingAward = TenderAward::where('TenderID', $id)->first();
-        
+
         // Determine the type if not specified
         if (!$type) {
             $type = $this->determineTenderType($tender);
         }
-        
+
         // Get appropriate data based on type
         $evaluationData = [];
         if ($type === 'rfq') {
@@ -189,10 +199,10 @@ class AwardsController extends Controller
         } else {
             $evaluationData = $this->getConsolidatedScores($id);
         }
-        
+
         // Get list of similar tenders/RFQs for type switching
         $availableItems = $this->getAvailableItemsForAward();
-        
+
         return view('procurement.awards.unified_award', compact(
             'tender',
             'existingAward',
@@ -246,11 +256,11 @@ class AwardsController extends Controller
     {
         // You can customize this logic based on your business rules
         // For example, check TenderType, amount thresholds, or naming conventions
-        
+
         if (str_contains(strtoupper($tender->TenderNo), 'RFQ')) {
             return 'rfq';
         }
-        
+
         // Could also check estimated value, procurement mode, etc.
         return 'tender';
     }
@@ -274,7 +284,7 @@ class AwardsController extends Controller
         ]);
 
         DB::beginTransaction();
-        
+
         try {
             // Check if award already exists
             $existingAward = TenderAward::where('TenderID', $request->tender_id)->first();
@@ -357,7 +367,7 @@ class AwardsController extends Controller
     protected function getConsolidatedScores($tenderId)
     {
         $tender = Tender::findOrFail($tenderId);
-        
+
         // Get responsive bids from BidSubmissions table (including evaluated ones)
         $bidders = \App\Models\Procurement\BidSubmission::where('TenderRef', $tender->TenderNo)
             ->where('IsResponsive', true)
@@ -376,7 +386,7 @@ class AwardsController extends Controller
 
         // Get tender sections with their weights
         $sections = $this->getTenderSections($tenderId);
-        
+
         // Get all evaluations for this tender
         $evaluations = TenderCommitteeEvaluation::where('TenderID', $tenderId)
             ->with(['tenderCommitteeMember'])
@@ -389,12 +399,12 @@ class AwardsController extends Controller
         foreach ($bidders as $bidder) {
             $consolidatedScores[] = $this->calculateBidderScoreForAward($bidder, $sections, $evaluations, $tenderId);
         }
-        
+
         // Sort bidders by total score (highest first)
         usort($consolidatedScores, function ($a, $b) {
             return $b['total_weighted_score'] <=> $a['total_weighted_score'];
         });
-        
+
         // Add rankings
         $rank = 1;
         foreach ($consolidatedScores as &$bidderScore) {
@@ -442,7 +452,7 @@ class AwardsController extends Controller
         foreach ($sections as $section) {
             $sectionScore = $this->calculateSectionScoreForAward($section, $evaluations, $tenderId);
             $sectionWeightedScore = ($sectionScore / 100) * $section['weight'];
-            
+
             $sectionScores[] = [
                 'section_id' => $section['id'],
                 'section_name' => $section['name'],
@@ -450,7 +460,7 @@ class AwardsController extends Controller
                 'weight' => $section['weight'],
                 'weighted_score' => $sectionWeightedScore
             ];
-            
+
             $totalWeightedScore += $sectionWeightedScore;
             $totalSectionWeight += $section['weight'];
         }
@@ -483,7 +493,7 @@ class AwardsController extends Controller
 
         foreach ($section['criteria'] as $criteria) {
             $criteriaEvaluations = $evaluations[$section['id']][$criteria['id']] ?? collect();
-            
+
             if ($criteriaEvaluations->isNotEmpty()) {
                 $averageScore = $criteriaEvaluations->avg('Score');
                 $totalCriteriaScore += $averageScore;
@@ -495,7 +505,7 @@ class AwardsController extends Controller
             $sectionAverage = $totalCriteriaScore / $criteriaCount;
             return ($sectionAverage / 10) * 100;
         }
-        
+
         return 0;
     }
 
@@ -507,7 +517,7 @@ class AwardsController extends Controller
         $technicalSection = collect($sectionScores)->first(function($section) {
             return stripos($section['section_name'], 'technical') !== false;
         });
-        
+
         return $technicalSection ? $technicalSection['score'] : null;
     }
 
@@ -517,10 +527,10 @@ class AwardsController extends Controller
     protected function getFinancialScore($sectionScores)
     {
         $financialSection = collect($sectionScores)->first(function($section) {
-            return stripos($section['section_name'], 'financial') !== false || 
+            return stripos($section['section_name'], 'financial') !== false ||
                    stripos($section['section_name'], 'finance') !== false;
         });
-        
+
         return $financialSection ? $financialSection['score'] : null;
     }
 
@@ -554,7 +564,7 @@ class AwardsController extends Controller
                     'id' => $tenderSupplier->supplier->Id,
                     'name' => $tenderSupplier->supplier->thirdParty->ThirdPartyName ?? 'Unknown Supplier',
                     'quoted_amount' => 0, // TODO: Get from bid submissions
-                    'delivery_time' => 'N/A', // TODO: Get from bid submissions  
+                    'delivery_time' => 'N/A', // TODO: Get from bid submissions
                     'payment_terms' => 'N/A', // TODO: Get from bid submissions
                     'is_responsive' => $tenderSupplier->bidResponsiveness->IsResponsive ?? false,
                 ];
@@ -567,20 +577,20 @@ class AwardsController extends Controller
     public function createFromConsolidation($tenderId)
     {
         $tender = Tender::findOrFail($tenderId);
-        
+
         // Verify tender is ready for award (has evaluations completed)
         $evaluationCount = TenderCommitteeEvaluation::where('TenderID', $tenderId)->count();
         if ($evaluationCount === 0) {
             return redirect()->back()->with('error', 'No evaluations found for this tender. Please complete evaluations first.');
         }
-        
+
         // Check if award already exists
         $existingAward = TenderAward::where('TenderID', $tenderId)->first();
         if ($existingAward) {
             return redirect()->route('awards.tender', $tenderId)
                 ->with('info', 'Award already exists for this tender.');
         }
-        
+
         // Redirect to unified award interface
         return redirect()->route('awards.tender', $tenderId)
             ->with('success', 'Tender forwarded for award processing. Review the consolidated scores below and proceed with award creation.');

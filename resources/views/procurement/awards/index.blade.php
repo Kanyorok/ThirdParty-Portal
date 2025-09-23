@@ -44,8 +44,20 @@
                         @forelse($items as $index => $row)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $row['ref_no'] }}</td>
-                                <td>{{ $row['title'] }}</td>
+                                <td>
+                                    @if($row['type'] === 'rfq' && !empty($row['t_RFQ']['RefNo']))
+                                        {{ $row['t_RFQ']['RefNo'] }}
+                                    @else
+                                        {{ $row['ref_no'] }}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($row['type'] === 'rfq' && !empty($row['t_RFQ']['Comments']))
+                                        {{ $row['t_RFQ']['Comments'] }}
+                                    @else
+                                        {{ $row['title'] }}
+                                    @endif
+                                </td>
                                 <td>
                                     @if($row['type'] === 'tender')
                                         <span class="badge bg-primary">Tender</span>
@@ -82,7 +94,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Pagination removed because items is a collection -->
     </div>
 
@@ -99,7 +111,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Approval Remarks (Optional)</label>
-                            <textarea name="approval_remarks" class="form-control" rows="3" 
+                            <textarea name="approval_remarks" class="form-control" rows="3"
                                       placeholder="Enter any additional remarks for this approval..."></textarea>
                         </div>
                     </div>
@@ -144,7 +156,7 @@
             form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', awardId);
             new bootstrap.Modal(document.getElementById('approveModal')).show();
         }
-        
+
         function rejectAward(awardId) {
             const form = document.getElementById('rejectForm');
             form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', awardId);
