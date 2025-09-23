@@ -48,8 +48,16 @@ class EnforceSessionTimeout
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
+                // HTMX-friendly redirect header
+                $loginUrl = route('login');
+                if ($request->headers->has('HX-Request')) {
+                    return redirect()->to($loginUrl)->with('status', 'Session expired due to inactivity. Please log in again.')
+                        ->withHeaders(['HX-Redirect' => $loginUrl]);
+                }
+
                 if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json(['message' => 'Session expired due to inactivity. Please log in again.'], 401);
+                    return response()->json(['message' => 'Session expired due to inactivity. Please log in again.'], 401)
+                        ->withHeaders(['HX-Redirect' => $loginUrl]);
                 }
 
                 return redirect()->route('login')->with('status', 'Session expired due to inactivity. Please log in again.');

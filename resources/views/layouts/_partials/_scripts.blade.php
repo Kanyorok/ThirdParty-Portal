@@ -142,6 +142,19 @@
             $("#sessionInactivityMinutes").html("0" + Minutes);
         }
 
+        // Background heartbeat: ensure stale sessions are kicked promptly
+        (function(){
+            function ping(){
+                try{
+                    fetch("{{ route('auth.heartbeat') }}", {credentials:'include'})
+                        .then(function(r){ if(!r.ok){ window.location.href = "{{ route('login') }}"; } })
+                        .catch(function(){ /* offline - middleware will handle next request */ });
+                }catch(e){}
+            }
+            setInterval(ping, 15000);
+            window.addEventListener('online', ping);
+        })();
+
         // Global Flatpickr initialization for date-only inputs
         function initGlobalDatePickers() {
             try {
