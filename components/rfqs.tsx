@@ -71,7 +71,7 @@ export function RfqsFilter() {
                 const contentType = res.headers.get("content-type") || "";
                 const data = contentType.includes("application/json") ? await res.json() : await res.text();
                 if (!res.ok) {
-                    throw new Error((data && data.message) || "Failed to load RFQs");
+                    throw new Error((data && (data as any).message) || "Failed to load RFQs");
                 }
                 let list: unknown[] = [];
                 if (isRecord(data) && Array.isArray((data as Record<string, unknown>)["data"])) {
@@ -276,9 +276,12 @@ export function RfqsFilter() {
                             {(invitations || []).map((rfq: unknown) => {
                                 const obj = isRecord(rfq) ? rfq : {};
                                 const id = pick(obj, ["id", "rfqId", "RFQID", "rfq_id"]);
-                                const title = pick(obj, ["title", "RFQTitle", "name", "referenceName"]) ?? "Untitled RFQ";
-                                const ref = pick(obj, ["referenceNumber", "reference", "RFQRef", "ref_no", "ref"]) ?? "-";
-                                const closing = pick(obj, ["closingDate", "closeDate", "closing_date", "deadline", "endDate"]);
+                                // Title: show comments when available
+                                const title = pick(obj, ["comments", "title", "RFQTitle", "name", "referenceName"]) ?? "Untitled RFQ";
+                                // Reference should use 'number' per API
+                                const ref = pick(obj, ["number", "referenceNumber", "reference", "RFQRef", "ref_no", "ref"]) ?? "-";
+                                // Closing date should use 'submissionDeadline' per API
+                                const closing = pick(obj, ["submissionDeadline", "closingDate", "closeDate", "closing_date", "deadline", "endDate"]);
                                 const status = String(pick(obj, ["status", "invitationStatus", "state"]) ?? "").toUpperCase();
                                 return (
                                     <TableRow key={String(id)}>

@@ -56,10 +56,13 @@ function normalizeAttachments(raw: unknown): RfqDocumentAttachment[] {
 function normalizeHeader(raw: Record<string, unknown>): RfqHeader {
     return {
         id: toStringSafe(raw.id ?? raw.rfqId ?? raw.rfq_id ?? ""),
-        title: toStringSafe(raw.title ?? raw.RFQTitle ?? raw.name ?? raw.referenceName ?? "Untitled RFQ"),
-        referenceNumber: toStringSafe(raw.referenceNumber ?? raw.reference ?? raw.RFQRef ?? raw.ref_no ?? raw.ref ?? "-"),
+        // Title: prefer 'comments' from supplier invitations
+        title: toStringSafe(raw.comments ?? raw.title ?? raw.RFQTitle ?? raw.name ?? raw.referenceName ?? "Untitled RFQ"),
+        // Reference: prefer 'number'
+        referenceNumber: toStringSafe(raw.number ?? raw.referenceNumber ?? raw.reference ?? raw.RFQRef ?? raw.ref_no ?? raw.ref ?? "-"),
         buyerName: toStringSafe(raw.buyerName ?? raw.buyer ?? ""),
-        closingDate: toStringSafe(raw.closingDate ?? raw.closeDate ?? raw.closing_date ?? raw.deadline ?? raw.endDate ?? ""),
+        // Closing date: prefer 'submissionDeadline'
+        closingDate: toStringSafe(raw.submissionDeadline ?? raw.closingDate ?? raw.closeDate ?? raw.closing_date ?? raw.deadline ?? raw.endDate ?? ""),
         description: toStringSafe(raw.description ?? raw.details ?? ""),
         attachments: normalizeAttachments((raw as any)?.attachments),
     };
@@ -233,13 +236,14 @@ export default function RfqDetailPage() {
                 if (normalized.response.currency) setCurrency(normalized.response.currency);
                 if (normalized.response.durationDays) setDurationDays(String(normalized.response.durationDays));
                 setIsSubmitted(Boolean(normalized.isSubmitted));
+            } else {
+                // seed lineResponses (no previous submission)
+                const seed: Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }> = {};
+                normalized.lines.forEach((l) => {
+                    seed[l.id] = { lineItemId: l.id, unitPrice: undefined, totalPrice: undefined, leadTimeDays: undefined, comments: "" } as any;
+                });
+                setLineResponses(seed);
             }
-            // seed lineResponses
-            const seed: Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }> = {};
-            normalized.lines.forEach((l) => {
-                seed[l.id] = { lineItemId: l.id, unitPrice: undefined, totalPrice: undefined, leadTimeDays: undefined, comments: "" } as any;
-            });
-            setLineResponses(seed);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : "Unable to load RFQ";
             setError(msg);
@@ -490,7 +494,7 @@ export default function RfqDetailPage() {
                                     <TableCell>{l.unitOfMeasure}</TableCell>
                                     <TableCell className="max-w-[320px] text-muted-foreground">{l.specification || "-"}</TableCell>
                                     <TableCell className="w-40">
-                                        <Input inputMode="decimal" defaultValue={r.unitPrice != null ? String(r.unitPrice) : ""} onChange={(e) => onChangeUnitPrice(l.id, e.target.value.replace(/[^0-9.]/g, ""))} disabled={isSubmitted} />
+                                        <Input inputMode="decimal" value={r.unitPrice != null ? String(r.unitPrice) : ""} onChange={(e) => onChangeUnitPrice(l.id, e.target.value.replace(/[^0-9.]/g, ""))} disabled={isSubmitted} />
                                     </TableCell>
                                     <TableCell className="w-40">
                                         <Input inputMode="decimal" value={r.totalPrice != null ? String(r.totalPrice) : ""} readOnly />
