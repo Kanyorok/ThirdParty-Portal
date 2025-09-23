@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 
+Route::middleware(['web','auth'])->group(function(){
+    Route::get('/auth/heartbeat', function(){
+        return response()->noContent();
+    })->name('auth.heartbeat');
+});
 
 require __DIR__ . '/auth.php';
 

@@ -65,6 +65,33 @@ export const SidebarState = (() => {
 		qa(`${cfg.itemSelector}.${cfg.activeItemClass}`, root).forEach(li => li.classList.remove(cfg.activeItemClass));
 	}
 
+	// Scroll helpers: keep the active item visible inside the sidebar
+	function getScrollContainer(root) {
+		// Prefer inner scroll area if present (AblePro uses .navbar-content)
+		return q('.navbar-content', root) || root;
+	}
+
+	function isInView(el, container, margin = 64) {
+		try {
+			const er = el.getBoundingClientRect();
+			const cr = (container === document || container === document.body)
+				? { top: 0, bottom: (window.innerHeight || document.documentElement.clientHeight) }
+				: container.getBoundingClientRect();
+			return er.top >= cr.top + margin && er.bottom <= cr.bottom - margin;
+		} catch {
+			return true;
+		}
+	}
+
+	function scrollIntoCenterIfNeeded(el, root) {
+		try {
+			const container = getScrollContainer(root);
+			if (!isInView(el, container)) {
+				el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+			}
+		} catch {}
+	}
+
 	function applyToDom() {
 		const root = q(cfg.rootSelector) || document;
 		const { activeRouteId, openItemIds } = getState();
@@ -88,6 +115,10 @@ export const SidebarState = (() => {
 					const li = q(`${cfg.itemSelector}[data-item-id="${id}"]`, root);
 					if (li) li.classList.add(cfg.expandedItemClass);
 				});
+				// After classes are applied, ensure the active link is visible
+				if (link) {
+					setTimeout(() => scrollIntoCenterIfNeeded(link, root), 0);
+				}
 			}
 		}
 	}

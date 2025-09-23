@@ -79,6 +79,23 @@
 
             @if(config('app.debug')===false && !auth()->user()->can(PermissionEnum::UsersSessions)) setInterval(timerIncrement, 1000); // 1 second @endif
 
+            // Detect offline -> when back online, force a timeout to avoid stale sessions across networks
+            window.addEventListener('online', function(){
+                try {
+                    $.post("{{ route('timeout') }}", {_token: window.csrf_token}).always(function(){
+                        window.location.reload();
+                    });
+                } catch(e){ window.location.reload(); }
+            });
+
+            // When going offline, immediately treat session as expiring
+            window.addEventListener('offline', function(){
+                try {
+                    nWarning('Connection lost. Your session will end when connection is restored.');
+                } catch(e) {}
+                try { window.windowIdleTime = 0; } catch(e) {}
+            });
+
             // Zero the idle timer on any action.
             $(this).bind('mousemove keydown scroll click', function () {
                 window.windowIdleTime = 300;
@@ -102,7 +119,7 @@
             if (window.windowIdleTime === 60) {
                 nWarning("Session Expiring in 1 Minute.");
             }
-            if (window.windowIdleTime === 3) {
+            if (window.windowIdleTime <= 3) {
                 $("#sessionInactivity").addClass("d-none");
                 $.ajax({
                     url: "{{ route('timeout') }}",
@@ -124,6 +141,19 @@
             $("#sessionInactivitySeconds").html(Seconds);
             $("#sessionInactivityMinutes").html("0" + Minutes);
         }
+
+        // Background heartbeat: ensure stale sessions are kicked promptly
+        (function(){
+            function ping(){
+                try{
+                    fetch("{{ route('auth.heartbeat') }}", {credentials:'include'})
+                        .then(function(r){ if(!r.ok){ window.location.href = "{{ route('login') }}"; } })
+                        .catch(function(){ /* offline - middleware will handle next request */ });
+                }catch(e){}
+            }
+            setInterval(ping, 15000);
+            window.addEventListener('online', ping);
+        })();
 
         // Global Flatpickr initialization for date-only inputs
         function initGlobalDatePickers() {
