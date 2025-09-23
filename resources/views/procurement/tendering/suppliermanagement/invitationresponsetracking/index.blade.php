@@ -59,10 +59,11 @@
             </td>
             <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('d/m/Y') }}</td>
             <td>
-                @if($invitation->ResponseStatus === 'Accepted')
-                    <span class="badge bg-success">Accepted</span>
-                @elseif($invitation->ResponseStatus === 'Declined')
-                    <span class="badge bg-danger">Declined</span>
+                @php $status = strtolower($invitation->ResponseStatus ?? ''); @endphp
+                @if($status === 'accepted')
+                    <span class="badge bg-success">{{ $invitation->ResponseStatus }}</span>
+                @elseif($status === 'pending' || $status === 'declined')
+                    <span class="badge bg-danger">{{ $invitation->ResponseStatus }}</span>
                 @else
                     <span class="badge bg-secondary">{{ $invitation->ResponseStatus }}</span>
                 @endif
