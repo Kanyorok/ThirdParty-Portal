@@ -663,7 +663,7 @@ Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController
 //    // Routes for RFQSectionController (already defined above, no duplicates needed)
 //});
 //
-//// Additional procurement routes
-//Route::get('/procurement/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
-//Route::get('/procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
-//Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
+// Additional procurement routes (JSON endpoints used by frontend)
+Route::get('committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
+Route::get('tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+Route::get('rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);

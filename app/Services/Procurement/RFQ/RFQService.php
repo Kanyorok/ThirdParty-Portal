@@ -18,15 +18,8 @@ class RFQService
     {
 
         return DB::table(DB::raw('t_RFQResponse WITH (NOLOCK)'))
-            ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_RFQResponse.SupplierId', '=', 't_Suppliers.Id')
-            ->select(DB::raw('
-                t_RFQResponse.RFQNumber,
-                t_RFQResponse.RFQResponseNumber,
-                t_RFQResponse.RFQId,
-                t_Suppliers.SupplierName,
-                t_Suppliers.Id as SupplierId,
-                t_Suppliers.Address
-            '))->get();
+            ->leftJoin(DB::raw('t_ThirdParties WITH (NOLOCK)'), 't_ThirdParties.Id', '=', 't_RFQResponse.SupplierId')
+            ->select(DB::raw("\n                t_RFQResponse.RFQNumber,\n                t_RFQResponse.RFQResponseNumber,\n                t_RFQResponse.RFQId,\n                t_ThirdParties.Id as SupplierId,\n                t_ThirdParties.TradingName as TradingName,\n                t_ThirdParties.PhysicalAddress as Address\n            "))->get();
 
     }
 
@@ -39,15 +32,15 @@ class RFQService
 
         // Get RFQ and supplier info
         $rfq = DB::table('t_RFQResponse')
-            ->join('t_Suppliers', 't_RFQResponse.SupplierId', '=', 't_Suppliers.Id')
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 't_RFQResponse.SupplierId')
             ->where('t_RFQResponse.RFQId', $rfqID)
             ->select(
                 't_RFQResponse.Id as RFQResponseId',
                 't_RFQResponse.RFQNumber',
                 't_RFQResponse.RFQResponseNumber',
                 't_RFQResponse.RFQId',
-                't_Suppliers.SupplierName',
-                't_Suppliers.Id'
+                DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                DB::raw('tp.Id as Id')
             )
             ->first();
 
