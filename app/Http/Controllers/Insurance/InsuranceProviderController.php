@@ -15,10 +15,16 @@ use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProviderRequest;
 
 class InsuranceProviderController extends Controller
 {
-    //
+    public function index()
+    {
+        $providers = InsuranceProvider::all();
+
+        return view('bancassurance.insurers.index', compact('providers'));
+    }
+
     public function create()
     {
-        //$this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
+        $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
         $providers = InsuranceProvider::all();
 
         return view('bancassurance.insurers.create', compact('providers'));
@@ -26,7 +32,7 @@ class InsuranceProviderController extends Controller
 
     public function store(InsuranceProviderRequest $request)
     {
-       // $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
+        $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
         $validated = $request->validated();
 
 
@@ -42,16 +48,8 @@ class InsuranceProviderController extends Controller
         return redirect()->route('bancassurance.insurers.index')->with('success', 'Insurance Provider registered.');
     }
 
-    public function index()
-    {
-        $providers = InsuranceProvider::all();
-
-        return view('bancassurance.insurers.index', compact('providers'));
-    }
-
     public function edit($Id)
     {
-        $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
         $provider = InsuranceProvider::findOrFail($Id);
 
         return view('bancassurance.insurers.edit', compact('provider'));
@@ -59,11 +57,8 @@ class InsuranceProviderController extends Controller
 
     public function viewProducts($Id)
     {
-        $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
 
         $provider = InsuranceProvider::findOrFail($Id);
-
-        // Only fetch products linked to this provider
         $products = InsuranceProduct::where('InsuranceProviderID', $Id)->get();
 
         return view('bancassurance.insurers.products', compact('provider', 'products'));
@@ -123,17 +118,5 @@ class InsuranceProviderController extends Controller
                 ->withInput();
         }
     }
-
-
-    // public function detachProduct($providerId, $productId)
-    // {
-    //     DB::table('t_InsuranceProviderProducts')
-    //         ->where('InsuranceProviderID', $providerId)
-    //         ->where('ProductID', $productId)
-    //         ->update(['IsActive' => 0]);
-
-    //     return redirect()->route('bancassurance.insurers.products', $providerId)->with('success', 'Product detached successfully.');
-    // }
-
 
 }

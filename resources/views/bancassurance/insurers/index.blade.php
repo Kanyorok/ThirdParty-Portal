@@ -8,6 +8,7 @@
     <div class="mb-3 text-end">
         <a href="{{ route('bancassurance.insurers.create') }}" class="btn btn-primary">Add Provider</a>
     </div>
+    <p><small>The list below is of the available insurance providers</small></p>
         <table id='InsuranceProvider' class="table table-bordered table-hover">
             <thead class="table-light">
                 <tr>
