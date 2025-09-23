@@ -84,6 +84,11 @@
                 window.windowIdleTime = 300;
                 $("#sessionInactivity").addClass("d-none");
             });
+
+            // Initialize date pickers globally on page load
+            if (typeof initGlobalDatePickers === 'function') {
+                initGlobalDatePickers();
+            }
         });
 
         function timerIncrement() {
@@ -120,12 +125,39 @@
             $("#sessionInactivityMinutes").html("0" + Minutes);
         }
 
+        // Global Flatpickr initialization for date-only inputs
+        function initGlobalDatePickers() {
+            try {
+                if (window.flatpickr) {
+                    var dateInputs = document.querySelectorAll('input[type="date"], input.flatpickr-date');
+                    dateInputs.forEach(function (inputEl) {
+                        if (inputEl._flatpickr) {
+                            return; // already initialized
+                        }
+                        flatpickr(inputEl, {
+                            // Keep submitted value as ISO (server-friendly), show dd/mm/yyyy to users
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            allowInput: true
+                        });
+                    });
+                }
+            } catch (e) {
+                console.warn('Flatpickr init failed:', e);
+            }
+        }
+
         function showOffCanvasMain(title, url) {
             document.getElementById('offcanvasMainLabel').innerHTML = title;
             $("#offcanvasMainBody").html('<div class="text-center my-4"><div class="spinner-grow text-secondary me-2" role="status"><span class="visually-hidden">Loading...</span></div></div>');
             window.bsOffcanvas.show();
             $.get(url, function (data) {
                 $("#offcanvasMainBody").html(data);
+                // Re-init date pickers for dynamically loaded content
+                if (typeof initGlobalDatePickers === 'function') {
+                    initGlobalDatePickers();
+                }
             }).fail(function (jqXHR) {
                 nError(jqXHR.responseJSON.message);
                 window.bsOffcanvas.hide();

@@ -131,7 +131,7 @@
                                                     <strong class="text-primary">{{ $contract->ContractRef ?? 'PENDING' }}</strong>
                                                     @if($contract->ContractApprovedOn)
                                                         <div class="text-muted small">
-                                                            Approved: {{ $contract->ContractApprovedOn->format('M d, Y') }}
+                                                            Approved: {{ $contract->ContractApprovedOn->format('d/m/Y') }}
                                                         </div>
                                                     @endif
                                                 </div>
@@ -170,10 +170,10 @@
                                             <td>
                                                 @if($contract->ContractStartDate && $contract->ContractEndDate)
                                                     <div class="text-success small">
-                                                        <strong>Start:</strong> {{ $contract->ContractStartDate->format('M d, Y') }}
+                                                        <strong>Start:</strong> {{ $contract->ContractStartDate->format('d/m/Y') }}
                                                     </div>
                                                     <div class="text-danger small">
-                                                        <strong>End:</strong> {{ $contract->ContractEndDate->format('M d, Y') }}
+                                                        <strong>End:</strong> {{ $contract->ContractEndDate->format('d/m/Y') }}
                                                     </div>
                                                     @php
                                                         $now = now();

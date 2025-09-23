@@ -54,8 +54,8 @@
                         <td>{{ $Round->RoundID }}</td>
                         <td>{{ $Round->Title }}</td>
                         <td>{{ $Round->MaxVendors }}</td>
-                        <td>{{ $Round->StartDate->format('Y-m-d') }}</td>
-                        <td>{{ $Round->EndDate->format('Y-m-d') }}</td>
+                        <td>{{ $Round->StartDate->format('d/m/Y') }}</td>
+                        <td>{{ $Round->EndDate->format('d/m/Y') }}</td>
                         <td>
                             <span class="badge {{ $Round->Status->getBadgeClass() }}">
                                 {{ $Round->Status->label() }}

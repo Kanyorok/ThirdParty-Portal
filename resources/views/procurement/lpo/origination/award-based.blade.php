@@ -84,7 +84,7 @@
                                                         </div>
                                                         <div class="text-muted small">
                                                             <i class="fas fa-calendar me-1"></i>
-                                                            Opened: {{ $award->tender->OpeningDate?->format('M d, Y') }}
+                                                            Opened: {{ $award->tender->OpeningDate?->format('d/m/Y') }}
                                                         </div>
                                                         <div class="text-muted small">
                                                             <i class="fas fa-tag me-1"></i>
@@ -154,7 +154,7 @@
                                                 @if($award->ApprovedOn)
                                                     <div class="text-success small">
                                                         <i class="fas fa-calendar-check me-1"></i>
-                                                        {{ $award->ApprovedOn->format('M d, Y') }}
+                                                        {{ $award->ApprovedOn->format('d/m/Y') }}
                                                     </div>
                                                     <div class="text-muted small">
                                                         {{ $award->ApprovedOn->format('H:i') }}
@@ -162,7 +162,7 @@
                                                 @elseif($award->CreatedOn)
                                                     <div class="text-muted small">
                                                         <i class="fas fa-calendar me-1"></i>
-                                                        {{ $award->CreatedOn->format('M d, Y') }}
+                                                        {{ $award->CreatedOn->format('d/m/Y') }}
                                                     </div>
                                                 @else
                                                     <span class="text-muted">N/A</span>
