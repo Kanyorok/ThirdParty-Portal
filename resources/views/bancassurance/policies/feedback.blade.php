@@ -18,7 +18,7 @@
         <div class="mb-3">
             <label class="form-label">Feedback Date</label>
             <input type="date" name="FeedbackDate" class="form-control @error('FeedbackDate') is-invalid @enderror"
-                   value="{{ old('FeedbackDate', \Carbon\Carbon::now()->format('d/m/Y')) }}" required>
+                   value="{{ old('FeedbackDate', \Carbon\Carbon::now()->format('Y-m-d')) }}" required>
             @error('FeedbackDate')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

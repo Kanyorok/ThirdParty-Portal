@@ -55,7 +55,8 @@ class ModuleService
                 $menu .= ' active';
             }
             $path = parse_url($module['route'], PHP_URL_PATH) ?? '/';
-            $menu .= '"><a href="' . $module['route'] . '" class="pc-link" data-ajax="1" data-route="' . $path . '">';
+            $menu .= '" data-item-id="' . $module['id'] . '">';
+            $menu .= '<a href="' . $module['route'] . '" class="pc-link" data-ajax="1" data-route="' . $path . '" data-route-id="' . $path . '">';
             $menu .= '<span class="pc-micon">';
             $menu .= $module['icon'] ?? '<i data-feather="box"></i>';
             $menu .= '</span>';
@@ -65,7 +66,7 @@ class ModuleService
             }
             $menu .= '</a>';
             if (!empty($module['children'])) {
-                $menu .= self::_buildSubNavbar($module['children']);
+                $menu .= self::_buildSubNavbar($module['children'], $module['id']);
             }
             $menu .= ' </li>';
         }
@@ -74,7 +75,7 @@ class ModuleService
         return $menu;
     }
 
-    protected static function _buildSubNavbar(array $children): string
+    protected static function _buildSubNavbar(array $children, $parentId = null): string
     {
         $menu = '<ul class="pc-submenu">';
         foreach ($children as $child) {
@@ -85,7 +86,8 @@ class ModuleService
                 $menu .= ' active';
             }
             $childPath = parse_url($child['route'], PHP_URL_PATH) ?? '/';
-            $menu .= '"><a href="' . $child['route'] . '" class="pc-link" data-ajax="1" data-route="' . $childPath . '">';
+            $menu .= '" data-item-id="' . $child['id'] . '"' . ($parentId ? ' data-parent-id="' . $parentId . '"' : '') . '>';
+            $menu .= '<a href="' . $child['route'] . '" class="pc-link" data-ajax="1" data-route="' . $childPath . '" data-route-id="' . $childPath . '">';
             $menu .= '<span>' . $child['name'] . '</span>';
             if (!empty($child['children'])) {
                 $menu .= '<span class="pc-arrow"><i data-feather="chevron-right"></i></span>';
@@ -93,7 +95,7 @@ class ModuleService
             $menu .= '</a>';
 
             if (!empty($child['children'])) {
-                $menu .= self::_buildSubNavbar($child['children']);
+                $menu .= self::_buildSubNavbar($child['children'], $child['id']);
             }
             $menu .= '</li>';
         }

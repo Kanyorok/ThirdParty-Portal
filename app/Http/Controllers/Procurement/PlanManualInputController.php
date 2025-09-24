@@ -53,7 +53,8 @@ class PlanManualInputController extends Controller
             })
             ->orderBy('ItemName')
             ->get();
-        $budgetLines = BudgetMaster::all();
+        // Align with Approved Needs budget line source
+        $budgetLines = \App\Models\Budget\BudgetLine::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines', 'selectedPlanId', 'selectedPlanTitle'));
     }
@@ -91,7 +92,9 @@ class PlanManualInputController extends Controller
         $planLineItem->ProcurementMethod = '';
         $planLineItem->SchedulePeriod = $validated['schedule_period'];
         $planLineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
-        $planLineItem->BudgetLineID = (int)$validated['budget_line_id'];
+        $planLineItem->BudgetLineID = isset($validated['budget_line_id']) && $validated['budget_line_id'] !== null
+            ? (int)$validated['budget_line_id']
+            : null;
         $planLineItem->ExecutionStatus = 'Pending';
         $planLineItem->ChangeRemarks = $validated['notes'] ?? null;
         $planLineItem->BranchID = $user->employee->BranchId;
@@ -127,7 +130,8 @@ class PlanManualInputController extends Controller
             ->orderBy('ItemName')
             ->get();
         $categories = ItemCategories::all();
-        $budgetLines = BudgetMaster::all();
+        // Align with Approved Needs budget line source
+        $budgetLines = \App\Models\Budget\BudgetLine::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.edit', compact('lineItem', 'plans', 'items', 'categories', 'budgetLines'));
     }

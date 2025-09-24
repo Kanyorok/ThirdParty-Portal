@@ -67,8 +67,8 @@
                             <div class="col-md-6">
                                 <strong>Contract Period:</strong>
                                 <div>
-                                    {{ $contract->ContractStartDate?->format('M d, Y') ?? 'N/A' }} -
-                                    {{ $contract->ContractEndDate?->format('M d, Y') ?? 'N/A' }}
+                                    {{ $contract->ContractStartDate?->format('d/m/Y') ?? 'N/A' }} -
+                                    {{ $contract->ContractEndDate?->format('d/m/Y') ?? 'N/A' }}
                                 </div>
                             </div>
                             <div class="col-md-6">

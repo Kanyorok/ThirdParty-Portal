@@ -77,7 +77,7 @@ class PlanFromNeedsController extends Controller
         $noFilters = !$request->filled('branch_filter') && !$request->filled('department_filter') && !$request->filled('category_id');
 
         foreach ($selectedNeeds as $need) {
-            $budgetLineId = $request->budget_line_id[$need->Id] ?? 0;
+            $budgetLineId = $request->budget_line_id[$need->Id] ?? null;
             $unitOfMeasureId = $need->item?->uom?->Id;
 
             if ($noFilters) {
@@ -107,7 +107,7 @@ class PlanFromNeedsController extends Controller
                 'ProcurementMethod' => '',
                 'SchedulePeriod' => $request->fiscal_year ?? now()->year,
                 'ExpectedDeliveryDate' => Carbon::parse($need->RequestedDate),
-                'BudgetLineID' => $budgetLineId,
+                'BudgetLineID' => $budgetLineId ? (int)$budgetLineId : null,
                 'ExecutionStatus' => 'Pending',
                 'ChangeRemarks' => $need->Justification,
                 'IsDeleted' => 0,
