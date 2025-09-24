@@ -5,7 +5,7 @@
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">✅ Departmental/Branch Needs - Approval Queue</h4>
 
-        <table class="table table-hover table-bordered">
+        <table id="needs-approval" class="table table-hover table-bordered">
             <thead class="table-light">
             <tr>
                 <th>#</th>
@@ -39,21 +39,30 @@
                     <td>{{ Carbon::parse($NeedsApprovalview->CreatedOn)->format('d/m/Y') }}</td>
                     <td>{{ Carbon::parse($NeedsApprovalview->RequestedDate)->format('d/m/Y') }}</td>
                     <td>
-
-                        <a class="btn btn-sm btn-primary"
-                           href="{{ route('department-need-approval.show', $NeedsApprovalview->Id) }}">View to
-                            Approve</a>
-                        </form>
+                        <a class="btn btn-sm btn-primary" href="{{ route('department-need-approval.show', $NeedsApprovalview->Id) }}">View to Approve</a>
                     </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="9" class="text-center">No submissions found.</td>
-                </tr>
             @endforelse
             <!-- Loop rows dynamically -->
             </tbody>
         </table>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#needs-approval').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
+                lengthChange: true,
+                language: {
+                    emptyTable: 'No submissions found.'
+                }
+            });
+        });
+    </script>
 
 @endsection

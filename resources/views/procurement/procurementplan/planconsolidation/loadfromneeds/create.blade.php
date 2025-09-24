@@ -104,7 +104,7 @@
                     <thead class="table-light">
                     <tr>
                         <th><input type="checkbox" id="selectAll"></th>
-                        <th>Item</th>
+                        <th>Item / Need ID</th>
                         <th>Branch</th>
                         <th>Dept</th>
                         <th>Qty</th>
@@ -119,7 +119,10 @@
                         <tr>
                             <td><input type="checkbox" class="need-checkbox" name="selected_needs[]"
                                        value="{{ $need->Id }}"></td>
-                            <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
+                            <td>
+                                {{ $need->item->ItemName ?? 'N/A' }}
+                                <div class="text-muted small">Need ID: {{ $need->NeedID }}</div>
+                            </td>
                             <td>{{ $need->branch->Name ?? 'N/A' }}</td>
                             <td>{{ $need->department->Name ?? 'N/A' }}</td>
                             <td>{{ $need->RequestedQty }}</td>
