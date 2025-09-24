@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\RFQ;
 use App\Models\ThirdParies\Supplier;
+use App\Models\Procurement\RFQResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -257,7 +258,12 @@ class RFQController extends Controller
             )
             ->get();
 
-        return view('procurement.rfqs.show', compact('rfq', 'suppliers'));
+        // Load RFQ responses (supplier quotations) with items and supplier info for printing
+        $rfqResponses = RFQResponse::with(['items.uom', 'supplier.thirdParty'])
+            ->where('RFQId', $rfq->Id)
+            ->get();
+
+        return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses'));
     }
 
     /**
