@@ -83,7 +83,7 @@
 
         <div class="mb-3">
             <label for="RequestedDate" class="form-label">Date Needed</label>
-            <input type="date" name="RequestedDate" id="RequestedDate" value="{{ old('RequestedDate') }}"
+            <input type="date" name="RequestedDate" id="RequestedDate" value="{{ old('RequestedDate') }}" min="{{ now()->toDateString() }}"
                    class="form-control @error('RequestedDate') is-invalid @enderror" required>
             @error('RequestedDate')
             <div class="invalid-feedback">{{ $message }}</div>
@@ -105,7 +105,8 @@
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d/m/Y",
-        allowInput: true
+        allowInput: true,
+        minDate: "today"
     });
     document.addEventListener('DOMContentLoaded', function() {
         const itemDropdown = document.getElementById('itemDropdown');

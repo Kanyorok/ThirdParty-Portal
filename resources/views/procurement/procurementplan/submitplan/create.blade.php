@@ -19,8 +19,8 @@
             return $scheduledQty === $mergedQty && $scheduledQty > 0;
         })->count();
 
+        // Budget linking is no longer a hard requirement for submission
         $readyToSubmit = $total > 0 &&
-                         $budgetLinked === $total &&
                          $methodAssigned === $total &&
                          $scheduled === $total &&
                          $completed === $total;
@@ -156,11 +156,11 @@
             <div class="alert alert-danger">
                 ⚠️ You cannot submit this plan yet. Please ensure that:
                 <ul>
-                    <li>All items are budget linked ({{ $budgetLinked }} / {{ $total }})</li>
                     <li>All items have procurement method assigned ({{ $methodAssigned }} / {{ $total }})</li>
                     <li>All items are scheduled ({{ $scheduled }} / {{ $total }})</li>
                     <li>All schedules are completed ({{ $completed }} / {{ $total }})</li>
                 </ul>
+                <div class="small text-muted">Note: Budget linking is optional for submission.</div>
             </div>
         @endif
     </div>
