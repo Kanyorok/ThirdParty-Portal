@@ -57,7 +57,21 @@
                                     }
                                 @endphp
                                 {{ $branchDisplay }}</td>
-                                <td>{{ $item->DepartmentID }}</td>
+                                <td>@php
+                                    $deptDisplay = $item->DepartmentID;
+                                    try {
+                                        $dept = \App\Models\HRM\Department::where('DepartmentID', $item->DepartmentID)->first();
+                                        if (!$dept) {
+                                            $dept = \App\Models\HRM\Department::find($item->DepartmentID);
+                                        }
+                                        if ($dept) {
+                                            $deptDisplay = $dept->Name ?? $dept->DepartmentName ?? $item->DepartmentID;
+                                        }
+                                    } catch (\Throwable $e) {
+                                        // ignore and keep id
+                                    }
+                                @endphp
+                                {{ $deptDisplay }}</td>
                                 <td>{{ $item->RequestedBy }}</td>
                                 <td>{{ $item->TotalItems }}</td>
                                 <td>{{ $item->VeryHighCount }}</td>
