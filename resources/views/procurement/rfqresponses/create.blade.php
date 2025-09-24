@@ -25,7 +25,25 @@
                         <select name="RFQId" id="rfq-code" class="form-control" required>
                             <option value="">-- Select RFQ --</option>
                             @foreach($rfqs as $rfq)
-                                <option value="{{ $rfq->Id }}">{{ $rfq->RFQNumber }}</option>
+                                @php
+                                    $hasResponse = false;
+                                    try {
+                                        // If relation is preloaded as collection/array
+                                        if (isset($rfq->rfqResponses) && (is_array($rfq->rfqResponses) || (is_object($rfq->rfqResponses) && method_exists($rfq->rfqResponses, 'count')))) {
+                                            $hasResponse = (is_array($rfq->rfqResponses) ? count($rfq->rfqResponses) : $rfq->rfqResponses->count()) > 0;
+                                        } elseif (is_object($rfq) && method_exists($rfq, 'rfqResponses')) {
+                                            $hasResponse = $rfq->rfqResponses()->exists();
+                                        } else {
+                                            // Fallback to direct DB check when $rfq is a plain object
+                                            $hasResponse = \Illuminate\Support\Facades\DB::table('t_RFQResponse')->where('RFQId', $rfq->Id)->exists();
+                                        }
+                                    } catch (\Throwable $e) {
+                                        $hasResponse = false;
+                                    }
+                                @endphp
+                                @if (!$hasResponse)
+                                    <option value="{{ $rfq->Id }}">{{ $rfq->RFQNumber }}</option>
+                                @endif
                             @endforeach
                         </select>
                     </div>

@@ -58,6 +58,9 @@
       </div>
 
       <!-- Supplier Table -->
+      <!-- Criteria alert (shown when no criteria/sections exist) -->
+      <div id="criteria-alert" class="mb-3" style="display:none;"></div>
+
       <div class="table-responsive mb-4">
         <table class="table table-bordered" id="supplier-table">
           <thead class="table-light">
@@ -72,7 +75,7 @@
           </thead>
           <tbody>
             <tr>
-              <td colspan="5" class="text-center">Select an RFQ to view supplier details</td>
+              <td colspan="6" class="text-center">Select an RFQ to view supplier details</td>
             </tr>
           </tbody>
         </table>
@@ -176,6 +179,27 @@
           .then(response => response.json())
           .then(data => {
             const { responses, criteria, sectionWeights } = data;
+
+            // Check if criteria/sections exist for the selected RFQ
+            const hasCriteria = criteria && (Array.isArray(criteria) ? criteria.length > 0 : Object.keys(criteria).length > 0);
+            const criteriaAlert = document.getElementById('criteria-alert');
+            if (!hasCriteria) {
+              // Show red alert with link to Quotation Criteria Setup
+              criteriaAlert.style.display = 'block';
+              criteriaAlert.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                  <strong>No evaluation criteria configured for this RFQ.</strong>
+                  Please set up quotation criteria first in Procurement Settings.
+                  <a class="btn btn-sm btn-outline-light btn-danger ms-3" href="{{ route('rfqcriteriasetup.evaluations') }}">Go to Quotation Criteria Setup</a>
+                </div>
+              `;
+              supplierTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Evaluation criteria missing. Please configure quotation criteria before proceeding.</td></tr>';
+              evaluationFormsContainer.innerHTML = '';
+              return;
+            } else {
+              criteriaAlert.style.display = 'none';
+              criteriaAlert.innerHTML = '';
+            }
 
             if (responses.length > 0) {
               supplierTableBody.innerHTML = '';
