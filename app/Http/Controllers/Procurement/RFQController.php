@@ -25,9 +25,10 @@ class RFQController extends Controller
             ->join('t_CodeDetails as cd', 'r.StatusID', '=', 'cd.Id')
             ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
             ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
             ->where('cd.Description', 'Approved')
             ->whereNull('rfql.Id')
-            ->select('r.Id', 'r.RequisitionNo')
+            ->select('r.Id', 'r.RequisitionNo', DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle"))
             ->distinct()
             ->get();
 
