@@ -27,7 +27,12 @@
           <select class="form-select" id="rfq-select" name="RFQId" required>
             <option value="">Select DropDown Or Search</option>
             @foreach ($rfqs as $rfq)
-              <option value="{{ $rfq->Id }}" data-comments="{{ $rfq->Comments }}">{{ $rfq->RFQNumber }}</option>
+              @php
+                $plan = optional($rfq->requisition)->procurementPlan;
+                $planLabel = $plan ? trim(($plan->Title ?? '') . ' - ' . ($plan->ReferenceNumber ?? '')) : '';
+                $label = $rfq->RFQNumber . ($planLabel ? ' - ' . $planLabel : '');
+              @endphp
+              <option value="{{ $rfq->Id }}" data-comments="{{ $rfq->Comments }}">{{ $label }}</option>
             @endforeach
           </select>
           <div class="invalid-feedback">Please select an RFQ number.</div>
