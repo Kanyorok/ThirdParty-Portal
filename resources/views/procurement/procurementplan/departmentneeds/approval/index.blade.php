@@ -13,6 +13,7 @@
                 <th>Item Name</th>
                 <th>Category</th>
                 <th>Quantity</th>
+                <th>Est. Unit Cost</th>
                 <th>Est. Cost</th>
                 <th>Submitted By</th>
                 <th>Submitted On</th>
@@ -29,6 +30,11 @@
                     <td>{{ $NeedsApprovalview->item->ItemName ?? 'N/A' }}</td>
                     <td>{{ $NeedsApprovalview->item->category->Name ?? 'N/A' }}</td>
                     <td>{{ $NeedsApprovalview->RequestedQty }}</td>
+                    <td>
+                        {{ is_numeric($NeedsApprovalview->EstimatedUnitCost ?? null)
+                            ? number_format($NeedsApprovalview->EstimatedUnitCost, 2, '.', ',')
+                            : 'N/A' }}
+                    </td>
                     <!-- <td>{{ $NeedsApprovalview->EstimatedUnitCost }}</td> -->
 
                     <!-- Include the est. cost as estimatedcost * requestedqty  -->

@@ -16,7 +16,9 @@ class ProcurementPlanMaintainController extends Controller
     public function index()
     {
         $this->authorize('viewAny', ConsolidatedProcurementPlan::class);
-        $plans = ConsolidatedProcurementPlan::with(['createdBy', 'lineItems'])->get();
+        $plans = ConsolidatedProcurementPlan::with(['createdBy', 'lineItems'])
+            ->orderByDesc('CreatedOn')
+            ->get();
 
         return view('procurement.procurementplan.procurementplanmaintenance.index', compact('plans'));
     }
