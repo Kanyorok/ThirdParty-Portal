@@ -1,3 +1,6 @@
+@php
+    use App\Services\DMS\DocumentService;
+@endphp
 @extends('layouts.app')
 @section('title','Receipt Details')
 
@@ -59,11 +62,30 @@
 
             <!-- Payment Details -->
             <div class="row g-3 mt-3">
+                @php
+                    // Determine wallet usage/refund tied to this receipt
+                    $walletTxns = \App\Models\Finance\CustomerWalletTransaction::where('CustomerID', $receipt->CustomerID)
+                        ->where('ReferenceType', 'receipt')
+                        ->where('ReferenceID', $receipt->Id)
+                        ->get(['TransactionType','Amount']);
+                    $walletUsed = (float) $walletTxns->where('TransactionType','withdrawal')->sum('Amount');
+                    $walletRefund = (float) $walletTxns->where('TransactionType','deposit')->sum('Amount');
+                    $cashApplied = max(0, (float)$receipt->total_allocated - $walletUsed);
+                    // Build display label for payment method
+                    $baseMethod = $receipt->paymentMethod->Description ?? $receipt->PaymentMethod;
+                    if ($walletUsed > 0 && $cashApplied > 0) {
+                        $displayMethod = $baseMethod . ' + Wallet';
+                    } elseif ($walletUsed > 0 && $cashApplied == 0) {
+                        $displayMethod = 'Wallet';
+                    } else {
+                        $displayMethod = $baseMethod;
+                    }
+                @endphp
                 <div class="col-md-3">
                     <div class="border rounded-3 p-3 h-100">
                         <div class="small text-muted">Amount Received</div>
                         <div class="fs-5 fw-semibold text-success">KSh {{ number_format($receipt->AmountReceived, 2) }}</div>
-                        <div class="small text-muted">{{ $receipt->paymentMethod->Description ?? $receipt->PaymentMethod }}</div>
+                        <div class="small text-muted">{{ $displayMethod }}</div>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -91,6 +113,29 @@
                         <div class="small text-muted">Reference</div>
                         <div class="fw-semibold">{{ $receipt->ReferenceNumber ?: 'No reference' }}</div>
                         <div class="small text-muted">Value: {{ $receipt->ValueDate->format('M d, Y') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Funding Breakdown -->
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small text-uppercase mb-2">Funding Breakdown</div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>From Wallet</span>
+                            <span class="fw-semibold">KSh {{ number_format($walletUsed, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>From {{ $baseMethod }}</span>
+                            <span class="fw-semibold">KSh {{ number_format($cashApplied, 2) }}</span>
+                        </div>
+                        @if($walletRefund > 0)
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Returned to Wallet (unapplied)</span>
+                            <span class="fw-semibold">KSh {{ number_format($walletRefund, 2) }}</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -174,15 +219,17 @@
                                     {{ $receipt->Remarks }}
                                 </div>
                             @endif
-                            @if($receipt->documents->count() > 0)
-                                <strong>Attachments:</strong>
-                                @foreach($receipt->documents as $doc)
-                                    <div class="mt-1">
-                                        <i class="fas fa-paperclip me-1"></i>
-                                        <a href="#" class="text-decoration-none">{{ $doc->Name }}</a>
-                                        <span class="small text-muted">({{ number_format($doc->Size/1024, 1) }} KB)</span>
-                                    </div>
-                                @endforeach
+                            <strong>Attachments:</strong>
+                            @php
+                                $documents = $receipt->documents()->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                            @endphp
+                            @if($documents->count() > 0)
+                                <div id="receiptAttachments">
+                                    @foreach($documents as $document)
+                                        @php $document->setRelations([]); @endphp
+                                        {!! (new DocumentService($document))->summaryList() !!}
+                                    @endforeach
+                                </div>
                             @else
                                 <div class="text-muted">No attachments</div>
                             @endif
@@ -262,6 +309,20 @@
         :root { --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif; }
         body, .card, .table { font-family: var(--font-sans); }
         .card { border: none; }
+        /* Attachment preview chip tweaks */
+        #receiptAttachments .modal-preview-document{
+            display: inline-flex;
+            align-items: center;
+            gap: .375rem;
+            padding: .25rem .6rem;
+            font-size: .85rem;
+            line-height: 1.2;
+            border-radius: 9999px;
+            margin: .125rem .25rem .125rem 0;
+        }
+        #receiptAttachments .modal-preview-document:hover{
+            filter: brightness(0.97);
+        }
         @media print {
             body * { visibility: hidden; }
             #printRoot, #printRoot * { visibility: visible; }
@@ -271,4 +332,8 @@
             .shadow-sm { box-shadow: none !important; }
         }
     </style>
+@endsection
+
+@section('scripts')
+    @includeIf('snippets.actions.preview-files')
 @endsection

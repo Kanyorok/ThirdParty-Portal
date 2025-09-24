@@ -45,6 +45,7 @@ use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceInvoiceLine;
+use App\Models\Finance\FinanceReceipt;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\Finance\FinanceTransaction;
@@ -429,6 +430,7 @@ class AppServiceProvider extends ServiceProvider
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+            FinanceReceipt::getPrimaryKey() => FinanceReceipt::class,
 
             //Fleet Management
 

@@ -41,28 +41,23 @@ class CreditCalculationService
             ];
         }
 
-        // Calculate actual usage from negative movements (decreases in credit)
+        // Calculate actual usage ONLY from invoice utilization movements (exclude adjustments)
+        $usageTypes = ['invoice_usage', 'usage'];
         $totalUsage = FinanceCreditMovement::where('CreditID', $credit->Id)
             ->where('CustomerID', $customerId)
-            ->where('Amount', '<', 0) // Only negative amounts (usage)
+            ->whereIn('MovementType', $usageTypes)
+            ->where('Amount', '<', 0) // usage movements are negative in signed model
             ->sum('Amount');
 
         // Convert to positive value for "used" amount
         $used = abs((float)$totalUsage);
 
-        // Debug logging - remove after testing
-        \Log::info('Credit calculation debug', [
-            'credit_id' => $credit->Id,
-            'customer_id' => $customerId,
-            'total_usage_raw' => $totalUsage,
-            'used_calculated' => $used
-        ]);
 
         // If no credit movements exist, fall back to invoice-based calculation
         $movementCount = FinanceCreditMovement::where('CreditID', $credit->Id)
             ->where('CustomerID', $customerId)
             ->count();
-            
+
         if ($movementCount == 0) {
             $used = $this->calculateUsedFromInvoices($customerId, $credit->EffectiveFrom);
         }
@@ -76,15 +71,7 @@ class CreditCalculationService
         $available = max(0.0, (float)$netCreditBalance);
         $utilization = $limit > 0 ? min(100, round(($used / $limit) * 100, 2)) : 0.0;
 
-        // Debug logging - remove after testing
-        \Log::info('Credit balance debug', [
-            'credit_id' => $credit->Id,
-            'customer_id' => $customerId,
-            'net_balance' => $netCreditBalance,
-            'available_calculated' => $available,
-            'credit_limit' => $limit,
-            'utilization' => $utilization
-        ]);
+        // No debug logging in production
 
         return [
             'credit_limit' => $limit,

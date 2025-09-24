@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 
 class ReceiptsPostingController extends Controller
 {
@@ -67,7 +69,7 @@ class ReceiptsPostingController extends Controller
             return response()->json(['error' => 'Customer not found'], 404);
             }
         } catch (\Exception $e) {
-            \Log::error('Error in findCustomer: ' . $e->getMessage(), [
+            Log::error('Error in findCustomer: ' . $e->getMessage(), [
                 'request' => $request->all(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -125,7 +127,7 @@ class ReceiptsPostingController extends Controller
             $walletBalance = $wallet ? (float) $wallet->Balance : 0;
         } catch (\Exception $e) {
             // Log error but continue without wallet
-            \Log::info('Error retrieving wallet for customer ' . $customer->Id . ': ' . $e->getMessage());
+            Log::info('Error retrieving wallet for customer ' . $customer->Id . ': ' . $e->getMessage());
         }
 
         if ($invoices->isEmpty() && $walletBalance == 0) {
@@ -153,7 +155,7 @@ class ReceiptsPostingController extends Controller
             'invoices' => $invoices
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error processing customer data: ' . $e->getMessage(), [
+            Log::error('Error processing customer data: ' . $e->getMessage(), [
                 'customer_id' => $customer->Id ?? null,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -187,13 +189,6 @@ class ReceiptsPostingController extends Controller
      */
     public function store(Request $request)
     {
-        // Debug logging
-        Log::info('Receipt creation attempt', [
-            'request_data' => $request->all(),
-            'user_id' => Auth::id()
-        ]);
-
-        // Simplified validation for debugging
         $validated = $request->validate([
             'CustomerId' => 'required|numeric',
             'AmountReceived' => 'required|numeric|min:0.01',
@@ -207,18 +202,15 @@ class ReceiptsPostingController extends Controller
             'UseWallet' => 'nullable|in:true,false,1,0',
             'WalletAmount' => 'nullable|numeric|min:0'
         ]);
-        
+
         // Convert UseWallet to boolean
         $validated['UseWallet'] = in_array($validated['UseWallet'] ?? 'false', ['true', '1', 1, true], true);
         $validated['WalletAmount'] = (float)($validated['WalletAmount'] ?? 0);
-        
-        Log::info('Validation passed completely', ['use_wallet_converted' => $validated['UseWallet']]);
+
 
         try {
-            Log::info('Receipt validation passed', ['validated_data' => $validated]);
 
             $allocations = json_decode($validated['Allocations'], true);
-            Log::info('Allocations decoded', ['allocations' => $allocations]);
 
             if (empty($allocations)) {
                 Log::error('No allocations provided');
@@ -238,19 +230,21 @@ class ReceiptsPostingController extends Controller
                 $totalAllocated += $allocation['allocate'];
             }
 
-            // Handle wallet usage
-            $walletAmount = 0;
-            if ($validated['UseWallet'] ?? false) {
-                $walletAmount = $validated['WalletAmount'];
-                if ($walletAmount > 0) {
+            // Handle wallet usage (deduct only what is actually applied to invoices)
+            $walletAmountRequested = (float)($validated['WalletAmount'] ?? 0);
+            $walletUsed = 0.0;
+            $wallet = null;
+            if (($validated['UseWallet'] ?? false) && $walletAmountRequested > 0) {
+                $walletUsed = min($walletAmountRequested, $totalAllocated);
+                if ($walletUsed > 0) {
                     $wallet = CustomerWallet::where('CustomerID', $validated['CustomerId'])->where('IsActive', true)->first();
-                    if ($wallet && $wallet->Balance >= $walletAmount) {
-                        // Deduct specified amount from wallet
+                    if ($wallet && $wallet->Balance >= $walletUsed) {
+                        // Deduct the amount actually used from wallet
                         $wallet->deductFunds(
-                            $walletAmount,
-                            "Applied to receipt payment - {$walletAmount}",
+                            $walletUsed,
+                            "Applied to receipt payment - {$walletUsed}",
                             'receipt',
-                            0 // Will be updated after receipt creation
+                            0 // Update to receipt Id after creation
                         );
                     } else {
                         throw new \Exception('Insufficient wallet balance');
@@ -258,28 +252,20 @@ class ReceiptsPostingController extends Controller
                 }
             }
 
-            // Adjust amount received if using wallet
-            $adjustedAmount = $validated['AmountReceived'];
-            if ($walletAmount > 0 && $totalAllocated <= $walletAmount) {
-                // Fully covered by wallet
-                $adjustedAmount = 0;
-            } elseif ($walletAmount > 0) {
-                // Partially covered by wallet
-                $adjustedAmount = $totalAllocated - $walletAmount;
-            }
-
-            // Ensure we don't have negative amounts
-            $adjustedAmount = max(0, $adjustedAmount);
+            // Compute cash applied vs wallet used
+            $cashEntered = (float)$validated['AmountReceived'];
+            $cashApplied = max(0.0, $totalAllocated - $walletUsed);
+            $remainderCash = max(0.0, $cashEntered - $cashApplied); // to be returned to wallet
 
             DB::beginTransaction();
 
             // Create receipt directly (bypass service for now)
-            Log::info('Creating receipt directly');
 
+            // Record AmountReceived as total paid to invoices (wallet + cash applied)
             $receipt = FinanceReceipt::create([
                 'CustomerID' => $validated['CustomerId'],
                 'ReceiptDate' => now()->toDateString(),
-                'AmountReceived' => $validated['AmountReceived'],
+                'AmountReceived' => $totalAllocated,
                 'PaymentMethod' => $validated['PaymentMethod'],
                 'ReferenceNumber' => $validated['ReferenceNo'],
                 'ValueDate' => $validated['ValueDate'],
@@ -293,6 +279,16 @@ class ReceiptsPostingController extends Controller
             ]);
 
             Log::info('Receipt created', ['receipt_id' => $receipt->Id, 'receipt_number' => $receipt->ReceiptNumber]);
+
+            // DMS Upload
+            if ($request->hasFile('Attachment')) {
+                $receipt->newDocument(
+                    ModulesEnum::Finance,
+                    $request->file('Attachment'),
+                    [PermissionEnum::FinanceAccountsReceivableCreate, PermissionEnum::FinanceAccountsReceivableView],
+                    Auth::user()
+                );
+            }
 
             // Create allocations
             foreach ($allocations as $allocation) {
@@ -318,34 +314,28 @@ class ReceiptsPostingController extends Controller
                 }
             }
 
-            Log::info('Allocations created successfully');
 
             // Update wallet transaction reference if wallet was used
-            if ($walletAmount > 0) {
+            if ($walletUsed > 0 && $wallet) {
                 $wallet->transactions()
                     ->where('ReferenceType', 'receipt')
                     ->where('ReferenceID', 0)
-                    ->where('Amount', $walletAmount)
+                    ->where('Amount', $walletUsed)
                     ->update(['ReferenceID' => $receipt->Id]);
             }
 
-            // Handle overpayment - add excess to wallet
-            $excessAmount = $validated['AmountReceived'] - $totalAllocated;
-            if ($excessAmount > 0) {
-                // Get or create wallet for this customer
+            // Return any un-applied cash back to wallet automatically
+            if ($remainderCash > 0) {
                 $customerWallet = CustomerWallet::getOrCreateWallet($validated['CustomerId']);
-
-                // Add excess amount to wallet
                 $customerWallet->addFunds(
-                    $excessAmount,
-                    "Excess amount from receipt {$receipt->ReceiptNumber}",
+                    $remainderCash,
+                    "Unapplied cash returned to wallet from receipt {$receipt->ReceiptNumber}",
                     'receipt',
                     $receipt->Id
                 );
-
-                // Update receipt with unapplied amount
+                // All funds are either applied or returned to wallet; keep UnappliedAmount at 0
                 $receipt->update([
-                    'UnappliedAmount' => $excessAmount,
+                    'UnappliedAmount' => 0,
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now()
                 ]);
@@ -356,7 +346,7 @@ class ReceiptsPostingController extends Controller
             activity('Receipt Creation')
                 ->performedOn($receipt)
                 ->causedBy(Auth::user())
-                ->withProperties(['total_allocated' => $totalAllocated, 'wallet_used' => $walletAmount])
+                ->withProperties(['total_allocated' => $totalAllocated, 'wallet_used' => $walletUsed])
                 ->log("Created receipt {$receipt->ReceiptNumber}");
 
             return redirect()->route('receiptsposting.show', $receipt->Id)
@@ -404,11 +394,11 @@ class ReceiptsPostingController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             // Process each allocation to handle credit restoration
             foreach ($receipt->allocations as $allocation) {
                 $invoice = $allocation->invoice;
-                
+
                 // Check if this invoice had credit applied
                 if ($invoice->UseCredit) {
                     // Restore credit by creating a credit movement
@@ -419,13 +409,13 @@ class ReceiptsPostingController extends Controller
                     ]);
                 }
             }
-            
+
             // Calculate total allocated amount (what actually went to invoices)
             $totalAllocated = $receipt->allocations->sum('AmountAllocated');
-            
+
             // Post only allocated amount to GL (not wallet deposits)
             $this->postReceiptToGL($receipt, $validated['Reason'], $totalAllocated);
-            
+
             // Update receipt status
             $receipt->update([
                 'Status' => 'Posted',
@@ -433,9 +423,9 @@ class ReceiptsPostingController extends Controller
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now()
             ]);
-            
+
             DB::commit();
-            
+
             activity('Receipt Posting')
                 ->performedOn($receipt)
                 ->causedBy(Auth::user())
@@ -490,7 +480,7 @@ class ReceiptsPostingController extends Controller
         }
 
         // Create credit movement for payment received
-        FinanceCreditMovement::create([
+        \App\Models\Finance\FinanceCreditMovement::create([
             'CreditID' => $creditProfile->Id,
             'CustomerID' => $invoice->CustomerID,
             'MovementType' => 'payment_received',
@@ -513,7 +503,7 @@ class ReceiptsPostingController extends Controller
     {
         try {
             $transactionService = app(TransactionService::class);
-            
+
             $payload = [
                 'ModuleID'          => 1100000, // Finance module
                 'ThirdPartyID'      => $receipt->CustomerID,
@@ -552,7 +542,7 @@ class ReceiptsPostingController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             throw new \Exception("Failed to post receipt to GL: " . $e->getMessage());
         }
     }
