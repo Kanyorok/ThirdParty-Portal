@@ -8,6 +8,7 @@ use App\Models\DMS\Document;
 use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\ThirdParies\Supplier;
+use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ class FinanceInvoiceEntry extends Model
     protected $fillable = [
         'InvoiceNumber',
         'SupplierID',
+        'ThirdPartyID',
         'CurrencyID',
         'ExchangeRate',
         'POReference',
@@ -58,6 +60,11 @@ class FinanceInvoiceEntry extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'SupplierID', 'Id');
+    }
+
+    public function thirdParty()
+    {
+        return $this->belongsTo(ThirdParties::class, 'ThirdPartyID', 'Id');
     }
 
     public function currency(){

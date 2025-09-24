@@ -12,6 +12,7 @@ use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\Procurement\OrderLines;
 use App\Models\ThirdParies\Supplier;
+use App\Models\ThirdParty\ThirdParties;
 use App\Services\Finance\TransactionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class InvoiceEntryController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
 
-        $invoices = FinanceInvoiceEntry::with('suppliers:Id,SupplierName')
+        $invoices = FinanceInvoiceEntry::with(['thirdParty:Id,ThirdPartyName','supplier:Id'])
             ->get();
 
         return view('finance.accountspayable.invoiceentry.index', compact('invoices'));
@@ -37,7 +38,11 @@ class InvoiceEntryController extends Controller
 
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
 
-        $suppliers = Supplier::select('Id', 'SupplierName')->get();
+        // Vendors: fetch from suppliers joined to third parties for label
+        $suppliers = Supplier::query()
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 't_Suppliers.ThirdPartyID')
+            ->select('t_Suppliers.Id', 't_Suppliers.ThirdPartyID', DB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"))
+            ->get();
         $orders = Order::select('Id','AccountID','Description','OrdTotExcl','OrderNo')
             ->get();
         $currencies = Currency::select('Id', 'Code')->get();
@@ -54,7 +59,7 @@ class InvoiceEntryController extends Controller
         // return$request->all();
         $validated = $request->validate([
             'InvoiceNumber'=> 'required|string',
-            'SupplierID'=> 'required|exists:t_Suppliers,Id',
+            'SupplierID'=> 'required|exists:t_Suppliers,Id', // kept for UI select
             'CurrencyID'=> 'required|exists:t_Currencies,Id',
             'ExchangeRate'=> 'required|numeric|min:0',
             'POReference'=> 'required|exists:t_Orders,OrderNo',
@@ -112,9 +117,13 @@ class InvoiceEntryController extends Controller
 
             FacadesDB::beginTransaction();
 
+            // Resolve ThirdPartyID from Supplier
+            $thirdPartyId = FacadesDB::table('t_Suppliers')->where('Id', $validated['SupplierID'])->value('ThirdPartyID');
+
             $invoice =  FinanceInvoiceEntry::create([
                 'InvoiceNumber'=> $validated['InvoiceNumber'],
                 'SupplierID'=> $validated['SupplierID'],
+                'ThirdPartyID'=> $thirdPartyId,
                 'CurrencyID'=> $validated['CurrencyID'],
                 'ExchangeRate'=> $validated['ExchangeRate'],
                 'POReference'=> $poId,
@@ -184,8 +193,12 @@ class InvoiceEntryController extends Controller
             return response()->json(['error' => 'PO not found'], 404);
         }
 
-        // Get supplier name
-        $supplier = FacadesDB::table('t_Suppliers')->where('Id', $po->AccountID)->first();
+        // Get supplier third party name
+        $supplier = FacadesDB::table('t_Suppliers as s')
+            ->leftJoin('t_ThirdParties as tp','tp.Id','=','s.ThirdPartyID')
+            ->where('s.Id', $po->AccountID)
+            ->select(DB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"))
+            ->first();
 
         // Get PO line items with ItemName from t_Items
         $items = FacadesDB::table('t_OrderLines as ol')
@@ -265,7 +278,7 @@ class InvoiceEntryController extends Controller
     public function show($id)
     {
         $invoice = FinanceInvoiceEntry::with([
-            'supplier:Id,SupplierName',
+            'thirdParty:Id,ThirdPartyName,TradingName',
             'currency:Id,Name,Code,Symbol',
             'order:Id,OrderNo,Description,OrdTotExcl',
             'grn:id,GRNID,SupplierId',
@@ -300,7 +313,7 @@ class InvoiceEntryController extends Controller
                 : '—',
             'amount'         => number_format((float)($invoice->InvoiceAmount ?? 0), 2),
             'exRate'         => $invoice->ExchangeRate ?? 1.0,
-            'vendorName'     => $invoice->supplier->SupplierName ?? '—',
+            'vendorName'     => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
             'poNo'           => $invoice->order->OrderNo ?? '—',
             'grnNo'          => $invoice->grn->GRNID ?? '—',
             'poSub'          => $poSub,
