@@ -72,9 +72,9 @@ class ReversingJournalController extends Controller
                     'BranchID'       => $line->BranchID,
                     'DepartmentID'   => $line->DepartmentID,
                     'IsDebit'        => !$line->IsDebit, // Flip
-                    'Amount'         => $line->Amount,
-                    'Debit'          => $line->Credit,    // Flip
-                    'Credit'         => $line->Debit,     // Flip
+                    'Amount'         => !$line->IsDebit?$line->Amount*-1:$line->Amount,
+                    'Debit'          => $line->Credit*-1,    // Flip
+                    'Credit'         => abs($line->Debit),     // Flip
                     'Narration'      => 'Reversal: ' . ($line->Narration ?? ''),
                     'CreatedBy'      => Auth::id(),
                     'ModifiedBy'     => Auth::id(),

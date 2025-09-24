@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Finance\BankBranchController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web','auth'])->group(function(){
@@ -86,4 +87,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
         });
     });
     Route::get('help', 'HelpController')->name('help');
+
+        // ✅ Global Locality Endpoint
+        Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
 });

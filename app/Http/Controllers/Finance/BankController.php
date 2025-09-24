@@ -12,7 +12,7 @@ class BankController extends Controller
     // Display a listing of the banks
     public function index()
     {
-        $banks = \App\Models\Finance\Bank::orderBy('BankName')->paginate(20);
+        $banks = \App\Models\Finance\Bank::with('country')->orderBy('BankName')->paginate(20);
         return view('finance.bank.index', compact('banks'));
     }
 

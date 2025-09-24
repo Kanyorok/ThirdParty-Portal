@@ -11,6 +11,7 @@ use App\Http\Controllers\Finance\ChequeManagementController;
 use App\Http\Controllers\Finance\COASegmentController;
 use App\Http\Controllers\Finance\ConsolidationReportsController;
 use App\Http\Controllers\Finance\CreditManagementController;
+use App\Http\Controllers\Finance\CreditAdjustmentController;
 use App\Http\Controllers\Finance\CreditNoteController;
 use App\Http\Controllers\Finance\DebitNoteController;
 use App\Http\Controllers\Finance\CustomerMasterController;
@@ -65,7 +66,7 @@ use Illuminate\Support\Facades\Route;
 
 // Newly added
 
-Route::namespace('Finance')->prefix('finance')->group(function () {
+Route::prefix('finance')->group(function () {
     Route::resource('journalbatch', JournalBatchController::class);
     Route::resource('ledgeraccounts', LedgerAccountsController::class);
     Route::resource('transactiontypes', TransactionTypesController::class);
@@ -79,8 +80,68 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
     Route::resource('debitnote', DebitNoteController::class);
     Route::resource('paymentprocessing', PaymentProcessingController::class);
     Route::resource('agingreport', AgingReportController::class);
-    Route::resource('receiptsposting', ReceiptsPostingController::class);
+    // Receipts posting routes moved to separate group below to avoid conflicts
     Route::resource('creditmanagement', CreditManagementController::class);
+    Route::post('creditmanagement/{id}/approve', [CreditManagementController::class, 'approve'])->name('creditmanagement.approve');
+    Route::get('creditmanagement/{id}/history', [CreditManagementController::class, 'history'])->name('creditmanagement.history');
+Route::resource('creditadjustment', CreditAdjustmentController::class);
+    Route::get('creditadjustment/create/{id}', [CreditAdjustmentController::class, 'createWithId'])->name('creditadjustment.createWithId');
+Route::post('creditadjustment/{id}/approve', [CreditAdjustmentController::class, 'approve'])->name('creditadjustment.approve');
+
+// Invoice generation with credit integration
+Route::resource('invoicegeneration', InvoiceGenerationController::class);
+Route::post('invoicegeneration/check-credit', [InvoiceGenerationController::class, 'checkCredit'])->name('invoicegeneration.check-credit');
+Route::post('invoicegeneration/{id}/apply-credit', [InvoiceGenerationController::class, 'applyCredit'])->name('invoicegeneration.apply-credit');
+
+// Debug route to check credit utilization
+Route::get('debug/credit-utilization/{creditId}', function($creditId) {
+    $credit = \App\Models\Finance\FinanceCreditManagement::with('customer')->findOrFail($creditId);
+
+    // Get all invoices for this customer
+    $allInvoices = \App\Models\Finance\FinanceInvoice::with('customer')
+        ->where('CustomerID', $credit->CustomerID)
+        ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber']);
+
+    // Also search by customer name
+    $invoicesByName = \App\Models\Finance\FinanceInvoice::with('customer')
+        ->whereHas('customer', function($query) use ($credit) {
+            $query->where('ThirdPartyName', 'like', "%{$credit->customer->ThirdPartyName}%");
+        })
+        ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber']);
+
+    return response()->json([
+        'credit_profile' => [
+            'id' => $credit->Id,
+            'customer_id' => $credit->CustomerID,
+            'customer_name' => $credit->customer->ThirdPartyName,
+            'credit_limit' => $credit->CreditLimit,
+            'effective_from' => $credit->EffectiveFrom,
+        ],
+        'invoices_by_customer_id' => $allInvoices->toArray(),
+        'invoices_by_customer_name' => $invoicesByName->toArray(),
+        'summary' => [
+            'total_invoices_by_id' => $allInvoices->count(),
+            'total_invoices_by_name' => $invoicesByName->count(),
+            'draft_with_credit_by_id' => $allInvoices->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
+            'draft_with_credit_by_name' => $invoicesByName->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
+        ]
+    ], 200, [], JSON_PRETTY_PRINT);
+});
+
+// Debug route to check invoices with credit applied
+Route::get('debug/invoices-with-credit', function() {
+    $invoicesWithCredit = \App\Models\Finance\FinanceInvoice::with('customer')
+        ->where('UseCredit', true)
+        ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber', 'CreditAppliedOn']);
+
+    return response()->json([
+        'total_invoices_with_credit' => $invoicesWithCredit->count(),
+        'total_amount' => $invoicesWithCredit->sum('TotalAmount'),
+        'invoices' => $invoicesWithCredit->toArray()
+    ], 200, [], JSON_PRETTY_PRINT);
+});
+
+
     Route::resource('agingreportar', AgingReportARController::class);
     Route::resource('customerstatement', CustomerStatementController::class);
     Route::resource('paymentvoucher', PaymentVoucherController::class);
@@ -205,15 +266,21 @@ Route::namespace('Finance')->prefix('finance')->group(function () {
         ]);
 });
 
-//Fetching Data for AR Invoice
-Route::prefix('finance/ar/receiptsposting')->name('receiptsposting.ar.')->group(function () {
-    Route::get('/', [ReceiptsPostingController::class, 'index'])->name('index');
-    Route::get('/create', [ReceiptsPostingController::class, 'create'])->name('create');
-    Route::post('/', [ReceiptsPostingController::class, 'store'])->name('store');
+// Receipts Posting routes
+Route::prefix('finance')->group(function () {
+    Route::resource('receiptsposting', ReceiptsPostingController::class);
+    Route::post('receiptsposting/{id}/approve', [ReceiptsPostingController::class, 'approve'])->name('receiptsposting.approve');
 
-    // AJAX endpoint
-    Route::get('/api/customers', [ReceiptsPostingController::class, 'findCustomer']);
+    // AJAX endpoints for receipts posting
+    Route::get('receiptsposting/api/customers', [ReceiptsPostingController::class, 'findCustomer'])->name('receiptsposting.api.customers');
+    Route::post('receiptsposting/api/auto-allocate', [ReceiptsPostingController::class, 'autoAllocate'])->name('receiptsposting.api.auto-allocate');
+    Route::get('receiptsposting/api/wallet-balance', [ReceiptsPostingController::class, 'getWalletBalance'])->name('receiptsposting.api.wallet-balance');
 });
+
+// Legacy AR endpoint for backward compatibility
+Route::get('finance/ar/receiptsposting/api/customers', [ReceiptsPostingController::class, 'findCustomer']);
+
+// Debug route removed
 
 
 // Bank Routes
@@ -235,6 +302,10 @@ Route::middleware('auth')->prefix('finance')->name('finance.')->group(function (
     Route::resource('bankbranch', BankBranchController::class)
         ->except(['index'])
         ->names('bankbranch');
+
+    // AJAX: Get cities for a selected country (used by Bank Branch create/edit)
+    Route::get('bankbranch/cities', [BankBranchController::class, 'getCities'])
+        ->name('bankbranch.cities');
 });
 
 
