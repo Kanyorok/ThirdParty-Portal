@@ -48,6 +48,11 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
             Route::resource('localities', 'LocalityController')->except(['create', 'show', 'edit']);
         });
 
+        // User Sessions (single-session admin)
+        Route::get('user-sessions', 'UserSessionController@index')->name('settings.user-sessions.index');
+        Route::post('user-sessions/revoke/{id}', 'UserSessionController@revoke')->name('settings.user-sessions.revoke');
+        Route::post('user-sessions/revoke-others/{userId}', 'UserSessionController@revokeOthers')->name('settings.user-sessions.revoke-others');
+
 
         Route::post('teams/{team}/notification', 'TeamMessagingController')->name('bulk-notification.team');
         Route::resource('teams/{team}/team-users', 'TeamUserController')->parameters(['team-users' => 'user'])->except(['create', 'edit']);
