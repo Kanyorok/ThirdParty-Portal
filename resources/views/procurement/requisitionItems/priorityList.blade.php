@@ -41,7 +41,22 @@
                                 <td>{{$loop->iteration }}</td>
                                 <td>{{ $item->RequisitionNo }}</td>
                                 <td>{{ $item->RequisitionDate }}</td>
-                                <td>{{ $item->BranchID }}</td>
+                                <td>@php
+                                    $branchDisplay = $item->BranchID;
+                                    try {
+                                        $branch = \App\Models\Core\Branch::where('BranchID', $item->BranchID)->first();
+                                        if (!$branch) {
+                                            $branch = \App\Models\Core\Branch::find($item->BranchID);
+                                        }
+                                        if ($branch) {
+                                            // prefer Name, then BranchName if present
+                                            $branchDisplay = $branch->Name ?? $branch->BranchName ?? $branch->BranchName ?? $item->BranchID;
+                                        }
+                                    } catch (\Throwable $e) {
+                                        // ignore and fallback to id
+                                    }
+                                @endphp
+                                {{ $branchDisplay }}</td>
                                 <td>{{ $item->DepartmentID }}</td>
                                 <td>{{ $item->RequestedBy }}</td>
                                 <td>{{ $item->TotalItems }}</td>
