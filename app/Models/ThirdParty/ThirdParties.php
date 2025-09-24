@@ -123,4 +123,25 @@ class ThirdParties extends Model
             'TypeId'
         );
     }
+
+    // Finance relationships
+    public function wallet()
+    {
+        return $this->hasOne(\App\Models\Finance\CustomerWallet::class, 'CustomerID', 'Id');
+    }
+
+    public function creditProfiles()
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceCreditManagement::class, 'CustomerID', 'Id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceInvoice::class, 'CustomerID', 'Id');
+    }
+
+    public function receipts()
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
+    }
 }

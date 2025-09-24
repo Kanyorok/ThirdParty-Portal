@@ -2,6 +2,16 @@
 @section('title','New Receipt')
 
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="container my-3">
         <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.8); z-index: 2000;">
             <div class="text-center">
@@ -10,6 +20,7 @@
             </div>
         </div>
         <form action="{{ route('receiptsposting.store') }}" method="post" enctype="multipart/form-data" id="receiptForm">
+            <!-- DEBUG: Action URL is {{ route('receiptsposting.store') }} -->
             @csrf
 
             <!-- Alerts / Toasts -->
@@ -113,6 +124,34 @@
                         </div>
 
                         <div class="small text-muted" id="invoiceCountHint">0 pending invoices</div>
+
+                        {{-- Wallet Balance Section --}}
+                        <div id="walletSection" class="mt-3 d-none">
+                            <div class="alert alert-info">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <i class="fas fa-wallet me-2"></i>
+                                        <strong>Wallet Balance: <span id="walletBalance">KSh 0.00</span></strong>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="useWallet" name="UseWallet">
+                                            <label class="form-check-label" for="useWallet">
+                                                Apply from wallet
+                                            </label>
+                                        </div>
+                                        <div id="walletAmountSection" class="d-none">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">KSh</span>
+                                                <input type="number" step="0.01" class="form-control" id="walletAmount" placeholder="0.00">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnMaxWallet">Max</button>
+                                            </div>
+                                            <div class="form-text">Enter amount to apply from wallet</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- STEP 3: Payment details + live totals -->
@@ -258,6 +297,12 @@
 
         const customerIdHidden = document.getElementById('customerIdHidden');
         const submitBtn        = document.getElementById('submitBtn');
+        const walletSection    = document.getElementById('walletSection');
+        const walletBalance    = document.getElementById('walletBalance');
+        const useWalletCheckbox = document.getElementById('useWallet');
+        const walletAmountSection = document.getElementById('walletAmountSection');
+        const walletAmountInput = document.getElementById('walletAmount');
+        const btnMaxWallet = document.getElementById('btnMaxWallet');
 
         const flashArea        = document.getElementById('flashArea');
         const toastArea        = document.getElementById('toastArea');
@@ -299,7 +344,8 @@
         /* ====================== STATE ====================== */
         let state = {
             customer: null,
-            invoices: [] // each: { id, number, issue_date, due_date, currency:{code,symbol?}, total, paid, balance, allocate, selected }
+            invoices: [], // each: { id, number, issue_date, due_date, currency:{code,symbol?}, total, paid, balance, allocate, selected }
+            walletBalance: 0
         };
 
         /* ====================== RESET / CLEAR ====================== */
@@ -328,13 +374,20 @@
             appliedBadge.textContent = '';
             submitBtn.disabled = true;
             setHidden(paymentBlock, true);
+            // Don't hide wallet section - keep it visible
+            useWalletCheckbox.checked = false;
+            useWalletCheckbox.disabled = true;
         }
         function resetAll(message){
             state.customer = null;
             state.invoices = [];
+            state.walletBalance = 0;
             clearCustomerUI();
             clearInvoicesUI();
             clearPaymentUI();
+            // Reset wallet display
+            walletBalance.textContent = 'KSh 0.00';
+            setHidden(walletSection, true);
             if (message) hint.textContent = message;
         }
 
@@ -367,9 +420,11 @@
                 resetAll();
                 state.customer = data.customer || null;
                 state.invoices = (data.invoices || []).map(x => ({ ...x, balance: balanceOf(x), allocate: 0, selected: false }));
+                state.walletBalance = data.customer?.wallet_balance || 0;
 
                 renderCustomer();
                 renderInvoices();
+                renderWallet();
                 setHidden(paymentBlock, state.invoices.filter(i => i.balance>0).length === 0);
 
                 hint.textContent = 'Customer loaded. Select invoices and allocate amounts.';
@@ -412,6 +467,19 @@
             custOut.textContent = fmt(outstanding);
 
             setHidden(custCard, false);
+        }
+
+        function renderWallet(){
+            // Always show wallet section for all customers
+            walletBalance.textContent = `KSh ${fmt(state.walletBalance || 0)}`;
+            setHidden(walletSection, false);
+
+            // Enable/disable checkbox based on balance
+            useWalletCheckbox.disabled = (state.walletBalance || 0) <= 0;
+            if (useWalletCheckbox.disabled) {
+                useWalletCheckbox.checked = false;
+                setHidden(walletAmountSection, true);
+            }
         }
 
         function renderInvoices(){
@@ -457,6 +525,28 @@
             recalcSummary();
         }
 
+        /* ====================== SMART ALLOCATION HELPER ====================== */
+        function smartAllocateInvoice(inv, allocInput) {
+            // Calculate available funds (cash + wallet)
+            const cashAmount = Number(amountInput.value || 0);
+            const walletAmount = useWalletCheckbox.checked ? Number(walletAmountInput.value || 0) : 0;
+            const totalAvailable = cashAmount + walletAmount;
+            
+            // Calculate what's already allocated to other selected invoices
+            const otherAllocated = sum(state.invoices.filter(i => i.selected && i.id !== inv.id).map(i => i.allocate));
+            
+            // Calculate remaining available for this invoice
+            const remainingAvailable = Math.max(0, totalAvailable - otherAllocated);
+            
+            // Allocate the minimum of what's needed and what's available
+            const optimalAllocation = Math.min(inv.balance, remainingAvailable);
+            
+            inv.allocate = optimalAllocation;
+            if (allocInput) {
+                allocInput.value = optimalAllocation.toFixed(2);
+            }
+        }
+
         /* ====================== SELECTION / ALLOCATION ====================== */
         function onSelectInvoice(e){
             const id = Number(e.target.getAttribute('data-id'));
@@ -468,7 +558,13 @@
             const allocInput = invoiceRows.querySelector(`.inv-alloc[data-id="${id}"]`);
             if (allocInput){
                 allocInput.disabled = !inv.selected;
-                if (!inv.selected){ inv.allocate = 0; allocInput.value = '0'; }
+                if (!inv.selected){ 
+                    inv.allocate = 0; 
+                    allocInput.value = '0'; 
+                } else {
+                    // Auto-calculate optimal allocation when selected
+                    smartAllocateInvoice(inv, allocInput);
+                }
             }
 
             recalcSummary();
@@ -509,7 +605,12 @@
 
             state.invoices.forEach(i => { i.selected=false; i.allocate=0; });
             const ordered = [...state.invoices].sort((a,b) => new Date(a.issue_date) - new Date(b.issue_date));
-            let remaining = received;
+
+            // Consider wallet amount if checkbox is checked
+            const walletAmount = useWalletCheckbox.checked ? Number(walletAmountInput.value || 0) : 0;
+            let totalAvailable = received + walletAmount;
+
+            let remaining = totalAvailable;
             for (const inv of ordered){
                 if (inv.balance <= 0 || remaining <= 0) continue;
                 const alloc = Math.min(inv.balance, remaining);
@@ -521,12 +622,71 @@
             amountInput.dispatchEvent(new Event('input'));
         });
 
+        /* ====================== WALLET HANDLERS ====================== */
+        useWalletCheckbox.addEventListener('change', function() {
+            setHidden(walletAmountSection, !this.checked);
+            if (this.checked) {
+                // Auto-suggest smart amount (what's needed vs what's available)
+                const totalSelected = sum(state.invoices.filter(i => i.selected).map(i => i.allocate));
+                const cashAmount = Number(amountInput.value || 0);
+                const needed = Math.max(0, totalSelected - cashAmount);
+                const suggested = Math.min(needed, state.walletBalance);
+                walletAmountInput.value = suggested > 0 ? suggested.toFixed(2) : '';
+            } else {
+                walletAmountInput.value = '';
+            }
+            recalcSummary();
+        });
+
+        walletAmountInput.addEventListener('input', function() {
+            const maxWallet = Math.min(state.walletBalance, 
+                sum(state.invoices.filter(i => i.selected).map(i => i.balance)));
+            if (Number(this.value) > maxWallet) {
+                this.value = maxWallet.toFixed(2);
+            }
+            
+            // Re-calculate allocations for selected invoices with smart allocation
+            state.invoices.filter(i => i.selected).forEach(inv => {
+                const allocInput = invoiceRows.querySelector(`.inv-alloc[data-id="${inv.id}"]`);
+                smartAllocateInvoice(inv, allocInput);
+            });
+            
+            recalcSummary();
+        });
+
+        btnMaxWallet.addEventListener('click', function() {
+            const totalSelected = sum(state.invoices.filter(i => i.selected).map(i => i.balance));
+            const maxUsable = Math.min(state.walletBalance, totalSelected);
+            walletAmountInput.value = maxUsable.toFixed(2);
+            
+            // Re-calculate allocations after setting max wallet amount
+            state.invoices.filter(i => i.selected).forEach(inv => {
+                const allocInput = invoiceRows.querySelector(`.inv-alloc[data-id="${inv.id}"]`);
+                smartAllocateInvoice(inv, allocInput);
+            });
+            
+            recalcSummary();
+        });
+
         /* ====================== PAYMENT + SUMMARY (digits only) ====================== */
-        amountInput.addEventListener('input', recalcSummary);
+        amountInput.addEventListener('input', function() {
+            // Re-calculate allocations for selected invoices when cash amount changes
+            state.invoices.filter(i => i.selected).forEach(inv => {
+                const allocInput = invoiceRows.querySelector(`.inv-alloc[data-id="${inv.id}"]`);
+                smartAllocateInvoice(inv, allocInput);
+            });
+            
+            recalcSummary();
+        });
 
         function recalcSummary(){
             const outstanding = sum(state.invoices.map(i => i.balance));
-            const received    = Number(amountInput.value || 0);
+            let received      = Number(amountInput.value || 0);
+
+            // Add wallet amount if checkbox is checked and amount specified
+            const walletAmount = useWalletCheckbox.checked ? Number(walletAmountInput.value || 0) : 0;
+            received += walletAmount;
+
             const applied     = sum(state.invoices.filter(i => i.selected).map(i => Math.min(i.allocate, i.balance)));
             const unapplied   = (received - applied);
 
@@ -557,9 +717,26 @@
 
         /* ====================== SUBMIT: build payload ====================== */
         document.getElementById('receiptForm').addEventListener('submit', (e) => {
+            // Prevent double submission
+            if (submitBtn.disabled) {
+                e.preventDefault();
+                return;
+            }
+
             const allocations = state.invoices
                 .filter(i => i.selected && i.allocate>0)
                 .map(i => ({ invoice_id: i.id, allocate: Number(i.allocate.toFixed(2)) }));
+
+            // Debug logging
+            console.log('Form submission data:', {
+                customer: state.customer,
+                allocations: allocations,
+                amountReceived: amountInput.value,
+                useWallet: useWalletCheckbox.checked,
+                walletBalance: state.walletBalance
+            });
+
+            // Debug complete
 
             let hidden = document.getElementById('allocationsJson');
             if (!hidden){
@@ -571,13 +748,60 @@
             }
             hidden.value = JSON.stringify(allocations);
 
-            const received = Number(amountInput.value || 0);
-            const applied  = sum(allocations.map(a => a.allocate));
-            if (received <= 0) { e.preventDefault(); flash('Enter a valid Amount Received.','danger'); return; }
-            if (applied > received) { e.preventDefault(); flash('Allocated amount exceeds Amount Received.','danger'); return; }
-            if (allocations.length === 0) {
-                e.preventDefault(); flash('Allocate at least one invoice to proceed.','danger'); return;
+            // Add wallet usage hidden fields
+            let walletHidden = document.getElementById('useWalletHidden');
+            if (!walletHidden){
+                walletHidden = document.createElement('input');
+                walletHidden.type = 'hidden';
+                walletHidden.name = 'UseWallet';
+                walletHidden.id   = 'useWalletHidden';
+                e.target.appendChild(walletHidden);
             }
+            walletHidden.value = useWalletCheckbox.checked;
+
+            // Add wallet amount hidden field
+            let walletAmountHidden = document.getElementById('walletAmountHidden');
+            if (!walletAmountHidden){
+                walletAmountHidden = document.createElement('input');
+                walletAmountHidden.type = 'hidden';
+                walletAmountHidden.name = 'WalletAmount';
+                walletAmountHidden.id   = 'walletAmountHidden';
+                e.target.appendChild(walletAmountHidden);
+            }
+            walletAmountHidden.value = useWalletCheckbox.checked ? (walletAmountInput.value || 0) : 0;
+
+            const baseReceived = Number(amountInput.value || 0);
+            const walletAmount = useWalletCheckbox.checked ? state.walletBalance : 0;
+            const totalReceived = baseReceived + walletAmount;
+            const applied  = sum(allocations.map(a => a.allocate));
+
+            if (totalReceived <= 0) {
+                e.preventDefault();
+                flash('Enter a valid Amount Received or use wallet balance.','danger');
+                return;
+            }
+            if (applied > totalReceived) {
+                e.preventDefault();
+                flash('Allocated amount exceeds total available (cash + wallet).','danger');
+                return;
+            }
+            if (allocations.length === 0) {
+                e.preventDefault();
+                flash('Allocate at least one invoice to proceed.','danger');
+                return;
+            }
+
+            // Disable submit button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+
+            // Re-enable after 10 seconds as failsafe
+            setTimeout(() => {
+                if (submitBtn.disabled) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save Receipt';
+                }
+            }, 10000);
         });
     </script>
 @endsection

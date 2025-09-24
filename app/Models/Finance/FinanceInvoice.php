@@ -51,6 +51,12 @@ class FinanceInvoice extends Model
         'Status',
         'ApprovalStatus',
         'ApprovalReason',
+        
+        // Credit application tracking
+        'UseCredit',
+        'CreditAppliedOn',
+        'CreditAppliedBy',
+        'CreditApplicationReason',
 
         'CreatedBy',
         'CreatedOn',
@@ -65,6 +71,8 @@ class FinanceInvoice extends Model
         'DueDate'     => 'date',
         'IsPaid'      => 'boolean',
         'IsGenerated' => 'boolean',
+        'UseCredit'   => 'boolean',
+        'CreditAppliedOn' => 'datetime',
     ];
 
     /**
@@ -158,6 +166,67 @@ class FinanceInvoice extends Model
 
     public function currency(){
         return $this->belongsTo(Currency::class,'CurrencyID','Id');
+    }
+
+    public function creditAppliedByUser(){
+        return $this->belongsTo(User::class,'CreditAppliedBy','Id');
+    }
+
+    /**
+     * Check if credit has been applied to this invoice
+     */
+    public function hasCreditApplied(): bool
+    {
+        return (bool) $this->UseCredit;
+    }
+
+    /**
+     * Get credit movement for this invoice
+     */
+    public function creditMovement()
+    {
+        return $this->hasOne(FinanceCreditMovement::class, 'ReferenceID', 'Id')
+            ->where('ReferenceType', 'invoice')
+            ->where('MovementType', 'invoice_usage');
+    }
+
+    /**
+     * Scope to filter invoices with credit applied
+     */
+    public function scopeWithCreditApplied($query)
+    {
+        return $query->where('UseCredit', true);
+    }
+
+    /**
+     * Scope to filter invoices without credit applied
+     */
+    public function scopeWithoutCreditApplied($query)
+    {
+        return $query->where('UseCredit', false);
+    }
+
+    /**
+     * Get receipt allocations for this invoice
+     */
+    public function receiptAllocations()
+    {
+        return $this->hasMany(FinanceReceiptAllocation::class, 'InvoiceID', 'Id');
+    }
+
+    /**
+     * Get receipts that have been applied to this invoice
+     */
+    public function receipts()
+    {
+        return $this->hasManyThrough(
+            FinanceReceipt::class,
+            FinanceReceiptAllocation::class,
+            'InvoiceID',
+            'Id',
+            'Id',
+            'ReceiptID'
+        );
     }
 
 }
