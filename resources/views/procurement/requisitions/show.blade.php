@@ -29,6 +29,8 @@
                             <th>Description</th>
                             <th>UOM</th>
                             <th>Quantity</th>
+                            <th>Need ID</th>
+                            <th>Est. Unit Cost</th>
                             <th>Estimated Cost</th>
                             <th>Urgency</th>
                             {{--                            <th>Status</th>--}}
@@ -47,7 +49,9 @@
                                 <td>{{ $item->Description }}</td>
                                 <td>{{ $item->UOM}}</td>
                                 <td>{{ $item->Quantity }}</td>
-                                <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
+                                <td>{{ $item->NeedRef ?? 'N/A' }}</td>
+                                <td>{{ isset($item->UnitPrice) && is_numeric($item->UnitPrice) ? number_format($item->UnitPrice, 2) : 'N/A' }}</td>
+                                <td>{{ isset($item->ExpectedPrice) && is_numeric($item->ExpectedPrice) ? number_format($item->ExpectedPrice, 2) : '0.00' }}</td>
 {{--                                <td>{{ $item->NeededBy }}</td>--}}
                                 <td>{{ $item->Urgency }}</td>
                                 {{--                                <td>{{ $item->Status }}</td>--}}
@@ -124,6 +128,15 @@
                                 {{-- <textarea name="Quantity" id="Quantity" rows="3" class="form-control"
                                           maxlength="1000"></textarea> --}}
                                 <p id="Quantity_error" class="invalid-feedback d-none error col-12" role="alert"></p>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="EstUnitCostDisplay">Est. Unit Cost</label>
+                                <input type="text" class="form-control" id="EstUnitCostDisplay" value="" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="EstCostDisplay">Estimated Cost</label>
+                                <input type="text" class="form-control" id="EstCostDisplay" value="" readonly>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label" for="UOM">UOM </label>
@@ -253,8 +266,10 @@
                                 `<option value="${itemData.UOMID}">${itemData.UOM}</option>`
                             );
 
-                            // Estimated Price
-                            $('#EstimatedPrice').val(itemData.UnitPrice || 0);
+                            // Est. Unit Cost from Plan (UnitPrice) and compute Estimated Cost
+                            const unit = parseFloat(itemData.UnitPrice || 0) || 0;
+                            $('#EstimatedPrice').val(unit);
+                            $('#EstUnitCostDisplay').val(unit.toFixed(2));
 
                             // LineItem ID
                             $('#LineItemID').val(itemData.LineItemID || '');
@@ -279,6 +294,8 @@
                             // Fallbacks
                             $('#UOM').empty().append('<option value="">Select UOM</option>');
                             $('#EstimatedPrice').val('');
+                            $('#EstUnitCostDisplay').val('');
+                            $('#EstCostDisplay').val('');
                             $('#QtyAvailable').html('');
                             $('#LineItemID').val('');
                         }
@@ -287,6 +304,8 @@
                         alert('Failed to load item details');
                         $('#UOM').empty().append('<option value="">Select UOM</option>');
                         $('#EstimatedPrice').val('');
+                        $('#EstUnitCostDisplay').val('');
+                        $('#EstCostDisplay').val('');
                         $('#QtyAvailable').html('');
                         $('#LineItemID').val('');
                     }
@@ -294,8 +313,20 @@
             } else {
                 $('#UOM').empty().append('<option value="">Select UOM</option>');
                 $('#EstimatedPrice').val(0);
+                $('#EstUnitCostDisplay').val('');
+                $('#EstCostDisplay').val('');
                 $('#LineItemID').val('');
                 $('#QtyAvailable').html('');
+            }
+        });
+
+        // Compute Estimated Cost when quantity changes
+        $('#Quantity').on('input', function(){
+            const qty = parseFloat($(this).val() || 0) || 0;
+            const unit = parseFloat($('#EstimatedPrice').val() || 0) || 0;
+            const total = qty * unit;
+            if (!isNaN(total)) {
+                $('#EstCostDisplay').val(total.toFixed(2));
             }
         });
 

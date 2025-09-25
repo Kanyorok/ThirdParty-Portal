@@ -6,6 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -90,8 +91,11 @@ class PostingController extends Controller
         $data = [];
 
         foreach ($journal->journalLines as $line) {
+            $rawAmount = abs((float)$line->Amount);
+            $isDebit = (bool)$line->IsDebit;
+            $amountToStore = $isDebit ? -$rawAmount : $rawAmount;
             $data[] = [
-                'TransactionDate' => $journal->Date,
+                'TransactionDate' => Carbon::now(), //$journal->Date,
                 'ReferenceNumber' => $journal->RefNo,
                 'TransactionType' => 'Journal',
                 'ModuleID' => 1100000,
@@ -99,8 +103,8 @@ class PostingController extends Controller
                 'GLAccountID' => $line->GLAccountID,
                 'BranchID' => session('LoginBranchId', 1), // Fallback to 1 if unset
                 'DepartmentID' => $line->DepartmentID,
-                'DRCR' => $line->IsDebit ? 'DR' : 'CR',
-                'Amount' => $line->Amount,
+                'DRCR' => $isDebit ? 'DR' : 'CR',
+                'Amount' => $amountToStore,
                 'CurrencyID' => 1,
                 'CurrencyCode' => 'KES',
                 'ExchangeRate' => 1,
@@ -132,7 +136,7 @@ class PostingController extends Controller
             '*.GLAccountID' => 'nullable|integer|exists:t_FinanceGLAccounts,Id',
             '*.BranchID' => 'required|integer|exists:t_Branches,Id',
             '*.DepartmentID' => 'required|integer|exists:t_Departments,Id',
-            '*.Amount' => 'required|numeric|min:0',
+            '*.Amount' => 'required|numeric',
 //            '*.CurrencyID' => 'required|integer|exists:t_Currencies,Id',
 //            '*.CurrencyCode' => 'required|string|max:3',
 //            '*.ExchangeRate' => 'required|numeric|min:0',

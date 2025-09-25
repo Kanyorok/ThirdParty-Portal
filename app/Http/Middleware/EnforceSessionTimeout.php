@@ -15,6 +15,11 @@ class EnforceSessionTimeout
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip static asset requests like favicon
+        if ($request->is('favicon.ico')) {
+            return $next($request);
+        }
+
         if (!Auth::check()) {
             return $next($request);
         }

@@ -91,7 +91,7 @@
                                         </select>
                                     </td>
                                     <td>
-                                        @php $amount = $isDebit ? $line->Debit : $line->Credit; @endphp
+                                        @php $amount = $isDebit ? $line->Debit*-1 : $line->Credit; @endphp
                                         <input type="number" name="Amount[]" class="form-control" step="0.01" value="{{ number_format((float)$amount, 2, '.', '') }}" required>
                                     </td>
                                     <td>

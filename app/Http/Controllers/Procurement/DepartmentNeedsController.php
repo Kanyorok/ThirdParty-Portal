@@ -42,7 +42,7 @@ class DepartmentNeedsController extends Controller
                 'ItemID' => ['required', 'integer', 'exists:t_Items,Id'],
                 'RequestedQty' => ['required', 'numeric', 'min:1'],
                 'EstimatedUnitCost' => ['required', 'numeric', 'gt:0'],
-                'RequestedDate' => ['required', 'date'],
+                'RequestedDate' => ['required', 'date', 'after_or_equal:today'],
                 'Justification' => ['nullable', 'string'],
             ]);
 

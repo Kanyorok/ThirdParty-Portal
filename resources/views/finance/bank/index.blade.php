@@ -22,12 +22,13 @@
         <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
+                    <th>#</th>
                     <th>Bank Name</th>
                     <th>Short</th>
                     <th>Bank Code</th>
                     <th>SWIFT</th>
                     <th>Clearing</th>
-                    <th>CountryID</th>
+                    <th>Country</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>View Branches</th>
@@ -43,12 +44,13 @@
             <tbody>
                 @forelse($banks as $bank)
                     <tr>
+                        <td>{{ $loop->iteration }}</td>
                         <td>{{ $bank->BankName }}</td>
                         <td>{{ $bank->ShortName ?? '—' }}</td>
                         <td>{{ $bank->BankCode ?? '—' }}</td>
                         <td>{{ $bank->SwiftCode ?? '—' }}</td>
                         <td>{{ $bank->ClearingCode ?? '—' }}</td>
-                        <td>{{ $bank->CountryID ?? '—' }}</td>
+                        <td>{{ $bank->country?->Name ?? '—' }}</td>
                         <td>{{ $bank->EmailID ?? '—' }}</td>
                         <td>{{ $bank->Phone ?? '—' }}</td>
                         <td>
@@ -78,13 +80,13 @@
                                 title="View More {{ $bank->BankName }}  Details">
                                  <i class="fas fa-eye"></i>
                              </a>
-                             
+
                              <a href="{{ route('finance.bank.edit', $bank->BankID) }}"
                                 class="btn btn-sm btn-outline-primary me-1"
                                 title="Edit  {{ $bank->BankName }}">
                                  <i class="fas fa-edit"></i>
                              </a>
-                             
+
                              <button type="button"
                                      class="btn btn-sm btn-outline-danger custom-delete-btn"
                                      title="Delete {{ $bank->BankName }}"
@@ -94,7 +96,7 @@
                                      data-route="{{ route('finance.bank.destroy', $bank->BankID) }}">
                                  <i class="fas fa-trash-alt"></i>
                              </button>
-                             
+
                         </td>
                     </tr>
                 @empty

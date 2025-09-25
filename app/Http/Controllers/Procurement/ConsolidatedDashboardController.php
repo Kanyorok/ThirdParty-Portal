@@ -32,7 +32,7 @@ class ConsolidatedDashboardController extends Controller
             $query->where('FiscalYear', $year);
         }
 
-        $needs = $query->get();
+        $needs = $query->orderByDesc('CreatedOn')->get();
 
         // Load filter dropdown options
         $branches = \App\Models\Core\Branch::orderBy('Name')->pluck('Name', 'Id')->prepend('All Branches', 'All Branches');

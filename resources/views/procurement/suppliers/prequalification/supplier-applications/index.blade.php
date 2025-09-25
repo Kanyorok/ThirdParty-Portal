@@ -51,7 +51,9 @@
                                 <span class="text-muted">N/A</span>
                                 @endif
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($application->SubmittedOn)->format('M d, Y') }}</td>
+                            <td data-order="{{ $application->SubmittedOn ? \Carbon\Carbon::parse($application->SubmittedOn)->format('Y-m-d H:i:s') : '' }}">
+                                {{ $application->SubmittedOn ? \Carbon\Carbon::parse($application->SubmittedOn)->format('M d, Y') : '' }}
+                            </td>
                             <td>
                                 <span class="badge bg-{{ $application->Status->getColor() }} px-3 py-2">
                                     {{ $application->Status->getLabel() }}
@@ -92,6 +94,7 @@
             lengthChange: false,
             ordering: true,
             autoWidth: false,
+            order: [[6, 'desc']],
             columnDefs: [{
                 orderable: false,
                 targets: -1

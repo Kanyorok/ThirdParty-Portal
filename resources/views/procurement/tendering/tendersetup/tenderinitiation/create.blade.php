@@ -127,7 +127,7 @@
                     <div class="col-md-9">
                         <label class="form-label fw-bold">Select Procurement Plan Item:</label>
                         <select class="form-select" id="planItemSelect">
-                            <option selected disabled>-- Select Item --</option>
+                            <option selected disabled>-- Select Item (Tender-method, not already used) --</option>
                         </select>
             </div>
                     <div class="col-md-3 d-flex align-items-end">
@@ -144,6 +144,7 @@
                         <thead>
                             <tr>
                                 <th>Item</th>
+                                <th>Need ID</th>
                                 <th>Planned Qty</th>
                                 <th>Qty to Tender</th>
                                 <th>Specs</th>
@@ -333,8 +334,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (procurementPlans[planId]) {
             procurementPlans[planId].forEach(item => {
                 const opt = document.createElement('option');
-                opt.value = item.itemId;
-                opt.textContent = `${item.name} (${item.plannedQty})`;
+                opt.value = item.planLineItemId;
+                opt.textContent = `${item.name} — Need ${item.needId || '—'} (Planned: ${item.plannedQty})`;
+                opt.dataset.itemId = item.itemId;
+                opt.dataset.needId = item.needId || '';
                 select.appendChild(opt);
             });
         }
@@ -343,15 +346,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function addPlanItemToGrid() {
         const planId = document.getElementById('selectedProcurementPlan').value;
         const select = document.getElementById('planItemSelect');
-        const itemId = select.value;
+        const planLineItemId = select.value; // now holds LineItemID
         const tbody = document.querySelector('#planItemsGrid tbody');
 
-        if (!planId || !itemId) {
+        if (!planId || !planLineItemId) {
             alert('Please select both a plan and an item.');
             return;
         }
 
-        const uniqueKey = `${planId}-${itemId}`;
+        const uniqueKey = `${planId}-${planLineItemId}`;
 
         if (addedPlanItems.has(uniqueKey)) {
             alert('Item already added for this plan.');
@@ -359,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const itemList = planItemData[planId] || [];
-        const item = itemList.find(obj => String(obj.itemId) === String(itemId));
+        const item = itemList.find(obj => String(obj.planLineItemId) === String(planLineItemId));
 
         if (!item) {
             alert('Item not found in plan data.');
@@ -369,9 +372,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = `
         <tr data-id="${uniqueKey}">
             <td>${item.name}</td>
+            <td>${item.needId || '—'}</td>
             <td>${item.plannedQty}</td>
             <td>
-                <input type="hidden" name="plan_items[${uniqueKey}][item_id]" value="${itemId}">
+                <input type="hidden" name="plan_items[${uniqueKey}][item_id]" value="${item.itemId}">
                 <input type="number" class="form-control" name="plan_items[${uniqueKey}][qty]" value="${item.plannedQty}" min="1" max="${item.plannedQty}" required>
             </td>
             <td>

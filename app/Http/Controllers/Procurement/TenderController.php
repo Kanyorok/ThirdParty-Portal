@@ -93,10 +93,24 @@ class TenderController extends Controller
             ->get()
             ->keyBy('PlanID');
 
-        $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty')
-            ->with(['item' => function ($query) {
-                $query->select('Id', 'ItemName');
-            }])
+        // Only include plan line items that:
+        // - belong to approved plans
+        // - have procurement method set to a Tender (Description contains 'Tender')
+        // - have NOT already been added to a tender (no TenderItems with this PlanItemID)
+        $approvedPlanIds = $procurementPlans->keys();
+        $usedPlanItemIds = TenderItems::whereNotNull('PlanItemID')->pluck('PlanItemID');
+
+        $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'BranchID', 'DepartmentID', 'ProcurementMethod')
+            ->with([
+                'item' => function ($query) { $query->select('Id', 'ItemName'); },
+                'procurementMode',
+                'departmentNeed' => function ($q) { $q->select('NeedID', 'ItemID', 'BranchID', 'DepartmentID'); }
+            ])
+            ->whereIn('PlanID', $approvedPlanIds)
+            ->whereNotIn('LineItemID', $usedPlanItemIds)
+            ->whereHas('procurementMode', function ($q) {
+                $q->where('Description', 'like', '%Tender%');
+            })
             ->get();
 
         $procurementPlansOutput = [];
@@ -104,20 +118,19 @@ class TenderController extends Controller
         foreach ($itemsCategories as $lineItem) {
             $planId = $lineItem->PlanID;
             $item = $lineItem->item;
-            if (!$item) {
-                continue;
-            }
-            $procurementPlansOutput[$planId][] = [
+            if (!$item) { continue; }
+            $needId = optional($lineItem->departmentNeed)->NeedID;
+
+            $entry = [
                 'id' => $planId,
+                'planLineItemId' => $lineItem->LineItemID,
                 'itemId' => $item->Id,
                 'name' => $item->ItemName,
                 'plannedQty' => $lineItem->MergedQty,
+                'needId' => $needId,
             ];
-            $planItemData[$planId][] = [
-                'itemId' => $item->Id,
-                'name' => $item->ItemName,
-                'plannedQty' => $lineItem->MergedQty,
-            ];
+            $procurementPlansOutput[$planId][] = $entry;
+            $planItemData[$planId][] = $entry;
         }
 
         // Get suppliers with their supplier categories and item categories mapping
@@ -186,8 +199,8 @@ class TenderController extends Controller
                         'ItemCategory' => $request->item_category_id,
                         'Remarks' => null,
                         'RelatedPRID' => $item['pr_ref'] ?? null,
-                        'CreatedBy' => auth()->user()->Id,
-                        'ModifiedBy' => auth()->user()->Id,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
                     ]);
                 }
             }
@@ -207,8 +220,8 @@ class TenderController extends Controller
                             'ItemCategory' => $request->item_category_id,
                             'Remarks' => null,
                             'RelatedPRID' => $manualItem['pr_ref'] ?? null,
-                            'CreatedBy' => auth()->user()->Id,
-                            'ModifiedBy' => auth()->user()->Id,
+                            'CreatedBy' => Auth::id(),
+                            'ModifiedBy' => Auth::id(),
                         ]);
                     }
                 }
@@ -219,8 +232,8 @@ class TenderController extends Controller
                     TenderSupplier::create([
                         'TenderID' => $tenderId,
                         'SupplierID' => $supplierId,
-                        'CreatedBy' => auth()->user()->Id,
-                        'ModifiedBy' => auth()->user()->Id,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
                     ]);
                 }
             }
@@ -762,7 +775,7 @@ class TenderController extends Controller
                     ->pluck('SupplierCategoryID');
                 $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
             } catch (\Throwable $e) {
-                \Log::warning('Failed reading t_ThirdParty_SupplierCategory', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
+                Log::warning('Failed reading t_ThirdParty_SupplierCategory', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
             }
 
             $supplierCategoryIds = $supplierCategoryIds->filter()->unique()->values();
@@ -784,7 +797,7 @@ class TenderController extends Controller
                         }
                     }
                 } catch (\Throwable $e) {
-                    \Log::warning('Failed reading category mappings', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
+                    Log::warning('Failed reading category mappings', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
                 }
             }
 
