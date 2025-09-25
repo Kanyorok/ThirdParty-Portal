@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Throwable;
+use App\Models\ThirdParies\Supplier;
 
 
 class TenderApiController extends Controller
@@ -41,6 +42,39 @@ class TenderApiController extends Controller
                     default:
                         $query->where('Status', TenderStatusEnum::Draft);
                         break;
+                }
+            }
+
+            // Enforce invitation logic for restricted tenders when requested
+            $enforceInvites = filter_var($request->query('enforce_invites', false), FILTER_VALIDATE_BOOLEAN);
+            $thirdPartyId = $request->query('third_party_id');
+
+            if ($enforceInvites) {
+                $supplier = null;
+                if ($thirdPartyId) {
+                    $supplier = Supplier::whereHas('thirdParty', function ($q) use ($thirdPartyId) {
+                        $q->where('Id', $thirdPartyId);
+                    })->first();
+                } elseif (Auth::check() && method_exists(Auth::user(), 'thirdParty') && Auth::user()->thirdParty) {
+                    $tp = Auth::user()->thirdParty;
+                    $supplier = Supplier::where('ThirdPartyID', $tp->Id)->first();
+                }
+
+                // If we have supplier context, restrict restricted tenders to invitations; always allow open tenders
+                if ($supplier) {
+                    $supplierId = $supplier->Id;
+                    $query->where(function ($q) use ($supplierId) {
+                        $q->where('TenderType', TenderTypeEnum::Open)
+                          ->orWhereExists(function ($sub) use ($supplierId) {
+                              $sub->select(DB::raw(1))
+                                  ->from('t_TenderInvitations as ti')
+                                  ->whereColumn('ti.TenderId', 't_Tenders.Id')
+                                  ->where('ti.SupplierId', $supplierId);
+                          });
+                    });
+                } else {
+                    // No supplier context; show only open tenders by default
+                    $query->where('TenderType', TenderTypeEnum::Open);
                 }
             }
 
