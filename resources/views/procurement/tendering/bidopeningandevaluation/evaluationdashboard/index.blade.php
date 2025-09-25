@@ -10,14 +10,20 @@
                 Role: <strong>{{ $userRole ?? 'Committee Member' }}</strong>
             </p>
         </div>
-        {{-- Requirement notice for committee & criteria setup --}}
-        <div class="text-end">
-            <div class="text-danger fw-bold">IMPORTANT: You must appoint the Tender Committee and set up Tender Criteria before performing evaluations.
-                <br>
-                <a href="/procurement/tendercommittee" class="btn btn-sm btn-outline-primary mt-2 me-2">Appoint Tender Committee</a>
-                <a href="/procurement/tenderevaluations" class="btn btn-sm btn-outline-danger mt-2">Go to Tender Criteria Setup</a>
+        {{-- Requirement notice for committee & criteria setup (show only when needed) --}}
+        @if(isset($needsCommitteeSetup) && $needsCommitteeSetup || isset($needsCriteriaSetup) && $needsCriteriaSetup)
+            <div class="text-end">
+                <div class="text-danger fw-bold">IMPORTANT: You must appoint the Tender Committee and set up Tender Criteria before performing evaluations.
+                    <br>
+                    @if(isset($needsCommitteeSetup) && $needsCommitteeSetup)
+                        <a href="/procurement/tendercommittee" class="btn btn-sm btn-outline-primary mt-2 me-2">Appoint Tender Committee</a>
+                    @endif
+                    @if(isset($needsCriteriaSetup) && $needsCriteriaSetup)
+                        <a href="/procurement/tenderevaluations" class="btn btn-sm btn-outline-danger mt-2">Go to Tender Criteria Setup</a>
+                    @endif
+                </div>
             </div>
-        </div>
+        @endif
         <div class="text-end">
             @if(isset($tenderCount) && isset($bidsCount))
                 <div class="small text-muted">
