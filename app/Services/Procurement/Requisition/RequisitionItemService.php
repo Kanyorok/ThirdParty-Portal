@@ -179,6 +179,8 @@ class RequisitionItemService
                 't_uom.Code as UOM',
                 't_ItemTypes.TypeName as Type',
                 't_ItemCategories.Name as Category',
+                // Need ID from the approved plan (if this line came from a plan). N/A otherwise
+                DB::raw("ISNULL((SELECT TOP 1 dn.NeedID\n                              FROM t_PlanLineItem pli WITH (NOLOCK)\n                              JOIN t_DepartmentNeeds dn WITH (NOLOCK)\n                                ON dn.ItemID = pli.ItemID\n                               AND dn.BranchID = pli.BranchID\n                               AND dn.DepartmentID = pli.DepartmentID\n                             WHERE pli.LineItemID = t_RequisitionLines.PlanLineRef), 'N/A') as NeedRef"),
                 // Per-unit expected price captured at line creation time (sourced from approved plan)
                 't_RequisitionLines.ExpectedPrice as UnitPrice',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
