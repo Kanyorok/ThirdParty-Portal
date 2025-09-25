@@ -99,13 +99,13 @@ function normalizeDetails(data: unknown): (RfqDetails & { currencies?: CurrencyO
     const currenciesRaw = (container.currencies || (rfqRaw as any)?.currencies) as unknown;
     let currencies: CurrencyOption[] | undefined;
     if (Array.isArray(currenciesRaw)) {
-        currencies = currenciesRaw.map((c: any) => ({
+        currencies = (currenciesRaw as any[]).map((c: any) => ({
             id: String(c.id ?? c.Id ?? ""),
             name: String(c.name ?? c.Name ?? c.symbol ?? c.Symbol ?? ""),
             code: String(c.code ?? c.Code ?? ""),
             symbol: String(c.symbol ?? c.Symbol ?? c.code ?? c.Code ?? ""),
             isDefault: Boolean(c.isDefault) || String(c.symbol ?? c.Symbol ?? "").toLowerCase() === "ksh",
-        })).sort((a, b) => (Number(!!b.isDefault) - Number(!!a.isDefault)) || a.symbol.localeCompare(b.symbol));
+        })).sort((a: CurrencyOption, b: CurrencyOption) => (Number(!!b.isDefault) - Number(!!a.isDefault)) || a.symbol.localeCompare(b.symbol));
     }
     // response (if supplier has submitted already)
     const responseRaw = (container.response || (container as any).supplierResponse || (rfqRaw as any)?.response) as any;
@@ -114,15 +114,17 @@ function normalizeDetails(data: unknown): (RfqDetails & { currencies?: CurrencyO
     if (responseRaw && typeof responseRaw === "object") {
         const itemsRaw = Array.isArray(responseRaw.items) ? responseRaw.items : [];
         const items: ResponseItem[] = itemsRaw.map((it: any) => ({
-            rfqLineId: String(it.rfqLineId ?? it.lineId ?? it.RFQLineID ?? ""),
-            quotedPrice: it.quotedPrice ?? it.unitPrice ?? null,
-            totalPayable: it.totalPayable ?? it.totalPrice ?? null,
-            leadTimeDays: it.leadTimeDays ?? it.leadTime ?? null,
-            comments: it.comments ?? it.remark ?? null,
+            rfqLineId: String(it.rfqLineId ?? it.lineId ?? it.RFQLineID ?? it.LineId ?? ""),
+            // prefer the DB column names used by your backend
+            quotedPrice: (it.QuotedPrice ?? it.quotedPrice ?? it.unitPrice) ?? null,
+            totalPayable: (it.TotalPayable ?? it.totalPayable ?? it.totalPrice) ?? null,
+            leadTimeDays: (it.leadTimeDays ?? it.leadTime ?? null) ?? null,
+            comments: toStringSafe(it.Comments ?? it.comments ?? it.remark ?? null) || null,
         }));
         response = {
             currency: String(responseRaw.currency ?? responseRaw.currencyCode ?? ""),
-            durationDays: Number.isFinite(Number(responseRaw.durationDays)) ? Number(responseRaw.durationDays) : undefined,
+            // accept DurationDays (DB) or durationDays
+            durationDays: Number.isFinite(Number(responseRaw.DurationDays ?? responseRaw.durationDays)) ? Number(responseRaw.DurationDays ?? responseRaw.durationDays) : undefined,
             items,
             submittedAt: String(responseRaw.submittedAt ?? responseRaw.createdAt ?? responseRaw.created_on ?? ""),
         };
@@ -225,17 +227,28 @@ export default function RfqDetailPage() {
             }
             // if response present (already submitted), seed fields and lock editing
             if (normalized.response) {
-                const responseMap: Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }> = {};
-                normalized.lines.forEach((l) => {
-                    const it = (normalized.response as SupplierResponse).items?.find((x) => x.rfqLineId === l.id);
-                    responseMap[l.id] = {
-                        lineItemId: l.id,
-                        unitPrice: it?.quotedPrice ?? undefined,
-                        totalPrice: it?.totalPayable ?? (it?.quotedPrice != null ? Number(((it?.quotedPrice || 0) * l.quantity).toFixed(2)) : undefined),
-                        leadTimeDays: it?.leadTimeDays ?? undefined,
-                        comments: it?.comments ?? "",
-                    } as any;
-                });
+                    const responseMap: Record<string, SupplierLineResponseInput & { leadTimeDays?: number | null; comments?: string | null }> = {};
+                    const respItems = (normalized.response as SupplierResponse).items || [];
+                    normalized.lines.forEach((l, idx) => {
+                        // try to find matching item by rfqLineId
+                        let it = respItems.find((x: any) => x && String(x.rfqLineId ?? x.lineId ?? x.RFQLineID ?? "") === String(l.id));
+                        // fallback: use item at same index if available
+                        if (!it) it = respItems[idx];
+
+                        const quoted = (it && (it.quotedPrice ?? it.QuotedPrice ?? it.unitPrice)) ?? undefined;
+                        const total = (it && (it.totalPayable ?? it.TotalPayable ?? it.totalPrice)) ?? (quoted != null ? Number((quoted * l.quantity).toFixed(2)) : undefined);
+                        const perItemLead = it && (it.leadTimeDays ?? it.leadTime ?? undefined);
+                        const comments = it && (it.comments ?? it.Comments ?? "") || "";
+
+                        responseMap[l.id] = {
+                            lineItemId: l.id,
+                            unitPrice: quoted ?? undefined,
+                            totalPrice: total ?? undefined,
+                            // prefer per-item lead time, else use response.durationDays
+                            leadTimeDays: perItemLead ?? (normalized.response?.durationDays ?? undefined),
+                            comments: comments ?? "",
+                        } as any;
+                    });
                 setLineResponses(responseMap);
                 if (normalized.response.currency) setCurrency(normalized.response.currency);
                 if (normalized.response.durationDays) setDurationDays(String(normalized.response.durationDays));
