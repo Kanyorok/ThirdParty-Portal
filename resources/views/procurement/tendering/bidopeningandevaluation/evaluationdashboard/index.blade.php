@@ -10,10 +10,24 @@
                 Role: <strong>{{ $userRole ?? 'Committee Member' }}</strong>
             </p>
         </div>
+        {{-- Requirement notice for committee & criteria setup (show only when needed) --}}
+        @if(isset($needsCommitteeSetup) && $needsCommitteeSetup || isset($needsCriteriaSetup) && $needsCriteriaSetup)
+            <div class="text-end">
+                <div class="text-danger fw-bold">IMPORTANT: You must appoint the Tender Committee and set up Tender Criteria before performing evaluations.
+                    <br>
+                    @if(isset($needsCommitteeSetup) && $needsCommitteeSetup)
+                        <a href="/procurement/tendercommittee" class="btn btn-sm btn-outline-primary mt-2 me-2">Appoint Tender Committee</a>
+                    @endif
+                    @if(isset($needsCriteriaSetup) && $needsCriteriaSetup)
+                        <a href="/procurement/tenderevaluations" class="btn btn-sm btn-outline-danger mt-2">Go to Tender Criteria Setup</a>
+                    @endif
+                </div>
+            </div>
+        @endif
         <div class="text-end">
             @if(isset($tenderCount) && isset($bidsCount))
                 <div class="small text-muted">
-                    <i class="fas fa-info-circle"></i> 
+                    <i class="fas fa-info-circle"></i>
                     {{ $tenderCount }} tender(s) • {{ $bidsCount }} bid(s) ready for evaluation
                 </div>
             @endif
@@ -121,7 +135,7 @@
                                                 </div>
                                                 <div>
                                                     @if($firstBid['can_evaluate'])
-                                                        <a href="{{ route('evaluator.tender-evaluation', $tenderId) }}" 
+                                                        <a href="{{ route('evaluator.tender-evaluation', $tenderId) }}"
                                                            class="btn btn-sm btn-success">
                                                             <i class="fas fa-play"></i> Start Evaluation
                                                         </a>
@@ -132,7 +146,7 @@
                                             </div>
                                         </td>
                                     </tr>
-                                    
+
                                     <!-- Bid Rows -->
                                     @foreach($tenderBids as $bid)
                                         <tr>
@@ -187,12 +201,12 @@
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     @if($bid['can_evaluate'] && !$bid['has_evaluated'])
-                                                        <a href="{{ route('evaluator.tender-evaluation', $tenderId) }}" 
+                                                        <a href="{{ route('evaluator.tender-evaluation', $tenderId) }}"
                                                            class="btn btn-sm btn-primary">
                                                             <i class="fas fa-edit"></i> Evaluate
                                                         </a>
                                                     @elseif($bid['has_evaluated'])
-                                                        <a href="{{ route('evaluator.tender-evaluation', $tenderId) }}" 
+                                                        <a href="{{ route('evaluator.tender-evaluation', $tenderId) }}"
                                                            class="btn btn-sm btn-outline-info">
                                                             <i class="fas fa-eye"></i> Review
                                                         </a>
@@ -201,23 +215,23 @@
                                                             <i class="fas fa-lock"></i> Locked
                                                         </span>
                                                     @endif
-                                                    
+
                                                     <!-- Quick actions menu -->
                                                     <div class="btn-group" role="group">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle"
                                                                 data-bs-toggle="dropdown">
                                                             <i class="fas fa-ellipsis-v"></i>
                                                         </button>
                                                         <ul class="dropdown-menu">
                                                             <li>
-                                                                <a class="dropdown-item" href="#" 
+                                                                <a class="dropdown-item" href="#"
                                                                    onclick="showBidDetails({{ $bid['bid_id'] }})">
                                                                     <i class="fas fa-info-circle"></i> Bid Details
                                                                 </a>
                                                             </li>
                                                             @if($bid['sections_configured'])
                                                                 <li>
-                                                                    <a class="dropdown-item" href="#" 
+                                                                    <a class="dropdown-item" href="#"
                                                                        onclick="showEvaluationSections({{ $tenderId }})">
                                                                         <i class="fas fa-list"></i> View Sections
                                                                     </a>
@@ -225,7 +239,7 @@
                                                             @endif
                                                             @if($bid['evaluation_notes'])
                                                                 <li>
-                                                                    <a class="dropdown-item" href="#" 
+                                                                    <a class="dropdown-item" href="#"
                                                                        onclick="showEvaluationNotes({{ $bid['bid_id'] }})">
                                                                         <i class="fas fa-sticky-note"></i> Notes
                                                                     </a>
@@ -237,7 +251,7 @@
                     </td>
                 </tr>
                                     @endforeach
-                                    
+
                                     <!-- Tender Summary Row -->
                                     @if($tenderBids->count() > 1)
                                         <tr class="table-light">
