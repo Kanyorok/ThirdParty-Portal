@@ -69,10 +69,14 @@ function normalizeHeader(raw: Record<string, unknown>): RfqHeader {
 }
 
 function normalizeLine(raw: Record<string, unknown>, index: number): RfqLineItem {
+    const itemCode = toStringSafe(raw.ItemCode ?? raw.itemCode ?? raw.item_code ?? raw.code ?? raw.code_ ?? raw.ItemID ?? raw.itemId ?? raw.Item ?? "");
+    const itemName = toStringSafe(raw.ItemName ?? raw.itemName ?? raw.item_name ?? raw.name ?? raw.itemDescription ?? raw.description ?? "");
+    const descriptionVal = itemCode && itemName ? `${itemCode} - ${itemName}` : (itemName || itemCode || toStringSafe(raw.description ?? raw.itemDescription ?? raw.item ?? raw.name ?? ""));
+
     return {
         id: toStringSafe(raw.id ?? raw.rfqLineId ?? raw.lineId ?? raw.RFQLineID ?? `${index + 1}`),
         lineNumber: toNumberSafe(raw.lineNumber ?? raw.line_no ?? index + 1),
-        description: toStringSafe(raw.description ?? raw.itemDescription ?? raw.item ?? raw.name ?? ""),
+        description: descriptionVal,
         quantity: toNumberSafe(raw.quantity ?? raw.qty ?? 0),
         unitOfMeasure: toStringSafe(raw.unitOfMeasure ?? raw.unit ?? raw.uomName ?? raw.UOM ?? raw.uom ?? ""),
         specification: toStringSafe(raw.specification ?? raw.notes ?? raw.spec ?? ""),
