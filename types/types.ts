@@ -5,6 +5,12 @@ export type Round = {
     startDate: string
     endDate: string
     maxVendors: number | string
+    // Backend-derived flags for action logic
+    supplierEligible?: boolean
+    isFutureWindow?: boolean
+    duplicateWithinRange?: boolean
+    primaryWindowRoundId?: number | null
+    primaryWindowRoundTitle?: string | null
     // Category-based application tracking
     categories?: RoundCategory[];
     // Summary of applications across categories
