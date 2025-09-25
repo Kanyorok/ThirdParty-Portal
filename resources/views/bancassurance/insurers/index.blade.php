@@ -26,10 +26,10 @@
             <tbody>
             @foreach($providers as $provider)
                 <tr>
-                    <td>{{ $provider->Id }}</td>
+                    <td>{{$loop->iteration }}</td>
                     <td>{{$provider->InsuranceProviderNO ?? '-'}}</td>
                     <td>{{ $provider->Name ?? '-'}}</td>
-                    <td>{{ $provider->Country ?? '-' }}</td>
+                    <td>{{ $provider->country->Name ?? '-' }}</td>
                     <td>{{ $provider->ContactPerson ?? '-' }}</td>
                     <td>{{ $provider->Email ?? '-' }}</td>
                     <td>{{ $provider->Phone ?? '-' }}</td>
@@ -39,8 +39,8 @@
                         </span>
                     </td>
                     <td>
-                        <a href="{{ route('bancassurance.insurers.edit', $provider->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                         <a href="{{ route('bancassurance.insurers.products', $provider->Id) }}" class="btn btn-sm btn-info">View Products</a>
+                        <a href="{{ route('bancassurance.insurers.edit', $provider->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                     <form action="{{ route('bancassurance.insurers.destroy', $provider->Id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')

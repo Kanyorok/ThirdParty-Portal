@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProductRequest;
+use App\Models\Core\CodeDetail;
 use App\Services\Insurance\ProviderAndProducts\InsuranceProductService;
 use Illuminate\Http\Request;
 use App\Models\Insurance\InsuranceProduct;
@@ -26,18 +27,17 @@ class InsuranceProductController extends Controller
     // Show create form
     public function create()
     {
-      //  $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
+        $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
+        $providers = InsuranceProvider::all()->where('IsActive', true);
+        $producttypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
 
-        $providers = InsuranceProvider::all();
-
-        $products = InsuranceProduct::all();
-        return view('bancassurance.products.create', compact('providers', 'products'));
+        return view('bancassurance.products.create', compact('providers', 'producttypes'));
     }
 
     // Store product
     public function store(InsuranceProductRequest $request)
     {
-       // $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
+        $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
 
         $validated = $request->validated();
 
@@ -61,9 +61,10 @@ class InsuranceProductController extends Controller
         $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
 
         $product = InsuranceProduct::findOrFail($Id);
+        $producttypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
         $providers = InsuranceProvider::all();
 
-        return view('bancassurance.products.edit', compact('product', 'providers'));
+        return view('bancassurance.products.edit', compact('product', 'providers', 'producttypes'));
     }
 
     // Update product

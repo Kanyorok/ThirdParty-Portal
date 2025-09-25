@@ -30,7 +30,7 @@
                     <td>{{ $product->Id }}</td>
                     <td>{{ $product->provider->Name ?? '-' }}</td>
                     <td>{{ $product->Name ?? '-' }}</td>
-                    <td>{{ $product->Type ?? '-' }}</td>
+                    <td>{{ $product->type->Description ?? '-' }}</td>
                     <td>{{ $product->Description ?? '-' }}</td>
                     <td>
                         @if($product->IsActive)

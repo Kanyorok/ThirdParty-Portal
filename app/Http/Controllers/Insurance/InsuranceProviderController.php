@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
+use App\Models\Core\Country;
 use App\Models\Insurance\InsuranceProduct;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,8 +27,9 @@ class InsuranceProviderController extends Controller
     {
         $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
         $providers = InsuranceProvider::all();
+        $Countrys = Country::all();
 
-        return view('bancassurance.insurers.create', compact('providers'));
+        return view('bancassurance.insurers.create', compact('providers','Countrys'));
     }
 
     public function store(InsuranceProviderRequest $request)
@@ -51,8 +53,9 @@ class InsuranceProviderController extends Controller
     public function edit($Id)
     {
         $provider = InsuranceProvider::findOrFail($Id);
+        $Countrys = Country::all();
 
-        return view('bancassurance.insurers.edit', compact('provider'));
+        return view('bancassurance.insurers.edit', compact('provider','Countrys'));
     }
 
     public function viewProducts($Id)
