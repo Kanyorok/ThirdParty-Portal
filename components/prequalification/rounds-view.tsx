@@ -234,6 +234,11 @@ export default async function RoundsView({
             startDate,
             endDate,
             maxVendors,
+            supplierEligible: (r as any).supplierEligible ?? undefined,
+            isFutureWindow: (r as any).isFutureWindow ?? undefined,
+            duplicateWithinRange: (r as any).duplicateWithinRange ?? undefined,
+            primaryWindowRoundId: (r as any).primaryWindowRoundId ?? undefined,
+            primaryWindowRoundTitle: (r as any).primaryWindowRoundTitle ?? undefined,
             categories,
             applicationSummary: categories.length > 0 ? {
                 total_categories: categories.length,

@@ -176,8 +176,10 @@ export default function CategoryApplications({ round, className }: CategoryAppli
         );
     }
 
-    const appliedCategories = round.categories.filter(cat => cat.has_applied);
-    const totalCategories = round.categories.length;
+    // Deduplicate categories by id to avoid duplicates in UI
+    const uniqueCategories = Array.from(new Map(round.categories.map(c => [c.category_id, c])).values());
+    const appliedCategories = uniqueCategories.filter(cat => cat.has_applied);
+    const totalCategories = uniqueCategories.length;
     
     if (appliedCategories.length === 0) {
         return (
@@ -250,7 +252,7 @@ export default function CategoryApplications({ round, className }: CategoryAppli
                         </div>
                     )}
                     
-                    <CategoryDetailView categories={round.categories} />
+                    <CategoryDetailView categories={uniqueCategories} />
                 </div>
             </DialogContent>
         </Dialog>
