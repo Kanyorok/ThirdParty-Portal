@@ -418,6 +418,18 @@ export default function RfqDetailPage() {
 
     return (
         <div className="space-y-6">
+            {/* Ensure the print block does not render on-screen and is only visible when printing */}
+            <style jsx global>{`
+                /* hide print-only block on screen */
+                .print-only { display: none !important; }
+
+                @media print {
+                    /* show only the print-only block when printing */
+                    body * { visibility: hidden !important; }
+                    .print-only, .print-only * { visibility: visible !important; }
+                    .print-only { display: block !important; position: absolute !important; left: 0; top: 0; width: 100%; }
+                }
+            `}</style>
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold leading-tight">{header.title}</h1>
@@ -599,7 +611,7 @@ export default function RfqDetailPage() {
                 </AccordionItem>
             </Accordion>
             {/* Print-friendly quotation view */}
-            <div className="hidden print:block">
+            <div className="hidden print:block print-only">
                 <div className="mb-4">
                     <div className="text-xl font-semibold">Quotation</div>
                     <div className="text-sm text-muted-foreground">Generated on {format(new Date(), "PPpp")}</div>
