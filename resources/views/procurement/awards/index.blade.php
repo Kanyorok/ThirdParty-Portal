@@ -84,16 +84,18 @@
                                 <td>{{ $row['award_date'] ?? '--' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        @if($row['type'] === 'tender')
+                                        @if($row['type'] === 'tender' && !empty($row['id']))
                                             <a href="{{ route('awards.tender', $row['id']) }}"
                                                class="btn btn-sm btn-outline-info" title="View Award Details">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
-                                        @else
+                                        @elseif($row['type'] === 'rfq' && !empty($row['id']))
                                             <a href="{{ route('awards.rfq', $row['id']) }}"
                                                class="btn btn-sm btn-outline-info" title="View Award Details">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
+                                        @else
+                                            <span class="btn btn-sm btn-outline-secondary disabled" title="Missing reference id">View</span>
                                         @endif
                                     </div>
                                 </td>

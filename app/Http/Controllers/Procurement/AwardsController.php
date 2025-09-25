@@ -39,7 +39,8 @@ class AwardsController extends Controller
                     'winning_bidder' => $award->winningSupplier->thirdParty->TradingName
                         ?? '--',
                     'award_date' => optional($award->AwardDate)->format('Y-m-d') ?? ($award->CreatedOn?->format('Y-m-d') ?? '--'),
-                    'id' => $award->tender->Id ?? null,
+                    // Always use FK to avoid missing relation
+                    'id' => $award->TenderID ?? ($award->tender->Id ?? null),
                 ];
             })
             ->values()
@@ -90,7 +91,8 @@ class AwardsController extends Controller
                     'status_class' => 'bg-success',
                     'winning_bidder' => $award->supplier->thirdParty->TradingName ?? '--',
                     'award_date' => ($award->CreatedOn?->format('Y-m-d')) ?? '--',
-                    'id' => $award->rfq->Id ?? null,
+                    // Prefer FK to ensure presence
+                    'id' => $award->RFQId ?? ($award->rfq->Id ?? null),
                 ];
             })
             ->values()
