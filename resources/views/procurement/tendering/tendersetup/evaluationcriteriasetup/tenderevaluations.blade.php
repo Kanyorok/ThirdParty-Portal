@@ -28,7 +28,12 @@
                 @foreach ($data as $item)
                     <tr>
                         <td>{{$loop->index+1}}</td>
-                        <td>{{$item['TenderNo']}}</td>
+                        <td>
+                            <strong>{{ $item['TenderNo'] }}</strong>
+                            @if(!empty($item['Title']))
+                                - {{ $item['Title'] }}
+                            @endif
+                        </td>
                         <td>{{$item['sectionsNumber']}}</td>
                         <td>
                             <a href="{{route('tender-criteria',$item['id'])}}"
