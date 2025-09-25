@@ -10,6 +10,13 @@
                 Role: <strong>{{ $userRole ?? 'Committee Member' }}</strong>
             </p>
         </div>
+        {{-- Requirement notice for tender criteria setup --}}
+        <div class="text-end">
+            <div class="text-danger fw-bold">IMPORTANT: You must set up Tender Criteria first before performing evaluations.
+                <br>
+                <a href="/procurement/tenderevaluations" class="btn btn-sm btn-outline-danger mt-2">Go to Tender Criteria Setup</a>
+            </div>
+        </div>
         <div class="text-end">
             @if(isset($tenderCount) && isset($bidsCount))
                 <div class="small text-muted">
