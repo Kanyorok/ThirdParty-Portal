@@ -69,11 +69,17 @@ class DepartmentNeedsController extends Controller
 
             return redirect()->route('procurementdepartmentalplan.index')
                 ->with('success', 'Department need created!');
-        } catch (\Exception $e) {
-            Log::error("--- CREATE DEPARTMENT NEEDS ERROR --- " . $e->getMessage());
+        } catch (\Illuminate\Database\QueryException $qe) {
+            Log::error("--- CREATE DEPARTMENT NEEDS DB ERROR --- ", ['message' => $qe->getMessage(), 'code' => $qe->getCode()]);
+            // User-friendly error (never expose SQL)
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['error' => $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to create the department need due to a system constraint. Please try again.']);
+        } catch (\Throwable $e) {
+            Log::error("--- CREATE DEPARTMENT NEEDS ERROR --- ", ['message' => $e->getMessage()]);
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to create the department need. Please try again.']);
         }
     }
 
