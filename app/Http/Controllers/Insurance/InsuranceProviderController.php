@@ -109,6 +109,11 @@ class InsuranceProviderController extends Controller
         $this->authorize(PermissionEnum::InsuranceProviderDelete, InsuranceProvider::class);
         try {
             $provider = InsuranceProvider::findOrFail($Id);
+
+            if ($provider->getProductByProvider()->exists()) {
+                return redirect()->back()
+                ->withErrors(['error' => 'This Provider is in use and cannot be deleted.']);
+            }  
             $provider->delete();
 
             return redirect()->route('bancassurance.insurers.index')

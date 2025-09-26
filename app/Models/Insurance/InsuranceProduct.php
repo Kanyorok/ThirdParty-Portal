@@ -42,4 +42,8 @@ class InsuranceProduct extends Model
     {
         return $this->belongsTo(CodeDetail::class,'Type','ID');
     }
+    public function policies()
+    {
+        return $this->hasMany(BancassurancePolicy::class,'ProductID','Id');
+    }
 }

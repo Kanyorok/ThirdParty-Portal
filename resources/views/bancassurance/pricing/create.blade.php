@@ -98,6 +98,9 @@
 
                 {{-- Submit --}}
                 <div class="text-end">
+                    <a href="{{ route('bancassurance.pricing.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
                     <button type="submit" class="btn btn-success px-4">Save Pricing Rule</button>
                 </div>
             </form>

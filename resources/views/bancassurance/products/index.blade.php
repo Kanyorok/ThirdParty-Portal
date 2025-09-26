@@ -40,14 +40,23 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('bancassurance.products.edit', $product->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('bancassurance.products.destroy', $product->Id) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Are you sure you want to delete this Insurance Product?');">Delete
+                    <a href="{{ route('bancassurance.products.edit', $product->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    @if($product->policies()->exists())
+                        <button class="btn btn-sm btn-secondary" disabled>
+                            <i class="bi bi-lock"></i> In Use
                         </button>
-                    </form>
+                    @else
+                        <form action="{{ route('bancassurance.products.destroy', $product->Id) }}" 
+                                method="POST" 
+                                onsubmit="return confirm('Are you sure you want to delete this product?');"
+                                class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </form>
+                    @endif
                     </td>
                 </tr>
             @endforeach

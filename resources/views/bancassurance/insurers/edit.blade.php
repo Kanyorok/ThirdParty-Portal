@@ -6,7 +6,7 @@
 <div class="container mt-4" style="max-width: 700px;">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Edit Insurance Provider</h5>
+            <h5 class="mb-0">Edit</h5>
         </div>
 
         <div class="card-body">

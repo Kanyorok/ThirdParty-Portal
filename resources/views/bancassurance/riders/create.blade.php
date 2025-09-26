@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add Rider')
+@section('title', 'Add Rider & Add On')
 @section('content')
 
 @if ($errors->any())
@@ -80,6 +80,9 @@
 
                 <!-- Submit -->
                 <div class="text-end">
+                    <a href="{{ route('bancassurance.riders.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left-circle me-1"></i> Back
+                    </a>
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-save"></i> Save Rider
                     </button>
