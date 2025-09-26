@@ -19,7 +19,6 @@ use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\TenderInvitationController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
-use App\Http\Controllers\Procurement\PurchaseOrderController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -121,17 +120,6 @@ Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $reques
 Route::apiResource('tenders', TenderApiController::class);
 Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
 Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
-
-// Supplier Purchase Orders (auth-protected)
-Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
-    Route::get('/supplier-pos', [PurchaseOrderController::class, 'apiSupplierPOs']);
-    Route::get('/supplier-pos/{id}', [PurchaseOrderController::class, 'apiSupplierPODetail']);
-});
-// Fallback (no auth) for local dev if token not wired yet
-if (env('APP_ENV') !== 'production') {
-    Route::get('/supplier-pos', [PurchaseOrderController::class, 'apiSupplierPOs']);
-    Route::get('/supplier-pos/{id}', [PurchaseOrderController::class, 'apiSupplierPODetail']);
-}
 
 // Tender Clarification APIs
 Route::post('/tender-clarifications', [TenderClarificationApiController::class, 'submitClarification']);

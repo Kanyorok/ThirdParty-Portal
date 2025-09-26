@@ -23,7 +23,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon\Carbon;
 use App\Models\Core\CodeDetail;
-use App\Models\ThirdParies\Supplier;
 
 class PurchaseOrderController extends Controller
 {
@@ -46,9 +45,6 @@ class PurchaseOrderController extends Controller
             'getAwardedRFQs',
             'getAwardedTenders',
             'getTenderItems',
-            // Supplier portal API endpoints
-            'apiSupplierPOs',
-            'apiSupplierPODetail',
         ]);
 //        $this->authorizeResource(Order::class);
     }
@@ -762,95 +758,5 @@ public function getRFQItems($rfqId)
         }
     }
 
-    // API: List POs for current supplier (by ThirdParty association)
-    public function apiSupplierPOs(Request $request): JsonResponse
-    {
-        try {
-            $user = $request->user();
-            $thirdPartyId = $user?->thirdParty?->Id ?? $user?->ThirdPartyId ?? null;
-            if (!$thirdPartyId) {
-                return response()->json(['data' => [], 'message' => 'No third party linked'], 200);
-            }
 
-            // Resolve all supplier legacy IDs under this third party
-            $supplierIds = DB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->pluck('Id');
-            if ($supplierIds->isEmpty()) {
-                return response()->json(['data' => []], 200);
-            }
-
-            $rows = DB::table('t_Orders as o')
-                ->leftJoin('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
-                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                // Prefer SourceId-based joins when available
-                ->leftJoin('t_RFQ as r', DB::raw('r.Id'), '=', DB::raw('CAST(o.SourceId AS INT)'))
-                ->leftJoin('t_Tenders as t', DB::raw('t.Id'), '=', DB::raw('CAST(o.SourceId AS INT)'))
-                ->leftJoin('t_TenderAwards as ta', DB::raw('ta.Id'), '=', DB::raw('CAST(o.SourceId AS INT)'))
-                ->whereIn('o.AccountID', $supplierIds)
-                ->orderByDesc('o.CreatedOn')
-                ->select([
-                    'o.Id as id',
-                    'o.OrderNo as po_no',
-                    'o.OrderDate as po_date',
-                    'o.ExtOrdNum as source_ref',
-                    'o.SourceType as source_type',
-                    'o.OrdTotIncl as total_incl',
-                    'o.OrdTotTax as total_tax',
-                    'o.OrdTotExcl as total_excl',
-                    DB::raw("COALESCE(r.RFQNumber, t.TenderNo, ta.ContractRef, o.ExtOrdNum) as display_ref"),
-                    's.Id as supplier_id',
-                    'tp.Id as supplier_third_party_id',
-                    DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, CAST(s.Id AS NVARCHAR(50))) as supplier_name"),
-                ])
-                ->limit(500)
-                ->get();
-
-            return response()->json(['data' => $rows]);
-        } catch (\Throwable $e) {
-            \Log::error('apiSupplierPOs failed', ['error' => $e->getMessage()]);
-            return response()->json(['data' => []], 200);
-        }
-    }
-
-    // API: PO detail for current supplier (authorization enforced by supplier ownership)
-    public function apiSupplierPODetail(Request $request, int $id): JsonResponse
-    {
-        try {
-            $user = $request->user();
-            $thirdPartyId = $user?->thirdParty?->Id ?? $user?->ThirdPartyId ?? null;
-            if (!$thirdPartyId) return response()->json(['error' => 'Unauthorized'], 401);
-
-            $supplierIds = DB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->pluck('Id');
-            if ($supplierIds->isEmpty()) return response()->json(['error' => 'Not found'], 404);
-
-            $order = DB::table('t_Orders as o')
-                ->leftJoin('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
-                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                ->leftJoin('t_RFQ as r', DB::raw('r.Id'), '=', DB::raw('CAST(o.SourceId AS INT)'))
-                ->leftJoin('t_Tenders as t', DB::raw('t.Id'), '=', DB::raw('CAST(o.SourceId AS INT)'))
-                ->leftJoin('t_TenderAwards as ta', DB::raw('ta.Id'), '=', DB::raw('CAST(o.SourceId AS INT)'))
-                ->where('o.Id', $id)
-                ->whereIn('o.AccountID', $supplierIds)
-                ->select([
-                    'o.Id as id', 'o.OrderNo as po_no', 'o.OrderDate as po_date',
-                    'o.ExtOrdNum as source_ref', 'o.SourceType as source_type', 'o.SourceId as source_id',
-                    'o.OrdTotIncl as total_incl', 'o.OrdTotTax as total_tax', 'o.OrdTotExcl as total_excl',
-                    DB::raw("COALESCE(r.RFQNumber, t.TenderNo, ta.ContractRef, o.ExtOrdNum) as display_ref"),
-                    's.Id as supplier_id', 'tp.Id as supplier_third_party_id',
-                    DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, CAST(s.Id AS NVARCHAR(50))) as supplier_name"),
-                ])->first();
-
-            if (!$order) return response()->json(['error' => 'Not found'], 404);
-
-            $lines = DB::table('t_OrderLines')->where('iOrderID', $id)->select([
-                'Id as id', DB::raw('COALESCE(ItemID, 0) as item_id'), 'ItemDescription as description',
-                DB::raw('COALESCE(QtyOrdered, 0) as qty'), DB::raw('COALESCE(UnitPrice, 0) as unit_price'),
-                DB::raw('COALESCE(LineTotal, 0) as line_total'),
-            ])->get();
-
-            return response()->json(['data' => ['order' => $order, 'lines' => $lines]]);
-        } catch (\Throwable $e) {
-            \Log::error('apiSupplierPODetail failed', ['id' => $id, 'error' => $e->getMessage()]);
-            return response()->json(['error' => 'Server error'], 500);
-        }
-    }
 }

@@ -50,7 +50,7 @@
         </form>
     </div>
 
-    <!-- Inline JavaScript to enforce 100% weight -->
+    <!-- Inline JavaScript to enforce 100% weight (do not disable inputs) -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('sectionCriteriaForm');
@@ -59,31 +59,22 @@
 
             function updateTotal() {
                 let total = 0;
-                const rows = form.querySelectorAll('tbody tr');
-
-                rows.forEach(row => {
-                    const checkbox = row.querySelector('input[type="checkbox"]');
-                    const weightInput = row.querySelector('input[type="number"]');
-
-                    if (checkbox && checkbox.checked && weightInput) {
-                        weightInput.disabled = false;
-                        total += parseFloat(weightInput.value) || 0;
-                    } else if (weightInput) {
-                        weightInput.disabled = true;
-                    }
+                const weightInputs = form.querySelectorAll('tr.section-row input[type="number"]');
+                weightInputs.forEach(input => {
+                    total += parseFloat(input.value) || 0;
                 });
-
-                totalWeightDisplay.textContent = total.toFixed(2);
+                if (totalWeightDisplay) {
+                    totalWeightDisplay.textContent = total.toFixed(2);
+                }
                 return total;
             }
 
             // Attach listeners
-            form.querySelectorAll('tbody tr').forEach(row => {
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                const weightInput = row.querySelector('input[type="number"]');
-
-                if (checkbox) checkbox.addEventListener('change', updateTotal);
-                if (weightInput) weightInput.addEventListener('input', updateTotal);
+            form.querySelectorAll('tr.section-row input[type="number"]').forEach(input => {
+                input.addEventListener('input', updateTotal);
+            });
+            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', updateTotal);
             });
 
             // Validate on submit
