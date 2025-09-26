@@ -37,7 +37,7 @@ class InvoiceEntryV2Controller extends Controller
         // Get default currency (ID 56 if exists, otherwise first available)
         $defaultCurrency = $this->getDefaultCurrency();
 
-        return view('finance.accountspayable.invoiceentry.create', compact('paymentMethods', 'defaultCurrency'));
+        return view('finance.accountspayable.invoiceentry.create-v2', compact('paymentMethods', 'defaultCurrency'));
     }
 
     public function show($id)
@@ -512,16 +512,16 @@ class InvoiceEntryV2Controller extends Controller
         $suppliers = DB::table('t_Suppliers as s')
             ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
             ->select(
-                's.Id', 
-                's.ThirdPartyID', 
+                's.Id',
+                's.ThirdPartyID',
                 DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, 'Unknown Supplier') as SupplierName")
             )
             ->get();
 
         $orders = DB::table('t_Orders')->select('Id','AccountID','Description','OrdTotExcl','OrderNo')->get();
-        
+
         $currencies = Currency::select('Id', 'Code')->get();
-        
+
         $grns = DB::table('t_GoodsReceipts')->select('Id', 'GRNID', 'SupplierId')->get();
 
         return view('finance.accountspayable.invoiceentry.edit', compact('invoice', 'suppliers', 'orders', 'currencies', 'grns'));
