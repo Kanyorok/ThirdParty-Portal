@@ -59,12 +59,12 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ route('finance.invoiceentry-v2.show', $invoice->Id) }}" 
+                                            <a href="{{ route('invoiceentry.show', $invoice->Id) }}"
                                                class="btn btn-outline-primary" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             @if($invoice->Status === 'Draft')
-                                                <a href="{{ route('finance.invoiceentry-v2.edit', $invoice->Id) }}" 
+                                                <a href="{{ route('invoiceentry.edit', $invoice->Id) }}"
                                                    class="btn btn-outline-secondary" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
@@ -88,7 +88,7 @@
                     <i class="fas fa-file-invoice text-muted mb-3" style="font-size: 3rem;"></i>
                     <h5 class="text-muted">No invoices found</h5>
                     <p class="text-muted">Create your first invoice entry to get started.</p>
-                    <a href="{{ route('finance.invoiceentry-v2.create') }}" class="btn btn-primary">
+                    <a href="{{ route('invoiceentry.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i> Create Invoice
                     </a>
                 </div>

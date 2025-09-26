@@ -364,6 +364,9 @@
     <script>
         // Wait for both DOM and jQuery to be ready
         function initializeInvoiceEntry() {
+            // API endpoints (hoisted so all handlers can access)
+            const quickSearchUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.quick-search') }}';
+            const findSupplierUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.search') }}';
 
             // Elements
             const searchSupplier = document.getElementById('searchSupplier');
@@ -484,7 +487,6 @@
                     searchSpinner.classList.remove('d-none');
                     searchHint.classList.add('d-none');
 
-                    const quickSearchUrl = '/finance/invoiceentry-v2/api/suppliers/quick-search';
                     const csrfToken = document.querySelector('meta[name="csrf-token"]');
 
                     fetch(quickSearchUrl, {
@@ -573,13 +575,13 @@
                 // Reset any previous results
                 resetSupplierView();
 
-                const searchUrl = '/finance/invoiceentry-v2/api/suppliers/search';
                 const csrfToken = document.querySelector('meta[name="csrf-token"]');
 
-                fetch(searchUrl, {
+                fetch(findSupplierUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken ? csrfToken.getAttribute('content') : ''
                     },
                     body: JSON.stringify({ supplier_id: supplier.SupplierID })

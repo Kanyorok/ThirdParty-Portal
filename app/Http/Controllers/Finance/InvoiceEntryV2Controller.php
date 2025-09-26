@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class InvoiceEntryV2Controller extends Controller
@@ -232,15 +233,17 @@ class InvoiceEntryV2Controller extends Controller
             // Get default currency for orders that don't have currency set
             $defaultCurrency = $this->getDefaultCurrency();
 
-            // Get related Purchase Orders
-            $orders = DB::table('t_Orders')
-                ->where('AccountID', $supplier->SupplierID)
-                ->where('Status', '!=', 'Draft') // Only approved/posted orders
-                ->select('Id', 'OrderNo', 'Description', 'OrdTotExcl as TotalAmount', 'OrderDate'
-                    // TODO: Uncomment when CurrencyID column is added to t_Orders table
-                    // , 'CurrencyID'
-                )
-                ->orderBy('OrderDate', 'desc')
+            // Get related Purchase Orders (schema-resilient: Status column may not exist)
+            $ordersQuery = DB::table('t_Orders')
+                ->where('AccountID', $supplier->SupplierID);
+
+            if (Schema::hasColumn('t_Orders', 'Status')) {
+                $ordersQuery->where('Status', '!=', 'Draft');
+            }
+
+            $orders = $ordersQuery
+                ->select('Id', 'OrderNo', 'Description', DB::raw('COALESCE(OrdTotExcl, 0) as TotalAmount'), 'OrderDate')
+                ->orderByRaw(Schema::hasColumn('t_Orders', 'OrderDate') ? 'OrderDate desc' : 'Id desc')
                 ->get()
                 ->map(function($order) use ($defaultCurrency) {
                     // TODO: Uncomment when CurrencyID column is available
@@ -390,8 +393,6 @@ class InvoiceEntryV2Controller extends Controller
     public function store(Request $request)
     {
         try {
-            Log::info('Invoice V2 store method called', ['request_data' => $request->all()]);
-
             $validated = $request->validate([
                 'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
                 'SupplierID' => 'required|exists:t_Suppliers,Id',
@@ -408,7 +409,7 @@ class InvoiceEntryV2Controller extends Controller
             DB::beginTransaction();
 
             $invoice = FinanceInvoiceEntry::create([
-                'ThirdPartyID' => $validated['ThirdPartyID'], // Store in correct field for relationship
+                //'ThirdPartyID' => $validated['ThirdPartyID'], // Store in correct field for relationship
                 'SupplierID' => $validated['SupplierID'], // Also store SupplierID separately if needed
                 'POId' => $validated['POReference'], // This is actually the PO ID from the form
                 'POReference'=>  $validated['POReference'],
@@ -442,7 +443,7 @@ class InvoiceEntryV2Controller extends Controller
 
             Log::info('Invoice V2 created successfully', ['invoice_id' => $invoice->Id]);
 
-            return redirect()->route('finance.invoiceentry-v2.show', $invoice->Id)
+            return redirect()->route('invoiceentry.show', $invoice->Id)
                 ->with('success', 'Invoice created successfully');
 
         }catch(\Throwable $th){
@@ -492,7 +493,7 @@ class InvoiceEntryV2Controller extends Controller
                 'ModifiedOn' => now()
             ]);
 
-            return redirect()->route('finance.invoiceentry-v2.show', $invoice->Id)
+            return redirect()->route('invoiceentry.show', $invoice->Id)
                 ->with('success', 'Invoice updated successfully');
 
         } catch (\Exception $e) {
@@ -524,7 +525,7 @@ class InvoiceEntryV2Controller extends Controller
 
         $grns = DB::table('t_GoodsReceipts')->select('Id', 'GRNID', 'SupplierId')->get();
 
-        return view('finance.accountspayable.invoiceentry.edit', compact('invoice', 'suppliers', 'orders', 'currencies', 'grns'));
+        return view('finance.accountspayable.invoiceentry.edit-v2', compact('invoice', 'suppliers', 'orders', 'currencies', 'grns'));
     }
 
     /**
