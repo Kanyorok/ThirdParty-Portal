@@ -24,7 +24,7 @@ class TenderEvaluationsController extends Controller
     public function index()
     {
         //return Tender::all();
-        $sections = Section::select('id', 'SectionName')->get();
+        $sections = Section::select('Id', 'SectionName')->get();
         //Get unique tenderID form the TenderSection table
         $tenderSections = TenderSection::select('TenderID')->distinct()->get();
         //Get tender that are not in the TenderSection table
@@ -108,55 +108,92 @@ class TenderEvaluationsController extends Controller
     {
         //check if user has permission to create tender sections
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
+        
+        // Log the incoming request data for debugging
+        Log::info('Tender sections form submission', [
+            'tender_id' => $request->tender_id,
+            'sections' => $request->sections,
+            'weights' => $request->weights,
+            'all_data' => $request->all()
+        ]);
+        
         // Validate the request data
         $request->validate([
-            'tender_id' => 'required',
-            'sections' => 'required',
+            'tender_id' => 'required|exists:t_Tenders,Id',
+            'sections' => 'required|array|min:1',
+            'sections.*' => 'exists:t_Sections,Id',
             'weights' => 'required|array',
-            'weights.*' => 'numeric|min:0|max:100',
         ]);
-        $tenderTitle = $request->tender_id;
+
+        $tenderId = $request->tender_id;
         $sections = $request->sections;
         $weights = $request->weights;
+        
+        // Calculate total weight for selected sections only
+        $totalWeight = 0;
+        foreach ($sections as $sectionId) {
+            $totalWeight += floatval($weights[$sectionId] ?? 0);
+        }
+        
         // Check if the total weight is 100
-        $totalWeight = array_sum($weights);
-        // if ($totalWeight !== 100) {
-        //     return back()->with('error', 'The total weight must be 100.');
-        // }
+        if (abs($totalWeight - 100) > 0.01) { // Allow small floating point differences
+            return back()->with('error', 'The total weight must be exactly 100%. Current total: ' . $totalWeight . '%');
+        }
+
         DB::beginTransaction();
         try {
-            // Loop through each section and add with its weight
-            foreach ($sections as $index => $sectionId) {
+            // First, delete existing sections for this tender to avoid duplicates
+            TenderSection::where('TenderID', $tenderId)->delete();
+            
+            // Loop through each selected section and add with its weight
+            foreach ($sections as $sectionId) {
                 // Check if the section exists
                 $section = Section::find($sectionId);
                 if (!$section) {
+                    DB::rollBack();
                     return back()->with('error', 'Section with ID ' . $sectionId . ' does not exist.');
                 }
-                // Create or update the tender section
-                $tenderSection = TenderSection::create([
-                    'TenderID' => $request->tender_id, // Assuming tender_id is passed in the request
-                    'SectionID' => $sectionId,
-                    'Weight' => $weights[$index],
-                    'IsActive' => true, // Assuming sections are active by default
-                    'Comments' => $request->comments[$index] ?? null, // Optional comments
-                    'CreatedBy' => auth()->id(),
-                    'ModifiedBy' => auth()->id(),
-                ]);
+                
+                $weight = floatval($weights[$sectionId] ?? 0);
+                
+                // Only create sections with weight > 0
+                if ($weight > 0) {
+                    $tenderSection = TenderSection::create([
+                        'TenderID' => $tenderId,
+                        'SectionID' => $sectionId,
+                        'Weight' => $weight,
+                        'IsActive' => true,
+                        'Comments' => null,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
+                    ]);
 
-                activity()
-                    ->performedOn($tenderSection)
-                    ->causedBy(auth()->id())
-                    ->log('Created or updated tender sections for tender: ' . $tenderTitle);
+                    activity()
+                        ->performedOn($tenderSection)
+                        ->causedBy(Auth::id())
+                        ->log('Created tender section for tender ID: ' . $tenderId . ', section ID: ' . $sectionId);
+                }
             }
+            
             DB::commit();
+            
+            // Log success
+            Log::info('Tender sections created successfully', [
+                'tender_id' => $tenderId,
+                'sections_count' => count($sections),
+                'user_id' => Auth::id()
+            ]);
 
             return back()->with('success', 'Tender sections created successfully.');
         } catch (Throwable $th) {
             DB::rollBack();
-            Log::error('Failed to create tender sections');
-            Log::error($th);
+            Log::error('Failed to create tender sections', [
+                'error' => $th->getMessage(),
+                'tender_id' => $tenderId,
+                'user_id' => Auth::id()
+            ]);
 
-            return back()->with('error', 'Failed to create tender sections: ');
+            return back()->with('error', 'Failed to create tender sections: ' . $th->getMessage());
         }
     }
 
