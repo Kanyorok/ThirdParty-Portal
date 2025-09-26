@@ -29,22 +29,93 @@ class TenderApiController extends Controller
         try {
             $query = Tender::with(['procurementMode', 'currency', 'tenderCategoryRelation', 'itemCategoryRelation']);
 
-            $status = $request->query('status');
-            if ($status) {
-                switch (strtolower($status)) {
-                    case 'open':
-                        $query->where('Status', TenderStatusEnum::Published);
-                        break;
-                    case 'closed':
-                        $query->where('Status', TenderStatusEnum::Closed);
-                        break;
-                    default:
-                        $query->where('Status', TenderStatusEnum::Draft);
-                        break;
+            // Enforce invites unless explicitly disabled (default: disabled to show all tenders)
+            $enforceInvites = filter_var($request->query('enforce_invites', false), FILTER_VALIDATE_BOOLEAN);
+            $thirdPartyId = $request->query('third_party_id');
+
+            if ($enforceInvites) {
+                // Resolve supplierId(s) for the current thirdParty (DISTINCT across multiple supplier rows)
+                $supplierIds = [];
+                if (!empty($thirdPartyId)) {
+                    $supplierIds = DB::table('t_Suppliers')
+                        ->where('ThirdPartyID', (int)$thirdPartyId)
+                        ->pluck('Id')
+                        ->unique()
+                        ->values()
+                        ->all();
+                } elseif (Auth::check() && method_exists(Auth::user(), 'thirdParty') && Auth::user()->thirdParty) {
+                    $tpId = Auth::user()->thirdParty->Id ?? null;
+                    if ($tpId) {
+                        $supplierIds = DB::table('t_Suppliers')
+                            ->where('ThirdPartyID', (int)$tpId)
+                            ->pluck('Id')
+                            ->unique()
+                            ->values()
+                            ->all();
+                    }
                 }
+
+                $supplierIds = array_values(array_filter(array_unique(array_map('intval', $supplierIds))));
+
+                // Visible tenders:
+                // 1) Open + visible statuses
+                // 2) Restricted + invited (exists in t_TenderInvitations for any supplierId)
+                $query->where(function ($vis) use ($supplierIds) {
+                    $vis->where(function ($open) {
+                            $open->where('TenderType', TenderTypeEnum::Open->value)
+                                ->whereIn('Status', [
+                                    TenderStatusEnum::Published->value,
+                                    TenderStatusEnum::OpeningInProgress->value,
+                                ]);
+                        });
+                    if (!empty($supplierIds)) {
+                        $vis->orWhere(function ($restricted) use ($supplierIds) {
+                            $restricted->where('TenderType', TenderTypeEnum::Restricted->value)
+                                ->whereIn('Status', [
+                                    TenderStatusEnum::Published->value,
+                                    TenderStatusEnum::OpeningInProgress->value,
+                                ])
+                                ->whereExists(function ($sub) use ($supplierIds) {
+                                    $sub->select(DB::raw(1))
+                                        ->from('t_TenderInvitations as ti')
+                                        ->whereColumn('ti.TenderId', 't_Tenders.Id')
+                                        ->whereIn('ti.SupplierId', $supplierIds)
+                                        ->whereNull('ti.DeletedOn');
+                                });
+                        });
+                    }
+                });
+            } else {
+                // Not enforcing invites: show all visible tenders regardless of supplier (Open + Restricted)
+                $query->whereIn('Status', [
+                    TenderStatusEnum::Published->value,
+                    TenderStatusEnum::OpeningInProgress->value,
+                ]);
             }
 
-            $tenders = $query->get();
+            // Optional filters
+            $statusParam = $request->query('status');
+            if (!empty($statusParam)) {
+                $query->where('Status', $statusParam);
+            }
+
+            $typeParam = $request->query('tenderType');
+            if (!empty($typeParam)) {
+                $query->where('TenderType', $typeParam);
+            }
+
+            $search = trim((string) $request->query('search', ''));
+            if ($search !== '') {
+                $like = '%' . str_replace(['%', '_'], ['[%]', '[_]'], $search) . '%';
+                $query->where(function ($w) use ($like) {
+                    $w->where('Title', 'like', $like)
+                      ->orWhere('TenderNo', 'like', $like)
+                      ->orWhere('ScopeOfWork', 'like', $like)
+                      ->orWhere('Instructions', 'like', $like);
+                });
+            }
+
+            $tenders = $query->orderByDesc('CreatedOn')->orderByDesc('Id')->get();
 
             $activity = activity()->performedOn(new Tender());
             if (Auth::check()) {

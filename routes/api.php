@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
@@ -79,9 +80,9 @@ Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $reques
             return response()->json([
                 'debug' => 'No supplier found',
                 'third_party_id' => $thirdPartyId,
-                'third_parties_count' => \App\Models\ThirdParies\ThirdParty::count(),
-                'suppliers_count' => \App\Models\ThirdParies\Supplier::count(),
-                'sample_third_party' => \App\Models\ThirdParies\ThirdParty::first()
+                'third_parties_count' => DB::table('t_ThirdParties')->count(),
+                'suppliers_count' => DB::table('t_Suppliers')->count(),
+                'sample_third_party' => DB::table('t_ThirdParties')->first()
             ]);
         }
 
@@ -116,7 +117,7 @@ Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $reques
 });
 
 
-// TEMPORARY: Test APIs without auth for debugging
+// Tenders API (public index to allow portal to call with third_party_id)
 Route::apiResource('tenders', TenderApiController::class);
 Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
 Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);

@@ -19,13 +19,9 @@
                         <td>
                             <input type="number"
                                    class="form-control"
-                                   name="weights[{{ $section->sections->id }}]"
+                                   name="weights[{{ $section->sections->Id }}]"
                                    value="{{ number_format($section->Weight, 2) }}"
                                    step="0.01" min="0" max="100" required>
-
-                            <!-- Hidden field to actually submit the value -->
-                            <input type="hidden" name="weights[{{ $section->sections->id }}]"
-                                   value="{{ number_format($section->Weight, 2) }}">
                         </td>
                     </tr>
 
@@ -33,8 +29,8 @@
                         <tr class="criteria-row">
                             <td>
                                 <input type="checkbox"
-                                       name="criterias[{{ $section->sections->id }}][]"
-                                       value="{{ $criteria->id }}"
+                                       name="criterias[{{ $section->sections->Id }}][]"
+                                       value="{{ $criteria->Id }}"
                                     {{ $criteria->isChecked ? 'checked' : '' }}>
                             </td>
                             <td colspan="2">{{ $criteria->CriteriaName }}</td>
