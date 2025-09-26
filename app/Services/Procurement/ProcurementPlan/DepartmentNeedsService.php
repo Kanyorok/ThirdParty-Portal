@@ -5,7 +5,6 @@ namespace App\Services\Procurement\ProcurementPlan;
 use App\Models\Procurement\DepartmentNeed;
 use App\Models\Auth\User;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 
 class DepartmentNeedsService
 {
@@ -26,12 +25,15 @@ class DepartmentNeedsService
             throw new \Exception('A pending need for this item already exists for your department.');
         }
 
-        // Two-phase NeedID assignment to guarantee uniqueness and ordering with identity:
-        // 1) Insert with a temporary unique placeholder
-        $tempNeedId = 'NEED-TMP-' . (string) Str::uuid();
+        // Generate NeedID
+        $prefix = 'NEED-';
+        $lastNEED = DepartmentNeed::where('NeedID', 'like', $prefix . '%')->orderBy('Id', 'desc')->first();
+        $lastNumber = $lastNEED ? intval(substr($lastNEED->NeedID, strlen($prefix))) : 0;
+        $newNEEDNumber = $prefix . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
+        // Create the new department need
         $departmentNeed = DepartmentNeed::create([
-            'NeedID' => $tempNeedId,
+            'NeedID' => $newNEEDNumber,
             'BranchID' => $branchId,
             'DepartmentID' => $departmentId,
             'ItemID' => $itemId,
@@ -46,10 +48,6 @@ class DepartmentNeedsService
             'ModifiedBy' => $actor->Id,
             'RequestedDate' => $data['RequestedDate'],
         ]);
-
-        // 2) Update NeedID using the assigned identity to ensure monotonic, collision-free ids
-        $finalNeedId = 'NEED-' . str_pad((string) $departmentNeed->Id, 5, '0', STR_PAD_LEFT);
-        $departmentNeed->update(['NeedID' => $finalNeedId]);
 
         activity()
             ->causedBy($actor)
