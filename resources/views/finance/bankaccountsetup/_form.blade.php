@@ -50,7 +50,7 @@
         <label class="form-label">IBAN</label>
         <input name="IBAN" class="form-control" value="{{ old('IBAN', $account->IBAN ?? '') }}">
     </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <label class="form-label">Currency <span class="text-danger">*</span></label>
             <select name="CurrencyID" id="CurrencyID" class="form-select" required>
                 <option value="">-- select currency --</option>
@@ -66,23 +66,31 @@
             </select>
             <small id="currencyHint" class="text-muted d-block mt-1"></small>
         </div>
-    <div class="col-md-3">
-        <label class="form-label">GLAccountID</label>
-        <input type="number" name="GLAccountID" class="form-control" value="{{ old('GLAccountID', $account->GLAccountID ?? '') }}">
-        {{-- Replace with select if you have GL accounts list --}}
+    <div class="col-md-6">
+        <label class="form-label">GL Account</label>
+        <select name="GLAccountID" id="GLAccountID" class="form-select">
+            <option value="">-- select GL account --</option>
+            @forelse(($glAccounts ?? []) as $gl)
+                <option value="{{ $gl->Id }}" @selected(old('GLAccountID', $account->GLAccountID ?? '') == $gl->Id)>
+                    {{ $gl->GLName ?? $gl->Description ?? ('GL #' . $gl->Id) }}
+                </option>
+            @empty
+                <option value="" disabled>No record found</option>
+            @endforelse
+        </select>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label class="form-label">Opening Balance</label>
         <input type="number" step="0.01" name="OpeningBalance" class="form-control"
                value="{{ old('OpeningBalance', $account->OpeningBalance ?? 0) }}">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label class="form-label">Current Balance</label>
         <input class="form-control" value="{{ old('CurrentBalance', $account->CurrentBalance ?? 0) }}" disabled>
         <small class="text-muted">Auto; starts at opening balance.</small>
     </div>
-    <div class="col-md-4 d-flex align-items-center">
+    {{-- <div class="col-md-4 d-flex align-items-center">
         <div class="form-check me-4">
             <input type="checkbox" name="IsDefault" id="IsDefault" class="form-check-input"
                    {{ old('IsDefault', $account->IsDefault ?? 0) ? 'checked' : '' }}>
@@ -93,7 +101,7 @@
                    {{ old('IsActive', $account->IsActive ?? 1) ? 'checked' : '' }}>
             <label for="IsActive" class="form-check-label">Active</label>
         </div>
-    </div>
+    </div> --}}
 </div>
 
 {{-- Simple client-side branch filter --}}

@@ -31,7 +31,7 @@
 
         <div class="mb-3">
             <label class="form-label">Payment Date <span class="text-danger">*</span></label>
-            <input type="date" name="PaymentDate" class="form-control" value="{{ now()->format('d/m/Y') }}" required>
+            <input type="date" name="PaymentDate" class="form-control" value="{{ now()->format('Y-m-d') }}" required>
         </div>
 
         <div class="mb-3">

@@ -51,8 +51,8 @@
                                 <h5>Contract Duration</h5>
                                 @if($contract->ContractStartDate && $contract->ContractEndDate)
                                     <div class="text-muted">
-                                        {{ $contract->ContractStartDate->format('M d, Y') }} - 
-                                        {{ $contract->ContractEndDate->format('M d, Y') }}
+                                        {{ $contract->ContractStartDate->format('d/m/Y') }} - 
+                                        {{ $contract->ContractEndDate->format('d/m/Y') }}
                                     </div>
                                     <small class="text-success">
                                         ({{ $contract->ContractStartDate->diffInDays($contract->ContractEndDate) }} days)
@@ -100,7 +100,7 @@
                                     </tr>
                                     <tr>
                                         <td><strong>Award Date:</strong></td>
-                                        <td>{{ $contract->AwardDate ? $contract->AwardDate->format('M d, Y') : 'N/A' }}</td>
+                                        <td>{{ $contract->AwardDate ? $contract->AwardDate->format('d/m/Y') : 'N/A' }}</td>
                                     </tr>
                                     <tr>
                                         <td><strong>Award Status:</strong></td>

@@ -65,7 +65,7 @@
                         <select name="RequisitionId" id="RequisitionId" class="form-select" required>
                             <option value="">-- Choose Requisition --</option>
                             @foreach($requisitions as $requisition)
-                                <option value="{{ $requisition->Id }}">{{ $requisition->RequisitionNo }}</option>
+                                <option value="{{ $requisition->Id }}">{{ $requisition->RequisitionNo }} @if(!empty($requisition->PlanTitle)) - {{ $requisition->PlanTitle }} @endif</option>
                             @endforeach
                         </select>
                     </div>

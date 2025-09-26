@@ -109,13 +109,12 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label">Link to Budget Line</label>
-                <select name="budget_line_id" class="form-select @error('budget_line_id') is-invalid @enderror"
-                        required>
+                <select name="budget_line_id" class="form-select @error('budget_line_id') is-invalid @enderror">
                     <option disabled {{ old('budget_line_id') ? '' : 'selected' }}>Select Budget Line</option>
                     @foreach ($budgetLines as $budgetLine)
-                        <option value="{{ $budgetLine->BudgetLineID }}"
-                            {{ old('budget_line_id') == $budgetLine->BudgetLineID ? 'selected' : '' }}>
-                            {{ $budgetLine->Description }}
+                        <option value="{{ $budgetLine->Id }}"
+                            {{ old('budget_line_id') == $budgetLine->Id ? 'selected' : '' }}>
+                            {{ $budgetLine->LineName }}
                         </option>
                     @endforeach
                 </select>

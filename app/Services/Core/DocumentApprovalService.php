@@ -20,6 +20,7 @@ class DocumentApprovalService
         $actor = $request->user();
         $data = $request->validated();
         $documentType = $data['document_type'];
+        $action = strtolower($data['action'] ?? 'approve');
 
         $docMap = [
             'purchase_order' => [
@@ -36,7 +37,39 @@ class DocumentApprovalService
             ],
         ];
 
-        // Check if already fully approved
+        // If rejecting, process rejection and update document immediately
+        if ($action === 'reject') {
+            DB::transaction(function () use ($documentType, $id, $actor, $data, $docMap) {
+                // Record rejection
+                DB::table('t_Approvals')->updateOrInsert(
+                    [
+                        'DocType' => $documentType,
+                        'DocumentId' => $id,
+                        'UserId' => $actor->Id,
+                    ],
+                    [
+                        'Status' => 'rejected',
+                        'RejectionReason' => $data['rejection_reason'] ?? null,
+                        'CreatedBy' => $actor->Id,
+                        'ModifiedBy' => $actor->Id,
+                        'CreatedOn' => now(),
+                        'ModifiedOn' => now(),
+                    ]
+                );
+
+                // Set document status to Rejected
+                DB::table((new $docMap[$documentType]['model'])->getTable())
+                    ->where('id', $id)
+                    ->update([
+                        $docMap[$documentType]['approved_column'] => $this->getCodeId('RequisitionStatus', 'Rejected'),
+                    ]);
+            });
+
+            return redirect()->route($docMap[$documentType]['route'], $id)
+                ->with('success', 'Document rejected successfully.');
+        }
+
+        // Approvals path: Check if already fully approved
         if ($this->approvalService->isFullyApproved($documentType, $id, (float)$data['order_total'])) {
             return redirect()->route($docMap[$documentType]['route'], $id)
                 ->with('warning', 'This document is already fully approved.');

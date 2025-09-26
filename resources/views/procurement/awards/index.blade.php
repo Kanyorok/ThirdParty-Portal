@@ -44,8 +44,34 @@
                         @forelse($items as $index => $row)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $row['ref_no'] }}</td>
-                                <td>{{ $row['title'] }}</td>
+                                <td>
+                                    @if($row['type'] === 'rfq' && !empty($row['t_RFQ']['RefNo']))
+                                        {{ $row['t_RFQ']['RefNo'] }}
+                                    @else
+                                        @php
+                                            $ref = $row['ref_no'] ?? '';
+                                            // If this looks like a numeric Id and it's a tender, try to resolve to TenderNo - Title
+                                            if(($row['type'] ?? '') === 'tender' && is_numeric($ref)) {
+                                                try {
+                                                    $t = \App\Models\Procurement\Tender::find((int)$ref);
+                                                    if($t) {
+                                                        $ref = trim((($t->TenderNo ?? '') . ' - ' . ($t->Title ?? '')));
+                                                    }
+                                                } catch (\Throwable $e) {
+                                                    // swallow errors and keep original ref
+                                                }
+                                            }
+                                        @endphp
+                                        {{ $ref }}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($row['type'] === 'rfq' && !empty($row['t_RFQ']['Comments']))
+                                        {{ $row['t_RFQ']['Comments'] }}
+                                    @else
+                                        {{ $row['title'] }}
+                                    @endif
+                                </td>
                                 <td>
                                     @if($row['type'] === 'tender')
                                         <span class="badge bg-primary">Tender</span>
@@ -58,16 +84,18 @@
                                 <td>{{ $row['award_date'] ?? '--' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        @if($row['type'] === 'tender')
+                                        @if($row['type'] === 'tender' && !empty($row['id']))
                                             <a href="{{ route('awards.tender', $row['id']) }}"
                                                class="btn btn-sm btn-outline-info" title="View Award Details">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
-                                        @else
+                                        @elseif($row['type'] === 'rfq' && !empty($row['id']))
                                             <a href="{{ route('awards.rfq', $row['id']) }}"
                                                class="btn btn-sm btn-outline-info" title="View Award Details">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
+                                        @else
+                                            <span class="btn btn-sm btn-outline-secondary disabled" title="Missing reference id">View</span>
                                         @endif
                                     </div>
                                 </td>
@@ -82,7 +110,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Pagination removed because items is a collection -->
     </div>
 
@@ -99,7 +127,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Approval Remarks (Optional)</label>
-                            <textarea name="approval_remarks" class="form-control" rows="3" 
+                            <textarea name="approval_remarks" class="form-control" rows="3"
                                       placeholder="Enter any additional remarks for this approval..."></textarea>
                         </div>
                     </div>
@@ -144,7 +172,7 @@
             form.action = `{{ route('awards.approve', ':id') }}`.replace(':id', awardId);
             new bootstrap.Modal(document.getElementById('approveModal')).show();
         }
-        
+
         function rejectAward(awardId) {
             const form = document.getElementById('rejectForm');
             form.action = `{{ route('awards.reject', ':id') }}`.replace(':id', awardId);

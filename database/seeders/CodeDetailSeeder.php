@@ -254,6 +254,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'PaymentMethod', 'Description' => 'Mpesa', 'Value' => 'M'],
             ['CodeID' => 'PaymentMethod', 'Description' => 'Bank', 'Value' => 'B'],
             ['CodeID' => 'PaymentMethod', 'Description' => 'Cash', 'Value' => 'C'],
+            ['CodeID' => 'PaymentMethod', 'Description' => 'Wallet', 'Value' => 'W'],
 
             //Property Issue Types
             ['CodeID' => 'IssueType', 'Description' => 'Electrical', 'Value' => 'E'],
@@ -570,7 +571,7 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'TripType', 'Description' => 'Marketing Campaign', 'Value' => 'MC'],
             ['CodeID' => 'TripType', 'Description' => 'Inventory Transfers', 'Value' => 'IT'],
             ['CodeID' => 'TripType', 'Description' => 'Other', 'Value' => 'O'],
-  
+
             //Driver Availability Status
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],

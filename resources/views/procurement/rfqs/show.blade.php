@@ -91,6 +91,90 @@
                 </tfoot>
 
             </table>
+
+            {{-- Supplier Quotations will be included in the printable section (only visible after approval) --}}
+            @if($rfq->Status === 'Approved' && isset($rfqResponses) && $rfqResponses->isNotEmpty())
+                <hr>
+                <h4>Supplier Quotations</h4>
+                <div id="supplierQuotationsPrint">
+                @foreach($rfqResponses as $response)
+                    <section class="supplier-quotation mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <h5>Supplier: {{ optional($response->supplier->thirdParty)->TradingName ?? $response->SupplierName ?? 'N/A' }}</h5>
+                                        <p class="mb-0">Response No: <strong>{{ $response->RFQResponseNumber }}</strong></p>
+                                        <p class="mb-0">Submitted: <strong>{{ optional($response->CreatedOn)->format('d/m/Y') ?? '' }}</strong></p>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <p class="mb-0">RFQ: <strong>{{ $rfq->RFQNumber }}</strong></p>
+                                        <p class="mb-0">Requisition: <strong>{{ optional($rfq->requisition)->RequisitionNo }}</strong></p>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Item</th>
+                                                <th>Description</th>
+                                                <th>Qty</th>
+                                                <th>UOM</th>
+                                                <th>Unit Price</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        @php $sum = 0; @endphp
+                                        @foreach($response->items as $ri)
+                                            @php $sum += floatval($ri->TotalPayable ?? ($ri->QuotedPrice * $ri->Quantity)); @endphp
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>{{ $ri->ItemName }}</td>
+                                                <td>{{ $ri->Description ?? '' }}</td>
+                                                <td class="text-end">{{ $ri->Quantity }}</td>
+                                                <td>{{ optional($ri->uom)->Name ?? $ri->UOM }}</td>
+                                                <td class="text-end">{{ number_format($ri->QuotedPrice, 2) }}</td>
+                                                <td class="text-end">{{ number_format($ri->TotalPayable ?? ($ri->QuotedPrice * $ri->Quantity), 2) }}</td>
+                                            </tr>
+                                        @endforeach
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="6" class="text-end"><strong>Subtotal</strong></td>
+                                                <td class="text-end"><strong>{{ number_format($sum, 2) }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="6" class="text-end">Tax / VAT (if any)</td>
+                                                <td class="text-end">{{ number_format($response->TaxAmount ?? 0, 2) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="6" class="text-end"><strong>Total Payable</strong></td>
+                                                <td class="text-end"><strong>{{ number_format($response->TotalPayable ?? $sum, 2) }}</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <p class="mb-1"><strong>Delivery Time (days):</strong> {{ $response->DurationDays ?? 'N/A' }}</p>
+                                        <p class="mb-1"><strong>Currency:</strong> {{ $response->Currency ?? 'N/A' }}</p>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <p class="mb-1">Authorized Signature: ________________________</p>
+                                        <p class="mb-1">Name: ________________________</p>
+                                        <p class="mb-1">Date: ________________________</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                @endforeach
+                </div>
+            @endif
         </div>
         <div class="text-end">
             @if ($rfq->Status === 'Approved')
@@ -229,37 +313,120 @@
 
     <script>
         function printRFQ() {
-            const content = document.getElementById('printSection').innerHTML;
-            const printWindow = window.open('', '', 'height=800,width=1000');
-            printWindow.document.write(`
-            <html>
+            const printContainer = document.getElementById('supplierQuotationsPrint');
+            if (!printContainer) {
+                alert('No supplier quotations available to print. Please approve the RFQ and ensure suppliers have submitted quotations.');
+                return;
+            }
+            const content = printContainer.innerHTML;
+            const printWindow = window.open('', '_blank', 'height=800,width=1000');
+
+            // Build printable HTML
+            const html = `
+                <!doctype html>
+                <html>
                 <head>
-                    <title>Print RFQ</title>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width,initial-scale=1">
+                    <title>Quotation - ${document.title}</title>
                     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
                     <style>
-                        table, th, td {
-                            border: 1px solid #000;
-                            border-collapse: collapse;
-                        }
-                        th, td {
-                            padding: 8px;
-                            text-align: left;
-                        }
-                        body {
-                            font-family: Arial, sans-serif;
-                            padding: 20px;
+                        body { font-family: Arial, Helvetica, sans-serif; color: #000; padding: 20px; }
+                        h1,h2,h3,h4 { margin: 0 0 10px 0 }
+                        .company, .meta { display: inline-block; vertical-align: top }
+                        .meta { float: right; text-align: right }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px }
+                        table, th, td { border: 1px solid #333 }
+                        th, td { padding: 8px; font-size: 12px }
+                        .text-end { text-align: right }
+                        .no-border { border: none }
+                        @media print {
+                            body { padding: 0 }
+                            .page-break { page-break-after: always }
                         }
                     </style>
                 </head>
                 <body>
-                    ${content}
+                    <div class="print-quotation">
+                        <header>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                <div class="company">
+                                    <h2>{{ config('app.name') }}</h2>
+                                    <div>Address: {{ config('app.address', '') }}</div>
+                                </div>
+                                <div class="meta">
+                                    <div><strong>RFQ:</strong> ${escapeHtml('{{ $rfq->RFQNumber }}')}</div>
+                                    <div><strong>Date:</strong> ${escapeHtml(new Date().toLocaleDateString())}</div>
+                                </div>
+                            </div>
+                        </header>
+
+                        <section>
+                            ${content}
+                        </section>
+                    </div>
                 </body>
-            </html>
-        `);
+                </html>
+            `;
+
+            // Write and wait for load
+            printWindow.document.open();
+            printWindow.document.write(html);
             printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
+
+            // Ensure the window finishes rendering before printing
+            const tryPrint = () => {
+                try {
+                    // Use onafterprint to close the window when print dialog finishes
+                    printWindow.onafterprint = function () {
+                        try { printWindow.close(); } catch (e) { /* ignore */ }
+                    };
+
+                    // Focus then print
+                    printWindow.focus();
+                    // Some browsers require a short delay
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 250);
+
+                    // As a safety, close after 20s in case onafterprint isn't fired
+                    setTimeout(() => {
+                        try { printWindow.close(); } catch (e) { /* ignore */ }
+                    }, 20000);
+                } catch (err) {
+                    console.error('Print error', err);
+                    try { printWindow.close(); } catch (e) { /* ignore */ }
+                }
+            };
+
+            // Small helper to escape text when injecting into template literals
+            function escapeHtml(text) {
+                if (typeof text !== 'string') return text;
+                return text.replace(/[&<>"']/g, function (c) {
+                    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+                });
+            }
+
+            // Wait until the new window document is ready
+            const maxWait = 5000;
+            const start = Date.now();
+            const checkReady = () => {
+                try {
+                    if (printWindow.document && printWindow.document.readyState === 'complete') {
+                        tryPrint();
+                        return;
+                    }
+                } catch (e) {
+                    // Access denied if popup blocked
+                }
+                if (Date.now() - start < maxWait) {
+                    setTimeout(checkReady, 100);
+                } else {
+                    // Fallback: attempt to print anyway
+                    tryPrint();
+                }
+            };
+            checkReady();
         }
     </script>
     <script>

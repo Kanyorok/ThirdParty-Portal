@@ -32,7 +32,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="fw-semibold text-muted">Date:</label>
-                        <div>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('Y-m-d') }}</div>
+                        <div>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') }}</div>
                     </div>
                     <div class="col-md-6 mt-3">
                         <label class="fw-semibold text-muted">Description:</label>

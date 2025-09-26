@@ -185,10 +185,14 @@ class RequisitionsController extends Controller
 
     public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
     {
-        $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();
-        if (!$hasLines) {
-            return back()->with('error', 'Cannot approve a requisition without items.');
+        // Allow rejection even if no lines; enforce line check only for approval action
+        if ($requisitionRequest->input('action') === 'approve') {
+            $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();
+            if (!$hasLines) {
+                return back()->with('error', 'Cannot approve a requisition without items.');
+            }
         }
+
         return $this->documentApprovalService->approve($requisitionRequest, $id);
     }
 

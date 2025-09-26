@@ -30,7 +30,7 @@
                             <label class="form-label">Termination Date<span class="text-danger">*</span></label>
                             <input type="date" name="TerminationDate"
                                    class="form-control @error('TerminationDate') is-invalid @enderror"
-                                   value="{{ old('TerminationDate', Carbon::now()->format('d/m/Y')) }}" required>
+                                   value="{{ old('TerminationDate', Carbon::now()->format('Y-m-d')) }}" required>
                         </div>
                     </div>
 
