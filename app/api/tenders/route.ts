@@ -288,8 +288,6 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = request.nextUrl;
-    // Third-party user context (supplier portal)
-    const thirdPartyId = (session as any)?.user?.thirdPartyId as number | undefined;
     const search = searchParams.get('search');
     const status = searchParams.get('status');
     const tenderType = searchParams.get('tenderType');
@@ -305,15 +303,6 @@ export async function GET(request: NextRequest) {
         searchParams.forEach((value, key) => {
           apiUrl.searchParams.append(key, value);
         });
-
-        // Enforce invitation gating for restricted tenders in supplier portal context
-        if (thirdPartyId) {
-          apiUrl.searchParams.set('enforce_invites', 'true');
-          apiUrl.searchParams.set('third_party_id', String(thirdPartyId));
-        } else {
-          // Without supplier context, default to open tenders only
-          apiUrl.searchParams.set('status', 'open');
-        }
 
         const response = await fetch(apiUrl.toString(), {
           headers: {
@@ -355,9 +344,6 @@ export async function GET(request: NextRequest) {
     if (tenderType && tenderType !== 'all') {
       filteredTenders = filteredTenders.filter(tender => tender.tenderType === tenderType);
     }
-
-    // Enforce invitation gating in fallback: without real invitations, expose only open tenders
-    filteredTenders = filteredTenders.filter(tender => tender.tenderType === 'op');
 
     // Return paginated results
     const page = parseInt(searchParams.get('page') || '1');

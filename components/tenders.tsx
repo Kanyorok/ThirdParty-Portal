@@ -120,8 +120,7 @@ interface TenderWithInvitation extends Tender {
     invitation?: TenderInvitation;
 }
 
-// Use Next.js API routes to ensure server adds supplier context and invitation gating
-const API_ROOT = `/api`;
+const API_ROOT = `${getBaseUrl()}/api`;
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },

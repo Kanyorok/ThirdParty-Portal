@@ -85,22 +85,29 @@ export async function GET(request: NextRequest) {
     if (externalApiUrl) {
       try {
         const apiUrl = `${externalApiUrl}/api/tender-invitations?${queryParams}`;
+        
         const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${session.accessToken}`,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
-          signal: AbortSignal.timeout(10000)
+          signal: AbortSignal.timeout(10000) // 10 seconds timeout
         });
+
         if (response.ok) {
           const data: {
             data: TenderInvitationResponse[];
             total: number;
             page: number;
             limit: number;
-            supplierInfo?: { supplierId: number; activeRoundId?: number; thirdPartyId: number };
+            supplierInfo?: {
+              supplierId: number;
+              activeRoundId: number;
+              thirdPartyId: number;
+            };
           } = await response.json();
+
           return NextResponse.json({
             data: data.data,
             pagination: {
@@ -113,16 +120,90 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch (error) {
-        console.warn('External API not available for tender invitations:', error);
+        console.warn('External API not available for tender invitations, using mock data:', error);
       }
     }
 
-    // No external API or failed: return empty set to avoid exposing wrong data
+    // Fallback to mock data if external API is unavailable
+    const mockInvitations: TenderInvitation[] = [
+      {
+        InvitationID: 1,
+        TenderId: 1,
+        SupplierId: 1,
+        InvitationDate: "2024-11-15T08:00:00.000Z",
+        ResponseStatus: "pending",
+        ResponseDate: undefined,
+        DeclineReason: undefined,
+        ConfirmationAttachment: undefined,
+        CreatedBy: "system",
+        CreatedOn: "2024-11-15T08:00:00.000Z",
+        ModifiedBy: undefined,
+        ModifiedOn: undefined,
+        DeletedBy: undefined,
+        DeletedOn: undefined,
+      },
+      {
+        InvitationID: 2,
+        TenderId: 2,
+        SupplierId: 1,
+        InvitationDate: "2024-11-10T10:00:00.000Z",
+        ResponseStatus: "accepted",
+        ResponseDate: "2024-11-12T14:30:00.000Z",
+        DeclineReason: undefined,
+        ConfirmationAttachment: undefined,
+        CreatedBy: "system",
+        CreatedOn: "2024-11-10T10:00:00.000Z",
+        ModifiedBy: "user",
+        ModifiedOn: "2024-11-12T14:30:00.000Z",
+        DeletedBy: undefined,
+        DeletedOn: undefined,
+      },
+    ];
+
+    // Filter mock data based on status if specified
+    let filteredInvitations = [...mockInvitations];
+    if (status !== 'all') {
+      filteredInvitations = filteredInvitations.filter(inv => inv.ResponseStatus === status);
+    }
+
+    // Create mock response data
+    const mockResponseData: TenderInvitationResponse[] = filteredInvitations.map(invitation => ({
+      invitation,
+        tender: {
+          id: invitation.TenderId,
+          tenderNo: invitation.TenderId === 1 ? "TENDER/2024/001" : "TENDER/2024/002",
+          title: invitation.TenderId === 1 ? "Supply and Installation of Office Equipment" : "Construction of Drainage System",
+          tenderType: invitation.TenderId === 1 ? "op" : "rs",
+          submissionDeadline: invitation.TenderId === 1 ? "2024-12-01T23:59:00.000Z" : "2024-11-30T17:00:00.000Z",
+          openingDate: invitation.TenderId === 1 ? "2024-12-02T10:00:00.000Z" : "2024-12-01T14:00:00.000Z",
+          status: "pb",
+          estimatedValue: invitation.TenderId === 1 ? "2500000" : "15000000",
+          currency: {
+            code: "KES",
+            symbol: "KSh"
+          }
+        }
+    }));
+
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = mockResponseData.slice(startIndex, endIndex);
+
     return NextResponse.json({
-      data: [],
-      pagination: { total: 0, page, limit, pages: 0 },
-      supplierInfo: { supplierId: 0, activeRoundId: 0 as any, thirdPartyId },
-      fallback: true,
+      data: paginatedData,
+      pagination: {
+        total: mockResponseData.length,
+        page,
+        limit,
+        pages: Math.ceil(mockResponseData.length / limit),
+      },
+      supplierInfo: {
+        supplierId: 1,
+        activeRoundId: 1,
+        thirdPartyId: thirdPartyId,
+      },
+      fallback: true, // Indicates this is mock data
     });
 
   } catch (error) {
