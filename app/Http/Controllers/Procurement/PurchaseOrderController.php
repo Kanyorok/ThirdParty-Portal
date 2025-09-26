@@ -56,7 +56,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $details,
-            ]);} 
+            ]);}
         catch(\Exception $e){
             return response()->json([
                 'success' => false,
@@ -105,7 +105,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $suppliers,
-            ]);} 
+            ]);}
         catch(\Exception $e){
             Log::error('Error fetching suppliers: ' . $e->getMessage());
 
@@ -196,6 +196,20 @@ class PurchaseOrderController extends Controller
                 ->whereNotNull('SourceId')
                 ->pluck('SourceId')
                 ->toArray();
+
+            // Also collect any external/reference numbers already used in orders (ExtOrdNum)
+            // so we can prevent double-creating POs from the same reference string
+            try {
+                $usedReferenceNumbers = DB::table('t_Orders')
+                    ->whereNotNull('ExtOrdNum')
+                    ->pluck('ExtOrdNum')
+                    ->map(function ($v) {
+                        return is_null($v) ? '' : trim((string) $v);
+                    })->filter()->values()->toArray();
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to fetch used ExtOrdNum values', ['error' => $e->getMessage()]);
+                $usedReferenceNumbers = [];
+            }
 
             // Tenders that have awards (for Tender source dropdown)
             $awardedTenders = collect();
@@ -309,6 +323,7 @@ class PurchaseOrderController extends Controller
                 'convertedRFQIds' => $convertedRFQIds ?? [],
                 'awardedTenders' => $awardedTenders ?? collect(),
                 'convertedTenderIds' => $convertedTenderIds ?? [],
+                'usedReferenceNumbers' => $usedReferenceNumbers ?? [],
             ]);
         } catch (\Exception $e) {
             \Log::error('Data fetch failed: ' . $e->getMessage());
@@ -339,6 +354,7 @@ class PurchaseOrderController extends Controller
                 'contracts' => collect(),
                 'sourceType' => 'RFQ',
                 'prefillContract' => null,
+                'usedReferenceNumbers' => [],
             ])->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
@@ -371,7 +387,52 @@ class PurchaseOrderController extends Controller
                 }
             }
 
+            // Ensure actor is available for logging/ownership checks
             $actor = $request->user();
+            if (!$actor) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // Also block by SourceType+SourceId: don't allow creating a PO for an RFQ/TENDER that already has one
+            $reqSourceType = strtoupper((string) $request->input('SourceType', ''));
+            $reqSourceId = (int) $request->input('SourceId', 0);
+            if (in_array($reqSourceType, ['RFQ', 'TENDER']) && $reqSourceId > 0) {
+                try {
+                    $existsBySource = DB::table('t_Orders')
+                        ->whereRaw('RTRIM(LTRIM(ISNULL(SourceType, \'\')))=?', [trim($reqSourceType)])
+                        ->where('SourceId', $reqSourceId)
+                        ->exists();
+                    if ($existsBySource) {
+                        Log::warning('Attempt to create PO for RFQ/Tender that already has a PO', ['sourceType' => $reqSourceType, 'sourceId' => $reqSourceId, 'user' => $actor->Id ?? null]);
+                        return response()->json([
+                            'message' => 'A purchase order already exists for the selected quotation/tender.',
+                            'error' => 'Duplicate source'
+                        ], 409);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Source existence check failed', ['error' => $e->getMessage()]);
+                    // proceed if the check fails
+                }
+            }
+
+            // Defensive check: ensure the reference number isn't already used in ExtOrdNum
+            if (!empty($referenceNumber)) {
+                try {
+                    $exists = DB::table('t_Orders')
+                        ->whereRaw("RTRIM(LTRIM(ISNULL(ExtOrdNum, '')))=?", [trim((string)$referenceNumber)])
+                        ->exists();
+                    if ($exists) {
+                        Log::warning('Attempt to create PO for reference already used in ExtOrdNum', ['ref' => $referenceNumber, 'user' => $actor->Id ?? null]);
+                        return response()->json([
+                            'message' => 'A purchase order already exists for the selected reference number.',
+                            'error' => 'Duplicate reference'
+                        ], 409);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Reference uniqueness check failed', ['error' => $e->getMessage()]);
+                    // Proceed conservatively (do not block) if the check itself fails
+                }
+            }
             if (!$actor) {
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
@@ -624,7 +685,7 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch RFQ.',
-                'error' => $e->getMessage(), 
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -683,7 +744,11 @@ public function getRFQItems($rfqId)
     public function getAwardedRFQs(): JsonResponse
     {
         try {
-            $awarded = DB::table('t_RFQAward as a')
+            // Exclude RFQs that already have POs by SourceId or whose RFQNumber appears in ExtOrdNum
+            $convertedIds = DB::table('t_Orders')->where('SourceType', 'RFQ')->whereNotNull('SourceId')->pluck('SourceId')->toArray();
+            $usedRefs = DB::table('t_Orders')->whereNotNull('ExtOrdNum')->pluck('ExtOrdNum')->map(function($v){ return is_null($v)?'':trim((string)$v); })->filter()->values()->toArray();
+
+            $q = DB::table('t_RFQAward as a')
                 ->join('t_RFQ as r', 'a.RFQId', '=', 'r.Id')
                 ->leftJoin('t_Suppliers as s', 's.Id', '=', 'a.SupplierId')
                 ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
@@ -694,15 +759,18 @@ public function getRFQItems($rfqId)
                     DB::raw('tp.Id as ThirdPartyId'),
                     DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
                     DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-                )
-                ->get();
+                );
 
-            // No fallback to non-awarded RFQs
+            if (!empty($convertedIds)) {
+                $q->whereNotIn('r.Id', $convertedIds);
+            }
+            if (!empty($usedRefs)) {
+                $q->whereNotIn('r.RFQNumber', $usedRefs);
+            }
 
-            return response()->json([
-                'success' => true,
-                'data' => $awarded,
-            ]);
+            $awarded = $q->get();
+
+            return response()->json(['success' => true, 'data' => $awarded]);
         } catch (\Throwable $e) {
             \Log::error('getAwardedRFQs failed', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'data' => []], 200);
@@ -712,7 +780,11 @@ public function getRFQItems($rfqId)
     public function getAwardedTenders(): JsonResponse
     {
         try {
-            $rows = DB::table('t_TenderAwards as ta')
+            // Exclude Tenders already converted to POs by SourceId or those whose TenderNo appears in ExtOrdNum
+            $convertedTenderIds = DB::table('t_Orders')->where('SourceType', 'TENDER')->whereNotNull('SourceId')->pluck('SourceId')->toArray();
+            $usedRefs = DB::table('t_Orders')->whereNotNull('ExtOrdNum')->pluck('ExtOrdNum')->map(function($v){ return is_null($v)?'':trim((string)$v); })->filter()->values()->toArray();
+
+            $q = DB::table('t_TenderAwards as ta')
                 ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
                 ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
                 ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
@@ -723,8 +795,16 @@ public function getRFQItems($rfqId)
                     DB::raw('tp.Id as ThirdPartyId'),
                     DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
                     DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-                )
-                ->get();
+                );
+
+            if (!empty($convertedTenderIds)) {
+                $q->whereNotIn('t.Id', $convertedTenderIds);
+            }
+            if (!empty($usedRefs)) {
+                $q->whereNotIn('t.TenderNo', $usedRefs);
+            }
+
+            $rows = $q->get();
             return response()->json(['success' => true, 'data' => $rows]);
         } catch (\Throwable $e) {
             \Log::error('getAwardedTenders failed', ['error' => $e->getMessage()]);
