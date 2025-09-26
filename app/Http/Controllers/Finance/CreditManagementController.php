@@ -88,7 +88,7 @@ class CreditManagementController extends Controller
             ->where('CodeID', 'PaymentTerm')
             ->orderBy('Description')
             ->get();
-        return $customers = ThirdParties::select('Id','ThirdPartyName','RegistrationNumber','Email')
+         $customers = ThirdParties::select('Id','ThirdPartyName','RegistrationNumber','Email')
             ->orderBy('ThirdPartyName')
             ->get();
         return view('finance.accountsreceivable.creditmanagement.create', compact('paymentTerms','customers'));

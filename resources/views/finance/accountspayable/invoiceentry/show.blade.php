@@ -1,3 +1,7 @@
+@php
+    use App\Services\DMS\DocumentService;
+@endphp
+
 @extends('layouts.app')
 @section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View'))
 
@@ -75,7 +79,7 @@
                             </div>
                             <div class="mt-2 small">
                                 <div class="text-muted">GRN Reference</div>
-                                <div class="fw-medium">{{ $grnNo }}</div>
+                                <div class="fw-medium">{{ $grnNo ?? 'N/A' }}</div>
                             </div>
                             @if(!empty($invoice->Description))
                                 <div class="mt-3 small">
@@ -187,12 +191,35 @@
                                 @endif
                             </ul>
 
-                            @if(!empty($invoice->file_path))
-                                <a href="{{ \Storage::url($invoice->file_path) }}" target="_blank" class="btn btn-sm w-100 btn-outline-dark mt-2">
-                                    <i data-feather="paperclip"></i> View Attachment
-                                </a>
-                            @endif
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attachments Section -->
+            <div class="card mt-4 border-0 shadow-sm rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h6 class="text-uppercase text-muted mb-0">
+                            <i data-feather="paperclip" class="me-2" width="16" height="16"></i>
+                            Attachments
+                        </h6>
+                    </div>
+                    <div class="mt-3" id="invoiceAttachments">
+                        @php
+                            $documents = $invoice->documents()
+                                ->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                        @endphp
+
+                        @forelse($documents as $document)
+                            @php
+                                // Avoid any morph relation lookups during render
+                                $document->setRelations([]);
+                            @endphp
+                            {!! (new DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted">No attachments uploaded</span>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -265,7 +292,7 @@
 
     @if($invoice->ApprovalStatus==='draft')
         <div class="mb-3">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#approveModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Approved')>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Approved')>
                 <i data-feather="thumbs-up"></i> Approve
             </button>
 
@@ -415,7 +442,7 @@
 
 @endsection
 
-@section('scripts')
+@push('scripts')
     <script>
         // Feather icons
         if (typeof feather !== 'undefined') { feather.replace(); }
@@ -434,6 +461,26 @@
 
         // Nice print styles (hide nav/buttons on print)
         const printCSS = `
+        /* Attachment preview chip tweaks */
+        #invoiceAttachments .modal-preview-document{
+            display: inline-flex;
+            align-items: center;
+            gap: .375rem;
+            padding: .25rem .6rem;
+            font-size: .85rem;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: .375rem;
+            text-decoration: none;
+            color: #495057;
+            margin: .125rem .25rem .125rem 0;
+        }
+        #invoiceAttachments .modal-preview-document:hover{
+            filter: brightness(0.97);
+            text-decoration: none;
+            color: #495057;
+        }
+
         @media print {
             .navbar, .btn,.lifecycle, .modal { display: none !important; }
             .card { box-shadow: none !important; border: none !important; }
@@ -444,4 +491,8 @@
         style.innerHTML = printCSS;
         document.head.appendChild(style);
     </script>
-@endsection
+@endpush
+
+@push('scripts')
+    @includeIf('snippets.actions.preview-files')
+@endpush

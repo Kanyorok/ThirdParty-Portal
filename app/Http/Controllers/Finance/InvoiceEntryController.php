@@ -38,7 +38,7 @@ class InvoiceEntryController extends Controller
 
         $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
 
-        // Vendors: fetch from suppliers joined to third parties for label
+        // Vendors: fetch from suppliers joined to third parties (value = Supplier.Id, also return ThirdPartyID)
         $suppliers = Supplier::query()
             ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 't_Suppliers.ThirdPartyID')
             ->select('t_Suppliers.Id', 't_Suppliers.ThirdPartyID', DB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"))
@@ -59,7 +59,7 @@ class InvoiceEntryController extends Controller
         // return$request->all();
         $validated = $request->validate([
             'InvoiceNumber'=> 'required|string',
-            'SupplierID'=> 'required|exists:t_Suppliers,Id', // kept for UI select
+            'ThirdPartyID'=> 'required|exists:t_ThirdParties,Id',
             'CurrencyID'=> 'required|exists:t_Currencies,Id',
             'ExchangeRate'=> 'required|numeric|min:0',
             'POReference'=> 'required|exists:t_Orders,OrderNo',
@@ -117,12 +117,13 @@ class InvoiceEntryController extends Controller
 
             FacadesDB::beginTransaction();
 
-            // Resolve ThirdPartyID from Supplier
-            $thirdPartyId = FacadesDB::table('t_Suppliers')->where('Id', $validated['SupplierID'])->value('ThirdPartyID');
+            $thirdPartyId = (int)$validated['ThirdPartyID'];
+            // Optionally resolve a SupplierID that maps to this ThirdParty (for legacy FK compatibility)
+            $legacySupplierId = FacadesDB::table('t_Suppliers')->where('ThirdPartyID', $thirdPartyId)->value('Id');
 
             $invoice =  FinanceInvoiceEntry::create([
                 'InvoiceNumber'=> $validated['InvoiceNumber'],
-                'SupplierID'=> $validated['SupplierID'],
+                'SupplierID'=> $legacySupplierId, // legacy field; prefer ThirdPartyID
                 'ThirdPartyID'=> $thirdPartyId,
                 'CurrencyID'=> $validated['CurrencyID'],
                 'ExchangeRate'=> $validated['ExchangeRate'],
@@ -223,6 +224,46 @@ class InvoiceEntryController extends Controller
         ];
 
         return response()->json($data);
+    }
+
+    public function viewGRNModal($grnId)
+    {
+        $lines = FacadesDB::table('t_GoodsReceipts as gr')
+            ->leftJoin('t_Items as i', 'gr.ItemNo', '=', 'i.Id')
+            ->leftJoin('t_Orders as o', 'gr.POID', '=', 'o.OrderNo')
+            ->leftJoin('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
+            ->leftJoin('t_ThirdParties as tp', 's.ThirdPartyID', '=', 'tp.Id')
+            ->where('gr.GRNID', $grnId)
+            ->select(
+                'gr.GRNID', 'gr.POID',
+                FacadesDB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"),
+                'i.ItemName', 'i.ItemDescription as Description',
+                'gr.POQTY as OrderedQty', 'gr.ReceivedQTY as ReceivedQty'
+            )
+            ->get();
+
+        if ($lines->isEmpty()) {
+            return response()->json(['error' => 'GRN not found'], 404);
+        }
+
+        $sumOrdered = (float)$lines->sum(fn($li) => (float)($li->OrderedQty ?? 0));
+        $sumReceived = (float)$lines->sum(fn($li) => (float)($li->ReceivedQty ?? 0));
+
+        return response()->json([
+            'GRNID' => $grnId,
+            'POID' => $lines->first()->POID,
+            'SupplierName' => $lines->first()->SupplierName,
+            'items' => $lines->map(fn($li) => [
+                'ItemName' => $li->ItemName ?? '',
+                'Description' => $li->Description ?? '',
+                'OrderedQty' => $li->OrderedQty ?? 0,
+                'ReceivedQty' => $li->ReceivedQty ?? 0,
+            ]),
+            'totals' => [
+                'ordered' => $sumOrdered,
+                'received' => $sumReceived,
+            ],
+        ]);
     }
 
     public function saveInvoice(Request $request)
@@ -341,7 +382,8 @@ class InvoiceEntryController extends Controller
 
                 // Load the invoice with the same relations, and lock row for update
                 $invoice = FinanceInvoiceEntry::with([
-                    'supplier:Id,SupplierName',
+                    // Use thirdParty since SupplierName column doesn't exist on t_Suppliers
+                    'thirdParty:Id,TradingName,ThirdPartyName',
                     'currency:Id,Name,Code,Symbol',
                     'order:Id,OrderNo,Description,OrdTotExcl',
                     'grn:id,GRNID,SupplierId',

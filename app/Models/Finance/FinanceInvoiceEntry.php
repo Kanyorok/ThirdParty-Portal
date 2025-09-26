@@ -5,6 +5,7 @@ namespace App\Models\Finance;
 use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\DMS\Document;
+use App\Models\DMS\DocumentRelation;
 use App\Models\Procurement\GoodsReceipt;
 use App\Models\Procurement\Order;
 use App\Models\ThirdParies\Supplier;
@@ -38,6 +39,9 @@ class FinanceInvoiceEntry extends Model
         'ApprovalReason',
         'InvoiceDate',
         'InvoiceAmount',
+        'DueDate',
+        'Amount', // Added for v2 compatibility
+        'DueDate', // Added for v2 functionality
         'Description',
         'CreatedBy',
         'ModifiedBy',
@@ -64,7 +68,7 @@ class FinanceInvoiceEntry extends Model
 
     public function thirdParty()
     {
-        return $this->belongsTo(ThirdParties::class, 'ThirdPartyID', 'Id');
+        return $this->belongsTo(ThirdParties::class, 'SupplierID', 'Id');
     }
 
     public function currency(){
@@ -83,11 +87,18 @@ class FinanceInvoiceEntry extends Model
     }
 
     /**
-     * Relation to uploaded documents.
+     * Relation to uploaded documents - Override DocumentsTrait to fix polymorphic issue
      */
     public function documents()
     {
-        return $this->morphMany(Document::class, 'documentable')->latest();
+        return $this->hasManyThrough(
+            Document::class,
+            DocumentRelation::class,
+            'RelatedID', // Foreign key on DocumentRelation table
+            'Id', // Foreign key on Document table
+            'Id', // Local key on current model
+            'DocumentId' // Local key on DocumentRelation table
+        )->where('t_DocumentRelations.Related', 'FinanceInvoiceEntryId');
     }
 
     public function createdBy()
