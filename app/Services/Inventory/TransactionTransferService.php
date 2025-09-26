@@ -12,7 +12,7 @@ use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Procurement\Requisitions;
+use App\Models\Procurement\GoodsReceipt;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -37,9 +37,9 @@ public function getHQBranchId(): int
         $data['Status'] = Transfers::Pending;
 
         if ($data['RequisitionType'] === 'procurement') {
-            $requisition = Requisitions::findOrFail($data['RequisitionId']);
+            $requisition = GoodsReceipt::findOrFail($data['RequisitionId']);
             $fromBranch = $this->getHQBranchId();
-            $toBranch = $requisition->BranchID;
+            $toBranch = $requisition->TransferTo;
         } else {
             $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
             $fromBranch = $requisition->FromBranch;
@@ -110,13 +110,13 @@ public function getHQBranchId(): int
                 ? $this->getHQBranchId()
                 : $transfer->FromBranch;
 
-            $stock = StockItem::where('ItemID', $itemId)
-                ->where('Branch', $fromBranch)
-                ->first();
+            // $stock = StockItem::where('ItemID', $itemId)
+            //     ->where('Branch', $fromBranch)
+            //     ->first();
 
-            if (!$stock || $stock->CurrentQty < $dispatchedQty) {
-                throw new Exception("Insufficient stock for ItemID {$itemId} in Branch {$fromBranch}.");
-            }
+            // if (!$stock || $stock->CurrentQty < $dispatchedQty) {
+            //     throw new Exception("Insufficient stock for ItemID {$itemId} in Branch {$fromBranch}.");
+            // }
 
 
 

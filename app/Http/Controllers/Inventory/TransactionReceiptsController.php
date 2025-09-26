@@ -35,19 +35,23 @@ class TransactionReceiptsController extends Controller
         return view('inventory.transactions.receipts.index', compact('receipts'));
     }
 
-    public function create()
+   public function create()
     {
         $this->authorize('create', TransactionReceipt::class);
+
+        $branchId = Auth::user()->BranchID;
 
         $transfers = TransactionTransfer::doesntHave('receipt')
             ->with(['items.item'])
             ->where('Status', Transfers::InTransit)
+            ->where('ToBranch', $branchId) 
             ->get();
 
         $users = User::all();
 
         return view('inventory.transactions.receipts.create', compact('transfers', 'users'));
     }
+
 
     public function store(TransactionReceiptRequest $request)
     {
