@@ -29,8 +29,8 @@ class TenderApiController extends Controller
         try {
             $query = Tender::with(['procurementMode', 'currency', 'tenderCategoryRelation', 'itemCategoryRelation']);
 
-            // Enforce invites unless explicitly disabled (default: disabled to show all tenders)
-            $enforceInvites = filter_var($request->query('enforce_invites', false), FILTER_VALIDATE_BOOLEAN);
+            // Enforce invites unless explicitly disabled (default: enabled to protect restricted tenders)
+            $enforceInvites = filter_var($request->query('enforce_invites', true), FILTER_VALIDATE_BOOLEAN);
             $thirdPartyId = $request->query('third_party_id');
 
             if ($enforceInvites) {
@@ -75,12 +75,23 @@ class TenderApiController extends Controller
                                     TenderStatusEnum::Published->value,
                                     TenderStatusEnum::OpeningInProgress->value,
                                 ])
-                                ->whereExists(function ($sub) use ($supplierIds) {
+                                ->where(function($source) use ($supplierIds) {
+                                    // Prefer invitations source of truth
+                                    $source->whereExists(function ($sub) use ($supplierIds) {
                                     $sub->select(DB::raw(1))
                                         ->from('t_TenderInvitations as ti')
                                         ->whereColumn('ti.TenderId', 't_Tenders.Id')
                                         ->whereIn('ti.SupplierId', $supplierIds)
                                         ->whereNull('ti.DeletedOn');
+                                    })
+                                    // Safety: if invitations are missing, fall back to selected suppliers (t_TenderSuppliers)
+                                    ->orWhereExists(function ($sub2) use ($supplierIds) {
+                                        $sub2->select(DB::raw(1))
+                                            ->from('t_TenderSuppliers as ts')
+                                            ->whereColumn('ts.TenderID', 't_Tenders.Id')
+                                            ->whereIn('ts.SupplierID', $supplierIds)
+                                            ->whereNull('ts.DeletedOn');
+                                    });
                                 });
                         });
                     }

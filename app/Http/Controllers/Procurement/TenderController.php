@@ -35,6 +35,8 @@ use Throwable;
 use App\Models\Procurement\TenderInvitation;
 use App\Mail\TenderInvitation as TenderInvitationMail;
 use Illuminate\Support\Facades\Mail;
+use App\Models\Procurement\TenderDocument;
+use App\Enums\Core\ModulesEnum;
 
 class TenderController extends Controller
 {
@@ -238,6 +240,15 @@ class TenderController extends Controller
                 }
             }
 
+            // Attach Tender Documents to DMS (from create form)
+            if ($request->hasFile('documents')) {
+                foreach ((array) $request->file('documents') as $uploadedFile) {
+                    if (!$uploadedFile) { continue; }
+                    // Create DMS document and relate to this tender
+                    $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
+                }
+            }
+
             DB::commit();
 
             activity()
@@ -383,6 +394,14 @@ class TenderController extends Controller
                 $tender->OpeningDate = $validated['opening_date'];
 
                 $tender->save();
+
+                // Attach Tender Documents to DMS (from edit form)
+                if ($request->hasFile('documents')) {
+                    foreach ((array) $request->file('documents') as $uploadedFile) {
+                        if (!$uploadedFile) { continue; }
+                        $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
+                    }
+                }
 
                 DB::commit();
 

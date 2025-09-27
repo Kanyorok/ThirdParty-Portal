@@ -76,43 +76,47 @@ class TenderInvitationController extends Controller
                 ], 400);
             }
 
-            // Get supplier ID from third party ID
-            $supplier = Supplier::whereHas('thirdParty', function($query) use ($thirdPartyId) {
+            // Get all supplier IDs for this third party (some have multiple supplier rows)
+            $supplierIds = Supplier::whereHas('thirdParty', function($query) use ($thirdPartyId) {
                 $query->where('Id', $thirdPartyId);
-            })->first();
+            })->pluck('Id');
 
-            if (!$supplier) {
+            if ($supplierIds->isEmpty()) {
                 return response()->json([
-                    'error' => 'Supplier not found for this third party',
-                    'debug' => [
-                        'third_party_id' => $thirdPartyId,
-                        'message' => 'No supplier record found for this third party ID'
+                    'data' => [],
+                    'total' => 0,
+                    'page' => $page,
+                    'limit' => $limit,
+                    'supplierInfo' => [
+                        'supplierId' => null,
+                        'thirdPartyId' => (int) $thirdPartyId,
                     ]
-                ], 404);
+                ]);
             }
 
-            // Fetch tender invitations for this supplier
-            Log::info('Fetching invitations for supplier', ['supplier_id' => $supplier->Id]);
+            // Fetch tender invitations for these suppliers
+            Log::info('Fetching invitations for suppliers', ['supplier_ids' => $supplierIds->values()->all()]);
             
             try {
                 $invitationsQuery = TenderInvitation::with(['tender'])
-                    ->where('SupplierId', $supplier->Id)
+                    ->whereIn('SupplierId', $supplierIds)
+                    ->whereNull('DeletedOn')
                     ->orderBy('InvitationDate', 'desc');
 
                 // Apply pagination
                 $offset = ($page - 1) * $limit;
-                $total = $invitationsQuery->count();
+                $total = (clone $invitationsQuery)->count();
                 $invitations = $invitationsQuery->skip($offset)->take($limit)->get();
 
                 Log::info('Found invitations', [
-                    'supplier_id' => $supplier->Id,
+                    'supplier_ids' => $supplierIds->values()->all(),
                     'total' => $total,
                     'returned' => $invitations->count()
                 ]);
 
             } catch (\Exception $e) {
                 Log::error('Error querying invitations', [
-                    'supplier_id' => $supplier->Id,
+                    'supplier_ids' => $supplierIds->values()->all(),
                     'error' => $e->getMessage()
                 ]);
                 
@@ -120,7 +124,7 @@ class TenderInvitationController extends Controller
                     'error' => 'Database query failed',
                     'message' => $e->getMessage(),
                     'debug' => [
-                        'supplier_id' => $supplier->Id,
+                        'supplier_ids' => $supplierIds->values()->all(),
                         'third_party_id' => $thirdPartyId
                     ]
                 ], 500);
@@ -179,7 +183,7 @@ class TenderInvitationController extends Controller
 
             Log::info('API: Returning tender invitations', [
                 'third_party_id' => $thirdPartyId,
-                'supplier_id' => $supplier->Id,
+                'supplier_ids' => $supplierIds->values()->all(),
                 'invitations_count' => $invitations->count(),
                 'total' => $total,
                 'sample_data' => $formattedData->take(1)
@@ -191,7 +195,7 @@ class TenderInvitationController extends Controller
                 'page' => $page,
                 'limit' => $limit,
                 'supplierInfo' => [
-                    'supplierId' => $supplier->Id,
+                    'supplierIds' => $supplierIds->values()->all(),
                     'thirdPartyId' => (int) $thirdPartyId,
                 ],
                 'debug' => [

@@ -1,8 +1,10 @@
 <?php
 namespace App\Http\Controllers\Procurement;
 
+use App\Http\Controllers\Controller;
 use App\Models\Procurement\TenderDocument;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class TenderDocumentController extends Controller
@@ -31,7 +33,7 @@ class TenderDocumentController extends Controller
             'TenderID' => $tenderId,
             'FilePath' => $path,
             'Description' => $request->description,
-            'CreatedBy' => auth()->id(),
+            'CreatedBy' => Auth::id(),
         ]);
 
         return response()->json($document, 201);
@@ -63,7 +65,7 @@ class TenderDocumentController extends Controller
         Storage::delete($document->FilePath);
         
         $document->update([
-            'DeletedBy' => auth()->id(),
+            'DeletedBy' => Auth::id(),
             'DeletedOn' => now(),
         ]);
         
