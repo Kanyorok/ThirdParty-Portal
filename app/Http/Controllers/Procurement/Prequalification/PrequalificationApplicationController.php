@@ -20,6 +20,7 @@ use App\Http\Resources\Procurement\PrequalificationRoundResource;
 use App\Http\Resources\Procurement\PrequalificationApplicationResource;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ThirdPartyApprovalStatusEnum;
+use App\Models\Procurement\Prequalification\PrequalificationResult;
 
 class PrequalificationApplicationController extends Controller
 {
@@ -141,6 +142,10 @@ class PrequalificationApplicationController extends Controller
                     ->select('prc.RoundID', 'sc.SupplierCategoryID', 'sc.CategoryName', 'sc.Description')
                     ->orderBy('sc.CategoryName')
                     ->get();
+                // Deduplicate categories per round by SupplierCategoryID
+                $rows = $rows->unique(function ($row) {
+                    return $row->RoundID . ':' . $row->SupplierCategoryID;
+                })->values();
                 $categoriesByRound = $rows->groupBy('RoundID');
             }
 
@@ -170,6 +175,15 @@ class PrequalificationApplicationController extends Controller
                     ->groupBy('ApplicationId');
             }
 
+            // Fetch persisted results per application to expose actual awarded % per category
+            $resultsByAppId = collect();
+            if ($appIds->isNotEmpty()) {
+                $resultsByAppId = PrequalificationResult::query()
+                    ->whereIn('ApplicationID', $appIds)
+                    ->get()
+                    ->keyBy('ApplicationID');
+            }
+
             // Helper to map status codes/enums to required labels
             $mapStatus = function ($appStatusCode = null, $catStatusCode = null, $stage = null) {
                 // Category status overrides application status when present
@@ -186,10 +200,10 @@ class PrequalificationApplicationController extends Controller
             };
 
             // Build output rounds with categories array
-            $data = $availableRounds->map(function ($round) use ($categoriesByRound, $appsByKey, $catStatuses, $mapStatus, $applications, $supplierId, $supplierEligible) {
+            $data = $availableRounds->map(function ($round) use ($categoriesByRound, $appsByKey, $catStatuses, $mapStatus, $applications, $supplierId, $supplierEligible, $resultsByAppId) {
                 $roundId = $round->RoundID;
                 $roundCats = $categoriesByRound->get($roundId, collect());
-                $cats = $roundCats->map(function ($cat) use ($roundId, $appsByKey, $catStatuses, $mapStatus) {
+                $cats = $roundCats->map(function ($cat) use ($roundId, $appsByKey, $catStatuses, $mapStatus, $resultsByAppId) {
                     $key = $roundId . ':' . $cat->SupplierCategoryID;
                     /** @var \App\Models\Procurement\Prequalification\PrequalificationApplication|null $app */
                     $app = $appsByKey->get($key);
@@ -199,7 +213,8 @@ class PrequalificationApplicationController extends Controller
                     }
 
                     $hasApplied = (bool) $app;
-                    $progress = $statusRow?->ProgressPercent ?? 0;
+                    $resultRow = $app ? $resultsByAppId->get($app->ApplicationID) : null;
+                    $progress = $resultRow?->TotalScore ?? ($statusRow?->ProgressPercent ?? 0);
                     $stage = $statusRow?->Stage ?? null;
                     $stageLabel = $statusRow?->StageLabel ?? null;
                     $decisionDate = $statusRow && $statusRow->DecisionDate ? $statusRow->DecisionDate->format('Y-m-d') : null;

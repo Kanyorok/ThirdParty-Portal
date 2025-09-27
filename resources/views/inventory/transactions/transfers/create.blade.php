@@ -133,8 +133,10 @@
                 .then(data => {
                     requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
                     data.forEach(req => {
-                        const text = selectedType === 'interbranch' ? req.ReqNo : req.RequisitionNo;
-                        requisitionIdSelect.innerHTML += `<option value="${req.Id}">${text}</option>`;
+                        const text = selectedType === 'interbranch' ? req.ReqNo : req.GRNID;
+                        const value = selectedType === 'interbranch' ? req.Id : req.id;
+                        
+                        requisitionIdSelect.innerHTML += `<option value="${value}">${text}</option>`;
                     });
                 })
                 .catch(error => {

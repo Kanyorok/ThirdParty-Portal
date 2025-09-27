@@ -23,11 +23,12 @@ use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\TenderSection;
 use App\Models\Procurement\TenderSupplier;
 use App\Traits\Model\UserActorTrait;
+use App\Traits\Model\DocumentsTrait;
 use Carbon\Carbon;
 
 class Tender extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

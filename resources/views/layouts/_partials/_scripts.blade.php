@@ -31,7 +31,7 @@
     <script>
         window.csrf_token = '{{ csrf_token() }}';
         window.bsOffcanvas = null;
-        window.windowIdleTime = 300;
+        window.windowIdleTime = {{ (int) config('session.lifetime', 20) * 60 }};
         window.smsMaxLimit = 168;
         $(function () {
             jQuery.fn.fadeOutAndRemove = function (speed) {
@@ -77,7 +77,7 @@
                 showOffCanvasMain(title.toString(), url.toString());
             });
 
-            @if(config('app.debug')===false && !auth()->user()->can(PermissionEnum::UsersSessions)) setInterval(timerIncrement, 1000); // 1 second @endif
+            @if(!auth()->user()->can(PermissionEnum::UsersSessions)) setInterval(timerIncrement, 1000); @endif
 
             // Detect offline -> when back online, force a timeout to avoid stale sessions across networks
             window.addEventListener('online', function(){
@@ -98,7 +98,7 @@
 
             // Zero the idle timer on any action.
             $(this).bind('mousemove keydown scroll click', function () {
-                window.windowIdleTime = 300;
+                window.windowIdleTime = {{ (int) config('session.lifetime', 20) * 60 }};
                 $("#sessionInactivity").addClass("d-none");
             });
 

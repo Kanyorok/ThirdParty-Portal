@@ -65,7 +65,7 @@
                     <input type="hidden" name="SourceId" id="SourceId" />
                         </div>
                     </div>
-                    
+
             <!-- RFQ Selection -->
             <div class="row mb-4 source-rfq d-none">
                     <div class="col-md-4">
@@ -73,16 +73,23 @@
                     <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
                         <option selected disabled>Select RFQ</option>
                         @foreach($awardedRfqs as $ar)
-                            @php $disabled = in_array($ar->Id, $convertedRFQIds ?? []) ? 'disabled' : ''; @endphp
+                            @php
+                                $rfqNumber = trim((string)($ar->RFQNumber ?? ''));
+                                $isConvertedId = in_array($ar->Id, $convertedRFQIds ?? []);
+                                $isUsedRef = in_array($rfqNumber, $usedReferenceNumbers ?? []);
+                            @endphp
+                            {{-- Skip RFQs that are already converted by id or by reference number in ExtOrdNum --}}
+                            @if($isConvertedId || $isUsedRef)
+                                @continue
+                            @endif
                             <option value="{{ $ar->RFQNumber }}"
                                     data-rfq-id="{{ $ar->Id }}"
                                     data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
                                     data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
                                     data-supplier-legacy-id="{{ $ar->SupplierId }}"
                                     data-supplier-name="{{ $ar->SupplierName ?? '' }}"
-                                    data-address="{{ $ar->Address ?? '' }}"
-                                    {{ $disabled }}>{{ $ar->RFQNumber }}</option>
-                            @endforeach
+                                    data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }}</option>
+                        @endforeach
                         {{-- Only awarded RFQs must be listed (no non-awarded options) --}}
                         </select>
                     @error('refNo')
@@ -112,14 +119,21 @@
                     <select class="form-control" id="tenderNo">
                         <option selected disabled>Select Tender</option>
                         @foreach(($awardedTenders ?? []) as $t)
-                            @php $disabled = in_array($t->Id, ($convertedTenderIds ?? [])) ? 'disabled' : ''; @endphp
+                            @php
+                                $tenderNo = trim((string)($t->TenderNo ?? ''));
+                                $isConvertedTenderId = in_array($t->Id, ($convertedTenderIds ?? []));
+                                $isUsedTenderRef = in_array($tenderNo, $usedReferenceNumbers ?? []);
+                            @endphp
+                            {{-- Skip Tenders already converted by id or whose TenderNo appears in ExtOrdNum --}}
+                            @if($isConvertedTenderId || $isUsedTenderRef)
+                                @continue
+                            @endif
                             <option value="{{ $t->TenderNo }}"
                                     data-tender-id="{{ $t->Id }}"
                                     data-supplier-id="{{ $t->SupplierId }}"
                                     data-thirdparty-id="{{ $t->ThirdPartyId ?? 0 }}"
                                     data-supplier-name="{{ $t->SupplierName ?? '' }}"
-                                    data-address="{{ $t->Address ?? '' }}"
-                                    {{ $disabled }}>{{ $t->TenderNo }}</option>
+                                    data-address="{{ $t->Address ?? '' }}">{{ $t->TenderNo }}</option>
                         @endforeach
                     </select>
                 </div>

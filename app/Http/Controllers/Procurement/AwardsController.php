@@ -100,7 +100,8 @@ class AwardsController extends Controller
                     'status_class' => 'bg-success',
                     'winning_bidder' => $award->supplier->thirdParty->TradingName ?? '--',
                     'award_date' => ($award->CreatedOn?->format('Y-m-d')) ?? '--',
-                    'id' => $award->rfq->Id ?? null,
+                    // Prefer FK to ensure presence
+                    'id' => $award->RFQId ?? ($award->rfq->Id ?? null),
                 ];
             })
             ->values()
