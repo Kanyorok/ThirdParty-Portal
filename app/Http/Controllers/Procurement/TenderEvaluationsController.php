@@ -158,9 +158,9 @@ class TenderEvaluationsController extends Controller
                 $tenderSection = TenderSection::create([
                     'TenderID' => $request->tender_id, // Assuming tender_id is passed in the request
                     'SectionID' => $sectionId,
-                    'Weight' => $weights[$index],
+                    'Weight' => (float)($weights[$sectionId] ?? 0),
                     'IsActive' => true, // Assuming sections are active by default
-                    'Comments' => $request->comments[$index] ?? null, // Optional comments
+                    'Comments' => $request->comments[$sectionId] ?? null, // Optional comments
                     'CreatedBy' => Auth::id(),
                     'ModifiedBy' => Auth::id(),
                 ]);
@@ -168,7 +168,7 @@ class TenderEvaluationsController extends Controller
                 activity()
                     ->performedOn($tenderSection)
                     ->causedBy(Auth::id())
-                    ->log('Created or updated tender sections for tender: ' . $tenderTitle);
+                    ->log('Created or updated tender sections for tender ID: ' . $tenderId);
             }
             
             DB::commit();
