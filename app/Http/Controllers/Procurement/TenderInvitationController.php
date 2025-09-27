@@ -119,14 +119,9 @@ class TenderInvitationController extends Controller
                     'supplier_ids' => $supplierIds->values()->all(),
                     'error' => $e->getMessage()
                 ]);
-                
+
                 return response()->json([
-                    'error' => 'Database query failed',
-                    'message' => $e->getMessage(),
-                    'debug' => [
-                        'supplier_ids' => $supplierIds->values()->all(),
-                        'third_party_id' => $thirdPartyId
-                    ]
+                    'message' => 'Failed to fetch invitations. Please try again later.'
                 ], 500);
             }
 
@@ -208,13 +203,11 @@ class TenderInvitationController extends Controller
         } catch (\Exception $e) {
             Log::error('Error fetching tender invitations', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
                 'third_party_id' => $request->query('third_party_id')
             ]);
 
             return response()->json([
-                'error' => 'Failed to fetch tender invitations',
-                'message' => $e->getMessage()
+                'message' => 'An unexpected error occurred. Please try again later.'
             ], 500);
         }
     }

@@ -259,9 +259,7 @@ class TenderController extends Controller
             return redirect()->route('initiatetender.index')->with('success', 'Tender created successfully.');
         } catch (Exception $e) {
             DB::rollBack();
-            return $e->getMessage();
             Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
-            Log::error($e);
             return redirect()->route('initiatetender.index')->with('error', 'Failed to create Tender. Please try again.');
         }
     }
@@ -415,7 +413,6 @@ class TenderController extends Controller
             } catch (Exception $e) {
                 DB::rollBack();
                 Log::error('--- UPDATE TENDER ERROR --- ' . $e->getMessage());
-                Log::error($e);
                 return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to update Tender. Please try again.');
             }
         } elseif ($type == 'crudItem') {
