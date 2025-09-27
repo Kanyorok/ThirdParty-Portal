@@ -29,17 +29,27 @@ class AwardsController extends Controller
         $tenderAwards = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->get()
             ->map(function ($award) {
+                // Use actual AwardStatus from database
+                $status = $award->AwardStatus;
+                $statusClass = match($status) {
+                    'Pending' => 'bg-warning text-dark',
+                    'Approved' => 'bg-success',
+                    'Rejected' => 'bg-danger',
+                    'Cancelled' => 'bg-secondary',
+                    default => 'bg-light text-dark'
+                };
+                
                 return [
                     'type' => 'tender',
                     // show TenderNo and Title together in the Ref column
                     'ref_no' => trim((($award->tender->TenderNo ?? '') . ' - ' . ($award->tender->Title ?? ''))) ?: 'N/A',
                     'title' => $award->tender->Title ?? 'N/A',
-                    'status' => 'Awarded', // Treat any created tender award as Awarded (per requirement)
-                    'status_class' => 'bg-success',
+                    'status' => $status,
+                    'status_class' => $statusClass,
                     'winning_bidder' => $award->winningSupplier->thirdParty->TradingName
                         ?? '--',
                     'award_date' => optional($award->AwardDate)->format('Y-m-d') ?? ($award->CreatedOn?->format('Y-m-d') ?? '--'),
-                    'id' => $award->tender->Id ?? null,
+                    'id' => $award->Id, // Use award ID not tender ID for approval actions
                 ];
             })
             ->values()
@@ -150,7 +160,8 @@ class AwardsController extends Controller
         if ($statusFilter === 'Pending') {
             $items = $items->where('status', 'Pending')->values();
         } elseif ($statusFilter === 'Awarded') {
-            $items = $items->where('status', 'Awarded')->values();
+            // Map "Awarded" filter to "Approved" status for compatibility
+            $items = $items->where('status', 'Approved')->values();
         }
 
         // Sort by award_date desc, then ref_no
