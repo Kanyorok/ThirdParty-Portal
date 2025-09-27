@@ -63,16 +63,6 @@ export const sidebarItems: readonly NavSection[] = [
                 icon: ClipboardCheck,
             },
             {
-                title: "Orders & Invoices",
-                url: "/orders-invoices",
-                icon: ReceiptText,
-            },
-            {
-                title: 'Purchase Orders',
-                url: '/po',
-                icon: Receipt,
-            },
-            {
                 title: "My Documents",
                 url: "/documents",
                 icon: FolderOpen,
