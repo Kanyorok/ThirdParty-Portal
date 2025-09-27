@@ -288,54 +288,43 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = request.nextUrl;
-    // Third-party user context (supplier portal)
-    const thirdPartyId = (session as any)?.user?.thirdPartyId as number | undefined;
     const search = searchParams.get('search');
     const status = searchParams.get('status');
     const tenderType = searchParams.get('tenderType');
 
-    // Try to fetch from external API first
-    const externalApiUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
-    
-    if (externalApiUrl) {
-      try {
-        const apiUrl = new URL(`${externalApiUrl}/api/tenders`);
-        
-        // Pass through all search parameters
-        searchParams.forEach((value, key) => {
-          apiUrl.searchParams.append(key, value);
-        });
-
-        // Enforce invitation gating for restricted tenders in supplier portal context
-        if (thirdPartyId) {
-          apiUrl.searchParams.set('enforce_invites', 'true');
-          apiUrl.searchParams.set('third_party_id', String(thirdPartyId));
-        } else {
-          // Without supplier context, default to open tenders only
-          apiUrl.searchParams.set('status', 'open');
-        }
-
-        const response = await fetch(apiUrl.toString(), {
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          // Add a timeout
-          signal: AbortSignal.timeout(10000) // 10 seconds timeout
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return NextResponse.json(data);
-        }
-      } catch (error) {
-        console.warn('External API not available, falling back to mock data:', error);
+    // Prefer calling ERP backend directly; enforce invites with third party context
+    try {
+      const erpBase = process.env.ERP_BASE_URL || process.env.NEXT_PUBLIC_ERP_BASE_URL || 'http://127.0.0.1:8000';
+      const apiUrl = new URL(`${erpBase}/api/tenders`);
+      // Forward filters
+      if (search) apiUrl.searchParams.set('search', search);
+      if (status && status !== 'all') apiUrl.searchParams.set('status', status);
+      if (tenderType && tenderType !== 'all') apiUrl.searchParams.set('tenderType', tenderType);
+      // Always enforce invitations and pass third party id; backend will include open tenders + invited restricted
+      const thirdPartyId = (session.user as any)?.thirdPartyId;
+      apiUrl.searchParams.set('enforce_invites', 'true');
+      if (thirdPartyId) {
+        apiUrl.searchParams.set('third_party_id', String(thirdPartyId));
       }
+
+      const response = await fetch(apiUrl.toString(), {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': session.accessToken ? `Bearer ${session.accessToken}` : ''
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return NextResponse.json(data);
+      }
+    } catch (e) {
+      console.warn('ERP /api/tenders call failed, falling back to mock:', e);
     }
 
-    // Fallback to mock data if external API is not available
-    let filteredTenders = [...mockTenders];
+    // Fallback to mock data if external API is not available: show only open tenders
+    let filteredTenders = [...mockTenders].filter(t => t.tenderType === 'op' && t.status === 'pb');
 
     // Apply search filter
     if (search) {
@@ -355,9 +344,6 @@ export async function GET(request: NextRequest) {
     if (tenderType && tenderType !== 'all') {
       filteredTenders = filteredTenders.filter(tender => tender.tenderType === tenderType);
     }
-
-    // Enforce invitation gating in fallback: without real invitations, expose only open tenders
-    filteredTenders = filteredTenders.filter(tender => tender.tenderType === 'op');
 
     // Return paginated results
     const page = parseInt(searchParams.get('page') || '1');

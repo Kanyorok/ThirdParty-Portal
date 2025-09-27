@@ -1,9 +1,9 @@
 "use client"
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/common/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/common/card";
-import { Badge } from "@/components/common/badge";
 import {
     Loader2,
     Info,
@@ -17,7 +17,6 @@ import {
     FileText,
     ChevronRight,
     Search as SearchIcon,
-    MessageSquare,
     XCircle,
     AlertTriangle,
     Send
@@ -120,8 +119,7 @@ interface TenderWithInvitation extends Tender {
     invitation?: TenderInvitation;
 }
 
-// Use Next.js API routes to ensure server adds supplier context and invitation gating
-const API_ROOT = `/api`;
+const API_ROOT = `${getBaseUrl()}/api`;
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -327,7 +325,7 @@ function TenderCard({
 export default function TendersPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [tenders, setTenders] = useState<TenderWithInvitation[]>([]);
-    const [invitations, setInvitations] = useState<TenderInvitation[]>([]);
+    const [, setInvitations] = useState<TenderInvitation[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('all');
     const [selectedTenderTypeFilter, setSelectedTenderTypeFilter] = useState<string>('all');
@@ -398,7 +396,7 @@ export default function TendersPage() {
                 try {
                     const errorData = await tendersResponse.value.json();
                     throw new Error(errorData.message || `HTTP error! status: ${tendersResponse.value.status}`);
-                } catch (parseError) {
+                } catch {
                     throw new Error(`HTTP error! status: ${tendersResponse.value.status}`);
                 }
             } else {
@@ -407,6 +405,7 @@ export default function TendersPage() {
 
             // Handle invitations response (non-critical - don't fail if invitations can't be loaded)
             let invitationsData: TenderInvitation[] = [];
+            let invitedTenderObjects: any[] = [];
             if (invitationsResponse.status === 'fulfilled' && invitationsResponse.value.ok) {
                 const invData = await invitationsResponse.value.json().catch(() => null);
 
@@ -417,15 +416,19 @@ export default function TendersPage() {
 
                 if (items.length === 0) {
                     invitationsData = [];
+                    invitedTenderObjects = [];
                 } else if (items[0]?.invitation) {
                     invitationsData = items.map((item: any) => item.invitation);
+                    invitedTenderObjects = items.map((item: any) => item.tender).filter((t: any) => !!t);
                 } else if (items[0]?.TenderId != null || items[0]?.tenderId != null) {
                     invitationsData = items as any[] as TenderInvitation[];
+                    invitedTenderObjects = [];
                 } else {
                     if (process.env.NODE_ENV !== 'production') {
                         console.info('Invitation response shape not recognized; ignoring. Example item:', items[0]);
                     }
                     invitationsData = [];
+                    invitedTenderObjects = [];
                 }
 
                 setInvitations(invitationsData);
@@ -438,6 +441,55 @@ export default function TendersPage() {
                 // Log invitation fetch error but don't fail the whole operation
                 if (process.env.NODE_ENV !== 'production') {
                     console.warn("Failed to fetch tender invitations:", invitationsResponse);
+                }
+            }
+
+            // Union: ensure invited restricted tenders are present even if backend /api/tenders omitted them
+            try {
+                const existingIds = new Set(tendersData.map(t => parseInt(t.id.toString())));
+                const invitedTenders = (invitedTenderObjects || [])
+                    .filter((t: any) => t && t.id != null);
+
+                for (const invTender of invitedTenders) {
+                    const tid = parseInt(invTender.id.toString());
+                    if (!existingIds.has(tid)) {
+                        // Normalize minimal shape to Tender interface fields if missing
+                        const normalized: Tender = {
+                            id: tid,
+                            tenderNo: invTender.tenderNo ?? invTender.TenderNo ?? '',
+                            title: invTender.title ?? invTender.Title ?? '',
+                            tenderType: invTender.tenderType ?? invTender.TenderType ?? 'rs',
+                            tenderCategory: invTender.tenderCategory ?? invTender.TenderCategory ?? '',
+                            scopeOfWork: invTender.scopeOfWork ?? invTender.ScopeOfWork ?? '',
+                            instructions: invTender.instructions ?? invTender.Instructions ?? '',
+                            submissionDeadline: invTender.submissionDeadline ?? invTender.SubmissionDeadline ?? '',
+                            openingDate: invTender.openingDate ?? invTender.OpeningDate ?? '',
+                            status: invTender.status ?? invTender.Status ?? 'pb',
+                            procurementModeId: invTender.procurementModeId ?? invTender.ProcurementModeId ?? null,
+                            estimatedValue: invTender.estimatedValue ?? invTender.EstimatedValue ?? null,
+                            itemCategoryId: invTender.itemCategoryId ?? invTender.ItemCategoryId ?? 0,
+                            currencyId: invTender.currencyId ?? invTender.CurrencyId ?? '',
+                            createdBy: invTender.createdBy ?? invTender.CreatedBy ?? null,
+                            createdOn: invTender.createdOn ?? invTender.CreatedOn ?? '',
+                            modifiedBy: invTender.modifiedBy ?? invTender.ModifiedBy ?? null,
+                            modifiedOn: invTender.modifiedOn ?? invTender.ModifiedOn ?? '',
+                            deletedBy: invTender.deletedBy ?? invTender.DeletedBy ?? null,
+                            deletedOn: invTender.deletedOn ?? invTender.DeletedOn ?? null,
+                            relatedPRID: invTender.relatedPRID ?? invTender.RelatedPRID ?? null,
+                            approvalRemarks: invTender.approvalRemarks ?? invTender.ApprovalRemarks ?? null,
+                            approvalStatus: invTender.approvalStatus ?? invTender.ApprovalStatus ?? 0,
+                            procurementMode: undefined,
+                            currency: undefined,
+                            tenderCategoryRelation: undefined,
+                            itemCategoryRelation: undefined,
+                        };
+                        tendersData.push(normalized);
+                        existingIds.add(tid);
+                    }
+                }
+            } catch (e) {
+                if (process.env.NODE_ENV !== 'production') {
+                    console.warn('Union with invited tenders failed:', e);
                 }
             }
 
