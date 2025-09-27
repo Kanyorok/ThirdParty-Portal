@@ -70,7 +70,7 @@
               <select name="rfq_id" class="form-select" required>
                 <option disabled selected>-- Select RFQ --</option>
                 @foreach ($rfqList as $rfq)
-                  <option value="{{ $rfq->Id }}">{{ $rfq->RFQNumber }}</option>
+                  <option value="{{ $rfq->Id }}" title="{{ $rfq->Comments ?? '' }}">{{ $rfq->RFQNumber }}-{{ $rfq->Comments ?? '' }}</option>
                 @endforeach
               </select>
             </div>

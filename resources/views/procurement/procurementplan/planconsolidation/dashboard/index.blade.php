@@ -54,6 +54,7 @@
                 <th>Item Name</th>
                 <th>Branch</th>
                 <th>Department</th>
+                <th>Raised By</th>
                 <th>Qty</th>
                 <th>Est. Unit Cost</th>
                 <th>Est. Cost</th>
@@ -71,6 +72,7 @@
                     <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
                     <td>{{ $need->branch->Name ?? 'N/A' }}</td>
                     <td>{{ $need->department->Name ?? 'N/A' }}</td>
+                    <td>{{ optional($need->creator)->Name ?? ($need->CreatedByName ?? ($need->CreatedBy ?? 'N/A')) }}</td>
                     <td>{{ $need->RequestedQty }}</td>
                     <td>
                         {{ is_numeric($need->EstimatedUnitCost ?? null)
@@ -92,7 +94,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">No records found for the selected filters.</td>
+                    <td colspan="12" class="text-center">No records found for the selected filters.</td>
                 </tr>
             @endforelse
             </tbody>

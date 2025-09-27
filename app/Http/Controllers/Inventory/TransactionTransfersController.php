@@ -10,7 +10,7 @@ use App\Models\Inventory\InterBranchRequisition;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\TransactionTransfer;
-use App\Models\Procurement\Requisitions;
+use App\Models\Procurement\GoodsReceipt;
 use App\Services\Inventory\TransactionTransferService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -55,25 +55,15 @@ class TransactionTransfersController extends Controller
                     ? app(TransactionTransferService::class)->getHQBranchId()
                     : $validatedData['FromBranch'];
 
-                $stock = StockItem::where('ItemID', $itemId)
-                    ->where('Branch', $branch)
-                    ->first();
-
-                if (!$stock || $stock->CurrentQty < $qty) {
-                    return response()->json([
-                        'status'  => 'error',
-                        'message' => "Insufficient stock for ItemID {$itemId} in Branch {$branch}.",
-                    ], 422);
-                }
+                
             }
 
             $transfer = $this->service->createTransfer($validatedData);
             $this->service->createTransferItems($transfer, $items);
 
-        return redirect()
-        ->route('transactionstransfers.index')
-        ->with('success', 'Transfer created successfully.');
-
+            return redirect()
+                ->route('transactionstransfers.index')
+                ->with('success', 'Transfer created successfully.');
         } catch (Throwable $e) {
             return response()->json([
                 'status'  => 'error',
@@ -81,7 +71,6 @@ class TransactionTransfersController extends Controller
             ], 500);
         }
     }
-
 
     public function show($Id)
     {
@@ -132,37 +121,34 @@ class TransactionTransfersController extends Controller
         return redirect()->route('transactionstransfers.index')->with('success', 'Transfer deleted.');
     }
 
-    /**
-     * Fetch requisitions by type (interbranch or procurement)
-     */
+ 
+
     public function getRequisitionsByType($type)
     {
         if ($type === 'interbranch') {
-            $requisitions = InterBranchRequisition::where('Status', 'Ap')
+            $requisitions = InterBranchRequisition::with(['fromBranch', 'toBranch'])
+                ->where('Status', 'Ap')
                 ->whereDoesntHave('transfer')
                 ->get();
         } elseif ($type === 'procurement') {
-            $statusIds = DB::table('t_CodeDetails')
-                ->where('CodeID', 'RequisitionStatus')
-                ->where('Description', 'Approved')
-                ->pluck('ID');
-
-            $requisitions = Requisitions::whereIn('StatusID', $statusIds)
-                ->whereNotNull('PlanRef')
+            $requisitions = GoodsReceipt::with(['transfer', 'item'])
+                ->whereNotNull('GRNID')
                 ->whereDoesntHave('transfer', function ($q) {
                     $q->where('RequisitionType', 'procurement');
                 })
-                ->get();
+                ->get([
+                    'id', 
+                    'GRNID', 
+                    'TransferTo',
+                    'ItemNo',
+                    'ReceivedQTY',
+                ]);
         } else {
             return response()->json([], 400);
         }
 
         return response()->json($requisitions);
     }
-
-    /**
-     * Fetch requisition details including items + UOM info
-     */
     public function getRequisitionDetails(Request $request, $id)
     {
         try {
@@ -178,16 +164,16 @@ class TransactionTransfersController extends Controller
 
                 $items = $requisition->items->map(function ($item) {
                     return [
-                        'Id'          => $item->Id,
-                        'Item'        => $item->Item,
-                        'ItemCode'    => $item->item?->ItemCode ?? '',
-                        'ItemName'    => $item->item?->ItemName ?? '',
-                        'UnitCost'    => $item->item?->price?->ActualPrice ?? 0,
-                        'UOM'         => $item->UOM ?? $item->item?->UOM,
-                        'UOMCode'     => $item->item?->uom?->Code ?? 'N/A',
-                        'PriceID'     => $item->item?->ItemPrice,
-                        'ApprovedQty' => $item->ApprovedQty ?? $item->Quantity,
-                        'DispatchedQty'=> $item->DispatchedQty ?? null,
+                        'Id'            => $item->Id,
+                        'Item'          => $item->Item,
+                        'ItemCode'      => $item->item?->ItemCode ?? '',
+                        'ItemName'      => $item->item?->ItemName ?? '',
+                        'UnitCost'      => $item->item?->price?->ActualPrice ?? 0,
+                        'UOM'           => $item->UOM ?? $item->item?->UOM,
+                        'UOMCode'       => $item->item?->uom?->Code ?? 'N/A',
+                        'PriceID'       => $item->item?->ItemPrice,
+                        'ApprovedQty'   => $item->ApprovedQty ?? $item->Quantity,
+                        'DispatchedQty' => $item->DispatchedQty ?? null,
                     ];
                 });
 
@@ -200,38 +186,38 @@ class TransactionTransfersController extends Controller
             }
 
             if ($type === 'procurement') {
-                $requisition = Requisitions::with([
-                    'requisitionLines.item.price',
-                    'requisitionLines.item.uom'
-                ])->findOrFail($id);
+                $requisition = GoodsReceipt::with(['item.price', 'item.uom', 'toBranch'])
+                    ->where('Id', $id)
+                    ->get();
 
-                $branch = $requisition->BranchID ? Branch::find($requisition->BranchID) : null;
+                if ($requisition->isEmpty()) {
+                    return response()->json(['error' => 'No procurement requisition found'], 404);
+                }
 
-                $items = $requisition->requisitionLines->map(function ($line) {
+                $items = $requisition->map(function ($gr) {
                     return [
-                        'Id'          => $line->Id,
-                        'Item'        => $line->Item,
-                        'ItemCode'    => $line->item?->ItemCode ?? '',
-                        'ItemName'    => $line->item?->ItemName ?? '',
-                        'UnitCost'    => $line->ExpectedPrice,
-                        'UOM'         => $line->UOM ?? $line->item?->UOM,
-                        'UOMCode'     => $line->item?->uom?->Code ?? 'N/A',
-                        'PriceID'     => $line->ExpectedPrice,
-                        'ApprovedQty' => $line->Quantity,
-                        'DispatchedQty'=> null,
+                        'Id'            => $gr->id,
+                        'Item'          => $gr->ItemNo,
+                        'ItemCode'      => $gr->item?->ItemCode ?? '',
+                        'ItemName'      => $gr->item?->ItemName ?? '',
+                        'UnitCost'      => $gr->item?->price?->ActualPrice ?? 0,
+                        'UOM'           => $gr->item?->UOM,
+                        'UOMCode'       => $gr->item?->uom?->Code ?? 'N/A',
+                        'PriceID'       => $gr->item?->ItemPrice,
+                        'ApprovedQty'   => $gr->POQTY,
+                        'DispatchedQty' => $gr->ReceivedQTY,
                     ];
                 });
 
                 return response()->json([
-                    'Id'          => $requisition->Id,
+                    'Id'          => $requisition->first()->GRNID,
                     'from_branch' => null,
-                    'to_branch'   => $branch,
+                    'to_branch'   => $requisition->first()->toBranch,
                     'items'       => $items,
                 ]);
             }
 
             return response()->json(['error' => 'Invalid type'], 400);
-
         } catch (Throwable $e) {
             return response()->json([
                 'status'  => 'error',
