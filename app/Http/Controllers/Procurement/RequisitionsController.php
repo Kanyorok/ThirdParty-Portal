@@ -142,8 +142,7 @@ class RequisitionsController extends Controller
             ]);
 
             return response()->json([
-                'message' => $requisitionAdd['message'],
-                'error' => $requisitionAdd['error'] ?? 'Unknown error'
+                'message' => 'Failed to create requisition. Please try again later.'
             ], 500);
 
         } catch (\Throwable $e) {
@@ -153,8 +152,7 @@ class RequisitionsController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Failed to create requisition',
-                'error' => $e->getMessage()
+                'message' => 'Failed to create requisition. Please try again later.'
             ], 500);
         }
     }
@@ -172,7 +170,9 @@ class RequisitionsController extends Controller
             return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            Log::warning("Unauthorized access attempt to view Requisition ID: {$id} by user ID: " . auth()->id());
+            $uid = null;
+            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            Log::warning("Unauthorized access attempt to view Requisition ID: {$id} by user ID: " . ($uid ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error("Requisition ID {$id} not found. Exception: " . $e->getMessage());
