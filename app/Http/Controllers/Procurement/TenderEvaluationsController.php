@@ -153,26 +153,22 @@ class TenderEvaluationsController extends Controller
                     DB::rollBack();
                     return back()->with('error', 'Section with ID ' . $sectionId . ' does not exist.');
                 }
-                
-                $weight = floatval($weights[$sectionId] ?? 0);
-                
-                // Only create sections with weight > 0
-                if ($weight > 0) {
-                    $tenderSection = TenderSection::create([
-                        'TenderID' => $tenderId,
-                        'SectionID' => $sectionId,
-                        'Weight' => $weight,
-                        'IsActive' => true,
-                        'Comments' => null,
-                        'CreatedBy' => Auth::id(),
-                        'ModifiedBy' => Auth::id(),
-                    ]);
+              
+                // Create or update the tender section
+                $tenderSection = TenderSection::create([
+                    'TenderID' => $request->tender_id, // Assuming tender_id is passed in the request
+                    'SectionID' => $sectionId,
+                    'Weight' => $weights[$index],
+                    'IsActive' => true, // Assuming sections are active by default
+                    'Comments' => $request->comments[$index] ?? null, // Optional comments
+                    'CreatedBy' => Auth::id(),
+                    'ModifiedBy' => Auth::id(),
+                ]);
 
-                    activity()
-                        ->performedOn($tenderSection)
-                        ->causedBy(Auth::id())
-                        ->log('Created tender section for tender ID: ' . $tenderId . ', section ID: ' . $sectionId);
-                }
+                activity()
+                    ->performedOn($tenderSection)
+                    ->causedBy(Auth::id())
+                    ->log('Created or updated tender sections for tender: ' . $tenderTitle);
             }
             
             DB::commit();
@@ -202,11 +198,12 @@ class TenderEvaluationsController extends Controller
     {
         $tender = Tender::findOrFail($TenderId);
 
-        // Fetch all active criteria already stored for this tender
-        $existingCriteria = TenderCriteria::where('TenderID', $TenderId)
+        // Fetch active criteria grouped by SectionID for this tender
+        $existingBySection = TenderCriteria::where('TenderID', $TenderId)
             ->where('IsActive', true)
-            ->pluck('CriteriaID')
-            ->toArray();
+            ->get(['CriteriaID', 'SectionID'])
+            ->groupBy('SectionID')
+            ->map(fn($rows) => $rows->pluck('CriteriaID')->toArray());
 
         // Get sections associated with the tender along with their criteria
         $tenderSections = TenderSection::where('TenderID', $tender->Id)
@@ -214,15 +211,12 @@ class TenderEvaluationsController extends Controller
             ->get();
 
         foreach ($tenderSections as $section) {
-            // Get criteria manually for this section (note: primary key is 'Id')
-            $criteriaList = Criteria::where('SectionID', $section->sections->Id)->get();
-
-            // Add `isChecked` to each criterion against TenderCriteria
+            $sectionId = $section->sections->Id;
+            $criteriaList = Criteria::where('SectionID', $sectionId)->get();
+            $selectedForSection = $existingBySection[$sectionId] ?? [];
             foreach ($criteriaList as $criteria) {
-                $criteria->isChecked = !empty($existingCriteria) && in_array($criteria->Id, $existingCriteria);
+                $criteria->isChecked = in_array($criteria->Id, $selectedForSection);
             }
-
-            // Attach the criteria list to the section manually
             $section->criteria = $criteriaList;
         }
 
@@ -250,26 +244,48 @@ class TenderEvaluationsController extends Controller
         try {
             DB::beginTransaction();
 
-            // Loop through each section and its selected criterias
+            // For each section, update its weight and sync only the selected criteria
             foreach ($weights as $sectionId => $weight) {
-                $selectedCriteria = $criterias[$sectionId] ?? [];
+                // Ensure TenderSection exists with updated weight
+                TenderSection::updateOrCreate(
+                    [
+                        'TenderID' => (int)$tenderId,
+                        'SectionID' => (int)$sectionId,
+                    ],
+                    [
+                        'Weight' => (float)$weight,
+                        'IsActive' => true,
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
+                        'CreatedBy' => Auth::id(),
+                        'CreatedOn' => now(),
+                    ]
+                );
 
-                // Get all criteria IDs for this section (from the definitions table)
-                $allSectionCriteria = Criteria::where('SectionID', $sectionId)->pluck('id');
+                $selected = array_map('intval', $criterias[$sectionId] ?? []);
 
-                foreach ($allSectionCriteria as $criteriaId) {
-                    $isSelected = in_array($criteriaId, $selectedCriteria);
+                // Remove any criteria not selected for this section
+                $removeQuery = TenderCriteria::where('TenderID', (int)$tenderId)
+                    ->where('SectionID', (int)$sectionId);
+                if (!empty($selected)) {
+                    $removeQuery->whereNotIn('CriteriaID', $selected);
+                }
+                // Soft-delete if model has SoftDeletes, else hard delete
+                $removeQuery->delete();
 
+                // Upsert selected criteria as active
+                foreach ($selected as $criteriaId) {
                     TenderCriteria::updateOrCreate(
                         [
-                            'TenderID' => $tenderId,
-                            'CriteriaID' => $criteriaId,
+                            'TenderID' => (int)$tenderId,
+                            'SectionID' => (int)$sectionId,
+                            'CriteriaID' => (int)$criteriaId,
                         ],
                         [
-                            'SectionID' => $sectionId,
-                            'MaxScore' => 10, // Set weight if selected, otherwise 0
-                            'IsActive' => $isSelected,
+                            'MaxScore' => 10,
+                            'IsActive' => true,
                             'CreatedBy' => Auth::id(),
+                            'CreatedOn' => now(),
                             'ModifiedBy' => Auth::id(),
                             'ModifiedOn' => now(),
                         ]
