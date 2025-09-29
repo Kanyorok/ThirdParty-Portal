@@ -40,16 +40,16 @@ class BudgetReallocationController extends Controller
             'createdBy',
             'approvedBy'
         ])->findOrFail($id);
-    
+
         // Load associated budget limits
         $limits = BudgetLineLedgerLimit::where('ReallocationID', $realloc->id)
             ->orderBy('EffectiveFrom')
             ->get();
-    
+
         // Separate into from/to line collections
         $fromLimits = $limits->where('BudgetLineID', $realloc->FromBudgetLineID);
         $toLimits   = $limits->where('BudgetLineID', $realloc->ToBudgetLineID);
-    
+
         return view('budgetandanalytics.reallocation.show', compact(
             'realloc',
             'limits',
@@ -57,7 +57,7 @@ class BudgetReallocationController extends Controller
             'toLimits'
         ));
     }
-    
+
 
     public function create()
     {
@@ -577,7 +577,7 @@ class BudgetReallocationController extends Controller
         //Get the Usage for that GL so far
         //Get branch ID interms of CBT and now date
         $b_id=Branch::find($validated['BranchID'])->BranchID;
-        $asDate = Carbon::createFromFormat('Y-m-d', '2024-04-30')->format('d M Y');
+        $asDate = Carbon::now();
         // Call stored procedure and get the result
         $result = DB::select(
             'EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?',
@@ -592,6 +592,7 @@ class BudgetReallocationController extends Controller
             'months'=>$months,
             'totAmountAllocated'=>$totAmountAllocated,
             'totUsage'=>abs($totUsage),
+            //'result'=>$result
         ];
 
 
