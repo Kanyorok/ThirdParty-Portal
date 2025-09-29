@@ -110,7 +110,7 @@ class BudgetConsolidationController extends Controller
 
                             //Fetch Actuals
                             //For Just pick for branch
-                            $b_id = Branch::find(2)->BranchID ?? 1;
+                            $b_id = Branch::find(session('LoginBranchId'))->BranchID ?? 1;
                             $asDate = date('Y-m-d');
                             $budgetLineID = $entry->BudgetLineID;
                             $result = DB::select(
@@ -122,7 +122,7 @@ class BudgetConsolidationController extends Controller
                             $actual =($result[0]->ClosingBalance =='.00'?0.00:$result[0]->ClosingBalance) ?? 0.00;
 
                             $actual=abs($actual);
-                            $change=(($fullAllocation-$actual)/$fullAllocation)*100;
+                            $change=($actual/$fullAllocation)*100;
                             $data[$type->Description][$glAccountSubType][] = [
                                 'rate' => 0,
                                 'budgetLineName' => $budgetLineName,
