@@ -21,6 +21,8 @@ use App\Models\Core\Branch;
 use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Shuchkin\SimpleXLSXGen;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BudgetConsolidationController extends Controller
 {
@@ -236,5 +238,51 @@ class BudgetConsolidationController extends Controller
     public function create()
     {
         return view('budgetandanalytics.budgetworkspace.budgetconsolidation.create');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $rows = $this->buildExportRows($request);
+        $rawName = (string)$request->input('budgetName', 'Budget');
+        $safeName = trim(preg_replace('/[^A-Za-z0-9\- _\.]+/', '', $rawName));
+        $safeName = $safeName !== '' ? $safeName : 'Budget';
+        $filename = $safeName . '-budget-consolidation-' . now()->format('Ymd_His') . '.xlsx';
+        $xlsx = SimpleXLSXGen::fromArray($rows)->download($filename);
+        // SimpleXLSXGen::download() echoes and exits; as a fallback return a standard response
+        return response()->noContent();
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $rows = $this->buildExportRows($request);
+        $pdf = Pdf::loadView('exports.budget_consolidation_pdf', ['rows' => $rows])
+            ->setPaper('A4', 'landscape');
+        $rawName = (string)$request->input('budgetName', 'Budget');
+        $safeName = trim(preg_replace('/[^A-Za-z0-9\- _\.]+/', '', $rawName));
+        $safeName = $safeName !== '' ? $safeName : 'Budget';
+        $filename = $safeName . '-budget-consolidation-' . now()->format('Ymd_His') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function buildExportRows(Request $request): array
+    {
+        $headers = ['Category','Sub Type','Budget Line','Rate %','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Total','Actuals','% Change'];
+        $rows = [$headers];
+        $raw = $request->input('rows', []);
+        $payload = is_array($raw) ? $raw : (json_decode((string)$raw, true) ?: []);
+        foreach ($payload as $r) {
+            $rows[] = [
+                $r['category'] ?? '',
+                $r['subType'] ?? '',
+                $r['budgetLineName'] ?? '',
+                $r['rate'] ?? '',
+                ($r['months'][1] ?? ''), ($r['months'][2] ?? ''), ($r['months'][3] ?? ''), ($r['months'][4] ?? ''), ($r['months'][5] ?? ''), ($r['months'][6] ?? ''),
+                ($r['months'][7] ?? ''), ($r['months'][8] ?? ''), ($r['months'][9] ?? ''), ($r['months'][10] ?? ''), ($r['months'][11] ?? ''), ($r['months'][12] ?? ''),
+                $r['total'] ?? '',
+                $r['actuals'] ?? '',
+                $r['change'] ?? '',
+            ];
+        }
+        return $rows;
     }
 }
