@@ -17,8 +17,10 @@ use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
 use App\Models\Budget\BudgetProjection;
 use App\Models\Budget\BudgetProjectionData;
+use App\Models\Core\Branch;
 use App\Models\Core\CodeDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BudgetConsolidationController extends Controller
 {
@@ -105,12 +107,30 @@ class BudgetConsolidationController extends Controller
                             }
                             $fullAllocation = BudgetManualEntry::where('Id', $entry->Id)->pluck('Amount')->first() ?? 0;
                             //return $glAccountSubType;
+
+                            //Fetch Actuals
+                            //For Just pick for branch
+                            $b_id = Branch::find(2)->BranchID ?? 1;
+                            $asDate = date('Y-m-d');
+                            $budgetLineID = $entry->BudgetLineID;
+                            $result = DB::select(
+                                'EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?',
+                                [$budgetLineID, $b_id, $asDate,'L']
+                            );
+
+                            // $result is an array of objects
+                            $actual =($result[0]->ClosingBalance =='.00'?0.00:$result[0]->ClosingBalance) ?? 0.00;
+
+                            $actual=abs($actual);
+                            $change=(($fullAllocation-$actual)/$fullAllocation)*100;
                             $data[$type->Description][$glAccountSubType][] = [
                                 'rate' => 0,
                                 'budgetLineName' => $budgetLineName,
                                 'allocationValues' => $allocationValues,
                                 'allocationType' => 'monthly',
                                 'fullAllocation' => $fullAllocation,
+                                'actual'=>$actual,
+                                'change'=>$change,
                             ];
                         }
                     }

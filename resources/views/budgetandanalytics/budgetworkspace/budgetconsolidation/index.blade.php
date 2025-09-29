@@ -136,9 +136,9 @@
                                                 @endforeach
 
                                                 <td class="text-end bg-success-subtle fw-semibold">{{ number_format($total, 2) }}</td>
-                                                <td class="text-end bg-info-subtle">{{ number_format($actual, 2) }}</td>
+                                                <td class="text-end bg-info-subtle">{{ number_format($entry['actual'], 2) }}</td>
                                                 <td class="text-center bg-danger-subtle">
-                                                    <span class="badge {{ $deltaClass }}">{{ number_format($percentChange, 2) }}%</span>
+                                                    <span class="badge {{ $deltaClass }}">{{ number_format($entry['change'], 2) }}%</span>
                                                 </td>
                                             </tr>
                                         @endforeach
