@@ -43,7 +43,7 @@
                     <option value="">-- Select Customer --</option>
                     @foreach($customers as $cust)
                         <option value="{{ $cust->Id }}" {{ old('CustomerID') == $cust->Id ? 'selected' : '' }}>
-                            {{ $cust->ThirdParty->ThirdPartyName }} -- ({{ $cust->NationalID }} ?? '-')
+                            {{ $cust->ThirdParty->ThirdPartyName }} -- ({{ $cust->NationalID }})
                         </option>
                     @endforeach
                 </select>
