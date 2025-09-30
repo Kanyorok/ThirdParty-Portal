@@ -261,7 +261,7 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Invoice Number <span class="text-danger">*</span></label>
+                                <label class="form-label">Supplier Invoice Number <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="InvoiceNumber" name="InvoiceNumber" required>
                             </div>
                             <div class="col-md-3">
