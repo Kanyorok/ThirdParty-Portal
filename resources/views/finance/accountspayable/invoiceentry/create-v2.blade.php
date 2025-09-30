@@ -95,25 +95,14 @@
                     <div class="border rounded-3 p-3 mb-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-7">
-                                <label class="form-label small text-muted">Search Supplier (Reg No./Email/Phone)</label>
-                                <div class="position-relative">
-                                    <input type="text" class="form-control" id="searchSupplier"
-                                           placeholder="Type registration number, email, or phone..."
-                                           autocomplete="off">
-                                    <div class="invalid-feedback">Please enter supplier details to search.</div>
-
-                                    <!-- Dropdown for supplier suggestions -->
-                                    <div class="dropdown-menu w-100 d-none shadow" id="supplierDropdown"
-                                         style="max-height: 300px; overflow-y: auto; z-index: 1050; position: absolute; top: 100%;">
-                                        <!-- Suppliers will be populated here -->
-                                    </div>
-                                </div>
+                                <label class="form-label small text-muted">Search Supplier (Reg No./Email/Phone/Name)</label>
+                                <select id="supplierSelect" class="form-control" style="width: 100%;">
+                                    <option value="">-- Search and select a supplier --</option>
+                                </select>
+                                <div class="form-text" id="supplierSelectHint">Type at least 2 characters to search</div>
                             </div>
                             <div class="col-md-5 text-md-end">
-                                <span id="searchHint" class="small text-muted">Type to see supplier suggestions</span>
-                                <span id="searchSpinner" class="small ms-2 d-none">
-                                    <i class="fas fa-spinner fa-spin"></i> searching…
-                                </span>
+                                <span class="small text-muted">Use the dropdown to select a supplier</span>
                             </div>
                         </div>
 
@@ -369,10 +358,7 @@
             const findSupplierUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.search') }}';
 
             // Elements
-            const searchSupplier = document.getElementById('searchSupplier');
-            const btnSearchSupplier = document.getElementById('btnSearchSupplier');
-            const searchSpinner = document.getElementById('searchSpinner');
-            const searchHint = document.getElementById('searchHint');
+            const supplierSelect = (typeof window.$ !== 'undefined') ? window.$('#supplierSelect') : null;
             const supplierCard = document.getElementById('supplierCard');
             const ordersBlock = document.getElementById('ordersBlock');
             const grnsBlock = document.getElementById('grnsBlock');
@@ -464,119 +450,76 @@
                     </div>`;
             }
 
-            // Quick search for dropdown suggestions
-            let searchTimeout;
-            function quickSearchSuppliers() {
-                const searchTerm = searchSupplier.value.trim();
-                const dropdown = document.getElementById('supplierDropdown');
-
-                if (!searchTerm || searchTerm.length < 2) {
-                    dropdown.classList.add('d-none');
+            // Initialize Select2 for Supplier search
+            function initializeSupplierSelect() {
+                if (!supplierSelect || typeof supplierSelect.select2 !== 'function') {
+                    console.warn('Select2 not available; supplier search will be disabled.');
                     return;
                 }
 
-                // Clear previous timeout
-                if (searchTimeout) {
-                    clearTimeout(searchTimeout);
+                // Destroy if previously initialized
+                if (supplierSelect.hasClass('select2-hidden-accessible')) {
+                    supplierSelect.select2('destroy');
                 }
 
-                // Debounce search
-                searchTimeout = setTimeout(() => {
-
-                    // Show loading
-                    searchSpinner.classList.remove('d-none');
-                    searchHint.classList.add('d-none');
-
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]');
-
-                    fetch(quickSearchUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken ? csrfToken.getAttribute('content') : ''
+                supplierSelect.select2({
+                    placeholder: 'Search and select a supplier...',
+                    allowClear: true,
+                    width: '100%',
+                    minimumInputLength: 2,
+                    ajax: {
+                        transport: function (params, success, failure) {
+                            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                            fetch(quickSearchUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken ? csrfToken.getAttribute('content') : ''
+                                },
+                                body: JSON.stringify({ q: params.data.term })
+                            })
+                            .then(r => r.json())
+                            .then(success)
+                            .catch(failure);
                         },
-                        body: JSON.stringify({ search_term: searchTerm })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.suppliers && data.suppliers.length > 0) {
-                            populateDropdown(data.suppliers);
-                        } else {
-                            showEmptyDropdown();
+                        delay: 250,
+                        processResults: function (data) {
+                            const results = Array.isArray(data?.results) ? data.results : [];
+                            return { results, pagination: { more: false } };
                         }
-                    })
-                    .catch(error => {
-                        console.error('Quick search error:', error);
-                        showEmptyDropdown();
-                    })
-                    .finally(() => {
-                        searchSpinner.classList.add('d-none');
-                        searchHint.classList.remove('d-none');
-                    });
-                }, 300); // 300ms debounce
-            }
-
-            // Populate dropdown with suppliers
-            function populateDropdown(suppliers) {
-                const dropdown = document.getElementById('supplierDropdown');
-                
-                if (!dropdown) {
-                    return;
-                }
-                
-                dropdown.innerHTML = '';
-
-                suppliers.forEach(supplier => {
-                    const item = document.createElement('a');
-                    item.className = 'dropdown-item py-2';
-                    item.href = '#';
-                    item.innerHTML = `
-                        <div class="fw-bold">${supplier.Name}</div>
-                        <small class="text-muted">${supplier.RegistrationNumber} • ${supplier.Email}</small>
-                    `;
-                    
-                    item.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        selectSupplier(supplier);
-                    });
-
-                    dropdown.appendChild(item);
+                    },
+                    templateResult: function (item) {
+                        if (!item.id) return item.text;
+                        return window.$('<div><strong>' + (item.supplier?.Name || item.text) + '</strong><br/><small class="text-muted">' + item.text + '</small></div>');
+                    },
+                    templateSelection: function (item) {
+                        if (!item.id) return item.text;
+                        return item.supplier?.Name || item.text;
+                    }
                 });
 
-                dropdown.classList.remove('d-none');
-                dropdown.style.display = 'block'; // Force display
+                supplierSelect.on('select2:select', function (e) {
+                    const data = e.params.data;
+                    const supplierId = data?.supplier?.SupplierID || data?.id;
+                    if (!supplierId) return;
+
+                    // Load full supplier details and related POs/GRNs
+                    loadSupplierById(supplierId);
+                });
+
+                supplierSelect.on('select2:clear', function () {
+                    resetSupplierView();
+                });
             }
 
-            // Show empty dropdown
-            function showEmptyDropdown() {
-                const dropdown = document.getElementById('supplierDropdown');
-                dropdown.innerHTML = '<div class="dropdown-item text-muted">No suppliers found</div>';
-                dropdown.classList.remove('d-none');
-            }
-
-            // Select supplier and load full details
-            function selectSupplier(supplier) {
-                // Hide dropdown
-                document.getElementById('supplierDropdown').classList.add('d-none');
-
-                // Update search input
-                searchSupplier.value = supplier.Name;
-
-                // Prevent duplicate requests
-                if (isSearching) {
-                    return;
-                }
-
+            function loadSupplierById(supplierId) {
+                if (isSearching) return;
                 isSearching = true;
-
-                // Show loading overlay
                 showLoadingOverlay('Loading supplier data...');
-
-                // Reset any previous results
                 resetSupplierView();
 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]');
-
                 fetch(findSupplierUrl, {
                     method: 'POST',
                     headers: {
@@ -584,7 +527,7 @@
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken ? csrfToken.getAttribute('content') : ''
                     },
-                    body: JSON.stringify({ supplier_id: supplier.SupplierID })
+                    body: JSON.stringify({ supplier_id: supplierId })
                 })
                 .then(response => {
                     if (!response.ok) {
@@ -600,30 +543,14 @@
                         currentSupplier = data.supplier;
                         currentOrders = data.orders;
                         currentGRNs = data.grns;
-
-                        // Update currency from response if available
-                        if (data.defaultCurrency) {
-                            updateCurrencyDisplay(data.defaultCurrency);
-                        }
-
-                        // Show success message
+                        if (data.defaultCurrency) updateCurrencyDisplay(data.defaultCurrency);
                         showNotification(`Loaded supplier: ${data.supplier.Name}`, 'success');
-
                         displaySupplier();
                         displayOrders();
                     }
                 })
                 .catch(error => {
-                    if (!navigator.onLine) {
-                        showNotification('No internet connection. Please check your network and try again.', 'error');
-                    } else if (error.message.includes('404')) {
-                        showNotification('Supplier not found', 'error');
-                    } else if (error.message.includes('500')) {
-                        showNotification('Server error occurred. Please try again later.', 'error');
-                    } else {
-                        showNotification(`Failed to load supplier: ${error.message}`, 'error');
-                    }
-
+                    showNotification(`Failed to load supplier: ${error.message}`, 'error');
                     resetSupplierView();
                 })
                 .finally(() => {
@@ -1234,47 +1161,8 @@
                 selectedGRN = null;
             }
 
-            // Event listeners for search input
-            if (searchSupplier) {
-                searchSupplier.addEventListener('input', function() {
-                    // Clear invalid state
-                    if (this.classList.contains('is-invalid')) {
-                        this.classList.remove('is-invalid');
-                    }
-
-                    // Clear previous results when user changes search term
-                    if (currentSupplier && this.value.trim() !== currentSupplier.Name) {
-                        resetSupplierView();
-                    }
-
-                    // Ensure loading overlay is hidden when user starts typing
-                    hideLoadingOverlay();
-
-                    // Trigger quick search
-                    quickSearchSuppliers();
-                });
-
-                // Hide dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    const dropdown = document.getElementById('supplierDropdown');
-                    if (!searchSupplier.contains(e.target) && !dropdown.contains(e.target)) {
-                        dropdown.classList.add('d-none');
-                    }
-                });
-
-                // Handle keyboard navigation
-                searchSupplier.addEventListener('keydown', function(e) {
-                    const dropdown = document.getElementById('supplierDropdown');
-                    const items = dropdown.querySelectorAll('.dropdown-item:not(.text-muted)');
-
-                    if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        if (items.length > 0) items[0].focus();
-                    } else if (e.key === 'Escape') {
-                        dropdown.classList.add('d-none');
-                    }
-                });
-            }
+            // Initialize supplier Select2
+            initializeSupplierSelect();
 
             // PO related event listeners
             const viewSelectedPOBtn = document.getElementById('viewSelectedPO');
@@ -1395,11 +1283,6 @@
                     const loadingOverlay = document.getElementById('loadingOverlay');
                     if (!loadingOverlay.classList.contains('d-none')) {
                         hideLoadingOverlay();
-                        // Reset search button state
-                        btnSearchSupplier.disabled = false;
-                        btnSearchSupplier.innerHTML = '<i class="fas fa-search me-1"></i> Find Supplier';
-                        searchSpinner.classList.add('d-none');
-                        searchHint.classList.remove('d-none');
                     }
                 }
             });
