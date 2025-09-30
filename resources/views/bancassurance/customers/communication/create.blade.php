@@ -10,7 +10,7 @@
             <select name="CustomerID" class="form-select" required>
             <option value="">-- Select CustomerID --</option>
                 @foreach($customers as $customer)
-                    <option value="{{ $customer->Id }}">{{ $customer->FullName }}</option>
+                    <option value="{{ $customer->Id }}">{{ $customer->thirdParty->ThirdPartyName }}</option>
                 @endforeach
             </select>
         </div>
@@ -52,9 +52,7 @@
             </div>
 
             <div class="text-end">
-                <button type="submit" class="btn btn-success">
-                    💾 Save Log
-                </button>
+                <button type="submit" class="btn btn-success">Save Log</button>
             </div>
         </form>
     </div>
