@@ -297,14 +297,7 @@
 
                     <!-- Submit Section -->
                     <div id="submitSection" class="text-center d-none">
-                        <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSubmit"
-                                onclick="if(this.form.checkValidity() && validate3WayMatching()){
-                                    this.disabled = true;
-                                    this.innerHTML = '<i class=&quot;fas fa-spinner fa-spin me-2&quot;></i> Creating Invoice...';
-                                    this.form.submit();
-                                } else {
-                                    return false;
-                                }">
+                        <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSubmit">
                             <i class="fas fa-save me-2"></i> Create Invoice
                         </button>
                     </div>
@@ -353,6 +346,11 @@
     <script>
         // Wait for both DOM and jQuery to be ready
         function initializeInvoiceEntry() {
+            // Prevent double initialization
+            if (window.__invoiceEntryInit) {
+                return;
+            }
+            window.__invoiceEntryInit = true;
             // API endpoints (hoisted so all handlers can access)
             const quickSearchUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.quick-search') }}';
             const findSupplierUrl = '{{ route('finance.invoiceentry-v2.api.suppliers.search') }}';
@@ -383,7 +381,7 @@
             function formatCurrency(amount, currency = null) {
                 const curr = currency || currentCurrency;
                 const symbol = curr?.symbol || 'KSh';
-                
+
                 // Handle already formatted strings by removing commas first
                 let numericAmount;
                 if (typeof amount === 'string') {
@@ -391,7 +389,7 @@
                 } else {
                     numericAmount = parseFloat(amount);
                 }
-                
+
                 return `${symbol} ${numericAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             }
 
@@ -1176,31 +1174,60 @@
                     }
                 });
             }
-
-            document.getElementById('changePO').addEventListener('click', function() {
-                hideSelectedPOSummary();
-                if (typeof window.$ !== 'undefined') {
-                    window.$('#poSelect').val(null).trigger('change');
-                } else {
-                    // Fallback to vanilla JS
-                    const poSelect = document.getElementById('poSelect');
-                    if (poSelect) {
-                        poSelect.value = '';
-                        poSelect.dispatchEvent(new Event('change'));
+            const changePOBtn = document.getElementById('changePO');
+            if (changePOBtn) {
+                changePOBtn.addEventListener('click', function() {
+                    hideSelectedPOSummary();
+                    if (typeof window.$ !== 'undefined') {
+                        window.$('#poSelect').val(null).trigger('change');
+                    } else {
+                        // Fallback to vanilla JS
+                        const poSelect = document.getElementById('poSelect');
+                        if (poSelect) {
+                            poSelect.value = '';
+                            poSelect.dispatchEvent(new Event('change'));
+                        }
                     }
-                }
-                // Reset all selections and hide all dependent cards
-                selectedPO = null;
-                selectedGRN = null;
-                document.getElementById('GRNReference').value = '';
-                grnsBlock.classList.add('d-none');
-                document.getElementById('matchingStatusBlock').classList.add('d-none');
-                invoiceDetailsBlock.classList.add('d-none');
-                submitSection.classList.add('d-none');
-            });
+                    // Reset all selections and hide all dependent cards
+                    selectedPO = null;
+                    selectedGRN = null;
+                    document.getElementById('GRNReference').value = '';
+                    grnsBlock.classList.add('d-none');
+                    document.getElementById('matchingStatusBlock').classList.add('d-none');
+                    invoiceDetailsBlock.classList.add('d-none');
+                    submitSection.classList.add('d-none');
+                });
+            }
 
 
-            // Form submission will be handled by HTML onclick validation
+            // Prevent multiple submissions and validate 3-way match once
+            let hasSubmitted = false;
+            if (invoiceForm) {
+                invoiceForm.addEventListener('submit', function(e) {
+                    // Validate 3-way matching first
+                    const ok = typeof validate3WayMatching === 'function' ? validate3WayMatching() : true;
+                    if (!ok) {
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Guard: already submitted
+                    if (hasSubmitted) {
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Disable submit button and prevent double submit immediately
+                    const submitBtn = document.getElementById('btnSubmit');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('disabled');
+                        submitBtn.setAttribute('aria-disabled', 'true');
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Creating Invoice...';
+                    }
+                    hasSubmitted = true;
+                }, true);
+            }
 
             // Comprehensive 3-way matching validation
             function validate3WayMatching() {
@@ -1298,7 +1325,7 @@
 
         // Also try to initialize when window loads (backup)
         window.addEventListener('load', function() {
-            if (typeof initializeInvoiceEntry === 'function') {
+            if (typeof initializeInvoiceEntry === 'function' && !window.__invoiceEntryInit) {
                 initializeInvoiceEntry();
             }
         });

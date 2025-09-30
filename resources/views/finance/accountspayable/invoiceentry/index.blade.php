@@ -121,6 +121,12 @@
                         </tbody>
                     </table>
                 </div>
+                {{-- Add pagination if available --}}
+                @if(method_exists($invoices, 'links'))
+                    <div class="mt-3">
+                        {{ $invoices->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
