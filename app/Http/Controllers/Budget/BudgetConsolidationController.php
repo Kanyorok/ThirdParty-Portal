@@ -59,7 +59,6 @@ class BudgetConsolidationController extends Controller
 
                     //return $budgetActivities;
                     foreach ($budgetActivities as $activity) {
-                        $fullAllocation=0;
                         //Get the name for the GLAccountSubType
                         //return $activity;
                         //$glAccountSubType = BudgetGLSubType::find($activity->budgetLine->GLAccountSubTypeID)->Description ?? 'N/A';
@@ -110,7 +109,6 @@ class BudgetConsolidationController extends Controller
                     foreach ($entriesByLine as $entry) {
                         //return $entry;
                         //Have a check to filter based on the GLType
-                        $fullAllocation=0;
                         $typeCheck = BudgetLine::find($entry->BudgetLineID)->GLAccountTypeID;
                         if ($typeCheck !== $type->Value) continue;
                         $budgetLine = BudgetLine::find($entry->BudgetLineID);
@@ -163,7 +161,6 @@ class BudgetConsolidationController extends Controller
                 $projections = BudgetProjection::where('BudgetID', $budgetId)->get();
                 //Loop through the projections
                 foreach ($projections as $projection) {
-                    $fullAllocation=0;
                     //Get the product Gltype
                     $product = BudgetProduct::find($projection->ProductID);
                     $productGLAccountID = $product->GLAccountID;
