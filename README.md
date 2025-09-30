@@ -1,3 +1,29 @@
+### Licensing (module-based, Ed25519)
+
+This build includes a signed licensing system bound to DB instance.
+
+Setup env:
+
+```
+LICENSING_PUBLIC_KEY_BASE64=BASE64_VENDOR_PUBLIC_KEY
+LICENSING_PUBLIC_KEY_ID=vendor-key-1
+```
+
+Key commands:
+
+```
+php artisan license:info
+php artisan license:verify --refresh
+php artisan license:import payload.json signature.b64 --id=LIC-001 --kid=vendor-key-1
+```
+
+Admin UI:
+- GET /admin/license (upload payload+signature)
+
+Route guards:
+- Global `license` middleware added to authenticated groups
+- Per-module middleware `module:{ModuleID}` wraps module routes (CRM=200000, Procurement=300000, Inventory=400000, Property=500000, Fleet=600000, DMS=700000, Legal=800000, Insurance=900000, HRM=1000000, Finance=1100000, Budget=1200000)
+
 # Br ERP
 
 **Br ERP** is a powerful and scalable Enterprise Resource Planning (ERP) system developed by **Craft Silicon**. It is designed to optimize and streamline business processes by integrating various organizational resources and operational modules into a single, unified system.

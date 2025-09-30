@@ -27,7 +27,7 @@ use App\Http\Controllers\Legal\ComplianceIncidentController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::prefix('legal')->group(function () {
+Route::middleware(['module:800000'])->prefix('legal')->group(function () {
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('legal-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'legal-reports.index',

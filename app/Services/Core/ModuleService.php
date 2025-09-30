@@ -4,6 +4,7 @@ namespace App\Services\Core;
 
 use App\Models\Auth\User;
 use App\Models\Core\Module;
+use App\Services\Licensing\LicensingService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -109,7 +110,16 @@ class ModuleService
     {
         $modules = Module::all();
 
-        $topLevelModules = $modules->whereNull('ParentID')->sortBy('ModuleID');
+        // Filter top-level modules by license
+        $allowed = app(LicensingService::class)->current();
+        $allowedIds = $allowed->isValid() ? $allowed->allowedModules : [];
+
+        $topLevelModules = $modules
+            ->whereNull('ParentID')
+            ->sortBy('ModuleID')
+            ->filter(static function ($m) use ($allowedIds) {
+                return in_array((int)$m->ModuleID, $allowedIds, true);
+            });
 
         $navbar = collect();
 

@@ -11,7 +11,7 @@ Route::middleware(['web','auth'])->group(function(){
 
 require __DIR__ . '/auth.php';
 
-Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function () {
+Route::middleware(['auth','license'])->namespace('App\Http\Controllers')->group(function () {
     require __DIR__ . '/crm.php';
     
     // Procurement routes with prefix
@@ -90,4 +90,12 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
         // ✅ Global Locality Endpoint
         Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
+});
+
+// Admin Licensing endpoints (should be accessible post-auth; license check happens after upload)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/license', [\App\Http\Controllers\Admin\LicenseController::class, 'index'])
+        ->name('admin.license.index');
+    Route::post('/admin/license', [\App\Http\Controllers\Admin\LicenseController::class, 'store'])
+        ->name('admin.license.store');
 });

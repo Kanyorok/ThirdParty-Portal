@@ -55,6 +55,8 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'thirdparty' => \App\Http\Middleware\EnforceThirdPartyUser::class,
         'thirdparty.approved' => \App\Http\Middleware\CheckThirdPartyApprovalStatus::class,
-    'verified.user' => \App\Http\Middleware\VerifiedUser::class,
+        'verified.user' => \App\Http\Middleware\VerifiedUser::class,
+        'license' => \App\Http\Middleware\RequireLicense::class,
+        'module' => \App\Http\Middleware\RequireModule::class,
     ];
 }

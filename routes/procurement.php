@@ -78,7 +78,7 @@ use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
 
 
-Route::namespace('Procurement')->group(function () {
+Route::middleware(['module:300000'])->namespace('Procurement')->group(function () {
 
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');

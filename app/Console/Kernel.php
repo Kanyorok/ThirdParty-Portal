@@ -7,24 +7,27 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    // ✅ Register your custom Artisan commands
-    protected $commands = [
-        \App\Console\Commands\SendTenderReminders::class,
-    ];
+	// ✅ Register your custom Artisan commands
+	protected $commands = [
+		\App\Console\Commands\SendTenderReminders::class,
+		\App\Console\Commands\LicenseImportCommand::class,
+		\App\Console\Commands\LicenseVerifyCommand::class,
+		\App\Console\Commands\LicenseInfoCommand::class,
+	];
 
-    // ✅ Define your task scheduling here
-    protected function schedule(Schedule $schedule)
-    {
-        $schedule->command('tender:send-reminders')->dailyAt('15:00');
-    // $schedule->command('tender:send-reminders')->daily();
-     $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
-    }
+	// ✅ Define your task scheduling here
+	protected function schedule(Schedule $schedule)
+	{
+		$schedule->command('tender:send-reminders')->dailyAt('15:00');
+	// $schedule->command('tender:send-reminders')->daily();
+	 $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
+	}
 
-    // ✅ Register commands from the app/Console/Commands directory
-    protected function commands()
-    {
-        $this->load(__DIR__.'/Commands');
+	// ✅ Register commands from the app/Console/Commands directory
+	protected function commands()
+	{
+		$this->load(__DIR__.'/Commands');
 
-        require base_path('routes/console.php');
-    }
+		require base_path('routes/console.php');
+	}
 }

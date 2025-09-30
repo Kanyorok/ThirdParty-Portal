@@ -23,7 +23,7 @@ use App\Http\Controllers\DMS\Tags\TagController;
 use App\Http\Controllers\DMS\Tags\TaggingRuleController;
 use Illuminate\Support\Facades\Route;
 
-Route::namespace('DMS')->prefix('dms')->group(function () {
+Route::middleware(['module:700000'])->namespace('DMS')->prefix('dms')->group(function () {
     Route::get('search', SearchController::class)->name('dms.search');
     Route::get('recent', DocumentRecentController::class)->name('repo.recent');
     Route::get('bulk-upload', DocumentUploadController::class)->name('files.upload');
