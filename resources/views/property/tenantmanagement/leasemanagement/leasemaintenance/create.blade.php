@@ -170,11 +170,7 @@
                     {{-- Action Buttons --}}
                     <div class="d-flex gap-2">
                         <a href="{{ route('addlease.index') }}" class="btn btn-secondary">Cancel</a>
-                        <button 
-                            type="submit" 
-                            class="btn btn-success"
-                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"
-                        >
+                        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
                             Save Lease
                         </button>
                     </div>

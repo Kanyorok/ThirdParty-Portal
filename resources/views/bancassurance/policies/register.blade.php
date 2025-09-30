@@ -26,7 +26,7 @@
         <tr>
             <td>{{ $loop->iteration }}</td>
             <td>{{ $policy->PolicyNumber ?? '-' }}</td>
-            <td>{{ $policy->customer->FullName ?? '-'  }}</td>
+            <td>{{ $policy->customer->thirdParty->ThirdPartyName ?? '-'  }}</td>
             <td>{{ $policy->insurer->Name ?? '-'  }}</td>
             <td><span class="badge bg-success">{{ $policy->Status->Label() }}</span></td>
             <td>{{ \Carbon\Carbon::parse($policy->PolicyStartDate)->format('d/m/Y') }}</td>
