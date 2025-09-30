@@ -73,6 +73,23 @@ class BudgetConsolidationController extends Controller
                             $allocationValues = [];
                         }
 
+                        //Fetch Actuals
+                        //For Just pick for branch
+                        $b_id = Branch::find(session('LoginBranchId'))->BranchID ?? 1;
+                        $asDate = date('Y-m-d');
+                        $budgetLineID = $activity->BudgetLineID;
+                        $result = DB::select(
+                            'EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?',
+                            [$budgetLineID, $b_id, $asDate,'L']
+                        );
+
+                        // $result is an array of objects
+                        $actual =($result[0]->ClosingBalance =='.00'?0.00:$result[0]->ClosingBalance) ?? 0.00;
+
+                        $actual=abs($actual);
+                        $change=($actual/$activity->FullAllocation)*100;
+
+
                         //Store this into the data arrays using keys from gl type value
                         $data[$type->Description][$glAccountSubType][] = [
                             'rate' => 0,
@@ -80,6 +97,8 @@ class BudgetConsolidationController extends Controller
                             'allocationValues' => $allocationValues,
                             'allocationType' => $activity->AllocationType,
                             'fullAllocation' => $activity->FullAllocation,
+                            'actual'=>$actual,
+                            'change'=>$change,
                         ];
                     }
                     ///////////////////////// Fetching data for Entry By Line //////////////////////////////////////////
@@ -151,17 +170,40 @@ class BudgetConsolidationController extends Controller
 
                     //Check allocation
                     $allocationType = $projection->AllocationType;
-                    $fullAllocation = BudgetProjection::where('Id', $projection->Id)->pluck('FullAllocation')->first() ?? 0;
-                    //Fetch the allocations if monthly allocation type
-                    $allocationValues = [];
-                    $values = BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
-                        ->select('Month', 'Amount')
-                        ->get()
-                        ->pluck('Amount', 'Month')
-                        ->toArray();
-                    if ($values) {
-                        $allocationValues = $values;
+                    $allocationValues = []; //To help store monthly allocation
+                    if($allocationType === 'monthly'){
+                        $values = BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
+                            ->select('Month', 'Amount')
+                            ->get()
+                            ->pluck('Amount', 'Month')
+                            ->toArray();
+                        if ($values) {
+                            $allocationValues = $values;
+                        }
+                        $fullAllocation=BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
+                                            ->sum('Amount');
+                    }else{
+                        $fullAllocation = BudgetProjection::where('Id', $projection->Id)->pluck('FullAllocation')->first() ?? 0;
                     }
+
+
+                    //Fetch Actuals
+                    //For Just pick for branch
+                    $b_id = Branch::find(session('LoginBranchId'))->BranchID ?? 1;
+                    $asDate = date('Y-m-d');
+                    $budgetLineID = $projection->BudgetLineID;
+                    $result = DB::select(
+                        'EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?',
+                        [$budgetLineID, $b_id, $asDate,'L']
+                    );
+
+                    // $result is an array of objects
+                    $actual =($result[0]->ClosingBalance =='.00'?0.00:$result[0]->ClosingBalance) ?? 0.00;
+
+                    $actual=abs($actual);
+                    $change=($actual/$fullAllocation)*100;
+
+
                     //Store data for the GL first in the data array and in the respective GL section
                     $data[$GLType][$glAccountSubType][] = [
                         'rate' => 0,
@@ -169,6 +211,8 @@ class BudgetConsolidationController extends Controller
                         'allocationValues' => $allocationValues,
                         'allocationType' => $allocationType,
                         'fullAllocation' => $fullAllocation,
+                        'actual'=>$actual,
+                        'change'=>$change,
                     ];
                     //Now get the Budgetline for that product
                     $budgetLineID = $projection->BudgetLineID;
@@ -191,8 +235,8 @@ class BudgetConsolidationController extends Controller
                     $budgetLineName = $budgetlineData->LineName;
                     //Get the Product rate value
                     $p_code = $product->ProductTypeID;
-                    $productTypeID = BudgetProductType::where('ProductCode', $p_code)->pluck('Id')->first();
-                    $rateValue = BudgetDriverRates::where('ProductTypeID', $productTypeID)->pluck('RateValue')->first();
+                    $productTypeID = BudgetProductType::where('ProductCode', $p_code)->first();
+                    $rateValue = BudgetDriverRates::where('ProductTypeID', $product->Id)->pluck('RateValue')->first();
                     //Check for allocations and compute the allocation to be inserted into the data array
                     $allocationValues = [];
                     $values = BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
@@ -209,23 +253,14 @@ class BudgetConsolidationController extends Controller
                     //Insert the data set 2 for the budgetline into the data array
                     $data[$budgetLineGLType][$glAccountSubType][] = [
                         'rate' => $rateValue,
-                        'budgetLineName' => $budgetLineName,
+                        'budgetLineName' => $product->Description, //$budgetLineName,
                         'allocationValues' => $allocationValues,
                         'allocationType' => $allocationType,
                         'fullAllocation' => ($fullAllocation * $rateValue) / 100,
+                        'actual'=>$actual,
+                        'change'=>$change,
                     ];
                 }
-                //Get the product Gltype
-                //Check allocation
-                //Store data for the GL first in the data array and in the respective GL section
-                //Now get the Budgetline for that product
-                //Get its GL type
-                //Gte the Product rate value
-                //Check for allocations and compute the allocation to be inserted into the data array
-                //Insert the data set 2 fro the budgetline into the data arrray
-
-                //
-
             }
         }
 
