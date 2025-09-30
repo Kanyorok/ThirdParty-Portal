@@ -26,7 +26,15 @@
         </thead>
         <tbody>
           @php
-            $groupedByRFQ = collect($evaluationsRanked)->groupBy('rfq.RFQNumber');
+            // Group evaluations by RFQ number, then sort groups so the RFQs with the latest responses appear first.
+            $groupedByRFQ = collect($evaluationsRanked)
+              ->groupBy('rfq.RFQNumber')
+              ->sortByDesc(function($group) {
+                // determine latest response/evaluation id in the group (best-effort fallbacks)
+                return $group->max(function($item) {
+                  return $item['response']->Id ?? $item['response']->id ?? $item['evaluation']->Id ?? $item['evaluation']->id ?? 0;
+                });
+              });
           @endphp
           @forelse ($groupedByRFQ as $rfqNumber => $group)
             <tr class="table-primary fw-bold"></tr>

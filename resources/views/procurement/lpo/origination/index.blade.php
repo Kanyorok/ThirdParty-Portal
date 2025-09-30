@@ -176,7 +176,7 @@
                                         </div>
                                         <div class="text-end">
                                             <div class="small text-muted">
-                                                {{ $lpo->OrderDate?->format('M d') }}
+                                                {{ $lpo->OrderDate?->format('d/m/Y') }}
                                             </div>
                                             @if($lpo->TotalAmount)
                                                 <div class="small text-success">
@@ -217,7 +217,7 @@
                                         </div>
                                         <div class="text-end">
                                             <div class="small text-muted">
-                                                {{ $lpo->OrderDate?->format('M d') }}
+                                                {{ $lpo->OrderDate?->format('d/m/Y') }}
                                             </div>
                                             @if($lpo->TotalAmount)
                                                 <div class="small text-warning">
@@ -258,7 +258,7 @@
                                         </div>
                                         <div class="text-end">
                                             <div class="small text-muted">
-                                                {{ $lpo->OrderDate?->format('M d') }}
+                                                {{ $lpo->OrderDate?->format('d/m/Y') }}
                                             </div>
                                             @if($lpo->TotalAmount)
                                                 <div class="small text-info">

@@ -1,5 +1,17 @@
 @extends('layouts.app')
 
+@section('styles')
+    <style>
+        .je-table { min-width: 1100px; }
+        .je-table th, .je-table td { white-space: nowrap; vertical-align: middle; }
+        .je-table th.col-gl, .je-table td.col-gl { min-width: 360px; }
+        .je-table th.col-debit, .je-table td.col-debit,
+        .je-table th.col-credit, .je-table td.col-credit,
+        .je-table th.col-amount, .je-table td.col-amount { min-width: 160px; text-align: right; }
+        .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; }
+    </style>
+@endsection
+
 @section('content')
     <div class="container mt-3">
         <div class="card shadow-sm rounded-4 border-0">
@@ -32,7 +44,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="fw-semibold text-muted">Date:</label>
-                        <div>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('Y-m-d') }}</div>
+                        <div>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') }}</div>
                     </div>
                     <div class="col-md-6 mt-3">
                         <label class="fw-semibold text-muted">Description:</label>
@@ -48,22 +60,22 @@
                 {{-- Journal Lines --}}
                 <h6 class="border-bottom pb-2 text-info">Journal Lines</h6>
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle table-bordered">
+                    <table class="table table-sm table-hover align-middle table-bordered je-table">
                         <thead class="table-light">
                         <tr>
                             <th>#</th>
-                            <th>GL Account</th>
-                            <th>Debit</th>
-                            <th>Credit</th>
-                            <th>Amount</th>
-                            <th>Narration</th>
+                            <th class="col-gl">GL Account</th>
+                            <th class="col-debit">Debit</th>
+                            <th class="col-credit">Credit</th>
+                            <th class="col-amount">Amount</th>
+                            <th class="col-narr">Narration</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($journalEntry->journalLines as $index => $line)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $line->glAccount->GLName }}</td>
+                                <td>{{$line->glAccount->GLCode}}  <small>({{ $line->glAccount->GLName }})</small></td>
                                 <td class="{{ $line->Debit > 0 ? 'text-danger' : '' }}">
                                     {{ number_format($line->Debit, 2) }}
                                 </td>

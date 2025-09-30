@@ -119,6 +119,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/purchase-order/awarded-rfqs', [PurchaseOrderController::class, 'getAwardedRFQs'])->name('purchase-order.awarded-rfqs');
     Route::get('/purchase-order/awarded-tenders', [PurchaseOrderController::class, 'getAwardedTenders'])->name('purchase-order.awarded-tenders');
     Route::get('/purchase-order/tender-items/{tenderId}', [PurchaseOrderController::class, 'getTenderItems'])->name('purchase-order.tender-items');
+    Route::get('/purchase-order/contract-items/{contractId}', [PurchaseOrderController::class, 'getContractItems'])->name('purchase-order.contract-items');
     Route::get('/purchase-order/items/{item}', [PurchaseOrderController::class, 'getItemDetails'])->name('purchase-order.item-details');
     Route::get('/purchase-order/payment-terms', [PurchaseOrderController::class, 'getPaymentTerms'])->name('purchase-order.payment-terms');
     Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
@@ -561,8 +562,17 @@ Route::get('contracts', [ContractsController::class, 'index'])->name('contracts.
 Route::get('contracts/create', [ContractsController::class, 'create'])->name('contracts.create');
 Route::post('contracts', [ContractsController::class, 'store'])->name('contracts.store');
 
+// Contract Review Workflow
+Route::post('contracts/{id}/submit-for-review', [ContractsController::class, 'submitForReview'])->name('contracts.submitForReview');
+
+// Contract Document Management
+Route::post('contracts/{id}/upload-document', [ContractsController::class, 'uploadDocument'])->name('contracts.uploadDocument');
+Route::post('contracts/{id}/add-addendum', [ContractsController::class, 'addAddendum'])->name('contracts.addAddendum');
+
 // Contracts - Approval Queue (specific routes before generic)
 Route::get('contracts/approval-queue', [ContractsController::class, 'approvalQueue'])->name('contracts.approvalQueue');
+Route::post('contracts/{id}/approve', [ContractsController::class, 'approve'])->name('contracts.approve');
+Route::post('contracts/{id}/reject', [ContractsController::class, 'rejectContract'])->name('contracts.reject');
 
 // Contract Creation from Awards (specific routes before generic)
 Route::get('contracts/create-from-award/{awardId}', [ContractsController::class, 'createFromAward'])->name('contracts.createFromAward');
@@ -663,7 +673,7 @@ Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController
 //    // Routes for RFQSectionController (already defined above, no duplicates needed)
 //});
 //
-//// Additional procurement routes
-//Route::get('/procurement/committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
-//Route::get('/procurement/tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
-//Route::get('/procurement/rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);
+// Additional procurement routes (JSON endpoints used by frontend)
+Route::get('committee-references/{type}', [TenderCommitteeController::class, 'getReferences']);
+Route::get('tendercommittee/{id}/{type}', [TenderCommitteeController::class, 'show'])->name('tendercommittee.show');
+Route::get('rfq-committee-member/{rfqId}', [RFQEvaluationController::class, 'getCommitteeMemberInfo']);

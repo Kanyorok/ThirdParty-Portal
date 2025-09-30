@@ -37,7 +37,7 @@ class RecurrentJournalController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
         try {
-            $gls = FinanceGLAccounts::select('Id', 'GLName')->get();
+            $gls = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
             $branches = Branch::select('Id', 'Name')->get();
             $departments = Department::select('Id', 'Name')->get();
             $paymentFrequency = CodeDetail::select('CodeID', 'Description', 'Value')->where('CodeID', 'JournalPaymentFrequency')->get();
@@ -120,8 +120,8 @@ class RecurrentJournalController extends Controller
                     'BranchID'       => $entry['branch_id'],
                     'DepartmentID'   => $entry['department_id'],
                     'IsDebit'        => $entry['is_debit'],
-                    'Amount'         => $entry['amount'],
-                    'Debit'          => $entry['debit'] ?? 0,
+                    'Amount'         => $entry['is_debit']?$entry['amount']*-1:$entry['amount'],
+                    'Debit'          => ($entry['debit']*-1) ?? 0,
                     'Credit'         => $entry['credit'] ?? 0,
                     'Narration'      => $entry['narration'] ?? null,
                     'CreatedBy' => Auth::id(),
@@ -158,7 +158,7 @@ class RecurrentJournalController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
         $journalEntry = FinanceJournalEntry::with('journalLines','recurringJournals')->findOrFail($id);
-        $gls         = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $gls         = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
         $branches    = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
         $paymentFrequency = CodeDetail::select('CodeID', 'Description', 'Value')->where('CodeID', 'JournalPaymentFrequency')->get();
@@ -251,8 +251,8 @@ class RecurrentJournalController extends Controller
                     'BranchID'     => $entry['branch_id'],
                     'DepartmentID' => $entry['department_id'],
                     'IsDebit'      => (bool)$entry['is_debit'],
-                    'Amount'       => (float)$entry['amount'],
-                    'Debit'        => (float)($entry['debit'] ?? 0),
+                    'Amount'       => (bool)$entry['is_debit']?(float)$entry['amount']*-1: (float)$entry['amount'],
+                    'Debit'        => (float)($entry['debit']*-1 ?? 0),
                     'Credit'       => (float)($entry['credit'] ?? 0),
                     'Narration'    => $entry['narration'] ?? null,
                     'ModifiedBy'   => Auth::id(),

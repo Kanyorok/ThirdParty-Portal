@@ -7,13 +7,14 @@ use App\Models\Finance\Bank;
 use App\Models\Finance\BankBranch;
 use App\Models\Finance\BankAccount;
 use App\Models\Core\Currency;
+use App\Models\Finance\FinanceGLAccounts;
 use Illuminate\Http\Request;
 
 class BankAccountSetupController extends Controller
 {
     public function index()
     {
-        $accounts = BankAccount::with(['bank','branch'])
+        $accounts = BankAccount::with(['bank','branch','glAccount'])
             ->orderBy('AccountNumber')
             ->paginate(20);
 
@@ -25,8 +26,11 @@ class BankAccountSetupController extends Controller
         $banks      = Bank::orderBy('BankName')->get(['BankID','BankName']);
         $branches   = BankBranch::orderBy('BranchName')->get(['BranchID','BankID','BranchName']);
         $currencies = Currency::orderBy('Name')->get(['Id','Code','Name','Symbol','DecimalDigits']);
+        $glAccounts = FinanceGLAccounts::where('IsActive', 1)
+            ->orderBy('GLName')
+            ->get(['Id','GLCode','GLName','Description']);
 
-        return view('finance.bankaccountsetup.create', compact('banks','branches','currencies'));
+        return view('finance.bankaccountsetup.create', compact('banks','branches','currencies','glAccounts'));
     }
 
     public function store(Request $request)
@@ -70,8 +74,11 @@ class BankAccountSetupController extends Controller
         $banks      = Bank::orderBy('BankName')->get(['BankID','BankName']);
         $branches   = BankBranch::orderBy('BranchName')->get(['BranchID','BankID','BranchName']);
         $currencies = Currency::orderBy('Name')->get(['Id','Code','Name','Symbol','DecimalDigits']);
+        $glAccounts = FinanceGLAccounts::where('IsActive', 1)
+            ->orderBy('GLName')
+            ->get(['Id','GLCode','GLName','Description']);
 
-        return view('finance.bankaccountsetup.edit', compact('account','banks','branches','currencies'));
+        return view('finance.bankaccountsetup.edit', compact('account','banks','branches','currencies','glAccounts'));
     }
     public function update(Request $request, $id)
     {

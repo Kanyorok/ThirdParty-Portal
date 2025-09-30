@@ -12,7 +12,7 @@ use App\Models\Inventory\InventoryHold;
 use App\Models\Inventory\StockItem;
 use App\Models\Inventory\TransactionTransfer;
 use App\Models\Inventory\TransactionTransferItem;
-use App\Models\Procurement\Requisitions;
+use App\Models\Procurement\GoodsReceipt;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -37,9 +37,9 @@ public function getHQBranchId(): int
         $data['Status'] = Transfers::Pending;
 
         if ($data['RequisitionType'] === 'procurement') {
-            $requisition = Requisitions::findOrFail($data['RequisitionId']);
+            $requisition = GoodsReceipt::findOrFail($data['RequisitionId']);
             $fromBranch = $this->getHQBranchId();
-            $toBranch = $requisition->BranchID;
+            $toBranch = $requisition->TransferTo;
         } else {
             $requisition = InterBranchRequisition::findOrFail($data['RequisitionId']);
             $fromBranch = $requisition->FromBranch;
@@ -102,6 +102,7 @@ public function getHQBranchId(): int
     public function createTransferItems(TransactionTransfer $transfer, array $items): void
     {
         foreach ($items as $itemData) {
+
             $itemId = $itemData['item'];
             $dispatchedQty = $itemData['dispatched_qty'];
 
@@ -109,13 +110,15 @@ public function getHQBranchId(): int
                 ? $this->getHQBranchId()
                 : $transfer->FromBranch;
 
-            $stock = StockItem::where('ItemID', $itemId)
-                ->where('Branch', $fromBranch)
-                ->first();
+            // $stock = StockItem::where('ItemID', $itemId)
+            //     ->where('Branch', $fromBranch)
+            //     ->first();
 
-            if (!$stock || $stock->CurrentQty < $dispatchedQty) {
-                throw new Exception("Insufficient stock for ItemID {$itemId} in Branch {$fromBranch}.");
-            }
+            // if (!$stock || $stock->CurrentQty < $dispatchedQty) {
+            //     throw new Exception("Insufficient stock for ItemID {$itemId} in Branch {$fromBranch}.");
+            // }
+
+
 
             $created = TransactionTransferItem::create([
                 'TransferId' => $transfer->Id,
@@ -130,7 +133,6 @@ public function getHQBranchId(): int
                 'CreatedOn' => now(),
                 'ModifiedOn' => now(),
             ]);
-            
 
             activity()->performedOn($created)->causedBy(Auth::user())
                 ->withProperties(['attributes' => $itemData])
@@ -138,6 +140,47 @@ public function getHQBranchId(): int
         }
     }
 
+    public function update(TransactionTransfer $transfer, array $data): void
+        {
+            DB::transaction(function () use ($transfer, $data) {
+
+                // Update main transfer fields
+                $transfer->TransferDate = $data['TransferDate'] ?? $transfer->TransferDate;
+                $transfer->TransferredBy = $data['TransferredBy'] ?? $transfer->TransferredBy;
+                $transfer->ModifiedBy = auth()->id();
+                $transfer->ModifiedOn = now();
+                $transfer->save();
+
+                // Update transfer items
+                if (!empty($data['items'])) {
+
+                    foreach ($data['items'] as $itemData) {
+
+                        $transferItem = $transfer->items()->where('Item', $itemData['item'])->first();
+
+                        if ($transferItem) {
+                            $transferItem->ApprovedQty = $itemData['approved_qty'];
+                            $transferItem->DispatchedQty = $itemData['dispatched_qty'];
+                            $transferItem->Remarks = $itemData['remarks'] ?? null;
+                            $transferItem->UnitCost = $itemData['unit_cost'] ?? $transferItem->UnitCost;
+                            $transferItem->ModifiedBy = auth()->id();
+                            $transferItem->ModifiedOn = now();
+                            $transferItem->save();
+
+                            activity()->performedOn($transferItem)
+                                ->causedBy(auth()->user())
+                                ->withProperties(['attributes' => $itemData])
+                                ->log('Updated Transaction Transfer Item');
+                        }
+                    }
+                }
+
+                activity()->performedOn($transfer)
+                    ->causedBy(auth()->user())
+                    ->withProperties(['attributes' => $data])
+                    ->log('Updated Transaction Transfer');
+            });
+        }
 
         public function approve(int $id): void
         {

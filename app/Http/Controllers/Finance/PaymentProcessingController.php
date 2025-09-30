@@ -68,7 +68,7 @@ class PaymentProcessingController extends Controller
 
                 // Load the invoice with the same relations, and lock row for update
                 $invoice = FinanceInvoiceEntry::with([
-                    'supplier:Id,SupplierName',
+                    'thirdParty:Id,TradingName,ThirdPartyName',
                     'currency:Id,Name,Code,Symbol',
                     'order:Id,OrderNo,Description,OrdTotExcl',
                     'grn:id,GRNID,SupplierId',
@@ -93,7 +93,7 @@ class PaymentProcessingController extends Controller
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
                     'ModuleID'          => $MODULE_ID,
-                    'ThirdPartyID'=>$invoice->SupplierID,
+                    'ThirdPartyID'=>$invoice->ThirdPartyID,
                     'IsScheduled'=>$isScheduled,
                     'VoucherID'=>$voucherID,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,

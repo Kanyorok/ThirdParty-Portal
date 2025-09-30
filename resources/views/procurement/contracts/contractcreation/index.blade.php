@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Procurement Contracts')
+@section('title', '📜 Procurement Contracts')
 
 @section('content')
     <div class="container mt-4">
@@ -7,15 +7,15 @@
             <div class="col-md-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h4 class="mb-1">📜 Procurement Contracts</h4>
+                        <h4 class="mb-1"></h4>
                         <p class="text-muted mb-0">Manage contracts created from approved tender awards</p>
                     </div>
                     <div>
                         <a href="{{ route('procawards.index') }}" class="btn btn-outline-primary me-2">
                             <i class="fas fa-trophy"></i> View Awards
                         </a>
-                        <a href="{{ route('contracts.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> New Contract
+                        <a href="{{ route('contracts.approvalQueue') }}" class="btn btn-warning">
+                            <i class="fas fa-clock"></i> Approval Queue
                         </a>
                     </div>
                 </div>
@@ -112,12 +112,12 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($contract->winningSupplier)
+                                                @if($contract->winningSupplier && $contract->winningSupplier->thirdParty)
                                                     <div>
-                                                        <strong>{{ $contract->winningSupplier->SupplierName }}</strong>
-                                                        @if($contract->winningSupplier->ContactPerson)
+                                                        <strong>{{ $contract->winningSupplier->thirdParty->TradingName ?? $contract->winningSupplier->thirdParty->Name }}</strong>
+                                                        @if($contract->winningSupplier->thirdParty->ContactPerson)
                                                             <div class="text-muted small">
-                                                                {{ $contract->winningSupplier->ContactPerson }}
+                                                                {{ $contract->winningSupplier->thirdParty->ContactPerson }}
                                                             </div>
                                                         @endif
                                                     </div>
@@ -152,14 +152,14 @@
                                             <td>
                                                 @if($contract->ContractStartDate && $contract->ContractEndDate)
                                                     <div class="text-success small">
-                                                        <strong>Start:</strong> {{ $contract->ContractStartDate->format('M d, Y') }}
+                                                        <strong>Start:</strong> {{ $contract->ContractStartDate->format('d/m/Y') }}
                                                     </div>
                                                     <div class="text-danger small">
-                                                        <strong>End:</strong> {{ $contract->ContractEndDate->format('M d, Y') }}
+                                                        <strong>End:</strong> {{ $contract->ContractEndDate->format('d/m/Y') }}
                                                     </div>
                                                 @elseif($contract->AwardDate)
                                                     <div class="text-muted small">
-                                                        <strong>Awarded:</strong> {{ $contract->AwardDate->format('M d, Y') }}
+                                                        <strong>Awarded:</strong> {{ $contract->AwardDate->format('d/m/Y') }}
                                                     </div>
                                                 @else
                                                     <span class="text-muted">N/A</span>

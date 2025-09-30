@@ -32,8 +32,14 @@
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label for="transferDate" class="form-label">Transfer Date</label>
-                        <input type="date" class="form-control" id="transferDate" name="TransferDate" required>
+                        <input type="date" 
+                            class="form-control" 
+                            id="transferDate" 
+                            name="TransferDate" 
+                            required 
+                            min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}">
                     </div>
+
                     <div class="col-md-2">
                         <label for="fromBranch" class="form-label">From Branch</label>
                         <input type="text" class="form-control" id="fromBranch" readonly>
@@ -127,8 +133,10 @@
                 .then(data => {
                     requisitionIdSelect.innerHTML = '<option value="">Select Requisition</option>';
                     data.forEach(req => {
-                        const text = selectedType === 'interbranch' ? req.ReqNo : req.RequisitionNo;
-                        requisitionIdSelect.innerHTML += `<option value="${req.Id}">${text}</option>`;
+                        const text = selectedType === 'interbranch' ? req.ReqNo : req.GRNID;
+                        const value = selectedType === 'interbranch' ? req.Id : req.id;
+                        
+                        requisitionIdSelect.innerHTML += `<option value="${value}">${text}</option>`;
                     });
                 })
                 .catch(error => {
@@ -186,10 +194,12 @@
                                 <input type="hidden" name="items[${index}][unit_id]" value="${item.PriceID}">
                             </td>
 
-                            <td>
+                           <td>
                                 <input type="text" class="form-control" value="${item.UOMCode}" readonly>
                                 <input type="hidden" name="items[${index}][uom]" value="${item.UOM}">
                             </td>
+
+
                             <td><input type="number" class="form-control" name="items[${index}][approved_qty]" value="${item.ApprovedQty}" readonly></td>
                             <td><input type="number" class="form-control" name="items[${index}][dispatched_qty]" value="${dispatchedQty}" min="0" max="${item.ApprovedQty}" required></td>
                             <td><input type="text" class="form-control" name="items[${index}][remarks]" maxlength="255"></td>

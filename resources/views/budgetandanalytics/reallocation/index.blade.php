@@ -26,7 +26,7 @@
                             <th>To Line</th>
                             <th>Amount</th>
                             <th>Status</th>
-{{--                            <th class="text-center">Actions</th>--}}
+                            <th class="text-center">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -58,16 +58,14 @@
                                         {{ ucfirst($r->Status) }}
                                     </span>
                                 </td>
-{{--                                <td class="text-center">--}}
-{{--                                    <button type="button" class="btn btn-sm btn-outline-primary"--}}
-{{--                                            title="Review"--}}
-{{--                                            data-bs-toggle="modal"--}}
-{{--                                            data-bs-target="#reviewModal"--}}
-{{--                                            onclick="loadReallocationDetails({{ $r->id }})">--}}
-{{--                                        <i class="fas fa-eye"></i>--}}
-{{--                                    </button>--}}
-
-{{--                                </td>--}}
+                                <td class="text-center">
+                                         <a href="{{ route('budgetandanalytics.reallocation.show', ['id' => $r->id]) }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                </td>
+                                
                             </tr>
                         @empty
                             <tr>

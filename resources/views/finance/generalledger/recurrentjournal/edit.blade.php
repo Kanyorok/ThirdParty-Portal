@@ -1,11 +1,36 @@
 @extends('layouts.app')
 @section('title', 'Edit Recurring Journal')
 
+@section('styles')
+    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <style>
+        .select2-container { width: 100% !important; }
+        .je-table { min-width: 1700px; border-collapse: separate; border-spacing: 0; }
+        .je-table th, .je-table td { vertical-align: middle; white-space: nowrap; }
+        .je-sticky { position: static; background: #fff; z-index: auto; }
+        .je-sticky-col { left: auto; }
+        .je-sticky-gl { left: auto; }
+        .je-table thead th.je-sticky { background: #f8f9fa; z-index: auto; }
+        .je-table th.col-gl, .je-table td.col-gl { min-width: 360px; }
+        .je-table th.col-branch, .je-table td.col-branch { min-width: 220px; }
+        .je-table th.col-dept, .je-table td.col-dept { min-width: 280px; }
+        .je-table th.col-drcr, .je-table td.col-drcr { min-width: 120px; text-align: center; }
+        .je-table th.col-amount, .je-table td.col-amount { min-width: 200px; text-align: right; }
+        .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; }
+        .je-table th.col-action, .je-table td.col-action { min-width: 120px; text-align: center; }
+        .je-table .form-select, .je-table .form-control, .je-table textarea { padding: 0.45rem 0.65rem; font-size: 0.875rem; }
+        .narration-input { min-height: 60px; resize: vertical; }
+        .totals-box { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; }
+        .select2-container .select2-selection--single { height: calc(2.25rem + 2px); padding: 0.375rem 0.75rem; font-size: 1rem; border: 1px solid #ced4da; border-radius: 0.375rem; background-color: #fff; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 100%; top: 50%; transform: translateY(-50%); right: 0.75rem; }
+    </style>
+@endsection
+
 @section('content')
     <div class="container mt-0">
         <div class="card shadow rounded-4">
-            <div class="card-header bg-light py-1 px-3">
-                <h6 class="mb-0 text-muted"><i class="fas fa-sync-alt text-info"></i> Edit {{ $journalEntry->RefNo }}</h6>
+            <div class="card-header bg-light py-2 px-3 d-flex align-items-center">
+                <h6 class="mb-0 text-muted"><i class="fas fa-sync-alt text-info me-1"></i> Edit {{ $journalEntry->RefNo }}</h6>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ route('recurrentjournal.update', $journalEntry->Id) }}" id="journalForm">
@@ -14,7 +39,7 @@
 
                     {{-- Schedule Header --}}
                     @php $rec = $journalEntry->recurringJournals->first(); @endphp
-                    <div class="row mb-4">
+                    <div class="row mb-4 g-3">
                         <div class="col-md-3">
                             <label class="form-label">Start Date</label>
                             <input type="date" name="StartDate" class="form-control" value="{{ optional($rec)->StartDate ? \Carbon\Carbon::parse(optional($rec)->StartDate)->format('Y-m-d') : date('Y-m-d') }}" required>
@@ -43,61 +68,63 @@
 
                     {{-- Lines --}}
                     <h5 class="border-bottom pb-2 mb-3 text-primary">🧾 Journal Lines</h5>
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle table-sm">
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered align-middle table-sm je-table">
                             <thead class="table-light">
                             <tr>
-                                <th>#</th>
-                                <th>GL Account</th>
-                                <th>Branch</th>
-                                <th>Department</th>
-                                <th>DR / CR</th>
-                                <th style="width: 180px">Amount</th>
-                                <th>Narration</th>
-                                <th class="text-center">Action</th>
+                                <th class="je-sticky je-sticky-col" style="width: 56px">#</th>
+                                <th class="col-gl je-sticky je-sticky-gl">GL Account</th>
+                                <th class="col-branch">Branch</th>
+                                <th class="col-dept">Department</th>
+                                <th class="col-drcr">DR / CR</th>
+                                <th class="col-amount">Amount</th>
+                                <th class="col-narr">Narration</th>
+                                <th class="col-action text-center">Action</th>
                             </tr>
                             </thead>
                             <tbody id="journalBody">
                             @foreach($journalEntry->journalLines as $i => $line)
                                 <tr>
-                                    <td class="line-number">{{ $i + 1 }}</td>
+                                    <td class="line-number je-sticky je-sticky-col">{{ $i + 1 }}</td>
                                     <input type="hidden" name="LineId[]" value="{{ $line->Id }}">
-                                    <td>
-                                        <select name="GLAccount[]" class="form-select form-control" required>
+                                    <td class="col-gl je-sticky je-sticky-gl">
+                                        <select name="GLAccount[]" class="form-select gl-account-select" required>
                                             @foreach($gls as $gl)
-                                                <option value="{{ $gl->Id }}" {{ $gl->Id == $line->GLAccountID ? 'selected' : '' }}>{{ $gl->GLName }}</option>
+                                                <option value="{{ $gl->Id }}" data-code="{{ $gl->GLCode }}" data-name="{{ $gl->GLName }}" {{ $gl->Id == $line->GLAccountID ? 'selected' : '' }}>
+                                                    {{ $gl->GLCode }} ({{ $gl->GLName }})
+                                                </option>
                                             @endforeach
                                         </select>
                                     </td>
-                                    <td>
+                                    <td class="col-branch">
                                         <select name="Branch[]" class="form-select" required>
                                             @foreach($branches as $branch)
                                                 <option value="{{ $branch->Id }}" {{ $branch->Id == $line->BranchID ? 'selected' : '' }}>{{ $branch->Name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
-                                    <td>
+                                    <td class="col-dept">
                                         <select name="Department[]" class="form-select" required>
                                             @foreach($departments as $department)
                                                 <option value="{{ $department->Id }}" {{ $department->Id == $line->DepartmentID ? 'selected' : '' }}>{{ $department->Name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
-                                    <td>
+                                    <td class="col-drcr">
                                         @php $isDebit = (bool)$line->IsDebit; @endphp
                                         <select name="DRCR[]" class="form-select" required>
                                             <option value="DR" {{ $isDebit ? 'selected' : '' }}>DR</option>
                                             <option value="CR" {{ !$isDebit ? 'selected' : '' }}>CR</option>
                                         </select>
                                     </td>
-                                    <td>
-                                        @php $amount = $isDebit ? $line->Debit : $line->Credit; @endphp
-                                        <input type="number" name="Amount[]" class="form-control" step="0.01" value="{{ number_format((float)$amount, 2, '.', '') }}" required>
+                                    <td class="col-amount">
+                                        @php $amount = $isDebit ? $line->Debit*-1 : $line->Credit; @endphp
+                                        <input type="number" name="Amount[]" class="form-control text-end" step="0.01" value="{{ number_format((float)$amount, 2, '.', '') }}" required>
                                     </td>
-                                    <td>
-                                        <input type="text" name="Narration[]" class="form-control" value="{{ $line->Narration }}">
+                                    <td class="col-narr">
+                                        <textarea name="Narration[]" class="form-control narration-input">{{ $line->Narration }}</textarea>
                                     </td>
-                                    <td class="text-center">
+                                    <td class="col-action text-center">
                                         <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
@@ -111,12 +138,12 @@
                         <button type="button" id="addRow" class="btn btn-outline-primary btn-sm">+ Add Line</button>
                     </div>
 
-                    <div class="alert alert-info rounded-3">
-                        <strong>Total Debit:</strong> <span id="totalDr">0.00</span> &nbsp;
-                        <strong>Total Credit:</strong> <span id="totalCr">0.00</span> &nbsp;
-                        <span id="balanceStatus" class="badge bg-warning text-dark fw-bold px-3 py-2" style="font-size: 0.75rem;">
-                            Unbalanced
-                        </span>
+                    <div class="totals-box alert alert-info">
+                        <div>
+                            <strong>Total Debit:</strong> <span id="totalDr">0.00</span> &nbsp;
+                            <strong>Total Credit:</strong> <span id="totalCr">0.00</span>
+                        </div>
+                        <span id="balanceStatus" class="badge bg-warning text-dark fw-bold px-3 py-2">Unbalanced</span>
                     </div>
 
                     <div class="d-flex justify-content-end gap-2">

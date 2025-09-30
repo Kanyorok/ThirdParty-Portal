@@ -54,7 +54,9 @@
                 <th>Item Name</th>
                 <th>Branch</th>
                 <th>Department</th>
+                <th>Raised By</th>
                 <th>Qty</th>
+                <th>Est. Unit Cost</th>
                 <th>Est. Cost</th>
                 <th>Date Needed</th>
                 <th>Status</th>
@@ -70,7 +72,13 @@
                     <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
                     <td>{{ $need->branch->Name ?? 'N/A' }}</td>
                     <td>{{ $need->department->Name ?? 'N/A' }}</td>
+                    <td>{{ optional($need->creator)->Name ?? ($need->CreatedByName ?? ($need->CreatedBy ?? 'N/A')) }}</td>
                     <td>{{ $need->RequestedQty }}</td>
+                    <td>
+                        {{ is_numeric($need->EstimatedUnitCost ?? null)
+                            ? number_format($need->EstimatedUnitCost, 2, '.', ',')
+                            : 'N/A' }}
+                    </td>
                     <td>{{ number_format($need->RequestedQty * $need->EstimatedUnitCost, 2) }}</td>
                     <td>{{ Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
                     <td><span class="badge bg-info">{{ $need->Status->label() }}</span></td>
@@ -86,7 +94,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">No records found for the selected filters.</td>
+                    <td colspan="12" class="text-center">No records found for the selected filters.</td>
                 </tr>
             @endforelse
             </tbody>

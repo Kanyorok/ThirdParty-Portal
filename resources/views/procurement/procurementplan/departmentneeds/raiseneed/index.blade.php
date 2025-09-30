@@ -18,6 +18,7 @@
             <th>Item Name</th>
             <th>Category</th>
             <th>Quantity</th>
+            <th>Est. Unit Cost</th>
             <th>Est. Cost</th>
             <th>Status</th>
             <th>Submitted By</th>
@@ -31,6 +32,11 @@
                 <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
                 <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
                 <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
+                <td>
+                    {{ is_numeric($departmentneedview->EstimatedUnitCost ?? null)
+                        ? number_format($departmentneedview->EstimatedUnitCost, 2, '.', ',')
+                        : 'N/A' }}
+                </td>
                 <td>
                     {{ isset($departmentneedview->RequestedQty, $departmentneedview->EstimatedUnitCost) &&
                     is_numeric($departmentneedview->RequestedQty) &&

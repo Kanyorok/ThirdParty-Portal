@@ -26,6 +26,7 @@ class ApproveRequisitionRequest extends FormRequest
             'document_type' => ['required', 'string'],
             'action' => ['required', 'string'],
             'order_total' => ['required', 'numeric', 'min:0'],
+            'rejection_reason' => ['required_if:action,reject', 'string', 'max:500'],
         ];
     }
 

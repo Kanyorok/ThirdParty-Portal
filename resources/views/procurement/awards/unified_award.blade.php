@@ -62,7 +62,7 @@
             <i class="fas fa-info-circle"></i> 
             This {{ $type === 'rfq' ? 'RFQ' : 'tender' }} has already been awarded to 
             <strong>{{ $existingAward->winningSupplier->SupplierName }}</strong> 
-            on {{ $existingAward->AwardDate->format('M d, Y') }}.
+            on {{ $existingAward->AwardDate->format('d/m/Y') }}.
             Status: <span class="badge {{ $existingAward->status_badge['class'] }}">{{ $existingAward->status_badge['text'] }}</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>

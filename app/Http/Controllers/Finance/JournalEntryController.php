@@ -30,7 +30,7 @@ class JournalEntryController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
-        $gls = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $gls = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
         return view('finance.generalledger.journalentry.create', compact('gls', 'branches', 'departments'));
@@ -96,8 +96,8 @@ class JournalEntryController extends Controller
                     'BranchID'       => $entry['branch_id'],
                     'DepartmentID'   => $entry['department_id'],
                     'IsDebit'        => $entry['is_debit'],
-                    'Amount'         => $entry['amount'],
-                    'Debit'          => $entry['debit'] ?? 0,
+                    'Amount'         => $entry['is_debit']?$entry['amount']*-1:$entry['amount'],
+                    'Debit'          => ($entry['debit']*-1) ?? 0,
                     'Credit'         => $entry['credit'] ?? 0,
                     'Narration'      => $entry['narration'] ?? null,
                     'CreatedBy' => Auth::id(),
@@ -133,7 +133,7 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
-        $gls         = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $gls         = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
         $branches    = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
 
@@ -163,7 +163,7 @@ class JournalEntryController extends Controller
                 'narration'     => $request->Narration[$index] ?? null,
             ];
         }
-        
+
          $request->merge(['entries' => $entries]);
 
           $validated = $request->validate([
@@ -220,8 +220,8 @@ class JournalEntryController extends Controller
                     'BranchID'     => $entry['branch_id'],
                     'DepartmentID' => $entry['department_id'],
                     'IsDebit'      => (bool)$entry['is_debit'],
-                    'Amount'       => (float)$entry['amount'],
-                    'Debit'        => (float)($entry['debit'] ?? 0),
+                    'Amount'       => (bool)$entry['is_debit']?(float)$entry['amount']*-1: (float)$entry['amount'],
+                    'Debit'        => (float)($entry['debit']*-1 ?? 0),
                     'Credit'       => (float)($entry['credit'] ?? 0),
                     'Narration'    => $entry['narration'] ?? null,
                     'ModifiedBy'   => Auth::id(),
