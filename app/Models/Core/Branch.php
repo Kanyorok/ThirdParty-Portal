@@ -28,6 +28,10 @@ class Branch extends Model
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
+    protected $casts = [
+        'BranchID' => 'string',
+    ];
+
     public static function getPrimaryKey(): string
     {
         return 'BranchID';

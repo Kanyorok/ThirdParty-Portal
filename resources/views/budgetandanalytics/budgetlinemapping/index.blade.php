@@ -47,6 +47,10 @@
                                     @if($item->IsProductDriven)
                                         <a href="{{ route('budgetlinemapping.show', $item->Id) }}"
                                            class="badge bg-success text-decoration-none">Yes</a>
+                                        <a href="{{ route('budgetlinemapping.show', $item->Id) }}"
+                                           class="badge bg-info text-decoration-none">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
                                     @else
                                         <span class="badge bg-secondary">No</span>
                                     @endif
