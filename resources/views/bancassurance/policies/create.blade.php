@@ -136,7 +136,7 @@
 
         {{-- Submit --}}
         <div class="text-end">
-            <button class="btn btn-success">Submit Proposal</button>
+            <button class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Proposal</button>
         </div>
     </form>
 </div>

@@ -73,7 +73,7 @@
 
         {{-- Submit --}}
         <div class="text-end">
-            <button class="btn btn-success" type="submit">
+            <button class="btn btn-success" type="submit" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
                 <i class="fas fa-save"></i> Save Profile
             </button>
         </div>

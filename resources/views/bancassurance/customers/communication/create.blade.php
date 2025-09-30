@@ -52,7 +52,7 @@
             </div>
 
             <div class="text-end">
-                <button type="submit" class="btn btn-success">Save Log</button>
+                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Log</button>
             </div>
         </form>
     </div>
