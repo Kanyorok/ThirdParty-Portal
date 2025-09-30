@@ -179,8 +179,6 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::delete('/transactionsreceipts/{Id}', [TransactionReceiptsController::class, 'destroy'])->name('transactionsreceipts.destroy');
     Route::get('/transactionsreceipts/transfer-items/{Id}', [TransactionReceiptsController::class, 'getTransferItems']);
 
-
-
     Route::resource('stockissue', StockIssueController::class);
 
     //Route::resource('transactionsapproval', TransactionApprovalController::class);
