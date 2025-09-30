@@ -126,22 +126,30 @@ class InvoiceEntryV2Controller extends Controller
     public function quickSearchSuppliers(Request $request)
     {
         try {
-            $request->validate([
-                'search_term' => 'required|string|min:2'
-            ]);
+            // Support both Select2 (q) and our previous (search_term) parameter styles
+            $q = trim((string) ($request->input('search_term') ?? $request->input('q') ?? ''));
 
-            $q = trim((string) $request->search_term);
+            if (mb_strlen($q) < 2) {
+                return response()->json([
+                    'results' => [],
+                    'suppliers' => [],
+                    'message' => 'Please type at least 2 characters'
+                ], 200);
+            }
 
             // Quick search in ThirdParties and join with Suppliers
+            // Collapse duplicates by ThirdPartyID (choose a stable SupplierID via MIN)
             $suppliers = DB::table('t_ThirdParties as tp')
                 ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
                 ->where(function($query) use ($q) {
                     $query->where('tp.RegistrationNumber', 'like', "%{$q}%")
                           ->orWhere('tp.Email', 'like', "%{$q}%")
-                          ->orWhere('tp.Phone', 'like', "%{$q}%");
+                          ->orWhere('tp.Phone', 'like', "%{$q}%")
+                          ->orWhere('tp.ThirdPartyName', 'like', "%{$q}%")
+                          ->orWhere('tp.TradingName', 'like', "%{$q}%");
                 })
                 ->select(
-                    's.Id as SupplierID',
+                    DB::raw('MIN(s.Id) as SupplierID'),
                     'tp.Id as ThirdPartyID',
                     'tp.ThirdPartyName',
                     'tp.TradingName',
@@ -149,23 +157,56 @@ class InvoiceEntryV2Controller extends Controller
                     'tp.Email',
                     'tp.Phone'
                 )
-                ->limit(10) // Limit for performance
-                ->get();
+                ->groupBy(
+                    'tp.Id',
+                    'tp.ThirdPartyName',
+                    'tp.TradingName',
+                    'tp.RegistrationNumber',
+                    'tp.Email',
+                    'tp.Phone'
+                )
+                ->orderBy('tp.TradingName')
+                ->limit(20)
+                ->get()
+                ->unique('ThirdPartyID')
+                ->values();
+
+            // Build common representation
+            $mapped = $suppliers->map(function($supplier) {
+                $name = $supplier->TradingName ?: $supplier->ThirdPartyName;
+                $display = trim($name) !== '' ? $name : 'Unknown Supplier';
+                $displayText = $display .
+                    ' (' . ($supplier->RegistrationNumber ?? '—') . ') - ' .
+                    ($supplier->Email ?? '—');
+
+                return [
+                    'SupplierID' => $supplier->SupplierID,
+                    'ThirdPartyID' => $supplier->ThirdPartyID,
+                    'Name' => $display,
+                    'RegistrationNumber' => $supplier->RegistrationNumber,
+                    'Email' => $supplier->Email,
+                    'Phone' => $supplier->Phone,
+                    'DisplayText' => $displayText,
+                ];
+            });
+
+            // Return both legacy and Select2-friendly formats to avoid breaking callers
+            // Ensure uniqueness in results by ThirdPartyID to avoid Select2 duplicates
+            $results = $mapped
+                ->unique('ThirdPartyID')
+                ->values()
+                ->map(function ($s) {
+                    return [
+                        'id' => $s['SupplierID'],
+                        'text' => $s['DisplayText'],
+                        'supplier' => $s,
+                    ];
+                });
 
             return response()->json([
-                'suppliers' => $suppliers->map(function($supplier) {
-                    return [
-                        'SupplierID' => $supplier->SupplierID,
-                        'ThirdPartyID' => $supplier->ThirdPartyID,
-                        'Name' => $supplier->TradingName ?: $supplier->ThirdPartyName,
-                        'RegistrationNumber' => $supplier->RegistrationNumber,
-                        'Email' => $supplier->Email,
-                        'Phone' => $supplier->Phone,
-                        'DisplayText' => ($supplier->TradingName ?: $supplier->ThirdPartyName) .
-                                       ' (' . $supplier->RegistrationNumber . ') - ' .
-                                       $supplier->Email
-                    ];
-                })
+                'suppliers' => $mapped,
+                'results' => $results,
+                'pagination' => [ 'more' => false ],
             ]);
 
         } catch (\Exception $e) {
@@ -233,17 +274,13 @@ class InvoiceEntryV2Controller extends Controller
             // Get default currency for orders that don't have currency set
             $defaultCurrency = $this->getDefaultCurrency();
 
-            // Get related Purchase Orders (schema-resilient: Status column may not exist)
-            $ordersQuery = DB::table('t_Orders')
-                ->where('AccountID', $supplier->SupplierID);
-
-            if (Schema::hasColumn('t_Orders', 'Status')) {
-                $ordersQuery->where('Status', '!=', 'Draft');
-            }
-
-            $orders = $ordersQuery
-                ->select('Id', 'OrderNo', 'Description', DB::raw('COALESCE(OrdTotExcl, 0) as TotalAmount'), 'OrderDate')
+            // Get related Purchase Orders for this ThirdParty via Supplier join
+            $orders = DB::table('t_Orders as o')
+                ->join('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
+                ->where('s.ThirdPartyID', '=', (int) $supplier->ThirdPartyID)
+                ->select('o.Id', 'o.OrderNo', 'o.Description', DB::raw('COALESCE(o.OrdTotExcl, 0) as TotalAmount'), 'o.OrderDate')
                 ->orderByRaw(Schema::hasColumn('t_Orders', 'OrderDate') ? 'OrderDate desc' : 'Id desc')
+                ->distinct()
                 ->get()
                 ->map(function($order) use ($defaultCurrency) {
                     // TODO: Uncomment when CurrencyID column is available
@@ -272,8 +309,9 @@ class InvoiceEntryV2Controller extends Controller
             // Get GRNs for this supplier
             $grns = DB::table('t_GoodsReceipts as gr')
                 ->join('t_Orders as o', 'gr.POID', '=', 'o.OrderNo')
-                ->where('gr.SupplierId', $supplier->SupplierID)
-                ->where('gr.InspectionStatus', 'p') // Posted only
+                ->join('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
+                ->where('s.ThirdPartyID', '=', (int) $supplier->ThirdPartyID)
+                ->where('gr.InspectionStatus', '=', 'p') // Posted only
                 ->select(
                     'gr.GRNID',
                     'gr.POID as OrderNo',
