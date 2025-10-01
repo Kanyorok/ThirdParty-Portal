@@ -24,7 +24,7 @@
                     <td>{{ $customer->thirdParty->ThirdPartyName ?? '-'}}</td>
                     <td>{{ $customer->NationalID ?? '-'}}</td>
                     <td>{{ $customer->thirdParty->Phone ?? '-'}}</td>
-                    <td>{{ $customer->thirdParty->Email }}</td>
+                    <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
                     <td>{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                     <td>
                         <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" class="btn btn-sm btn-info">View Portfolio</a> 

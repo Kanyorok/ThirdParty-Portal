@@ -10,7 +10,7 @@
             <select name="CustomerID" class="form-select" required>
             <option value="">-- Select CustomerID --</option>
                 @foreach($customers as $customer)
-                    <option value="{{ $customer->Id }}">{{ $customer->thirdParty->ThirdPartyName }}</option>
+                    <option value="{{ $customer->Id }}">{{ $customer->thirdParty->ThirdPartyName ?? '-'}}</option>
                 @endforeach
             </select>
         </div>
@@ -25,7 +25,7 @@
                  <option value="">--Select Contact Type--</option>
                     @foreach ($contacttypes as $contacttype)
                     <option value="{{ $contacttype->ID }}">
-                    {{ $contacttype->Description }}
+                    {{ $contacttype->Description ?? '-'}}
                  </option>
                   @endforeach
             </select>
