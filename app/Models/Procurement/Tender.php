@@ -18,7 +18,7 @@ use App\Models\Core\Currency;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
-use App\Models\procurement\TenderItems;
+use App\Models\Procurement\TenderItems;
 use App\Models\Procurement\TenderAward;
 use App\Models\Procurement\TenderSection;
 use App\Models\Procurement\TenderSupplier;

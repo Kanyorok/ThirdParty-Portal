@@ -298,9 +298,8 @@ class TenderEvaluationController extends Controller
                   ->orWhere('c.ReferenceId', $tenderId);
             })
             ->where('m.IsActive', 1)
-            ->where(function($q){
-                $q->whereNull('m.Response')->orWhere('m.Response', 1);
-            })
+            ->where('m.Response', 1)
+            ->whereNull('m.DeletedOn')
             ->select('m.Id')
             ->orderByDesc('m.Id')
             ->first();

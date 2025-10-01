@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\Licensing\LicensingService;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 
 class LicenseVerifyCommand extends Command
@@ -20,7 +21,11 @@ class LicenseVerifyCommand extends Command
 			$this->error('Invalid: '.($result->reason ?? 'unknown'));
 			return self::FAILURE;
 		}
-		$this->info('Valid. Expires: '.$result->expiresAt);
+		$this->info('Valid.');
+		$this->line('Expires (UTC): '.$result->expiresAt);
+		$tz = config('app.timezone', 'UTC');
+		$expiresLocal = CarbonImmutable::parse($result->expiresAt)->tz($tz);
+		$this->line('Expires ('.$tz.'): '.$expiresLocal->format('Y-m-d H:i:s T'));
 		$this->line('Modules: '.implode(',', $result->allowedModules));
 		return self::SUCCESS;
 	}

@@ -7,8 +7,8 @@ use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCommitteeEvaluation;
 use App\Models\Procurement\TenderSupplier;
 use App\Models\Procurement\TenderSection;
-use App\Models\procurement\Section;
-use App\Models\procurement\Criteria;
+use App\Models\Procurement\Section;
+use App\Models\Procurement\Criteria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

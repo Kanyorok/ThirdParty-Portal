@@ -15,7 +15,9 @@
 				<div class="card-body">
 					<p>Status: <strong>{{ $license->isValid() ? 'Valid' : 'Invalid ('.$license->reason.')' }}</strong></p>
 					@if($license->isValid())
-						<p>Expires: {{ $license->expiresAt }}</p>
+						<p>Expires (UTC): {{ $license->expiresAt }}</p>
+						@php($tz = config('app.timezone'))
+						<p>Expires ({{ $tz }}): {{ \Carbon\CarbonImmutable::parse($license->expiresAt)->tz($tz)->format('Y-m-d H:i:s T') }}</p>
 						<p>Modules: {{ implode(', ', $license->allowedModules) }}</p>
 					@endif
 				</div>
