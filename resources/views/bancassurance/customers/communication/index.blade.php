@@ -23,12 +23,12 @@
             <tbody>
             @forelse($logs as $log)
                 <tr>
-                    <td>{{$log->customers->thirdParty->ThirdPartyName}}</td>
+                    <td>{{$log->customers->thirdParty->ThirdPartyName ?? '-'}}</td>
                     <td>{{ \Carbon\Carbon::parse($log->ContactDate)->format('d/m/Y') }}</td>
-                    <td>{{ $log->contacttypes->Description }}</td>
-                    <td>{{ $log->Summary }}</td>
-                    <td>{{ $log->employees->FirstName }}</td>
-                    <td>{{ $log->Notes }}</td>
+                    <td>{{ $log->contacttypes->Description ?? '-'}}</td>
+                    <td>{{ $log->Summary ?? '-'}}</td>
+                    <td>{{ $log->employees->FirstName ?? '-'}}</td>
+                    <td>{{ $log->Notes ?? '-'}}</td>
                     <td>
                         <a href="{{ route('bancassurance.customers.communication.edit', $log->Id) }}"
                            class="btn btn-sm btn-warning">Edit</a>
