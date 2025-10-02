@@ -1,11 +1,21 @@
 @php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 @section('title', 'Department Needs Approval')
+@section('styles')
+    <style>
+        /* Keep content inside the card: responsive table and wrap long text */
+        .card .table-responsive { overflow-x: auto; }
+        #needs-approval td, #needs-approval th { white-space: normal; word-wrap: break-word; }
+        /* Prevent table margin from expanding card */
+        #needs-approval { margin-bottom: 0; }
+    </style>
+@endsection
 @section('content')
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">✅ Departmental/Branch Needs - Approval Queue</h4>
 
-        <table id="needs-approval" class="table table-hover table-bordered">
+        <div class="table-responsive">
+        <table id="needs-approval" class="table table-hover table-bordered mb-0">
             <thead class="table-light">
             <tr>
                 <th>#</th>
