@@ -15,7 +15,7 @@
           <select class="form-select" name="ThirdPartyId">
                 <option value="">-- Select the tenant --</option>
                 @foreach ($tenants as $tenant)
-                    <option value="{{ $tenant->Id }}"> Name: {{ $tenant->TradingName }} &nbsp; Phone: {{ $tenant->Phone }}</option>
+                    <option value="{{ $tenant->Id }}"> Name: {{ $tenant->ThirdPartyName }} &nbsp; Phone: {{ $tenant->Phone }}</option>
                 @endforeach
           </select>
         </div>

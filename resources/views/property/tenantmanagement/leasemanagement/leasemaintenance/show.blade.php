@@ -19,7 +19,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->tenant->thirdParty->TradingName ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -44,12 +44,12 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Start Date</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d M Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d M Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -69,12 +69,12 @@
             <hr>
             <div class="row g-3 text-dark">
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Monthly Rent (KES)</label>
+                    <label class="form-label fw-semibold">Rent Amount</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->MonthlyRent, 2) }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Deposit (KES)</label>
+                    <label class="form-label fw-semibold">Deposit</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->Deposit, 2) }}" readonly>
                 </div>
 

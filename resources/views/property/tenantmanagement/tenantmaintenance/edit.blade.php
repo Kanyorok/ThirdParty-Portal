@@ -18,7 +18,7 @@
                         <label class="form-label">Tenant<span class="text-danger">*</span></label>
                         <input type="hidden" name="ThirdPartyId" value="{{ $tenants->ThirdPartyId }}">
                         <input type="text" class="form-control"
-                               value="{{ $tenants->thirdParty->TradingName }}" readonly>
+                               value="{{ $tenants->thirdParty->ThirdPartyName }}" readonly>
                         <small class="text-muted">Tenant cannot be changed once created.</small>
                     </div>
 

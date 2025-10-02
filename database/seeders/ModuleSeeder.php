@@ -289,9 +289,7 @@ class ModuleSeeder extends Seeder
             // First level - Property Registry
             ['ModuleID' => 501000, 'Name' => 'Property Registry', 'Icon' => '<i class="fas fa-building"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],
             ['ModuleID' => 501100, 'Name' => 'Add Property', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'PropertyRegistry.index'],
-            ['ModuleID' => 501200, 'Name' => 'Property Type', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'propertytype.index'],
-            ['ModuleID' => 501300, 'Name' => 'Property Category', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'propertycategory.index'],
-            ['ModuleID' => 501400, 'Name' => 'Property Attachments', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'attachments.index'],
+            ['ModuleID' => 501200, 'Name' => 'Property Attachments', 'Icon' => null, 'Description' => '', 'ParentID' => 501000, 'Route' => 'attachments.index'],
 
             // Structural Mapping (under Property Registry)
             ['ModuleID' => 501500, 'Name' => 'Structural Mapping', 'Icon' => '<i class="fas fa-sitemap"></i>', 'Description' => '', 'ParentID' => 501000, 'Route' => null],
@@ -328,7 +326,8 @@ class ModuleSeeder extends Seeder
 
             // First level - Property Management Settings
             ['ModuleID' => 505000, 'Name' => 'Settings', 'Icon' => '<i class="fas fa-cog"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => null],
-            ['ModuleID' => 505100, 'Name' => 'Property Settings', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertysettings.index'],
+            ['ModuleID' => 505100, 'Name' => 'Property Type', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertytype.index'],
+            ['ModuleID' => 505200, 'Name' => 'Property Category', 'Icon' => null, 'Description' => '', 'ParentID' => 505000, 'Route' => 'propertycategory.index'],
 
             // First level - Reports
             ['ModuleID' => 599000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-chart-bar"></i>', 'Description' => '', 'ParentID' => 500000, 'Route' => 'property-reports.index'],

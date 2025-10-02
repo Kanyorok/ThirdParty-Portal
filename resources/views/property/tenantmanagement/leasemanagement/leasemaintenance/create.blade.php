@@ -31,7 +31,7 @@
                                 <option value="">-- Select Tenant --</option>
                                 @foreach ($newtenants as $newtenant)
                                     <option value="{{ $newtenant->Id }}">
-                                        {{ $newtenant->thirdParty->TradingName ?? '-' }}
+                                        {{ $newtenant->thirdParty->ThirdPartyName ?? '-' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -135,7 +135,7 @@
                     {{-- Due Day --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Due Day <span class="text-danger">*</span></label>
+                            <label class="form-label">Due Date <span class="text-danger">*</span></label>
                             <input 
                                 type="number" 
                                 class="form-control" 
