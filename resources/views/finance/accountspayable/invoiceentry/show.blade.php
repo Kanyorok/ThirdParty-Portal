@@ -107,17 +107,42 @@
                                 <table class="table align-middle mb-0">
                                     <tbody>
                                     <tr>
-                                        <td class="text-muted">Invoice Amount</td>
+                                        <td class="text-muted">Invoice Amount (Inclusive)</td>
                                         <td class="text-end">
                                             <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td class="text-muted">PO Subtotal (Items)</td>
-                                        <td class="text-end">
-                                            <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
-                                        </td>
-                                    </tr>
+                                    @if(!empty($invoice->order))
+                                        @php
+                                            $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                                            $poTax = (float)($invoice->order->OrdTotTax ?? 0);
+                                            $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
+                                            $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                        @endphp
+                                        <tr>
+                                            <td class="text-muted">PO Discount</td>
+                                            <td class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Tax</td>
+                                            <td class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Exclusive</td>
+                                            <td class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Inclusive</td>
+                                            <td class="text-end"><strong>{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</strong></td>
+                                        </tr>
+                                    @else
+                                        <tr>
+                                            <td class="text-muted">PO Subtotal (Items)</td>
+                                            <td class="text-end">
+                                                <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     @if(property_exists($invoice, 'TaxAmount') || isset($invoice->TaxAmount))
                                         <tr>
                                             <td class="text-muted">Tax Amount</td>
@@ -269,12 +294,39 @@
                             @endforelse
                             </tbody>
                             @if(count($poItems) > 0)
-                                <tfoot class="table-light">
-                                <tr>
-                                    <th colspan="3" class="text-end">PO Subtotal</th>
-                                    <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
-                                </tr>
-                                </tfoot>
+                                @if(!empty($invoice->order))
+                                    @php
+                                        $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                                        $poTax = (float)($invoice->order->OrdTotTax ?? 0);
+                                        $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
+                                        $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                    @endphp
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3" class="text-end">Discount</th>
+                                            <th class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Tax</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Exclusive</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Inclusive</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</th>
+                                        </tr>
+                                    </tfoot>
+                                @else
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3" class="text-end">PO Subtotal</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
+                                        </tr>
+                                    </tfoot>
+                                @endif
                             @endif
                         </table>
                     </div>

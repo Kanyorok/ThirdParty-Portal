@@ -731,7 +731,8 @@
                 document.getElementById('selectedPONumber').textContent = order.OrderNo;
                 document.getElementById('selectedPODate').textContent = order.OrderDate;
                 const orderCurrency = order.Currency || currentCurrency;
-                document.getElementById('selectedPOAmount').textContent = `${orderCurrency.Symbol} ${order.TotalAmount}`;
+                // Display inclusive amount as primary
+                document.getElementById('selectedPOAmount').textContent = `${orderCurrency.Symbol} ${order.OrdTotIncl ?? order.TotalAmount}`;
                 document.getElementById('selectedPODescription').textContent = order.Description;
 
                 document.getElementById('selectedPOSummary').classList.remove('d-none');
@@ -858,9 +859,10 @@
                     // Set expected amount from PO
                     const selectedOrder = currentOrders.find(order => order.Id == selectedPO.Id);
                     if (selectedOrder) {
-                        const expectedAmountValue = parseFloat(selectedOrder.TotalAmount.replace(/,/g, ''));
+                        const inclusive = (selectedOrder.OrdTotIncl || selectedOrder.TotalAmount || '0').toString().replace(/,/g, '');
+                        const expectedAmountValue = parseFloat(inclusive);
                         const orderCurrency = selectedOrder.Currency || currentCurrency;
-                        document.getElementById('expectedAmount').textContent = `${orderCurrency.Symbol} ${selectedOrder.TotalAmount}`;
+                        document.getElementById('expectedAmount').textContent = `${orderCurrency.Symbol} ${selectedOrder.OrdTotIncl ?? selectedOrder.TotalAmount}`;
 
                         // Update currency display if order has different currency
                         if (selectedOrder.Currency) {
@@ -1028,6 +1030,12 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-12"><strong>Description:</strong> ${order.Description}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3"><strong>Discount:</strong> ${formatCurrency(order.OrdDiscAmnt || 0, order.Currency)}</div>
+                        <div class="col-md-3"><strong>Tax:</strong> ${formatCurrency(order.OrdTotTax || 0, order.Currency)}</div>
+                        <div class="col-md-3"><strong>Exclusive:</strong> ${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</div>
+                        <div class="col-md-3"><strong>Inclusive:</strong> ${formatCurrency(order.OrdTotIncl || order.TotalAmount || 0, order.Currency)}</div>
                     </div>`;
 
                 if (order.OrderLines && order.OrderLines.length > 0) {
@@ -1058,9 +1066,21 @@
                     poContent += `
                                 </tbody>
                                 <tfoot>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Discount</th>
+                                        <th class="text-end">${formatCurrency(order.OrdDiscAmnt || 0, order.Currency)}</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Tax</th>
+                                        <th class="text-end">${formatCurrency(order.OrdTotTax || 0, order.Currency)}</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Exclusive</th>
+                                        <th class="text-end">${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</th>
+                                    </tr>
                                     <tr class="table-light">
-                                        <th colspan="3">Total Amount</th>
-                                        <th class="text-end">${formatCurrency(order.TotalAmount, order.Currency)}</th>
+                                        <th colspan="3">Inclusive</th>
+                                        <th class="text-end">${formatCurrency(order.OrdTotIncl || order.TotalAmount || 0, order.Currency)}</th>
                                     </tr>
                                 </tfoot>
                             </table>

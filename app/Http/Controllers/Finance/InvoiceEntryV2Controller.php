@@ -90,8 +90,8 @@ class InvoiceEntryV2Controller extends Controller
                 ->select(
                     'i.ItemName',
                     'i.ItemDescription as Description',
-                    'ol.fQuantity as Quantity',
-                    'ol.fUnitPriceExcl as UnitCost'
+                    DB::raw('COALESCE(ol.fQuantity, 0) as Quantity'),
+                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as UnitCost')
                 )
                 ->get();
 
@@ -278,7 +278,16 @@ class InvoiceEntryV2Controller extends Controller
             $orders = DB::table('t_Orders as o')
                 ->join('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
                 ->where('s.ThirdPartyID', '=', (int) $supplier->ThirdPartyID)
-                ->select('o.Id', 'o.OrderNo', 'o.Description', DB::raw('COALESCE(o.OrdTotExcl, 0) as TotalAmount'), 'o.OrderDate')
+                ->select(
+                    'o.Id',
+                    'o.OrderNo',
+                    'o.Description',
+                    DB::raw('COALESCE(o.OrdTotExcl, 0) as OrdTotExcl'),
+                    DB::raw('COALESCE(o.OrdTotTax, 0) as OrdTotTax'),
+                    DB::raw('COALESCE(o.OrdDiscAmnt, 0) as OrdDiscAmnt'),
+                    DB::raw('COALESCE(o.OrdTotIncl, 0) as OrdTotIncl'),
+                    'o.OrderDate'
+                )
                 ->orderByRaw(Schema::hasColumn('t_Orders', 'OrderDate') ? 'OrderDate desc' : 'Id desc')
                 ->distinct()
                 ->get()
@@ -295,7 +304,12 @@ class InvoiceEntryV2Controller extends Controller
                         'Id' => $order->Id,
                         'OrderNo' => $order->OrderNo,
                         'Description' => $order->Description ?? '',
-                        'TotalAmount' => number_format((float)$order->TotalAmount, 2),
+                        'OrdTotExcl' => number_format((float)$order->OrdTotExcl, 2),
+                        'OrdDiscAmnt' => number_format((float)$order->OrdDiscAmnt, 2),
+                        'OrdTotTax' => number_format((float)$order->OrdTotTax, 2),
+                        'OrdTotIncl' => number_format((float)$order->OrdTotIncl, 2),
+                        // Backward compatibility: treat TotalAmount as inclusive amount
+                        'TotalAmount' => number_format((float)$order->OrdTotIncl, 2),
                         'OrderDate' => $order->OrderDate ? \Carbon\Carbon::parse($order->OrderDate)->format('d M Y') : '',
                         'Currency' => [
                             'Id' => $currency->Id ?? $defaultCurrency->Id,
@@ -456,7 +470,18 @@ class InvoiceEntryV2Controller extends Controller
                 'InvoiceNumber' => $validated['InvoiceNumber'],
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'DueDate' => $validated['DueDate'],
-                'InvoiceAmount' => $validated['Amount'],
+                // Store inclusive amount for posting/approval
+                'InvoiceAmount' => (function() use ($validated) {
+                    // If form provided Amount, prefer it; otherwise if PO is present, fetch OrdTotIncl
+                    $formAmount = (float)$validated['Amount'];
+                    if (!empty($validated['POReference'])) {
+                        $ordTotIncl = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->value('OrdTotIncl');
+                        if ($ordTotIncl !== null) {
+                            return (float)$ordTotIncl;
+                        }
+                    }
+                    return $formAmount;
+                })(),
                 'Description' => $validated['Description'],
                 'CurrencyID' => 56, // Set to default currency
                 'ExchangeRate' => 1.0, // Set exchange rate to 1
