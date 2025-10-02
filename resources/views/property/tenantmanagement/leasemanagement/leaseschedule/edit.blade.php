@@ -26,13 +26,13 @@
           <div class="col-md-6">
             <label class="form-label">Lease Number</label>
             <input type="text" class="form-control" value="{{ $leaseschedules->lease->LeaseNumber ?? '' }}" readonly>
-            <input type="hidden" name="LeaseId" value="{{ $leaseschedules->Id }}">
+            <input type="hidden" name="LeaseId" value="{{ $leaseschedules->LeaseNumber }}">
           </div>
 
           <!-- Tenant -->
           <div class="col-md-6">
             <label class="form-label">Tenant</label>
-            <input type="text" class="form-control" value="{{ $leaseschedules->lease->tenant->thirdParty->TradingName ?? '' }}" readonly>
+            <input type="text" class="form-control" value="{{ $leaseschedules->lease->tenant->thirdParty->ThirdPartyName ?? '' }}" readonly>
             <input type="hidden" name="TenantId" value="{{ $leaseschedules->lease->tenant->Id ?? '' }}">
           </div>
 
@@ -102,8 +102,8 @@
 
         <!-- Actions -->
         <div class="text-end">
-          <button type="submit" class="btn btn-success">Update Lease Schedule</button>
           <a href="{{ route('schedulelease.index') }}" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-success">Update Lease Schedule</button>
         </div>
       </div>
     </div>

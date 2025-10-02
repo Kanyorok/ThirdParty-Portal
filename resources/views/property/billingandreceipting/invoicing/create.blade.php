@@ -33,7 +33,7 @@
                         data-service="{{ $newlease->ServiceCharge ?? 0 }}"
                         data-parking="{{ $newlease->ParkingFee ?? 0 }}"
                         data-other="{{ $newlease->OtherCharges ?? 0 }}">
-                  LSno: {{ $newlease->LeaseNumber }} — Name: {{ $newlease->tenant->thirdParty->TradingName }}
+                  LSno: {{ $newlease->LeaseNumber }} — Name: {{ $newlease->tenant->thirdParty->ThirdPartyName }}
                 </option>
               @endforeach
             </select>

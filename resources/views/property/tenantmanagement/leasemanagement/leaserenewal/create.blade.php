@@ -39,7 +39,7 @@
                   <option value="{{ $lease->Id }}"
                     data-leasenumber="{{ $lease->LeaseNumber }}"
                     data-tenant-id="{{ $lease->Tenant }}"
-                    data-tenant-name="{{ $lease->tenant->thirdParty->TradingName ?? 'N/A' }}"
+                    data-tenant-name="{{ $lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
                     data-property-id="{{ $lease->PropertyID }}"
                     data-property-name="{{ $lease->property->PropertyName ?? 'N/A' }}"
                     data-frequency-id="{{ $lease->PaymentFrequency }}"

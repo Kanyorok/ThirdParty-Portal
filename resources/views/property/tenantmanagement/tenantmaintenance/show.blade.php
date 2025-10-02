@@ -14,7 +14,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant Name</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->TradingName  ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->ThirdPartyName  ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
