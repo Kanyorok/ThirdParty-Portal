@@ -12,7 +12,7 @@
         </a>
     </div>
 
-    <p class="text-muted">This screen displays the completion status of maintenance requests.</p>
+    <p class="text-muted"><small>This screen displays the completion status of maintenance requests.</small></p>
 
     @if($workCompletions->count())
         <div class="card shadow-sm">
