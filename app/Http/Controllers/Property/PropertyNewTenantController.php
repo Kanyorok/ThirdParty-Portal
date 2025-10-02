@@ -24,13 +24,36 @@ class PropertyNewTenantController extends Controller
         return view('property.tenantmanagement.tenantmaintenance.index', compact('newtenants'));
     }
 
-    public function create(){
+    public function create()
+    {
         $this->authorize(PermissionEnum::TenantMaintenanceCreate, PropertyNewTenant::class);
+
         $tenantTypes = CodeDetail::where('CodeID', 'TenantType')->get();
+
+        // Already assigned tenants
         $assignedTenantIds = PropertyNewTenant::pluck('ThirdPartyId')->toArray();
-        $tenants = ThirdParties::whereNotIn('Id', $assignedTenantIds)->get();
+
+        // Fetch only tenants with active Tenant type (not soft-deleted in pivot or type)
+        $tenants = ThirdParties::whereHas('types', function ($q) {
+                $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn') // pivot must not be deleted
+                ->whereNull('t_ThirdPartyTypes.DeletedOn')             // type itself not deleted
+                ->whereHas('category', function ($sub) {
+                    $sub->where('Name', 'Tenant'); // must belong to Tenant category
+                });
+            })
+            ->with(['types' => function ($q) {
+                $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
+                ->whereNull('t_ThirdPartyTypes.DeletedOn')
+                ->whereHas('category', function ($sub) {
+                    $sub->where('Name', 'Tenant');
+                });
+            }])
+            ->whereNotIn('Id', $assignedTenantIds) // optional: exclude already assigned
+            ->get();
+
         return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes','tenants'));
     }
+
 
     public function edit($id)
     {
@@ -84,7 +107,7 @@ class PropertyNewTenantController extends Controller
         $this->service::update(
             $newtenant,
             $tenantTypeModel,
-            $data['Remarks'] ?? null,
+            $data['Remarks'] ?? '',
             $data['IsActive'],
             $request->user(),
             $document
