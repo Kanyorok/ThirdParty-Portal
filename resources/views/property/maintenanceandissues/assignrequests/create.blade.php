@@ -77,7 +77,7 @@
                       <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
                           <option value="">--Select a technician--</option>
                           @foreach ($employees as $employee)
-                              <option value="{{ $employee->Id }}">{{ $employee->JobTitle }}</option>
+                              <option value="{{ $employee->Id }}">{{ $employee->EmployeeID }} -- {{ $employee->FirstName }},{{ $employee->LastName }}</option>
                           @endforeach
                       </select>
                   </div>
@@ -87,7 +87,7 @@
                       <select class="form-select" name="PrequalifiedVendor" id="vendorSelect">
                           <option value="">--Select a vendor--</option>
                           @foreach ($suppliers as $supplier)
-                              <option value="{{ $supplier->Id }}">{{ $supplier->SupplierName }}</option>
+                              <option value="{{ $supplier->Id }}">{{ $supplier->thirdParty->ThirdPartyName }}</option>
                           @endforeach
                       </select>
                   </div>
