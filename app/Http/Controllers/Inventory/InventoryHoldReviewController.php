@@ -43,7 +43,13 @@ class InventoryHoldReviewController extends Controller
     public function create()
     {
         $this->authorize('create', InventoryHoldReview::class);
-        $holds = InventoryHold::whereNull('DeletedOn')->get();
+        $holds = InventoryHold::whereNull('DeletedOn')
+            ->whereHas('sourceDetail', function ($q) {
+                $q->where('Description', '!=', 'Transaction Transfer');
+            })
+            ->get();
+
+
         $holds->each(function ($hold) {
             $hold->Condition = $hold->conditionDetail?->Description ?? null;
             $hold->Defect = $hold->defectDetail?->Description ?? null;
