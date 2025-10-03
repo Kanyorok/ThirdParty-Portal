@@ -33,23 +33,25 @@ class PropertyNewTenantController extends Controller
         // Already assigned tenants
         $assignedTenantIds = PropertyNewTenant::pluck('ThirdPartyId')->toArray();
 
-        // Fetch only tenants with active Tenant type (not soft-deleted in pivot or type)
-        $tenants = ThirdParties::whereHas('types', function ($q) {
-                $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn') // pivot must not be deleted
-                ->whereNull('t_ThirdPartyTypes.DeletedOn')             // type itself not deleted
-                ->whereHas('category', function ($sub) {
-                    $sub->where('Name', 'Tenant'); // must belong to Tenant category
-                });
-            })
-            ->with(['types' => function ($q) {
-                $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
-                ->whereNull('t_ThirdPartyTypes.DeletedOn')
-                ->whereHas('category', function ($sub) {
-                    $sub->where('Name', 'Tenant');
-                });
-            }])
-            ->whereNotIn('Id', $assignedTenantIds) // optional: exclude already assigned
-            ->get();
+        // // Fetch only tenants with active Tenant type
+        // $tenants = ThirdParties::whereHas('types', function ($q) {
+        //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
+        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')  
+        //         ->whereHas('category', function ($sub) {
+        //             $sub->where('Name', 'Tenant');
+        //         });
+        //     })
+        //     ->with(['types' => function ($q) {
+        //         $q->whereNull('t_ThirdPartyType_ThirdParties.DeletedOn')
+        //         ->whereNull('t_ThirdPartyTypes.DeletedOn')
+        //         ->whereHas('category', function ($sub) {
+        //             $sub->where('Name', 'Tenant');
+        //         });
+        //     }])
+        //     ->whereNotIn('Id', $assignedTenantIds)
+        //     ->get();
+
+        $tenants = ThirdParties::all();
 
         return view('property.tenantmanagement.tenantmaintenance.create', compact('tenantTypes','tenants'));
     }
