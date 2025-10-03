@@ -381,24 +381,51 @@ class InvoiceEntryV2Controller extends Controller
     private function getOrderLines($orderId)
     {
         try {
-            return DB::table('t_OrderLines as ol')
+            $rows = DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
                 ->where('ol.iOrderID', $orderId)
                 ->select(
                     DB::raw('COALESCE(i.ItemName, ol.cDescription, \'Unknown Item\') as ItemName'),
-                    DB::raw('COALESCE(ol.fQuantity, 0) as Quantity'),
-                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as UnitPrice'),
-                    DB::raw('COALESCE(ol.fQuantity, 0) * COALESCE(ol.fUnitPriceExcl, 0) as LineTotal')
+                    DB::raw('COALESCE(i.ItemDescription, ol.cDescription, \'\') as ItemDescription'),
+                    DB::raw('COALESCE(ol.fQuantity, 0) as fQuantity'),
+                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as fUnitPriceExcl'),
+                    DB::raw('COALESCE(ol.fUnitPriceIncl, 0) as fUnitPriceIncl'),
+                    DB::raw('COALESCE(ol.fLineDiscount, 0) as fLineDiscount'),
+                    DB::raw('COALESCE(ol.fTaxRate, 0) as fTaxRate'),
+                    DB::raw('COALESCE(ol.LineTotal, 0) as LineTotal')
                 )
-                ->get()
-                ->map(function($line) {
-                    return [
-                        'ItemName' => $line->ItemName ?? 'Unknown Item',
-                        'Quantity' => $line->Quantity ?? 0,
-                        'UnitPrice' => number_format((float)$line->UnitPrice, 2),
-                        'LineTotal' => number_format((float)$line->LineTotal, 2)
-                    ];
-                });
+                ->get();
+
+            return $rows->map(function ($r) {
+                $quantity = (float)($r->fQuantity ?? 0);
+                $unitExcl = (float)($r->fUnitPriceExcl ?? 0);
+                $unitIncl = (float)($r->fUnitPriceIncl ?? 0);
+                $discount = (float)($r->fLineDiscount ?? 0); // assume line amount
+                $taxRate = (float)($r->fTaxRate ?? 0);
+
+                $lineExcl = $quantity * $unitExcl;
+                if ($unitIncl > 0) {
+                    $lineInclGiven = $quantity * $unitIncl;
+                    $lineTax = max(0.0, $lineInclGiven - max(0.0, $lineExcl - $discount));
+                    $lineIncl = $r->LineTotal !== null ? (float)$r->LineTotal : $lineInclGiven;
+                } else {
+                    $lineTax = max(0.0, max(0.0, $lineExcl - $discount) * ($taxRate / 100.0));
+                    $lineIncl = $r->LineTotal !== null ? (float)$r->LineTotal : max(0.0, $lineExcl - $discount + $lineTax);
+                }
+
+                return [
+                    'ItemName' => $r->ItemName ?? 'Unknown Item',
+                    'Description' => $r->ItemDescription ?? '',
+                    'Quantity' => $quantity,
+                    'UnitPriceExcl' => $unitExcl,
+                    'UnitPriceIncl' => $unitIncl,
+                    'Discount' => $discount,
+                    'TaxRate' => $taxRate,
+                    'TaxAmount' => $lineTax,
+                    'LineExclusive' => $lineExcl,
+                    'LineInclusive' => $lineIncl,
+                ];
+            });
         } catch (\Exception $e) {
             Log::error('Error fetching order lines: ' . $e->getMessage(), [
                 'orderId' => $orderId,

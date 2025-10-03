@@ -1053,14 +1053,26 @@
                                 </thead>
                                 <tbody>`;
 
+                    let sumDisc = 0, sumTax = 0, sumExcl = 0, sumIncl = 0;
                     order.OrderLines.forEach(line => {
                         poContent += `
                             <tr>
-                                <td>${line.ItemName}</td>
-                                <td class="text-end">${line.Quantity}</td>
-                                <td class="text-end">${formatCurrency(line.UnitPrice, order.Currency)}</td>
-                                <td class="text-end">${formatCurrency(line.LineTotal, order.Currency)}</td>
+                                <td>
+                                    <div>${line.ItemName}</div>
+                                    ${line.Description ? `<div class="text-muted small">${line.Description}</div>` : ''}
+                                </td>
+                                <td class="text-end">${(line.Quantity ?? 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                                <td class="text-end">${formatCurrency(line.UnitPriceExcl ?? line.UnitPrice ?? 0, order.Currency)}</td>
+                                <td class="text-end">
+                                    <div>${formatCurrency(line.LineExclusive ?? 0, order.Currency)}</div>
+                                    <div class="small text-muted">Disc: ${formatCurrency(line.Discount ?? 0, order.Currency)} • Tax: ${formatCurrency(line.TaxAmount ?? 0, order.Currency)}</div>
+                                    <div><strong>${formatCurrency(line.LineInclusive ?? line.LineTotal ?? 0, order.Currency)}</strong></div>
+                                </td>
                             </tr>`;
+                        sumDisc += parseFloat(line.Discount || 0);
+                        sumTax += parseFloat(line.TaxAmount || 0);
+                        sumExcl += parseFloat(line.LineExclusive || 0);
+                        sumIncl += parseFloat(line.LineInclusive || line.LineTotal || 0);
                     });
 
                     poContent += `
@@ -1078,9 +1090,21 @@
                                         <th colspan="3" class="text-end">Exclusive</th>
                                         <th class="text-end">${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</th>
                                     </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Items Subtotal (Exclusive)</th>
+                                        <th class="text-end">${formatCurrency(sumExcl, order.Currency)}</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Items Discount (Total)</th>
+                                        <th class="text-end">- ${formatCurrency(sumDisc, order.Currency)}</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Items Tax (Total)</th>
+                                        <th class="text-end">${formatCurrency(sumTax, order.Currency)}</th>
+                                    </tr>
                                     <tr class="table-light">
                                         <th colspan="3">Inclusive</th>
-                                        <th class="text-end">${formatCurrency(order.OrdTotIncl || order.TotalAmount || 0, order.Currency)}</th>
+                                        <th class="text-end">${formatCurrency(sumIncl, order.Currency)}</th>
                                     </tr>
                                 </tfoot>
                             </table>
