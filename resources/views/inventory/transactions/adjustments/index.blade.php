@@ -26,7 +26,6 @@
                 <th>Adjustment Id</th>
                 <th>Date</th>
                 <th>Store</th>
-                <th>Reason</th>
                 <th>Adjusted By</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -43,7 +42,6 @@
                     >
                     <td>{{ Carbon::parse($adjustment->AdjustmentDate)->format('d/m/Y') }}</td>
                     <td>{{ optional($adjustment->branch)->Name ?? 'N/A' }}</td>
-                    <td>{{ optional($adjustment->reason)->Description ?? 'N/A' }}</td>
                     <td>{{$adjustment->adjustedBy->Name ?? 'N/A'}}</td>
                     <td>
                         @if($statusEnum)

@@ -25,6 +25,8 @@ use App\Http\Controllers\Inventory\TransactionReceiptsController;
 use App\Http\Controllers\Inventory\TransactionTransfersController;
 use App\Http\Controllers\Inventory\UOMController;
 use App\Http\Controllers\Inventory\UOMConversionController;
+use App\Http\Controllers\Inventory\StockMovementController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -100,7 +102,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
 
     Route::resource('inventorydashboard', InventoryDashboardController::class);
-    Route::resource('movementdashboard', MovementDashboardController::class);
+    Route::resource('movementdashboard', StockMovementController::class);
 
     //Route::resource('stocktake', StockTakeController::class);
     Route::get('/stocktake/index', [StockTakeController::class, 'index'])->name('stocktake.index');
@@ -119,6 +121,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::get('/stockconsumption/create', [StockConsumptionController::class, 'create'])->name('stockconsumption.create');
     Route::get('/stockconsumption/get-issued-to-options', [StockConsumptionController::class, 'getIssuedToOptions'])->name('stockconsumption.getIssuedToOptions');
     Route::get('/stockconsumption/get-stores', [StockConsumptionController::class, 'getStores'])->name('stockconsumption.getStores');
+    Route::get('/stockconsumption/get-items', [StockConsumptionController::class, 'getItems'])->name('stockconsumption.getItems');
     Route::get('/stockconsumption/get-uom', [StockConsumptionController::class, 'getUOM'])->name('stockconsumption.getUOM');
 
     Route::post('/stockconsumption', [StockConsumptionController::class, 'store'])->name('stockconsumption.store');

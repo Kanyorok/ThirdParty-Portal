@@ -24,13 +24,12 @@
                 <div class="card-body">
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">From Branch</label>
+                            <label class="form-label">From Branch <span class="text-danger">*</span></label>
                             <input type="hidden" id="FromBranch" name="FromBranch" value="{{ $fromBranch->Id }}">
                             <input type="text" class="form-control" value="{{ $fromBranch->Name }}" readonly>
-
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">To Branch/ Requesting Branch</label>
+                            <label class="form-label">To Branch/ Requesting Branch <span class="text-danger">*</span></label>
                             <select name="ToBranch" class="form-select" required>
                                 <option value="">Select Branch</option>
                                 @foreach ($branches as $branch)
@@ -42,7 +41,7 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Date</label>
+                            <label class="form-label">Date <span class="text-danger">*</span></label>
                             <input type="date" name="CreatedOn" class="form-control"
                                    value="{{ old('CreatedOn', now()->toDateString()) }}" required>
                         </div>
@@ -67,7 +66,7 @@
             <div class="card-body border">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-2">
-                        <label class="form-label">Parent Category</label>
+                        <label class="form-label">Parent Category <span class="text-danger">*</span></label>
                         <select name="items[__INDEX__][Category]" class="form-select category-select" data-initial=""
                                 required>
                             <option value="">-- Select Category --</option>
@@ -81,7 +80,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Item</label>
+                        <label class="form-label">Item <span class="text-danger">*</span></label>
                         <select name="items[__INDEX__][Item]" class="form-select item-select" data-initial="" required>
                             <option value="">-- Select Item --</option>
                         </select>
@@ -98,7 +97,7 @@
                         <input type="text" class="form-control item-uom" readonly>
                     </div>
                     <div class="col-md-1">
-                        <label class="form-label">Requested Qty</label>
+                        <label class="form-label">Requested Qty <span class="text-danger">*</span></label>
                         <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control item-qty"
                                value="1" min="1" required>
                     </div>
@@ -440,5 +439,14 @@
             @endforeach
             @endif
         </script>
+
+        <style>
+            .text-danger {
+                font-weight: bold;
+            }
+            .form-label {
+                font-weight: 500;
+            }
+        </style>
     @endpush
 @endsection
