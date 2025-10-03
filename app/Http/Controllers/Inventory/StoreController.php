@@ -21,7 +21,8 @@ class StoreController extends Controller
 
     public function index()
     {
-        $stores = Store::all();
+        $branchId = auth()->user()->employee?->BranchId;
+        $stores = Store::where('BranchID', $branchId)->get();
         return view('inventory.stores.index', compact('stores'));
     }
 
