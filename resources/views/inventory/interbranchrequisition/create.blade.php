@@ -1,256 +1,444 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Interbranch Requisition')
+@section('title', 'New Inter-Branch Requisition')
 
 @section('content')
-<div class="container mt-5">
-    <div class="card shadow rounded-4">
-        <div class="card-header text-dark rounded-top-4" style="background-color:#add8e6;">
-            <h4 class="mb-0">Edit Interbranch Requisition</h4>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-        <div class="card-body">
-            @if($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+    @endif
+
+    <div class="container mt-4">
+        <h4 class="fw-bold mb-3">New Inter-Branch Requisition</h4>
+
+        <form action="{{ route('interbranchrequisition.store') }}" method="POST">
+            @csrf
+
+            <div class="card shadow">
+                <div class="card-header bg-light fw-bold">➕ Request Stock from Another Branch</div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">From Branch</label>
+                            <input type="hidden" id="FromBranch" name="FromBranch" value="{{ $fromBranch->Id }}">
+                            <input type="text" class="form-control" value="{{ $fromBranch->Name }}" readonly>
+
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">To Branch/ Requesting Branch</label>
+                            <select name="ToBranch" class="form-select" required>
+                                <option value="">Select Branch</option>
+                                @foreach ($branches as $branch)
+                                    <option
+                                        value="{{ $branch->Id }}" {{ old('ToBranch') == $branch->Id ? 'selected' : '' }}>
+                                        {{ $branch->Name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="CreatedOn" class="form-control"
+                                   value="{{ old('CreatedOn', now()->toDateString()) }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary" id="addItemBtn">➕ Add Item</button>
+                    </div>
+
+                    <div id="itemsContainer"></div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Requisition</button>
+                    </div>
                 </div>
-            @endif
-
-            <form method="POST" action="{{ route('interbranch-requisitions.update', $requisition->id) }}">
-                @csrf
-                @method('PUT')
-
-                <!-- From Branch -->
-                <div class="mb-3">
-                    <label for="from_branch_id" class="form-label">From Branch</label>
-                    <select name="from_branch_id" id="from_branch_id" class="form-select" required>
-                        <option value="">-- Select Branch --</option>
-                        @foreach($branches as $branch)
-                            <option value="{{ $branch->id }}" {{ $requisition->from_branch_id == $branch->id ? 'selected' : '' }}>
-                                {{ $branch->BranchName }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- To Branch -->
-                <div class="mb-3">
-                    <label for="to_branch_id" class="form-label">To Branch</label>
-                    <select name="to_branch_id" id="to_branch_id" class="form-select" required>
-                        <option value="">-- Select Branch --</option>
-                        @foreach($branches as $branch)
-                            <option value="{{ $branch->id }}" {{ $requisition->to_branch_id == $branch->id ? 'selected' : '' }}>
-                                {{ $branch->BranchName }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Items Table -->
-                <table class="table table-bordered align-middle">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%">Category</th>
-                            <th style="width: 25%">Subcategory</th>
-                            <th style="width: 25%">Item</th>
-                            <th style="width: 15%">Quantity</th>
-                            <th style="width: 10%">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="items-table">
-                        @foreach($requisition->items as $item)
-                            <tr>
-                                <!-- Category -->
-                                <td>
-                                    <select name="categories[]" class="form-select category" required data-selected="{{ $item->category_id }}">
-                                        <option value="{{ $item->category_id }}" selected>{{ $item->category->CategoryName ?? 'Loading...' }}</option>
-                                    </select>
-                                </td>
-
-                                <!-- Subcategory -->
-                                <td>
-                                    <select name="subcategories[]" class="form-select subcategory" required data-selected="{{ $item->subcategory_id }}">
-                                        <option value="{{ $item->subcategory_id }}" selected>{{ $item->subcategory->SubcategoryName ?? 'Loading...' }}</option>
-                                    </select>
-                                </td>
-
-                                <!-- Item -->
-                                <td>
-                                    <select name="items[]" class="form-select item" required data-selected="{{ $item->item_id }}">
-                                        <option value="{{ $item->item_id }}" selected>{{ $item->item->ItemName ?? 'Loading...' }}</option>
-                                    </select>
-                                </td>
-
-                                <!-- Quantity -->
-                                <td>
-                                    <input type="number" name="quantities[]" class="form-control" value="{{ $item->Quantity }}" required min="1">
-                                </td>
-
-                                <!-- Remove -->
-                                <td>
-                                    <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-
-                <!-- Add Item -->
-                <button type="button" id="add-row" class="btn btn-primary mb-3">+ Add Item</button>
-
-                <!-- Submit -->
-                <div>
-                    <button type="submit" class="btn btn-success">Update Requisition</button>
-                    <a href="{{ route('interbranch-requisitions.index') }}" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
-</div>
-@endsection
 
-@section('scripts')
-<script>
-$(document).ready(function () {
-    // -------------------------------
-    // Dynamic loaders
-    // -------------------------------
-    function loadCategories(row, selectedCategory = null) {
-        let select = row.find('.category');
-        let currentVal = selectedCategory || select.data('selected') || select.val();
-        let currentText = select.find('option:selected').text();
+    <template id="itemTemplate">
+        <div class="card mb-3 item-entry">
+            <div class="card-body border">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label">Parent Category</label>
+                        <select name="items[__INDEX__][Category]" class="form-select category-select" data-initial=""
+                                required>
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Category</label>
+                        <select name="items[__INDEX__][Subcategory]" class="form-select subcategory-select"
+                                data-initial="">
+                            <option value="">-- Select Subcategory --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Item</label>
+                        <select name="items[__INDEX__][Item]" class="form-select item-select" data-initial="" required>
+                            <option value="">-- Select Item --</option>
+                        </select>
+                        {{-- Hidden input for item_name, required for server-side validation error message --}}
+                        <input type="hidden" name="items[__INDEX__][item_name]" class="item-name-hidden">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Item Code</label>
+                        <input type="text" name="items[__INDEX__][ItemCode]" class="form-control item-code" value=""
+                               readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">UOM</label>
+                        <input type="text" class="form-control item-uom" readonly>
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">Requested Qty</label>
+                        <input type="number" name="items[__INDEX__][RequestedQty]" class="form-control item-qty"
+                               value="1" min="1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Remarks</label>
+                        <input type="text" name="items[__INDEX__][Remarks]" class="form-control">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-item-btn">✖</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 
-        select.html(`<option value="${currentVal}" selected>${currentText || '-- Loading --'}</option>`);
+    @push('scripts')
+        <script>
+            let itemCounter = 0;
 
-        $.get("{{ route('inventory.get-categories') }}", function (res) {
-            let found = false;
-            let options = '<option value="">-- Select Category --</option>';
+            // New: Function to populate categories based on selected branch's stock
+            function populateCategoriesByBranch(entry, selectedCategory = null, callback = null) {
+                const categorySelect = entry.querySelector('.category-select');
+                const subcategorySelect = entry.querySelector('.subcategory-select');
+                const itemSelect = entry.querySelector('.item-select');
+                const fromBranchSelect = document.getElementById('FromBranch');
+                const fromBranchId = fromBranchSelect.value;
 
-            res.categories.forEach(cat => {
-                let selected = (currentVal == cat.Id) ? 'selected' : '';
-                if (selected) found = true;
-                options += `<option value="${cat.Id}" ${selected}>${cat.CategoryName}</option>`;
-            });
+                categorySelect.innerHTML = ''; // Clear previous options
+                categorySelect.disabled = true; // Disable until loaded
+                subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+                subcategorySelect.disabled = true;
+                itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+                itemSelect.disabled = true;
+                entry.querySelector('.item-code').value = '';
+                entry.querySelector('.item-uom').value = '';
+                entry.querySelector('.item-name-hidden').value = '';
 
-            if (currentVal && !found) {
-                options += `<option value="${currentVal}" selected>${currentText}</option>`;
+                if (!fromBranchId) {
+                    categorySelect.innerHTML = '<option value="">Select Requesting Branch First</option>';
+                    return callback?.();
+                }
+
+                // Using the specific route: /inventory/get-categories-by-branch
+                fetch(`/inventory/get-categories-by-branch?from_branch_id=${fromBranchId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        categorySelect.disabled = false;
+                        if (data.categories.length === 0) {
+                            categorySelect.innerHTML = `<option value="">${data.message || '-- No Categories Available --'}</option>`;
+                            categorySelect.disabled = true;
+                        } else {
+                            categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+                            data.categories.forEach(cat => {
+                                const option = new Option(cat.Name, cat.Id);
+                                if (selectedCategory == cat.Id) option.selected = true;
+                                categorySelect.add(option);
+                            });
+                        }
+                        callback?.();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching categories by branch:', error);
+                        categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+                        categorySelect.disabled = true;
+                        callback?.();
+                    });
             }
 
-            select.html(options);
-        });
-    }
 
-    function loadSubcategories(categoryId, row, selectedSubcategory = null) {
-        let select = row.find('.subcategory');
-        let currentVal = selectedSubcategory || select.data('selected') || select.val();
-        let currentText = select.find('option:selected').text();
+            // Modified: Function to populate subcategories by branch and category
+            function populateSubcategoriesByBranchAndCategory(entry, selectedSubcat = null, callback = null) {
+                const categorySelect = entry.querySelector('.category-select');
+                const subcategorySelect = entry.querySelector('.subcategory-select');
+                const itemSelect = entry.querySelector('.item-select');
+                const fromBranchSelect = document.getElementById('FromBranch');
 
-        select.html(`<option value="${currentVal}" selected>${currentText || '-- Loading --'}</option>`);
+                const categoryId = categorySelect.value;
+                const fromBranchId = fromBranchSelect.value;
 
-        $.get("{{ route('inventory.get-subcategories') }}", { category_id: categoryId }, function (res) {
-            let found = false;
-            let options = '<option value="">-- Select Subcategory --</option>';
+                subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+                subcategorySelect.disabled = true;
+                itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+                itemSelect.disabled = true;
+                entry.querySelector('.item-code').value = '';
+                entry.querySelector('.item-uom').value = '';
+                entry.querySelector('.item-name-hidden').value = '';
 
-            res.subcategories.forEach(sub => {
-                let selected = (currentVal == sub.Id) ? 'selected' : '';
-                if (selected) found = true;
-                options += `<option value="${sub.Id}" ${selected}>${sub.SubcategoryName}</option>`;
-            });
 
-            if (currentVal && !found) {
-                options += `<option value="${currentVal}" selected>${currentText}</option>`;
+                if (!categoryId || !fromBranchId) {
+                    return callback?.();
+                }
+
+                // Using the specific route: /inventory/get-subcategories-by-branch-and-category
+                fetch(`/inventory/get-subcategories-by-branch-and-category?from_branch_id=${fromBranchId}&category_id=${categoryId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        subcategorySelect.disabled = false;
+                        if (data.subcategories.length === 0) {
+                            subcategorySelect.innerHTML = `<option value="">${data.message || '-- No Subcategories Available --'}</option>`;
+                            // If no subcategories, load items directly from the parent category
+                            populateItemsByBranchAndCategoryOrSubcategory(entry, null, categoryId);
+                            subcategorySelect.disabled = true; // Keep subcategory disabled as there are no options
+                        } else {
+                            subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+                            data.subcategories.forEach(subcat => {
+                                const option = new Option(subcat.Name, subcat.Id);
+                                if (selectedSubcat == subcat.Id) option.selected = true;
+                                subcategorySelect.add(option);
+                            });
+                            itemSelect.innerHTML = '<option value="">Select Subcategory</option>';
+                            itemSelect.disabled = true;
+                        }
+                        callback?.();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching subcategories by branch and category:', error);
+                        subcategorySelect.innerHTML = '<option value="">Error loading subcategories</option>';
+                        subcategorySelect.disabled = true;
+                        callback?.();
+                    });
             }
 
-            select.html(options);
-        });
-    }
+            // Renamed: Function to populate items by branch and category/subcategory
+            function populateItemsByBranchAndCategoryOrSubcategory(entry, selectedItem = null, fallbackCategoryId = null) {
+                const categorySelect = entry.querySelector('.category-select');
+                const subcategorySelect = entry.querySelector('.subcategory-select');
+                const itemSelect = entry.querySelector('.item-select');
+                const fromBranchSelect = document.getElementById('FromBranch');
 
-    function loadItems(branchId, categoryId, subcategoryId, row, selectedItem = null) {
-        let select = row.find('.item');
-        let currentVal = selectedItem || select.data('selected') || select.val();
-        let currentText = select.find('option:selected').text();
+                const categoryId = fallbackCategoryId || categorySelect.value; // Use fallback if provided
+                const subcategoryId = subcategorySelect.value;
+                const fromBranchId = fromBranchSelect.value;
 
-        select.html(`<option value="${currentVal}" selected>${currentText || '-- Loading --'}</option>`);
+                itemSelect.innerHTML = '';
+                itemSelect.disabled = true;
+                entry.querySelector('.item-code').value = '';
+                entry.querySelector('.item-uom').value = '';
+                entry.querySelector('.item-name-hidden').value = '';
 
-        $.get("{{ route('inventory.get-items') }}", {
-            from_branch_id: branchId,
-            category_id: categoryId,
-            subcategory_id: subcategoryId
-        }, function (res) {
-            let found = false;
-            let options = '<option value="">-- Select Item --</option>';
+                let fetchUrl = '';
+                // Using the specific route: /inventory/get-items
+                if (fromBranchId && (subcategoryId || categoryId)) {
+                    fetchUrl = `/inventory/get-items?`;
+                    if (subcategoryId) {
+                        fetchUrl += `subcategory_id=${subcategoryId}`;
+                    } else {
+                        fetchUrl += `category_id=${categoryId}`;
+                    }
+                    fetchUrl += `&from_branch_id=${fromBranchId}`;
+                } else {
+                    itemSelect.innerHTML = '<option value="">Select Category/Subcategory</option>';
+                    return;
+                }
 
-            res.items.forEach(item => {
-                let selected = (currentVal == item.Id) ? 'selected' : '';
-                if (selected) found = true;
-                options += `<option value="${item.Id}" ${selected}>${item.ItemName}</option>`;
-            });
+                fetch(fetchUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        itemSelect.disabled = false;
+                        if (data.items.length === 0) {
+                            itemSelect.innerHTML = `<option value="">${data.message || '-- No Items Available --'}</option>`;
+                            itemSelect.disabled = true;
+                        } else {
+                            itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+                        }
 
-            if (currentVal && !found) {
-                options += `<option value="${currentVal}" selected>${currentText}</option>`;
+                        const currentItem = selectedItem || itemSelect.getAttribute('data-initial');
+                        let hasCurrent = false;
+
+                        data.items.forEach(item => {
+                            const option = new Option(item.ItemName, item.Id);
+                            if (item.Id == currentItem) {
+                                option.selected = true;
+                                hasCurrent = true;
+                            }
+                            itemSelect.add(option);
+                        });
+
+                        if (currentItem && !hasCurrent && data.items.length > 0) {
+                            const originalItemName = entry.querySelector('.item-name-hidden').value || '[Original Item]';
+                            const option = new Option(originalItemName, currentItem, true, true);
+                            itemSelect.add(option);
+                            fetchItemCodeAndUom(currentItem, entry);
+                        } else if (itemSelect.value) {
+                            fetchItemCodeAndUom(itemSelect.value, entry);
+                        } else {
+                            entry.querySelector('.item-code').value = '';
+                            entry.querySelector('.item-uom').value = '';
+                            entry.querySelector('.item-name-hidden').value = '';
+                        }
+
+                    })
+                    .catch(error => {
+                        console.error('Error fetching items:', error);
+                        itemSelect.innerHTML = '<option value="">Error loading items</option>';
+                        itemSelect.disabled = true;
+                        entry.querySelector('.item-code').value = 'Error';
+                        entry.querySelector('.item-uom').value = 'Error';
+                        entry.querySelector('.item-name-hidden').value = '';
+                    });
             }
 
-            select.html(options);
-        });
-    }
+            // Function to fetch Item Code and UOM (uses the exact route format /items/code/{Id})
+            function fetchItemCodeAndUom(itemId, entry) {
+                if (!itemId) {
+                    entry.querySelector('.item-code').value = '';
+                    entry.querySelector('.item-uom').value = '';
+                    entry.querySelector('.item-name-hidden').value = '';
+                    return;
+                }
+                // Using the specific route: /items/code/{Id}
+                fetch(`/inventory/items/code/${itemId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        entry.querySelector('.item-code').value = data.item_code ?? 'N/A';
+                        entry.querySelector('.item-uom').value = data.item_uom ?? 'N/A';
+                        const selectedText = entry.querySelector('.item-select option:checked')?.textContent;
+                        entry.querySelector('.item-name-hidden').value = selectedText || '';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching item data:', error);
+                        entry.querySelector('.item-code').value = 'Error';
+                        entry.querySelector('.item-uom').value = 'Error';
+                        entry.querySelector('.item-name-hidden').value = '';
+                    });
+            }
 
-    // -------------------------------
-    // Initial load
-    // -------------------------------
-    $('#items-table tr').each(function () {
-        let row = $(this);
-        loadCategories(row);
-        loadSubcategories(row.find('.category').val(), row);
-        loadItems($('#from_branch_id').val(), row.find('.category').val(), row.find('.subcategory').val(), row);
-    });
+            function addItem(values = {}) {
+                const template = document.getElementById('itemTemplate');
+                const clone = template.content.cloneNode(true);
+                const currentItemIndex = itemCounter;
 
-    // -------------------------------
-    // Add new row
-    // -------------------------------
-    $('#add-row').click(function () {
-        let newRow = `
-        <tr>
-            <td><select name="categories[]" class="form-select category" required><option value="">-- Select Category --</option></select></td>
-            <td><select name="subcategories[]" class="form-select subcategory" required><option value="">-- Select Subcategory --</option></select></td>
-            <td><select name="items[]" class="form-select item" required><option value="">-- Select Item --</option></select></td>
-            <td><input type="number" name="quantities[]" class="form-control" required min="1"></td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-row">X</button></td>
-        </tr>`;
-        $('#items-table').append(newRow);
-        let row = $('#items-table tr').last();
-        loadCategories(row);
-    });
+                // Replace __INDEX__ in all names
+                const fields = clone.querySelectorAll('[name]');
+                fields.forEach(element => {
+                    element.name = element.name.replace('__INDEX__', currentItemIndex);
+                });
 
-    // -------------------------------
-    // Remove row
-    // -------------------------------
-    $(document).on('click', '.remove-row', function () {
-        $(this).closest('tr').remove();
-    });
+                document.getElementById('itemsContainer').appendChild(clone);
+                const newEntry = document.getElementById('itemsContainer').lastElementChild;
 
-    // -------------------------------
-    // Cascading events
-    // -------------------------------
-    $(document).on('change', '.category', function () {
-        let row = $(this).closest('tr');
-        loadSubcategories($(this).val(), row);
-        row.find('.item').html('<option value="">-- Select Item --</option>');
-    });
+                const categorySelect = newEntry.querySelector('.category-select');
+                const subcategorySelect = newEntry.querySelector('.subcategory-select');
+                const itemSelect = newEntry.querySelector('.item-select');
+                const itemCodeInput = newEntry.querySelector('.item-code');
+                const itemUomInput = newEntry.querySelector('.item-uom');
+                const itemNameHiddenInput = newEntry.querySelector('.item-name-hidden');
+                const requestedQtyInput = newEntry.querySelector('.item-qty');
+                const remarksInput = newEntry.querySelector('[name$="[Remarks]"]');
 
-    $(document).on('change', '.subcategory', function () {
-        let row = $(this).closest('tr');
-        loadItems($('#from_branch_id').val(), row.find('.category').val(), $(this).val(), row);
-    });
+                // Set initial values from old input or provided values
+                if (values.Category) {
+                    categorySelect.setAttribute('data-initial', values.Category);
+                }
+                if (values.Subcategory) {
+                    subcategorySelect.setAttribute('data-initial', values.Subcategory);
+                }
+                if (values.Item) {
+                    itemSelect.setAttribute('data-initial', values.Item);
+                }
+                if (values.ItemCode) {
+                    itemCodeInput.value = values.ItemCode;
+                }
+                if (values.item_uom) { // Assuming item_uom might be passed in old values
+                    itemUomInput.value = values.item_uom;
+                }
+                if (values.item_name) {
+                    itemNameHiddenInput.value = values.item_name;
+                }
+                if (values.RequestedQty) {
+                    requestedQtyInput.value = values.RequestedQty;
+                }
+                if (values.Remarks) {
+                    remarksInput.value = values.Remarks;
+                }
 
-    $('#from_branch_id').change(function () {
-        $('#items-table tr').each(function () {
-            let row = $(this);
-            loadItems($('#from_branch_id').val(), row.find('.category').val(), row.find('.subcategory').val(), row);
-        });
-    });
-});
-</script>
+                // Populate categories and then subcategories/items based on old values
+                populateCategoriesByBranch(newEntry, values.Category, () => {
+                    if (values.Category) {
+                        categorySelect.value = values.Category; // Ensure selected
+                        populateSubcategoriesByBranchAndCategory(newEntry, values.Subcategory, () => {
+                            if (values.Subcategory) {
+                                subcategorySelect.value = values.Subcategory; // Ensure selected
+                                populateItemsByBranchAndCategoryOrSubcategory(newEntry, values.Item);
+                            } else if (values.Category) {
+                                // If subcategory was not set, but category was, load items for that category
+                                populateItemsByBranchAndCategoryOrSubcategory(newEntry, values.Item, values.Category);
+                            }
+                        });
+                    }
+                });
+
+                newEntry.querySelector('.remove-item-btn').addEventListener('click', function () {
+                    this.closest('.item-entry').remove();
+                });
+
+                itemCounter++;
+            }
+
+            document.getElementById('addItemBtn').addEventListener('click', function () {
+                addItem();
+            });
+
+            // Handle changes on Requesting Branch select to update all item categories
+            document.getElementById('FromBranch').addEventListener('change', function () {
+                const itemEntries = document.querySelectorAll('.item-entry');
+                itemEntries.forEach(entry => {
+                    populateCategoriesByBranch(entry);
+                });
+            });
+
+
+            // Delegated event listener for category and subcategory changes
+            document.addEventListener('change', function (e) {
+                const entry = e.target.closest('.item-entry');
+                if (!entry) return;
+
+                if (e.target.classList.contains('category-select')) {
+                    populateSubcategoriesByBranchAndCategory(entry);
+                    populateItemsByBranchAndCategoryOrSubcategory(entry); // Reset items when category changes
+                } else if (e.target.classList.contains('subcategory-select')) {
+                    populateItemsByBranchAndCategoryOrSubcategory(entry);
+                } else if (e.target.classList.contains('item-select')) {
+                    // Call the dedicated function to fetch item code and UOM
+                    fetchItemCodeAndUom(e.target.value, entry);
+                }
+            });
+
+            // Initial load: Add first item automatically if no old inputs (fresh form) or repopulate from old input
+            @if (!old('items'))
+            addItem();
+            @else
+            @foreach (old('items', []) as $index => $oldItem)
+            addItem(@json($oldItem));
+            @endforeach
+            @endif
+        </script>
+    @endpush
 @endsection
