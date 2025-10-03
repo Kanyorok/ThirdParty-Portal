@@ -48,19 +48,19 @@
             <div class="row border-bottom pb-2 mb-3">
                 <div class="col-md-6">
                     <strong>Supplier Name:</strong>
-                    <span>{{ $voucher->invoice->supplier->SupplierName ?? 'N/A' }}</span>
+                    <span>{{ ($voucher->invoice->thirdParty->TradingName ?? $voucher->invoice->thirdParty->ThirdPartyName) ?? 'N/A' }}</span>
                 </div>
                 <div class="col-md-6">
                     <strong>Email:</strong>
-                    <span>{{ $voucher->invoice->supplier->ContactEmail ?? 'N/A' }}</span>
+                    <span>{{ $voucher->invoice->thirdParty->Email ?? 'N/A' }}</span>
                 </div>
                 <div class="col-md-6">
                     <strong>Phone:</strong>
-                    <span>{{ $voucher->invoice->supplier->ContactPhone ?? 'N/A' }}</span>
+                    <span>{{ $voucher->invoice->thirdParty->Phone ?? 'N/A' }}</span>
                 </div>
                 <div class="col-md-6">
                     <strong>Address:</strong>
-                    <span>{{ $voucher->invoice->supplier->Address ?? 'N/A' }}</span>
+                    <span>{{ $voucher->invoice->thirdParty->PhysicalAddress ?? 'N/A' }}</span>
                 </div>
             </div>
 

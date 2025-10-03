@@ -24,7 +24,7 @@
           <!-- Tenant -->
          <div class="col-md-4">
             <label class="form-label">Tenant</label>
-            <input type="text" class="form-control" value="{{ $newlease->tenant->thirdParty->TradingName ?? '' }}" disabled>
+            <input type="text" class="form-control" value="{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '' }}" disabled>
             <input type="hidden" name="Tenant" value="{{ $newlease->Tenant }}">
           </div>
 

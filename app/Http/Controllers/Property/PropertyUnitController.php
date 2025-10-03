@@ -71,18 +71,33 @@ class PropertyUnitController extends Controller
         }
     }
 
-    public function edit($id)
-    {
-        $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
-        
-        $unit = PropertyUnit::findOrFail($id);
-        $floors = PropertyFloor::all();
-        $blocks = PropertyBlock::all();
-        $properties = PropertyRegistry::all();
-        $lineentries = PropertyRegistry::with('getBlockByProperty.floor')->get();
+public function edit($id)
+{
+    $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyUnit::class);
+    
+    $unit = PropertyUnit::findOrFail($id);
 
-        return view('property.propertyregistry.structuralmapping.addunit.edit', compact('blocks', 'properties', 'lineentries', 'unit', 'floors'));
-    }
+    // Get the property for this unit
+    $propertyId = $unit->PropertyID;
+    $blockId    = $unit->BlockID;
+
+    // Filtered collections
+    $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+    $floors = PropertyFloor::where('BlockID', $blockId)->get();
+
+    // For property dropdown (same as create)
+    $lineentries = PropertyRegistry::with(['getBlockByProperty.floor'])
+                                   ->where('IsActive', true)
+                                   ->get();
+
+    return view('property.propertyregistry.structuralmapping.addunit.edit', compact(
+        'unit',
+        'blocks',
+        'floors',
+        'lineentries'
+    ));
+}
+
 
     public function update(Request $request, $id)
     {

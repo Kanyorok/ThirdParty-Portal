@@ -100,7 +100,8 @@
                 </div>
             </div>
             <div class="card-footer text-end">
-                <button type="submit" class="btn btn-primary px-4">
+                <button type="submit" class="btn btn-primary px-4" 
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
                     <i class="fas fa-paper-plane"></i> Submit Referral
                 </button>
             </div>

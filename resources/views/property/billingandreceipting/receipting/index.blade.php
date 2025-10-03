@@ -27,7 +27,7 @@
             <tr>
               <td>{{ $loop->iteration ?? '_' }}</td>
               <td>{{ $receipt->invoice->InvoiceNumber ?? '_' }}</td>
-              <th>{{ $receipt->invoice->lease->tenant->thirdParty->TradingName ?? '_' }}</td>
+              <th>{{ $receipt->invoice->lease->tenant->thirdParty->ThirdPartyName ?? '_' }}</td>
               <td>{{ $receipt->BillingMonth ?? '_' }}</td>
               <td>{{ $receipt->PaymentDate ? \Carbon\Carbon::parse($receipt->PaymentDate)->format('d/m/Y') : '-' }}</td>
               <td>{{ $receipt->Balance ?? '_' }}</td>

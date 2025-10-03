@@ -31,6 +31,7 @@ class PurchaseOrderController extends Controller
         $this->middleware('ajax')->except([
             'index',
             'create',
+            'store', // Allow regular form submission for store
             'show',
             'linkRFQ',
             'fetchRFQDetails',
@@ -45,6 +46,7 @@ class PurchaseOrderController extends Controller
             'getAwardedRFQs',
             'getAwardedTenders',
             'getTenderItems',
+            'getContractItems',
         ]);
 //        $this->authorizeResource(Order::class);
     }
@@ -111,8 +113,7 @@ class PurchaseOrderController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch items.',
-                'error' => $e->getMessage(),
+                'message' => 'Failed to fetch items.'
             ], 500);
         }
     }
@@ -129,13 +130,13 @@ class PurchaseOrderController extends Controller
         try {
             $details = $this->orderService->fetchOrders();
             // Debug: log the details to storage/logs/laravel.log
-            \Log::info('PurchaseOrderController@index details:', ['details' => $details]);
+            Log::info('PurchaseOrderController@index details:', ['details' => $details]);
             // Optionally, uncomment the next line to dump to browser (remove after checking)
             // dd($details);
             return view('procurement.orders.index', compact('details'));
         } catch (\Exception $e) {
-            \Log::error('Create page failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to fetch items: ' . $e->getMessage());
+            Log::error('Create page failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to fetch items.');
         }
 //        return view("procurement.orders.index");
     }
@@ -147,6 +148,23 @@ class PurchaseOrderController extends Controller
     {
         try {
             $itemTypes = $this->itemService->getTypes();
+            
+            // Load all items for the dropdown
+            $allItems = DB::table('t_Items as i')
+                ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
+                ->leftJoin('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
+                ->whereNull('i.DeletedBy')
+                ->select(
+                    'i.Id as itemCode',
+                    'i.ItemName as itemName', 
+                    'i.ItemDescription as description',
+                    'i.ItemPrice as unitPrice',
+                    'it.TypeName as itemType',
+                    'ic.Name as categoryName'
+                )
+                ->orderBy('i.ItemName')
+                ->get();
+            
             $rfqResponses = $this->rfqService->fetchRFQ();
             $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
             $suppliers = $this->supplierService->getSuppliers();
@@ -181,7 +199,7 @@ class PurchaseOrderController extends Controller
                     )
                     ->get();
             } catch (\Throwable $e) {
-                \Log::warning('Skipping RFQAward join for awarded RFQs', ['error' => $e->getMessage()]);
+                Log::warning('Skipping RFQAward join for awarded RFQs', ['error' => $e->getMessage()]);
                 $awardedFromRFQAward = collect();
             }
 
@@ -197,27 +215,20 @@ class PurchaseOrderController extends Controller
                 ->pluck('SourceId')
                 ->toArray();
 
-            // Also collect any external/reference numbers already used in orders (ExtOrdNum)
-            // so we can prevent double-creating POs from the same reference string
-            try {
-                $usedReferenceNumbers = DB::table('t_Orders')
-                    ->whereNotNull('ExtOrdNum')
-                    ->pluck('ExtOrdNum')
-                    ->map(function ($v) {
-                        return is_null($v) ? '' : trim((string) $v);
-                    })->filter()->values()->toArray();
-            } catch (\Throwable $e) {
-                \Log::warning('Failed to fetch used ExtOrdNum values', ['error' => $e->getMessage()]);
-                $usedReferenceNumbers = [];
-            }
-
-            // Tenders that have awards (for Tender source dropdown)
+            // Tenders that have awards but NO existing contracts (for Tender source dropdown)
             $awardedTenders = collect();
             try {
                 $awardedTenders = DB::table('t_TenderAwards as ta')
                     ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
                     ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
                     ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                    ->where('ta.AwardStatus', 'Approved') // Only approved awards
+                    ->where(function ($q) {
+                        // Only include tenders that DON'T have contracts
+                        $q->whereNull('ta.ContractStatus')
+                          ->orWhere('ta.ContractStatus', '')
+                          ->orWhere('ta.ContractStatus', 'No Contract Required');
+                    })
                     ->select(
                         't.Id',
                         't.TenderNo',
@@ -227,8 +238,10 @@ class PurchaseOrderController extends Controller
                         DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
                     )
                     ->get();
+                
+                \Log::info('Filtered awarded tenders without contracts', ['count' => $awardedTenders->count()]);
             } catch (\Throwable $e) {
-                \Log::warning('Skipping TenderAwards join for awarded tenders', ['error' => $e->getMessage()]);
+                Log::warning('Skipping TenderAwards join for awarded tenders', ['error' => $e->getMessage()]);
                 $awardedTenders = collect();
             }
 
@@ -238,11 +251,13 @@ class PurchaseOrderController extends Controller
                 ->pluck('SourceId')
                 ->toArray();
 
-            // Executed contracts for Contract-based source selection
+            // Active contracts for Contract-based source selection (Approved or Executed)
             $contracts = DB::table('t_TenderAwards as ta')
                 ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
                 ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-                ->where('ta.ContractStatus', '=', 'Executed')
+                ->whereIn('ta.ContractStatus', ['Approved', 'Executed']) // Include both Approved and Executed contracts
+                ->whereNotNull('ta.ContractRef') // Must have a contract reference
+                ->where('ta.ContractRef', '!=', '') // Contract reference cannot be empty
                 ->orderByDesc('ta.ContractApprovedOn')
                 ->select(
                     'ta.Id as Id',
@@ -250,9 +265,12 @@ class PurchaseOrderController extends Controller
                     'ta.WinningSupplierID as SupplierId',
                     DB::raw('tp.Id as ThirdPartyId'),
                     DB::raw("tp.TradingName as SupplierName"),
-                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
+                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
+                    'ta.ContractStatus' // Include status for display
                 )
                 ->get();
+                
+            \Log::info('Active contracts loaded for LPO', ['count' => $contracts->count()]);
 
             // Optional contract prefill support: if contractId is present, pre-select reference and supplier
             $prefillContract = null;
@@ -304,7 +322,7 @@ class PurchaseOrderController extends Controller
                         ];
                     }
                 } catch (\Throwable $e) {
-                    \Log::warning('Contract prefill failed', ['error' => $e->getMessage()]);
+                    Log::warning('Contract prefill failed', ['error' => $e->getMessage()]);
                 }
             }
 
@@ -312,6 +330,7 @@ class PurchaseOrderController extends Controller
 
             return view('procurement.orders.create', [
                 'itemTypes' => $itemTypes ?? [],
+                'allItems' => $allItems ?? collect(),
                 'rfqs' => $uniqueRfqs ?? [],
                 'rfqResponses' => $rfqResponses ?? [],
                 'suppliers' => $suppliers ?? [],
@@ -326,7 +345,7 @@ class PurchaseOrderController extends Controller
                 'usedReferenceNumbers' => $usedReferenceNumbers ?? [],
             ]);
         } catch (\Exception $e) {
-            \Log::error('Data fetch failed: ' . $e->getMessage());
+            Log::error('Data fetch failed: ' . $e->getMessage());
             // Ensure dev-expected vars exist even on failure
             try {
                 $paymentTerms = CodeDetail::query()
@@ -334,7 +353,7 @@ class PurchaseOrderController extends Controller
                     ->orderBy('DisplayOrder')
                     ->get(['ID', 'Description']);
                 if ($paymentTerms->isEmpty()) {
-                    $paymentTerms = DB::table('t_CodeDetails')
+                $paymentTerms = DB::table('t_CodeDetails')
                         ->whereIn(DB::raw('RTRIM(LTRIM(CodeID))'), ['PaymentTerm', 'PaymentTerms'])
                         ->orderBy('DisplayOrder')
                         ->select('ID', 'Description')
@@ -346,6 +365,7 @@ class PurchaseOrderController extends Controller
             return view('procurement.orders.create', [
                 'suppliers' => [],
                 'itemTypes' => [],
+                'allItems' => collect(),
                 'rfqs' => [],
                 'rfqResponses' => [],
                 'paymentTerms' => $paymentTerms ?? [],
@@ -362,7 +382,7 @@ class PurchaseOrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PurchaseOrderRequest $request): JsonResponse
+    public function store(PurchaseOrderRequest $request)
     {
         try {
             $validatedData = $request->validated();
@@ -390,7 +410,10 @@ class PurchaseOrderController extends Controller
             // Ensure actor is available for logging/ownership checks
             $actor = $request->user();
             if (!$actor) {
-                return response()->json(['message' => 'Unauthorized'], 401);
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Unauthorized'], 401);
+                }
+                return redirect()->back()->with('error', 'Unauthorized access.');
             }
 
             // Also block by SourceType+SourceId: don't allow creating a PO for an RFQ/TENDER that already has one
@@ -434,7 +457,10 @@ class PurchaseOrderController extends Controller
                 }
             }
             if (!$actor) {
-                return response()->json(['message' => 'Unauthorized'], 401);
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Unauthorized'], 401);
+                }
+                return redirect()->back()->with('error', 'Unauthorized access.');
             }
 
             // Ensure terms is a valid ID from t_CodeDetails
@@ -443,10 +469,16 @@ class PurchaseOrderController extends Controller
                     'terms' => $validatedData['terms'],
                     'user_id' => $actor->Id ?? null,
                 ]);
-                return response()->json([
-                    'message' => 'Invalid payment term selected.',
-                    'error' => 'The selected payment term does not exist.'
-                ], 422);
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Invalid payment term selected.',
+                        'error' => 'The selected payment term does not exist.'
+                    ], 422);
+                }
+                return redirect()->back()
+                    ->with('error', 'Invalid payment term selected.')
+                    ->withInput();
             }
 
             // Pass the terms ID (from t_CodeDetails.ID) to addPO
@@ -466,10 +498,16 @@ class PurchaseOrderController extends Controller
                     'service_response' => $POAdd,
                 ]);
 
-                return response()->json([
-                    'message' => $POAdd['message'] ?? 'Failed to create purchase order',
-                    'error' => $POAdd['error'] ?? 'Unknown error'
-                ], 500);
+                $errorMessage = $POAdd['message'] ?? 'Failed to create purchase order';
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => $errorMessage,
+                        'error' => $POAdd['error'] ?? 'Unknown error'
+                    ], 500);
+                }
+                return redirect()->back()
+                    ->with('error', $errorMessage)
+                    ->withInput();
             }
 
             $poId = $POAdd['po_id'] ?? null;
@@ -479,10 +517,16 @@ class PurchaseOrderController extends Controller
                     'response' => $POAdd
                 ]);
 
-                return response()->json([
-                    'message' => 'Purchase order created but no ID returned.',
-                    'error' => 'Missing PO ID'
-                ], 500);
+                $errorMessage = 'Purchase order created but no ID returned.';
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => $errorMessage,
+                        'error' => 'Missing PO ID'
+                    ], 500);
+                }
+                return redirect()->back()
+                    ->with('error', $errorMessage)
+                    ->withInput();
             }
 
             // Process each PO line
@@ -505,10 +549,16 @@ class PurchaseOrderController extends Controller
                         'response' => $POLinesAdd,
                     ]);
 
-                    return response()->json([
-                        'message' => 'Failed to add PO line',
-                        'error' => $POLinesAdd['error'] ?? 'Line creation error'
-                    ], 500);
+                    $errorMessage = 'Failed to add PO line ' . ($index + 1);
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'message' => $errorMessage,
+                            'error' => $POLinesAdd['error'] ?? 'Line creation error'
+                        ], 500);
+                    }
+                    return redirect()->back()
+                        ->with('error', $errorMessage)
+                        ->withInput();
                 }
             }
 
@@ -521,17 +571,30 @@ class PurchaseOrderController extends Controller
                     'response' => $POSum,
                 ]);
 
-                return response()->json([
-                    'message' => 'Failed to calculate PO sum',
-                    'error' => $POSum['error'] ?? 'Sum calculation error'
-                ], 500);
+                $errorMessage = 'Failed to calculate PO totals';
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => $errorMessage,
+                        'error' => $POSum['error'] ?? 'Sum calculation error'
+                    ], 500);
+                }
+                return redirect()->back()
+                    ->with('error', $errorMessage)
+                    ->withInput();
             }
 
             // Everything succeeded
-            return response()->json([
-                'message' => $POAdd['message'] ?? 'Order created successfully',
-                'route' => route('purchaseOrder.index')
-            ], 200);
+            $successMessage = $POAdd['message'] ?? 'Purchase order created successfully';
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $successMessage,
+                    'route' => route('purchaseOrder.index')
+                ], 200);
+            }
+            
+            return redirect()->route('purchaseOrder.index')
+                ->with('success', $successMessage);
 
         } catch (\Throwable $e) {
             Log::error('Exception occurred while creating order.', [
@@ -539,10 +602,18 @@ class PurchaseOrderController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return response()->json([
-                'message' => 'Failed to create order',
-                'error' => $e->getMessage()
-            ], 500);
+            $errorMessage = 'Failed to create purchase order: ' . $e->getMessage();
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Failed to create order',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->with('error', $errorMessage)
+                ->withInput();
         }
     }
     /**
@@ -565,13 +636,15 @@ class PurchaseOrderController extends Controller
             return view('procurement.orders.show', compact('orderInfo', 'lineInfo'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            \Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . (auth()->user()->Id ?? 'guest'));
+            $uid = null;
+            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . ($uid ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
+            Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
             return redirect()->back()->with('error', 'Order not found.');
         } catch (\Exception $e) {
-            \Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to fetch order.');
         }
     }
@@ -616,7 +689,7 @@ class PurchaseOrderController extends Controller
             $RFQ = $this->rfqService->fetchRFQ();
 //            \Log::info('RFQ loaded in create():', $RFQ->toArray());
         } catch (\Exception $e) {
-            \Log::error('Error fetching RFQS: ' . $e->getMessage());
+            Log::error('Error fetching RFQS: ' . $e->getMessage());
             $RFQ = collect(); // fallback to empty collection
         }
 
@@ -637,13 +710,15 @@ class PurchaseOrderController extends Controller
             return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            \Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . (auth()->user()->Id ?? 'guest'));
+            $uid = null;
+            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            Log::warning("Unauthorized access attempt to view Order ID: {$id} by user ID: " . ($uid ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
+            Log::error("Order ID {$id} not found. Exception: " . $e->getMessage());
             return redirect()->back()->with('error', 'Order not found.');
         } catch (\Exception $e) {
-            \Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error("Failed to fetch order ID {$id}. Exception: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()->with('error', 'Failed to fetch order.');
         }
 
@@ -664,21 +739,23 @@ class PurchaseOrderController extends Controller
                 'data' => $RFQData,
             ]);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            \Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . (auth()->user()->Id ?? 'guest'));
+            $uid = null;
+            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            Log::warning("Unauthorized access attempt to view RFQ ID: {$id} by user ID: " . ($uid ?? 'guest'));
 
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized access.',
             ], 403);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
+            Log::error("RFQ ID {$id} not found. Exception: " . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'message' => 'RFQ not found.',
             ], 404);
         } catch (\Exception $e) {
-            \Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), [
+            Log::error("Failed to fetch RFQ ID {$id}. Exception: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
 
@@ -735,7 +812,7 @@ public function getRFQItems($rfqId)
 
         return response()->json(['items' => $items]);
     } catch (\Throwable $e) {
-        \Log::error('Failed to fetch RFQ items', ['rfqId' => $rfqId, 'error' => $e->getMessage()]);
+        Log::error('Failed to fetch RFQ items', ['rfqId' => $rfqId, 'error' => $e->getMessage()]);
         return response()->json(['items' => []], 200);
     }
 }
@@ -772,7 +849,7 @@ public function getRFQItems($rfqId)
 
             return response()->json(['success' => true, 'data' => $awarded]);
         } catch (\Throwable $e) {
-            \Log::error('getAwardedRFQs failed', ['error' => $e->getMessage()]);
+            Log::error('getAwardedRFQs failed', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'data' => []], 200);
         }
     }
@@ -780,14 +857,18 @@ public function getRFQItems($rfqId)
     public function getAwardedTenders(): JsonResponse
     {
         try {
-            // Exclude Tenders already converted to POs by SourceId or those whose TenderNo appears in ExtOrdNum
-            $convertedTenderIds = DB::table('t_Orders')->where('SourceType', 'TENDER')->whereNotNull('SourceId')->pluck('SourceId')->toArray();
-            $usedRefs = DB::table('t_Orders')->whereNotNull('ExtOrdNum')->pluck('ExtOrdNum')->map(function($v){ return is_null($v)?'':trim((string)$v); })->filter()->values()->toArray();
-
-            $q = DB::table('t_TenderAwards as ta')
+            // Only return tenders that are awarded but DON'T have existing contracts
+            $rows = DB::table('t_TenderAwards as ta')
                 ->join('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
                 ->leftJoin('t_Suppliers as s', 's.Id', '=', 'ta.WinningSupplierID')
                 ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                ->where('ta.AwardStatus', 'Approved') // Only approved awards
+                ->where(function ($q) {
+                    // Only include tenders that DON'T have contracts
+                    $q->whereNull('ta.ContractStatus')
+                      ->orWhere('ta.ContractStatus', '')
+                      ->orWhere('ta.ContractStatus', 'No Contract Required');
+                })
                 ->select(
                     't.Id',
                     't.TenderNo',
@@ -795,19 +876,13 @@ public function getRFQItems($rfqId)
                     DB::raw('tp.Id as ThirdPartyId'),
                     DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
                     DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
-                );
-
-            if (!empty($convertedTenderIds)) {
-                $q->whereNotIn('t.Id', $convertedTenderIds);
-            }
-            if (!empty($usedRefs)) {
-                $q->whereNotIn('t.TenderNo', $usedRefs);
-            }
-
-            $rows = $q->get();
+                )
+                ->get();
+                
+            \Log::info('AJAX: Filtered awarded tenders without contracts', ['count' => $rows->count()]);
             return response()->json(['success' => true, 'data' => $rows]);
         } catch (\Throwable $e) {
-            \Log::error('getAwardedTenders failed', ['error' => $e->getMessage()]);
+            Log::error('getAwardedTenders failed', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'data' => []], 200);
         }
     }
@@ -833,8 +908,68 @@ public function getRFQItems($rfqId)
 
             return response()->json(['items' => $items]);
         } catch (\Throwable $e) {
-            \Log::error('Failed to fetch Tender items', ['tenderId' => $tenderId, 'error' => $e->getMessage()]);
+            Log::error('Failed to fetch Tender items', ['tenderId' => $tenderId, 'error' => $e->getMessage()]);
             return response()->json(['items' => []], 200);
+        }
+    }
+
+    public function getContractItems($contractId): JsonResponse
+    {
+        try {
+            // Get contract details
+            $contract = DB::table('t_TenderAwards as ta')
+                ->leftJoin('t_Tenders as t', 'ta.TenderID', '=', 't.Id')
+                ->where('ta.Id', (int) $contractId)
+                ->whereIn('ta.ContractStatus', ['Approved', 'Executed'])
+                ->select('ta.Id', 'ta.TenderID', 'ta.ContractRef')
+                ->first();
+
+            if (!$contract) {
+                return response()->json(['items' => []], 404);
+            }
+
+            // Get tender items for the contract's tender with item details
+            $items = DB::table('t_TenderItems as ti')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'ti.ItemID')
+                ->leftJoin('t_ItemTypes as itype', 'it.ItemType', '=', 'itype.Id')
+                ->leftJoin('t_ItemCategories as ic', 'it.Category', '=', 'ic.Id')
+                ->where('ti.TenderID', (int) $contract->TenderID)
+                ->select([
+                    DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                    DB::raw('COALESCE(it.ItemName, ti.ManualItemDescription) as itemName'),
+                    DB::raw('COALESCE(it.ItemDescription, ti.ManualItemDescription) as description'),
+                    DB::raw('COALESCE(itype.TypeName, \'\') as itemType'),
+                    DB::raw('COALESCE(ic.Name, \'\') as categoryName'),
+                    DB::raw('COALESCE(ti.QtyToTender, ti.PlannedQty, 1) as quantity'),
+                    DB::raw('COALESCE(it.ItemPrice, 0) as unitPrice')
+                ])
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'itemCode' => (int) $row->itemCode,
+                        'itemName' => $row->itemName,
+                        'description' => $row->description ?: $row->itemName,
+                        'itemType' => $row->itemType,
+                        'categoryName' => $row->categoryName,
+                        'quantity' => (float) $row->quantity,
+                        'unitPrice' => (float) $row->unitPrice,
+                    ];
+                });
+
+            \Log::info('Contract tender items loaded', [
+                'contractId' => $contractId,
+                'contractRef' => $contract->ContractRef,
+                'tenderID' => $contract->TenderID,
+                'itemCount' => $items->count()
+            ]);
+
+            return response()->json([
+                'items' => $items,
+                'availableItems' => $items // Also provide items for dropdown population
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to fetch Contract tender items', ['contractId' => $contractId, 'error' => $e->getMessage()]);
+            return response()->json(['items' => [], 'availableItems' => []], 200);
         }
     }
 

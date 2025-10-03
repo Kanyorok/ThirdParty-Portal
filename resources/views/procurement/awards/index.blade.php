@@ -97,6 +97,33 @@
                                         @else
                                             <span class="btn btn-sm btn-outline-secondary disabled" title="Missing reference id">View</span>
                                         @endif
+                                        
+                                        @if($row['status'] === 'Pending')
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                    onclick="approveAward({{ $row['id'] }})" title="Approve Award">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    onclick="rejectAward({{ $row['id'] }})" title="Reject Award">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        @elseif($row['status'] === 'Approved')
+                                            @php
+                                                $award = \App\Models\Procurement\TenderAward::find($row['id']);
+                                                $hasContract = $award && $award->hasContract();
+                                            @endphp
+                                            @if($hasContract)
+                                                <a href="{{ route('contracts.show', $row['id']) }}"
+                                                   class="btn btn-sm btn-info" title="View Contract">
+                                                    <i class="fas fa-eye"></i> View Contract
+                                                </a>
+                                            @else
+                                                <a href="{{ route('contracts.createFromAward', $row['id']) }}"
+                                                   class="btn btn-sm btn-primary" title="Create Contract">
+                                                    <i class="fas fa-file-contract"></i> Create Contract
+                                                </a>
+                                            @endif
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

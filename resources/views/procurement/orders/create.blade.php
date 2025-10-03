@@ -152,9 +152,15 @@
                     <div class="col-md-4">
                     <label>Contract Ref <span class="text-danger">*</span></label>
                     <select class="form-control" id="contractRef">
-                        <option selected disabled>Select Contract</option>
+                        <option selected disabled>Select Active Contract</option>
                         @foreach(($contracts ?? []) as $c)
-                            <option value="{{ $c->ContractRef }}" data-contract-id="{{ $c->Id }}" data-supplier-id="{{ $c->SupplierId }}" data-address="{{ $c->Address }}">{{ $c->ContractRef }} ({{ $c->SupplierName }})</option>
+                            <option value="{{ $c->ContractRef }}" 
+                                    data-contract-id="{{ $c->Id }}" 
+                                    data-supplier-id="{{ $c->SupplierId }}" 
+                                    data-supplier-name="{{ $c->SupplierName ?? '' }}"
+                                    data-address="{{ $c->Address }}">
+                                {{ $c->ContractRef }} - {{ $c->SupplierName }} [{{ $c->ContractStatus }}]
+                            </option>
                         @endforeach
                         </select>
                 </div>
@@ -257,7 +263,17 @@
                         <td class="line-no">1.</td>
                         <td class="text-start">
                             <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item" required>
-                                <option disabled selected>Select Item Code</option>
+                                <option value="" disabled selected>Select Item</option>
+                                @foreach(($allItems ?? []) as $item)
+                                    <option value="{{ $item->itemCode }}" 
+                                            data-name="{{ $item->itemName }}" 
+                                            data-description="{{ $item->description ?? $item->itemName }}" 
+                                            data-price="{{ $item->unitPrice ?? 0 }}"
+                                            data-type="{{ $item->itemType ?? '' }}"
+                                            data-category="{{ $item->categoryName ?? '' }}">
+                                        {{ $item->itemName }}
+                                    </option>
+                                @endforeach
                             </select>
                         </td>
                         <td class="text-start">
@@ -325,10 +341,49 @@
         // Prepare RFQ responses for JS (for supplier filtering)
         const rfqResponses = @json($rfqResponses);
         const convertedRFQIds = @json($convertedRFQIds);
-    </script>
-
-    <script>
-        const itemTypeOptions = ``;
+        
+        // Load all items for dropdowns
+        const allItems = @json($allItems);
+        
+        // Build item options HTML
+        let itemOptions = '<option value="" disabled selected>Select Item</option>';
+        let currentAvailableItems = allItems; // Keep reference to current available items
+        
+        function buildItemOptions(items) {
+            let options = '<option value="" disabled selected>Select Item</option>';
+            items.forEach(item => {
+                options += `<option value="${item.itemCode}" 
+                                   data-name="${item.itemName}" 
+                                   data-description="${item.description || item.itemName}" 
+                                   data-price="${item.unitPrice || 0}"
+                                   data-type="${item.itemType || ''}"
+                                   data-category="${item.categoryName || ''}">
+                               ${item.itemName}
+                           </option>`;
+            });
+            return options;
+        }
+        
+        // Initialize with all items
+        itemOptions = buildItemOptions(allItems);
+        
+        // Function to update item options for contract-specific tender items
+        function updateItemOptionsForContract(contractItems) {
+            console.log('Updating item options for contract tender items:', contractItems);
+            currentAvailableItems = contractItems;
+            itemOptions = buildItemOptions(contractItems);
+            
+            // Update existing dropdowns with new options
+            $('.itemCode').each(function() {
+                const currentVal = $(this).val();
+                $(this).html(itemOptions);
+                
+                // Try to restore the previously selected value if it still exists
+                if (currentVal && contractItems.find(item => item.itemCode == currentVal)) {
+                    $(this).val(currentVal);
+                }
+            });
+        }
     </script>
 
     <script>
@@ -340,27 +395,51 @@
             const addRow = (idx, it) => {
                 const $tr = $('<tr/>');
                 $tr.append(`<td class="line-no">${idx + 1}.</td>`);
+                
+                // Create item dropdown with currently available items (contract-specific or all items)
                 const $itemTd = $('<td class="text-start"/>');
                 const $select = $('<select class="form-select form-select-sm itemCode" name="itemCode[]" required/>');
-                const optionText = it.itemName || `Item #${it.itemCode || ''}`;
-                const optionVal = Number.isFinite(it.itemCode) ? it.itemCode : 0;
-                $select.append(`<option value="${optionVal}" selected>${optionText}</option>`);
+                $select.html(itemOptions);
+                
+                // If we have a pre-loaded item, select it
+                if (it.itemCode && it.itemCode > 0) {
+                    $select.val(it.itemCode);
+                    
+                    // If the item is not in the current options, add it as a selected option
+                    if ($select.find(`option[value="${it.itemCode}"]`).length === 0) {
+                        const itemName = it.itemName || `Item #${it.itemCode}`;
+                        $select.append(`<option value="${it.itemCode}" selected 
+                                              data-name="${itemName}" 
+                                              data-description="${it.description || itemName}" 
+                                              data-price="${it.unitPrice || 0}">
+                                         ${itemName}
+                                       </option>`);
+                    }
+                }
+                
                 $itemTd.append($select);
                 $tr.append($itemTd);
-                $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${optionText}</textarea></td>`);
+                
+                // Item description
+                const itemDescription = it.description || it.itemName || '';
+                $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
+                
+                // Other fields
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${it.quantity ?? ''}"></td>`);
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
                 $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" step="any"></td>');
                 $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>');
+                
                 const lineTotal = (+it.quantity || 0) * (+it.unitPrice || 0);
                 $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly value="${lineTotal.toFixed(2)}"></td>`);
                 $tr.append('<td class="text-center align-middle"><button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button></td>');
                 $tbody.append($tr);
             };
+            
             (items || []).forEach((it, idx) => addRow(idx, it));
             if ((items || []).length === 0) {
-                // keep one blank row
-                addRow(0, { itemCode: 0, itemName: '', quantity: '', unitPrice: '' });
+                // keep one blank row with current available items
+                addRow(0, { itemCode: '', itemName: '', quantity: '', unitPrice: '' });
             }
             updateTotals();
         }
@@ -449,18 +528,23 @@
                         });
                     })
                     .catch(() => {});
+                // Reset to all items for RFQ mode
+                updateItemOptionsForContract(allItems);
             } else if (mode === 'TENDER') {
                 $('.source-rfq').addClass('d-none');
                 $('.source-tender').removeClass('d-none');
                 $('.source-contract').addClass('d-none');
                 $('#supplier').prop('disabled', true);
                 $('.direct-only').addClass('d-none');
+                // Reset to all items for Tender mode
+                updateItemOptionsForContract(allItems);
             } else if (mode === 'CONTRACT') {
                 $('.source-rfq').addClass('d-none');
                 $('.source-tender').addClass('d-none');
                 $('.source-contract').removeClass('d-none');
                 $('#supplier').prop('disabled', true);
                 $('.direct-only').addClass('d-none');
+                // Keep current available items (will be updated when contract is selected)
             } else {
                 $('.source-rfq').addClass('d-none');
                 $('.source-tender').addClass('d-none');
@@ -468,6 +552,8 @@
                 $('#supplier').prop('disabled', false);
                 $('#SourceId').val('');
                 $('.direct-only').removeClass('d-none');
+                // Reset to all items for Direct mode
+                updateItemOptionsForContract(allItems);
                 populateItems([]);
             }
         }
@@ -581,12 +667,14 @@
             }
         });
 
-        // Contract selection: auto-fill supplier and (optionally) items
+        // Contract selection: auto-fill supplier and load contract tender items
         $(document).on('change', '#contractRef', function () {
             const opt = $(this).find('option:selected');
             const contractId = parseInt(opt.data('contract-id'));
             const supplierId = parseInt(opt.data('supplier-id'));
+            const supplierName = opt.data('supplier-name') || '';
             const address = opt.data('address') || '';
+            
             if (!isNaN(contractId)) {
                 $('#SourceId').val(contractId);
             } else {
@@ -596,21 +684,34 @@
             const $supplier = $('#supplier');
             $supplier.empty().append('<option selected disabled>Select supplier</option>');
             if (!isNaN(supplierId)) {
-                $supplier.append(`<option value="${supplierId}" selected data-address="${address}">Supplier #${supplierId}</option>`);
+                const name = supplierName || `Supplier #${supplierId}`;
+                $supplier.append(`<option value="${supplierId}" selected data-address="${address}">${name}</option>`);
                 $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);
                 if ($("input[name='supplier']").length === 0) {
                     $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
-            } else {
+                } else {
                     $("input[name='supplier']").val(String(supplierId));
                 }
             }
 
-            // Optional: fetch mapped contract items here if needed (kept minimal to match dev UX)
-            // fetch(`/procurement/purchaseOrder/contract-details/${contractId}`)
-            //     .then(r => r.json())
-            //     .then(({items}) => { populateItems(items || []); updateTotals(); })
-            //     .catch(console.error);
+            // Load contract tender items and update available items
+            if (!isNaN(contractId)) {
+                fetch(`/procurement/purchase-order/contract-items/${contractId}`)
+                    .then(r => r.json())
+                    .then(({items, availableItems}) => { 
+                        // Update global item options with contract-specific tender items
+                        updateItemOptionsForContract(availableItems || []);
+                        
+                        // Populate the form with the tender items
+                        populateItems(items || []); 
+                        updateTotals(); 
+                    })
+                    .catch(err => {
+                        console.error('Failed to load contract tender items:', err);
+                        populateItems([]);
+                    });
+            }
         });
 
         // Autopopulate address when supplier is selected
@@ -620,20 +721,162 @@
         });
 
         $(function () {
-            $('form#purchaseOrdersForm').submit(async function (e) {
+            $('form#purchaseOrdersForm').submit(function (e) {
                 e.preventDefault();
+                
+                // Ensure supplier value is set
                 const supVal = $('#supplier').val();
                 if (supVal && $("input[name='supplier']").length === 0) {
                     $('<input>').attr({type:'hidden', name:'supplier', value:String(supVal)}).appendTo('#purchaseOrdersForm');
                 }
-                if (await saveForm($(this), $('#saveOrder'), true, true, true)) {
-                    $Modal.modal('hide');
+                
+                // Validate required fields before submission
+                let isValid = true;
+                let errorMessages = [];
+                
+                // Check supplier
+                if (!$('#supplier').val()) {
+                    errorMessages.push('Please select a supplier');
+                    isValid = false;
                 }
+                
+                // Check payment terms
+                if (!$('#terms').val()) {
+                    errorMessages.push('Please select payment terms');
+                    isValid = false;
+                }
+                
+                // Check if we have at least one item
+                const itemCount = $('.itemCode').length;
+                if (itemCount === 0) {
+                    errorMessages.push('Please add at least one item');
+                    isValid = false;
+                }
+                
+                // Check each item has required fields
+                $('.itemCode').each(function(index) {
+                    const $row = $(this).closest('tr');
+                    const itemCode = $(this).val();
+                    const quantity = $row.find('.quantity').val();
+                    const unitPrice = $row.find('.unit-price').val();
+                    
+                    if (!itemCode) {
+                        errorMessages.push(`Row ${index + 1}: Please select an item`);
+                        isValid = false;
+                    }
+                    if (!quantity || quantity <= 0) {
+                        errorMessages.push(`Row ${index + 1}: Please enter a valid quantity`);
+                        isValid = false;
+                    }
+                    if (!unitPrice || unitPrice < 0) {
+                        errorMessages.push(`Row ${index + 1}: Please enter a valid unit price`);
+                        isValid = false;
+                    }
+                });
+                
+                if (!isValid) {
+                    alert('Please fix the following errors:\n\n' + errorMessages.join('\n'));
+                    return false;
+                }
+                
+                // Show loading state
+                $('#saveOrder').prop('disabled', true).text('Saving...');
+                
+                // Submit the form normally
+                this.submit();
             });
         });
 
-        // Direct helpers omitted (kept from your current dev form)
+        // Add Item Button Handler
+        $(document).on('click', '#add-row', function() {
+            const $tbody = $('#item-rows');
+            const rowCount = $tbody.find('tr').length + 1;
+            
+            const $newRow = $(`
+                <tr>
+                    <td class="line-no">${rowCount}.</td>
+                    <td class="text-start">
+                        <select class="form-select form-select-sm itemCode" name="itemCode[]" required>
+                            ${itemOptions}
+                        </select>
+                    </td>
+                    <td class="text-start">
+                        <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;"></textarea>
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required>
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required>
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm tax" name="tax[]" step="any">
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm discount" name="discount[]" step="any">
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly>
+                    </td>
+                    <td class="text-center align-middle">
+                        <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item">
+                            <i class="fa fa-trash"></i> Remove
+                        </button>
+                    </td>
+                </tr>
+            `);
+            
+            $tbody.append($newRow);
+            updateRowNumbers();
+        });
 
-        // Remove row handler and totals calculation kept from your current dev form
+        // Item Selection Change Handler
+        $(document).on('change', '.itemCode', function() {
+            const $row = $(this).closest('tr');
+            const $option = $(this).find('option:selected');
+            const itemName = $option.data('name') || $option.text();
+            const itemDescription = $option.data('description') || itemName;
+            const unitPrice = $option.data('price') || 0;
+            
+            // Update description and price
+            $row.find('.itemDescription').val(itemDescription);
+            $row.find('.unit-price').val(unitPrice);
+            
+            // Recalculate totals
+            recalcRow($row);
+            updateTotals();
+        });
+
+        // Remove Row Handler
+        $(document).on('click', '.remove-row', function() {
+            const $tbody = $('#item-rows');
+            if ($tbody.find('tr').length > 1) {
+                $(this).closest('tr').remove();
+                updateRowNumbers();
+                updateTotals();
+            } else {
+                alert('At least one item row is required.');
+            }
+        });
+
+        // Update quantity, price, tax, discount handlers
+        $(document).on('input', '.quantity, .unit-price, .tax, .discount', function() {
+            const $row = $(this).closest('tr');
+            recalcRow($row);
+            updateTotals();
+        });
+
+        // Update row numbers
+        function updateRowNumbers() {
+            $('#item-rows tr').each(function(index) {
+                $(this).find('.line-no').text((index + 1) + '.');
+            });
+        }
+
+        // Initialize on page load
+        $(document).ready(function() {
+            updateTotals();
+        });
+
 </script>
 @endsection

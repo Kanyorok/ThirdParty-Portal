@@ -41,7 +41,7 @@
                             <tr>
                                 <td>{{ $loop->iteration ?? '-' }}</td>
                                 <td>{{ $newtenant->type->Description ?? '-' }}</td>
-                                <td>{{ $newtenant->thirdParty->TradingName ?? '-' }}</td>
+                                <td>{{ $newtenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                                 <td>{{ $newtenant->thirdParty->RegistrationNumber ?? '-' }}</td>
                                 <td>{{ $newtenant->thirdParty->Phone ?? '-' }}</td>
                                 <td>{{ $newtenant->thirdParty->Email ?? '-' }}</td>

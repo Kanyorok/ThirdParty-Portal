@@ -24,7 +24,7 @@ class Supplier extends ThirdParties
         'RoundID',
         'ThirdPartyID',
         'RoundID',
-    'CategoryId',
+        'CategoryId',
         'Active_Status',
         'SupplierCategoryID',
         'CreatedBy',
@@ -47,7 +47,7 @@ class Supplier extends ThirdParties
 
     public function thirdParty(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\ThirdParty\ThirdParties::class, 'ThirdPartyID', 'Id');
+        return $this->belongsTo(ThirdParties::class, 'ThirdPartyID', 'Id');
     }
 
     public function rfqEvaluations(): HasMany

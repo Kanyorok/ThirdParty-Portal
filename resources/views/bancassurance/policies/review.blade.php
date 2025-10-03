@@ -7,7 +7,7 @@
     <h4>Review Proposal – Policy ID #{{ $policy->Id }}</h4>
 
     <div class="mb-4">
-        <strong>Customer:</strong> {{ $policy->customer->FullName ?? '-'}}<br>
+        <strong>Customer:</strong> {{ $policy->customer->thirdParty->ThirdPartyName ?? '-'}}<br>
         <strong>Product:</strong> {{ $policy->product->Name ?? '-'}}<br>
         <strong>Sum Assured:</strong> {{ number_format($policy->SumAssured, 2) }}<br>
         <strong>Premium:</strong> {{ number_format($policy->PremiumAmount, 2) }}<br>
@@ -33,7 +33,7 @@
         </div>
 
         <div class="text-end">
-            <button class="btn btn-primary">Submit to Underwriter</button>
+            <button class="btn btn-primary" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit to Underwriter</button>
         </div>
     </form>
 </div>

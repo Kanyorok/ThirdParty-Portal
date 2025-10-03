@@ -48,7 +48,7 @@
             <div class="row border-bottom pb-2 mb-3">
                 <div class="col-md-6">
                     <strong>Supplier Name:</strong>
-                    <span>{{ $voucher->invoice->supplier->SupplierName ?? 'N/A' }}</span>
+                    <span>{{ ($voucher->invoice->thirdParty->TradingName ?? $voucher->invoice->thirdParty->ThirdPartyName) ?? 'N/A' }}</span>
                 </div>
                 <div class="col-md-6">
                     <strong>Email:</strong>

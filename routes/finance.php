@@ -23,6 +23,7 @@ use App\Http\Controllers\Finance\HierarchyViewerController;
 use App\Http\Controllers\Finance\IncomeStatementController;
 use App\Http\Controllers\Finance\InvoiceApprovalController;
 use App\Http\Controllers\Finance\InvoiceEntryController;
+use App\Http\Controllers\Finance\InvoiceEntryV2Controller;
 use App\Http\Controllers\Finance\InvoiceGenerationController;
 use App\Http\Controllers\Finance\JournalBatchController;
 use App\Http\Controllers\Finance\JournalEntryController;
@@ -73,7 +74,23 @@ Route::prefix('finance')->group(function () {
     Route::resource('bankreconciliation', BankReconciliationController::class);
     Route::resource('periodmanagement', PeriodManagementController::class);
     Route::resource('vendormaster', VendorMasterController::class);
-    Route::resource('invoiceentry', InvoiceEntryController::class);
+    // Original invoice entry (kept for compatibility)
+    // Route::resource('invoiceentry', InvoiceEntryController::class);
+    
+    // New simplified invoice entry approach
+    Route::resource('invoiceentry', InvoiceEntryV2Controller::class)->names([
+        'index' => 'invoiceentry.index',
+        'create' => 'invoiceentry.create',
+        'store' => 'invoiceentry.store',
+        'show' => 'invoiceentry.show',
+        'edit' => 'invoiceentry.edit',
+        'update' => 'invoiceentry.update',
+        'destroy' => 'invoiceentry.destroy',
+    ]);
+    
+    // AJAX routes for supplier search in new invoice entry
+    Route::post('invoiceentry-v2/api/suppliers/quick-search', [InvoiceEntryV2Controller::class, 'quickSearchSuppliers'])->name('finance.invoiceentry-v2.api.suppliers.quick-search');
+    Route::post('invoiceentry-v2/api/suppliers/search', [InvoiceEntryV2Controller::class, 'findSupplier'])->name('finance.invoiceentry-v2.api.suppliers.search');
     Route::resource('customermaster', CustomerMasterController::class);
     Route::resource('invoicegeneration', InvoiceGenerationController::class);
     Route::resource('creditnote', CreditNoteController::class);
@@ -230,6 +247,7 @@ Route::get('debug/invoices-with-credit', function() {
     Route::get('/finance/grns/{selectedPO}', [InvoiceEntryController::class, 'getGRNs'])->name('finance.grns');
     // Route for viewingPOModal
     Route::get('/finance/viewpo/{selectedPO}', [InvoiceEntryController::class, 'viewPOModal'])->name('finance.viewPOModal');
+    Route::get('/finance/viewgrn/{grnId}', [InvoiceEntryController::class, 'viewGRNModal'])->name('finance.viewGRNModal');
     // Route for sAVING INVOICE
     Route::post('/finance/invoice/save', [InvoiceEntryController::class, 'saveInvoice'])->name('invoiceentry.save');
     //Route for gettng suppliers from invoices

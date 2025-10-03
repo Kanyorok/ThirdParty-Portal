@@ -44,7 +44,7 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $newlease->LeaseNumber ?? '-' }}</td>
-                                <td>{{ $newlease->tenant->thirdParty->TradingName ?? '-' }}</td>
+                                <td>{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                                 <td>
                                     {{ $newlease->property->PropertyName ?? '-' }}
                                     @if($newlease->property && $newlease->IsActive === 'Inactive')
