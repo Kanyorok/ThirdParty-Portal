@@ -39,15 +39,19 @@ class TransactionReceiptsController extends Controller
     {
         $this->authorize('create', TransactionReceipt::class);
 
-        $branchId = Auth::user()->BranchID;
+        $branchId = Auth::user()->employee->BranchId ?? null;
 
         $transfers = TransactionTransfer::doesntHave('receipt')
             ->with(['items.item'])
-            ->where('Status', Transfers::InTransit)
-            ->where('ToBranch', $branchId) 
+            ->where('Status', Transfers::InTransit->value)
+           ->where('ToBranch', $branchId) 
             ->get();
 
-        $users = User::all();
+
+        $users = User::whereHas('employee', function ($q) use ($branchId) {
+                $q->where('BranchId', $branchId);
+            })
+            ->get();
 
         return view('inventory.transactions.receipts.create', compact('transfers', 'users'));
     }
@@ -62,13 +66,6 @@ class TransactionReceiptsController extends Controller
         unset($validatedData['items']);
 
        $transfer = TransactionTransfer::findOrFail($validatedData['TransferID']);
-
-        if (Auth::user()->BranchID !== $transfer->ToBranch) {
-            return redirect()
-                ->back()
-                ->withInput()
-                ->withErrors(['TransferID' => 'You are not authorized to receive this transfer.']);
-        }
 
 
         try {

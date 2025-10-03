@@ -14,6 +14,8 @@ use App\Models\Procurement\GoodsReceipt;
 use App\Services\Inventory\TransactionTransferService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
 use Throwable;
 
 class TransactionTransfersController extends Controller
@@ -27,14 +29,25 @@ class TransactionTransfersController extends Controller
 
     public function index()
     {
-        $transfers = TransactionTransfer::with(['items.item'])->latest()->get();
+        $branchId = Auth::user()->employee?->BranchId; 
+
+        $transfers = TransactionTransfer::with(['items.item', 'fromBranch', 'toBranch'])
+            ->where(function ($q) use ($branchId) {
+                $q->where('FromBranch', $branchId)
+                ->orWhere('ToBranch', $branchId);
+            })
+            ->get();
+
         return view('inventory.transactions.transfers.index', compact('transfers'));
     }
 
     public function create(Request $request)
     {
+        $branchId = Auth::user()->employee?->BranchId; 
         $this->authorize('create', TransactionTransfer::class);
-        $users = User::all();
+        $users = User::whereHas('employee', function ($q) use ($branchId) {
+        $q->where('BranchId', $branchId);
+        })->get();
         return view('inventory.transactions.transfers.create', compact('users'));
     }
 
@@ -84,10 +97,13 @@ class TransactionTransfersController extends Controller
 
     public function edit($Id)
     {
+        $branchId = auth()->user()->employee?->BranchId;
         $this->authorize('update', TransactionTransfer::class);
         $branches = Branch::all();
         $itemsMasterList = ItemMasterList::all();
-        $users = User::all();
+        $users = User::whereHas('employee', function ($q) use ($branchId) {
+        $q->where('BranchId', $branchId);
+        })->get();
 
         $transferitem = TransactionTransfer::with([
             'fromBranch', 'toBranch', 'creator', 'items.item', 'requisition'
@@ -125,11 +141,15 @@ class TransactionTransfersController extends Controller
 
     public function getRequisitionsByType($type)
     {
+        $branchId = Auth::user()->employee?->BranchId;
         if ($type === 'interbranch') {
             $requisitions = InterBranchRequisition::with(['fromBranch', 'toBranch'])
                 ->where('Status', 'Ap')
-                ->whereDoesntHave('transfer')
-                ->get();
+                ->where(function ($q) use ($branchId) {
+                $q->where('FromBranch', $branchId);
+            })
+            ->whereDoesntHave('transfer')
+            ->get();
         } elseif ($type === 'procurement') {
             $requisitions = GoodsReceipt::with(['transfer', 'item'])
                 ->whereNotNull('GRNID')

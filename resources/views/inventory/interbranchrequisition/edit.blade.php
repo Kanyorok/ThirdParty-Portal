@@ -25,15 +25,11 @@
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label for="FromBranch" class="form-label">From Branch</label>
-                        <select name="FromBranch" id="FromBranch" class="form-select" required>
-                            <option value="">-- Select Branch --</option>
-                            @foreach($branches as $branch)
-                                <option value="{{ $branch->Id }}" {{ $item->FromBranch == $branch->Id ? 'selected' : '' }}>
-                                    {{ $branch->Name }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="col-md-4">
+                            <label class="form-label">From Branch</label>
+                            <input type="hidden" id="FromBranch" name="FromBranch" value="{{ $fromBranch->Id }}">
+                            <input type="text" class="form-control" value="{{ $fromBranch->Name }}" readonly>
+                        </div>
                     </div>
 
                     <div class="col-md-6">
@@ -66,20 +62,24 @@
                     </thead>
                     <tbody id="items-table">
                         @foreach($item->items as $index => $reqItem)
-                            <tr>
+                            <tr data-row-index="{{ $index }}">
                                 <td>
-                                    <select name="items[{{ $index }}][Category]" class="form-select category" required>
+                                    <select name="items[{{ $index }}][Category]" class="form-select category" required 
+                                            data-selected="{{ $reqItem->item->category->ParentId ? $reqItem->item->category->parent->Id : $reqItem->item->category->Id }}">
                                         <option value="">-- Select Category --</option>
                                         @foreach($categories as $cat)
-                                            <option value="{{ $cat->Id }}" 
-                                                {{ $reqItem->item->category->ParentId === null && $reqItem->item->category->Id == $cat->Id ? 'selected' : '' }}>
-                                                {{ $cat->Name }}
-                                            </option>
+                                            @if($cat->ParentId === null)
+                                                <option value="{{ $cat->Id }}" 
+                                                    {{ ($reqItem->item->category->ParentId ? $reqItem->item->category->parent->Id : $reqItem->item->category->Id) == $cat->Id ? 'selected' : '' }}>
+                                                    {{ $cat->Name }}
+                                                </option>
+                                            @endif
                                         @endforeach
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="items[{{ $index }}][Subcategory]" class="form-select subcategory">
+                                    <select name="items[{{ $index }}][Subcategory]" class="form-select subcategory" 
+                                            data-selected="{{ $reqItem->item->category->ParentId ? $reqItem->item->category->Id : '' }}">
                                         <option value="">-- Select Subcategory --</option>
                                         @if($reqItem->item->category->ParentId)
                                             <option value="{{ $reqItem->item->category->Id }}" selected>
@@ -88,13 +88,19 @@
                                         @endif
                                     </select>
                                 </td>
+                              
                                 <td>
-                                    <select name="items[{{ $index }}][Item]" class="form-select item" required>
+                                    <select name="items[{{ $index }}][Item]" 
+                                            class="form-select item" required
+                                            data-selected="{{ $reqItem->ItemId }}"
+                                            data-preserved-name="{{ $reqItem->item->ItemName }}">
                                         <option value="{{ $reqItem->ItemId }}" selected>
                                             {{ $reqItem->item->ItemName }}
                                         </option>
                                     </select>
                                 </td>
+
+
                                 <td>
                                     <input type="text" name="items[{{ $index }}][ItemCode]" 
                                            class="form-control item-code" 
@@ -130,103 +136,254 @@
 </div>
 @endsection
 
-{{-- Script Section --}}
 @push('scripts')
 <script>
 $(document).ready(function () {
     let rowIdx = {{ $item->items->count() }};
 
-    function loadCategories(branchId, row) {
-        if (!branchId) return;
-        $.get("{{ route('inventory.get-categories-by-branch') }}", { from_branch_id: branchId }, function (res) {
+    // Initialize all existing rows sequentially
+    $('#items-table tr').each(function(index) {
+        let row = $(this);
+        // Add a small delay to prevent race conditions
+        setTimeout(() => {
+            initializeRow(row);
+        }, index * 100); // Stagger initialization
+    });
+
+    function initializeRow(row) {
+        let branchId = $('#FromBranch').val();
+        let categorySelect = row.find('.category');
+        let subcategorySelect = row.find('.subcategory');
+        let itemSelect = row.find('.item');
+        
+        // Get the stored values from data attributes or current selections
+        let selectedCategory = categorySelect.data('selected') || categorySelect.val();
+        let selectedSubcategory = subcategorySelect.data('selected') || subcategorySelect.val();
+        let selectedItem = itemSelect.data('selected') || itemSelect.val();
+        
+        console.log('Initializing row:', { selectedCategory, selectedSubcategory, selectedItem });
+        
+        // Load categories for this row
+        loadCategories(branchId, row, selectedCategory, selectedSubcategory, selectedItem);
+    }
+
+    function loadCategories(branchId, row, selectedCategory = null, selectedSubcategory = null, selectedItem = null) {
+        if (!branchId) {
+            console.log('No branch ID provided');
+            return;
+        }
+        
+        console.log('Loading categories for branch:', branchId);
+        
+        $.get("{{ route('inventory.get-categories-by-branch') }}", { 
+            from_branch_id: branchId 
+        }, function (res) {
             let categorySelect = row.find('.category');
-            let currentVal = categorySelect.data('selected');
+            let currentVal = selectedCategory || categorySelect.data('selected');
+            
             categorySelect.empty().append('<option value="">-- Select Category --</option>');
-            res.categories.forEach(cat => {
-                let selected = currentVal == cat.Id ? 'selected' : '';
-                categorySelect.append(`<option value="${cat.Id}" ${selected}>${cat.Name}</option>`);
-            });
+            
+            if (res.categories && res.categories.length > 0) {
+                res.categories.forEach(cat => {
+                    let selected = currentVal == cat.Id ? 'selected' : '';
+                    categorySelect.append(`<option value="${cat.Id}" ${selected}>${cat.Name}</option>`);
+                });
+                
+                // If we have a selected category, load its subcategories
+                if (currentVal) {
+                    console.log('Loading subcategories for category:', currentVal);
+                    loadSubcategories(branchId, currentVal, row, selectedSubcategory, selectedItem);
+                } else {
+                    // Clear dependent fields if no category selected
+                    row.find('.subcategory').empty().append('<option value="">-- Select Subcategory --</option>');
+                    row.find('.item').empty().append('<option value="">-- Select Item --</option>');
+                    row.find('.item-code').val('');
+                    row.find('.item-uom').val('');
+                }
+            } else {
+                categorySelect.append('<option value="">No categories available</option>');
+            }
+        }).fail(function(xhr, status, error) {
+            console.error('Error loading categories:', error);
         });
     }
 
-    function loadSubcategories(branchId, categoryId, row) {
-        if (!branchId || !categoryId) return;
+    function loadSubcategories(branchId, categoryId, row, selectedSubcategory = null, selectedItem = null) {
+        if (!branchId || !categoryId) {
+            console.log('Missing branch or category ID');
+            return;
+        }
+        
+        console.log('Loading subcategories for category:', categoryId);
+        
         $.get("{{ route('inventory.get-subcategories-by-branch-and-category') }}", {
             from_branch_id: branchId,
             category_id: categoryId
         }, function (res) {
             let subSelect = row.find('.subcategory');
-            let currentVal = subSelect.data('selected');
+            let currentVal = selectedSubcategory || subSelect.data('selected');
+            
             subSelect.empty().append('<option value="">-- Select Subcategory --</option>');
-            res.subcategories.forEach(sub => {
-                let selected = currentVal == sub.Id ? 'selected' : '';
-                subSelect.append(`<option value="${sub.Id}" ${selected}>${sub.Name}</option>`);
-            });
+            
+            if (res.subcategories && res.subcategories.length > 0) {
+                res.subcategories.forEach(sub => {
+                    let selected = currentVal == sub.Id ? 'selected' : '';
+                    subSelect.append(`<option value="${sub.Id}" ${selected}>${sub.Name}</option>`);
+                });
+                
+                // If we have a selected subcategory, load its items
+                if (currentVal) {
+                    console.log('Loading items for subcategory:', currentVal);
+                    loadItems(branchId, categoryId, currentVal, row, selectedItem);
+                } else {
+                    // If no subcategory selected but we have category, load items from category
+                    console.log('Loading items for category (no subcategory):', categoryId);
+                    loadItems(branchId, categoryId, null, row, selectedItem);
+                }
+            } else {
+                console.log('No subcategories found, loading items for category:', categoryId);
+                loadItems(branchId, categoryId, null, row, selectedItem);
+            }
+        }).fail(function(xhr, status, error) {
+            console.error('Error loading subcategories:', error);
         });
     }
 
-    function loadItems(branchId, categoryId, subcategoryId, row) {
-        if (!branchId || !categoryId) return;
-        $.get("{{ route('inventory.get-items') }}", {
-            from_branch_id: branchId,
-            category_id: categoryId,
-            subcategory_id: subcategoryId
-        }, function (res) {
-            let itemSelect = row.find('.item');
-            let currentVal = itemSelect.data('selected');
-            itemSelect.empty().append('<option value="">-- Select Item --</option>');
+   function loadItems(branchId, categoryId, subcategoryId, row, selectedItem = null) {
+    let itemSelect = row.find('.item');
+    let currentVal = selectedItem || itemSelect.data('selected') || itemSelect.val();
+
+    // itemSelect.empty().append('<option value="">-- Select Item --</option>');
+
+    $.get("{{ route('inventory.get-items') }}", {
+        from_branch_id: branchId,
+        category_id: categoryId,
+        subcategory_id: subcategoryId
+    }, function (res) {
+        let found = false;
+
+        if (res.items && res.items.length > 0) {
             res.items.forEach(item => {
-                let selected = currentVal == item.Id ? 'selected' : '';
+                let selected = (currentVal == item.Id) ? 'selected' : '';
+                if (selected) found = true;
                 itemSelect.append(`<option value="${item.Id}" ${selected}>${item.ItemName}</option>`);
             });
-        });
-    }
+        }
+
+        // If pre-saved item was not in the response, keep it
+        if (currentVal && !found) {
+            let preservedText = itemSelect.data('preserved-name') 
+                             || row.find('.item option[selected]').text() 
+                             || 'Previously selected item';
+
+            itemSelect.append(`<option value="${currentVal}" selected>${preservedText}</option>`);
+        }
+
+        // Restore selection
+        if (currentVal) {
+            itemSelect.val(currentVal);
+
+            // 🔑 Load the item details immediately (fixes empty Item Code + UOM)
+            loadItemDetails(currentVal, row);
+        }
+    }).fail(function(xhr, status, error) {
+        console.error('Error loading items:', error);
+
+        if (currentVal) {
+            let preservedText = itemSelect.data('preserved-name') 
+                             || row.find('.item option[selected]').text() 
+                             || 'Previously selected item';
+
+            itemSelect.html(`<option value="${currentVal}" selected>${preservedText}</option>`);
+            // 🔑 Also load details even on fail
+            loadItemDetails(currentVal, row);
+        } else {
+            itemSelect.html('<option value="">Error loading items</option>');
+        }
+    });
+}
+
 
     function loadItemDetails(itemId, row) {
-        if (!itemId) return;
+        if (!itemId) {
+            console.log('No item ID provided for details');
+            return;
+        }
+        
+        console.log('Loading item details for:', itemId);
+        
         $.get("{{ url('inventory/items/code') }}/" + itemId, function (res) {
-            
-            row.find('.item-code').val(res.item_code);
-            row.find('.item-uom').val(res.item_uom);
+            console.log('Item details response:', res);
+            if (res.item_code) {
+                row.find('.item-code').val(res.item_code);
+            } else {
+                row.find('.item-code').val('N/A');
+            }
+            if (res.item_uom) {
+                row.find('.item-uom').val(res.item_uom);
+            } else {
+                row.find('.item-uom').val('N/A');
+            }
+        }).fail(function(xhr, status, error) {
+            console.error('Error loading item details:', error);
+            row.find('.item-code').val('Error');
+            row.find('.item-uom').val('Error');
         });
     }
 
-    // Branch change reloads categories
-    $('#FromBranch').on('change', function () {
-        let branchId = $(this).val();
-        $('#items-table tr').each(function () {
-            loadCategories(branchId, $(this));
-        });
-    });
-
-    // Cascade handlers
+    // Event handlers - use more specific selectors
     $(document).on('change', '.category', function () {
         let row = $(this).closest('tr');
         let branchId = $('#FromBranch').val();
         let categoryId = $(this).val();
-        loadSubcategories(branchId, categoryId, row);
-        row.find('.subcategory').data('selected', ''); // reset
-        row.find('.item').empty().append('<option value="">-- Select Item --</option>');
+        
+        console.log('Category changed to:', categoryId);
+        
+        // Only clear dependent fields if category actually changed
+        if (categoryId) {
+            row.find('.subcategory').empty().append('<option value="">-- Select Subcategory --</option>');
+            row.find('.item').empty().append('<option value="">-- Select Item --</option>');
+            row.find('.item-code').val('');
+            row.find('.item-uom').val('');
+            
+            loadSubcategories(branchId, categoryId, row);
+        } else {
+            // Clear everything if no category selected
+            row.find('.subcategory').empty().append('<option value="">-- Select Subcategory --</option>');
+            row.find('.item').empty().append('<option value="">-- Select Item --</option>');
+            row.find('.item-code').val('');
+            row.find('.item-uom').val('');
+        }
     });
 
     $(document).on('change', '.subcategory', function () {
         let row = $(this).closest('tr');
         let branchId = $('#FromBranch').val();
         let categoryId = row.find('.category').val();
-        let subId = $(this).val();
-        loadItems(branchId, categoryId, subId, row);
+        let subcategoryId = $(this).val();
+        
+        console.log('Subcategory changed to:', subcategoryId);
+        
+        if (categoryId && subcategoryId) {
+            row.find('.item').empty().append('<option value="">-- Select Item --</option>');
+            row.find('.item-code').val('');
+            row.find('.item-uom').val('');
+            
+            loadItems(branchId, categoryId, subcategoryId, row);
+        }
     });
 
     $(document).on('change', '.item', function () {
         let row = $(this).closest('tr');
         let itemId = $(this).val();
+        console.log('Item changed to:', itemId);
         loadItemDetails(itemId, row);
     });
 
     // Add new row
     $('#add-row').on('click', function () {
         let newRow = `
-            <tr>
+            <tr data-row-index="${rowIdx}">
                 <td>
                     <select name="items[${rowIdx}][Category]" class="form-select category" required>
                         <option value="">-- Select Category --</option>
@@ -249,14 +406,23 @@ $(document).ready(function () {
             </tr>
         `;
         $('#items-table').append(newRow);
-        let branchId = $('#FromBranch').val();
-        loadCategories(branchId, $('#items-table tr').last());
+        
+        // Initialize the new row after a brief delay
+        setTimeout(() => {
+            let branchId = $('#FromBranch').val();
+            loadCategories(branchId, $('#items-table tr').last());
+        }, 100);
+        
         rowIdx++;
     });
 
     // Remove row
     $(document).on('click', '.remove-row', function () {
-        $(this).closest('tr').remove();
+        if ($('#items-table tr').length > 1) {
+            $(this).closest('tr').remove();
+        } else {
+            alert('At least one item is required.');
+        }
     });
 });
 </script>
