@@ -35,7 +35,7 @@ class StockAdjustmentItem extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
-
+ 
     public function modifier()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
