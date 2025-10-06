@@ -309,7 +309,7 @@ class BudgetProjectionsController extends Controller
 
         //return $products;
 
-        $budget = BudgetDriverProjections::findOrFail($id);
+        return$budget = BudgetDriverProjections::findOrFail($id);
 
         $rate = BudgetProduct::with(['rate'])
             ->get();
