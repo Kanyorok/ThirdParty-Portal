@@ -73,7 +73,7 @@ class YieldRateController extends Controller
         $validated = $request->validate([
             // 'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
             'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
-            'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
+            //'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
             'RateValue' => 'required|numeric|min:0|max:100',
             // 'EffectiveDate'  => 'required|date',
             'Source' => 'required|string|max:100',
@@ -84,7 +84,7 @@ class YieldRateController extends Controller
             $driverRate = BudgetDriverRates::create([
                 'PeriodTypeID' => 1, //for nullable period type
                 'ProductTypeID' => $validated['ProductTypeID'],
-                'RateTypeID' => $validated['RateTypeID'],
+                'RateTypeID' => 1,//$validated['RateTypeID'],
                 'RateValue' => $validated['RateValue'],
                 'EffectiveDate' => 1, //for nullable effective date
                 'Source' => $validated['Source'],
@@ -183,7 +183,7 @@ class YieldRateController extends Controller
         $validated = $request->validate([
             // 'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
             //'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
-            'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
+            //'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
             'RateValue' => 'required|numeric|min:0|max:100',
             // 'EffectiveDate'  => 'required|date',
             'Source' => 'required|string|max:100',
@@ -195,7 +195,7 @@ class YieldRateController extends Controller
             $driverRate->update([
                 'PeriodTypeID' => 1,
                 //'ProductTypeID' => $validated['ProductTypeID'],
-                'RateTypeID' => $validated['RateTypeID'],
+                'RateTypeID' => 1,//$validated['RateTypeID'],
                 'RateValue' => $validated['RateValue'],
                 'EffectiveDate' => 1,
                 'Source' => $validated['Source'],

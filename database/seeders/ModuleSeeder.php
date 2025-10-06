@@ -232,7 +232,7 @@ class ModuleSeeder extends Seeder
             //['ModuleID' => 1201410, 'Name' => 'Budget Line Categories', 'Icon' => null, 'Description' => 'Budget Lines Categories', 'Route' => 'budgetlinecategories.index', 'ParentID' => 1201000],
             ['ModuleID' => 1201415, 'Name' => 'Budget Lines', 'Icon' => null, 'Description' => 'Budget Lines Management', 'Route' => 'budgetlinemapping.index', 'ParentID' => 1201000],
             ['ModuleID' => 1201420, 'Name' => 'Activity Master', 'Icon' => null, 'Description' => 'Budget Activity Master', 'Route' => 'activitymaster.index', 'ParentID' => 1201000],
-            ['ModuleID' => 1201425, 'Name' => 'Rates', 'Icon' => null, 'Description' => 'Budget Rates', 'Route' => 'rates.index', 'ParentID' => 1201000],
+            //['ModuleID' => 1201425, 'Name' => 'Rates', 'Icon' => null, 'Description' => 'Budget Rates', 'Route' => 'rates.index', 'ParentID' => 1201000],
             //['ModuleID' => 1201700, 'Name' => 'Drivers Master', 'Icon' => null, 'Description' => 'Driver Setup', 'Route' => 'budgetdrivers.index', 'ParentID' => 1201000],
             ['ModuleID' => 1201800, 'Name' => 'Products Rates', 'Icon' => null, 'Description' => 'Products Rates Setup', 'Route' => 'yieldexpenserate.index', 'ParentID' => 1201000],
             //moved this to workspace ['ModuleID' => 1201900, 'Name' => 'Activities Master', 'Icon' => null, 'Description' => 'Budget Activity Setup', 'Route' => 'budgetactivities.index', 'ParentID' => 1201000],
@@ -263,7 +263,7 @@ class ModuleSeeder extends Seeder
             //            ['ModuleID' => 1204100, 'Name' => 'BI & Analytics Dashboard', 'Icon' => null, 'Description' => 'Analytics Dashboard', 'Route' => 'analyticsdashboard.index', 'ParentID' => 1204000],
 
             // Admin & Integration
-            ['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
+            //['ModuleID' => 1205000, 'Name' => 'Admin & Integration', 'Icon' => null, 'Description' => 'System Controls and CBS Integration', 'Route' => null, 'ParentID' => 1200000],
             ['ModuleID' => 1205100, 'Name' => 'CBS Data Sync', 'Icon' => null, 'Description' => 'CBS Product Auto Sync', 'Route' => 'cbssync.index', 'ParentID' => 1205000],
             ['ModuleID' => 1205200, 'Name' => 'Data Sync Logs', 'Icon' => null, 'Description' => 'CBS & System Sync Logs', 'Route' => 'datasynclogs.index', 'ParentID' => 1205000],
             //Settings
@@ -553,10 +553,10 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 1103000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-building-columns"></i>', 'Description' => 'Manage banks, branches, accounts & cash', 'Route' => null, 'ParentID' => 1100000],
             ['ModuleID' => 1103100, 'Name' => 'Bank Registry', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => 'finance.bank.index', 'ParentID' => 1103000],
             ['ModuleID' => 1103200, 'Name' => 'Bank Accounts', 'Icon' => '<i class="fas fa-piggy-bank"></i>', 'Description' => 'Manage organization bank accounts', 'Route' => 'finance.bankaccountsetup.index', 'ParentID' => 1103000],
-            ['ModuleID' => 1103300, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103000],
-            ['ModuleID' => 1103400, 'Name' => 'Bank Transfers', 'Icon' => '<i class="fas fa-right-left"></i>', 'Description' => '', 'Route' => 'finance.banktransfers.index', 'ParentID' => 1103000],
-            ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103000],
-            ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103000],
+//            ['ModuleID' => 1103300, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103000],
+//            ['ModuleID' => 1103400, 'Name' => 'Bank Transfers', 'Icon' => '<i class="fas fa-right-left"></i>', 'Description' => '', 'Route' => 'finance.banktransfers.index', 'ParentID' => 1103000],
+//            ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103000],
+//            ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103000],
 
 
 
