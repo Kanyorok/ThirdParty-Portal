@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQCriteria;
 use App\Models\Procurement\RFQSection;
-use App\Models\Procurement\RFQSettingSection;
+use App\Models\Procurement\Criteria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,18 +16,17 @@ class RFQCriteriaController extends Controller
     {
         $rfq = RFQ::findOrFail($rfqId);
 
-        // Get assigned RFQ sections
-        // ✅ CORRECT
-        $rfqSections = RFQSection::with(['section.criteriaSettings'])->where('RFQID', $rfqId)->get();
+        // Get assigned RFQ sections with their criteria from t_Criterias via Section
+        $rfqSections = RFQSection::with(['section.criteria'])->where('RFQID', $rfqId)->get();
 
         // Get already assigned criteria
         $existingCriteria = RFQCriteria::where('RFQID', $rfqId)->get();
 
         // Mark checked criteria
         foreach ($rfqSections as $rfqSection) {
-            foreach ($rfqSection->section->criteriaSettings as $criteria) {
+            foreach ($rfqSection->section->criteria as $criteria) {
                 $criteria->isChecked = $existingCriteria->contains(function ($item) use ($criteria, $rfqSection) {
-                    return $item->CriteriaID == $criteria->id && $item->SectionID == $rfqSection->section->id;
+                    return (int)$item->CriteriaID === (int)$criteria->Id && (int)$item->SectionID === (int)$rfqSection->section->Id;
                 });
             }
         }

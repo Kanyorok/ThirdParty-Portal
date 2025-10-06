@@ -58,7 +58,7 @@
                 <option value="">All Tenants</option>
                 @foreach($tenants as $tenant)
                     <option value="{{ $tenant->Id }}" {{ request('tenant_id') == $tenant->id ? 'selected' : '' }}>
-                        {{ $tenant->TenantName }}
+                        {{ $tenant->thirdParty->ThirdPartyName }}
                     </option>
                 @endforeach
             </select>
@@ -90,10 +90,10 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody> 
                 @foreach($invoices as $invoice)
                 @php
-                    $tenant = $invoice->lease->tenant->TenantName ?? 'N/A';
+                    $tenant = $invoice->lease->tenant->thirdParty->ThirdPartyName  ?? 'N/A';
                     $property = $invoice->lease->property->PropertyName ?? 'N/A';
                     $unit = $invoice->lease->unit->UnitCode ?? 'N/A';
                     $due = $invoice->RentAmount + $invoice->ServicesCharge + $invoice->ParkingFee + $invoice->OtherCharges;
@@ -106,7 +106,7 @@
                     <td>{{ $tenant ?? '-'}}</td>
                     <td>{{ $property ?? '-'}}</td>
                     <td>{{ $unit ?? '-'}}</td>
-                    <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') }}</td>
                     <td>KES {{ number_format($due) }}</td>
                     <td>KES {{ number_format($paid) }}</td>
                     <td>
@@ -181,7 +181,7 @@
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Amount (KES)'
+                        text: 'Amount'
                     }
                 },
                 x: {

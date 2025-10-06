@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Core\CategoryMaster;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
+
+
 
 class CategoryMasterSeeder extends Seeder
 {

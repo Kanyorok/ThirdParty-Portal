@@ -17,7 +17,7 @@
                             value="{{ $policy->Id }}"
                             data-paymentfrequency="{{ $policy->paymentfrequency->Description }}"
                             data-customerid="{{ $policy->CustomerID }}" {{-- Numeric ID --}}
-                            data-customername="{{ $policy->customer->FullName }}" {{-- Display name --}}
+                            data-customername="{{ $policy->customer->thirdParty->ThirdPartyName }}" {{-- Display name --}}
                             {{ $payment->PolicyID == $policy->Id ? 'selected' : '' }}>
                             {{ $policy->PolicyNumber }}
                         </option>

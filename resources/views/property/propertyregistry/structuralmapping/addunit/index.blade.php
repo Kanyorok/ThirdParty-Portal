@@ -3,6 +3,15 @@
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+    <style>
+        /* Force table text to wrap instead of overflowing */
+        #propertyunits td {
+            white-space: normal !important;
+            word-wrap: break-word;
+            max-width: 200px; /* optional: limit width so wrap actually happens */
+        }
+    </style>
 @endsection
 
 @section('content')

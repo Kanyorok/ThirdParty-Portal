@@ -26,9 +26,22 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'StoreName' => 'required|string|max:255',
+             'StoreName' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_Stores', 'StoreName')->ignore($this->route('Id')),
+            ],
             'BranchID' => 'required|integer|exists:t_Branches,Id',
             'Status' => 'required|boolean',
+        ];
+
+    }
+
+      public function messages()
+    {
+        return [
+            'StoreName.unique' => 'The Store Name already exists.',
         ];
     }
 }

@@ -42,7 +42,7 @@
         </div>
 
         <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-success px-4">Save Sub Category</button>
+          <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Sub Category</button>
         </div>
 
       </form>

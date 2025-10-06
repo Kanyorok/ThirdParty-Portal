@@ -27,7 +27,7 @@
 <div class="receipt-box">
     <div class="d-flex justify-content-between mb-3">
         <h4>🏦 Bancassurance Premium Receipt</h4>
-        <button onclick="window.print()" class="btn btn-primary btn-sm no-print">🖨️ Print</button>
+        <button onclick="window.print()" class="btn btn-primary btn-sm no-print">Print</button>
     </div>
 
     <hr>

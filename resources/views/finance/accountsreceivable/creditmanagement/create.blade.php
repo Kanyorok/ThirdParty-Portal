@@ -20,9 +20,9 @@
                             <option value="">-- Select Customer --</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->Id }}"
-                                        data-idnumber="{{ $customer->IDRegistrationNo }}"
-                                        data-email="{{ $customer->EmailAddress }}">
-                                        {{ $customer->TenantName }}
+                                        data-idnumber="{{ $customer->RegistrationNumber }}"
+                                        data-email="{{ $customer->Email }}">
+                                        {{ $customer->ThirdPartyName }}
                                 </option>
                             @endforeach
                         </select>

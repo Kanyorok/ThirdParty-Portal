@@ -7,7 +7,7 @@
 @section('content')
     <div class="container mt-4">
         <a href="{{ route('tenantclearance.create') }}" class="btn btn-primary mb-3">New Clearance</a>
-        <h4 class="fw-bold mb-3">Tenant Exit & Clearance Records</h4>
+        <p><small>This is a list of cleared tenants upon termination of lease</small></p>
 
         @if($clearancetenants->count())
             <table class="table table-bordered table-striped align-middle" id="tenantclearance">
@@ -28,7 +28,7 @@
                 @foreach($clearancetenants as $clearancetenant)
                     <tr>
                         <td>{{ $loop->iteration ?? '-' }}</td>
-                        <td>{{ $clearancetenant->lease->tenant->TenantName  ?? '-' }}</td>
+                        <td>{{ $clearancetenant->lease->tenant->thirdParty->TradingName  ?? '-' }}</td>
                         <td>{{ $clearancetenant->ExitDate ? \Carbon\Carbon::parse($clearancetenant->ExitDate)->format('d/m/Y') : '-' }}</td>
                         <td>@if($clearancetenant->FinalInspection)
                                 <span class="badge bg-success">Yes</span>
@@ -53,7 +53,7 @@
                         </td>
                         <td>
                             <a href="{{ route('tenantclearance.show', $clearancetenant->Id) }}"
-                               class="btn btn-sm btn-info">👁 View</a>
+                               class="btn btn-sm btn-info">View</a>
                             <a href="{{ route('tenantclearance.edit', $clearancetenant->Id) }}"
                                class="btn btn-sm btn-warning">Edit</a>
                         </td>

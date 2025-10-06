@@ -51,7 +51,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end mt-4">
-                        <button type="submit" class="btn btn-warning px-4">Update Store</button>
+                        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Store</button>
                         <a href="{{ route('stores.index') }}" class="btn btn-danger px-4 ms-2">Cancel</a>
                     </div>
                 </form>

@@ -18,13 +18,22 @@
                 <select name="ItemID" id="itemDropdown" class="form-select @error('ItemID') is-invalid @enderror"
                         required>
                     <option disabled selected>Select an item</option>
+                    @php
+                        // Build a set of item IDs that already have a pending need for this department to hide them
+                        $pendingItemIds = \App\Models\Procurement\DepartmentNeed::query()
+                            ->where('DepartmentID', auth()->user()->employee->DepartmentId ?? null)
+                            ->where('Status', \App\Enums\Procurement\DepartmentNeedsEnum::Pending)
+                            ->pluck('ItemID')->toArray();
+                    @endphp
                     @foreach ($items as $item)
+                        @if(!in_array($item->Id, $pendingItemIds))
                         <option value="{{ $item->Id }}" data-category="{{ $item->category->Name ?? '' }}"
                                 data-uom="{{ $item->uom->Name ?? 'N/A' }}"
                                 data-price="{{ $item->price->ActualPrice ?? '0.00' }}"
                             {{ old('ItemID') == $item->Id ? 'selected' : '' }}>
                             {{ $item->ItemName }}
                         </option>
+                        @endif
                     @endforeach
                 </select>
                 @error('ItemID')
@@ -74,7 +83,7 @@
 
         <div class="mb-3">
             <label for="RequestedDate" class="form-label">Date Needed</label>
-            <input type="date" name="RequestedDate" id="RequestedDate" value="{{ old('RequestedDate') }}"
+            <input type="date" name="RequestedDate" id="RequestedDate" value="{{ old('RequestedDate') }}" min="{{ now()->toDateString() }}"
                    class="form-control @error('RequestedDate') is-invalid @enderror" required>
             @error('RequestedDate')
             <div class="invalid-feedback">{{ $message }}</div>
@@ -85,7 +94,7 @@
 
         <div class="d-flex justify-content-end">
             <button type="reset" class="btn btn-secondary me-2">Clear</button>
-            <button type="submit" class="btn btn-primary">Submit Need</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary" disabled>Submit Need</button>
         </div>
     </form>
     </div>
@@ -96,7 +105,8 @@
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d/m/Y",
-        allowInput: true
+        allowInput: true,
+        minDate: "today"
     });
     document.addEventListener('DOMContentLoaded', function() {
         const itemDropdown = document.getElementById('itemDropdown');
@@ -104,17 +114,58 @@
         const uomField = document.getElementById('uomField');
         const estimatedCostField = document.getElementById('EstimatedUnitCostField');
         const estimatedCostHidden = document.getElementById('EstimatedUnitCostHidden');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const priceErrorId = 'priceErrorMsg';
+        function ensurePriceErrorEl() {
+            let el = document.getElementById(priceErrorId);
+            if (!el) {
+                el = document.createElement('div');
+                el.id = priceErrorId;
+                el.className = 'text-danger mt-2';
+                // place right under the Estimated Unit Cost field
+                estimatedCostField.parentElement.appendChild(el);
+            }
+            return el;
+        }
 
         function fillFields() {
             const selected = itemDropdown.options[itemDropdown.selectedIndex];
+
+            // If placeholder (no explicit value or disabled), don't show the warning by default
+            if (!selected || !selected.hasAttribute('value') || selected.disabled) {
+                categoryField.value = '';
+                uomField.value = '';
+                estimatedCostField.value = '';
+                estimatedCostHidden.value = '';
+                submitBtn.disabled = true;
+                return;
+            }
             categoryField.value = selected.getAttribute('data-category') || '';
             uomField.value = selected.getAttribute('data-uom') || '';
-            const price = selected.getAttribute('data-price') || '';
-            estimatedCostField.value = price;
-            estimatedCostHidden.value = price;
+            const priceRaw = selected.getAttribute('data-price') || '';
+            const price = parseFloat(priceRaw);
+            const hasValidPrice = !isNaN(price) && price > 0;
+            estimatedCostField.value = hasValidPrice ? price.toFixed(2) : '';
+            estimatedCostHidden.value = hasValidPrice ? price.toFixed(2) : '';
+
+            const msgEl = ensurePriceErrorEl();
+            if (!hasValidPrice) {
+                msgEl.textContent = 'This item has no estimated cost configured. Please contact procurement or select another item.';
+                submitBtn.disabled = true;
+            } else {
+                msgEl.textContent = '';
+                submitBtn.disabled = false;
+            }
         }
 
-        if (itemDropdown.value) fillFields();
+        // Only pre-fill if a real item (with a value attribute) is preselected (e.g., after validation errors)
+        const initSelected = itemDropdown.options[itemDropdown.selectedIndex];
+        if (initSelected && initSelected.hasAttribute('value') && !initSelected.disabled) {
+            fillFields();
+        } else {
+            submitBtn.disabled = true;
+        }
         itemDropdown.addEventListener('change', fillFields);
     });
     </script>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings\Codes;
 
 use App\Http\Controllers\Controller;
 use App\Models\Core\Country;
+use App\Models\Core\Locality;
 use App\Services\LocalityService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -22,7 +23,28 @@ class LocalitySelectController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $data = [];
-        if ($request->has('country') && $request->has('q')) {
+        // Preferred: filter by numeric CountryId directly from t_Localities.CountryId
+        if ($request->filled('countryId')) {
+            $search = (string) $request->get('q', '');
+            $countryId = (int) $request->get('countryId');
+            $data = Locality::query()
+                ->where('CountryId', $countryId)
+                ->with(['in'])
+                ->when($search !== '', function (Builder $query) use ($search) {
+                    $query->where('Name', 'LIKE', "%$search%")
+                        ->orWhereHas('in', function (Builder $q) use ($search) {
+                            $q->where('Name', 'LIKE', "%$search%");
+                        });
+                })
+                ->lock('WITH(NOLOCK)')
+                ->select(['ID', 'Name', 'LocalityID'])
+                ->limit(20)
+                ->get()
+                ->map(function ($locality) {
+                    return (new LocalityService($locality))->getLocation(true);
+                })
+                ->toArray();
+        } elseif ($request->has('country') && $request->has('q')) {
             $search = $request->q;
             $country = Country::query()->where('CountryCode', $request->country)->first();
             if ($country instanceof Country) {

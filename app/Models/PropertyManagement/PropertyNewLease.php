@@ -81,7 +81,7 @@ class PropertyNewLease extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
     }
-            public function createdByUser()
+    public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }
@@ -89,6 +89,10 @@ class PropertyNewLease extends Model
     public function modifiedByUser()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+    public function invoices()
+    {
+        return $this->hasMany(PropertyInvoice::class, 'Lease', 'Id');
     }
 
 

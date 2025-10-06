@@ -43,7 +43,7 @@
                     <option value="">-- Select Customer --</option>
                     @foreach($customers as $cust)
                         <option value="{{ $cust->Id }}" {{ old('CustomerID') == $cust->Id ? 'selected' : '' }}>
-                            {{ $cust->FullName }} ({{ $cust->NationalID }})
+                            {{ $cust->ThirdParty->ThirdPartyName }} -- ({{ $cust->NationalID }})
                         </option>
                     @endforeach
                 </select>
@@ -136,7 +136,7 @@
 
         {{-- Submit --}}
         <div class="text-end">
-            <button class="btn btn-success">Submit Proposal</button>
+            <button class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Proposal</button>
         </div>
     </form>
 </div>

@@ -32,4 +32,9 @@ class PropertyLeaseSchedulePolicy
     {
         return $user->can(PermissionEnum::PropertyLeaseScheduleDelete->value);
     }
+
+    public function print(User $user, PropertyLeaseSchedule $PropertyLeaseSchedule): bool
+    {
+        return $user->can(PermissionEnum::PropertyLeaseSchedulePrint->value);
+    }
 }

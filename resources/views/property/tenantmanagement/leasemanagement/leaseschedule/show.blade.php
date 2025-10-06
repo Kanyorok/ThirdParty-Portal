@@ -27,7 +27,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaseschedule->lease->tenant->TenantName ?? '-' }}" readonly>
+                        value="{{ $leaseschedule->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -39,13 +39,13 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Start Date</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d M Y') : '-' }}" readonly>
+                        value="{{ $leaseschedule->StartDate ? Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d M Y') : '-' }}" readonly>
+                        value="{{ $leaseschedule->EndDate ? Carbon::parse($leaseschedule->EndDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
             </div><br>
 

@@ -60,7 +60,7 @@
             <input type="text" name="Remarks" class="form-control" value="{{ $uomConversion->Remarks }}">
           </div>
           <div class="col-md-4 d-flex align-items-end justify-content-end">
-            <button type="submit" class="btn btn-success mt-2">💾 Update Mapping</button>
+            <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Update Mapping</button>
           </div>
         </div>
 

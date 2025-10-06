@@ -14,32 +14,32 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant Name</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->TenantName ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->ThirdPartyName  ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">ID / Registration No.</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->IDRegistrationNo ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->RegistrationNumber ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Phone Number</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->PhoneNumber ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->Phone ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Email Address</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->EmailAddress ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->Email ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Nationality</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->Nationality ?? '-' }}" readonly>
+                    <label class="form-label fw-semibold">Country of Origin</label>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->Country ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Postal Address</label>
-                    <input type="text" class="form-control bg-light" value="{{ $newtenant->PostalAddress ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $newtenant->thirdParty->PhysicalAddress ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -50,6 +50,17 @@
                         @else
                             <span class="badge bg-danger">Inactive</span>
                         @endif
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Attached Documents</label>
+                    <div class="p-2 border rounded bg-light">
+                        @forelse($newtenant->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                            {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted">No documents attached.</span>
+                        @endforelse
                     </div>
                 </div>
 
@@ -76,4 +87,8 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection
