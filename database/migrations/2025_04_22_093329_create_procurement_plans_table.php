@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('t_ProcurementPlans', function (Blueprint $table) {
             $table->id('Id');
             $table->foreignId('ProcurementPeriodId')->constrained('t_ProcurementPeriods')->onDelete('cascade');
-            $table->foreignId('ItemId')->constrained('t_Items');
+            $table->foreignId('ItemId')->constrained('t_Items', 'Id');
 
             $table->string('Category', 100)->nullable();
             $table->string('UOM', 50)->nullable();

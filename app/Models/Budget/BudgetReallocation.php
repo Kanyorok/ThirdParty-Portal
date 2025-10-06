@@ -4,7 +4,7 @@ namespace App\Models\Budget;
 
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
-use App\Models\User;
+use App\Models\Auth\User;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,7 +12,7 @@ class BudgetReallocation extends Model
 {
     use UserActorTrait;
 
-    protected $primaryKey = 'Id';
+    protected $primaryKey = 'id';
     protected $table = 't_BudgetReallocations';
     public $timestamps = false;
 
@@ -37,10 +37,15 @@ class BudgetReallocation extends Model
         'Amount',
         'Justification',
         'Status',
+        'ApprovalReason',
         'CreatedBy',
         'CreatedOn',
         'ApprovedBy',
-        'ApprovedOn'
+        'ApprovedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+        'DeletedOn',
     ];
 
     protected $casts = [
@@ -153,7 +158,7 @@ class BudgetReallocation extends Model
     {
         $this->update([
             'Status' => 'approved',
-            'ApprovedBy' => $userId ?? auth()->id(),
+            'ApprovedBy' => $userId ?? \Illuminate\Support\Facades\Auth::id(),
             'ApprovedOn' => now()
         ]);
     }

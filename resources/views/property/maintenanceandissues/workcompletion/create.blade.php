@@ -12,17 +12,17 @@
         <!-- Request Selection -->
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label">Select Maintenance Request</label>
+            <label class="form-label">Select Maintenance Request<span class="text-danger">*</span></label>
             <select id="request-select" name="RequestNumber" class="form-select" required>
               <option value="">-- Select Request --</option>
               @foreach ($assignments as $assignment)
                 <option
                   value="{{ $assignment->Id }}"
-                  data-property="{{ $assignment->request->property->PropertyName ?? '' }}"
-                  data-block="{{ $assignment->request->block->BlockName ?? '' }}"
-                  data-floor="{{ $assignment->request->floor->FloorLabel ?? '' }}"
-                  data-unit="{{ $assignment->request->unit->UnitCode ?? '' }}">
-                  {{ $assignment->request->RequestNumber }}
+                  data-property="{{ $assignment->request->property->PropertyName ?? '-' }}"
+                  data-block="{{ $assignment->request->block->BlockName ?? '-' }}"
+                  data-floor="{{ $assignment->request->floor->FloorLabel ?? '-' }}"
+                  data-unit="{{ $assignment->request->unit->UnitCode ?? '-' }}">
+                  {{ $assignment->request->RequestNumber}}
                 </option>
               @endforeach
             </select>
@@ -55,11 +55,11 @@
 
         <div class="row g-3 mb-3">
           <div class="col-md-3">
-            <label class="form-label">Completion Date</label>
+            <label class="form-label">Completion Date<span class="text-danger">*</span></label>
             <input type="date" class="form-control" name="CompletionDate" value="{{ old('CompletionDate', date('Y-m-d')) }}" required>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Parts Used (Optional)</label>
+            <label class="form-label">Parts Used</label>
             <input type="text" class="form-control" name="PartsUsed" placeholder="e.g. 3/4” Pipe, Valve" value="{{ old('PartsUsed') }}">
           </div>
           <div class="col-md-3">
@@ -67,7 +67,7 @@
             <input type="number" class="form-control" name="Cost" placeholder="e.g. 1500" value="{{ old('Cost') }}">
           </div>
           <div class="col-md-3">
-            <label class="form-label">Final Status</label>
+            <label class="form-label">Final Status<span class="text-danger">*</span></label>
             <select class="form-select" name="FinalStatus" required>
               <option value="">--Select a status--</option>
               @foreach ($finalstatus as $status)
@@ -86,14 +86,14 @@
 
         <!-- Work Summary -->
         <div class="mb-3">
-          <label class="form-label">Work Done Summary</label>
+          <label class="form-label">Work Done Summary<span class="text-danger">*</span></label>
           <textarea class="form-control" rows="3" name="WorkDoneSummary" placeholder="e.g. Replaced leaking pipe and sealed joints." required>{{ old('WorkDoneSummary') }}</textarea>
         </div>
         </div>
-
-        <!-- Submit -->
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Mark as Completed</button>
       </div>
+      <!-- Submit -->
+      <a href="{{ route('workcompletion.index') }}" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Mark as Completed</button>
     </div>
   </form>
 </div>

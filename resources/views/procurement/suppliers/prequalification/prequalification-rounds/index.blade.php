@@ -25,6 +25,15 @@
             </a>
         </div>
         
+        <div class="px-3 pt-3">
+            <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
+                <i class="fa fa-info-circle me-2"></i>
+                <span title="Define round dates, vendor cap per category, sections weights = 100%, criteria scored out of 10.">
+                    <strong>Guidance:</strong> A prequalification round defines the start and end dates for supplier prequalification. You must set the maximum number of vendors allowed <em>(enforced per category within this round)</em>, assign weights to sections totaling exactly 100%, and note that each criterion is scored out of 10.
+                </span>
+            </div>
+        </div>
+        
         {{-- Table --}}
         <div class="table-responsive">
             <table id="roundsTable" class="table table-striped table-hover mb-0 align-middle" data-datatable="auto" data-dt-opts='{"pageLength":10,"order":[[3,"desc"]],"responsive":true,"language":{"search":"_INPUT_","searchPlaceholder":"Search rounds..."}}'>
@@ -45,8 +54,8 @@
                         <td>{{ $Round->RoundID }}</td>
                         <td>{{ $Round->Title }}</td>
                         <td>{{ $Round->MaxVendors }}</td>
-                        <td>{{ $Round->StartDate->format('Y-m-d') }}</td>
-                        <td>{{ $Round->EndDate->format('Y-m-d') }}</td>
+                        <td>{{ $Round->StartDate->format('d/m/Y') }}</td>
+                        <td>{{ $Round->EndDate->format('d/m/Y') }}</td>
                         <td>
                             <span class="badge {{ $Round->Status->getBadgeClass() }}">
                                 {{ $Round->Status->label() }}

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Property;
 
 
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Property\PropertyInvoiceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\BillingAndReceipting\PropertyReceiptRequest;
@@ -33,9 +34,9 @@ class PropertyReceiptController extends Controller
 
     public function create()
     {
-        //$this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
 
-        // Only get invoices that are not fully paid
+        $this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
+
         $invoices = PropertyInvoice::with('receipts')->get()->filter(function ($invoice) {
             $totalDue = ($invoice->RentAmount ?? 0) + ($invoice->ServicesCharge ?? 0) + ($invoice->ParkingFee ?? 0) + ($invoice->OtherCharges ?? 0);
             $paid = PropertyReceipt::getAmountPaidSoFar($invoice->Id);
@@ -44,7 +45,6 @@ class PropertyReceiptController extends Controller
 
         $codes = CodeDetail::where('CodeID', 'PaymentMethod')->get();
 
-        // Build an array with amounts paid per invoice
         $amountsPaid = [];
         foreach ($invoices as $invoice) {
             $amountsPaid[$invoice->Id] = PropertyReceipt::getAmountPaidSoFar($invoice->Id);
@@ -55,13 +55,13 @@ class PropertyReceiptController extends Controller
 
     public function show($Id)
     {
-       // $this->authorize(PermissionEnum::PropertyReceiptView, PropertyReceipt::class);
-        $receipt = PropertyReceipt::with('code')->find($Id);
+        $this->authorize(PermissionEnum::PropertyReceiptView, PropertyReceipt::class);
+        $receipt = PropertyReceipt::all()->find($Id);
         return view('property.billingandreceipting.receipting.show', compact('receipt'));
     }
     public function store(PropertyReceiptRequest $request)
     {
-      //  $this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
+        $this->authorize(PermissionEnum::PropertyReceiptCreate, PropertyReceipt::class);
         try {
             $validated = $request->validated();
             $InvoiceID = $validated['InvoiceID'];
@@ -116,8 +116,9 @@ class PropertyReceiptController extends Controller
     }
     public function print($Id)
     {
+        $this->authorize(PermissionEnum::PropertyReceiptPrint, PropertyReceipt::class);
         $receipt = PropertyReceipt::with(['invoice.lease.tenant'])->findOrFail($Id);
-        $tenantName = optional(optional($receipt->invoice)->lease)->tenant->TenantName ?? 'N/A';
+        $tenantName = optional(optional($receipt->invoice)->lease)->tenant->ThirdPartyName ?? 'N/A';
  
                 $html = "
         <html>
@@ -134,7 +135,7 @@ class PropertyReceiptController extends Controller
         </head>
         <body onload='window.print();'>
         <h2>Tenant Payment Receipt</h2>
-        <p><strong>Tenant:</strong> {$tenantName}</strong></p>
+        <p><strong>Tenant:</strong> {$receipt->invoice->lease->tenant->thirdParty->ThirdPartyName }</strong></p>
         <p><strong>Receipt No:</strong> {$receipt->ReferenceNo}</strong></p>
         <p><strong>Invoice No:</strong> " . ($receipt->invoice->InvoiceNumber ?? '-') . "</strong></p>
         <p><strong>Payment Date:</strong> {$receipt->PaymentDate}</p>
@@ -164,84 +165,12 @@ class PropertyReceiptController extends Controller
  
         return response($html)->header('Content-Type', 'text/html');
     }
-    public function edit($id)
-    {
-      //  $this->authorize(PermissionEnum::PropertyReceiptUpdate, PropertyReceipt::class);
-
-        $receipts = PropertyReceipt::with('code')->findOrFail($id);
-        $invoices = PropertyInvoice::all();
-        $statuses = PropertyInvoiceEnum::cases(); // Pass enum cases to the view
-
-        return view('property.billingandreceipting.receipting.edit', compact('receipts', 'invoices', 'statuses'));
-    }
-public function update(PropertyReceiptRequest $request, $id)
-{
-    // $this->authorize(PermissionEnum::PropertyReceiptUpdate, PropertyReceipt::class);
-
-    try {
-        $validated      = $request->validated();
-        $receipt        = PropertyReceipt::findOrFail($id);
-        $invoice        = PropertyInvoice::findOrFail($validated['InvoiceID']);
-        $paymentMethod  = CodeDetail::findOrFail($validated['PaymentMethod']);
-
-        // Cast numeric fields
-        $RentAmount      = floatval($validated['RentAmount']);
-        $ServicesCharge  = floatval($validated['ServicesCharge']);
-        $ParkingFee      = floatval($validated['ParkingFee']);
-        $OtherCharges    = floatval($validated['OtherCharges']);
-        $AmountPaidSoFar = floatval($validated['AmountPaidSoFar']);
-        $AmountPaidNow   = floatval($validated['AmountPaidNow']);
-
-        // Use Service to update
-        PropertyReceiptService::update(
-            $receipt,
-            $invoice,
-            $validated['BillingMonth'],
-            $validated['InvoiceDate'],
-            $RentAmount,
-            $ServicesCharge,
-            $ParkingFee,
-            $OtherCharges,
-            $validated['TotalDue'],
-            $AmountPaidSoFar,
-            $validated['Balance'],
-            $validated['PaymentDate'],
-            $AmountPaidNow,
-            $paymentMethod,
-            $validated['ReferenceNo'],
-            $validated['Remarks'] ?? '',
-            Auth::user()
-        );
-
-        // --- Update Invoice Status ---
-        $totalDue  = $RentAmount + $ServicesCharge + $ParkingFee + $OtherCharges;
-        $totalPaid = PropertyReceipt::getAmountPaidSoFar($invoice->Id);
-
-        if ($totalPaid >= $totalDue) {
-            $invoice->Status = PropertyInvoiceEnum::FullyPaid->value;
-        } elseif ($totalPaid > 0) {
-            $invoice->Status = PropertyInvoiceEnum::PartialPaid->value;
-        } else {
-            $invoice->Status = PropertyInvoiceEnum::Pending->value;
-        }
-        $invoice->save();
-
-        return redirect()
-            ->route('rentreceipt.index')
-            ->with('success', 'Rent receipt updated successfully');
-    } catch (Exception $e) {
-        return redirect()
-            ->back()
-            ->with('error', 'Failed to update receipt: ' . $e->getMessage())
-            ->withInput();
-    }
-}
 
 
     public function destroy($id)
     {
-        //Check if user has permission to delete property categories
-      //  $this->authorize(PermissionEnum::PropertyReceiptDelete, PropertyReceipt::class);
+
+        $this->authorize(PermissionEnum::PropertyReceiptDelete, PropertyReceipt::class);
         try {
             $receipts = PropertyReceipt::findOrFail($id);
             $receipts->delete();

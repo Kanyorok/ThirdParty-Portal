@@ -12,17 +12,7 @@ class ItemMasterListRequest extends FormRequest
 {
     public function authorize()
     {
-
-        if ($this->isMethod('post')) {
-            return $this->user()->can('create', \App\Models\Inventory\ItemMasterList::class);
-        }
-
-        if ($this->isMethod('put') || $this->isMethod('patch')) {
-            $item = $this->route('itemmasterlist');
-            return $item ? $this->user()->can('update', $item) : false;
-        }
-
-        return false;
+        return true;
     }
 
     /**

@@ -10,6 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        if (Schema::hasTable('t_Sections')) {
+            return; // Table already exists; skip creating
+        }
         Schema::create('t_Sections', function (Blueprint $table) {
             $table->id('Id');
             $table->string('SectionName', 100)->unique();

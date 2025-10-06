@@ -17,7 +17,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant Name</label>
                     <input type="text" class="form-control bg-light text-dark"
-                        value="{{ $receipt->invoice->lease->tenant->TenantName ?? '-' }}" readonly>
+                        value="{{ $receipt->invoice->lease->tenant->thirdParty->ThirdPartyName  ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -125,7 +125,6 @@
                 on <strong>{{ $receipt->ModifiedOn ? Carbon::parse($receipt->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
             </div>
             <div>
-                <a href="{{ route('rentreceipt.edit', $receipt->Id) }}" class="btn btn-sm btn-dark">Edit</a>
                 <a href="{{ route('rentreceipt.index') }}" class="btn btn-sm btn-secondary">Back</a>
             </div>
         </div>

@@ -22,7 +22,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaserenewal->lease->tenant->TenantName ?? '-' }}" readonly>
+                        value="{{ $leaserenewal->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -40,41 +40,41 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date of Current Lease</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('d M Y') : '-' }}" readonly>
+                        value="{{ $leaserenewal->EndDateCurrentLease ? Carbon::parse($leaserenewal->EndDateCurrentLease)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">New Start Date</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('d M Y') : '-' }}" readonly>
+                        value="{{ $leaserenewal->NewStartDate ? Carbon::parse($leaserenewal->NewStartDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">New End Date</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('d M Y') : '-' }}" readonly>
+                        value="{{ $leaserenewal->NewEndDate ? Carbon::parse($leaserenewal->NewEndDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">New Monthly Rent (KES)</label>
+                    <label class="form-label fw-semibold">New Monthly Rent</label>
                     <input type="text" class="form-control bg-light text-dark" 
                         value="{{ $leaserenewal->NewMonthlyRent ? number_format($leaserenewal->NewMonthlyRent, 2) : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Service Charge (KES)</label>
+                    <label class="form-label fw-semibold">Service Charge</label>
                     <input type="text" class="form-control bg-light text-dark" 
                         value="{{ $leaserenewal->ServiceCharge ? number_format($leaserenewal->ServiceCharge, 2) : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Parking Fee (KES)</label>
+                    <label class="form-label fw-semibold">Parking Fee</label>
                     <input type="text" class="form-control bg-light text-dark" 
                         value="{{ $leaserenewal->ParkingFee ? number_format($leaserenewal->ParkingFee, 2) : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Other Charges (KES)</label>
+                    <label class="form-label fw-semibold">Other Charges</label>
                     <input type="text" class="form-control bg-light text-dark" 
                         value="{{ $leaserenewal->OtherCharges ? number_format($leaserenewal->OtherCharges, 2) : '-' }}" readonly>
                 </div>

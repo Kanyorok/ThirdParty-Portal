@@ -6,8 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\RFQ;
 use App\Models\ThirdParies\Supplier;
+use App\Models\Procurement\RFQResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Services\HRM\UserService;
+use App\Enums\EmailPriorityEnum;
 
 class RFQController extends Controller
 {
@@ -22,9 +26,10 @@ class RFQController extends Controller
             ->join('t_CodeDetails as cd', 'r.StatusID', '=', 'cd.Id')
             ->join('t_RequisitionLines as rl', 'r.Id', '=', 'rl.RequisitionID')
             ->leftJoin('t_RFQLines as rfql', 'rl.Id', '=', 'rfql.RequisitionLineId')
+            ->leftJoin('t_ConsolidatedProcurementPlan as cpp', 'r.PlanRef', '=', 'cpp.PlanID')
             ->where('cd.Description', 'Approved')
             ->whereNull('rfql.Id')
-            ->select('r.Id', 'r.RequisitionNo')
+            ->select('r.Id', 'r.RequisitionNo', DB::raw("COALESCE(cpp.Title + ' - ' + cpp.ReferenceNumber, '') as PlanTitle"))
             ->distinct()
             ->get();
 
@@ -78,8 +83,8 @@ class RFQController extends Controller
             'RequisitionId' => $request->RequisitionId,
             'Comments' => $request->Comments,
             'SubmissionDeadline' => $request->SubmissionDeadline,
-            'CreatedBy' => auth()->user()->Id,
-            'ModifiedBy' => auth()->user()->Id,
+            'CreatedBy' => \Illuminate\Support\Facades\Auth::user()->Id,
+            'ModifiedBy' => \Illuminate\Support\Facades\Auth::user()->Id,
             'Status' => 'Pending',
         ]);
 
@@ -106,14 +111,51 @@ class RFQController extends Controller
         // Update RFQ status to Approved
         $rfq->update(['Status' => 'Approved']);
 
-        // Update supplier statuses in the pivot table
-        $rfq->suppliers()->syncWithPivotValues($request->suppliers, ['Status' => 'Approved']);
+        // Ensure unique supplier IDs to avoid duplicate pivot entries
+        $supplierIds = collect($request->suppliers)->map(fn($v) => (int)$v)->unique()->values()->all();
 
-        // Notify selected suppliers
-        // $suppliers = Supplier::whereIn('Id', $request->suppliers)->get(['SupplierName', 'ContactEmail']);
-        // foreach ($suppliers as $supplier) {
-             //todo @mureithi send email to supplier
-        // }
+        // Update supplier statuses in the pivot table
+        $rfq->suppliers()->syncWithPivotValues($supplierIds, ['Status' => 'Approved']);
+
+        // Build recipients (unique emails for selected suppliers)
+        $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
+            ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
+            ->whereNull('tpu.DeletedOn')
+            ->groupBy('tpu.ThirdPartyId');
+
+        $recipientRows = DB::table('t_Suppliers as s')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
+                $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
+            })
+            ->whereIn('s.Id', $supplierIds)
+            ->whereNull('s.DeletedOn')
+            ->whereNull('tp.DeletedOn')
+            ->select('tp.TradingName', DB::raw('tpu.Email as Email'))
+            ->get();
+
+        $cc = [];
+        $usedEmails = [];
+        foreach ($recipientRows as $row) {
+            $email = trim((string)$row->Email);
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) && !in_array(strtolower($email), $usedEmails, true)) {
+                $cc[] = [$row->TradingName => $email];
+                $usedEmails[] = strtolower($email);
+            }
+        }
+
+        // Send email via UserService (actor as sender), including suppliers in CC
+        $actor = Auth::user();
+        if ($actor) {
+            $subject = 'RFQ Approved: ' . $rfq->RFQNumber;
+            $body = '<p>Hello ' . e($actor->Name) . ',</p>' .
+                '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
+                '<p>Submission Deadline: <b>' . e(optional($rfq->SubmissionDeadline)->format('Y-m-d')) . '</b></p>' .
+                '<p>Selected suppliers have been notified.</p>';
+
+            (new UserService($actor))
+                ->sendEmail($subject, $body, $cc, true, EmailPriorityEnum::Important);
+        }
 
         return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');
     }
@@ -149,13 +191,79 @@ class RFQController extends Controller
         // Get the RFQ and its associated RFQLines
         $rfq = RFQ::with('rfqLines', 'rfqLines.uom')->findOrFail($id);
 
-        // Get unique itemCategoryIds from the RFQLines
-        $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique();
+        // Gather item category IDs from RFQ lines and include ancestors and descendants
+        $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
+        $allCategoryIds = collect();
+        foreach ($itemCategoryIds as $catId) {
+            $cat = \App\Models\Inventory\ItemCategories::find($catId);
+            if ($cat) {
+                $allCategoryIds->push($cat->Id);
+                // include ancestors so if classification includes a parent, subcategory items still qualify
+                $parent = $cat->parent;
+                while ($parent) {
+                    $allCategoryIds->push($parent->Id);
+                    $parent = $parent->parent;
+                }
+            }
+        }
 
-        // Fetch suppliers whose CategoryId matches any of the itemCategoryIds
-        $suppliers = Supplier::whereIn('CategoryId', $itemCategoryIds)->get();
+        // include descendants (BFS) so if a parent item category is mapped, its subcategories are covered
+        $queue = collect($itemCategoryIds);
+        while ($queue->isNotEmpty()) {
+            $currentBatch = $queue->splice(0, 100)->all();
+            $children = DB::table('t_ItemCategories')
+                ->whereIn('ParentId', $currentBatch)
+                ->pluck('Id');
+            $newChildren = $children->diff($allCategoryIds);
+            if ($newChildren->isNotEmpty()) {
+                $allCategoryIds = $allCategoryIds->merge($newChildren);
+                $queue = $queue->merge($newChildren);
+            }
+        }
 
-        return view('procurement.rfqs.show', compact('rfq', 'suppliers'));
+        $allCategoryIds = $allCategoryIds->unique()->values();
+
+        // Prepare a subquery to fetch a single contact email per third party
+        $thirdPartyUserEmailSub = DB::table('t_ThirdPartyUsers as tpu')
+            ->select('tpu.ThirdPartyId', DB::raw('MIN(tpu.Email) as Email'))
+            ->whereNull('tpu.DeletedOn')
+            ->groupBy('tpu.ThirdPartyId');
+
+        // Select suppliers and de-duplicate by ThirdPartyId (one row per supplier in UI)
+        $suppliers = DB::table('t_Suppliers as s')
+            ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
+                $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
+            })
+            ->whereNull('s.DeletedOn')
+            ->whereNull('tp.DeletedOn')
+            ->where('s.Active_Status', 1)
+            ->whereExists(function ($q) use ($allCategoryIds) {
+                $q->select(DB::raw(1))
+                    ->from('t_SupplierCategory_ItemCategory as scic')
+                    ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
+                    ->whereNull('sc.DeletedOn')
+                    ->whereNull('scic.DeletedOn')
+                    ->whereIn('scic.ItemCategoryID', $allCategoryIds)
+                    ->whereColumn('sc.SupplierCategoryID', 's.CategoryId');
+            })
+            ->groupBy('tp.Id', 'tp.TradingName', 'tp.BusinessType')
+            ->select(
+                DB::raw('MIN(s.Id) as Id'),
+                DB::raw('MIN(s.CategoryId) as SupplierCategoryId'),
+                'tp.Id as ThirdPartyId',
+                'tp.TradingName as SupplierName',
+                'tp.BusinessType',
+                DB::raw('MIN(tpu.Email) as Email')
+            )
+            ->get();
+
+        // Load RFQ responses (supplier quotations) with items and supplier info for printing
+        $rfqResponses = RFQResponse::with(['items.uom', 'supplier.thirdParty'])
+            ->where('RFQId', $rfq->Id)
+            ->get();
+
+        return view('procurement.rfqs.show', compact('rfq', 'suppliers', 'rfqResponses'));
     }
 
     /**
@@ -190,7 +298,7 @@ class RFQController extends Controller
             'ItemCategoryId' => $request->ItemCategoryId,
             'Comments' => $request->Comments,
             'SubmissionDeadline' => $request->SubmissionDeadline,
-            'ModifiedBy' => auth()->user()->Id,
+            'ModifiedBy' => \Illuminate\Support\Facades\Auth::user()->Id,
         ]);
 
         // Update suppliers in the pivot table

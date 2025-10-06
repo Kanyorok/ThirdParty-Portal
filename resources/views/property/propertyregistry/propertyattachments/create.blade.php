@@ -1,6 +1,17 @@
 @extends('layouts.app')
 @section('title', 'Add Property Attachment')
 @section('content')
+
+@if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+@endif
+
 <div class="container mt-4">
     <form action="{{ route('attachments.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
@@ -36,7 +47,7 @@
           </div>
         <div class="col-md-6">
           <label class="form-label">Upload File<span class="text-danger">*</span></label>
-          <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx">
+          <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" required>
         </div>
       </div>
 

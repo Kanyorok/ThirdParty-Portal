@@ -2,6 +2,14 @@
 @section('title', 'Raise Need')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        /* Ensure card content doesn't overflow: make tables responsive and allow modal body scrolling */
+        .card .table-responsive { overflow-x: auto; }
+        /* Allow long text to wrap inside table cells */
+        #raisedneeds td, #raisedneeds th { white-space: normal; word-wrap: break-word; }
+        /* Limit modal body height so it fits inside viewport and scrolls if needed */
+        .modal-body.scrollable { max-height: 60vh; overflow-y: auto; }
+    </style>
 @endsection
 
 @section('content')
@@ -11,13 +19,15 @@
         <a href="{{ route('procurementdepartmentalplan.create') }}" class="btn btn-success">+ Add Need</a>
     </div>
 
-    <table id="raisedneeds" class="table table-bordered table-striped align-middle">
+    <div class="table-responsive">
+    <table id="raisedneeds" class="table table-bordered table-striped align-middle mb-0">
         <thead>
         <tr>
             <th>#</th>
             <th>Item Name</th>
             <th>Category</th>
             <th>Quantity</th>
+            <th>Est. Unit Cost</th>
             <th>Est. Cost</th>
             <th>Status</th>
             <th>Submitted By</th>
@@ -31,6 +41,11 @@
                 <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
                 <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
                 <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
+                <td>
+                    {{ is_numeric($departmentneedview->EstimatedUnitCost ?? null)
+                        ? number_format($departmentneedview->EstimatedUnitCost, 2, '.', ',')
+                        : 'N/A' }}
+                </td>
                 <td>
                     {{ isset($departmentneedview->RequestedQty, $departmentneedview->EstimatedUnitCost) &&
                     is_numeric($departmentneedview->RequestedQty) &&
@@ -73,7 +88,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body">
+                <div class="modal-body scrollable">
                     <div id="lineItemsContainer"></div>
                 </div>
 

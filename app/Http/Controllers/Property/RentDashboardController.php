@@ -8,7 +8,7 @@ use App\Models\PropertyManagement\PropertyReceipt;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyNewTenant;
 use Illuminate\Http\Request;
-    use Illuminate\Support\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class RentDashboardController extends Controller

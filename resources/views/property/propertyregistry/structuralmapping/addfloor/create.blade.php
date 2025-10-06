@@ -59,11 +59,11 @@
             const PropertyId = this.value;
 
             // Reset Block dropdown
-            BlockSelect.innerHTML = '<option value="">-- Select a Block --</option>';
+            BlockSelect.innerHTML = '<option value="">-- Blocks --</option>';
 
             if (PropertyId) {
                 // Construct the URL from the named route
-                const url = `{{ route('getblockbyproperty', ':Id') }}`.replace(':Id', PropertyId);
+                const url = `{{ route('getblocksforfloor', ':Id') }}`.replace(':Id', PropertyId);
 
                 fetch(url)
                     .then(response => response.json())

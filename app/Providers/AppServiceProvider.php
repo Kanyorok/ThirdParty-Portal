@@ -45,6 +45,7 @@ use App\Models\Finance\FinanceGLSubAccountTypes;
 use App\Models\Finance\FinanceGLTypeGroup;
 use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceInvoiceLine;
+use App\Models\Finance\FinanceReceipt;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceJournalLines;
 use App\Models\Finance\FinanceTransaction;
@@ -152,6 +153,7 @@ use App\Policies\Insurance\InsuranceProductPolicy;
 use App\Policies\Insurance\InsuranceProductRiderPolicy;
 use App\Policies\Insurance\CommissionRulePolicy;
 use App\Policies\Inventory\InterBranchRequisitionPolicy;
+
 use App\Policies\Inventory\InventoryHoldReviewPolicy;
 use App\Policies\Inventory\InventoryTypePolicy;
 use App\Policies\Inventory\ItemCategoryPolicy;
@@ -245,6 +247,8 @@ use App\Models\Legal\LegalTemplate;
 use App\Models\Legal\LoanSecurity;
 use App\Models\Procurement\Section;
 use Illuminate\Support\Facades\View;
+use App\Models\Auth\PersonalAccessToken as CustomPersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -429,6 +433,7 @@ class AppServiceProvider extends ServiceProvider
             TaxJurisdiction::getPrimaryKey() => TaxJurisdiction::class,
             FinanceTaxType::getPrimaryKey() => FinanceTaxType::class,
             FinanceInvoiceEntry::getPrimaryKey() => FinanceInvoiceEntry::class,
+            FinanceReceipt::getPrimaryKey() => FinanceReceipt::class,
 
             //Fleet Management
 
@@ -537,6 +542,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(UOMConversion::class, UOMConversionPolicy::class);
         Gate::policy(FleetRepairLog::class, FleetRepairLogPolicy::class);
         Gate::policy(FleetVehicleInspection::class, FleetVehicleInspectionPolicy::class);
+
+        Sanctum::usePersonalAccessTokenModel(CustomPersonalAccessToken::class);
 
         /* Event::listen(EmailSendEvent::class, EmailSendListener::class);
          Event::listen(SMSSendEvent::class, SMSSendListener::class);

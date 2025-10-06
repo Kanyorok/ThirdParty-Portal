@@ -23,7 +23,7 @@ class BudgetActivitiesController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetActivity::class);
         $activities = BudgetActivity::with([
-            'budget:Id,Name,From,To',
+            'budget:Id,Name,From,To,Status',
             //'allocations:Id,BudgetActivityID,Month,Amount',
             //'branch:Id,Name',
             //'budgetLine:Id,LineName',
@@ -48,7 +48,7 @@ class BudgetActivitiesController extends Controller
             ->toArray();
         $budgetLines = BudgetLine::select('Id', 'LineName')->whereIn('Id',$checkIds)->get();
         $branches = Branch::select('Id', 'Name')->get();
-        $budgets = Budget::all();
+        $budgets = Budget::select('Id', 'Name')->where('Status','draft')->get();
 
         return view('budgetandanalytics.budgetactivities.create', compact(
             'budgetLines',
@@ -73,6 +73,15 @@ class BudgetActivitiesController extends Controller
             'FullAllocation' => 'nullable|numeric|min:0',
             'monthly_allocations' => 'nullable|array',
             'monthly_allocations.*' => 'nullable|numeric|min:0',
+        ],
+        [
+            'ActivityID.required' => 'Please select an activity from the list.',
+            'BudgetID.required' => 'Please select a budget from the list.',
+            'BudgetLineID.required' => 'Please select a budget line from the list.',
+            'Description.required' => 'Please enter a description.',
+            'AllocationType.required' => 'Please select an allocation type.',
+            'monthly_allocations.*.numeric' => 'Monthly allocation must be a number.',
+            'monthly_allocations.*.min' => 'Monthly allocation must be greater than 0.',
         ]);
 
         try {

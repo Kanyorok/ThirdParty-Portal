@@ -51,21 +51,30 @@
                         @forelse ($driverRates as $item)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $item->productType->Description ?? '-' }}</td>
-                                <td>{{ $item->rateType->RateTypeName ?? '-' }}</td>
-                                <td>{{ number_format($item->RateValue, 2) }}</td>
-                                <td>{{ $item->Source ?? '-' }}</td>
+                                <td>{{ $item['Description']['Description'] ?? '-' }}</td>
+                                <td>{{ $item['RateTypeName'] ?? '-' }}</td>
+                                <td>{{ number_format($item['RateValue'], 2) }}</td>
+                                <td>{{ $item['Source'] ?? '-' }}</td>
                                 <td class="text-center">
-                                    <a href="{{ route('yieldexpenserate.edit', $item->Id) }}"
-                                       class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                    <a href="javascript:void(0);"
+                                       class="btn btn-sm btn-outline-primary me-1 edit-btn"
+                                       data-id="{{ $item['Id'] }}"
+                                       data-product="{{ $item['Description']['Description'] ?? '-' }}"
+                                       data-ratetype="{{ $item['RateTypeName'] ?? '-' }}"
+                                       data-ratevalue="{{ $item['RateValue'] }}"
+                                       data-source="{{ $item['Source'] ?? '-' }}"
+                                       title="Edit"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#editRateModal-{{$item['Id']}}">
                                         <i class="fas fa-edit"></i>
                                     </a>
+
                                     <button type="button"
                                             class="btn btn-sm btn-outline-danger custom-delete-btn"
                                             data-bs-toggle="modal"
                                             data-bs-target="#customDeleteConfirmModal"
-                                            data-name="{{ $item->productType->Description??'-' }}"
-                                            data-route="{{ route('yieldexpenserate.destroy', $item->Id) }}"
+                                            data-name="{{ $item['Description']['Description']??'-' }}"
+                                            data-route="{{ route('yieldexpenserate.destroy', $item['Id']) }}"
                                             title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
@@ -164,5 +173,79 @@
         </div>
     </div>
 
+
+    @foreach($driverRates as $item)
+        <!-- Edit Rate Modal -->
+        <div class="modal fade" id="editRateModal-{{ $item['Id'] }}" tabindex="-1" aria-labelledby="editRateLabel-{{ $item['Id'] }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rounded-3 shadow">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-primary" id="editRateLabel-{{ $item['Id'] }}">
+                            <i class="fas fa-edit me-2"></i> Edit Product Rate
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <form method="POST" action="{{ route('yieldexpenserate.update', $item['Id']) }}">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <!-- Product (readonly text) -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Product</label>
+                                    <input type="text" class="form-control" value="{{ $item['Description']['Description'] }}" readonly>
+                                    <!-- Hidden field to still hold ProductTypeID -->
+                                    <input type="hidden" name="ProductTypeID" value="{{ $item['Description']['Id'] }}">
+                                </div>
+
+                                <!-- Rate Type -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Rate Type</label>
+                                    <select class="form-select" name="RateTypeID" required>
+                                        <option value="">-- Select Rate Type --</option>
+                                        @foreach($rateTypes as $rate)
+                                            <option value="{{ $rate->Id }}" {{ $rate->RateTypeName === $item['RateTypeName'] ? 'selected' : '' }}>
+                                                {{ $rate->RateTypeName }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Rate Value -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Rate Value (%)</label>
+                                    <input type="number" step="0.01" class="form-control" name="RateValue"
+                                           value="{{ $item['RateValue'] }}" required>
+                                </div>
+
+                                <!-- Source -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Source</label>
+                                    <input type="text" class="form-control" name="Source"
+                                           value="{{ $item['Source'] }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-success"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerHTML='<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Updating...'; this.form.submit(); }">
+                                <i class="fas fa-save me-1"></i> Update Rate
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+
+
     @include('components.modals.delete-confirm')
+
 @endsection

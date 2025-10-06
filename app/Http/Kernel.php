@@ -28,6 +28,8 @@ class Kernel extends HttpKernel
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\Session\Middleware\AuthenticateSession::class,
+            \App\Http\Middleware\EnforceSessionTimeout::class,
+            \App\Http\Middleware\EnsureSingleActiveSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -53,5 +55,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'thirdparty' => \App\Http\Middleware\EnforceThirdPartyUser::class,
         'thirdparty.approved' => \App\Http\Middleware\CheckThirdPartyApprovalStatus::class,
+    'verified.user' => \App\Http\Middleware\VerifiedUser::class,
     ];
 }

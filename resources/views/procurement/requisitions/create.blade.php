@@ -48,7 +48,9 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $item->RequisitionNo }}</td>
                                     <td>{{ $item->PlanTitle ?? 'N/A' }}</td>
-                                    <td>{{ $item->CreatedOn ? Carbon::parse($item->CreatedOn)->format('d-m-Y') : '' }}</td>
+                                    <td data-order="{{ $item->CreatedOn ? Carbon::parse($item->CreatedOn)->format('Y-m-d H:i:s') : '' }}">
+                                        {{ $item->CreatedOn ? Carbon::parse($item->CreatedOn)->format('d-m-Y') : '' }}
+                                    </td>
                                     <td>{{ $item->BranchID }}</td>
                                     <td>{{ $item->DepartmentID }}</td>
                                     <td>{{ $item->Remarks }}</td>
@@ -174,6 +176,7 @@
             ordering: true,
             searching: true,
             lengthChange: true,
+            order: [[3, 'desc']], // Requisition Date column (0-based index)
             language: {
                 emptyTable: "No data available"
             }

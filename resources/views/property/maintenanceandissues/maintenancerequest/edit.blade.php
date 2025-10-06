@@ -17,7 +17,7 @@
         </div>
     @endif
 
-    <form action="{{ route('maintenancerequest.update', $maintenancerequest->Id) }}" method="POST">
+    <form action="{{ route('maintenancerequest.update', $maintenancerequest->Id) }}" enctype="multipart/form-data" method="POST">
         @csrf
         @method('PUT')
 
@@ -26,14 +26,14 @@
 
                 <div class="row">
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Request Number</label>
+                    <label class="form-label">Request Number<span class="text-danger">*</span></label>
                     <input type="text" class="form-control" value="{{ $maintenancerequest->RequestNumber }}" disabled>
                 </div>
 
                 {{-- Property --}}
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Property</label>
-                    <select name="Property" id="property-select" class="form-select @error('Property') is-invalid @enderror">
+                    <label class="form-label">Property<span class="text-danger">*</span></label>
+                    <select name="Property" id="property-select" class="form-select @error('Property') is-invalid @enderror" required>
                         <option value="">-- Select Property --</option>
                         @foreach($properties as $property)
                             <option value="{{ $property->Id }}" {{ $property->Id == old('Property', $maintenancerequest->Property) ? 'selected' : '' }}>
@@ -86,12 +86,12 @@
                 {{-- Request Details --}}
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Reported By</label>
+                        <label class="form-label">Reported By<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="ReportedBy" placeholder="Optional"
-                            value="{{ old('ReportedBy', $maintenancerequest->ReportedBy) }}">
+                            value="{{ old('ReportedBy', $maintenancerequest->ReportedBy) }}" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Issue Type</label>
+                        <label class="form-label">Issue Type<span class="text-danger">*</span></label>
                         <select class="form-select" name="IssueType" required>
                             <option value="">-- Select Issue Type --</option>
                             @foreach ($issuetypes as $issuetype)
@@ -103,8 +103,8 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Priority</label>
-                        <select class="form-select" name="Priority">
+                        <label class="form-label">Priority<span class="text-danger">*</span></label>
+                        <select class="form-select" name="Priority" required>
                             <option value="">-- Select Priority Level --</option>
                             @foreach ($priorities as $priority)
                                 <option value="{{ $priority->ID }}"
@@ -154,9 +154,9 @@
 
 <script>
 const routes = {
-    getBlocks: "{{ route('getblockbyproperty', ['PropertyId' => '__ID__']) }}",
-    getFloors: "{{ route('getfloorbyblock', ['BlockId' => '__ID__']) }}",
-    getUnits: "{{ route('getunitbyfloor', ['FloorId' => '__ID__']) }}"
+    getBlocks: "{{ route('getblockbyproperty.maintenance', ['PropertyId' => '__ID__']) }}",
+    getFloors: "{{ route('getfloorbyblock.maintenance', ['BlockId' => '__ID__']) }}",
+    getUnits: "{{ route('getunitbyfloor.maintenance', ['FloorId' => '__ID__']) }}"
 };
 
 document.addEventListener('DOMContentLoaded', function () {

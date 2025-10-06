@@ -22,7 +22,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Termination Date</label>
                     <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d M Y') : '-' }}" readonly>
+                        value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">

@@ -26,7 +26,7 @@ class PropertyBlockController extends Controller
     }
     public function create(){
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyBlock::class);
-        $properties = PropertyRegistry::all();
+        $properties = PropertyRegistry::where('IsActive',true)->get();
         return view('property.propertyregistry.structuralmapping.addblock.create', compact('properties'));
     }
 

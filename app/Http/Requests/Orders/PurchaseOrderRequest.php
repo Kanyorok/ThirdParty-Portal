@@ -22,13 +22,20 @@ class PurchaseOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-
             'supplier' => ['required'],
-            'pODate' => ['required', 'date'],
+            'pODate' => ['required', 'date', 'before_or_equal:today'],
             'priority' => ['nullable'],
             'refNo' => ['nullable'],
             'terms' => ['required', 'exists:t_CodeDetails,ID,CodeID,PaymentTerm'],
 
+            // For unified origination forms
+            'origination_type' => ['nullable', 'in:rfq,award,contract,direct'],
+            'award_id' => ['nullable', 'integer'],
+            'contract_id' => ['nullable', 'integer'],
+            'plan_item_id' => ['nullable', 'integer'],
+            'rfq_id' => ['nullable'],
+
+            // Item arrays - required for most cases but flexible for unified forms
             'itemCode' => 'required|array|min:1',
             // 'itemCode.*'  => 'required|integer|exists:items,id',
 
@@ -46,6 +53,11 @@ class PurchaseOrderRequest extends FormRequest
 
             'lineTotal' => 'required|array',
             'lineTotal.*' => ['required', 'numeric', 'min:0'],
+
+            // Additional fields for unified form
+            'notes' => ['nullable', 'string'],
+            'delivery_terms' => ['nullable', 'string'],
+            'address' => ['nullable', 'string'],
         ];
     }
 }

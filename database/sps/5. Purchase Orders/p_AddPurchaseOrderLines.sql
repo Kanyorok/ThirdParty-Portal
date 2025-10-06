@@ -14,17 +14,24 @@ BEGIN
 
     DECLARE @PriceIncl float;
 
+    DECLARE @DiscAmount float;
+
+    -- Unit price including tax
     set @PriceIncl = isnull(@Price, 0) * (1 + @Tax / 100)
 
+    -- Calculate discount amount (absolute) based on percentage passed in @Discount
+    set @DiscAmount = (@Quantity * isnull(@Price, 0)) * (isnull(@Discount, 0) / 100.0)
 
--- 		set @LineTotal = ((@Quantity * @Price) - @Discount) * (1 + @Tax / 100)
-    set @LineTotal = (@Quantity * @Price) * (1 - @Discount / 100) * (1 + @Tax / 100)
+    -- Line total: (quantity * unit price) minus discount amount, then apply tax
+    set @LineTotal = ((@Quantity * isnull(@Price, 0)) - @DiscAmount) * (1 + @Tax / 100)
 
     -- Insert new purchase order lines
+
+    -- Store fLineDiscount as absolute discount amount (not percentage)
     INSERT INTO t_OrderLines (iOrderID, fQuantity, fUnitPriceExcl, fUnitPriceIncl, flineDiscount, fTaxRate, CreatedBy,
-                              CreatedOn, ModifiedBy, ModifiedOn, BranchID, iStockCodeID, LineTotal)
-    VALUES (@OrderId, @Quantity, @Price, @PriceIncl, @Discount, @Tax, @User, getdate(), @User, getdate(), @BranchId,
-            @Item, @LineTotal)
+                  CreatedOn, ModifiedBy, ModifiedOn, BranchID, iStockCodeID, LineTotal)
+    VALUES (@OrderId, @Quantity, @Price, @PriceIncl, @DiscAmount, @Tax, @User, getdate(), @User, getdate(), @BranchId,
+        @Item, @LineTotal)
 
 
     SET NOCOUNT OFF

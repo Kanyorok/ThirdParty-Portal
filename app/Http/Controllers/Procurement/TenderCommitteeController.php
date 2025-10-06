@@ -163,14 +163,18 @@ class TenderCommitteeController extends Controller
                 return redirect()->back()->with('error', 'Tender not found with ID: ' . $id);
             }
             $title = $tender->Title;
-            $committeeMembers = TenderCommitteeMember::where('TenderID', $id)->with('employee')->get();
+            $committeeMembers = TenderCommitteeMember::where('TenderID', $id)
+                ->with(['user.employee'])
+                ->get();
         } elseif ($type === 'rfq') {
             $rfq = RFQ::find($id);
             if (!$rfq) {
                 return redirect()->back()->with('error', 'RFQ not found with ID: ' . $id);
             }
             $title = $rfq->RFQNumber;
-            $committeeMembers = RFQCommitteeMember::where('RFQID', $id)->get();
+            $committeeMembers = RFQCommitteeMember::where('RFQID', $id)
+                ->with(['user.employee'])
+                ->get();
         }
         return view('procurement.tendering.bidopeningandevaluation.committeeappointment.TenderMembers', [
             'committeeMembers' => $committeeMembers,

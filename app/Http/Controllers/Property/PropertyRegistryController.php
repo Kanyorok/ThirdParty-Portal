@@ -29,7 +29,8 @@ class PropertyRegistryController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
-        $lineentries = CategoryMaster::with('propertytypes')->get();
+        $lineentries = CategoryMaster::with('propertytypes')
+        ->where('Type', 'PropertyCategory')->get();
         $countries = Country::all();
         return view('property.propertyregistry.registry.create', compact('lineentries', 'countries'));
     }
@@ -46,11 +47,17 @@ class PropertyRegistryController extends Controller
         return response()->json($localities);
     }
 
-    public function show($id){
+    public function show($id)
+    {
         $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
-        $property = PropertyRegistry::find($id);
-        return view('property.propertyregistry.registry.show',compact('property'));
+
+        $property = PropertyRegistry::with([
+            'getBlockByProperty.floor.units'
+        ])->findOrFail($id);
+
+        return view('property.propertyregistry.registry.show', compact('property'));
     }
+
 
     public function store(PropertyRegistryRequest $request)
     {
@@ -77,7 +84,7 @@ class PropertyRegistryController extends Controller
             $country,
             $location,
             $validated['Address'],
-            $validated['PropertyDescription'] ?? null,
+            $validated['PropertyDescription'] ?? '',
             $request->user(),
             $firstFile
         );
