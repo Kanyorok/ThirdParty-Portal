@@ -59,7 +59,6 @@ class FleetVehicleInspectionService
                 'Mileage'            => $data['Mileage'] ?? null,
                 'Fuel'               => $data['Fuel'] ?? null,
                 'EngineOil'          => $data['EngineOil'] ?? null,
-                'Speedometer'        => $data['Speedometer'] ?? null,
                 'Coolant'            => $data['Coolant'] ?? null,
                 'Reflector'          => $data['Reflector'] ?? 0,
                 'FireExtinguisher'   => $data['FireExtinguisher'] ?? 0,
