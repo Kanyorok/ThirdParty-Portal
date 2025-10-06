@@ -33,7 +33,7 @@
                         @forelse($invoices as $item)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ ($item->thirdParty->TradingName ?? $item->thirdParty->ThirdPartyName) ?? '-' }}</td>
+                                <td>{{ ($item->thirdParty->TradingName ?? optional($item->thirdParty)->ThirdPartyName) ?? '-' }}</td>
                                 <td>{{ $item->InvoiceNumber ?? '-' }}</td>
                                 <td>{{ $item->InvoiceDate ? \Carbon\Carbon::parse($item->InvoiceDate)->format('d-m-Y') : '-' }}</td>
                                 <td class="text-end">{{ $item->InvoiceAmount ? number_format($item->InvoiceAmount, 2) : '-' }}</td>
