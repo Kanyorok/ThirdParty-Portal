@@ -8,6 +8,7 @@ import { ErrorState } from '@/components/dashboard/error-state'
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
 import { RequestSummaryCards } from '@/components/request'
 import { containerVariants, itemVariants } from '@/lib/dashboard-animations'
+import SummaryCharts from '@/components/dashboard/summary-charts'
 import { usePageTitle } from '@/hooks/use-page-title'
 
 function DashboardContent() {
@@ -65,6 +66,24 @@ function DashboardContent() {
                             </div>
                             <Suspense fallback={<DashboardSkeleton />}>
                                 <RequestSummaryCards />
+                            </Suspense>
+                        </motion.section>
+
+                        <motion.section
+                            variants={itemVariants}
+                            aria-labelledby="analytics-heading"
+                            className="space-y-6"
+                        >
+                            <div className="flex items-center justify-between">
+                                <h2
+                                    id="analytics-heading"
+                                    className="text-2xl font-semibold text-foreground"
+                                >
+                                    Activity Analytics
+                                </h2>
+                            </div>
+                            <Suspense fallback={<DashboardSkeleton />}>
+                                <SummaryCharts />
                             </Suspense>
                         </motion.section>
 

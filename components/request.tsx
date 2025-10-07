@@ -5,50 +5,75 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/ca
 import { DollarSign, Mail, CheckCircle, Loader2 } from "lucide-react"; // Icons for each card
 import { motion, AnimatePresence } from "framer-motion";
 
-interface RequestSummary {
-    title: string;
-    count: number;
-    icon: React.ElementType;
-    description: string;
-    colorClass: string;
+interface SummaryResponse {
+    summary: {
+        activePrequalificationRequests: number;
+        directInvites: number;
+        availableTenders: number;
+        completedRequests: number;
+    };
 }
 
 export function RequestSummaryCards() {
-    const [summaryData, setSummaryData] = useState<RequestSummary[]>([]);
+    const [summaryData, setSummaryData] = useState<{
+        title: string;
+        count: number;
+        icon: React.ElementType;
+        description: string;
+        colorClass: string;
+    }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchSummaryData = async () => {
             setIsLoading(true);
-            await new Promise((resolve) => setTimeout(resolve, 1200)); // Simulate API call delay
+            try {
+                const res = await fetch('/api/dashboard/summary', { cache: 'no-store' });
+                if (!res.ok) throw new Error('Failed to load summary');
+                const data: SummaryResponse = await res.json();
 
-            // Mock data for demonstration
-            const mockData: RequestSummary[] = [
-                {
-                    title: "Active Requests",
-                    count: Math.floor(Math.random() * 50) + 10, // 10-59 active requests
-                    icon: DollarSign, // Using DollarSign as a generic request icon
-                    description: "Currently open and awaiting action.",
-                    colorClass: "text-blue-500 dark:text-blue-400",
-                },
-                {
-                    title: "Direct Invites",
-                    count: Math.floor(Math.random() * 20) + 5, // 5-24 direct invites
-                    icon: Mail, // Icon for invites
-                    description: "Requests sent directly to your organization.",
-                    colorClass: "text-purple-500 dark:text-purple-400",
-                },
-                {
-                    title: "Completed Requests",
-                    count: Math.floor(Math.random() * 100) + 30, // 30-129 completed requests
-                    icon: CheckCircle, // Icon for completed
-                    description: "Requests that have been finalized.",
-                    colorClass: "text-green-500 dark:text-green-400",
-                },
-            ];
+                const items = [
+                    {
+                        title: "Active Requests",
+                        count: data.summary.activePrequalificationRequests ?? 0,
+                        icon: DollarSign,
+                        description: "Applications in progress or under review.",
+                        colorClass: "text-blue-500 dark:text-blue-400",
+                    },
+                    {
+                        title: "Direct Invites",
+                        count: data.summary.directInvites ?? 0,
+                        icon: Mail,
+                        description: "Invitations to apply sent to you.",
+                        colorClass: "text-purple-500 dark:text-purple-400",
+                    },
+                    {
+                        title: "Available Tenders",
+                        count: data.summary.availableTenders ?? 0,
+                        icon: DollarSign,
+                        description: "Open and invited tenders you can apply to.",
+                        colorClass: "text-amber-600 dark:text-amber-400",
+                    },
+                    {
+                        title: "Completed Requests",
+                        count: data.summary.completedRequests ?? 0,
+                        icon: CheckCircle,
+                        description: "Successful applications and prequalifications.",
+                        colorClass: "text-green-500 dark:text-green-400",
+                    },
+                ];
 
-            setSummaryData(mockData);
-            setIsLoading(false);
+                setSummaryData(items);
+            } catch (e) {
+                setSummaryData([
+                    { title: "Active Requests", count: 0, icon: DollarSign, description: "Applications in progress or under review.", colorClass: "text-blue-500 dark:text-blue-400" },
+                    { title: "Direct Invites", count: 0, icon: Mail, description: "Invitations to apply sent to you.", colorClass: "text-purple-500 dark:text-purple-400" },
+                    { title: "Available Tenders", count: 0, icon: DollarSign, description: "Open and invited tenders you can apply to.", colorClass: "text-amber-600 dark:text-amber-400" },
+                    { title: "Completed Requests", count: 0, icon: CheckCircle, description: "Successful applications and prequalifications.", colorClass: "text-green-500 dark:text-green-400" },
+                ]);
+            } finally {
+                setIsLoading(false);
+            }
         };
 
         fetchSummaryData();

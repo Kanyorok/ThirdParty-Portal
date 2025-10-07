@@ -18,6 +18,7 @@ import { Button } from "@/components/common/button"
 import { Separator } from "@/components/common/separator"
 import { cn } from "@/lib/utils"
 import { getFlatNavItems } from "@/utils/navigation"
+import { FileText, FileSearch, FileQuestion, FileCheck2, FileCog, FileSymlink, File } from "lucide-react"
 
 type NavItem = {
     href: string
@@ -205,6 +206,28 @@ export const SearchDialog = memo(function SearchDialog() {
         [items, recentHrefs]
     )
 
+    const [remoteResults, setRemoteResults] = useState<{ id: string | number; type: string; title: string; description?: string; href?: string }[] | null>(null)
+    const [remoteLoading, setRemoteLoading] = useState(false)
+
+    useEffect(() => {
+        const q = debouncedQuery.trim()
+        if (!q) {
+            setRemoteResults(null)
+            return
+        }
+        let cancelled = false
+        setRemoteLoading(true)
+        fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`, { cache: 'no-store' })
+            .then(async (r) => {
+                if (!r.ok) throw new Error('search failed')
+                const data = await r.json()
+                if (!cancelled) setRemoteResults(Array.isArray(data?.data) ? data.data : [])
+            })
+            .catch(() => { if (!cancelled) setRemoteResults([]) })
+            .finally(() => { if (!cancelled) setRemoteLoading(false) })
+        return () => { cancelled = true }
+    }, [debouncedQuery])
+
     const filteredGroups: GroupedItems[] = useMemo(() => {
         const q = debouncedQuery.trim()
         if (!q) {
@@ -225,7 +248,8 @@ export const SearchDialog = memo(function SearchDialog() {
             if (!byGroup.has(key)) byGroup.set(key, [])
             byGroup.get(key)!.push(item)
         }
-        return Array.from(byGroup.entries()).map(([group, gi]) => ({ group, items: gi }))
+        const navGroups = Array.from(byGroup.entries()).map(([group, gi]) => ({ group, items: gi }))
+        return navGroups
     }, [debouncedQuery, groups, items, recentItems])
 
     const navigate = useCallback(
@@ -270,6 +294,52 @@ export const SearchDialog = memo(function SearchDialog() {
                         <CommandEmpty>{SEARCH_CONFIG.emptyMessage}</CommandEmpty>
 
                         <AnimatePresence initial={false} mode="popLayout">
+                            {/* Remote results group */}
+                            {remoteResults && (
+                                <motion.div
+                                    key="remote"
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -6 }}
+                                    transition={{ duration: 0.15 }}
+                                >
+                                    <CommandGroup heading={remoteLoading ? "Searching…" : "Results"}>
+                                        {remoteResults.length === 0 && !remoteLoading ? (
+                                            <div className="px-3 py-2 text-xs text-muted-foreground">No matching tenders, RFQs, or documents.</div>
+                                        ) : (
+                                            remoteResults.map((r) => (
+                                                <CommandItem
+                                                    key={`${r.type}:${r.id}`}
+                                                    value={`${r.title} ${r.description || ''}`}
+                                                    onSelect={() => {
+                                                        setOpen(false)
+                                                        if (r.href) {
+                                                            startTransition(() => router.push(r.href!))
+                                                        }
+                                                    }}
+                                                    className="cursor-pointer px-3 py-2 aria-selected:bg-accent aria-selected:text-accent-foreground"
+                                                    disabled={isPending}
+                                                >
+                                                    <div className="flex w-full min-w-0 items-center gap-2">
+                                                        <File className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="truncate text-sm font-medium">
+                                                                <Highlight text={r.title} query={debouncedQuery} />
+                                                            </div>
+                                                            {r.description ? (
+                                                                <div className="truncate text-xs text-muted-foreground">
+                                                                    <Highlight text={r.description} query={debouncedQuery} />
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                    </div>
+                                                </CommandItem>
+                                            ))
+                                        )}
+                                    </CommandGroup>
+                                </motion.div>
+                            )}
+
                             {filteredGroups.map(({ group, items }, gi) => (
                                 <motion.div
                                     key={group}
