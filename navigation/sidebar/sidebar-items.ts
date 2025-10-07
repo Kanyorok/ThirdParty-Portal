@@ -48,22 +48,22 @@ export const sidebarItems: readonly NavSection[] = [
         items: [
             {
                 title: "Tenders",
-                url: "/tenders",
+                url: "/dashboard/tenders",
                 icon: FileText,
             },
             {
                 title: "RFQs",
-                url: "/rfqs",
+                url: "/dashboard/rfqs",
                 icon: ClipboardList,
             },
             {
                 title: "Prequalification",
-                url: "/prequalification",
+                url: "/dashboard/prequalification",
                 icon: ClipboardCheck,
             },
             {
                 title: "My Documents",
-                url: "/documents",
+                url: "/dashboard/documents",
                 icon: FolderOpen,
             },
         ],
@@ -73,12 +73,12 @@ export const sidebarItems: readonly NavSection[] = [
         items: [
             {
                 title: "My Account",
-                url: "/account",
+                url: "/dashboard/account",
                 icon: User,
             },
             {
                 title: "Help & Support",
-                url: "/help",
+                url: "/dashboard/help",
                 icon: HelpCircle,
             },
         ],
