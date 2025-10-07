@@ -55,9 +55,9 @@
                         <a href="{{ route('invoiceentry.index') }}" class="btn btn-outline-secondary">
                             <i data-feather="arrow-left"></i> Back
                         </a>
-                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>
-                            <i data-feather="file-text"></i> View PO Items
-                        </button>
+{{--                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>--}}
+{{--                            <i data-feather="file-text"></i> View PO Items--}}
+{{--                        </button>--}}
                         <button type="button" class="btn btn-success" onclick="window.print()">
                             <i data-feather="printer"></i> Print
                         </button>
