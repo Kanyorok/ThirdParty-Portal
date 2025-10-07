@@ -26,6 +26,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Simple module scoped counter for fallback IDs (avoids window any casts)
+let docCounter = 0;
+
 interface Tender {
   id: string;
   title: string;
@@ -45,9 +48,10 @@ interface DocumentUpload {
 
 interface TenderBidFormProps {
   tender: Tender;
+  onFinalSubmitSuccess?: () => void; // callback to collapse modal & notify parent
 }
 
-export default function TenderBidForm({ tender }: TenderBidFormProps) {
+export default function TenderBidForm({ tender, onFinalSubmitSuccess }: TenderBidFormProps) {
   const [bidData, setBidData] = useState({
     bidAmount: "",
     currency: tender.currency?.code || "KES",
@@ -110,7 +114,7 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
             toast.success(`✅ Final bid already submitted on ${new Date(existing.createdOn || existing.CreatedOn).toLocaleDateString()}`);
           }
         }
-      } catch (error) {
+  } catch {
         // Silent fail for existing bid check
         // Don't show error to user - just proceed with empty form
       } finally {
@@ -152,10 +156,12 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
         return;
       }
 
+      // Generate deterministic-ish incremental fallback id if crypto not available
+      const fallbackId = `doc_${++docCounter}`;
       const newDocument: DocumentUpload = {
         file,
         documentType: "other", // Default type
-        id: Math.random().toString(36).substring(2, 15),
+        id: (typeof crypto !== 'undefined' && 'randomUUID' in crypto) ? (crypto as unknown as { randomUUID: () => string }).randomUUID() : fallbackId,
       };
 
       setDocuments(prev => [...prev, newDocument]);
@@ -314,7 +320,7 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
       formData.append('status', type === 'draft' ? 'draft' : 'submitted');
 
       // Add documents
-      documents.forEach((doc, index) => {
+  documents.forEach((doc) => {
         formData.append('documents', doc.file);
         formData.append('documentTypes', doc.documentType);
       });
@@ -383,16 +389,24 @@ export default function TenderBidForm({ tender }: TenderBidFormProps) {
         setDocuments([]);
         setExistingBidId(data.data?.bid_id || data.data?.Id || null);
         setIsEditingDraft(false); // Final submission, no longer editing draft
+
+        // Trigger external success handler (e.g., close modal / collapse dialog)
+        if (onFinalSubmitSuccess) {
+          // Slight delay to let toast render before closing
+            setTimeout(() => {
+              onFinalSubmitSuccess();
+            }, 400);
+        }
       } else if (type === 'draft') {
         // For draft saves, update the existing bid ID if we got one back
         setExistingBidId(data.data?.bid_id || data.data?.Id || existingBidId);
         setIsEditingDraft(true); // Still in draft mode
       }
 
-    } catch (error) {
+    } catch (err) {
       toast.error(
-        error instanceof Error 
-          ? error.message 
+        err instanceof Error 
+          ? err.message 
           : "Failed to submit bid"
       );
     } finally {

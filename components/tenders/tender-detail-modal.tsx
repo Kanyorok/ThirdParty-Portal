@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/common/dialog";
 import { Button } from "@/components/common/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/common/tabs";
 import { Badge } from "@/components/common/badge";
-import { Separator } from "@/components/common/separator";
 import {
   Calendar,
   DollarSign,
@@ -19,7 +18,6 @@ import {
   XCircle,
   AlertTriangle,
   Download,
-  Upload,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -314,10 +312,16 @@ export default function TenderDetailModal({
 
             <TabsContent value="bidding" className="mt-0 data-[state=active]:block data-[state=inactive]:hidden">
               <div className="px-4 py-2">
-                <TenderBidForm tender={{
-                  ...tender,
-                  id: tender.id.toString()
-                }} />
+                <TenderBidForm
+                  tender={{
+                    ...tender,
+                    id: tender.id.toString()
+                  }}
+                  onFinalSubmitSuccess={() => {
+                    // Close the dialog
+                    onClose();
+                  }}
+                />
               </div>
             </TabsContent>
 
