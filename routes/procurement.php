@@ -123,6 +123,8 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/purchase-order/items/{item}', [PurchaseOrderController::class, 'getItemDetails'])->name('purchase-order.item-details');
     Route::get('/purchase-order/payment-terms', [PurchaseOrderController::class, 'getPaymentTerms'])->name('purchase-order.payment-terms');
     Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
+    Route::get('/purchase-order/direct-plans', [PurchaseOrderController::class, 'getDirectPlans'])->name('purchase-order.direct-plans');
+    Route::get('/purchase-order/direct-plan-items/{planId}', [PurchaseOrderController::class, 'getDirectPlanItems'])->name('purchase-order.direct-plan-items');
     
     // NEW: Unified PO Origination AJAX endpoints
     Route::get('purchaseOrder/award-details/{id}', [PurchaseOrderController::class, 'getAwardDetails'])->name('purchaseOrder.awardDetails');

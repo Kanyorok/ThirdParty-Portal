@@ -174,17 +174,18 @@
                 </div>
             </div>
 
-            <!-- Supplier & Details -->
+            <!-- Primary Driver (Supplier for RFQ/Tender/Contract, Procurement Plan for Direct) & Address -->
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <label>Supplier <span class="text-danger">*</span></label>
-                    <select class="form-control supplier @error('supplier') is-invalid @enderror" id="supplier" name="supplier">
-                        <option selected disabled>Select supplier</option>
-                    </select>
-                    <input type="hidden" id="supplierHidden" />
-                    @error('supplier')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
+                    <!-- Host for supplier driver (non-direct) and plan driver (direct) -->
+                    <div id="supplierDriverHost"></div>
+                    <div id="planDriver" class="plan-driver d-none">
+                        <label>Procurement Plan (Direct) <span class="text-danger">*</span></label>
+                        <select id="directPlanSelect" class="form-control">
+                            <option value="" selected>Select Approved Plan</option>
+                        </select>
+                        <small class="text-muted">Select an approved plan (Direct Purchase) then choose supplier & items.</small>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label>Address</label>
@@ -192,20 +193,28 @@
                 </div>
             </div>
 
-            <!-- Direct mode helpers -->
+            <!-- Original Supplier (will be dynamically moved when Direct mode) -->
+            <div id="supplierDriverContainer" class="d-none">
+                <label>Supplier <span class="text-danger">*</span></label>
+                <select class="form-control supplier @error('supplier') is-invalid @enderror" id="supplier" name="supplier">
+                    <option selected disabled>Select supplier</option>
+                </select>
+                <input type="hidden" id="supplierHidden" />
+                @error('supplier')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <!-- Direct mode helpers (will receive supplier select when Direct) -->
             <div class="row mb-3 direct-only d-none">
-                    <div class="col-md-6">
+                <div class="col-md-6">
                     <label>Item Category (optional)</label>
                     <select id="itemCategory" class="form-control">
                         <option value="" selected>-- None --</option>
                     </select>
                 </div>
-                <div class="col-md-6">
-                    <label>Prequalified Suppliers (helper)</label>
-                    <select id="preqSupplierHelper" class="form-control">
-                        <option value="" selected>-- None --</option>
-                    </select>
-                    <small class="text-muted">This is a helper. You can still type a different supplier.</small>
+                <div class="col-md-6" id="directSupplierHost">
+                    <!-- Supplier select will be appended here in Direct mode -->
                 </div>
             </div>
 
@@ -497,12 +506,23 @@
         // Source mode toggling
         function applySourceMode() {
             const mode = $('input[name="SourceType"]:checked').val();
+            const $planDriver = $('#planDriver');
+            const $supplierContainer = $('#supplierDriverContainer');
+            const $supplierHost = $('#supplierDriverHost');
+            const $directSupplierHost = $('#directSupplierHost');
             if (mode === 'RFQ') {
                 $('.source-rfq').removeClass('d-none');
                 $('.source-tender').addClass('d-none');
                 $('.source-contract').addClass('d-none');
                 $('#supplier').prop('disabled', true); // auto in RFQ
                 $('.direct-only').addClass('d-none');
+                // Show supplier driver, hide plan
+                $planDriver.addClass('d-none');
+                if ($supplierContainer.parent().attr('id') !== 'supplierDriverHost') {
+                    $supplierContainer.appendTo($supplierHost).removeClass('d-none');
+                } else {
+                    $supplierContainer.removeClass('d-none');
+                }
                 // Live refresh of awarded RFQs from t_RFQAward
                 const $ref = $('#refNo');
                 $ref.empty().append('<option selected disabled>Loading awarded RFQs...</option>');
@@ -536,6 +556,12 @@
                 $('.source-contract').addClass('d-none');
                 $('#supplier').prop('disabled', true);
                 $('.direct-only').addClass('d-none');
+                $planDriver.addClass('d-none');
+                if ($supplierContainer.parent().attr('id') !== 'supplierDriverHost') {
+                    $supplierContainer.appendTo($supplierHost).removeClass('d-none');
+                } else {
+                    $supplierContainer.removeClass('d-none');
+                }
                 // Reset to all items for Tender mode
                 updateItemOptionsForContract(allItems);
             } else if (mode === 'CONTRACT') {
@@ -544,6 +570,12 @@
                 $('.source-contract').removeClass('d-none');
                 $('#supplier').prop('disabled', true);
                 $('.direct-only').addClass('d-none');
+                $planDriver.addClass('d-none');
+                if ($supplierContainer.parent().attr('id') !== 'supplierDriverHost') {
+                    $supplierContainer.appendTo($supplierHost).removeClass('d-none');
+                } else {
+                    $supplierContainer.removeClass('d-none');
+                }
                 // Keep current available items (will be updated when contract is selected)
             } else {
                 $('.source-rfq').addClass('d-none');
@@ -555,6 +587,31 @@
                 // Reset to all items for Direct mode
                 updateItemOptionsForContract(allItems);
                 populateItems([]);
+                // Show plan driver, move supplier to direct host
+                $planDriver.removeClass('d-none');
+                if ($supplierContainer.parent().attr('id') !== 'directSupplierHost') {
+                    $supplierContainer.appendTo($directSupplierHost).removeClass('d-none');
+                } else {
+                    $supplierContainer.removeClass('d-none');
+                }
+                // Load approved direct procurement plans
+                const $planSel = $('#directPlanSelect');
+                $planSel.prop('disabled', true).html('<option value="" selected>Loading plans...</option>');
+                fetch('/procurement/purchase-order/direct-plans')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $planSel.empty().append('<option value="" selected>Select Approved Plan</option>');
+                        if (!success) { $planSel.append('<option disabled>Error loading plans</option>'); return; }
+                        (data || []).forEach(p => {
+                            const label = `${p.Title || ('Plan #' + (p.PlanID||''))}${p.FiscalYear ? ' - ' + p.FiscalYear : ''} (${p.PendingItems} pending)`;
+                            $planSel.append(`<option value="${p.PlanID}">${label}</option>`);
+                        });
+                        $planSel.prop('disabled', false);
+                    })
+                    .catch(() => {
+                        $planSel.html('<option value="" selected>Failed to load plans</option>');
+                        $planSel.prop('disabled', false);
+                    });
             }
         }
         $(document).on('change', 'input[name="SourceType"]', applySourceMode);
@@ -733,6 +790,15 @@
                 // Validate required fields before submission
                 let isValid = true;
                 let errorMessages = [];
+
+                // If Direct mode, ensure a plan is selected
+                const mode = $('input[name="SourceType"]:checked').val();
+                if (mode === 'DIRECT') {
+                    if (!$('#directPlanSelect').val()) {
+                        errorMessages.push('Please select a procurement plan for Direct purchase');
+                        isValid = false;
+                    }
+                }
                 
                 // Check supplier
                 if (!$('#supplier').val()) {
@@ -876,6 +942,32 @@
         // Initialize on page load
         $(document).ready(function() {
             updateTotals();
+        });
+
+        // Direct plan selection handler
+        $(document).on('change', '#directPlanSelect', function(){
+            const val = $(this).val();
+            if (val) {
+                $('#SourceId').val(val); // set SourceId to PlanID for backend awareness
+                // Clear current items before loading
+                populateItems([]);
+                const $planSel = $(this);
+                $planSel.prop('disabled', true);
+                fetch(`/procurement/purchase-order/direct-plan-items/${val}`)
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        if (success) {
+                            populateItems(data || []);
+                        } else {
+                            alert('Failed to load plan items.');
+                        }
+                    })
+                    .catch(() => alert('Error loading plan items.'))
+                    .finally(()=> $planSel.prop('disabled', false));
+            } else {
+                $('#SourceId').val('');
+                populateItems([]);
+            }
         });
 
 </script>
