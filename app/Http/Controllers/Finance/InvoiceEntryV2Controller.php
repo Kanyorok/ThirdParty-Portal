@@ -489,7 +489,7 @@ class InvoiceEntryV2Controller extends Controller
 
             $invoice = FinanceInvoiceEntry::create([
                 //'ThirdPartyID' => $validated['ThirdPartyID'], // Store in correct field for relationship
-                'SupplierID' => $validated['SupplierID'], // Also store SupplierID separately if needed
+                'SupplierID' => $validated['ThirdPartyID'], // Also store SupplierID separately if needed
                 'POId' => $validated['POReference'], // This is actually the PO ID from the form
                 'POReference'=>  $validated['POReference'],
                 'GRNId' => 1,//$validated['GRNReference'], //Set to one to avoid data type conversion since with po we can get the grn
