@@ -14,28 +14,28 @@
             <div class="row mb-4">
                 <div class="col-md-3">
                     <label class="form-label">Filter by Branch</label>
-                    <select class="form-select" name="branch">
-                        <option value="">All Branches</option>
+                    <select class="form-select filter-auto" name="branch">
+                        <option value="" {{ empty($branch) ? 'selected' : '' }}>All Branches</option>
                         @foreach ($branches as $id => $name)
-                            <option value="{{ $id }}" {{ $id == $branch ? 'selected' : '' }}>{{ $name }}</option>
+                            <option value="{{ $id }}" {{ (string)$id === (string)$branch ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Filter by Department</label>
-                    <select class="form-select" name="department">
-                        <option value="">All Departments</option>
+                    <select class="form-select filter-auto" name="department">
+                        <option value="" {{ empty($department) ? 'selected' : '' }}>All Departments</option>
                         @foreach ($departments as $id => $name)
-                            <option value="{{ $id }}" {{ $id == $department ? 'selected' : '' }}>{{ $name }}</option>
+                            <option value="{{ $id }}" {{ (string)$id === (string)$department ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Planning Year</label>
-                    <select class="form-select" name="year">
-                        <option value="All Years">All Years</option>
+                    <select class="form-select filter-auto" name="year">
+                        <option value="" {{ empty($year) ? 'selected' : '' }}>All Years</option>
                         @foreach ($years as $y)
-                            <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
+                            <option value="{{ $y }}" {{ (string)$y === (string)$year ? 'selected' : '' }}>{{ $y }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -210,6 +210,10 @@
                 language: {
                     emptyTable: ""
                 }
+            });
+            // Auto submit on filter change
+            $('.filter-auto').on('change', function(){
+                this.form.submit();
             });
         });
     </script>
