@@ -2,6 +2,8 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Core\CodeDetail;
+use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -33,5 +35,13 @@ class MedicalFundContribution extends Model
     public function fund()
     {
         return $this->belongsTo(MedicalFund::class, 'FundId', 'Id');
+    }
+    public function contributorType()
+    {
+        return $this->belongsTo(CodeDetail::class, 'ContributorType', 'ID');
+    }
+    public function contributor()
+    {
+        return $this->belongsTo(ThirdParties::class, 'ContributorId', 'Id');
     }
 }

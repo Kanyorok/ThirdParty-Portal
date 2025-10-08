@@ -5,8 +5,8 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">Beneficiaries — {{ $medical_fund->FundName }}</h4>
         <div class="d-flex gap-2">
-            <a href="{{ route('bancassurance.medicalfunds.beneficiaries.create',$medical_fund->ID) }}" class="btn btn-primary">Add Beneficiary</a>
-            <a href="{{ route('bancassurance.medicalfunds.edit', $medical_fund->ID) }}" class="btn btn-outline-secondary">Back to Fund</a>
+            <a href="{{ route('bancassurance.medicalfunds.beneficiaries.create',$medical_fund->Id) }}" class="btn btn-primary">Add Beneficiary</a>
+            <a href="{{ route('bancassurance.medicalfunds.edit', $medical_fund->Id) }}" class="btn btn-outline-secondary">Back to Fund</a>
         </div>
     </div>
 
@@ -32,7 +32,7 @@
                         <tbody>
                             @foreach($beneficiaries as $i => $b)
                                 <tr>
-                                    <td>{{ $beneficiaries->firstItem() + $i }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td class="fw-semibold">{{ $b->FullName }}</td>
                                     <td>{{ $b->Relationship ?? '—' }}</td>
                                     <td>{{ optional($b->DateOfBirth)->format('Y-m-d') ?: '—' }}</td>
@@ -41,8 +41,8 @@
                                     <td>{!! $b->IsActive ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
                                     <td class="text-end">
                                         <div class="btn-group">
-                                            <a href="{{ route('bancassurance.medicalfunds.beneficiaries.edit', $b->ID) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                            <form action="{{ route('bancassurance.medicalfunds.beneficiaries.destroy', $b->ID) }}" method="POST" onsubmit="return confirm('Remove beneficiary?');">
+                                            <a href="{{ route('bancassurance.medicalfunds.beneficiaries.edit', $b->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                            <form action="{{ route('bancassurance.medicalfunds.beneficiaries.destroy', $b->Id) }}" method="POST" onsubmit="return confirm('Remove beneficiary?');">
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-sm btn-outline-danger">Delete</button>
                                             </form>

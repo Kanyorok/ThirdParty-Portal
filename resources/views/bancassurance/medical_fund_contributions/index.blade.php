@@ -41,9 +41,9 @@
                         @foreach($contributions as $i => $c)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ optional($c->ContributionDate)->format('d/m/Y') }}</td>
-                                <td>{{ $c->ContributorType ?? '-' }}</td>
-                                <td>{{ $c->ContributorID ?? '—' }}</td>
+                                <td>{{ $c->ContributionDate ? \Illuminate\Support\Carbon::parse($c->ContributionDate)->format('d/m/Y') : '—' }}</td>
+                                <td>{{ $c->contributorType->Description ?? '-' }}</td>
+                                <td>{{ $c->contributor->ThirdPartyName ?? '—' }}</td>
                                 <td class="text-end">{{ number_format((float)$c->Amount,2) }}</td>
                                 <td>{{ $c->Notes ?? '—' }}</td>
                                 <td class="text-end">
