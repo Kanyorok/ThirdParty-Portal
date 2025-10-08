@@ -22,7 +22,7 @@ class SupplierController extends Controller
                     'categories.itemCategories',
                     'types',
                     'legacyCategories.category',
-                    'prequalificationApplications.category'
+                    'prequalificationApplications.category.itemCategories'
                 ])
                 ->select([
                     'Id',
@@ -91,12 +91,7 @@ class SupplierController extends Controller
                     $appCats = ($supplier->prequalificationApplications ?? collect())
                         ->pluck('category')
                         ->filter()
-                        ->map(function ($cat) {
-                            return (object) [
-                                'CategoryName' => $cat->CategoryName ?? 'Category',
-                                'itemCategories' => collect(),
-                            ];
-                        });
+                        ->unique('SupplierCategoryID');
 
                     // Map legacy categories to synthetic objects (only if legacy exists and not already represented)
                     $legacyCats = ($supplier->legacyCategories ?? collect())->map(function ($map) {
@@ -108,14 +103,19 @@ class SupplierController extends Controller
                     });
 
                     // Merge ensuring uniqueness by CategoryName
-                    $merged = $newCats->map(function ($cat) {
-                        // Normalize to common shape
-                        $cat->CategoryName = $cat->CategoryName ?? 'Category';
-                        return $cat;
-                    })
+                    $merged = $newCats
                         ->concat($appCats)
                         ->concat($legacyCats)
-                        ->unique(fn($c) => strtolower($c->CategoryName));
+                        ->map(function ($cat) {
+                            $cat->CategoryName = $cat->CategoryName ?? 'Category';
+                            return $cat;
+                        })
+                        ->unique(function ($c) {
+                            if (isset($c->SupplierCategoryID)) {
+                                return 'id-'.$c->SupplierCategoryID;
+                            }
+                            return 'name-'.strtolower($c->CategoryName);
+                        });
 
                     if ($merged->isEmpty()) {
                         return '<span class="text-warning">No categories assigned</span>';
