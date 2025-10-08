@@ -1,5 +1,17 @@
 @extends('layouts.app')
 
+@section('styles')
+    <style>
+        .je-table { min-width: 1100px; }
+        .je-table th, .je-table td { white-space: nowrap; vertical-align: middle; }
+        .je-table th.col-gl, .je-table td.col-gl { min-width: 360px; }
+        .je-table th.col-debit, .je-table td.col-debit,
+        .je-table th.col-credit, .je-table td.col-credit,
+        .je-table th.col-amount, .je-table td.col-amount { min-width: 160px; text-align: right; }
+        .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; }
+    </style>
+@endsection
+
 @section('content')
     <div class="container mt-0">
         <div class="card shadow-sm rounded-4 border-0">
@@ -43,15 +55,15 @@
                 {{-- Journal Lines --}}
                 <h6 class="border-bottom pb-2 text-info">Journal Lines</h6>
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle table-bordered">
+                    <table class="table table-sm table-hover align-middle table-bordered je-table">
                         <thead class="table-light">
                         <tr>
                             <th>#</th>
-                            <th>GL Account</th>
-                            <th>Debit</th>
-                            <th>Credit</th>
-                            <th>Amount</th>
-                            <th>Narration</th>
+                            <th class="col-gl">GL Account</th>
+                            <th class="col-debit">Debit</th>
+                            <th class="col-credit">Credit</th>
+                            <th class="col-amount">Amount</th>
+                            <th class="col-narr">Narration</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -65,7 +77,7 @@
                                 <td class="{{ $line->Credit > 0 ? 'text-success' : '' }}">
                                     {{ number_format($line->Credit, 2) }}
                                 </td>
-                                <td>{{ number_format($line->Amount, 2) }}</td>
+                                <td>{{ number_format(abs($line->Amount), 2) }}</td>
                                 <td>{{ $line->Narration }}</td>
                             </tr>
                         @endforeach

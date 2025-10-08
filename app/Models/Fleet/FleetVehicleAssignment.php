@@ -3,42 +3,90 @@
 namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Model\UserActorTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Core\Branch;
+use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetVehicleInspection;
+use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetDriver;
+use App\Models\Auth\User;
+use App\Models\HRM\Employee;
+use App\Models\Core\CodeDetail;
+
 
 class FleetVehicleAssignment extends Model
 {
-    protected $table = 't_FleetVehicleAssignments';
-    protected $primaryKey = 'AssignmentID';
-    public $timestamps = false;
+     use UserActorTrait, SoftDeletes;
 
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
+    const DELETED_AT = 'DeletedOn';
+
+
+    protected $table = 't_FleetVehicleAssignments';
+    protected $primaryKey = 'Id';
+    public $timestamps = false;
     protected $fillable = [
+
+        'AssignmentID',
+        'TripNo',
+        'VehicleType',
         'VehicleID',
-        'AssignedBranchID',
-        'AssignedToUserID',
+        'DriverID',
+        'LastInspectionDate',
         'AssignmentDate',
         'Purpose',
         'Notes',
         'AssignedBy',
-        'CreatedOn'
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedOn',
+        'DeletedBy',
     ];
 
     // Relationships
+
+    public static function getPrimaryKey(): string
+    {
+        return 'AssgId';
+    }
     public function vehicle()
     {
-        return $this->belongsTo(FleetVehicle::class, 'VehicleID');
+        return $this->belongsTo(FleetVehicle::class, 'VehicleID', 'Id');
     }
 
-    public function branch()
+    public function fleetVehicleType()
     {
-        return $this->belongsTo(\App\Models\Branch::class, 'AssignedBranchID');
+        return $this->belongsTo(CodeDetail::class, 'VehicleType', 'ID');
     }
 
-    public function user()
+    public function driver()
     {
-        return $this->belongsTo(\App\Models\User::class, 'AssignedToUserID');
+        return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
     }
 
-    public function assignedBy()
+
+    // public function branch()
+    // {
+    //     return $this->belongsTo(Branch::class, 'BranchID', 'Id');
+    // }
+
+
+    public function assigner()
     {
-        return $this->belongsTo(\App\Models\User::class, 'AssignedBy');
+        return $this->belongsTo(Employee::class, 'AssignedBy', 'Id');
+    }
+
+    public function trip()
+    {
+        return $this->belongsTo(FleetTripLog::class, 'TripNo', 'Id');
+    }
+
+    public function inspectionDate()
+    {
+        return $this->belongsTo(FleetVehicleInspection::class, 'LastInspectionDate', 'Id');
     }
 }

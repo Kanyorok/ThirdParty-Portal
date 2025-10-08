@@ -2,27 +2,25 @@
 @section('title', 'Record Premium Payment')
 
 @section('content')
-    <div class="container mt-4">
-        <form method="POST" action="{{ route('bancassurance.premiums.store') }}">
-            @csrf
+<div class="container mt-4">
+    <form method="POST" action="{{ route('bancassurance.premiums.store') }}">
+        @csrf
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Select Policy</label>
-                <select id="request-select" name="PolicyID" class="form-select" required>
-                    <option value="">-- Select Policy --</option>
-                    @foreach ($policies as $policy)
-                        <option
-                            value="{{ $policy->Id }}"
-                            data-paymentfrequency="{{ $policy->paymentfrequency->Description}}"
-                            data-customerid="{{ $policy->customer->FullName }}"
-                            data-balance="{{ isset($balances[$policy->Id]) ? $balances[$policy->Id] : 0 }}">
-                            {{ $policy->PolicyNumber }}
-                            (Pending: {{ isset($balances[$policy->Id]) ? number_format($balances[$policy->Id], 2) : '0.00' }}
-                            )
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Select Policy</label>
+            <select id="request-select" name="PolicyID" class="form-select" required>
+                <option value="">-- Select Policy --</option>
+                @foreach ($policies as $policy)
+                    <option
+                        value="{{ $policy->Id }}"
+                        data-paymentfrequency="{{ $policy->paymentfrequency->Description ?? '-'}}"
+                        data-customerid="{{ $policy->customer->thirdParty->ThirdPartyName ?? '-'}}"
+                        data-balance="{{ isset($balances[$policy->Id]) ? $balances[$policy->Id] : 0 }}">
+                        {{ $policy->PolicyNumber }} (Pending: {{ isset($balances[$policy->Id]) ? number_format($balances[$policy->Id], 2) : '0.00' }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
@@ -75,11 +73,11 @@
                 <textarea name="Notes" class="form-control" rows="2"></textarea>
             </div>
 
-            <div class="text-end">
-                <button type="submit" class="btn btn-success">Record Payment</button>
-            </div>
-        </form>
-    </div>
+        <div class="text-end">
+            <button type="submit" class="btn btn-success">Record Payment</button>
+        </div>
+    </form>
+</div>
 
     {{-- JavaScript --}}
     <script>
@@ -114,7 +112,7 @@
         document.getElementById('payment-date').addEventListener('change', autoCalculateNextPaymentDate);
 
         // Trigger change event on page load to show balance if a policy is preselected
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('request-select').dispatchEvent(new Event('change'));
         });
 

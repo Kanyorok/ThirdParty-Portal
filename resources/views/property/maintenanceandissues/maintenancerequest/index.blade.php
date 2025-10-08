@@ -33,11 +33,21 @@
           <a href="{{ route('maintenancerequest.show', $maintenancerequest->Id) }}" class="btn btn-success btn-sm">View</a>
           <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-sm btn-warning">Edit</a>
           <form action="{{ route('maintenancerequest.destroy', $maintenancerequest->Id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this lease?');">
-            @csrf
-              @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                </form>
-            </td>
+          @if($maintenancerequest->requestId()->exists())
+              <button class="btn btn-sm btn-secondary" disabled>
+                  <i class="bi bi-lock"></i> In Use
+              </button>
+          @else
+              <form action="{{ route('maintenancerequest.destroy', $maintenancerequest->Id) }}" 
+                    method="POST" 
+                    onsubmit="return confirm('Are you sure you want to delete this Request?');">
+                  @csrf
+                  @method('DELETE')
+                  <button class="btn btn-sm btn-danger">
+                      <i class="bi bi-trash"></i> Delete
+                  </button>
+              </form>
+          @endif
         </td>
       </tr>
     @endforeach

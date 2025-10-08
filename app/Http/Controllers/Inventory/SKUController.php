@@ -9,6 +9,7 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\Store;
 use App\Models\Core\Branch;
+use Illuminate\Support\Facades\Auth;
 use App\Services\Inventory\StockItemService;
 use Illuminate\Http\Request;
 
@@ -23,9 +24,12 @@ class SKUController extends Controller
 
     public function index()
     {
+     $branchId = auth()->user()->employee?->BranchId;
         $this->authorize('viewAny', StockItem::class);
 
-        $items = StockItem::with(['item', 'store', 'uom'])->get(); // Eager load relationships
+        $items = StockItem::with(['item', 'store', 'uom'])
+        ->where('Branch', $branchId)
+        ->get();
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
@@ -33,9 +37,12 @@ class SKUController extends Controller
     {
         $this->authorize('create', StockItem::class);
 
-        $branches = Branch::all();
-        $categories = ItemCategories::whereNull('ParentId')->get();
-        $stores = []; // Will be loaded via AJAX
+        $branches = auth()->user()->employee?->BranchId;
+
+        $categories = ItemCategories::whereNull('ParentId')
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get();
+        $stores = Store::where('BranchID', $branches)->get();
 
         return view('inventory.itemmaster.sku.create', compact('branches', 'stores', 'categories'));
     }
@@ -45,6 +52,7 @@ class SKUController extends Controller
         $this->authorize('create', StockItem::class);
 
         $data = $request->validated();
+        $data['Status'] = 1; 
 
         try {
             $skuCode = $this->stockItemService->create($data);
@@ -54,12 +62,16 @@ class SKUController extends Controller
         }
     }
 
+
     public function show($id)
     {
         $item = StockItem::with(['item', 'store', 'uom'])->findOrFail($id);
+        $categories = ItemCategories::whereNull('ParentId')
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get();
         $this->authorize('view', $item);
 
-        return view('inventory.itemmaster.sku.show', compact('item'));
+        return view('inventory.itemmaster.sku.show', compact('item', 'categories'));
     }
 
     public function edit($id)
@@ -67,15 +79,19 @@ class SKUController extends Controller
         $item = StockItem::with('item.category.parent')->findOrFail($id);
         $this->authorize('update', $item);
 
-        $branches = Branch::all();
-        $categories = ItemCategories::whereNull('ParentId')->get();
-        $stores = Store::where('BranchID', $item->Branch)->get();
+        $branches = auth()->user()->employee?->BranchId;
+        $categories = ItemCategories::whereNull('ParentId')
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get();
+        $stores = Store::where('BranchID', $branches)->get();
 
         $category = $item->item->category;
         $parentCategoryId = $category->parent ? $category->parent->Id : $category->Id;
         $subcategoryId = $category->parent ? $category->Id : null;
 
-        $items = ItemMasterList::where('Category', $subcategoryId ?? $parentCategoryId)->get();
+        $items = ItemMasterList::where('Category', $subcategoryId ?? $parentCategoryId)
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get();
 
         return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores', 'categories', 'items'));
     }
@@ -98,7 +114,7 @@ class SKUController extends Controller
     public function destroy($id)
     {
         $item = StockItem::findOrFail($id);
-        $this->authorize('delete', $item);
+        $this->authorize('destroy', $item);
 
         try {
             $this->stockItemService->delete($item);
@@ -124,9 +140,13 @@ class SKUController extends Controller
         $categoryId = $request->get('category_id');
         $subcategoryId = $request->get('subcategory_id');
 
-        $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)->get(['Id', 'ItemName']);
+        $items = ItemMasterList::where('Category', $subcategoryId ?? $categoryId)
+            ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+            ->get(['Id', 'ItemName']);
         return response()->json($items);
     }
+
+    
 
     public function getItemDetails(Request $request)
     {
@@ -151,5 +171,4 @@ class SKUController extends Controller
             ]
         ]);
     }
-
 }

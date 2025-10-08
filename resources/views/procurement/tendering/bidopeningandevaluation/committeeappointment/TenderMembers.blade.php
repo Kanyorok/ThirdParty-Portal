@@ -21,7 +21,7 @@
                 <!-- Example Row -->
                 @forelse ($committeeMembers as $item)
                     <tr>
-                        <td>{{ $item->employee->FirstName }} {{ $item->employee->LastName }}</td>
+                        <td>{{ $item->user->employee->FirstName ?? $item->user->Name ?? 'N/A' }} {{ $item->user->employee->LastName ?? '' }}</td>
                         <td>{{$item->Role}} </td>
                         <td>{{$item->modifiedBy->CreatedOn->format('d/m/Y')}}</td>
                         @if($item->Response == '0')
@@ -84,7 +84,7 @@
                                     <!-- Example Row -->
                                     @forelse ($committeeMembers as $item)
                                         <tr>
-                                            <td>{{ $item->employee->FirstName }} {{ $item->employee->LastName }}</td>
+                                            <td>{{ $item->user->employee->FirstName ?? $item->user->Name ?? 'N/A' }} {{ $item->user->employee->LastName ?? '' }}</td>
                                             <input type="hidden" name="memberID[]" value="{{ $item->UserID }}">
                                             <td>{{ $item->Role }}</td>
                                             <td>

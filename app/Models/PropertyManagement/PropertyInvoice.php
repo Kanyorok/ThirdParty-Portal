@@ -49,12 +49,10 @@ class PropertyInvoice extends Model
     {
         return $this->hasMany(PropertyReceipt::class, 'InvoiceID', 'Id');
     }
-
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }
-
     public function modifiedByUser()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');

@@ -24,16 +24,26 @@ class ThirdPartyResource extends JsonResource
             'id' => $this->Id,
             'thirdPartyName' => $this->ThirdPartyName,
             'tradingName' => $this->TradingName,
-            'businessType' => $this->BusinessType->label(),
+            'businessType' => $this->BusinessType?->label(),
             'registrationNumber' => $this->RegistrationNumber,
             'taxPIN' => $this->TaxPIN,
             'vatNumber' => $this->VATNumber,
             'country' => $this->Country,
+            'countryId' => $this->CountryId,
+            'countryInfo' => $this->whenLoaded('country', function () {
+                return [
+                    'id' => $this->country->Id,
+                    'name' => $this->country->Name,
+                    'code' => $this->country->CountryCode,
+                    'phoneCode' => $this->country->PhoneCode,
+                    'flag' => $this->country->Flag,
+                ];
+            }),
             'physicalAddress' => $this->PhysicalAddress,
             'email' => $this->Email,
             'phone' => $this->Phone,
             'website' => $this->Website,
-            'approvalStatus' => $this->ApprovalStatus->label(),
+            'approvalStatus' => $this->ApprovalStatus?->label(),
             'status' => $this->Status?->value,
             // Legacy single type value (enum) kept for backward compatibility during transition
             'thirdPartyType' => $this->ThirdPartyType?->value,

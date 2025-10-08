@@ -12,76 +12,90 @@
         @endif
         <div class="row">
 
+            
+
             {{-- Left Side Panel: Driver Details --}}
             <div class="col-md-4">
-                <div class="card h-100 shadow rounded-4">
-                    <div class="card-body p-3">
-                        <h5 class="card-title fw-bold mb-3">{{ $driver->FullName }} Details</h5>
-                        <hr>
+    <div class="card h-100 shadow rounded-4">
+        <div class="card-body p-3">
+            <h5 class="card-title fw-bold mb-3">{{ $driver->FullName }} Details</h5>
+            <hr>
 
-                        <dl class="row g-2">
-                            <dt class="col-md-5">Driver No:</dt>
-                            <dd class="col-md-7 text-muted">{{ $driver->DriverNo }}</dd>
 
-                            <dt class="col-md-5">Full Name:</dt>
-                            <dd class="col-md-7 text-muted">{{ $driver->FullName }}</dd>
+             {{-- Vehicle Images --}}
+       @if ($driver->image) 
+    <img src="data:{{ $driver->image->MIMEType }};base64,{{ $driver->image->Image }}"
+         alt="Driver Image"
+         class="img-fluid mb-3 rounded-circle border shadow"
+         style="width: 200px; height: 200px; object-fit: cover;">
+        @else
+            <img src="{{ asset('images/vehicle-placeholder.png') }}" 
+                alt="No Image"
+                class="img-fluid mb-3 rounded-circle border shadow"
+                style="width: 200px; height: 200px; object-fit: cover;">
+        @endif
 
-                            <dt class="col-md-5">National ID:</dt>
-                            <dd class="col-md-7 text-muted">{{ $driver->NationalID }}</dd>
 
-                            <dt class="col-md-5">Phone:</dt>
-                            <dd class="col-md-7 text-muted">{{ $driver->Phone }}</dd>
+            <dl class="row g-2">
+                <dt class="col-md-5">Driver No:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->DriverNo }}</dd>
 
-                            <dt class="col-md-5">Employment Type:</dt>
-                            <dd class="col-md-7 text-muted">{{ $driver->employmentType->Description }}</dd>
+                <dt class="col-md-5">Full Name:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->FullName }}</dd>
 
-                            <dt class="col-md-5">Active:</dt>
-                            <dd class="col-md-7 text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</dd>
+                <dt class="col-md-5">National ID:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->NationalID }}</dd>
 
-                            <dt class="col-md-5">Notes:</dt>
-                            <dd class="col-md-7 text-muted">{{ $driver->Notes ?: '—' }}</dd>
-                        </dl>
-                    </div>
+                <dt class="col-md-5">Phone:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->Phone }}</dd>
 
-                    <div class="card-footer bg-light">
-                        <h6 class="fw-bold mb-2">📄 Documents</h6>
-                        @forelse($driver->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
-                            {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
-                        @empty
-                            <p class="text-muted mb-0">No documents uploaded.</p>
-                        @endforelse
-                    </div>
+                <dt class="col-md-5">Employment Type:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->employmentType->Description }}</dd>
 
-                    <div class="card-footer d-flex justify-content-between">
-                        <a href="{{ route('fleet.drivers.edit', $driver->Id) }}" class="btn btn-warning">✏️ Edit</a>
-                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDriverModal">🗑️
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
+                <dt class="col-md-5">Active:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->IsActive ? '✅ Active' : '❌ Inactive' }}</dd>
 
-            {{-- Right Side Panel: Tabs for Licenses, Assignments, and Trips --}}
-            <div class="col-md-8">
-                <div class="card h-100 p-3 shadow rounded-4">
-                    <h5 class="card-title fw-bold">Driver Records</h5>
-                    <p class="fst-italic mb-3">
-                        💡 Assignments can be created manually, but are also added automatically when a trip is created.
-                        Trips are loaded automatically and cannot be added manually.
-                    </p>
-                    <hr>
+                <dt class="col-md-5">Notes:</dt>
+                <dd class="col-md-7 text-muted">{{ $driver->Notes ?: '—' }}</dd>
+            </dl>
+        </div>
 
-                    <ul class="nav nav-tabs mb-3" id="driverTabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-bs-toggle="tab" href="#licenses">👤 Licenses</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#assignments">🚚 Assignments</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-bs-toggle="tab" href="#trips">🗺️ Trips</a>
-                        </li>
-                    </ul>
+        <div class="card-footer bg-light">
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+            @forelse($driver->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
+        </div>
+
+        <div class="card-footer d-flex justify-content-between">
+            <a href="{{ route('fleet.drivers.edit', $driver->Id) }}" class="btn btn-warning">✏️ Edit</a>
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDriverModal">🗑️ Delete</button>
+        </div>
+    </div>
+</div>
+
+        {{-- Right Side Panel: Tabs for Licenses, Assignments, and Trips --}}
+        <div class="col-md-8">
+            <div class="card h-100 p-3 shadow rounded-4">
+            <h5 class="card-title fw-bold">Driver Records</h5>
+            <p class="fst-italic mb-3">
+              💡  Assignments can be created manually, but are also added automatically when a trip is created. Trips are loaded automatically and cannot be added manually.
+            </p>
+            <hr>
+
+                <ul class="nav nav-tabs mb-3" id="driverTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#licenses">👤 Licenses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#assignments">🚚 Assignments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#trips">🗺️ Trips</a>
+                    </li>
+                </ul>
 
                     <div class="tab-content">
                         {{-- Licenses Tab Content --}}
@@ -169,16 +183,24 @@
                                                         data-id="{{ $assignment->Id }}">🗑️
                                                 </button>
 
-                                                {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}"
-                                                    method="POST"
+                                                {{-- Assign Inspection Button --}}
+                                                <a href="{{ route('fleet.driver_assignments.assign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-success">Assign Inspection</a>
+
+                                                {{-- Unassign Inspection Button --}}
+                                                <a href="{{ route('fleet.driver_assignments.unassign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-danger">Unassign Inspection</a>
+
+                                                {{-- Existing Unassign form (can be removed if using above buttons) --}}
+                                                {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}" 
+                                                    method="POST" 
                                                     class="d-inline"
                                                     onsubmit="return confirmUnassign(event)">
                                                     @csrf
                                                     @method('POST')
-                                                        <input type="hidden" name="assignment_id" value="{{ $assignment->Id }}">
+                                                    <input type="hidden" name="assignment_id" value="{{ $assignment->Id }}">
                                                     <button type="submit" class="btn btn-sm btn-primary">Unassign</button>
                                                 </form> --}}
-
                                             </td>
                                         </tr>
                                     @endforeach
@@ -187,7 +209,7 @@
                             </div>
                         </div>
 
-                        {{-- Trips Tab Content --}}
+                        {{-- Trips Tab Content
                         <div class="tab-pane fade" id="trips">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h5>Trips</h5>
@@ -207,8 +229,8 @@
                                         <th>End Location</th>
                                         <th>Distance (Km)</th>
                                     </tr>
-                                    </thead>
-                                    <tbody id="tripsTable">
+                                    </thead> --}}
+                                    {{-- <tbody id="tripsTable">
                                     @foreach($trips as $trip)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
@@ -231,7 +253,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
     {{-- Add License Modal --}}
 
     <div class="modal fade" id="addLicenseModal" tabindex="-1">
@@ -462,7 +484,7 @@
 @endsection
 
 @section('scripts')
-    @include('snippets.actions.preview-files')
+ @include('snippets.actions.preview-files')
     <script>
         let storeLicenseUrl = "{{ route('fleet.licenses.store') }}";
         let updateLicenseUrl = "{{ url('fleet/driver-licenses') }}/";
@@ -628,6 +650,17 @@
                 });
             });
         });
-    </script>
+
+    function confirmUnassign(e) {
+        e.preventDefault(); // stop form submission
+
+        if (confirm("Are you sure you want to unassign this vehicle?\n\n⚠️ Please first inspect the vehicle.")) {
+            // redirect to inspection create page instead
+            window.location.href = "{{ route('fleet.vehicle_inspection.create') }}";
+        }
+
+        return false; // always stop normal submit
+    }
+</script>
 @endsection
 

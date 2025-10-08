@@ -1,13 +1,24 @@
 <?php
 
+use App\Http\Controllers\Finance\BankBranchController;
 use Illuminate\Support\Facades\Route;
 
+Route::middleware(['web','auth'])->group(function(){
+    Route::get('/auth/heartbeat', function(){
+        return response()->noContent();
+    })->name('auth.heartbeat');
+});
 
 require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function () {
     require __DIR__ . '/crm.php';
-    require __DIR__ . '/procurement.php';
+    
+    // Procurement routes with prefix
+    Route::prefix('procurement')->group(function () {
+        require __DIR__ . '/procurement.php';
+    });
+    
     require __DIR__ . '/inventory.php';
     require __DIR__ . '/property.php';
     require __DIR__ . '/finance.php';
@@ -46,6 +57,11 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
             Route::resource('localities', 'LocalityController')->except(['create', 'show', 'edit']);
         });
 
+        // User Sessions (single-session admin)
+        Route::get('user-sessions', 'UserSessionController@index')->name('settings.user-sessions.index');
+        Route::post('user-sessions/revoke/{id}', 'UserSessionController@revoke')->name('settings.user-sessions.revoke');
+        Route::post('user-sessions/revoke-others/{userId}', 'UserSessionController@revokeOthers')->name('settings.user-sessions.revoke-others');
+
 
         Route::post('teams/{team}/notification', 'TeamMessagingController')->name('bulk-notification.team');
         Route::resource('teams/{team}/team-users', 'TeamUserController')->parameters(['team-users' => 'user'])->except(['create', 'edit']);
@@ -79,4 +95,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
         });
     });
     Route::get('help', 'HelpController')->name('help');
+
+        // ✅ Global Locality Endpoint
+        Route::get('/getCities', [BankBranchController::class, 'getCities'])->name('getCities');
 });

@@ -26,8 +26,8 @@ class FleetVehicleInspectionService
         }
 
         // Extract number from last ID
-        $lastNumber = (int)str_replace('INSP-', '', $lastInspection->InspectionID);
-
+        $lastNumber = (int) str_replace('INSP-', '', $lastInspection->InspectionID);
+        
 
         // Increment
         $nextNumber = $lastNumber + 1;
@@ -40,49 +40,48 @@ class FleetVehicleInspectionService
      * Create a new vehicle inspection (pre or post trip)
      */
 
-
-    public function create(array $data, UploadedFile $document = null): FleetVehicleInspection
+    
+   public function create(array $data,UploadedFile $document = null): FleetVehicleInspection
     {
-        return DB::transaction(function () use ($data, $document) {
+        return DB::transaction(function () use ($data,$document) {
             $parent = !empty($data['ParentInspectionID'])
                 ? FleetVehicleInspection::find($data['ParentInspectionID'])
                 : null;
 
             $inspection = FleetVehicleInspection::create([
-                'InspectionID' => $this->generateInspectionNo($parent),
+                'InspectionID'       => $this->generateInspectionNo($parent),
                 'ParentInspectionID' => $parent?->Id,
-                'InspectionTypeID' => $data['InspectionTypeID'],
-                'VehicleID' => $data['VehicleID'],
-                'FuelType' => $data['FuelType'],
-                'DriverID' => $data['DriverID'],
-                'InspectionDate' => $data['InspectionDate'] ?? null,
-                'Mileage' => $data['Mileage'] ?? null,
-                'Fuel' => $data['Fuel'] ?? null,
-                'EngineOil' => $data['EngineOil'] ?? null,
-                'Speedometer' => $data['Speedometer'] ?? null,
-                'Coolant' => $data['Coolant'] ?? null,
-                'Reflector' => $data['Reflector'] ?? 0,
-                'FireExtinguisher' => $data['FireExtinguisher'] ?? 0,
-                'FirstAidKit' => $data['FirstAidKit'] ?? 0,
-                'SpareTyre' => $data['SpareTyre'] ?? 0,
-                'Spanner' => $data['Spanner'] ?? 0,
-                'Jack' => $data['Jack'] ?? 0,
-                '4XFloorMats' => $data['4XFloorMats'] ?? 0,
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
+                'InspectionTypeID'     => $data['InspectionTypeID'],
+                'VehicleID'          => $data['VehicleID'],
+                'FuelType'           => $data['FuelType'],
+                'DriverID'           => $data['DriverID'],
+                'InspectionDate'     => $data['InspectionDate'] ?? null,
+                'Mileage'            => $data['Mileage'] ?? null,
+                'Fuel'               => $data['Fuel'] ?? null,
+                'EngineOil'          => $data['EngineOil'] ?? null,
+                'Coolant'            => $data['Coolant'] ?? null,
+                'Reflector'          => $data['Reflector'] ?? 0,
+                'FireExtinguisher'   => $data['FireExtinguisher'] ?? 0,
+                'FirstAidKit'        => $data['FirstAidKit'] ?? 0,
+                'SpareTyre'          => $data['SpareTyre'] ?? 0,
+                'Spanner'            => $data['Spanner'] ?? 0,
+                'Jack'               => $data['Jack'] ?? 0,
+                '4XFloorMats'        => $data['4XFloorMats'] ?? 0,
+                'CreatedBy'          => Auth::id(),
+                'CreatedOn'          => now(),
+                'ModifiedBy'         => Auth::id(),
+                'ModifiedOn'         => now(),
             ]);
 
-
-            if ($document) {
-                $inspection->newDocument(
-                    ModulesEnum::Fleet,
-                    $document,
-                    [PermissionEnum::VehicleInspectionView->value],
-                    Auth::user()
-                );
-
+           
+                if ($document) {
+                    $inspection->newDocument(
+                        ModulesEnum::Fleet,
+                        $document,
+                        [PermissionEnum::VehicleInspectionView->value],
+                        Auth::user()
+                    );
+                
             }
 
             activity()

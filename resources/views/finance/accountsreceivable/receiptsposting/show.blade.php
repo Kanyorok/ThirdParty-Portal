@@ -1,383 +1,339 @@
+@php
+    use App\Services\DMS\DocumentService;
+@endphp
 @extends('layouts.app')
-@section('title','Receipt View')
+@section('title','Receipt Details')
 
 @section('content')
-    @php
-        // ===== Dummy payload (replace with real data from controller) =====
-        $company = [
-            'name'    => 'Craft Silicon Limited',
-            'tagline' => 'Financial Technology • Core Banking • Digital Channels',
-            'address' => "Craft Silicon Campus, Musa Gitau Rd, off Waiyaki Way\nP.O. Box 13628-00800, Nairobi, Kenya",
-            'email'   => 'info.kenya@craftsilicon.com',
-            'phone'   => '+254 709 044 000',
-        ];
-
-        $receipt = [
-            'receiptNo'      => 'RCPT-2025-001',
-            'date'           => '2025-08-20',
-            'customerName'   => 'ABC Properties Ltd',
-            'customerID'     => '12345678',
-            'paymentMethod'  => 'Bank Transfer',
-            'referenceNo'    => 'TRX-883728',
-            'remarks'        => 'Payment allocated across multiple invoices.',
-            'currencySymbol' => 'KSh',
-            'amountReceived' => 20000.00,
-            'preparedBy'     => 'Finance Officer',
-            'authorizedBy'   => 'Finance Manager',
-        ];
-
-        $allocations = [
-            ['invoiceNo' => 'INV-2025-0001', 'invoiceAmount' => 13920.00, 'balanceBefore' => 13920.00, 'applied' => 13920.00],
-            ['invoiceNo' => 'INV-2025-0002', 'invoiceAmount' => 2320.00,  'balanceBefore' => 2320.00,  'applied' =>  2080.00],
-        ];
-
-        $appliedTotal = array_sum(array_map(fn($a) => $a['applied'], $allocations));
-        $unapplied    = max(0, $receipt['amountReceived'] - $appliedTotal); // carry as credit if > 0
-    @endphp
-
     <div class="container my-3">
-        <!-- Actions -->
-        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-2">
+        {{-- Success/Error Messages --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
+                <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
             <a href="{{ route('receiptsposting.index') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Back
+                <i class="fas fa-arrow-left me-1"></i> Back to Receipts
             </a>
             <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-primary" onclick="printA4()">
-                    <i class="fas fa-print me-1"></i> Print A4
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="printSlip()">
-                    <i class="fas fa-receipt me-1"></i> Print Slip
+                @if($receipt->Status === 'Draft')
+                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#postReceiptModal">
+                        <i class="fas fa-check-circle me-1"></i> Post Receipt
+                    </button>
+                @endif
+                <button class="btn btn-sm btn-primary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> Print
                 </button>
             </div>
         </div>
 
-        <div class="row g-3">
-            <!-- ========= A4 RECEIPT ========= -->
-            <div class="col-12">
-                <div id="receiptA4" class="card shadow-sm border-0 p-4 rounded-4">
-                    <!-- Header -->
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <div class="h4 mb-0">{{ $company['name'] }}</div>
-                            <div class="small text-muted">{{ $company['tagline'] }}</div>
-                            <div class="small mt-1" style="white-space:pre-line">{{ $company['address'] }}</div>
-                            <div class="small text-muted mt-1">{{ $company['email'] }} • {{ $company['phone'] }}</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="h5 fw-semibold mb-0">RECEIPT</div>
-                            <div class="small text-muted">No.</div>
-                            <div class="fs-6 fw-semibold">{{ $receipt['receiptNo'] }}</div>
-                            <div class="small text-muted mt-1">Date</div>
-                            <div class="fw-medium">{{ $receipt['date'] }}</div>
-                        </div>
-                    </div>
-
-                    <hr class="my-3">
-
-                    <!-- Parties -->
-                    <div class="row small">
-                        <div class="col-md-6">
-                            <div class="text-muted text-uppercase">Received From</div>
-                            <div class="fw-semibold">{{ $receipt['customerName'] }}</div>
-                            <div>ID Number: <span class="text-muted">{{ $receipt['customerID'] }}</span></div>
-                        </div>
-                        <div class="col-md-6 text-md-end mt-2 mt-md-0">
-                            <div class="text-muted text-uppercase">Payment Details</div>
-                            <div>Method: <span class="fw-medium">{{ $receipt['paymentMethod'] }}</span></div>
-                            <div>Reference: <span class="text-muted">{{ $receipt['referenceNo'] }}</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Amount / Summary -->
-                    <div class="row g-3 mt-3">
-                        <div class="col-lg-7">
-                            <div class="border rounded-3 p-3">
-                                <div class="text-muted text-uppercase small mb-2">Applied to Invoices</div>
-                                <div class="table-responsive">
-                                    <table class="table table-sm align-middle mb-0">
-                                        <thead class="table-light">
-                                        <tr>
-                                            <th>Invoice</th>
-                                            <th class="text-end">Invoice Amount</th>
-                                            <th class="text-end">Balance Before</th>
-                                            <th class="text-end">Amount Applied</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        @foreach($allocations as $row)
-                                            <tr>
-                                                <td class="fw-medium">{{ $row['invoiceNo'] }}</td>
-                                                <td class="text-end">{{ $receipt['currencySymbol'] }} {{ number_format($row['invoiceAmount'],2) }}</td>
-                                                <td class="text-end">{{ $receipt['currencySymbol'] }} {{ number_format($row['balanceBefore'],2) }}</td>
-                                                <td class="text-end text-success fw-semibold">{{ $receipt['currencySymbol'] }} {{ number_format($row['applied'],2) }}</td>
-                                            </tr>
-                                        @endforeach
-                                        </tbody>
-                                        <tfoot class="table-light">
-                                        <tr>
-                                            <th colspan="3" class="text-end">Applied Total</th>
-                                            <th class="text-end">{{ $receipt['currencySymbol'] }} {{ number_format($appliedTotal,2) }}</th>
-                                        </tr>
-                                        <tr>
-                                            <th colspan="3" class="text-end">Amount Received</th>
-                                            <th class="text-end">{{ $receipt['currencySymbol'] }} {{ number_format($receipt['amountReceived'],2) }}</th>
-                                        </tr>
-                                        @if($unapplied > 0)
-                                            <tr>
-                                                <th colspan="3" class="text-end">Unapplied (Customer Credit)</th>
-                                                <th class="text-end text-warning">{{ $receipt['currencySymbol'] }} {{ number_format($unapplied,2) }}</th>
-                                            </tr>
-                                        @endif
-                                        </tfoot>
-                                    </table>
-                                </div>
-                                <div class="small text-muted mt-2">Remarks: {{ $receipt['remarks'] }}</div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-5">
-                            <div class="border rounded-3 p-3 h-100 d-flex flex-column">
-                                <div class="text-muted text-uppercase small">Amount in Words</div>
-                                <div class="fw-medium">Twenty Thousand Kenya Shillings Only</div>
-
-                                <div class="row small mt-3">
-                                    <div class="col-6">
-                                        <div class="text-muted">Prepared By</div>
-                                        <div class="fw-medium">{{ $receipt['preparedBy'] }}</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted">Authorized By</div>
-                                        <div class="fw-medium">{{ $receipt['authorizedBy'] }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="mt-auto small text-muted pt-2">
-                                    Please quote receipt number <strong>{{ $receipt['receiptNo'] }}</strong> on all
-                                    correspondence.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tear-off Remittance (print only) -->
-                    <hr class="my-4 print-only">
-                    <div class="border rounded-3 p-2 small print-only">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <div class="fw-semibold">Remittance Advice</div>
-                                <div class="text-muted">Attach with payment</div>
-                            </div>
-                            <div>
-                                <div><strong>Receipt:</strong> {{ $receipt['receiptNo'] }}</div>
-                                <div>
-                                    <strong>Amount:</strong> {{ $receipt['currencySymbol'] }} {{ number_format($receipt['amountReceived'],2) }}
-                                </div>
-                                <div><strong>Date:</strong> {{ $receipt['date'] }}</div>
-                            </div>
-                        </div>
-                        <div class="mt-1">{{ $company['name'] }} • {{ $company['phone'] }}</div>
-                    </div>
+        <div id="printRoot" class="card shadow-sm rounded-4 border-0 p-3 p-md-4">
+            <!-- Header -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start">
+                <div>
+                    <div class="h5 mb-0">Receipt — <span class="fw-semibold">{{ $receipt->ReceiptNumber }}</span></div>
+                    <div class="small text-muted">{{ $receipt->customer->ThirdPartyName ?? '-' }}</div>
+                    <div class="small text-muted">{{ $receipt->customer->RegistrationNumber ?? '-' }} • {{ $receipt->customer->Email ?? '-' }}</div>
+                </div>
+                <div class="text-md-end mt-2 mt-md-0">
+                    <div class="small text-muted">Status</div>
+                    @php
+                        $status = strtolower($receipt->Status ?? 'draft');
+                        $statusClass = match($status) {
+                            'posted' => 'bg-success',
+                            'draft' => 'bg-warning text-dark',
+                            default => 'bg-secondary'
+                        };
+                    @endphp
+                    <div><span class="badge {{ $statusClass }}">{{ ucfirst($status) }}</span></div>
+                    <div class="small text-muted mt-2">Receipt Date: {{ $receipt->ReceiptDate->format('M d, Y') }}</div>
                 </div>
             </div>
 
-            <!-- ========= THERMAL/POS SLIP ========= -->
-            <div class="col-12">
-                <div id="receiptSlip" class="card shadow-sm border-0 p-3 rounded-4 d-none">
-                    <div class="slip">
-                        <div class="slip-title">{{ $company['name'] }}</div>
-                        <div class="slip-sub">{{ $company['phone'] }} • {{ $company['email'] }}</div>
-                        <div class="slip-sep"></div>
-
-                        <div class="slip-row"><span>RECEIPT</span><span>#{{ $receipt['receiptNo'] }}</span></div>
-                        <div class="slip-row"><span>Date</span><span>{{ $receipt['date'] }}</span></div>
-                        <div class="slip-sep"></div>
-
-                        <div class="slip-row"><span>Customer</span><span>{{ $receipt['customerName'] }}</span></div>
-                        <div class="slip-row"><span>ID</span><span>{{ $receipt['customerID'] }}</span></div>
-                        <div class="slip-row"><span>Method</span><span>{{ $receipt['paymentMethod'] }}</span></div>
-                        <div class="slip-row"><span>Ref</span><span>{{ $receipt['referenceNo'] }}</span></div>
-                        <div class="slip-sep"></div>
-
-                        <div class="slip-row slip-bold">
-                            <span>Amount Received</span><span>{{ $receipt['currencySymbol'] }} {{ number_format($receipt['amountReceived'],2) }}</span>
+            <!-- Payment Details -->
+            <div class="row g-3 mt-3">
+                @php
+                    // Determine wallet usage/refund tied to this receipt
+                    $walletTxns = \App\Models\Finance\CustomerWalletTransaction::where('CustomerID', $receipt->CustomerID)
+                        ->where('ReferenceType', 'receipt')
+                        ->where('ReferenceID', $receipt->Id)
+                        ->get(['TransactionType','Amount']);
+                    $walletUsed = (float) $walletTxns->where('TransactionType','withdrawal')->sum('Amount');
+                    $walletRefund = (float) $walletTxns->where('TransactionType','deposit')->sum('Amount');
+                    $cashApplied = max(0, (float)$receipt->total_allocated - $walletUsed);
+                    // Build display label for payment method
+                    $baseMethod = $receipt->paymentMethod->Description ?? $receipt->PaymentMethod;
+                    if ($walletUsed > 0 && $cashApplied > 0) {
+                        $displayMethod = $baseMethod . ' + Wallet';
+                    } elseif ($walletUsed > 0 && $cashApplied == 0) {
+                        $displayMethod = 'Wallet';
+                    } else {
+                        $displayMethod = $baseMethod;
+                    }
+                @endphp
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted">Amount Received</div>
+                        <div class="fs-5 fw-semibold text-success">KSh {{ number_format($receipt->AmountReceived, 2) }}</div>
+                        <div class="small text-muted">{{ $displayMethod }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted">Applied to Invoices</div>
+                        <div class="fs-5 fw-semibold text-primary">KSh {{ number_format($receipt->total_allocated, 2) }}</div>
+                        <div class="small text-muted">{{ $receipt->allocations->count() }} invoice(s)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted">Unapplied Amount</div>
+                        <div class="fs-5 fw-semibold {{ $receipt->UnappliedAmount > 0 ? 'text-warning' : 'text-muted' }}">
+                            KSh {{ number_format($receipt->UnappliedAmount, 2) }}
                         </div>
-                        <div class="slip-row">
-                            <span>Applied</span><span>{{ $receipt['currencySymbol'] }} {{ number_format($appliedTotal,2) }}</span>
-                        </div>
-                        @if($unapplied > 0)
-                            <div class="slip-row">
-                                <span>Unapplied</span><span>{{ $receipt['currencySymbol'] }} {{ number_format($unapplied,2) }}</span>
-                            </div>
+                        @if($receipt->UnappliedAmount > 0)
+                            <div class="small text-warning">Added to wallet</div>
+                        @else
+                            <div class="small text-muted">Fully allocated</div>
                         @endif
-                        <div class="slip-sep"></div>
-
-                        <div class="slip-sub">Invoices</div>
-                        @foreach($allocations as $row)
-                            <div class="slip-row">
-                                <span>{{ $row['invoiceNo'] }}</span><span>{{ $receipt['currencySymbol'] }} {{ number_format($row['applied'],2) }}</span>
-                            </div>
-                        @endforeach
-                        <div class="slip-sep"></div>
-
-                        <div class="slip-center">Thank you!</div>
-                        <div class="slip-center">— Keep this for your records —</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted">Reference</div>
+                        <div class="fw-semibold">{{ $receipt->ReferenceNumber ?: 'No reference' }}</div>
+                        <div class="small text-muted">Value: {{ $receipt->ValueDate->format('M d, Y') }}</div>
                     </div>
                 </div>
             </div>
 
+            <!-- Funding Breakdown -->
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small text-uppercase mb-2">Funding Breakdown</div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>From Wallet</span>
+                            <span class="fw-semibold">KSh {{ number_format($walletUsed, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>From {{ $baseMethod }}</span>
+                            <span class="fw-semibold">KSh {{ number_format($cashApplied, 2) }}</span>
+                        </div>
+                        @if($walletRefund > 0)
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Returned to Wallet (unapplied)</span>
+                            <span class="fw-semibold">KSh {{ number_format($walletRefund, 2) }}</span>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Allocations -->
+            @if($receipt->allocations->count() > 0)
+                <div class="mt-4">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-file-invoice text-info me-2"></i> Invoice Allocations
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice No.</th>
+                                    <th>Issue Date</th>
+                                    <th class="text-end">Invoice Total</th>
+                                    <th class="text-end">Amount Paid</th>
+                                    <th class="text-end">This Payment</th>
+                                    <th class="text-end">Remaining Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($receipt->allocations as $allocation)
+                                    @php
+                                        $invoice = $allocation->invoice;
+                                        $remaining = $invoice->TotalAmount - $invoice->AmountPaid;
+                                    @endphp
+                                    <tr>
+                                        <td class="fw-medium">{{ $invoice->InvoiceNumber }}</td>
+                                        <td>{{ $invoice->InvoiceDate->format('Y-m-d') }}</td>
+                                        <td class="text-end">KSh {{ number_format($invoice->TotalAmount, 2) }}</td>
+                                        <td class="text-end">KSh {{ number_format($invoice->AmountPaid, 2) }}</td>
+                                        <td class="text-end fw-semibold text-success">KSh {{ number_format($allocation->AmountAllocated, 2) }}</td>
+                                        <td class="text-end {{ $remaining <= 0 ? 'text-success' : 'text-warning' }}">
+                                            KSh {{ number_format($remaining, 2) }}
+                                            @if($remaining <= 0)
+                                                <i class="fas fa-check-circle ms-1" title="Fully Paid"></i>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Additional Details -->
+            <div class="row g-3 mt-3">
+                <div class="col-lg-6">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small text-uppercase mb-2">Payment Details</div>
+                        <div class="small">
+                            <div class="row mb-2">
+                                <div class="col-5"><strong>Payment Method:</strong></div>
+                                <div class="col-7">{{ $receipt->paymentMethod->Description ?? $receipt->PaymentMethod }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-5"><strong>Reference No:</strong></div>
+                                <div class="col-7">{{ $receipt->ReferenceNumber ?: '—' }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-5"><strong>Value Date:</strong></div>
+                                <div class="col-7">{{ $receipt->ValueDate->format('M d, Y') }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-5"><strong>Posting Date:</strong></div>
+                                <div class="col-7">{{ $receipt->PostingDate->format('M d, Y') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="text-muted small text-uppercase mb-2">Remarks & Attachments</div>
+                        <div class="small">
+                            @if($receipt->Remarks)
+                                <div class="mb-3">
+                                    <strong>Remarks:</strong><br>
+                                    {{ $receipt->Remarks }}
+                                </div>
+                            @endif
+                            <strong>Attachments:</strong>
+                            @php
+                                $documents = $receipt->documents()->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                            @endphp
+                            @if($documents->count() > 0)
+                                <div id="receiptAttachments">
+                                    @foreach($documents as $document)
+                                        @php $document->setRelations([]); @endphp
+                                        {!! (new DocumentService($document))->summaryList() !!}
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-muted">No attachments</div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Trail -->
+            <div class="mt-4">
+                <h6 class="text-muted mb-3">
+                    <i class="fas fa-history text-info me-2"></i> Audit Trail
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <tbody>
+                            <tr>
+                                <td width="120" class="text-muted small">Created:</td>
+                                <td>{{ $receipt->CreatedOn->format('M d, Y H:i') }} by {{ $receipt->creator->name ?? 'System' }}</td>
+                            </tr>
+                            @if($receipt->ModifiedOn && $receipt->ModifiedOn != $receipt->CreatedOn)
+                                <tr>
+                                    <td class="text-muted small">Modified:</td>
+                                    <td>{{ $receipt->ModifiedOn->format('M d, Y H:i') }} by {{ $receipt->modifier->name ?? 'System' }}</td>
+                                </tr>
+                            @endif
+                            @if($receipt->Status === 'Posted')
+                                <tr>
+                                    <td class="text-muted small">Posted:</td>
+                                    <td>{{ $receipt->ModifiedOn->format('M d, Y H:i') }} - {{ $receipt->ApprovalReason ?: 'Receipt posted to GL' }}</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
+        {{-- Post Receipt Modal --}}
+        @if($receipt->Status === 'Draft')
+            <div class="modal fade" id="postReceiptModal" tabindex="-1" aria-labelledby="postReceiptModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <form method="POST" action="{{ route('receiptsposting.approve', $receipt->Id) }}">
+                        @csrf
+                        <input type="hidden" name="action_type" value="approve">
+                        <div class="modal-content rounded-4 shadow">
+                            <div class="modal-header bg-light border-0">
+                                <h5 class="modal-title text-success" id="postReceiptModalLabel">Post Receipt</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="mb-3">Are you sure you want to post receipt <strong>{{ $receipt->ReceiptNumber }}</strong>?</p>
+                                <p class="small text-muted mb-3">This will create GL entries and the receipt cannot be modified afterward.</p>
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">Posting Reason</label>
+                                    <textarea class="form-control" name="Reason" id="reason" rows="3" required 
+                                        placeholder="Enter reason for posting...">Receipt verified and ready for GL posting</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button class="btn btn-success" type="submit" id="postBtn" 
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerHTML='<i class=\'fas fa-spinner fa-spin me-1\'></i>Posting...'; this.form.submit();}">
+                                    <i class="fas fa-check-circle me-1"></i> Post Receipt
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
     </div>
 @endsection
 
 @section('styles')
     <style>
-        /* System font stack (no CDN) */
-        :root {
-            --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+        :root { --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif; }
+        body, .card, .table { font-family: var(--font-sans); }
+        .card { border: none; }
+        /* Attachment preview chip tweaks */
+        #receiptAttachments .modal-preview-document{
+            display: inline-flex;
+            align-items: center;
+            gap: .375rem;
+            padding: .25rem .6rem;
+            font-size: .85rem;
+            line-height: 1.2;
+            border-radius: 9999px;
+            margin: .125rem .25rem .125rem 0;
         }
-
-        body, .card, .table {
-            font-family: var(--font-sans);
+        #receiptAttachments .modal-preview-document:hover{
+            filter: brightness(0.97);
         }
-
-        .table td, .table th {
-            vertical-align: middle;
-        }
-
-        /* Print helpers */
-        .print-only {
-            display: none;
-        }
-
         @media print {
-            .print-only {
-                display: block !important;
-            }
-        }
-
-        /* A4 print rules */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-
-            .print-a4, .print-a4 * {
-                visibility: visible;
-            }
-
-            .print-a4 {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-
-            @page {
-                size: A4 portrait;
-                margin: 14mm;
-            }
-
-            .navbar, .btn {
-                display: none !important;
-            }
-
-            .card, .shadow-sm {
-                box-shadow: none !important;
-                border: none !important;
-            }
-        }
-
-        /* Slip layout (screen) */
-        .slip {
-            width: 320px; /* looks like 80mm roll on screen */
-            margin: 0 auto;
-            font-size: 13px;
-        }
-
-        .slip-title {
-            text-align: center;
-            font-weight: 700;
-        }
-
-        .slip-sub {
-            text-align: center;
-            color: #6c757d;
-            font-size: 12px;
-        }
-
-        .slip-sep {
-            border-top: 1px dashed #999;
-            margin: 6px 0;
-        }
-
-        .slip-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .slip-bold {
-            font-weight: 700;
-        }
-
-        .slip-center {
-            text-align: center;
-        }
-
-        /* Slip print rules */
-        @media print {
-            .print-slip, .print-slip * {
-                visibility: visible;
-            }
-
-            .print-slip {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 58mm; /* adjust to 80mm for wider rolls */
-                padding: 2mm 2mm 0 2mm;
-            }
-
-            @page {
-                size: 58mm auto;
-                margin: 0;
-            }
+            body * { visibility: hidden; }
+            #printRoot, #printRoot * { visibility: visible; }
+            #printRoot { position: absolute; left: 0; top: 0; width: 100%; }
+            @page { size: A4 portrait; margin: 14mm; }
+            .btn, .navbar { display:none !important; }
+            .shadow-sm { box-shadow: none !important; }
         }
     </style>
 @endsection
 
 @section('scripts')
-    <script>
-        function printA4() {
-            // show A4, hide Slip
-            document.getElementById('receiptA4').classList.remove('d-none');
-            document.getElementById('receiptSlip').classList.add('d-none');
-
-            // tag A4 as print root
-            document.getElementById('receiptA4').classList.add('print-a4');
-            document.getElementById('receiptSlip').classList.remove('print-slip');
-
-            window.print();
-
-            // cleanup
-            document.getElementById('receiptA4').classList.remove('print-a4');
-        }
-
-        function printSlip() {
-            // show Slip, hide A4
-            document.getElementById('receiptSlip').classList.remove('d-none');
-            document.getElementById('receiptA4').classList.add('d-none');
-
-            // tag Slip as print root
-            document.getElementById('receiptSlip').classList.add('print-slip');
-            document.getElementById('receiptA4').classList.remove('print-a4');
-
-            window.print();
-
-            // cleanup
-            document.getElementById('receiptSlip').classList.remove('print-slip');
-            // bring A4 back after print for on-screen viewing (optional)
-            document.getElementById('receiptA4').classList.remove('d-none');
-        }
-    </script>
+    @includeIf('snippets.actions.preview-files')
 @endsection

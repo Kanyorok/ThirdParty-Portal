@@ -26,7 +26,7 @@
 
       <div class="row mb-3">
           <div class="col">
-              <label class="form-label">Transfer Ref</label>
+              <label class="form-label">Transfer Ref <span class="text-danger">*</span></label>
               <select id="transferId" name="TransferID" class="form-select" required>
                   <option value="">Select Transfer</option>
                   @foreach($transfers as $transfer)
@@ -38,7 +38,7 @@
         </div>
 
           <div class="col">
-              <label class="form-label">Received By</label>
+              <label class="form-label">Received By <span class="text-danger">*</span></label>
               <select name="ReceivedBy" class="form-select select2" required>
                   <option value="">-- Select User --</option>
                   @foreach ($users as $user)
@@ -50,7 +50,7 @@
           </div>
 
           <div class="col">
-              <label class="form-label">Receive Date</label>
+              <label class="form-label">Receive Date <span class="text-danger">*</span></label>
               <input type="date" name="ReceivedDate" class="form-control"
                      value="{{ old('ReceivedDate', date('Y-m-d')) }}" required>
         </div>
@@ -65,10 +65,10 @@
                 <th>UOM</th>
                 <th>Unit Cost</th>
                 <th>Dispatched Qty</th>
-                <th>Qty Received</th>
+                <th>Qty Received <span class="text-danger">*</span></th>
                 <th>Discrepancy</th>
                 <th>Qty Damaged</th>
-                <th>Store</th>
+                <th>Store <span class="text-danger">*</span></th>
               <th>Remarks</th>
             </tr>
           </thead>
@@ -81,7 +81,7 @@
                                         <input type="hidden" name="items[{{ $index }}][item]"
                                                value="{{ $item['item'] }}">
                                     </td>
-
+                                    
                                     <td>
                                         <input type="number" name="items[{{ $index }}][uom]"
                                                class="form-control uom"
@@ -102,7 +102,7 @@
                                     <td>
                                         <input type="number" name="items[{{ $index }}][received_qty]"
                                                class="form-control received-qty"
-                                               value="{{ $item['received_qty'] ?? 0 }}">
+                                               value="{{ $item['received_qty'] ?? 0 }}" required>
                                     </td>
                                     <td>
                                         <input type="number" name="items[{{ $index }}][discrepancy]"
@@ -115,7 +115,7 @@
                                                value="{{ $item['damaged_qty'] ?? 0 }}">
                                     </td>
                                     <td>
-                                        <select name="items[{{ $index }}][store_id]" class="form-select">
+                                        <select name="items[{{ $index }}][store_id]" class="form-select" required>
                                             <option value="">-- Select Store --</option>
                                             @if(isset($item['store_options']))
                                                 @foreach($item['store_options'] as $store)
@@ -145,27 +145,28 @@
           <textarea name="GeneralRemarks" class="form-control">{{ old('GeneralRemarks') }}</textarea>
       </div>
 
-                <button type="submit" class="btn btn-success">Post Receipt</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Post Receipt</button>
+
     </form>
   </div>
     </div>
 
     <script>
-        document.getElementById('transferId').addEventListener('change', function () {
-            const transferId = this.value;
-            if (!transferId) return;
+    document.getElementById('transferId').addEventListener('change', function () {
+        const transferId = this.value;
+        if (!transferId) return;
 
-            fetch(`/inventory/transactionsreceipts/transfer-items/${transferId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const tableBody = document.getElementById('itemsTableBody');
-                    tableBody.innerHTML = "";
+        fetch(`/inventory/transactionsreceipts/transfer-items/${transferId}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('itemsTableBody');
+                tableBody.innerHTML = "";
 
-                    data.items.forEach((item, index) => {
-                        const dispatchedQty = item.DispatchedQty ?? 0;
-                        const stores = item.stores ?? [];
+                data.items.forEach((item, index) => {
+                    const dispatchedQty = item.DispatchedQty ?? 0;
+                    const stores = item.stores ?? [];
 
-                        const row = `
+                    const row = `
                         <tr>
                             <td>
                                 ${item.item?.ItemName ?? 'N/A'}
@@ -187,7 +188,7 @@
                             </td>
 
                             <td>
-                                <input type="number" name="items[${index}][received_qty]" class="form-control received-qty" min="0" value="${dispatchedQty}">
+                                <input type="number" name="items[${index}][received_qty]" class="form-control received-qty" min="0" value="${dispatchedQty}" required>
                             </td>
 
                             <td>
@@ -199,7 +200,7 @@
                             </td>
 
                             <td>
-                                <select name="items[${index}][store_id]" class="form-select">
+                                <select name="items[${index}][store_id]" class="form-select" required>
                                     <option value="">-- Select Store --</option>
                                     ${stores.map(store => `<option value="${store.Id}">${store.StoreName}</option>`).join('')}
                                 </select>
@@ -210,35 +211,34 @@
                             </td>
                         </tr>
                     `;
-                        tableBody.innerHTML += row;
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching transfer data:", error);
+                    tableBody.innerHTML += row;
                 });
-        });
-
-        // Recalculate discrepancy when quantity is changed
-        document.addEventListener('input', function (event) {
-            if (event.target.classList.contains('received-qty')) {
-                const row = event.target.closest('tr');
-                const dispatchedInput = row.querySelector('.dispatched-qty');
-                const discrepancyInput = row.querySelector('.discrepancy');
-
-                const dispatched = parseFloat(dispatchedInput.value) || 0;
-                const received = parseFloat(event.target.value) || 0;
-                const discrepancy = dispatched - received;
-
-                discrepancyInput.value = discrepancy;
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            $('.select2').select2({
-                placeholder: 'Select user',
-                allowClear: true
+            })
+            .catch(error => {
+                console.error("Error fetching transfer data:", error);
             });
-        });
-    </script>
-@endsection
+    });
 
+    // Recalculate discrepancy when quantity is changed
+    document.addEventListener('input', function (event) {
+        if (event.target.classList.contains('received-qty')) {
+            const row = event.target.closest('tr');
+            const dispatchedInput = row.querySelector('.dispatched-qty');
+            const discrepancyInput = row.querySelector('.discrepancy');
+
+            const dispatched = parseFloat(dispatchedInput.value) || 0;
+            const received = parseFloat(event.target.value) || 0;
+            const discrepancy = dispatched - received;
+
+            discrepancyInput.value = discrepancy;
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        $('.select2').select2({
+            placeholder: 'Select user',
+            allowClear: true
+        });
+    });
+</script>
+@endsection

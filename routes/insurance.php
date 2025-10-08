@@ -188,8 +188,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
     });
 
 
-    Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(function () {
-
+        Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(function () {
         // Product Setup
         Route::get('/', [InsuranceProductController::class, 'index'])->name('index');
         Route::get('create', [InsuranceProductController::class, 'create'])->name('create');
@@ -197,8 +196,6 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('{Id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
         Route::put('{Id}/update', [InsuranceProductController::class, 'update'])->name('update');
         Route::delete('delete/{Id}', [InsuranceProductController::class, 'destroy'])->name('destroy');
-        // Route::get('{Id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
-        // Route::post('{Id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
 
 
     });

@@ -4,25 +4,25 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-    <div class="container mt-4">
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+<div class="container mt-4">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-        <div class="mb-3 text-end">
-            <a href="{{ route('bancassurance.products.create') }}" class="btn btn-primary">New Product</a>
-        </div>
-        <table id='InsuranceProduct' class="table table-bordered">
+    <div class="mb-3 text-end">
+        <a href="{{ route('bancassurance.products.create') }}" class="btn btn-primary">New Product</a>
+    </div>
+        <table  id='InsuranceProduct' class="table table-bordered">
             <thead class="table-light">
-            <tr>
-                <th>#</th>
-                <th>Provider</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
+                <tr>
+                    <th>#</th>         
+                    <th>Provider</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody>
             @foreach($products as $product)
@@ -30,7 +30,7 @@
                     <td>{{ $product->Id }}</td>
                     <td>{{ $product->provider->Name ?? '-' }}</td>
                     <td>{{ $product->Name ?? '-' }}</td>
-                    <td>{{ $product->Type ?? '-' }}</td>
+                    <td>{{ $product->type->Description ?? '-' }}</td>
                     <td>{{ $product->Description ?? '-' }}</td>
                     <td>
                         @if($product->IsActive)
@@ -40,17 +40,23 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('bancassurance.products.edit', $product->Id) }}"
-                           class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('bancassurance.products.destroy', $product->Id) }}" method="POST"
-                              class="d-inline">
+                    <a href="{{ route('bancassurance.products.edit', $product->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    @if($product->policies()->exists())
+                        <button class="btn btn-sm btn-secondary" disabled>
+                            <i class="bi bi-lock"></i> In Use
+                        </button>
+                    @else
+                        <form action="{{ route('bancassurance.products.destroy', $product->Id) }}" 
+                                method="POST" 
+                                onsubmit="return confirm('Are you sure you want to delete this product?');"
+                                class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Are you sure you want to delete this Insurance Product?');">
-                                Delete
+                            <button class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i> Delete
                             </button>
                         </form>
+                    @endif
                     </td>
                 </tr>
             @endforeach

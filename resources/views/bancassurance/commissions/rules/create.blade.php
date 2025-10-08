@@ -1,62 +1,104 @@
 @extends('layouts.app')
 @section('title', 'Set Commission Rule')
-
 @section('content')
-    <div class="container mt-4">
-        <form method="POST" action="{{ route('commissions.rules.store') }}">
-            @csrf
 
-            <div class="mb-3">
-                <label class="form-label"> Rule Name <span class="text-danger">*</span></label>
-                <input type="text" name="RuleName" class="form-control" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label"> Product <span class="text-danger">*</span></label>
-                <select name="ProductId" class="form-select" required>
-                    <option value="">-- Select --</option>
-                    @foreach($products as $product)
-                        <option value="{{ $product->Id }}">{{ $product->Name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Policy Type <span class="text-danger">*</span></label>
-                <select name="PolicyTypeId" class="form-select" required>
-                    <option value="">--Select Policy Type--</option>
-                    @foreach ($policytypes as $policytype)
-                        <option value="{{ $policytype->ID }}">
-                            {{ $policytype->Description }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label"> CommissionRate (%) <span class="text-danger">*</span></label>
-                <input type="number" name="CommissionRate" step="0.01" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label"> FixedAmount <span class="text-danger">*</span></label>
-                <input type="number" name="FixedAmount" step="0.01" class="form-control" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Applies To <span class="text-danger">*</span></label>
-                <select name="AppliesTo" class="form-select" required>
-                    <option value="">--Select--</option>
-                    @foreach ($assignto as $assign)
-                        <option value="{{ $assign->ID }}">
-                            {{ $assign->Description }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="mb-3 form-check">
-                <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck">
-                <label class="form-check-label" for="primaryCheck">IsActive </label>
-            </div>
-
-            <button type="submit" class="btn btn-success">Save Rule</button>
-        </form>
+@if ($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Please fix the following issues:</strong>
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+@endif
+
+<div class="container mt-4">
+    <div class="card shadow-sm rounded-3">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-gear-fill me-2"></i> Commission Info</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ route('commissions.rules.store') }}">
+                @csrf
+
+                <!-- Row 1 -->
+                <div class="row g-3 mb-3">
+                    <!-- Rule Name -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Rule Name <span class="text-danger">*</span></label>
+                        <input type="text" name="RuleName" class="form-control rounded-3" placeholder="Enter rule name" required>
+                    </div>
+
+                    <!-- Product -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Product <span class="text-danger">*</span></label>
+                        <select name="ProductId" class="form-select rounded-3" required>
+                            <option value="">-- Select Product --</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->Id }}">{{ $product->Name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Policy Type -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Policy Type <span class="text-danger">*</span></label>
+                        <select name="PolicyTypeId" class="form-select rounded-3" required>
+                            <option value="">-- Select Policy Type --</option>
+                            @foreach ($policytypes as $policytype)
+                                <option value="{{ $policytype->ID }}">{{ $policytype->Description }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="row g-3 mb-3">
+                    <!-- Commission Rate -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Commission Rate (%) <span class="text-danger">*</span></label>
+                        <input type="number" name="CommissionRate" step="0.01" class="form-control rounded-3" placeholder="e.g. 5.00" required>
+                    </div>
+
+                    <!-- Fixed Amount -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Fixed Amount <span class="text-danger">*</span></label>
+                        <input type="number" name="FixedAmount" step="0.01" class="form-control rounded-3" placeholder="e.g. 1000" required>
+                    </div>
+
+                    <!-- Applies To -->
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Applies To <span class="text-danger">*</span></label>
+                        <select name="AppliesTo" class="form-select rounded-3" required>
+                            <option value="">-- Select Option --</option>
+                            @foreach ($assignto as $assign)
+                                <option value="{{ $assign->ID }}">{{ $assign->Description }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 3 -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="IsActive" value="1" id="primaryCheck" checked>
+                        <label class="form-check-label fw-semibold" for="primaryCheck">Is Active</label>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ route('commissions.rules.index') }}" class="btn btn-secondary rounded-3">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success rounded-3 px-4">
+                        Save Rule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection

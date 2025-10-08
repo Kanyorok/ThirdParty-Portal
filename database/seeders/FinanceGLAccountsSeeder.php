@@ -19,8 +19,9 @@ class FinanceGLAccountsSeeder extends Seeder
         $accountTypeMap = [
             'A' => 'A', // Asset
             'L' => 'L', // Liability
-            'I' => 'I',
-            'E' => 'E'
+            'I' => 'I', // Income
+            'E' => 'E', // Expense
+            'S' => 'S'  // Share and Capital
         ];
 
         // Helper to get IDs from code
@@ -43,12 +44,30 @@ class FinanceGLAccountsSeeder extends Seeder
             // --- INCOME & EXPENSES ---
             ['4000', 'Revenue / Income', 'I', 'REV', 'RV_INCOME', '3000', 'CR', 0, 1, null, 005, 'Sales or service income', '4000', '100', '10', '3'],
             ['5000', 'Expense Account', 'E', 'OPEX', 'EX_EXP', '3000', 'DR', 0, 1, null, 005, 'Purchases or operating expenses', '5000', '200', '20', '3'],
+
+            // --- SHARE AND CAPITAL ---
+            ['3100', 'Share Capital - Ordinary', 'S', 'SC', 'EQ_SHARECAP', null, 'CR', 0, 1, 'CBS3100', 005, 'Ordinary share capital issued by the company', '3100', '800', '80', '4'],
+            ['3200', 'Retained Earnings', 'S', 'RE', 'EQ_RETAINED', '3100', 'CR', 0, 1, 'CBS3200', 005, 'Accumulated profits retained in the business', '3200', '810', '81', '4'],
+
+
         ];
 
         foreach ($glAccounts as $gl) {
-            [$glCode, $name, $typeCode, $groupCode, $subCode, $parentCode, $normalBal, $isCtrl, $isPost, $cbsCode, $branch, $desc,$type,$accType,$subType,$glDigits] = $gl;
+            [
+                $glCode, $name, $typeCode, $groupCode, $subCode, $parentCode, $normalBal,
+                $isCtrl, $isPost, $cbsCode, $branch, $desc, $type, $accType, $subType, $glDigits
+            ] = $gl;
 
-            $typeId    = $accountTypeMap[$typeCode];
+            // Check if GLCode already exists
+            $exists = DB::table('t_FinanceGLAccounts')
+                ->where('GLCode', $glCode)
+                ->exists();
+
+            if ($exists) {
+                continue; // Skip if duplicate
+            }
+
+            $typeId    = $accountTypeMap[$typeCode] ?? null;
             $groupId   = $getGroupId($groupCode);
             $subTypeId = $getSubTypeId($subCode);
 
@@ -59,29 +78,29 @@ class FinanceGLAccountsSeeder extends Seeder
             }
 
             DB::table('t_FinanceGLAccounts')->insert([
-                'GLCode'             => $glCode,
-                'GLName'             => $name,
-                'GLAccountTypeID'    => $typeId,
-                'GLTypeGroupID'      => $groupId,
-                'GLSubAccountTypeID' => $subTypeId,
-                'ParentGLID'         => $parentId,
-                'NormalBalance'      => $normalBal,
-                'IsControlAccount'   => $isCtrl,
-                'IsPostingAccount'   => $isPost,
-                'CBSAccountCode'     => $cbsCode,
-                'BranchID'           => $branch,
-                'Description'        => $desc,
-                'IsActive'           => 1,
-                'GLAccountTypeValue' => $type,
-                'GLTypeGroupIDValue' =>$accType,
-                'GLSubAccountTypeIDValue' => $subType,
-                'GLDigits' => $glDigits,
-                'CreatedBy'          => 1,
-                'CreatedOn'          => $now,
-                'ModifiedBy'         => 1,
-                'ModifiedOn'         => $now,
-                'DeletedBy'          => null,
-                'DeletedOn'          => null,
+                'GLCode'                 => $glCode,
+                'GLName'                 => $name,
+                'GLAccountTypeID'        => $typeId,
+                'GLTypeGroupID'          => $groupId,
+                'GLSubAccountTypeID'     => $subTypeId,
+                'ParentGLID'             => $parentId,
+                'NormalBalance'          => $normalBal,
+                'IsControlAccount'       => $isCtrl,
+                'IsPostingAccount'       => $isPost,
+                'CBSAccountCode'         => $cbsCode,
+                'BranchID'               => $branch,
+                'Description'            => $desc,
+                'IsActive'               => 1,
+                'GLAccountTypeValue'     => $type,
+                'GLTypeGroupIDValue'     => $accType,
+                'GLSubAccountTypeIDValue'=> $subType,
+                'GLDigits'               => $glDigits,
+                'CreatedBy'              => 1,
+                'CreatedOn'              => $now,
+                'ModifiedBy'             => 1,
+                'ModifiedOn'             => $now,
+                'DeletedBy'              => null,
+                'DeletedOn'              => null,
             ]);
         }
     }

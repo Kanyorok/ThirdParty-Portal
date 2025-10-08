@@ -3,13 +3,13 @@
 
 @section('content')
 <div class="card shadow p-4 rounded-4">
-    {{--    <h4 class="mb-3">🧾 Create Payables Invoice</h4>--}}
+{{--    <h4 class="mb-3">🧾 Create Payables Invoice</h4>--}}
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
     @endif
 
     <form action="{{route('invoiceentry.store')}}" method="POST" enctype="multipart/form-data">
@@ -21,7 +21,7 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label">Vendor<span class="text-danger">*</span></label>
-                <select id="VendorSelect" name="SupplierID" class="form-control" required>
+                <select id="VendorSelect" name="ThirdPartyID" class="form-control" required>
                     <option disabled selected value="">-- Select Vendor --</option>
                     @foreach($suppliers as $item)
                         <option value="{{ $item->Id }}">{{ $item->SupplierName }}</option>
@@ -58,12 +58,15 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label">GRN Reference<span class="text-danger">*</span></label>
-                <select id="GRNReference" name="GRNReference" class="form-control" required>
-                    <option selected disabled value="">-- Select GRN --</option>
-                    @foreach($grns as $grn)
-                        <option value="{{ $grn->id }}">{{ $grn->GRNID }}</option>
-                    @endforeach
-                </select>
+                <div class="d-flex align-items-center gap-2">
+                    <select id="GRNReference" name="GRNReference" class="form-select" style="flex:1;" required>
+                        <option selected disabled value="">-- Select GRN --</option>
+                        @foreach($grns as $grn)
+                            <option value="{{ $grn->id }}">{{ $grn->GRNID }}</option>
+                        @endforeach
+                    </select>
+                    <button id="ViewGRNButton" type="button" class="btn btn-outline-secondary">View GRN</button>
+                </div>
                 <small class="form-text text-muted">A PO must first be selected.</small>
             </div>
             <div class="col-md-6 mb-3">
@@ -78,8 +81,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Invoice Description</label>
-                <textarea name="Description" class="form-control" rows="3"
-                          placeholder="Enter invoice description"></textarea>
+                <textarea name="Description" class="form-control" rows="3" placeholder="Enter invoice description"></textarea>
             </div>
         </div>
 
@@ -96,10 +98,7 @@
 
         <div class="mt-4 d-flex justify-content-end gap-2">
             <a href="{{route('invoiceentry.index')}}" class="btn btn-secondary">Back</a>
-            <button type="submit" class="btn btn-success"
-                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='💾Saving...'; this.form.submit();}">
-                💾 Save Invoice
-            </button>
+            <button type="submit" class="btn btn-success" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='💾Saving...'; this.form.submit();}">💾 Save Invoice</button>
         </div>
 
         {{--View PO Modal--}}
@@ -111,10 +110,25 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div id="poDetailsContent">
-                            <!-- PO details will be dynamically loaded here -->
-                            <p>Loading PO details...</p>
-                        </div>
+                        <div id="poDetailsContent"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{--View GRN Modal--}}
+        <div class="modal fade" id="viewGRN" tabindex="-1" aria-labelledby="viewGRNTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered  ">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewGRNTitle">GRN Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="grnDetailsContent"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -133,20 +147,23 @@
         const grns = document.getElementById('GRNReference');
         const viewPOButton = document.getElementById('ViewPOButton');
         const viewPOModal = document.getElementById('viewPO');
+        const viewGRNButton = document.getElementById('ViewGRNButton');
+        const viewGRNModal = document.getElementById('viewGRN');
 
         // Disable PO and GRN selects initially
         pos.disabled = true;
         grns.disabled = true;
         viewPOButton.disabled = true;
+        if (viewGRNButton) viewGRNButton.disabled = true;
 
         // Handle vendor change
-        vendor.addEventListener('change', function () {
+        vendor.addEventListener('change', function(){
             const selectedVendor = vendor.options[vendor.selectedIndex].value;
             pos.disabled = !selectedVendor;
 
             pos.innerHTML = '<option selected disabled value="">Loading...</option>';
 
-            if (selectedVendor) {
+            if (selectedVendor){
                 fetch(`/finance/finance/pos/${selectedVendor}`)
                     .then(response => response.json())
                     .then(data => {
@@ -159,25 +176,34 @@
                         }
 
                         pos.innerHTML = '<option selected disabled value="">-- Select PO --</option>';
-                        data.forEach(function (po) {
-                            pos.innerHTML += `<option value="${po.OrderNo}">${po.OrderNo}</option>`;
+                        // Sort POs for consistency and faster selection
+                        data.sort((a,b) => (a.OrderNo||'').localeCompare(b.OrderNo||''));
+                        const frag = document.createDocumentFragment();
+                        data.forEach(function(po){
+                            const opt = document.createElement('option');
+                            opt.value = po.OrderNo;
+                            opt.textContent = po.OrderNo;
+                            frag.appendChild(opt);
                         });
+                        pos.innerHTML = '<option selected disabled value="">-- Select PO --</option>';
+                        pos.appendChild(frag);
                         pos.disabled = false;
                     });
             }
         });
 
         // Handle PO change
-        pos.addEventListener('change', function () {
+        pos.addEventListener('change', function(){
             const selectedPO = pos.options[pos.selectedIndex].value;
             viewPOButton.disabled = !selectedPO;
+            if (viewGRNButton) viewGRNButton.disabled = !selectedPO;
 
             grns.innerHTML = '<option selected disabled value="">Loading GRN...</option>';
 
-            if (selectedPO) {
+            if (selectedPO){
                 fetch(`/finance/finance/grns/${selectedPO}`)
                     .then(response => response.json())
-                    .then(data => {
+                    .then(data =>{
                         //console.log("GRNDATA", data);
 
                         if (data.length === 0) {
@@ -186,20 +212,39 @@
                             return;
                         }
 
-                        grns.innerHTML = '<option selected disabled value="">-- Select GRN --</option>';
-                        data.forEach(function (grn) {
-                            grns.innerHTML += `<option value="${grn.GRNID}">${grn.GRNID}</option>`;
+                        // Optimize GRN populate
+                        data.sort((a,b) => (a.GRNID||'').localeCompare(b.GRNID||''));
+                        const gfrag = document.createDocumentFragment();
+                        data.forEach(function(grn){
+                            const opt = document.createElement('option');
+                            opt.value = grn.GRNID;
+                            opt.textContent = grn.GRNID;
+                            gfrag.appendChild(opt);
                         });
+                        grns.innerHTML = '<option selected disabled value="">-- Select GRN --</option>';
+                        grns.appendChild(gfrag);
                         viewPOButton.disabled = false;
+                        if (viewGRNButton) viewGRNButton.disabled = false;
                         grns.disabled = false;
                     })
             }
         });
 
+        // Helper: show loading spinner content
+        function setLoading(targetId, title) {
+            const el = document.getElementById(targetId);
+            el.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center py-4">
+                    <div class="spinner-border text-primary me-2" role="status" aria-hidden="true"></div>
+                    <span>Loading ${title}...</span>
+                </div>`;
+        }
+
         // View PO details in modal
-        viewPOButton.addEventListener('click', function () {
+        viewPOButton.addEventListener('click', function() {
             const selectedPO = pos.options[pos.selectedIndex].value;
             if (selectedPO) {
+                setLoading('poDetailsContent', 'PO');
                 fetch(`/finance/finance/viewpo/${selectedPO}`)
                     .then(response => response.json())
                     .then(data => {
@@ -220,6 +265,7 @@
                                         <th>Item Name</th>
                                         <th>Quantity</th>
                                         <th>Unit Cost</th>
+                                        <th class="text-end">Line Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -228,16 +274,86 @@
                                             <td>${item.ItemName}</td>
                                             <td>${item.Quantity}</td>
                                             <td>${item.UnitCost}</td>
+                                            <td class="text-end">${(parseFloat(item.UnitCost||0) * parseFloat(item.Quantity||0)).toFixed(2)}</td>
                                         </tr>`).join('')}
                                 </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="3" class="text-end">PO Subtotal</th>
+                                        <th class="text-end">${data.items.reduce((sum, it) => sum + (parseFloat(it.UnitCost||0) * parseFloat(it.Quantity||0)), 0).toFixed(2)}</th>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     `;
 
-                        // Show the modal
+                        // Show the modal immediately for perceived performance
                         new bootstrap.Modal(viewPOModal).show();
                     });
             }
+        });
+
+        // View GRN details in modal
+        if (viewGRNButton) viewGRNButton.addEventListener('click', function() {
+            const selectedGRN = grns.options[grns.selectedIndex]?.value;
+            if (selectedGRN) {
+                setLoading('grnDetailsContent', 'GRN');
+                fetch(`/finance/finance/viewgrn/${selectedGRN}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const grnDetailsContent = document.getElementById('grnDetailsContent');
+                        grnDetailsContent.innerHTML = '';
+
+                        grnDetailsContent.innerHTML = `
+                        <h5>GRN: ${data.GRNID}</h5>
+                        <p><strong>Vendor:</strong> ${data.SupplierName}</p>
+                        <p><strong>PO:</strong> ${data.POID}</p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>Ordered Qty</th>
+                                        <th>Received Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.items.map(item => `
+                                        <tr>
+                                            <td>${item.ItemName}</td>
+                                            <td>${item.OrderedQty}</td>
+                                            <td>${item.ReceivedQty}</td>
+                                        </tr>`).join('')}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th class="text-end">Totals:</th>
+                                        <th>${data.totals.ordered}</th>
+                                        <th>${data.totals.received}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `;
+
+                        new bootstrap.Modal(viewGRNModal).show();
+                    });
+            }
+        });
+
+        // Auto-select GRN when a single GRN exists for a PO
+        pos.addEventListener('change', function(){
+            // after GRN fetch completes (handled above)
+            setTimeout(() => {
+                const opts = grns.querySelectorAll('option');
+                const valid = Array.from(opts).filter(o => o.value && o.disabled !== true);
+                if (valid.length === 1) {
+                    grns.value = valid[0].value;
+                    grns.disabled = true; // lock since one-to-one
+                } else {
+                    grns.disabled = false;
+                }
+            }, 250);
         });
     </script>
 @endsection

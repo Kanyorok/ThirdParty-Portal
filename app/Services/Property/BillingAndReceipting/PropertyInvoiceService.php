@@ -6,6 +6,7 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Models\Auth\User;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use Illuminate\Support\Facades\DB;
 
 
@@ -60,29 +61,30 @@ class PropertyInvoiceService
             //Posting to financee invoicee table
             $finance = app(\App\Services\Finance\InvoiceIntakeService::class);
             //Get the tenantID
-            $tenantID = PropertyNewLease::find($Lease->Id)->Tenant;
+            $tenantID =PropertyNewLease::find($Lease->Id)->Tenant;
+            $thirdPartyID=PropertyNewTenant::find($tenantID)->ThirdPartyId;
             // Build Finance lines (include only non-zero lines)
             $lines = [];
             $addLine = function (string $name, float $amount) use (&$lines, $Lease) {
-                $amt = (int)round($amount);
+                $amt = (int) round($amount);
                 if ($amt > 0) {
                     $lines[] = [
                         'InvoiceLineName' => $name,
-                        'Description' => "Lease #{$Lease->Id}",
-                        'UnitCost' => $amt,
-                        'Quantity' => 1,
-                        'Tax' => null,
-                        'TaxID' => null,
-                        'TaxAmount' => '0',
-                        'Discount' => 0,
-                        'Total' => $amt,
+                        'Description'     => "Lease #{$Lease->Id}",
+                        'UnitCost'        => $amt,
+                        'Quantity'        => 1,
+                        'Tax'             => null,
+                        'TaxID'           => null,
+                        'TaxAmount'       => '0',
+                        'Discount'        => 0,
+                        'Total'           => $amt,
                     ];
                 }
             };
-            $addLine('Monthly Rent', (float)$RentAmount);
-            $addLine('Service Charge', (float)$ServicesCharge);
-            $addLine('Parking Fee', (float)$ParkingFee);
-            $addLine('Other Charges', (float)$OtherCharges);
+            $addLine('Monthly Rent',  (float) $RentAmount);
+            $addLine('Service Charge',(float) $ServicesCharge);
+            $addLine('Parking Fee',   (float) $ParkingFee);
+            $addLine('Other Charges', (float) $OtherCharges);
 
             if (!empty($lines)) {
                 $total = array_sum(array_column($lines, 'Total'));
@@ -92,8 +94,8 @@ class PropertyInvoiceService
                     'SourceTable' => 't_RentInvoice',
 
                     'ModuleID' => 500000,
-                    'CurrencyID' => 56,
-                    'CustomerID' => $tenantID ?? null,
+                    'CurrencyID' =>56,
+                    'CustomerID' => $thirdPartyID  ?? null,
 
                     'InvoiceID' => $invoice->Id,
                     'InvoiceNumber' => $InvoiceNumber,

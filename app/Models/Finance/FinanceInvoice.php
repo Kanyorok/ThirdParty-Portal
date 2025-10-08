@@ -6,6 +6,7 @@ use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\Core\Module;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -50,6 +51,12 @@ class FinanceInvoice extends Model
         'Status',
         'ApprovalStatus',
         'ApprovalReason',
+        
+        // Credit application tracking
+        'UseCredit',
+        'CreditAppliedOn',
+        'CreditAppliedBy',
+        'CreditApplicationReason',
 
         'CreatedBy',
         'CreatedOn',
@@ -61,9 +68,11 @@ class FinanceInvoice extends Model
 
     protected $casts = [
         'InvoiceDate' => 'date',
-        'DueDate' => 'date',
-        'IsPaid' => 'boolean',
+        'DueDate'     => 'date',
+        'IsPaid'      => 'boolean',
         'IsGenerated' => 'boolean',
+        'UseCredit'   => 'boolean',
+        'CreditAppliedOn' => 'datetime',
     ];
 
     /**
@@ -109,10 +118,10 @@ class FinanceInvoice extends Model
             // If you added IdempotencyKey column and it’s empty, compute one
             if (empty($model->IdempotencyKey)) {
                 $model->IdempotencyKey = self::makeIdempotencyKey([
-                    'SourceTable' => $model->SourceTable,
-                    'InvoiceID' => $model->InvoiceID,     // external ref if any
-                    'CustomerID' => $model->CustomerID,
-                    'InvoiceDate' => optional($model->InvoiceDate)->format('Y-m-d'),
+                    'SourceTable'  => $model->SourceTable,
+                    'InvoiceID'    => $model->InvoiceID,     // external ref if any
+                    'CustomerID'   => $model->CustomerID,
+                    'InvoiceDate'  => optional($model->InvoiceDate)->format('Y-m-d'),
                     'InvoiceTitle' => $model->InvoiceTitle,
                     // add other fields if your sources need them
                 ]);
@@ -123,10 +132,10 @@ class FinanceInvoice extends Model
             // Keep IdempotencyKey stable once set; only set if it’s empty.
             if (empty($model->IdempotencyKey)) {
                 $model->IdempotencyKey = self::makeIdempotencyKey([
-                    'SourceTable' => $model->SourceTable,
-                    'InvoiceID' => $model->InvoiceID,
-                    'CustomerID' => $model->CustomerID,
-                    'InvoiceDate' => optional($model->InvoiceDate)->format('Y-m-d'),
+                    'SourceTable'  => $model->SourceTable,
+                    'InvoiceID'    => $model->InvoiceID,
+                    'CustomerID'   => $model->CustomerID,
+                    'InvoiceDate'  => optional($model->InvoiceDate)->format('Y-m-d'),
                     'InvoiceTitle' => $model->InvoiceTitle,
                 ]);
             }
@@ -139,29 +148,85 @@ class FinanceInvoice extends Model
         return $this->hasMany(FinanceInvoiceLine::class, 'InvoiceID', 'Id');
     }
 
-    public function customer()
-    {
-        return $this->belongsTo(PropertyNewTenant::class, 'CustomerID', 'Id');
+    public function customer(){
+        return $this->belongsTo(ThirdParties::class,'CustomerID','Id');
     }
 
-    public function source()
-    {
-        return $this->belongsTo(Module::class, 'ModuleID', 'ModuleID');
+    public function source(){
+        return $this->belongsTo(Module::class,'ModuleID','ModuleID');
     }
 
-    public function createdBy()
-    {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    public function createdBy(){
+        return $this->belongsTo(User::class,'CreatedBy','Id');
     }
 
-    public function modifiedBy()
-    {
-        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    public function modifiedBy(){
+        return $this->belongsTo(User::class,'ModifiedBy','Id');
     }
 
-    public function currency()
+    public function currency(){
+        return $this->belongsTo(Currency::class,'CurrencyID','Id');
+    }
+
+    public function creditAppliedByUser(){
+        return $this->belongsTo(User::class,'CreditAppliedBy','Id');
+    }
+
+    /**
+     * Check if credit has been applied to this invoice
+     */
+    public function hasCreditApplied(): bool
     {
-        return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
+        return (bool) $this->UseCredit;
+    }
+
+    /**
+     * Get credit movement for this invoice
+     */
+    public function creditMovement()
+    {
+        return $this->hasOne(FinanceCreditMovement::class, 'ReferenceID', 'Id')
+            ->where('ReferenceType', 'invoice')
+            ->where('MovementType', 'invoice_usage');
+    }
+
+    /**
+     * Scope to filter invoices with credit applied
+     */
+    public function scopeWithCreditApplied($query)
+    {
+        return $query->where('UseCredit', true);
+    }
+
+    /**
+     * Scope to filter invoices without credit applied
+     */
+    public function scopeWithoutCreditApplied($query)
+    {
+        return $query->where('UseCredit', false);
+    }
+
+    /**
+     * Get receipt allocations for this invoice
+     */
+    public function receiptAllocations()
+    {
+        return $this->hasMany(FinanceReceiptAllocation::class, 'InvoiceID', 'Id');
+    }
+
+    /**
+     * Get receipts that have been applied to this invoice
+     */
+    public function receipts()
+    {
+        return $this->hasManyThrough(
+            FinanceReceipt::class,
+            FinanceReceiptAllocation::class,
+            'InvoiceID',
+            'Id',
+            'Id',
+            'ReceiptID'
+        );
     }
 
 }

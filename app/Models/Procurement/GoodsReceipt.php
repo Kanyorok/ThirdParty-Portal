@@ -8,6 +8,9 @@ use App\Models\ThirdParies\Supplier;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Core\Branch;
+use App\Models\Inventory\ItemMasterList;
+
 
 class GoodsReceipt extends Model
 {
@@ -59,5 +62,22 @@ class GoodsReceipt extends Model
     {
         return $this->belongsTo(Supplier::class, 'SupplierId');
     }
+
+    public function item()
+    {
+        return $this->belongsTo(ItemMasterList::class, 'ItemNo', 'Id');
+    }
+
+    public function toBranch()
+    {
+        return $this->belongsTo(Branch::class, 'TransferTo', 'Id');
+    }
+
+    public function transfer()
+    {
+        return $this->hasOne(\App\Models\Inventory\TransactionTransfer::class, 'RequisitionId', 'id')
+            ->where('RequisitionType', 'procurement');
+    }
+
 
 }

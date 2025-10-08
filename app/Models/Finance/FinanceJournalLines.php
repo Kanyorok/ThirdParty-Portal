@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinanceJournalLines extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait,SoftDeletes;
 
 
     protected $table = 't_FinanceJournalLines';
@@ -58,7 +58,7 @@ class FinanceJournalLines extends Model
     public function glAccount()
     {
         return $this->belongsTo(FinanceGLAccounts::class, 'GLAccountID')
-            ->select('Id', 'GLAccountTypeID', 'GLTypeGroupID', 'GLSubAccountTypeID', 'GLName', 'GLTypeGroupID');
+            ->select('Id','GLAccountTypeID','GLTypeGroupID','GLSubAccountTypeID','GLName','GLTypeGroupID','GLCode');
     }
 
     public function branch()

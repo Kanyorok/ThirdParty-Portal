@@ -38,7 +38,7 @@ abstract class PrequalificationRoundRequest extends FormRequest
                             $fail('Weight is required when section is included.');
                             return;
                         }
-                        if ((int)$value < 0 || (int)$value > 100) {
+                        if ((int) $value < 0 || (int) $value > 100) {
                             $fail('Weight must be between 0 and 100.');
                         }
                     }
@@ -59,12 +59,12 @@ abstract class PrequalificationRoundRequest extends FormRequest
                     $criteriaIndex = $matches[2] ?? null;
 
                     if ($sectionIndex !== null && $criteriaIndex !== null && !empty($sections[$sectionIndex]['criteria'][$criteriaIndex]['included'])) {
-                        if (empty($value) && !is_numeric($value)) {
-                            $fail('Weight is required when criteria is included.');
+                        if (!is_numeric($value)) {
+                            $fail('Criteria score must be 10.');
                             return;
                         }
-                        if ((int)$value < 0 || (int)$value > 10) {
-                            $fail('Weight must be between 0 and 10.');
+                        if ((int) $value !== 10) {
+                            $fail('Criteria score is fixed at 10.');
                         }
                     }
                 },
@@ -89,7 +89,7 @@ abstract class PrequalificationRoundRequest extends FormRequest
             }
 
             foreach ($includedSections as $section) {
-                $sectionWeight = (int)($section['weight'] ?? 0);
+                $sectionWeight = (int) ($section['weight'] ?? 0);
                 $totalSectionWeight += $sectionWeight;
             }
 

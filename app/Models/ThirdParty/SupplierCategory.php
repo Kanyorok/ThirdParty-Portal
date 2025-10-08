@@ -11,6 +11,7 @@ use App\Models\Inventory\ItemCategories;
 
 // model representing t_ItemCategories
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SupplierCategory extends Model
 {
@@ -44,8 +45,8 @@ class SupplierCategory extends Model
         return $this->belongsToMany(
             Supplier::class,
             't_ThirdParty_SupplierCategory',
-            'SupplierCategoryID',
-            'ThirdPartyID'
+            'supplier_category_id',
+            'third_party_id'
         )->withTimestamps();
     }
 
@@ -76,6 +77,13 @@ class SupplierCategory extends Model
      */
     public function syncItemCategoriesWithAudit(array $newIds, int $userId): void
     {
+        // If model not persisted, avoid pivot operations
+        if (!$this->getKey()) {
+            Log::warning('Attempted to sync item categories on unsaved SupplierCategory model', [
+                'new_ids' => $newIds,
+            ]);
+            return;
+        }
         $newIds = collect($newIds)->filter()->unique()->values();
 
         $pivotTable = 't_SupplierCategory_ItemCategory';

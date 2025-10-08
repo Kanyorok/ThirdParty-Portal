@@ -114,8 +114,8 @@
 
             {{-- Footer --}}
             <div class="card-footer d-flex justify-content-end gap-2 bg-light py-2">
-                <button class="btn btn-sm btn-primary px-4" type="submit">Update</button>
                 <a href="{{ route('workcompletion.index') }}" class="btn btn-sm btn-secondary px-4">Cancel</a>
+                <button class="btn btn-sm btn-primary px-4" type="submit">Update</button>
             </div>
         </div>
     </form>

@@ -23,20 +23,28 @@ class FinanceGLTypeGroupSeeder extends Seeder
             ['REV', 'I', 'Revenue'],
             ['OPEX', 'E', 'Operating Expenses'],
             ['CAPEX', 'E', 'Capital Expenditure'],
+            ['SC', 'S', 'Capital'],
+            ['RE', 'S', 'Retained Earnings'],
         ];
 
         foreach ($groups as [$code, $type, $desc]) {
-            DB::table('t_FinanceGLTypeGroups')->insert([
-                'TypeGroupCode'   => $code,
-                'GLAccountTypeId' => $type,
-                'Description'     => $desc,
-                'CreatedBy'       => 1,
-                'CreatedOn'       => $now,
-                'ModifiedBy'      => 1,
-                'ModifiedOn'      => $now,
-                'DeletedBy'       => null,
-                'DeletedOn'       => null,
-            ]);
+            $exists = DB::table('t_FinanceGLTypeGroups')
+                ->where('TypeGroupCode', $code)
+                ->exists();
+
+            if (!$exists) {
+                DB::table('t_FinanceGLTypeGroups')->insert([
+                    'TypeGroupCode'   => $code,
+                    'GLAccountTypeId' => $type,
+                    'Description'     => $desc,
+                    'CreatedBy'       => 1,
+                    'CreatedOn'       => $now,
+                    'ModifiedBy'      => 1,
+                    'ModifiedOn'      => $now,
+                    'DeletedBy'       => null,
+                    'DeletedOn'       => null,
+                ]);
+            }
         }
     }
 }

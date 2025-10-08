@@ -14,7 +14,7 @@
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">🚗 Register New Vehicle</h4>
 
-        <form action="{{ route('fleet.vehicles.store') }}" method="POST">
+     <form action="{{ route('fleet.vehicles.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <div class="row g-3">
@@ -22,7 +22,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Registration Number</label>
                     <input type="text" class="form-control" name="RegistrationNo"
-                           value="{{ old('RegistrationNo') }}" required>
+                           value="{{ old('RegistrationNo') }}" required maxlength="7">
                 </div>
 
                 {{-- Vehicle Type --}}
@@ -68,7 +68,7 @@
                 <div class="col-md-4">
                     <label class="form-label">Vehicle Model</label>
                     <select class="form-control" id="model" name="Model" required>
-                        <option value="">-- Select Model --</option>
+                        <option value="">{{ old('Model') ? old('Model') : '-- Select Model --' }}</option>
                     </select>
                 </div>
 
@@ -86,29 +86,46 @@
                 </div>
 
 
+                {{-- Color --}}
+                <div class="col-md-4">
+                    <label class="form-label">Vehicle Color</label>     
+                    <input type="text" class="form-control" name="Color" value="{{ old('Color') }}">
+                </div>
+
                 {{-- Chassis No --}}
                 <div class="col-md-4">
                     <label class="form-label">Chassis Number</label>
-                    <input type="text" class="form-control" name="ChassisNo" value="{{ old('ChassisNo') }}">
+                    <input type="text"
+                        class="form-control"
+                        name="ChassisNo"
+                        value="{{ old('ChassisNo') }}"
+                        minlength="17"
+                        maxlength="17"
+                        pattern=".{17}"
+                        title="Chassis Number must be exactly 17 characters">
                 </div>
+
 
                 {{-- Engine No --}}
                 <div class="col-md-4">
                     <label class="form-label">Engine Number</label>
-                    <input type="text" class="form-control" name="EngineNo" value="{{ old('EngineNo') }}">
+                    <input type="text" class="form-control" name="EngineNo" value="{{ old('EngineNo') }}"
+                        minlength="11" maxlength="17"
+                        title="Engine Number must be 11 to 17 characters">
                 </div>
 
                 {{-- Capacity --}}
                 <div class="col-md-4">
-                    <label class="form-label">Capacity (No. of Passengers)</label>
-                    <input type="text" class="form-control" name="Capacity" value="{{ old('Capacity') }}">
+                    <label class="form-label">Vehicle Engine (CC)</label>
+                    <input type="number" class="form-control" name="Capacity" value="{{ old('Capacity') }}" placeholder="e.g., 1500" min="0" max="9999" maxlength="4">
                 </div>
 
                 {{-- Odometer --}}
                 <div class="col-md-4">
                     <label class="form-label">Odometer Reading</label>
-                    <input type="number" step="0.01" class="form-control" name="OdometerReading"
-                           value="{{ old('OdometerReading') }}">
+                    <input type="number" class="form-control" name="OdometerReading"
+                           value="{{ old('OdometerReading') }}"
+                           min="0" max="999999" maxlength="6" placeholder="e.g., 012345">
                 </div>
 
                 {{-- Status --}}
@@ -124,6 +141,20 @@
                     </select>
                 </div>
 
+                {{-- Max Load --}}
+                <div class="col-md-4">
+                    <label class="form-label">Maximum Load (Kg)</label>
+                    <input type="number" step="0.01" class="form-control" name="MaxLoad"
+                           value="{{ old('MaxLoad') }}">
+                </div>  
+
+                {{-- Max Passengers --}}
+                <div class="col-md-4">
+                    <label class="form-label">Maximum Passengers</label>
+                    <input type="number" class="form-control" name="MaxPassengers"
+                           value="{{ old('MaxPassengers') }}">
+                </div>
+
                 {{-- Branch --}}
                 <div class="col-md-4">
                     <label class="form-label">Assign to Branch</label>
@@ -136,6 +167,15 @@
                             </option>
                         @endforeach
                     </select>
+                </div>
+            </div>
+
+
+            {{-- Image Upload --}}
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label">Upload Vehicle Image</label>          
+                    <input type="file" class="form-control" name="ImageFile" accept="image/*">
                 </div>
             </div>
 

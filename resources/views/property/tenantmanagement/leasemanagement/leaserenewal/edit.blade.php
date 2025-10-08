@@ -28,7 +28,7 @@
             <div class="col-md-6">
                 <label class="form-label">Tenant</label>
                 <input type="text" class="form-control" readonly
-                       value="{{ old('TenantName', $leaserenewal->lease->tenant->TenantName ?? '-') }}">
+                       value="{{ old('TenantName', $leaserenewal->lease->tenant->ThirdPartyName ?? '-') }}">
                 <input type="hidden" name="TenantId"
                        value="{{ old('TenantId', $leaserenewal->lease->tenant->Id ?? '-') }}">
             </div>

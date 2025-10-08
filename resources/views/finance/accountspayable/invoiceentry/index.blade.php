@@ -25,7 +25,7 @@
                             <th>Invoice Date</th>
                             <th class="text-end">Amount</th>
                             <th scope="col">Approval</th>
-                            {{--                            <th>Description</th>--}}
+{{--                            <th>Description</th>--}}
                             <th class="text-center">Actions</th>
                         </tr>
                         </thead>
@@ -33,7 +33,7 @@
                         @forelse($invoices as $item)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $item->suppliers->SupplierName ?? '-' }}</td>
+                                <td>{{ ($item->thirdParty->TradingName ?? optional($item->thirdParty)->ThirdPartyName) ?? '-' }}</td>
                                 <td>{{ $item->InvoiceNumber ?? '-' }}</td>
                                 <td>{{ $item->InvoiceDate ? \Carbon\Carbon::parse($item->InvoiceDate)->format('d-m-Y') : '-' }}</td>
                                 <td class="text-end">{{ $item->InvoiceAmount ? number_format($item->InvoiceAmount, 2) : '-' }}</td>
@@ -50,44 +50,44 @@
                                         {{ ucfirst($item->ApprovalStatus) ?? 'Pending' }}
                                     </span>
                                 </td>
-                                {{--                                <td>{{ $item->Description ?? '-' }}</td>--}}
+{{--                                <td>{{ $item->Description ?? '-' }}</td>--}}
                                 <td class="text-center">
                                     <a href="{{ route('invoiceentry.show', $item->Id) }}"
                                        class="btn btn-sm btn-outline-info me-1"
                                        title="View Invoice">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @if(strtolower($item->ApprovalStatus) === 'draft')
-                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"
-                                           class="btn btn-sm btn-outline-primary me-1"
-                                           title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    @else
-                                        <a href="#"
-                                           class="btn btn-sm btn-outline-primary me-1 disabled"
-                                           title="Edit (disabled)">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    @endif
+{{--                                    @if(strtolower($item->ApprovalStatus) === 'draft')--}}
+{{--                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"--}}
+{{--                                        class="btn btn-sm btn-outline-primary me-1"--}}
+{{--                                        title="Edit">--}}
+{{--                                            <i class="fas fa-edit"></i>--}}
+{{--                                        </a>--}}
+{{--                                    @else--}}
+{{--                                        <a href="#"--}}
+{{--                                        class="btn btn-sm btn-outline-primary me-1 disabled"--}}
+{{--                                        title="Edit (disabled)">--}}
+{{--                                            <i class="fas fa-edit"></i>--}}
+{{--                                        </a>--}}
+{{--                                    @endif--}}
 
                                     @if(strtolower($item->ApprovalStatus) === 'draft')
                                         <button type="button"
-                                                class="btn btn-sm btn-danger custom-delete-btn"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#customDeleteConfirmModal"
-                                                data-name="{{$item->InvoiceNumber}}" {{-- Pass item name --}}
-                                                data-route="{{ route('invoiceentry.destroy', $item->Id) }}">
-                                            <i class="fas fa-trash-alt"></i>
+                                            class="btn btn-sm btn-danger custom-delete-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{$item->InvoiceNumber}}"    {{-- Pass item name --}}
+                                            data-route="{{ route('invoiceentry.destroy', $item->Id) }}">
+                                            <i  class="fas fa-trash-alt"></i>
                                         </button>
                                     @else
                                         <button type="button"
-                                                class="btn btn-sm btn-danger custom-delete-btn disabled"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#customDeleteConfirmModal"
-                                                data-name="{{$item->InvoiceNumber}}" {{-- Pass item name --}}
-                                                data-route="{{ route('invoiceentry.destroy', $item->Id) }}">
-                                            <i class="fas fa-trash-alt"></i>
+                                            class="btn btn-sm btn-danger custom-delete-btn disabled"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{$item->InvoiceNumber}}"    {{-- Pass item name --}}
+                                            data-route="{{ route('invoiceentry.destroy', $item->Id) }}">
+                                            <i  class="fas fa-trash-alt"></i>
                                         </button>
                                     @endif
                                     {{-- <form action="{{ route('invoiceentry.destroy', $item->Id) }}" method="POST"
@@ -121,10 +121,16 @@
                         </tbody>
                     </table>
                 </div>
+                {{-- Add pagination if available --}}
+                @if(method_exists($invoices, 'links'))
+                    <div class="mt-3">
+                        {{ $invoices->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
-    @include('components.modals.delete-confirm')
+@include('components.modals.delete-confirm')
 @endsection
 
 @section('styles')
@@ -157,7 +163,6 @@
             .table-responsive {
                 font-size: 0.875rem;
             }
-
             .btn-sm {
                 padding: 0.2rem 0.4rem;
             }

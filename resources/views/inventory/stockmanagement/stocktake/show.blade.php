@@ -4,7 +4,6 @@
 
     <div class="container mt-5" style="max-width: 1000px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold text-primary">📦 Stock Take Details</h3>
             <a href="{{ route('stocktake.index') }}" class="btn btn-outline-secondary btn-sm">⬅ Back to List</a>
         </div>
 
@@ -57,11 +56,11 @@
                         <tbody>
                         @forelse ($stock->lines as $index => $line)
                             <tr class="text-center">
-                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $index + 1 ?? '-'}}</td>
                                 <td>{{ $line->item->item->ItemCode ?? 'N/A' }}</td>
                                 <td>{{ $line->item->item->ItemName ?? 'N/A' }}</td>
-                                <td>{{ $line->ActualQuantity }}</td>
-                                <td>{{ $line->CountedQuantity }}</td>
+                                <td>{{ $line->ActualQuantity ?? '-'}}</td>
+                                <td>{{ $line->CountedQuantity ?? '-'}}</td>
                                 <td>
                                     @php $variance = $line->CountedQuantity - $line->ActualQuantity; @endphp
                                     <span
@@ -69,7 +68,7 @@
                     {{ $variance }}
                   </span>
                                 </td>
-                                <td class="text-start">{{ $line->Remarks }}</td>
+                                <td class="text-start">{{ $line->Remarks ?? '-'}}</td>
                             </tr>
                         @empty
                             <tr>

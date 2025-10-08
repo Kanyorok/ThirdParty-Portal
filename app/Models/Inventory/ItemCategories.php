@@ -62,6 +62,11 @@ class ItemCategories extends Model
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(ItemMasterList::class, 'Category', 'Id');
+    }
+
     public function deleter()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');

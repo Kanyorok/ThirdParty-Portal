@@ -1,7 +1,16 @@
+@php
+    use App\Services\DMS\DocumentService;
+@endphp
+
 @extends('layouts.app')
 @section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View'))
 
 @section('content')
+    <style>
+        /* Hide top navigation only on this page */
+        .navbar, nav.navbar, .pc-header, header.pc-header, .pc-h-item[data-pc-toggle="sidebar"], .mobile-menu { display: none !important; }
+        body { padding-top: 0 !important; }
+    </style>
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
@@ -12,8 +21,7 @@
 
     <div class="card shadow rounded-4 border-0">
         <!-- Header -->
-        <div class="p-4 p-md-5 border-bottom bg-light rounded-top-4"
-             style="background: linear-gradient(135deg, #f8fafc, #eef2ff);">
+        <div class="p-4 p-md-5 border-bottom bg-light rounded-top-4" style="background: linear-gradient(135deg, #f8fafc, #eef2ff);">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -22,8 +30,7 @@
                             <span class="badge rounded-pill text-bg-secondary px-3 py-2">{{ $currencyCode }}</span>
                         @endif
                         @if(!empty($invoice->ApprovalStatus))
-                            <span
-                                class="badge rounded-pill text-bg-{{ $invoice->ApprovalStatus === 'posted' ? 'success' : ($invoice->ApprovalStatus === 'rejected' ? 'danger' : 'warning') }} px-3 py-2">
+                            <span class="badge rounded-pill text-bg-{{ $invoice->ApprovalStatus === 'posted' ? 'success' : ($invoice->ApprovalStatus === 'rejected' ? 'danger' : 'warning') }} px-3 py-2">
                             {{ ucfirst($invoice->ApprovalStatus) }}
                         </span>
                         @endif
@@ -48,10 +55,9 @@
                         <a href="{{ route('invoiceentry.index') }}" class="btn btn-outline-secondary">
                             <i data-feather="arrow-left"></i> Back
                         </a>
-                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
-                                data-bs-target="#poItemsModal" @disabled(!$invoice->order)>
-                            <i data-feather="file-text"></i> View PO Items
-                        </button>
+{{--                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>--}}
+{{--                            <i data-feather="file-text"></i> View PO Items--}}
+{{--                        </button>--}}
                         <button type="button" class="btn btn-success" onclick="window.print()">
                             <i data-feather="printer"></i> Print
                         </button>
@@ -78,7 +84,7 @@
                             </div>
                             <div class="mt-2 small">
                                 <div class="text-muted">GRN Reference</div>
-                                <div class="fw-medium">{{ $grnNo }}</div>
+                                <div class="fw-medium">{{ $grnNo ?? 'N/A' }}</div>
                             </div>
                             @if(!empty($invoice->Description))
                                 <div class="mt-3 small">
@@ -101,17 +107,42 @@
                                 <table class="table align-middle mb-0">
                                     <tbody>
                                     <tr>
-                                        <td class="text-muted">Invoice Amount</td>
+                                        <td class="text-muted">Invoice Amount (Inclusive)</td>
                                         <td class="text-end">
                                             <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td class="text-muted">PO Subtotal (Items)</td>
-                                        <td class="text-end">
-                                            <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
-                                        </td>
-                                    </tr>
+                                    @if(!empty($invoice->order))
+                                        @php
+                                            $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                                            $poTax = (float)($invoice->order->OrdTotTax ?? 0);
+                                            $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
+                                            $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                        @endphp
+                                        <tr>
+                                            <td class="text-muted">PO Discount</td>
+                                            <td class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Tax</td>
+                                            <td class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Exclusive</td>
+                                            <td class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Inclusive</td>
+                                            <td class="text-end"><strong>{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</strong></td>
+                                        </tr>
+                                    @else
+                                        <tr>
+                                            <td class="text-muted">PO Subtotal (Items)</td>
+                                            <td class="text-end">
+                                                <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     @if(property_exists($invoice, 'TaxAmount') || isset($invoice->TaxAmount))
                                         <tr>
                                             <td class="text-muted">Tax Amount</td>
@@ -179,8 +210,7 @@
                                 </li>
                                 @if(!empty($invoice->ApprovedOn))
                                     <li class="d-flex gap-2 align-items-start mt-2">
-                                        <i data-feather="check-circle" class="mt-1 opacity-50" width="16"
-                                           height="16"></i>
+                                        <i data-feather="check-circle" class="mt-1 opacity-50" width="16" height="16"></i>
                                         <div>
                                             <div class="text-muted">Approved</div>
                                             <div class="fw-medium">
@@ -191,13 +221,35 @@
                                 @endif
                             </ul>
 
-                            @if(!empty($invoice->file_path))
-                                <a href="{{ \Storage::url($invoice->file_path) }}" target="_blank"
-                                   class="btn btn-sm w-100 btn-outline-dark mt-2">
-                                    <i data-feather="paperclip"></i> View Attachment
-                                </a>
-                            @endif
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attachments Section -->
+            <div class="card mt-4 border-0 shadow-sm rounded-4 attachments-section">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h6 class="text-uppercase text-muted mb-0">
+                            <i data-feather="paperclip" class="me-2" width="16" height="16"></i>
+                            Attachments
+                        </h6>
+                    </div>
+                    <div class="mt-3" id="invoiceAttachments">
+                        @php
+                            $documents = $invoice->documents()
+                                ->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                        @endphp
+
+                        @forelse($documents as $document)
+                            @php
+                                // Avoid any morph relation lookups during render
+                                $document->setRelations([]);
+                            @endphp
+                            {!! (new DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted">No attachments uploaded</span>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -242,12 +294,39 @@
                             @endforelse
                             </tbody>
                             @if(count($poItems) > 0)
-                                <tfoot class="table-light">
-                                <tr>
-                                    <th colspan="3" class="text-end">PO Subtotal</th>
-                                    <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
-                                </tr>
-                                </tfoot>
+                                @if(!empty($invoice->order))
+                                    @php
+                                        $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                                        $poTax = (float)($invoice->order->OrdTotTax ?? 0);
+                                        $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
+                                        $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                    @endphp
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3" class="text-end">Discount</th>
+                                            <th class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Tax</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Exclusive</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Inclusive</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</th>
+                                        </tr>
+                                    </tfoot>
+                                @else
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3" class="text-end">PO Subtotal</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
+                                        </tr>
+                                    </tfoot>
+                                @endif
                             @endif
                         </table>
                     </div>
@@ -268,15 +347,81 @@
         </div>
     </div>
 
+    <!-- Print-optimized layout (hidden on screen, visible on print) -->
+    <div id="printRootInvoice" class="print-only" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+            <div>
+                <div style="font-size:16px; font-weight:700;">Payables Invoice</div>
+                <div style="color:#666;">Invoice: {{ $invNo }}</div>
+                <div style="color:#666;">Date: {{ $invDate }}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:18px; font-weight:700;">{{ $currencySymbol }} {{ $amount }}</div>
+                <div style="color:#666;">PO: {{ $poNo }}</div>
+                <div style="color:#666;">GRN: {{ $grnNo ?? 'N/A' }}</div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-bottom:10px;">
+            <div style="flex:1; border:1px solid #e9ecef; padding:8px;">
+                <div style="font-weight:600; margin-bottom:4px;">Vendor / Supplier</div>
+                <div>{{ $vendorName }}</div>
+            </div>
+            <div style="flex:1; border:1px solid #e9ecef; padding:8px;">
+                <div style="font-weight:600; margin-bottom:4px;">References</div>
+                <div>PO: {{ $poNo }}</div>
+                <div>GRN: {{ $grnNo ?? 'N/A' }}</div>
+            </div>
+            <div style="flex:1; border:1px solid #e9ecef; padding:8px;">
+                <div style="font-weight:600; margin-bottom:4px;">Summary</div>
+                <div>Invoice Amount: {{ $currencySymbol }} {{ $amount }}</div>
+                <div>PO Subtotal: {{ $currencySymbol }} {{ number_format($poSub, 2) }}</div>
+            </div>
+        </div>
+
+        <div style="border:1px solid #e9ecef;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Item</th>
+                        <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Qty</th>
+                        <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Unit Cost</th>
+                        <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Line Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach($poItems as $row)
+                    @php $lineTotal = ((float)($row->UnitPrice ?? $row->UnitCost ?? 0)) * ((float)($row->Quantity ?? 0)); @endphp
+                    <tr>
+                        <td style="padding:6px 8px; border-bottom:1px solid #f1f3f5;">
+                            <div style="font-weight:600;">{{ $row->ItemName }}</div>
+                            @if(!empty($row->Description))
+                                <div style="color:#666; font-size:12px;">{{ $row->Description }}</div>
+                            @endif
+                        </td>
+                        <td style="padding:6px 8px; text-align:right; border-bottom:1px solid #f1f3f5;">{{ number_format((float)($row->Quantity ?? 0), 2) }}</td>
+                        <td style="padding:6px 8px; text-align:right; border-bottom:1px solid #f1f3f5;">{{ $currencySymbol }} {{ number_format((float)($row->UnitPrice ?? $row->UnitCost ?? 0), 2) }}</td>
+                        <td style="padding:6px 8px; text-align:right; border-bottom:1px solid #f1f3f5;">{{ $currencySymbol }} {{ number_format($lineTotal, 2) }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" style="text-align:right; padding:6px 8px; border-top:1px solid #e9ecef;">PO Subtotal</th>
+                        <th style="text-align:right; padding:6px 8px; border-top:1px solid #e9ecef;">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
     @if($invoice->ApprovalStatus==='draft')
         <div class="mb-3">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                    data-bs-target="#approveModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Approved')>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Approved')>
                 <i data-feather="thumbs-up"></i> Approve
             </button>
 
-            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal"
-                    @disabled(!empty($invoice->Status) && $invoice->Status === 'Rejected')}>
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Rejected')}>
                 <i data-feather="thumbs-down"></i> Reject
             </button>
         </div>
@@ -345,21 +490,17 @@
             <div class="modal-dialog modal-md modal-dialog-centered">
                 <div class="modal-content rounded-4">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="approveModalLabel">Approve
-                            Invoice {{ $invoice->InvoiceNumber ?? ($invoice->Id ?? $invoice->id) }}</h5>
+                        <h5 class="modal-title" id="approveModalLabel">Approve Invoice {{ $invoice->InvoiceNumber ?? ($invoice->Id ?? $invoice->id) }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <form action="{{ route('ap.invoice.approve', $invoice->Id ?? $invoice->id) }}" method="POST"
-                          id="approveForm">
+                    <form action="{{ route('ap.invoice.approve', $invoice->Id ?? $invoice->id) }}" method="POST" id="approveForm">
                         @csrf
                         @method('POST')
                         <div class="modal-body">
                             <div class="alert alert-info small">
                                 You’re about to approve this invoice.
-                                <div class="mt-1">
-                                    <strong>Amount:</strong> {{ ($invoice->currency->Symbol ?? '') . number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}
-                                </div>
+                                <div class="mt-1"><strong>Amount:</strong> {{ ($invoice->currency->Symbol ?? '') . number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</div>
                                 @if(!empty($invoice->order?->OrderNo))
                                     <div><strong>PO:</strong> {{ $invoice->order->OrderNo }}</div>
                                 @endif
@@ -367,19 +508,15 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Reason / Comment <span class="text-danger">*</span></label>
-                                <textarea name="Reason" class="form-control" rows="3"
-                                          placeholder="Add an approval note for audit trail" required></textarea>
+                                <textarea name="Reason" class="form-control" rows="3" placeholder="Add an approval note for audit trail" required></textarea>
                                 <div class="form-text">This will be stored in the approval history.</div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
-                            </button>
-                            <button class="btn btn-success" id="approveProceedBtn" type="submit"
-                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
-                                <span class="default-label"><i
-                                        class="fas fa-check-circle"></i> Proceed to Approve</span>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-success" id="approveProceedBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                                <span class="default-label"><i class="fas fa-check-circle"></i> Proceed to Approve</span>
                             </button>
                         </div>
                     </form>
@@ -392,42 +529,32 @@
             <div class="modal-dialog modal-md modal-dialog-centered">
                 <div class="modal-content rounded-4">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="rejectModalLabel">Reject
-                            Invoice {{ $invoice->InvoiceNumber ?? ($invoice->Id ?? $invoice->id) }}</h5>
+                        <h5 class="modal-title" id="rejectModalLabel">Reject Invoice {{ $invoice->InvoiceNumber ?? ($invoice->Id ?? $invoice->id) }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <form action="{{ route('ap.invoice.reject', $invoice->Id ?? $invoice->id) }}" method="POST"
-                          id="rejectForm">
+                    <form action="{{ route('ap.invoice.reject', $invoice->Id ?? $invoice->id) }}" method="POST" id="rejectForm">
                         @csrf
                         @method('POST')
                         <div class="modal-body">
                             <div class="alert alert-warning small">
                                 You’re about to reject this invoice.
-                                <div class="mt-1">
-                                    <strong>Amount:</strong> {{ ($invoice->currency->Symbol ?? '') . number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}
-                                </div>
+                                <div class="mt-1"><strong>Amount:</strong> {{ ($invoice->currency->Symbol ?? '') . number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</div>
                                 @if(!empty($invoice->order?->OrderNo))
                                     <div><strong>PO:</strong> {{ $invoice->order->OrderNo }}</div>
                                 @endif
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Reason for Rejection <span
-                                        class="text-danger">*</span></label>
-                                <textarea name="Reason" class="form-control" rows="3"
-                                          placeholder="Provide a clear reason for rejection" required></textarea>
-                                <div class="form-text">This will be shared with the originator and stored in the
-                                    history.
-                                </div>
+                                <label class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
+                                <textarea name="Reason" class="form-control" rows="3" placeholder="Provide a clear reason for rejection" required></textarea>
+                                <div class="form-text">This will be shared with the originator and stored in the history.</div>
                             </div>
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel
-                            </button>
-                            <button class="btn btn-danger" id="rejectProceedBtn" type="submit"
-                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-danger" id="rejectProceedBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
                                 <span class="default-label"><i class="fas fa-check-circle"></i> Proceed to Reject</span>
                             </button>
                         </div>
@@ -440,38 +567,81 @@
 
 @endsection
 
-@section('scripts')
+@push('scripts')
     <script>
         // Feather icons
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
+        if (typeof feather !== 'undefined') { feather.replace(); }
 
         // Copy invoice number
-        document.getElementById('copyInvBtn')?.addEventListener('click', function () {
+        document.getElementById('copyInvBtn')?.addEventListener('click', function(){
             const txt = @json($invNo);
             navigator.clipboard.writeText(txt).then(() => {
                 const btn = this;
                 const original = btn.innerHTML;
                 btn.innerHTML = '<i data-feather="check"></i>';
                 feather.replace();
-                setTimeout(() => {
-                    btn.innerHTML = original;
-                    feather.replace();
-                }, 1200);
+                setTimeout(() => { btn.innerHTML = original; feather.replace(); }, 1200);
             });
         });
 
         // Nice print styles (hide nav/buttons on print)
         const printCSS = `
+        /* Keep attachment chips nice on screen */
+        #invoiceAttachments .modal-preview-document{ display:inline-flex; align-items:center; gap:.375rem; padding:.25rem .6rem; font-size:.85rem; background:#f8f9fa; border:1px solid #dee2e6; border-radius:.375rem; text-decoration:none; color:#495057; margin:.125rem .25rem .125rem 0; }
+        #invoiceAttachments .modal-preview-document:hover{ filter:brightness(0.97); text-decoration:none; color:#495057; }
+
+        @page { size: A4 portrait; margin: 12mm; }
         @media print {
-            .navbar, .btn,.lifecycle, .modal { display: none !important; }
-            .card { box-shadow: none !important; border: none !important; }
-            a[href]:after { content: ""; }
+            /* Base */
+            html, body { font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+            /* Hide UI/controls */
+            .navbar, .btn, .modal, .lifecycle, .attachments-section { display: none !important; }
+
+            /* Flatten cards */
+            .card, .shadow, .shadow-sm, .shadow-lg { box-shadow: none !important; border: 1px solid #e9ecef !important; }
+            .rounded-top-4 { background: #ffffff !important; }
+
+            /* Compact spacing */
+            .p-4, .p-md-5 { padding: 12px !important; }
+            .mt-4, .mt-3 { margin-top: 10px !important; }
+            h1, h5 { margin: 0 0 6px 0 !important; }
+
+            /* Tables fit nicely */
+            .table-responsive { overflow: visible !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { padding: 6px 8px !important; }
+            thead th { background: #f8f9fa !important; }
+
+            /* Avoid breaking important blocks */
+            .card, .table-responsive, table { page-break-inside: avoid; }
+
+            /* Remove link hints */
+            a[href]:after { content: "" !important; }
         }
     `;
         const style = document.createElement('style');
         style.innerHTML = printCSS;
         document.head.appendChild(style);
+
+        // Toggle print-only vs screen
+        const printRoot = document.getElementById('printRootInvoice');
+        const screenRootCards = document.querySelectorAll('.card');
+
+        window.addEventListener('beforeprint', () => {
+            // Hide screen layout, show print layout
+            printRoot && (printRoot.style.display = 'block');
+            screenRootCards.forEach(c => c.classList.add('d-print-none'));
+        });
+
+        window.addEventListener('afterprint', () => {
+            // Restore screen layout
+            printRoot && (printRoot.style.display = 'none');
+            screenRootCards.forEach(c => c.classList.remove('d-print-none'));
+        });
     </script>
-@endsection
+@endpush
+
+@push('scripts')
+    @includeIf('snippets.actions.preview-files')
+@endpush

@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\DMS\DocumentService;
 use App\Models\Core\CodeDetail;
 
-
 class FleetVehicleInspectionController extends Controller
 {
     protected FleetVehicleInspectionService $inspectionService;
@@ -26,6 +25,7 @@ class FleetVehicleInspectionController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetVehicleInspection::class);
+
         $inspections = FleetVehicleInspection::with(['vehicle', 'driver', 'fuel', 'postTrips'])
             ->where('CreatedBy', Auth::id())
             ->whereNull('ParentInspectionID')
@@ -37,9 +37,10 @@ class FleetVehicleInspectionController extends Controller
     public function create()
     {
         $this->authorize('create', FleetVehicleInspection::class);
+
         $vehicles = FleetVehicle::all();
-        $drivers = FleetDriver::all();
-        $fuels = FuelType::all();
+        $drivers  = FleetDriver::all();
+        $fuels    = FuelType::all();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
 
         return view('fleet.vehicle_inspection.create', compact('vehicles', 'drivers', 'fuels', 'inspectionTypes'));
@@ -48,19 +49,21 @@ class FleetVehicleInspectionController extends Controller
     public function createPostTrip($id)
     {
         $this->authorize('create', FleetVehicleInspection::class);
-        $parentInspection = FleetVehicleInspection::findOrFail($id);
+
+        // Eager-load inspectionType so ID is available in the Blade
+        $parentInspection = FleetVehicleInspection::with('inspectionType')->findOrFail($id);
+
         $vehicles = FleetVehicle::all();
-        $drivers = FleetDriver::all();
-        $fuels = FuelType::all();
+        $drivers  = FleetDriver::all();
+        $fuels    = FuelType::all();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
 
-
         return view('fleet.vehicle_inspection.create', [
-            'vehicles' => $vehicles,
-            'drivers' => $drivers,
-            'fuels' => $fuels,
-            'inspectionTypes' => $inspectionTypes,
-            'parentInspection' => $parentInspection,
+            'vehicles'          => $vehicles,
+            'drivers'           => $drivers,
+            'fuels'             => $fuels,
+            'inspectionTypes'   => $inspectionTypes,
+            'parentInspection'  => $parentInspection,
         ]);
     }
 
@@ -76,21 +79,24 @@ class FleetVehicleInspectionController extends Controller
             ->with('success', 'Vehicle inspection created successfully.');
     }
 
-
     public function show($id)
     {
         $this->authorize('view', FleetVehicleInspection::class);
-        $inspection = FleetVehicleInspection::with(['vehicle', 'driver', 'fuel', 'postTrips', 'inspectionType'])->findOrFail($id);
+
+        $inspection = FleetVehicleInspection::with(['vehicle', 'driver', 'fuel', 'postTrips', 'inspectionType'])
+            ->findOrFail($id);
+
         return view('fleet.vehicle_inspection.show', compact('inspection'));
     }
 
     public function edit($id)
     {
         $this->authorize('edit', FleetVehicleInspection::class);
+
         $inspection = FleetVehicleInspection::findOrFail($id);
-        $vehicles = FleetVehicle::all();
-        $drivers = FleetDriver::all();
-        $fuels = FuelType::all();
+        $vehicles   = FleetVehicle::all();
+        $drivers    = FleetDriver::all();
+        $fuels      = FuelType::all();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
 
         return view('fleet.vehicle_inspection.edit', compact('inspection', 'vehicles', 'drivers', 'fuels', 'inspectionTypes'));
@@ -99,6 +105,7 @@ class FleetVehicleInspectionController extends Controller
     public function update(FleetVehicleInspectionRequest $request, $id)
     {
         $this->authorize('update', FleetVehicleInspection::class);
+
         $inspection = FleetVehicleInspection::findOrFail($id);
         $this->inspectionService->update($inspection, $request->validated());
 
@@ -109,6 +116,7 @@ class FleetVehicleInspectionController extends Controller
     public function destroy($id)
     {
         $this->authorize('destroy', FleetVehicleInspection::class);
+
         $inspection = FleetVehicleInspection::findOrFail($id);
         $this->inspectionService->delete($inspection);
 

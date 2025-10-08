@@ -4,6 +4,7 @@ namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\DMS\Image;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Support\Facades\Auth;
@@ -12,12 +13,12 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\DocumentsTrait;
 use App\Models\HRM\Employee;
-use App\Models\Fleet\FleetTripLog;
+use App\Models\Fleet\FleetTripLog; 
 
 
 class FleetDriver extends Model
 {
-    use UserActorTrait, SoftDeletes, DocumentsTrait;
+    use UserActorTrait, SoftDeletes,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -28,8 +29,8 @@ class FleetDriver extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'DriverNo', 'FullName', 'StaffNumber', 'NationalID', 'Phone', 'Email', 'EmploymentType',
-        'Status', 'Notes', 'IsActive', 'CreatedBy',
+        'DriverNo','FullName', 'StaffNumber', 'NationalID', 'Phone', 'Email', 'EmploymentType',
+        'Status', 'Notes', 'DriverStatus', 'ImageId', 'IsActive', 'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
         'ModifiedOn',
@@ -55,6 +56,21 @@ class FleetDriver extends Model
     public function tripLogs()
     {
         return $this->hasMany(FleetTripLog::class, 'DriverID', 'Id');
+    }
+
+    public function image()
+    {
+        return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
+    }   
+
+    public function driverImage()
+    {
+        return $this->belongsTo(Employee::class, 'ImageId', 'Id');
+    }   
+
+    public function driverStatus()
+    {
+        return $this->belongsTo(CodeDetail::class, 'DriverStatus', 'ID');
     }
 
 

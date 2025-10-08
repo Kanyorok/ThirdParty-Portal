@@ -21,11 +21,10 @@ class COASegmentController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceCOAView, SegmentOrder::class);
-        $accountTypes = CodeDetail::select('CodeID','Value','Description','DisplayOrder')->where('CodeID','GLAccountType')->get();
+        $accountTypes = CodeDetail::select('ID','CodeID','Value','Description','DisplayOrder')->where('CodeID','GLAccountType')->get();
         $segments = SegmentOrder::select('Id', 'SegmentType')->get();
         $glDigits=SegmentOrder::where('SegmentType','GLDigits')->pluck('Description')->first();
         $data=[];
-        $data = [];
 
         foreach ($accountTypes as $accountType) {
             // Ensure the account type node is initialized

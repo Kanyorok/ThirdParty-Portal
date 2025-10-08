@@ -4,7 +4,6 @@
 
 @section('content')
 
-
 @if($errors->any())
     <div class="alert alert-danger">
         <ul>
@@ -22,6 +21,7 @@
         @csrf
         @method('PUT')
 
+        {{-- Row 1 --}}
         <div class="row mb-3">
             <div class="col-md-4">
                 <label for="BarCode" class="form-label">Bar Code</label>
@@ -31,9 +31,6 @@
                 <label for="ItemName" class="form-label">Item Name</label>
                 <input type="text" name="ItemName" class="form-control" value="{{ old('ItemName', $item->ItemName) }}" required>
             </div>
-        </div>
-
-        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="ItemType" class="form-label">Item Type</label>
                 <select name="ItemType" class="form-select" required>
@@ -44,9 +41,12 @@
                             {{ $itemType->TypeName }}
                         </option>
                     @endforeach
-
                 </select>
             </div>
+        </div>
+
+        {{-- Row 2 --}}
+        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="Category" class="form-label">Category</label>
                 <select name="Category" id="category" class="form-select" required>
@@ -69,9 +69,6 @@
                     @endforeach
                 </select>
             </div>
-        </div>
-
-        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
                 <select name="UOM" class="form-select" required>
@@ -82,9 +79,12 @@
                             {{ $uom->Code }}
                         </option>
                     @endforeach
-
                 </select>
             </div>
+        </div>
+
+        {{-- Row 3 --}}
+        <div class="row mb-3">
             <div class="col-md-4">
                 <label for="InventoryType" class="form-label">Inventory Type</label>
                 <select name="InventoryType" class="form-select" required>
@@ -95,42 +95,11 @@
                             {{ $inventoryType->Type }}
                         </option>
                     @endforeach
-
                 </select>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label for="ItemDescription" class="form-label">Item Description</label>
-            <textarea name="ItemDescription" class="form-control" rows="3">{{ old('ItemDescription', $item->ItemDescription) }}</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="ImageUpload" class="form-label">Item Image</label>
-            <input type="file" name="ImageUpload" class="form-control">
-            @if($item->image)
-                <div class="mt-2" id="current-image-section">
-                    <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image"
-                         style="max-width:200px;">
-                    <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image</button>
-                </div>
-                <input type="hidden" name="remove_image" id="remove-image" value="0">
-            @endif
-
-            <div class="mb-3">
-                <label for="DocumentUpload" class="form-label">Attached Document</label>
-                @if($item->DocumentUpload)
-                    <div class="mb-2">
-                        <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing
-                            Document</a>
-                    </div>
-                @endif
-                <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control"
-                       accept=".pdf,.doc,.docx,.xls,.xlsx">
             </div>
             <div class="col-md-4">
                 <label for="Status" class="form-label">Item Status</label>
-                <select class="form-control" name="Status">
+                <select class="form-select" name="Status">
                     <option value="">Select Status</option>
                     @foreach($status as $stat)
                         <option value="{{ $stat->ID }}"
@@ -139,30 +108,55 @@
                         </option>
                     @endforeach
                 </select>
-
+            </div>
+            <div class="col-md-4">
+                <label for="ImageUpload" class="form-label">Item Image</label>
+                <input type="file" name="ImageUpload" class="form-control">
+                @if($item->image)
+                    <div class="mt-2" id="current-image-section">
+                        <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image" style="max-width:200px;">
+                        <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image</button>
+                    </div>
+                    <input type="hidden" name="remove_image" id="remove-image" value="0">
+                @endif
             </div>
         </div>
 
-        <button type="submit" class="btn btn-success">Update Item</button>
+        {{-- Row 4 --}}
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="DocumentUpload" class="form-label">Attached Document</label>
+                @if($item->DocumentUpload)
+                    <div class="mb-2">
+                        <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing Document</a>
+                    </div>
+                @endif
+                <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
+            </div>
+        </div>
+
+        {{-- Full-width --}}
+        <div class="mb-3">
+            <label for="ItemDescription" class="form-label">Item Description</label>
+            <textarea name="ItemDescription" class="form-control" rows="3">{{ old('ItemDescription', $item->ItemDescription) }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+            Update Item
+        </button>
     </form>
 </div>
 
 @endsection
 
 @section('scripts')
-
-    <script>
-        $(document).ready(function () {
-            // ...existing category/subcategory code...
-
-            $('#remove-image-btn').on('click', function () {
-                $('#current-image-section').hide();
-                $('#remove-image').val('1');
-            });
-        });
-    </script>
 <script>
     $(document).ready(function () {
+        $('#remove-image-btn').on('click', function () {
+            $('#current-image-section').hide();
+            $('#remove-image').val('1');
+        });
+
         $('#category').change(function () {
             let categoryId = $(this).val();
             $('#subcategory').html('<option value="">Loading...</option>');

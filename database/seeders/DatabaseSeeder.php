@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UnitOfMeasureSeeder::class);
         $this->call(ItemMasterListSeeder::class);
         // $this->call(DepartmentNeedsSeeder::class);
-        $this->call(SupplierSeeder::class);
+        // $this->call(SupplierSeeder::class);
         $this->call(BudgetMasterSeeder::class);
         $this->call(BudgetPeriodTypeSeeder::class);
         //        $this->call(BudgetPeriodSeeder::class);
@@ -61,14 +61,14 @@ class DatabaseSeeder extends Seeder
         $this->call(PropertyFloorSeeder::class);
         $this->call(PropertyUnitSeeder::class);
 
-        $this->call(TenantRegistrySeeder::class);
+        //$this->call(TenantRegistrySeeder::class);
         $this->call(FinanceGLTypeGroupSeeder::class);
         $this->call(FinanceGLSubAccountTypeSeeder::class);
         $this->call(FinanceGLAccountsSeeder::class);
         $this->call(FinanceSegmentOrderSeeder::class);
-        $this->call(OrderLinesSeeder::class);
-        $this->call(OrderSeeder::class);
-        // $this->call(GoodsReceiptsSeeder::class);
+//        $this->call(OrderLinesSeeder::class);
+//         $this->call(OrderSeeder::class);
+//         $this->call(GoodsReceiptsSeeder::class);
 
         $this->call(FinanceTransactionTypesSeeder::class);
         $this->call(FinanceModuleTransactionSeeder::class);
@@ -83,10 +83,30 @@ class DatabaseSeeder extends Seeder
         $this->call(LegalLoanSecuritiesSeeder::class);
         $this->call(LegalCaseCounselSeeder::class);
         $this->call(LegalCaseOutcomeSeeder::class);
+        $this->call(RegulatoryObligationsSeeder::class);
+        $this->call(ComplianceMastersSeeder::class);
+        $this->call(ComplianceObligationsSeeder::class);
+        $this->call(ComplianceControlsSeeder::class);
+        $this->call(ComplianceIncidentsSeeder::class);
+        $this->call(ComplianceFilingsSeeder::class);
+
+        $this->call(SystemBankSettingSeeder::class);
+        $this->call(BanksSeeder::class);
+        $this->call(BankBranchesSeeder::class);
+
+
+//         $this->call(RegulatoryObligationsSeeder::class);
+//         $this->call(ComplianceMastersSeeder::class);
+//         $this->call(ComplianceObligationsSeeder::class);
+//         $this->call(ComplianceControlsSeeder::class);
+//         $this->call(ComplianceIncidentsSeeder::class);
+//         $this->call(ComplianceFilingsSeeder::class);
+
         $this->call(financeroleseeder::class);
         $this->call(ThirdPartyTypesSeeder::class);
         //$this->call(GoodsReceiptsSeeder::class);
         $this->call(WorkFlowTypesSeeder::class);
         $this->call(WorkflowSeeder::class);
+        // $this->call(GRNPOSeeder::class);
     }
 }

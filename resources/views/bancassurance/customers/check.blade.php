@@ -4,15 +4,15 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-    <div class="container mt-4">
+<div class="container mt-4">
 
-        <div class="mb-3 text-end">
-            <a href="{{ route('bancassurance.customers.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Register New Customer</a>
-        </div>
-        <div><p>The list of registered customers below:</p></div>
-        <table id="customerregistry" class="table table-bordered table-striped align-middle">
-            <thead>
+    <div class="mb-3 text-end">
+        <a href="{{ route('bancassurance.customers.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Register New Customer</a>
+    </div>
+    <div><p><small>The list of registered customers below:</small></p></div>
+    <table id="customerregistry" class="table table-bordered table-striped align-middle">
+        <thead>
             <tr>
                 <th>#</th>
                 <th>Full Name</th>
@@ -26,27 +26,24 @@
             <tbody>
             @forelse ($customers as $i => $customer)
                 <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $customer->FullName ?? '-'}}</td>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $customer->thirdParty->ThirdPartyName ?? '-'}}</td>
                     <td>{{ $customer->NationalID ?? '-'}}</td>
-                    <td>{{ $customer->PhoneNumber ?? '-'}}</td>
-                    <td>{{ $customer->Email }}</td>
+                    <td>{{ $customer->thirdParty->Phone ?? '-'}}</td>
+                    <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
                     <td>{{ $customer->DateOfBirth? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
-                    <td>
-
-                        <a href="{{ route('bancassurance.customers.show', $customer->Id) }}"
-                           class="btn btn-sm btn-info">view</a>
-                        <a href="{{ route('bancassurance.customers.edit', $customer->Id) }}"
-                           class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" method="POST"
-                              class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Are you sure you want to delete this Customer?');">Delete
-                            </button>
-                        </form>
-                    </td>
+                     <td>
+                     
+                    <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
+                    <a href="{{ route('bancassurance.customers.edit', $customer->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this Customer?');">Delete
+                        </button>
+                    </form>
+                </td>
                 </tr>
             @empty
             @endforelse

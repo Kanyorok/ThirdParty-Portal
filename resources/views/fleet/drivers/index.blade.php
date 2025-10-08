@@ -35,7 +35,9 @@
                     <th>Phone</th>
                     <th>Employment</th>
                     <th>Status</th>
+                    <th>Driver Availability</th>
                     <th>Actions</th>
+                    
                 </tr>
                 </thead>
                 <tbody>
@@ -43,7 +45,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $driver->FullName }}</td>
-                        <td>{{ $driver->driver->FullName ?? '—' }}</td>
+                        <td>{{ $driver->driver->EmployeeID ?? '—' }}</td>
                         <td>{{ $driver->NationalID }}</td>
                         <td>{{ $driver->Phone }}</td>
                         <td>{{ $driver->employmentType->Description ?? '—' }}</td>
@@ -54,6 +56,26 @@
                                 <span class="badge bg-danger">Inactive</span>
                             @endif
                         </td>
+                        <td>
+                        @if($driver->driverStatus)
+                            @php
+                                // Map status descriptions to badge colors
+                                $statusColors = [
+                                    'Available'     => 'success',
+                                    'AssignedTrip'  => 'warning',
+                                    'OnTrip'        => 'info',
+                                ];
+
+                                $color = $statusColors[$driver->driverStatus->Description] ?? 'light';
+                            @endphp
+
+                            <span class="badge bg-{{ $color }}">
+                                {{ $driver->driverStatus->Description }}
+                            </span>
+                        @else
+                            <span class="badge bg-light text-dark">-</span>
+                        @endif
+                    </td>
                         <td>
                             <a href="{{ route('fleet.drivers.show', $driver->Id) }}" class="btn btn-sm btn-info">👁️Details</a>
                         </td>

@@ -2,9 +2,9 @@
 @section('title', 'CBS GL Accounts')
 @section('content')
     <div class="card mb-4">
-        {{--        <div class="card-header bg-dark text-white">--}}
-        {{--            🧾 CBS GL Accounts--}}
-        {{--        </div>--}}
+{{--        <div class="card-header bg-dark text-white">--}}
+{{--            🧾 CBS GL Accounts--}}
+{{--        </div>--}}
         <div class="card-body">
             <p class="text-muted">
                 Below is a list of General Ledger accounts synced from Core Banking System (CBS).
@@ -18,28 +18,21 @@
                         <tr>
                             <th>#</th>
                             <th>GL Account No</th>
-                            {{--                            <th>GL Name</th>--}}
                             <th>Description</th>
                             <th>GL Type</th>
-                            <th>Mapped to Budget Line</th>
+{{--                            <th>Mapped to Budget Line</th>--}}
                             <th>Active</th>
-                            {{-- <th>Actions</th> --}}
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach($gls as $gls)
+                    @foreach($gls as $item)
                         <tr>
-                            <td>{{$loop->iteration}}</td>
-                            <td>{{$gls->AccountID}}</td>
-                            <td class="text-break">{{$gls->Description}}</td>
-                            {{--                            <td class="text-break">{{$gls->Description}}</td>--}}
-                            <td>{{$gls->GLAccountTypeID}}</td>
-                            <td><span class="badge bg-success">✅ Yes</span></td>
+                            <td>{{ ($gls->currentPage() - 1) * $gls->perPage() + $loop->iteration }}</td>
+                            <td>{{ $item->AccountID }}</td>
+                            <td class="text-break">{{ $item->Description }}</td>
+                            <td>{{ $item->GLAccountTypeID }}</td>
+{{--                            <td><span class="badge bg-success">✅ Yes</span></td>--}}
                             <td><span class="badge bg-success">✔</span></td>
-                            {{-- <td>
-                              <button class="btn btn-sm btn-info">🔍 View</button>
-                              <button class="btn btn-sm btn-outline-primary">🔗 Map</button>
-                            </td> --}}
                         </tr>
                     @endforeach
                     </tbody>
@@ -50,6 +43,13 @@
                     @endif
                 </table>
             </div>
+
+            {{-- Pagination controls --}}
+            <div class="d-flex justify-content-center mt-3">
+                {{ $gls->links() }}
+            </div>
+
+
         </div>
 </div>
 @endsection

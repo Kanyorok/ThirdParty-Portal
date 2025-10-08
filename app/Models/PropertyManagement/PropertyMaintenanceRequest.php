@@ -39,7 +39,7 @@ class PropertyMaintenanceRequest extends Model
     }
     public function requestId()
     {
-        return $this->belongsTo(PropertyMaintenanceAssign::class, 'RequestNumber', 'Id');
+        return $this->belongsTo(PropertyMaintenanceAssign::class, 'Id', 'RequestNumber');
     }
     public function property()
     {
@@ -70,7 +70,6 @@ class PropertyMaintenanceRequest extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }
-
     public function modifiedByUser()
     {
         return $this->belongsTo(User::class, 'ModifiedBy');

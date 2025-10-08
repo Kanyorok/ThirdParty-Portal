@@ -26,14 +26,44 @@
     @forelse ($invitations as $index => $invitation)
         <tr>
             <td>{{ $index + 1 }}</td>
-            <td>{{ $invitation->TenderId }}</td>
-            <td>{{ $invitation->SupplierId  }}</td>
+            <td>
+                @php
+                    $tender = \App\Models\Procurement\Tender::find($invitation->TenderId);
+                @endphp
+                @if($tender)
+                    {{ trim((($tender->TenderNo ?? '') . ' - ' . ($tender->Title ?? ''))) }}
+                @else
+                    {{ $invitation->TenderId }}
+                @endif
+            </td>
+            <td>
+                @php
+                    $supplierName = $invitation->SupplierId;
+                    try {
+                        // First try Supplier model (t_Suppliers) then its thirdParty relation
+                        $sup = \App\Models\ThirdParies\Supplier::with('thirdParty')->find($invitation->SupplierId);
+                        if($sup && $sup->thirdParty) {
+                            $supplierName = $sup->thirdParty->ThirdPartyName ?? ($sup->thirdParty->TradingName ?? $invitation->SupplierId);
+                        } else {
+                            // Fallback: maybe SupplierId is actually a ThirdParties Id
+                            $tp = \App\Models\ThirdParty\ThirdParties::find($invitation->SupplierId);
+                            if($tp) {
+                                $supplierName = $tp->ThirdPartyName ?? ($tp->TradingName ?? $invitation->SupplierId);
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore and show raw id
+                    }
+                @endphp
+                {{ $supplierName }}
+            </td>
             <td>{{ \Carbon\Carbon::parse($invitation->InvitationDate)->format('d/m/Y') }}</td>
             <td>
-                @if($invitation->ResponseStatus === 'Accepted')
-                    <span class="badge bg-success">Accepted</span>
-                @elseif($invitation->ResponseStatus === 'Declined')
-                    <span class="badge bg-danger">Declined</span>
+                @php $status = strtolower($invitation->ResponseStatus ?? ''); @endphp
+                @if($status === 'accepted')
+                    <span class="badge bg-success">{{ $invitation->ResponseStatus }}</span>
+                @elseif($status === 'pending' || $status === 'declined')
+                    <span class="badge bg-danger">{{ $invitation->ResponseStatus }}</span>
                 @else
                     <span class="badge bg-secondary">{{ $invitation->ResponseStatus }}</span>
                 @endif

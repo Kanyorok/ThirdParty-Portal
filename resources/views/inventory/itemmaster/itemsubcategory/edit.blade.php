@@ -62,7 +62,7 @@
 
         <input type="hidden" name="ModifiedBy" value="{{ auth()->id() }}">
 
-        <button type="submit" class="btn btn-primary">✅ Save Changes</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">✅ Save Changes</button>
         <a href="{{ route('itemsubcategory.index') }}" class="btn btn-secondary">🔙 Cancel</a>
     </form>
 </div>

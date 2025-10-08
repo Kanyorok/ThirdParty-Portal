@@ -16,7 +16,7 @@ class PropertyNewLeaseRequest extends FormRequest
         return [
             'Tenant' => 'required|exists:t_TenantMaintenance,Id',
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
-            'BlockID' => 'required|exists:t_PropertyRegistry,Id',
+            'BlockID' => 'required|exists:t_PropertyBlock,Id',
             'FloorID' => 'required|exists:t_PropertyFloor,Id',
             'Unit' => 'required|exists:t_PropertyUnit,Id',
             'StartDate' => 'required|date',

@@ -13,7 +13,10 @@
                 </div>
 
                 <!-- Right side -->
-                <div class="text-end">
+                <div class="text-end d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print
+                    </button>
                     Approval Status:
                     @if($journalEntry->ApprovalStatus == 'posted')
                         <span class="badge bg-success">Approved</span>
@@ -32,21 +35,12 @@
                         <h6>Recurring Schedule</h6>
                         @if ($journalEntry->recurringJournals->isNotEmpty())
                             @php $recurring = $journalEntry->recurringJournals->first(); @endphp
-                            <div class="small">Start:
-                                <strong>{{ $recurring->StartDate ? \Carbon\Carbon::parse($recurring->StartDate)->format('Y-m-d') : 'N/A' }}</strong>
-                            </div>
-                            <div class="small">Next Run:
-                                <strong>{{ $recurring->NextRunDate ? \Carbon\Carbon::parse($recurring->NextRunDate)->format('Y-m-d') : 'N/A' }}</strong>
-                            </div>
-                            <div class="small">Frequency:
-                                <strong>{{ ucfirst( $frequencies[$recurring->Frequency ?? ''] ?? '-' ) }}</strong></div>
-                            <div class="small">End:
-                                <strong>{{ $recurring->CutOffDate ? \Carbon\Carbon::parse($recurring->CutOffDate)->format('Y-m-d') : ($journalEntry->Date ? \Carbon\Carbon::parse($journalEntry->Date)->format('Y-m-d') : 'N/A') }}</strong>
-                            </div>
+                            <div class="small">Start: <strong>{{ $recurring->StartDate ? \Carbon\Carbon::parse($recurring->StartDate)->format('d/m/Y') : 'N/A' }}</strong></div>
+                            <div class="small">Next Run: <strong>{{ $recurring->NextRunDate ? \Carbon\Carbon::parse($recurring->NextRunDate)->format('d/m/Y') : 'N/A' }}</strong></div>
+                            <div class="small">Frequency: <strong>{{ ucfirst( $frequencies[$recurring->Frequency ?? ''] ?? '-' ) }}</strong></div>
+                            <div class="small">End: <strong>{{ $recurring->CutOffDate ? \Carbon\Carbon::parse($recurring->CutOffDate)->format('d/m/Y') : ($journalEntry->Date ? \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') : 'N/A') }}</strong></div>
                         @else
-                            <div class="small text-muted"><i class="fas fa-info-circle me-1"></i>No recurring schedule
-                                defined.
-                            </div>
+                            <div class="small text-muted"><i class="fas fa-info-circle me-1"></i>No recurring schedule defined.</div>
                         @endif
                     </div>
 
@@ -97,12 +91,10 @@
                 {{-- Action Buttons --}}
                 @if($journalEntry->ApprovalStatus=='draft')
                     <div class="mt-4 d-flex justify-content-end gap-3">
-                        <button class="btn btn-outline-danger" data-bs-toggle="modal"
-                                data-bs-target="#actionRejectModal" data-action="reject">
+                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
                             <i class="fas fa-times-circle me-1"></i> Reject
                         </button>
-                        <button class="btn btn-outline-success" data-bs-toggle="modal"
-                                data-bs-target="#actionApproveModal" data-action="approve">
+                        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#actionApproveModal" data-action="approve">
                             <i class="fas fa-check-circle me-1"></i> Approve
                         </button>
                     </div>
@@ -118,8 +110,7 @@
     </div>
     @if($journalEntry->ApprovalStatus=='draft')
         {{-- Approve Modal --}}
-        <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel"
-             aria-hidden="true">
+        <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <form method="POST" action="{{ route('journalApproval', $journalEntry->Id) }}">
                     @csrf
@@ -134,16 +125,12 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="reason" class="form-label">Reason</label>
-                                <textarea class="form-control" name="Reason" id="reason" rows="3" required
-                                          placeholder="Enter reason here..."></textarea>
+                                <textarea class="form-control" name="Reason" id="reason" rows="3" required placeholder="Enter reason here..."></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-success" id="postBtn" type="submit"
-                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
-                                Approve
-                            </button>
+                            <button class="btn btn-success" id="postBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">Approve</button>
                         </div>
                     </div>
                 </form>
@@ -151,8 +138,7 @@
         </div>
 
         {{-- Reject Modal --}}
-        <div class="modal fade" id="actionRejectModal" tabindex="-1" aria-labelledby="actionModalLabel"
-             aria-hidden="true">
+        <div class="modal fade" id="actionRejectModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <form method="POST" action="{{ route('journalApproval', $journalEntry->Id) }}">
                     @csrf
@@ -167,16 +153,12 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="reason" class="form-label">Reason</label>
-                                <textarea class="form-control" name="Reason" id="reason" rows="3" required
-                                          placeholder="Enter reason here..."></textarea>
+                                <textarea class="form-control" name="Reason" id="reason" rows="3" required placeholder="Enter reason here..."></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-danger" id="postBtn" type="submit"
-                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
-                                Reject
-                            </button>
+                            <button class="btn btn-danger" id="postBtn" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">Reject</button>
                         </div>
                     </div>
                 </form>

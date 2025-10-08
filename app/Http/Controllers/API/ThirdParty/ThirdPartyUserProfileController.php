@@ -67,6 +67,7 @@ class ThirdPartyUserProfileController extends Controller
                     'TaxPIN' => $data['taxPin'] ?? $thirdParty->TaxPIN,
                     'VATNumber' => $data['vatNumber'] ?? $thirdParty->VATNumber,
                     'Country' => $data['country'] ?? $thirdParty->Country,
+                    'CountryId' => $data['countryId'] ?? $thirdParty->CountryId,
                     'PhysicalAddress' => $data['physicalAddress'] ?? $thirdParty->PhysicalAddress,
                     'Website' => $data['website'] ?? $thirdParty->Website,
                     'ModifiedBy' => Auth::id(),
@@ -161,6 +162,7 @@ class ThirdPartyUserProfileController extends Controller
                     'TaxPIN' => $validatedData['taxPin'] ?? null,
                     'VATNumber' => $validatedData['vatNumber'] ?? null,
                     'Country' => $validatedData['country'] ?? null,
+                    'CountryId' => $validatedData['countryId'] ?? null,
                     'PhysicalAddress' => $validatedData['physicalAddress'] ?? null,
                     'Website' => $validatedData['website'] ?? null,
                 ]);

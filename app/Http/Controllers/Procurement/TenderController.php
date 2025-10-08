@@ -32,6 +32,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Throwable;
+use App\Models\Procurement\TenderInvitation;
+use App\Mail\TenderInvitation as TenderInvitationMail;
+use Illuminate\Support\Facades\Mail;
+use App\Models\Procurement\TenderDocument;
+use App\Enums\Core\ModulesEnum;
 
 class TenderController extends Controller
 {
@@ -90,10 +95,24 @@ class TenderController extends Controller
             ->get()
             ->keyBy('PlanID');
 
-        $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty')
-            ->with(['item' => function ($query) {
-                $query->select('Id', 'ItemName');
-            }])
+        // Only include plan line items that:
+        // - belong to approved plans
+        // - have procurement method set to a Tender (Description contains 'Tender')
+        // - have NOT already been added to a tender (no TenderItems with this PlanItemID)
+        $approvedPlanIds = $procurementPlans->keys();
+        $usedPlanItemIds = TenderItems::whereNotNull('PlanItemID')->pluck('PlanItemID');
+
+        $itemsCategories = PlanLineItem::select('LineItemID', 'PlanID', 'ItemID', 'MergedQty', 'BranchID', 'DepartmentID', 'ProcurementMethod')
+            ->with([
+                'item' => function ($query) { $query->select('Id', 'ItemName'); },
+                'procurementMode',
+                'departmentNeed' => function ($q) { $q->select('NeedID', 'ItemID', 'BranchID', 'DepartmentID'); }
+            ])
+            ->whereIn('PlanID', $approvedPlanIds)
+            ->whereNotIn('LineItemID', $usedPlanItemIds)
+            ->whereHas('procurementMode', function ($q) {
+                $q->where('Description', 'like', '%Tender%');
+            })
             ->get();
 
         $procurementPlansOutput = [];
@@ -101,23 +120,23 @@ class TenderController extends Controller
         foreach ($itemsCategories as $lineItem) {
             $planId = $lineItem->PlanID;
             $item = $lineItem->item;
-            if (!$item) {
-                continue;
-            }
-            $procurementPlansOutput[$planId][] = [
+            if (!$item) { continue; }
+            $needId = optional($lineItem->departmentNeed)->NeedID;
+
+            $entry = [
                 'id' => $planId,
+                'planLineItemId' => $lineItem->LineItemID,
                 'itemId' => $item->Id,
                 'name' => $item->ItemName,
                 'plannedQty' => $lineItem->MergedQty,
+                'needId' => $needId,
             ];
-            $planItemData[$planId][] = [
-                'itemId' => $item->Id,
-                'name' => $item->ItemName,
-                'plannedQty' => $lineItem->MergedQty,
-            ];
+            $procurementPlansOutput[$planId][] = $entry;
+            $planItemData[$planId][] = $entry;
         }
 
-        $suppliers = Supplier::select('Id', 'ThirdPartyName', 'CategoryId')->get();
+        // Get suppliers with their supplier categories and item categories mapping
+        $suppliers = $this->getPrequalifiedSuppliers();
 
         activity()
             ->performedOn(new Tender())
@@ -182,8 +201,8 @@ class TenderController extends Controller
                         'ItemCategory' => $request->item_category_id,
                         'Remarks' => null,
                         'RelatedPRID' => $item['pr_ref'] ?? null,
-                        'CreatedBy' => auth()->user()->Id,
-                        'ModifiedBy' => auth()->user()->Id,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
                     ]);
                 }
             }
@@ -203,8 +222,8 @@ class TenderController extends Controller
                             'ItemCategory' => $request->item_category_id,
                             'Remarks' => null,
                             'RelatedPRID' => $manualItem['pr_ref'] ?? null,
-                            'CreatedBy' => auth()->user()->Id,
-                            'ModifiedBy' => auth()->user()->Id,
+                            'CreatedBy' => Auth::id(),
+                            'ModifiedBy' => Auth::id(),
                         ]);
                     }
                 }
@@ -215,9 +234,18 @@ class TenderController extends Controller
                     TenderSupplier::create([
                         'TenderID' => $tenderId,
                         'SupplierID' => $supplierId,
-                        'CreatedBy' => auth()->user()->Id,
-                        'ModifiedBy' => auth()->user()->Id,
+                        'CreatedBy' => Auth::id(),
+                        'ModifiedBy' => Auth::id(),
                     ]);
+                }
+            }
+
+            // Attach Tender Documents to DMS (from create form)
+            if ($request->hasFile('documents')) {
+                foreach ((array) $request->file('documents') as $uploadedFile) {
+                    if (!$uploadedFile) { continue; }
+                    // Create DMS document and relate to this tender
+                    $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
                 }
             }
 
@@ -231,9 +259,7 @@ class TenderController extends Controller
             return redirect()->route('initiatetender.index')->with('success', 'Tender created successfully.');
         } catch (Exception $e) {
             DB::rollBack();
-            return $e->getMessage();
             Log::error("--- CREATE TENDER ERROR --- " . $e->getMessage());
-            Log::error($e);
             return redirect()->route('initiatetender.index')->with('error', 'Failed to create Tender. Please try again.');
         }
     }
@@ -254,7 +280,7 @@ class TenderController extends Controller
             return $qty * $price;
         });
 
-        $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier')->get();
+        $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier.thirdParty')->get();
         $tenderCategory = TenderCategory::find($tender->tender_category_id);
         $itemCategory = ItemCategories::find($tender->item_category_id);
         $currency = Currency::find($tender->currency_id);
@@ -367,6 +393,14 @@ class TenderController extends Controller
 
                 $tender->save();
 
+                // Attach Tender Documents to DMS (from edit form)
+                if ($request->hasFile('documents')) {
+                    foreach ((array) $request->file('documents') as $uploadedFile) {
+                        if (!$uploadedFile) { continue; }
+                        $tender->newDocument(ModulesEnum::Procurement, $uploadedFile, [PermissionEnum::TenderRead->value], Auth::user());
+                    }
+                }
+
                 DB::commit();
 
                 activity()
@@ -379,7 +413,6 @@ class TenderController extends Controller
             } catch (Exception $e) {
                 DB::rollBack();
                 Log::error('--- UPDATE TENDER ERROR --- ' . $e->getMessage());
-                Log::error($e);
                 return redirect()->route('initiatetender.edit', $id)->with('error', 'Failed to update Tender. Please try again.');
             }
         } elseif ($type == 'crudItem') {
@@ -597,6 +630,286 @@ class TenderController extends Controller
 
     public function approveTender(Request $request)
     {
-        // Check if the user has permission to approve tenders using the enum
+        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+        
+        // Validate the request
+        $request->validate([
+            'tender_id' => 'required|exists:t_Tenders,Id',
+            'reason' => 'required|string|max:1000',
+        ]);
+        
+        try {
+            DB::beginTransaction();
+            
+            // Find the tender
+            $tender = Tender::findOrFail($request->tender_id);
+            
+            // Update the approval status and related fields
+            $tender->update([
+                'ApprovalStatus' => TenderApprovalStatusEnum::APPROVED,
+                'ApprovalRemarks' => $request->reason,
+                'Status' => TenderStatusEnum::Published, // Approve and publish as mentioned in the modal
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+            
+            // Handle restricted tender invitations
+            $invitationsSent = 0;
+            if ($tender->isRestricted()) {
+                $invitationsSent = $this->sendRestrictedTenderInvitations($tender);
+            }
+            
+            // Log the approval activity
+            activity()
+                ->performedOn($tender)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'action' => 'approve',
+                    'approval_remarks' => $request->reason,
+                    'previous_status' => 'Pending',
+                    'new_status' => 'Approved',
+                    'tender_type' => $tender->TenderType->value,
+                    'invitations_sent' => $invitationsSent
+                ])
+                ->log('Tender approved and published with ID: ' . $tender->Id . ($invitationsSent > 0 ? ". Invitations sent to {$invitationsSent} suppliers." : ''));
+            
+            DB::commit();
+            
+            $successMessage = 'Tender approved and published successfully.';
+            if ($invitationsSent > 0) {
+                $successMessage .= " Invitations sent to {$invitationsSent} suppliers.";
+            }
+            
+            return redirect()->route('initiatetender.index')->with('success', $successMessage);
+        } catch (Throwable $th) {
+            DB::rollBack();
+            Log::error("--- APPROVE TENDER ERROR --- " . $th->getMessage());
+            Log::error($th);
+            return redirect()->route('initiatetender.index')->with('error', 'Failed to approve Tender. Please try again.');
+        }
+    }
+
+    public function rejectTender(Request $request)
+    {
+        $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
+        
+        // Validate the request
+        $request->validate([
+            'tender_id' => 'required|exists:t_Tenders,Id',
+            'reason' => 'required|string|max:1000',
+        ]);
+        
+        try {
+            DB::beginTransaction();
+            
+            // Find the tender
+            $tender = Tender::findOrFail($request->tender_id);
+            
+            // Update the approval status and related fields
+            $tender->update([
+                'ApprovalStatus' => TenderApprovalStatusEnum::REJECTED,
+                'ApprovalRemarks' => $request->reason,
+                'Status' => TenderStatusEnum::Draft, // Keep as draft when rejected
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+            
+            // Log the rejection activity
+            activity()
+                ->performedOn($tender)
+                ->causedBy(Auth::user())
+                ->withProperties([
+                    'action' => 'reject',
+                    'rejection_remarks' => $request->reason,
+                    'previous_status' => 'Pending',
+                    'new_status' => 'Rejected'
+                ])
+                ->log('Tender rejected with ID: ' . $tender->Id);
+            
+            DB::commit();
+            
+            return redirect()->route('initiatetender.index')->with('success', 'Tender rejected successfully.');
+        } catch (Throwable $th) {
+            DB::rollBack();
+            Log::error("--- REJECT TENDER ERROR --- " . $th->getMessage());
+            Log::error($th);
+            return redirect()->route('initiatetender.index')->with('error', 'Failed to reject Tender. Please try again.');
+        }
+    }
+
+    /**
+     * Get prequalified suppliers based on active prequalification rounds
+     */
+    private function getPrequalifiedSuppliers()
+    {
+        // Find active prequalification rounds (DB code 'O' for Open)
+        $activeRounds = \App\Models\Procurement\Prequalification\PrequalificationRound::where('Status', 'O')
+            ->where('StartDate', '<=', now())
+            ->where('EndDate', '>=', now())
+            ->pluck('RoundID');
+
+        if ($activeRounds->isEmpty()) {
+            return collect([]); // No active rounds, no suppliers available
+        }
+
+        // FIXED: Query t_Suppliers directly instead of looking for approved applications
+        // and derive SupplierCategory mapping via pivot if SupplierCategoryID is null
+        $prequalifiedSuppliers = \App\Models\ThirdParies\Supplier::whereIn('RoundID', $activeRounds)
+            ->where('Active_Status', 1)
+            ->with(['thirdParty', 'supplierCategory.itemCategories'])
+            ->get();
+
+        $suppliers = collect();
+        
+        foreach ($prequalifiedSuppliers as $supplier) {
+            if (!$supplier->thirdParty) continue;
+            
+            $thirdParty = $supplier->thirdParty;
+            
+            // Build list of item category IDs this supplier can serve
+            $itemCategoryIds = [];
+            
+            // Start item categories with supplier's direct CategoryId (if present)
+            if (!empty($supplier->CategoryId)) {
+                $itemCategoryIds[] = (int) $supplier->CategoryId;
+                // include first-level subcategories
+                $directSubcats = \App\Models\Inventory\ItemCategories::where('ParentId', $supplier->CategoryId)->pluck('Id');
+                foreach ($directSubcats as $sid) {
+                    $itemCategoryIds[] = (int) $sid;
+                }
+            }
+
+            // Build supplierCategoryIds from either direct SupplierCategoryID or pivot mapping
+            $supplierCategoryIds = collect();
+            if (!empty($supplier->SupplierCategoryID)) {
+                $supplierCategoryIds->push($supplier->SupplierCategoryID);
+            }
+            // Add any categories from pivot t_ThirdParty_SupplierCategory (in case SupplierCategoryID is NULL)
+            try {
+                $pivotCats = DB::table('t_ThirdParty_SupplierCategory')
+                    ->where('third_party_id', $supplier->ThirdPartyID)
+                    ->pluck('SupplierCategoryID');
+                $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
+            } catch (\Throwable $e) {
+                Log::warning('Failed reading t_ThirdParty_SupplierCategory', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
+            }
+
+            $supplierCategoryIds = $supplierCategoryIds->filter()->unique()->values();
+
+            // From all supplier categories, collect mapped item categories (including subcategories)
+            if ($supplierCategoryIds->isNotEmpty()) {
+                try {
+                    $parentItemCats = DB::table('t_SupplierCategory_ItemCategory')
+                        ->whereIn('SupplierCategoryID', $supplierCategoryIds)
+                        ->whereNull('DeletedOn')
+                        ->pluck('ItemCategoryID');
+
+                    foreach ($parentItemCats as $parentCatId) {
+                        $itemCategoryIds[] = (int) $parentCatId;
+                        // include subcategories
+                        $subcategories = \App\Models\Inventory\ItemCategories::where('ParentId', $parentCatId)->pluck('Id');
+                        foreach ($subcategories as $subcategoryId) {
+                            $itemCategoryIds[] = (int) $subcategoryId;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Failed reading category mappings', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
+                }
+            }
+
+            $suppliers->push([
+                'Id' => $supplier->Id,
+                'SupplierName' => $thirdParty->ThirdPartyName,
+                'ThirdPartyName' => $thirdParty->ThirdPartyName,
+                'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
+                'CategoryId' => null, // No longer used - categories come from SupplierCategory mapping
+                'SupplierCategoryID' => $supplierCategoryIds->first(), // Prefer first mapped category if any
+                'ItemCategoryIds' => array_unique($itemCategoryIds), // All categories this supplier can serve
+                'RoundID' => $supplier->RoundID,
+                'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
+                'ThirdPartyID' => $supplier->ThirdPartyID,
+            ]);
+        }
+
+        // Remove duplicates based on supplier ID (a supplier might have multiple records)
+        return $suppliers->unique('Id')->values();
+    }
+
+    /**
+     * Send invitations to selected suppliers for restricted tenders
+     */
+    private function sendRestrictedTenderInvitations(Tender $tender): int
+    {
+        $invitationsSent = 0;
+        
+        try {
+            // Get all selected suppliers for this tender from t_TenderSuppliers
+            $selectedSuppliers = TenderSupplier::where('TenderID', $tender->Id)
+                ->with(['supplier.thirdParty'])
+                ->get();
+
+            if ($selectedSuppliers->isEmpty()) {
+                Log::warning("No suppliers found for restricted tender ID: {$tender->Id}");
+                return 0;
+            }
+
+            foreach ($selectedSuppliers as $tenderSupplier) {
+                if (!$tenderSupplier->supplier || !$tenderSupplier->supplier->thirdParty) {
+                    Log::warning("Missing supplier or thirdParty data for TenderSupplier ID: {$tenderSupplier->id}");
+                    continue;
+                }
+
+                $supplier = $tenderSupplier->supplier;
+                $thirdParty = $supplier->thirdParty;
+                
+                // Skip if no email address
+                if (!$thirdParty->Email) {
+                    Log::warning("No email address for supplier {$thirdParty->ThirdPartyName} (ID: {$supplier->Id})");
+                    continue;
+                }
+
+                // Create invitation record in t_TenderInvitations
+                $invitation = TenderInvitation::create([
+                    'TenderId' => $tender->Id,
+                    'SupplierId' => $supplier->Id,
+                    'InvitationDate' => now(),
+                    'ResponseStatus' => TenderInvitation::STATUS_PENDING,
+                    'ResponseDate' => null,
+                    'DeclineReason' => null,
+                    'ConfirmationAttachment' => null,
+                    'CreatedBy' => Auth::id(),
+                    'CreatedOn' => now(),
+                    'ModifiedBy' => Auth::id(),
+                    'ModifiedOn' => now(),
+                ]);
+
+                // Send email invitation
+                try {
+                    Mail::to($thirdParty->Email)
+                        ->send(new TenderInvitationMail($tender, $supplier));
+                    
+                    $invitationsSent++;
+                    
+                    Log::info("Tender invitation sent to {$thirdParty->ThirdPartyName} ({$thirdParty->Email}) for tender {$tender->TenderNo}");
+                    
+                } catch (Exception $emailException) {
+                    Log::error("Failed to send email to {$thirdParty->Email}: " . $emailException->getMessage());
+                    
+                    // Update invitation record to indicate email failure (but keep the record)
+                    $invitation->update([
+                        'DeclineReason' => 'Email sending failed: ' . $emailException->getMessage(),
+                        'ModifiedOn' => now(),
+                    ]);
+                }
+            }
+            
+            Log::info("Restricted tender invitations process completed. Total sent: {$invitationsSent}");
+            
+        } catch (Exception $e) {
+            Log::error("Error in sendRestrictedTenderInvitations: " . $e->getMessage());
+            throw $e; // Re-throw to be caught by the main transaction
+        }
+
+        return $invitationsSent;
     }
 }

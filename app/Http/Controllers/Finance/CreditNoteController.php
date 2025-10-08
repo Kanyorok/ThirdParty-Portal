@@ -93,7 +93,7 @@ class CreditNoteController extends Controller
     {
         $note = FinanceCDNotes::with([
             'invoice',
-            'invoice.supplier',
+            'invoice.thirdParty',
             'invoice.order:Id,OrderNo',
             'invoice.currency:Id,Code',
             'createdBy:Id,Name',

@@ -420,43 +420,43 @@
                             </form>
                         </div>
                     @endif
-                    <div class="onboarding-content with-gradient d-none modal-item text-center" id="trashFileModal">
-                        <h4 class="text-danger">
-                            Trash Document <b class="rm-file-name">{{ $file->Name }}</b> ?
-                        </h4>
-                        <div class="alert alert-warning" role="alert">
-                            <b>Note</b>This file will be deleted permanently
-                        </div>
-                        @if($checkedOut)
-                            <div class="alert alert-info d-flex align-items-center" role="alert">
-                                <i data-feather="alert-triangle"></i>
-                                <div>This document has been checkout, cannot be deleted</div>
+                        <div class="onboarding-content with-gradient d-none modal-item text-center" id="trashFileModal">
+                            <h4 class="text-danger">
+                                Trash Document <b class="rm-file-name">{{ $file->Name }}</b> ?
+                            </h4>
+                            <div class="alert alert-warning" role="alert">
+                                <b>Note</b>This file will be deleted permanently
                             </div>
-                            <div class="mt-4">
-                                <button type="button" class="btn btn-secondary float-end"
-                                        data-bs-dismiss="modal">
-                                    close
-                                </button>
-                            </div>
-                        @else
-                            <form id="trashFileForm" method="post"
-                                  action="{{  route('files.destroy', [$file->repository->RepositoryId, $file->DocumentId]), }}"> @csrf
-                                <div class="mt-4">@method('delete')
-                                    <button type="button" class="btn btn-secondary float-start"
-                                            data-bs-dismiss="modal">
-                                        no, cancel
-                                    </button>
-
-                                    <button class="btn btn-danger float-end" id="trashFileBtn"
-                                            type="submit"><i
-                                            class="fas fa-trash"></i> yes, delete
-                                    </button>
-
+                            @if($checkedOut)
+                                <div class="alert alert-info d-flex align-items-center" role="alert">
+                                    <i data-feather="alert-triangle"></i>
+                                    <div>This document has been checkout, cannot be deleted</div>
                                 </div>
-                            </form>
-                        @endif
+                                <div class="mt-4">
+                                    <button type="button" class="btn btn-secondary float-end"
+                                            data-bs-dismiss="modal">
+                                        close
+                                    </button>
+                                </div>
+                            @else
+                                <form id="trashFileForm" method="post"
+                                      action="{{  route('files.destroy', [$file->repository->RepositoryId, $file->DocumentId]) }}"> @csrf
+                                    <div class="mt-4">@method('delete')
+                                        <button type="button" class="btn btn-secondary float-start"
+                                                data-bs-dismiss="modal">
+                                            no, cancel
+                                        </button>
 
-                    </div>
+                                        <button class="btn btn-danger float-end" id="trashFileBtn"
+                                                type="submit"><i
+                                                class="fas fa-trash"></i> yes, delete
+                                        </button>
+
+                                    </div>
+                                </form>
+                            @endif
+
+                        </div>
                     <div class="onboarding-content with-gradient d-none modal-item" id="updateFileVisibilityModal">
                         <form action="{{ route('file.visibility',[$file->DocumentId]) }}" method="post"
                               id="updateFileVisibilityForm"> @csrf

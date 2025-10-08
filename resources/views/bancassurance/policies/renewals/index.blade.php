@@ -21,7 +21,7 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $policy->PolicyNumber }}</td>
-                    <td>{{ $policy->customer->FullName }}</td>
+                    <td>{{ $policy->customer->thirdParty->ThirdPartyName }}</td>
                     <td>{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}</td>
                     <td>{{ $policy->Status->label() }}</td>
                     <td><a href="{{ route('bancassurance.policies.renewalForm', $policy->Id) }}"

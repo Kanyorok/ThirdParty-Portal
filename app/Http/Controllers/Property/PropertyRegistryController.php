@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
+use App\Models\Core\Country;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -19,14 +22,17 @@ class PropertyRegistryController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
         $properties = PropertyRegistry::with('type')->get();
         return view('property.propertyregistry.registry.index', compact('properties'));
     }
 
     public function create(){
-        $lineentries = CategoryMaster::with('propertytypes')->get();
-        $localities = Locality::all();
-        return view('property.propertyregistry.registry.create', compact('lineentries', 'localities'));
+        $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
+        $lineentries = CategoryMaster::with('propertytypes')
+        ->where('Type', 'PropertyCategory')->get();
+        $countries = Country::all();
+        return view('property.propertyregistry.registry.create', compact('lineentries', 'countries'));
     }
 
     public function getTypesByCategory($categoryId)
@@ -35,74 +41,112 @@ class PropertyRegistryController extends Controller
         return response()->json($types);
     }
 
-    public function show($id){
-        $property = PropertyRegistry::find($id);
-        // $createdByUser = User::find($property->CreatedBy);
-        // $modifiedByUser = User::find($property->ModifiedBy);
-        return view('property.propertyregistry.registry.show',compact('property'));
+    public function getLocalityByCountry($country)
+    {
+        $localities = Locality::where('CountryId', $country)->get();
+        return response()->json($localities);
     }
+
+    public function show($id)
+    {
+        $this->authorize(PermissionEnum::PropertyRegistryView, PropertyRegistry::class);
+
+        $property = PropertyRegistry::with([
+            'getBlockByProperty.floor.units'
+        ])->findOrFail($id);
+
+        return view('property.propertyregistry.registry.show', compact('property'));
+    }
+
 
     public function store(PropertyRegistryRequest $request)
     {
+        $this->authorize(PermissionEnum::PropertyRegistryCreate, PropertyRegistry::class);
 
         $validated = $request->validated();
-        //dd($validated);
-        // Fetch model instances based on validated IDs
-        $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-        $propertyType = PropertyType::findOrFail($validated['PropertyType']);
-        $category = CategoryMaster::findOrFail($validated['Category']);
-        $townCity = Locality::findOrFail($validated['TownCity']);
 
-        foreach ($request->file('file', []) as $uploadedFile) {
-            PropertyRegistryService::create(
-                $validated['PropertyName'],
-                $validated['PropertyCode'],
-                $propertyType,
-                $category,
-                $validated['Owner'],
-                $acquisitionDate,
-                $validated['Country'],
-                $townCity,
-                $validated['AreaLocality'],
-                $validated['PropertyDescription'] ?? '',
-                $request->user(),
-                $uploadedFile
-            );
+        $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
+        $propertyType   = PropertyType::findOrFail($validated['PropertyType']);
+        $category       = CategoryMaster::findOrFail($validated['Category']);
+        $location       = Locality::findOrFail($validated['LocationId']);
+        $country        = Country::findOrFail($validated['CountryId']);
+
+        // Take first file (if any) for the initial create
+        $firstFile = $request->file('file')[0] ?? null;
+
+        $service = PropertyRegistryService::create(
+            $validated['PropertyName'],
+            $validated['PropertyCode'],
+            $propertyType,
+            $category,
+            $validated['Owner'],
+            $acquisitionDate,
+            $country,
+            $location,
+            $validated['Address'],
+            $validated['PropertyDescription'] ?? '',
+            $request->user(),
+            $firstFile
+        );
+
+        // Attach remaining files (if more than one uploaded)
+        if ($request->hasFile('file')) {
+            foreach (array_slice($request->file('file'), 1) as $uploadedFile) {
+                $service->propertyRegistry->newDocument(
+                    ModulesEnum::Property,
+                    $uploadedFile,
+                    [PermissionEnum::PropertyRegistryView->value],
+                    $request->user()
+                );
+            }
         }
 
-        return redirect()->route('PropertyRegistry.index')
+        return redirect()
+            ->route('PropertyRegistry.index')
             ->with('success', 'Property registry created successfully');
     }
 
+
     public function edit($id)
     {
-        //Check if user has permission to edit tender categories
-        // $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
+        $this->authorize(PermissionEnum::PropertyRegistryUpdate, PropertyRegistry::class);
+
         $property = PropertyRegistry::findOrFail($id);
-        $types = PropertyType::all();
+
+        // Preload only the types for the selected category so the edit dropdown matches the saved category
+        $types = PropertyType::where('PropertyCategoryId', $property->Category)->get();
+
+        // Keep both variables if other views use them
         $categories = CategoryMaster::all();
         $lineentries = CategoryMaster::with('propertytypes')->get();
-        $localities = Locality::all();
 
-        return view('property.propertyregistry.registry.edit', compact('property', 'localities', 'lineentries', 'types', 'categories'));
+        $countries = Country::all();
+
+        // NOTE: use plural $localities (collection) to match your blade
+        $localities = Locality::where('CountryId', $property->CountryId)->get();
+
+        return view(
+            'property.propertyregistry.registry.edit',
+            compact('property', 'countries', 'localities', 'lineentries', 'types', 'categories')
+        );
     }
+
 
     public function update(PropertyRegistryRequest $request, $id)
     {
+        $this->authorize(PermissionEnum::PropertyRegistryUpdate, PropertyRegistry::class);
         $validated = $request->validated();
-
-        // Fetch model instances based on validated IDs
         $acquisitionDate = Carbon::parse($validated['AcquisitionDate']);
-        $propertyType = PropertyType::findOrFail($validated['PropertyType']);
-        $category = CategoryMaster::findOrFail($validated['Category']);
-        $townCity = Locality::findOrFail($validated['TownCity']);
+        $propertyType    = PropertyType::findOrFail($validated['PropertyType']);
+        $category        = CategoryMaster::findOrFail($validated['Category']);
+        $location        = Locality::findOrFail($validated['LocationId']);
+        $country        = Country::findOrFail($validated['CountryId']);
 
         DB::beginTransaction();
 
         try {
             $property = PropertyRegistry::findOrFail($id);
 
-            // Update the main property record first (no file yet)
             PropertyRegistryService::update(
                 $property,
                 $validated['PropertyName'],
@@ -111,14 +155,14 @@ class PropertyRegistryController extends Controller
                 $category,
                 $validated['Owner'],
                 $acquisitionDate,
-                $validated['Country'],
-                $townCity,
-                $validated['AreaLocality'],
+                $country,
+                $location,
+                $validated['Address'],
                 $validated['PropertyDescription'] ?? '',
-                $request->user()
+                $request->user(),
+                $validated['IsActive'] ?? $property->IsActive
             );
 
-            // Handle file uploads (loop like in store)
             foreach ($request->file('file', []) as $uploadedFile) {
                 PropertyRegistryService::update(
                     $property,
@@ -128,11 +172,12 @@ class PropertyRegistryController extends Controller
                     $category,
                     $validated['Owner'],
                     $acquisitionDate,
-                    $validated['Country'],
-                    $townCity,
-                    $validated['AreaLocality'],
+                    $country,
+                    $location,
+                    $validated['Address'],
                     $validated['PropertyDescription'] ?? '',
                     $request->user(),
+                    $validated['IsActive'],
                     $uploadedFile
                 );
             }
@@ -157,9 +202,16 @@ class PropertyRegistryController extends Controller
     public function destroy($id)
     {
         //Check if user has permission to delete property categories
-        //$this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
+         $this->authorize(PermissionEnum::PropertyRegistryDelete, PropertyRegistry::class);
         try {
             $property = PropertyRegistry::findOrFail($id);
+
+
+            if ($property->getBlockByProperty()->exists()) {
+                return redirect()->back()
+                ->withErrors(['error' => 'This Property is in use and cannot be deleted.']);
+            }
+
             $property->delete();
 
             return redirect()->route('PropertyRegistry.index')

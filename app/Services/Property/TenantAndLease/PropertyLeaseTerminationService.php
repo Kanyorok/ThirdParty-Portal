@@ -11,6 +11,7 @@ use App\Models\PropertyManagement\PropertyLeaseRenewal;
 use App\Models\PropertyManagement\PropertyLeaseSchedule;
 use App\Models\PropertyManagement\PropertyLeaseTermination;
 use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyUnit;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
@@ -72,6 +73,15 @@ class PropertyLeaseTerminationService
                     'IsActive' => false,
                     'ModifiedBy' => $user->Id,
                 ]);
+
+
+            // Availability of the property Unit
+            $unit = PropertyUnit::findOrFail($LeaseID->Unit);
+            $unit->update([
+                'IsRentable'    => 1,   // Unit can now be rented again
+                'CurrentStatus' => 1,   // Status = Available
+                'ModifiedBy'    => $user->Id,
+            ]);
 
             activity()
                 ->causedBy($user->Id)

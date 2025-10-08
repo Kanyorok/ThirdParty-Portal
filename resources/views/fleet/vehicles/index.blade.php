@@ -4,26 +4,24 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-    <div class="card p-4 shadow rounded-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">Fleet Vehicles List</h4>
-            <a href="{{ route('fleet.vehicles.create') }}" class="btn btn-primary">
-                ➕ Add Vehicle
-            </a>
+<div class="card p-4 shadow rounded-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Fleet Vehicles List</h4>
+        <a href="{{ route('fleet.vehicles.create') }}" class="btn btn-primary">
+            ➕ Add Vehicle
+        </a>
+    </div>
+
+
+   @if(!$vehicles->isEmpty())
+        <div class="mb-3">
+            <p class="mb-0" style="font-style: italic;">
+                <span class="me-2">💡</span>
+                Click the <strong>Details</strong> button to view complete vehicle information including trips, inspections, maintenance, repairs, and assignments.<br>
+                <strong><span class="me-1">ℹ️</span>Note:</strong> Fleet Model, Make, and Fuel Type are automatically loaded from Fleet Settings where they are managed.
+            </p>
         </div>
-
-
-        @if(!$vehicles->isEmpty())
-            <div class="mb-3">
-                <p class="mb-0" style="font-style: italic;">
-                    <span class="me-2">💡</span>
-                    Click the <strong>Details</strong> button to view complete vehicle information including trips,
-                    inspections, maintenance, repairs, and assignments.<br>
-                    <strong><span class="me-1">ℹ️</span>Note:</strong> Fleet Model, Make, and Fuel Type are
-                    automatically loaded from Fleet Settings where they are managed.
-                </p>
-            </div>
-        @endif
+    @endif
 
 
         <div class="table-responsive">
@@ -38,8 +36,9 @@
                     <th>Fuel</th>
                     <th>Branch</th>
                     <th>Status</th>
+                    <th>Vehicle Availability</th>
                     <th>Action</th>
-
+                   
                 </tr>
                 </thead>
                 <tbody>
@@ -52,15 +51,28 @@
                         <td>{{ $vehicle->vehicleType->Description }}</td>
                         <td>{{ $vehicle->fuelType->FuelName }}</td>
                         <td>{{ $vehicle->branch->Name ?? '-' }}</td>
-                        <td>{{ $vehicle->status->Description }}</td>
+                        <td>{{ $vehicle->status->Description ?? '-' }}</td>
+                        <td>
+                        @if($vehicle->vehicleStatus)
+                            @php
+                                // Map status descriptions to badge colors
+                                $statusColors = [
+                                    'Available'     => 'success',
+                                    'AssignedTrip'  => 'warning',
+                                    'OnTrip'        => 'info',
+                                ];
 
-                        {{-- <td>
-                            @if ($vehicle->IsActive)
-                                <span class="badge bg-success">Yes</span>
-                            @else
-                                <span class="badge bg-danger">No</span>
-                            @endif
-                        </td> --}}
+                                $color = $statusColors[$vehicle->vehicleStatus->Description] ?? 'light';
+                            @endphp
+
+                            <span class="badge bg-{{ $color }}">
+                                {{ $vehicle->vehicleStatus->Description }}
+                            </span>
+                        @else
+                            <span class="badge bg-light text-dark">-</span>
+                        @endif
+                    </td>
+
 
                         <td>
                             <a href="{{ route('fleet.vehicles.show', $vehicle->Id) }}"

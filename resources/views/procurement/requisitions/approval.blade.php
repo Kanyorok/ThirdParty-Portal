@@ -12,7 +12,7 @@
 
             <div class="card-body">
                 <!-- Requisition Summary Section -->
-                <div class="row mb-4">
+                <div class="row mb-4"></div>
                     <div class="col-md-6">
                         <h5>Requisition Information</h5>
                         <p><strong>Requisition Number:</strong> {{ $requisitionInfo->RequisitionNo ?? 'N/A' }}</p>
@@ -40,6 +40,7 @@
                             <th>#</th>
                             <th>Item Type</th>
                             <th>Item Name</th>
+                            <th>Need ID</th>
                             <th>UOM</th>
                             <th>Quantity</th>
                             <th>Pricing</th>
@@ -52,6 +53,7 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $item->Type ?? 'N/A' }}</td>
                                 <td>{{ $item->ItemName ?? 'N/A' }}</td>
+                                <td>{{ $item->NeedRef ?? 'N/A' }}</td>
                                 <td>{{ $item->UOM }}</td>
                                 <td>{{ $item->Quantity }}</td>
                                 <td>{{ $item->ExpectedPrice }}</td>
@@ -124,14 +126,12 @@
 
     <!-- Approval Status Modal -->
     <div class="modal fade" id="statusModal" tabindex="-1" role="dialog" aria-labelledby="statusModalLabel"
-         aria-hidden="true">
+         aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
         <div class="modal-dialog modal-dialog-scrollable modal-md" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-secondary text-white">
                     <h5 class="modal-title" id="statusModalLabel">Approval Status</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body">
@@ -158,14 +158,12 @@
 
     <!-- Reject Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel"
-         aria-hidden="true">
+         aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="rejectModalLabel">Reject Requisition</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="{{ route('requisition.approve', $requisitionInfo->Id) }}" method="POST">
                     @csrf
@@ -177,7 +175,10 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <input type="hidden" name="document_type" value="purchase_requisition">
+                        <input type="hidden" name="order_total" value="{{ $requisitionInfo->ExpectedPrice ?? '0' }}">
+                        <input type="hidden" name="order_id" value="{{ $requisitionInfo->Id }}">
                         <input type="hidden" name="action" value="reject">
                         <button type="submit" class="btn btn-danger">Submit Rejection</button>
                     </div>

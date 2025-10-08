@@ -70,11 +70,11 @@
         </div>
 
         <!-- Auto-assign ModifiedBy -->
-            <div class="d-flex justify-content-start mt-4">
-                <input type="hidden" name="ModifiedBy" value="{{ auth()->id() }}">
-                <button type="submit" class="btn btn-primary">✅ Save Changes</button>
-                <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">🔙 Cancel</a>
-            </div>
+        <div class="d-flex justify-content-start mt-4">
+            <input type="hidden" name="ModifiedBy" value="{{ auth()->id() }}">
+            <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">✅ Save Changes</button>
+            <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">🔙 Cancel</a>
+        </div>
     </form>
 </div>
 @endsection
