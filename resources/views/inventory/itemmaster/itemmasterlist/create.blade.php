@@ -23,15 +23,15 @@
         {{-- Row 1 --}}
         <div class="row mb-3">
             <div class="col-md-4">
-                <label for="BarCode" class="form-label">Bar Code</label>
+                <label for="BarCode" class="form-label">Bar Code <span class="text-danger">*</span></label>
                 <input type="text" name="BarCode" id="BarCode" class="form-control" value="{{ old('BarCode') }}" required>
             </div>
             <div class="col-md-4">
-                <label for="ItemName" class="form-label">Item Name</label>
+                <label for="ItemName" class="form-label">Item Name <span class="text-danger">*</span></label>
                 <input type="text" name="ItemName" id="ItemName" class="form-control" value="{{ old('ItemName') }}" required>
             </div>
             <div class="col-md-4">
-                <label for="ItemType" class="form-label">Item Type</label>
+                <label for="ItemType" class="form-label">Item Type <span class="text-danger">*</span></label>
                 <select name="ItemType" id="ItemType" class="form-select" required>
                     <option selected disabled>Select Type</option>
                     @foreach($itemTypes as $itemType)
@@ -46,7 +46,7 @@
         {{-- Row 2 --}}
         <div class="row mb-3">
             <div class="col-md-4">
-                <label for="Category" class="form-label">Parent Category</label>
+                <label for="Category" class="form-label">Parent Category <span class="text-danger">*</span></label>
                 <select name="Category" id="category" class="form-select" required>
                     <option value="">-- Select Category --</option>
                     @foreach($categories as $category)
@@ -61,7 +61,7 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label for="UOM" class="form-label">Unit of Measure (UOM)</label>
+                <label for="UOM" class="form-label">Unit of Measure (UOM) <span class="text-danger">*</span></label>
                 <select name="UOM" id="UOM" class="form-select" required>
                     <option selected disabled>Select UOM</option>
                     @foreach($uoms as $uom)
@@ -76,7 +76,7 @@
         {{-- Row 3 --}}
         <div class="row mb-3">
             <div class="col-md-4">
-                <label for="InventoryType" class="form-label">Inventory Type</label>
+                <label for="InventoryType" class="form-label">Inventory Type <span class="text-danger">*</span></label>
                 <select name="InventoryType" id="InventoryType" class="form-select" required>
                     <option selected disabled>Select Inventory Type</option>
                     @foreach($inventoryTypes as $inventoryType)
@@ -136,4 +136,13 @@
         });
     });
 </script>
+
+<style>
+.text-danger {
+    font-weight: bold;
+}
+.form-label {
+    font-weight: 500;
+}
+</style>
 @endsection

@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon\Carbon;
 use App\Models\Core\CodeDetail;
+use App\Models\Procurement\ConsolidatedProcurementPlan;
 
 class PurchaseOrderController extends Controller
 {
@@ -47,8 +48,93 @@ class PurchaseOrderController extends Controller
             'getAwardedTenders',
             'getTenderItems',
             'getContractItems',
+            'getDirectPlans',
         ]);
 //        $this->authorizeResource(Order::class);
+    }
+
+    /**
+     * Fetch approved procurement plans with pending direct procurement items.
+     */
+    public function getDirectPlans(): JsonResponse
+    {
+        try {
+            $plans = ConsolidatedProcurementPlan::query()
+                ->where('Status', 'Approved')
+                ->whereHas('planLineItems', function ($query) {
+                    $query->where('ExecutionStatus', 'Pending')
+                        ->whereHas('procurementMode', function ($sub) {
+                            $sub->where('Description', 'LIKE', '%Direct%');
+                        });
+                })
+                ->orderByDesc('ApprovedOn')
+                ->limit(100)
+                ->get()
+                ->map(function ($p) {
+                    return [
+                        'PlanID' => $p->PlanID ?? $p->Id ?? null,
+                        'Title' => $p->Title ?? $p->Name ?? ('Plan #' . ($p->PlanID ?? $p->Id)),
+                        'FiscalYear' => $p->FiscalYear ?? null,
+                        'ApprovedOn' => $p->ApprovedOn,
+                        'PendingItems' => $p->planLineItems->where('ExecutionStatus', 'Pending')->count(),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $plans,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch direct procurement plans', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch direct procurement plans.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get pending direct procurement plan line items for a plan
+     */
+    public function getDirectPlanItems($planId): JsonResponse
+    {
+        try {
+            $plan = ConsolidatedProcurementPlan::with(['planLineItems' => function($q){
+                $q->where('ExecutionStatus', 'Pending')
+                  ->whereHas('procurementMode', function($sub){
+                      $sub->where('Description', 'LIKE', '%Direct%');
+                  })
+                  ->with(['item']);
+            }])->where(function($q) use ($planId){
+                $q->where('PlanID', $planId)->orWhere('Id', $planId);
+            })->first();
+
+            if(!$plan){
+                return response()->json(['success'=>false,'message'=>'Plan not found'],404);
+            }
+
+            $items = $plan->planLineItems->map(function($li){
+                $item = $li->item; // may be null
+                return [
+                    'itemCode' => $item->Id ?? null,
+                    'itemName' => $item->ItemName ?? $li->Description ?? ('Item #'.$li->Id),
+                    'description' => $item->ItemDescription ?? $li->Description ?? '',
+                    'quantity' => $li->MergedQty ?? $li->Quantity ?? 0,
+                    'unitPrice' => $li->EstimatedUnitCost ?? 0,
+                ];
+            })->values();
+
+            return response()->json([
+                'success'=>true,
+                'data'=>$items,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch direct plan items', ['planId'=>$planId,'error'=>$e->getMessage()]);
+            return response()->json([
+                'success'=>false,
+                'message'=>'Failed to fetch plan items.'
+            ],500);
+        }
     }
 
     public function getItemDetails($item): JsonResponse
@@ -239,7 +325,7 @@ class PurchaseOrderController extends Controller
                     )
                     ->get();
                 
-                \Log::info('Filtered awarded tenders without contracts', ['count' => $awardedTenders->count()]);
+                Log::info('Filtered awarded tenders without contracts', ['count' => $awardedTenders->count()]);
             } catch (\Throwable $e) {
                 Log::warning('Skipping TenderAwards join for awarded tenders', ['error' => $e->getMessage()]);
                 $awardedTenders = collect();
@@ -270,7 +356,7 @@ class PurchaseOrderController extends Controller
                 )
                 ->get();
                 
-            \Log::info('Active contracts loaded for LPO', ['count' => $contracts->count()]);
+            Log::info('Active contracts loaded for LPO', ['count' => $contracts->count()]);
 
             // Optional contract prefill support: if contractId is present, pre-select reference and supplier
             $prefillContract = null;
@@ -879,7 +965,7 @@ public function getRFQItems($rfqId)
                 )
                 ->get();
                 
-            \Log::info('AJAX: Filtered awarded tenders without contracts', ['count' => $rows->count()]);
+            Log::info('AJAX: Filtered awarded tenders without contracts', ['count' => $rows->count()]);
             return response()->json(['success' => true, 'data' => $rows]);
         } catch (\Throwable $e) {
             Log::error('getAwardedTenders failed', ['error' => $e->getMessage()]);
@@ -956,7 +1042,7 @@ public function getRFQItems($rfqId)
                     ];
                 });
 
-            \Log::info('Contract tender items loaded', [
+            Log::info('Contract tender items loaded', [
                 'contractId' => $contractId,
                 'contractRef' => $contract->ContractRef,
                 'tenderID' => $contract->TenderID,
@@ -968,7 +1054,7 @@ public function getRFQItems($rfqId)
                 'availableItems' => $items // Also provide items for dropdown population
             ]);
         } catch (\Throwable $e) {
-            \Log::error('Failed to fetch Contract tender items', ['contractId' => $contractId, 'error' => $e->getMessage()]);
+            Log::error('Failed to fetch Contract tender items', ['contractId' => $contractId, 'error' => $e->getMessage()]);
             return response()->json(['items' => [], 'availableItems' => []], 200);
         }
     }

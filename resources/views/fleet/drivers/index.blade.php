@@ -43,7 +43,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $driver->FullName }}</td>
-                        <td>{{ $driver->driver->FullName ?? '—' }}</td>
+                        <td>{{ $driver->driver->EmployeeID ?? '—' }}</td>
                         <td>{{ $driver->NationalID }}</td>
                         <td>{{ $driver->Phone }}</td>
                         <td>{{ $driver->employmentType->Description ?? '—' }}</td>

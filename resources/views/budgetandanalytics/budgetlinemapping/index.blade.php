@@ -3,6 +3,13 @@
 
 @section('content')
     <div class="container my-3">
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <!-- Card for Budget Lines -->
         <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
             <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
@@ -41,7 +48,7 @@
                                     {{ $item->LineName }}
                                 </td>
                                 <td>{{ $item->department->Name ?? '-' }}</td>
-                                <td>{{ $item->glAccountType->Description ?? '-' }}</td>
+                                <td>{{ $item->GLAccountTypeID ?? '-' }}</td>
                                 <td>{{ $item->glSubType->Description ?? '-' }}</td>
                                 <td>
                                     @if($item->IsProductDriven)

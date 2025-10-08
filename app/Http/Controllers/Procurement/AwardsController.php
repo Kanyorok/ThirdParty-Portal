@@ -14,6 +14,7 @@ use App\Models\Procurement\BidResponsiveness;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AwardsController extends Controller
 {
@@ -436,13 +437,23 @@ class AwardsController extends Controller
         return \App\Models\Procurement\TenderSection::where('TenderID', $tenderId)
             ->with(['sections.criteria'])
             ->get()
+            ->filter(function ($tenderSection) {
+                if (!$tenderSection->sections) {
+                    Log::warning('TenderSection missing related Section, skipping', [
+                        'tender_section_id' => $tenderSection->Id ?? null,
+                        'tender_id' => $tenderSection->TenderID ?? null,
+                    ]);
+                    return false;
+                }
+                return true;
+            })
             ->map(function ($tenderSection) {
                 $section = $tenderSection->sections;
                 return [
                     'id' => $section->Id,
                     'name' => $section->SectionName,
                     'weight' => $tenderSection->Weight ?? 100,
-                    'criteria' => $section->criteria->map(function($criteria) {
+                    'criteria' => ($section->criteria ?? collect())->map(function($criteria) {
                         return [
                             'id' => $criteria->Id,
                             'name' => $criteria->CriteriaName,
@@ -450,7 +461,8 @@ class AwardsController extends Controller
                         ];
                     })
                 ];
-            });
+            })
+            ->values();
     }
 
     /**

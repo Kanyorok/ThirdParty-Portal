@@ -130,6 +130,16 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::get('/assignments', [FleetVehicleAssignmentController::class, 'index'])->name('fleet.assignments.index');
     Route::get('/assignments/create', [FleetVehicleAssignmentController::class, 'create'])->name('fleet.assignments.create');
     Route::post('/assignments', [FleetVehicleAssignmentController::class, 'store'])->name('fleet.assignments.store');
+    Route::get('/assignments/{Id}/edit', [FleetVehicleAssignmentController::class, 'edit'])->name('fleet.assignments.edit');
+    Route::get('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'show'])->name('fleet.assignments.show');
+    Route::put('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'update'])->name('fleet.assignments.update');
+    Route::delete('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'destroy'])->name('fleet.assignments.destroy');
+    Route::get('/assignments/get-vehicles/{Id}', [FleetVehicleAssignmentController::class, 'getVehiclesByTrip'])->name('fleet.assignments.getVehicles');
+    Route::get('/assignments/get-inspection/{Id}', [FleetVehicleAssignmentController::class, 'getVehicleInspection'])->name('fleet.assignments.getInspection');
+    Route::get('/assignments/get-driver/{Id}', [FleetVehicleAssignmentController::class, 'getVehicleDriver'])->name('fleet.assignments.getDriver');
+
+
+
 
     // ==================== Fleet Vehicle Documents ====================
     Route::get('/documents', [VehicleDocumentController::class, 'index'])->name('fleet.documents.index');

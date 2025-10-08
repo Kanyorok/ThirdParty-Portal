@@ -162,7 +162,7 @@ class StockAdjustmentService
                 'ItemID' => $item->Item,
                 'BranchID' => $adjustment->Branch,
                 'Quantity' => abs($item->AdjustmentQty),
-                'Reason' => $adjustment->Reason,
+                'Reason' => $item->Reason,
                 'Source' => $sourceCodeId,
                 'SourceID' => $adjustment->Id,
                 'Status' => Transfers::UnderReview->value,

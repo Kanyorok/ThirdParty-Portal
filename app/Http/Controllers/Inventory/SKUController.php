@@ -9,6 +9,7 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\Store;
 use App\Models\Core\Branch;
+use Illuminate\Support\Facades\Auth;
 use App\Services\Inventory\StockItemService;
 use Illuminate\Http\Request;
 
@@ -23,9 +24,12 @@ class SKUController extends Controller
 
     public function index()
     {
+     $branchId = auth()->user()->employee?->BranchId;
         $this->authorize('viewAny', StockItem::class);
 
-        $items = StockItem::with(['item', 'store', 'uom'])->get(); // Eager load relationships
+        $items = StockItem::with(['item', 'store', 'uom'])
+        ->where('Branch', $branchId)
+        ->get();
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
@@ -33,11 +37,12 @@ class SKUController extends Controller
     {
         $this->authorize('create', StockItem::class);
 
-        $branches = Branch::all();
+        $branches = auth()->user()->employee?->BranchId;
+
         $categories = ItemCategories::whereNull('ParentId')
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
-        $stores = Store::all();
+        $stores = Store::where('BranchID', $branches)->get();
 
         return view('inventory.itemmaster.sku.create', compact('branches', 'stores', 'categories'));
     }
@@ -74,11 +79,11 @@ class SKUController extends Controller
         $item = StockItem::with('item.category.parent')->findOrFail($id);
         $this->authorize('update', $item);
 
-        $branches = Branch::all();
+        $branches = auth()->user()->employee?->BranchId;
         $categories = ItemCategories::whereNull('ParentId')
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
-        $stores = Store::where('BranchID', $item->Branch)->get();
+        $stores = Store::where('BranchID', $branches)->get();
 
         $category = $item->item->category;
         $parentCategoryId = $category->parent ? $category->parent->Id : $category->Id;

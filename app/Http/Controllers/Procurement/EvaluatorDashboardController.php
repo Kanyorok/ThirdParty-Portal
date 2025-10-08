@@ -159,6 +159,11 @@ class EvaluatorDashboardController extends Controller
         $tender = Tender::with(['tenderSections.sections.criteria', 'submissions'])
             ->findOrFail($tenderId);
 
+        // Filter out inactive or orphaned tender sections (missing related Section)
+        $tender->setRelation('tenderSections', $tender->tenderSections->filter(function($ts){
+            return ($ts->IsActive ?? true) && $ts->sections; // relation name 'sections'
+        })->values());
+
         // Get evaluation readiness
         $readiness = $tender->getEvaluationReadiness();
         if (!$readiness['ready']) {
