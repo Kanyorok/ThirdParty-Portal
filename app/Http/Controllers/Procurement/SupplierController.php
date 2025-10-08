@@ -18,7 +18,12 @@ class SupplierController extends Controller
     {
         if ($request->ajax()) {
             $query = ThirdParties::suppliers()
-                ->with(['categories','types'])
+                ->with([
+                    'categories.itemCategories',
+                    'types',
+                    'legacyCategories.category',
+                    'prequalificationApplications.category'
+                ])
                 ->select([
                     'Id',
                     'ThirdPartyName',
@@ -75,7 +80,60 @@ class SupplierController extends Controller
                     return $supplier->IsPrequalified ? 'Yes' : 'No';
                 })
                 ->addColumn('category_names', function ($supplier) {
-                    return optional($supplier->categories)->pluck('CategoryName')->filter()->unique()->implode(', ');
+                    if (!$supplier->IsPrequalified) {
+                        return '<span class="text-muted">Not prequalified</span>';
+                    }
+
+                    // Collect new pivot categories first
+                    $newCats = $supplier->categories ?? collect();
+
+                    // Categories from prequalification applications (each application has a single category)
+                    $appCats = ($supplier->prequalificationApplications ?? collect())
+                        ->pluck('category')
+                        ->filter()
+                        ->map(function ($cat) {
+                            return (object) [
+                                'CategoryName' => $cat->CategoryName ?? 'Category',
+                                'itemCategories' => collect(),
+                            ];
+                        });
+
+                    // Map legacy categories to synthetic objects (only if legacy exists and not already represented)
+                    $legacyCats = ($supplier->legacyCategories ?? collect())->map(function ($map) {
+                        $label = $map->category->Name ?? $map->category->Description ?? 'Category';
+                        return (object) [
+                            'CategoryName' => $label,
+                            'itemCategories' => collect(),
+                        ];
+                    });
+
+                    // Merge ensuring uniqueness by CategoryName
+                    $merged = $newCats->map(function ($cat) {
+                        // Normalize to common shape
+                        $cat->CategoryName = $cat->CategoryName ?? 'Category';
+                        return $cat;
+                    })
+                        ->concat($appCats)
+                        ->concat($legacyCats)
+                        ->unique(fn($c) => strtolower($c->CategoryName));
+
+                    if ($merged->isEmpty()) {
+                        return '<span class="text-warning">No categories assigned</span>';
+                    }
+
+                    $html = '<dl class="mb-0">';
+                    foreach ($merged as $cat) {
+                        $catName = e($cat->CategoryName ?? 'Category');
+                        $itemCats = $cat->itemCategories ?? collect();
+                        $count = $itemCats->count();
+                        $badge = $count > 0 ? " <span class=\"badge bg-secondary ms-1\">{$count}</span>" : '';
+                        $itemList = $count > 0
+                            ? e($itemCats->pluck('Name')->filter()->unique()->implode(', '))
+                            : 'No specific items';
+                        $html .= "<dt class=\"fw-semibold\">{$catName}{$badge}</dt><dd class=\"mb-1\">{$itemList}</dd>";
+                    }
+                    $html .= '</dl>';
+                    return $html;
                 })
                 ->addColumn('TradingName', function ($supplier) {
                     return $supplier->TradingName ?? 'N/A';
@@ -104,7 +162,7 @@ class SupplierController extends Controller
                     </div>
                 ';
                 })
-                ->rawColumns(['actions'])
+                ->rawColumns(['actions','category_names'])
                 ->make(true);
         }
 
