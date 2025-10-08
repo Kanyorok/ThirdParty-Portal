@@ -14,6 +14,9 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">📑 GRN Listing – Goods Receipt Notes</h4>
+    <a href="{{ route('goods-receipt.index', ['item_type' => 'service']) }}" class="btn btn-outline-primary me-2" title="Service Receipt Notes (SRN)">
+      SRN (Services)
+    </a>
     <a href="{{ route('procurementreceipts.create') }}" class="btn btn-success">
       + New GRN
     </a>

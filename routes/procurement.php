@@ -18,6 +18,7 @@ use App\Http\Controllers\Procurement\EngagedAuditorController;
 use App\Http\Controllers\Procurement\EvaluationCriteriaController;
 use App\Http\Controllers\Procurement\EvaluatorDashboardController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;
+use App\Http\Controllers\Procurement\EnhancedGoodsReceiptController;
 use App\Http\Controllers\Procurement\InspectionController;
 use App\Http\Controllers\Procurement\MapToBudgetController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
@@ -241,6 +242,13 @@ Route::namespace('Procurement')->group(function () {
     Route::delete('/procurementreceipts/delete/{grnId}/{poId}', [GoodsReceiptController::class, 'destroy'])->name('procurementreceipts.destroy');
     Route::post('/procurementreceipts/post', [GoodsReceiptController::class, 'postReceipt'])->name('procurementreceipts.post');
 
+    // Enhanced Goods Receipt Notes (parallel, supports Service Receipt Notes)
+    Route::get('goods-receipt', [EnhancedGoodsReceiptController::class, 'index'])->name('goods-receipt.index');
+    Route::get('goods-receipt/create', [EnhancedGoodsReceiptController::class, 'create'])->name('goods-receipt.create');
+    Route::post('goods-receipt', [EnhancedGoodsReceiptController::class, 'store'])->name('goods-receipt.store');
+    Route::get('goods-receipt/{grnId}/{poId}', [EnhancedGoodsReceiptController::class, 'show'])->name('goods-receipt.show');
+    Route::get('goods-receipt/dashboard', [EnhancedGoodsReceiptController::class, 'dashboard'])->name('goods-receipt.dashboard');
+
     //Tenders
     Route::resource('initiatetender', TenderController::class);
     Route::resource('tendercategory', TenderCategoryController::class);
@@ -259,6 +267,13 @@ Route::namespace('Procurement')->group(function () {
     Route::resource('assignrole', TenderAssignRoleController::class);
     Route::resource('evaluationcriteria', EvaluationCriteriaController::class);
     Route::resource('bidevaluation', BidEvaluationController::class);
+
+    // Purchase Order JSON helpers
+    Route::get('purchaseOrder/root-categories', [PurchaseOrderController::class, 'getRootItemCategories'])->withoutMiddleware(['ajax'])->name('purchaseOrder.rootCategories');
+    Route::get('purchaseOrder/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->withoutMiddleware(['ajax'])->name('purchaseOrder.prequalifiedSuppliers');
+    Route::get('purchaseOrder/items-by-category/{categoryId}', [PurchaseOrderController::class, 'getItemsByCategoryWithDescendants'])->withoutMiddleware(['ajax'])->name('purchaseOrder.itemsByCategory');
+    Route::get('purchaseOrder/direct-plan-categories', [PurchaseOrderController::class, 'getDirectPlanCategories'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanCategories');
+    Route::get('purchaseOrder/direct-plan-items/{categoryId?}', [PurchaseOrderController::class, 'getDirectPlanItems'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanItems');
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::post('bidscores/{tenderId}/consolidate', [BidScoreConsolidationController::class, 'storeConsolidation'])

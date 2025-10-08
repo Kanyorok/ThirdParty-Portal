@@ -45,6 +45,11 @@ class PurchaseOrderController extends Controller
             'getAwardedRFQs',
             'getAwardedTenders',
             'getTenderItems',
+            // Newly added helpers for Direct LPO flow
+            'getRootItemCategories',
+            'getItemsByCategoryWithDescendants',
+            'getDirectPlanCategories',
+            'getDirectPlanItems',
         ]);
 //        $this->authorizeResource(Order::class);
     }
@@ -758,5 +763,187 @@ public function getRFQItems($rfqId)
         }
     }
 
+    /**
+     * Root Item Categories (ParentId is null)
+     */
+    public function getRootItemCategories(): JsonResponse
+    {
+        try {
+            $rows = DB::connection('sqlsrv')->table('t_ItemCategories')
+                ->whereNull('ParentId')
+                ->whereNull('DeletedOn')
+                ->orderBy('Name')
+                ->select('Id', 'Name')
+                ->get();
+            return response()->json(['success' => true, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            \Log::error('getRootItemCategories failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'data' => []], 200);
+        }
+    }
+
+    /**
+     * Prequalified suppliers for a category (open rounds only)
+     */
+    public function prequalifiedSuppliersByCategory(int $categoryId): JsonResponse
+    {
+        try {
+            $openRoundIds = DB::table('t_PrequalificationRounds')
+                ->where('Status', 'O')
+                ->pluck('Id')
+                ->all();
+
+            $rows = DB::table('t_Suppliers as s')
+                ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+                ->leftJoin('t_SupplierCategory_ItemCategory as scic', 'scic.SupplierCategoryID', '=', 's.SupplierCategoryID')
+                ->whereIn('s.RoundID', $openRoundIds ?: [-1])
+                ->when($categoryId > 0, fn($q) => $q->where('scic.ItemCategoryID', $categoryId))
+                ->whereNull('s.DeletedOn')
+                ->distinct()
+                ->orderByRaw('COALESCE(tp.TradingName, tp.ThirdPartyName)')
+                ->select([
+                    DB::raw('s.Id as SupplierId'),
+                    DB::raw('tp.Id as ThirdPartyId'),
+                    DB::raw("COALESCE(tp.TradingName, tp.ThirdPartyName, '') as SupplierName"),
+                    DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
+                ])
+                ->get();
+
+            return response()->json(['success' => true, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            \Log::error('prequalifiedSuppliersByCategory failed', ['categoryId' => $categoryId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'data' => []], 200);
+        }
+    }
+
+    /**
+     * Items for a category and all descendant categories
+     */
+    public function getItemsByCategoryWithDescendants(int $categoryId): JsonResponse
+    {
+        try {
+            // Load all categories (id,parent)
+            $cats = DB::connection('sqlsrv')->table('t_ItemCategories')->whereNull('DeletedOn')->select('Id', 'ParentId')->get();
+            $children = [];
+            foreach ($cats as $c) {
+                $p = (string)($c->ParentId ?? 'root');
+                if (!isset($children[$p])) $children[$p] = [];
+                $children[$p][] = (int)$c->Id;
+            }
+            // DFS from given id to collect all descendants including self
+            $ids = [];
+            $stack = [$categoryId];
+            $seen = [];
+            while ($stack) {
+                $cur = array_pop($stack);
+                if (isset($seen[$cur])) continue;
+                $seen[$cur] = true;
+                $ids[] = (int)$cur;
+                $key = (string)$cur;
+                if (isset($children[$key])) {
+                    foreach ($children[$key] as $ch) { $stack[] = $ch; }
+                }
+            }
+
+            $items = DB::connection('sqlsrv')->table('t_Items')
+                ->whereNull('DeletedOn')
+                ->when($categoryId > 0, fn($q) => $q->whereIn('Category', $ids))
+                ->orderBy('ItemName')
+                ->select([
+                    DB::raw('Id as itemCode'),
+                    DB::raw('ItemName as itemName'),
+                    DB::raw("COALESCE(ItemType, '') as itemType"),
+                    DB::raw('COALESCE(ItemPrice, 0) as unitPrice'),
+                ])
+                ->get();
+
+            return response()->json(['success' => true, 'items' => $items]);
+        } catch (\Throwable $e) {
+            \Log::error('getItemsByCategoryWithDescendants failed', ['categoryId' => $categoryId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'items' => []], 200);
+        }
+    }
+
+    /**
+     * Categories from approved procurement plans that are marked as Direct procurement.
+     */
+    public function getDirectPlanCategories(): JsonResponse
+    {
+        try {
+            $directId = DB::connection('sqlsrv')->table('t_CodeDetails')
+                ->where('CodeID', 'ProcurementMethod')
+                ->where('Value', 'D')
+                ->value('ID');
+
+            if (!$directId) {
+                return response()->json(['success' => true, 'data' => []]);
+            }
+
+            $rows = DB::connection('sqlsrv')->table('t_PlanLineItem as li')
+                ->join('t_ConsolidatedProcurementPlan as cp', 'cp.PlanID', '=', 'li.PlanID')
+                ->leftJoin('t_ItemCategories as cat', 'cat.Id', '=', 'li.CategoryID')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                ->leftJoin('t_ItemCategories as itcat', 'itcat.Id', '=', 'it.Category')
+                ->where('li.ProcurementMethod', $directId)
+                ->whereNull('li.DeletedOn')
+                ->whereNull('cp.DeletedOn')
+                ->where('cp.Status', 'Ap') // Approved plans
+                ->selectRaw('DISTINCT COALESCE(cat.Id, itcat.Id) as Id, COALESCE(cat.Name, itcat.Name) as Name')
+                ->orderBy('Name')
+                ->get();
+
+            return response()->json(['success' => true, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            \Log::error('getDirectPlanCategories failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'data' => []], 200);
+        }
+    }
+
+    /**
+     * Items from approved procurement plans under Direct procurement method.
+     */
+    public function getDirectPlanItems(?int $categoryId = null): JsonResponse
+    {
+        try {
+            $directId = DB::connection('sqlsrv')->table('t_CodeDetails')
+                ->where('CodeID', 'ProcurementMethod')
+                ->where('Value', 'D')
+                ->value('ID');
+
+            if (!$directId) {
+                return response()->json(['success' => true, 'items' => []]);
+            }
+
+            $q = DB::connection('sqlsrv')->table('t_PlanLineItem as li')
+                ->join('t_ConsolidatedProcurementPlan as cp', 'cp.PlanID', '=', 'li.PlanID')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                ->where('li.ProcurementMethod', $directId)
+                ->whereNull('li.DeletedOn')
+                ->whereNull('cp.DeletedOn')
+                ->where('cp.Status', 'Ap');
+
+            if ($categoryId && $categoryId > 0) {
+                $q->where(function ($qq) use ($categoryId) {
+                    $qq->where('li.CategoryID', $categoryId)
+                       ->orWhere('it.Category', $categoryId);
+                });
+            }
+
+            $items = $q->select([
+                    DB::raw('COALESCE(it.Id, li.ItemID) as itemCode'),
+                    DB::raw("COALESCE(it.ItemName, CONCAT('Planned Item #', li.ItemID)) as itemName"),
+                    DB::raw("COALESCE(it.ItemType, '') as itemType"),
+                    DB::raw('COALESCE(li.MergedQty, 1) as quantity'),
+                    DB::raw('COALESCE(it.ItemPrice, 0) as unitPrice'),
+                ])
+                ->orderBy('itemName')
+                ->get();
+
+            return response()->json(['success' => true, 'items' => $items]);
+        } catch (\Throwable $e) {
+            \Log::error('getDirectPlanItems failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'items' => []], 200);
+        }
+    }
 
 }
