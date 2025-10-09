@@ -12,7 +12,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('bancassurance.medicalfunds.contributions.store',$medical_fund->ID) }}" method="POST">
+            <form action="{{ route('bancassurance.medicalfunds.contributions.store', ['medical_fund' => $medical_fund->ID]) }}" method="POST">
                 @csrf
                     <div class="row g-3">
                     <div class="col-md-3">
@@ -53,7 +53,7 @@
 
                 <div class="mt-3 d-flex gap-2">
                     <button class="btn btn-primary">Save</button>
-                    <a href="{{ route('bancassurance.medicalfunds.contributions.index',$medical_fund->ID) }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>

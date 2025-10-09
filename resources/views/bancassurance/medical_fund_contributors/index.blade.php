@@ -5,8 +5,8 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">Contributors — {{ $medical_fund->FundName }}</h4>
         <div class="d-flex gap-2">
-            <a href="{{ route('bancassurance.medicalfunds.show', $medical_fund->ID) }}" class="btn btn-outline-secondary">Back to Fund</a>
-            <a href="{{ route('bancassurance.medicalfunds.contributors.create', $medical_fund->ID) }}" class="btn btn-primary">New Contributor</a>
+            <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back to Fund</a>
+            <a href="{{ route('bancassurance.medicalfunds.contributors.create', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-primary">New Contributor</a>
         </div>
     </div>
 
@@ -30,7 +30,7 @@
                 </div>
                 <div class="col-md-3 d-flex align-items-end gap-2">
                     <button class="btn btn-primary">Apply</button>
-                    <a href="{{ route('bancassurance.medicalfunds.contributors.index', $medical_fund->ID) }}" class="btn btn-outline-secondary">Reset</a>
+                    <a href="{{ route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>
         </div>

@@ -5,8 +5,8 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Packages — {{ $medical_fund->FundName }}</h4>
     <div class="d-flex gap-2">
-      <a href="{{ route('bancassurance.medicalfunds.show', $medical_fund->ID) }}" class="btn btn-outline-secondary">Back to Fund</a>
-      <a href="{{ route('bancassurance.medicalfunds.packages.create',$medical_fund->ID) }}" class="btn btn-primary">New Package</a>
+      <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back to Fund</a>
+      <a href="{{ route('bancassurance.medicalfunds.packages.create', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-primary">New Package</a>
     </div>
   </div>
   @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif

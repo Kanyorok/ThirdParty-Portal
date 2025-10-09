@@ -263,47 +263,53 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
 });
 
 Route::middleware(['web','auth'])
-    ->prefix('insurance/bancassurance')
+    ->prefix('insurance/bancassurance')   // keep your current base URL
     ->as('bancassurance.')
     ->group(function () {
 
-        // Medical Funds (no hyphen → clean names)
+        // Medical Funds
         Route::resource('medicalfunds', MedicalFundController::class)
             ->parameters(['medicalfunds' => 'medical_fund']);
 
-        // Nested: Beneficiaries
+        // Beneficiaries (nested under fund) — shallow member routes:
+        // index/create/store need {medical_fund}; show/edit/update/destroy use shallow names.
         Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
             ->shallow()
-            ->parameters(['medicalfunds' => 'medical_fund','beneficiaries' => 'beneficiary']);
+            ->parameters(['medicalfunds' => 'medical_fund', 'beneficiaries' => 'beneficiary']);
 
-        // Nested: Contributions
+        // Contributions (nested under fund) — shallow for member routes
         Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
             ->shallow()
-            ->parameters(['medicalfunds' => 'medical_fund','contributions' => 'contribution']);
+            ->parameters(['medicalfunds' => 'medical_fund', 'contributions' => 'contribution']);
 
-        // Nested: Disbursements
+        // Disbursements (nested under fund) — shallow for member routes
         Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
             ->shallow()
-            ->parameters(['medicalfunds' => 'medical_fund','disbursements' => 'disbursement']);
+            ->parameters(['medicalfunds' => 'medical_fund', 'disbursements' => 'disbursement']);
 
-        // ✅ Packages (must be inside the group to get bancassurance.* names)
+        // Packages (nested under fund) — shallow for member routes
         Route::resource('medicalfunds.packages', MedicalFundPackageController::class)
             ->shallow()
-            ->parameters(['medicalfunds'=>'medical_fund','packages'=>'package']);
+            ->parameters(['medicalfunds' => 'medical_fund', 'packages' => 'package']);
 
-        // Contributors under a fund
+        // Contributors (nested under fund) — shallow for member routes
         Route::resource('medicalfunds.contributors', MedicalFundContributorController::class)
             ->shallow()
-            ->parameters(['medicalfunds'=>'medical_fund','contributors'=>'contributor']);
+            ->parameters(['medicalfunds' => 'medical_fund', 'contributors' => 'contributor']);
 
-        // Quick add beneficiary from contributor show
+        // Quick add beneficiary from contributor show page
         Route::post('contributors/{contributor}/beneficiaries', [ContributorBeneficiaryController::class, 'store'])
             ->name('contributors.beneficiaries.store');
-            Route::get('medicalfunds/{medical_fund}/contributors/{contributor}/coverage-remaining', [\App\Http\Controllers\Insurance\MedicalFundDisbursementController::class,'remainingLimit'])
-    ->name('coverage.remaining'); // GET params: beneficiary_id, coverage_id, on_date (Y-m-d optional)
-   
-        Route::get(
-            'medicalfunds/{medical_fund}/contributors/{contributor}/options',
+
+        // Coverage remaining (AJAX): only {contributor} in the URL (matches your JS)
+        // Controller signature: remainingLimit(Request $request, MedicalFundContributor $contributor)
+        Route::get('contributors/{contributor}/coverage-remaining',
+            [MedicalFundDisbursementController::class, 'remainingLimit']
+        )->name('coverage.remaining');
+
+        // Contributor options (AJAX): beneficiaries + coverages for a contributor in a given fund
+        // Controller signature: options(MedicalFund $medical_fund, MedicalFundContributor $contributor)
+        Route::get('medicalfunds/{medical_fund}/contributors/{contributor}/options',
             [MedicalFundDisbursementController::class, 'options']
         )->name('medicalfunds.contributors.options');
     });

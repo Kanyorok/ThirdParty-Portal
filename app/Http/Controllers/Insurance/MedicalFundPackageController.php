@@ -63,7 +63,7 @@ public function store(Request $request, MedicalFund $medical_fund)
 
     // 4) redirect AFTER syncing
     return redirect()
-        ->route('bancassurance.medicalfunds.packages.index', $medical_fund->ID)
+        ->route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $medical_fund->ID])
         ->with('success','Package created.');
 }
 
@@ -114,7 +114,7 @@ public function update(Request $request, MedicalFundPackage $package)
     $package->coverages()->sync($sync);   // ✅ update pivot
 
     return redirect()
-        ->route('bancassurance.medicalfunds.packages.index', $package->FundID)
+        ->route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $package->FundID])
         ->with('success','Package updated.');
 }
 
@@ -123,7 +123,7 @@ public function update(Request $request, MedicalFundPackage $package)
         $fundId = $package->FundID;
         $package->delete();
         return redirect()
-            ->route('bancassurance.medicalfunds.packages.index', $fundId)
+            ->route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $fundId])
             ->with('success','Package archived.');
     }
 }

@@ -10,7 +10,7 @@
 
   <div class="card">
     <div class="card-body">
-      <form action="{{ route('bancassurance.medicalfunds.disbursements.store', $medical_fund->ID) }}" method="POST" id="disbForm">
+      <form action="{{ route('bancassurance.medicalfunds.disbursements.store', ['medical_fund' => $medical_fund->ID]) }}" method="POST" id="disbForm">
         @csrf
 
         <div class="row g-3">
@@ -112,7 +112,7 @@
 
         <div class="mt-3 d-flex gap-2">
           <button class="btn btn-primary">Save</button>
-          <a href="{{ route('bancassurance.medicalfunds.disbursements.index', $medical_fund->ID) }}" class="btn btn-outline-secondary">Cancel</a>
+          <a href="{{ route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
       </form>
     </div>
@@ -140,26 +140,43 @@
   async function loadOptionsForContributor(cid){
     if(!$benef || !$cov) return;
 
-    // reset lists
-    $benef.innerHTML = '<option value="">-- select beneficiary --</option>';
-    $cov.innerHTML   = '<option value="">-- select coverage --</option>';
-    if(!cid){ setDisplay(); return; }
+    if(!cid){
+      $benef.innerHTML = '<option value="">-- select beneficiary --</option>';
+      $cov.innerHTML   = '<option value="">-- select coverage --</option>';
+      setDisplay();
+      return;
+    }
+
+    // Preserve existing options as a fallback in case the request fails
+    const prevBenefHTML = $benef.innerHTML;
+    const prevCovHTML   = $cov.innerHTML;
+
+    // Show lightweight loading state without destroying fallback yet
+    $benef.innerHTML = '<option value="">Loading beneficiaries...</option>';
+    $cov.innerHTML   = '<option value="">Loading coverages...</option>';
 
     const url = `{{ route('bancassurance.medicalfunds.contributors.options', ['medical_fund' => $medical_fund->ID, 'contributor' => ':cid']) }}`
                   .replace(':cid', cid);
     try{
       const res = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
       const json = await res.json();
-      if(!json.ok){ setDisplay(null, 'Could not load contributor options.'); return; }
+      if(!json.ok){
+        // Restore previous state if backend signals failure
+        $benef.innerHTML = prevBenefHTML;
+        $cov.innerHTML   = prevCovHTML;
+        setDisplay(null, 'Could not load contributor options.');
+        return;
+      }
 
-      // beneficiaries
+      // Reset then refill from payload
+      $benef.innerHTML = '<option value="">-- select beneficiary --</option>';
       (json.beneficiaries || []).forEach(b => {
         const o = document.createElement('option');
         o.value = b.ID; o.textContent = b.FullName;
         $benef.appendChild(o);
       });
 
-      // coverages with pivot hints as data-*
+      $cov.innerHTML = '<option value="">-- select coverage --</option>';
       (json.coverages || []).forEach(cv => {
         const o = document.createElement('option');
         o.value = cv.ID; o.textContent = cv.Name;
@@ -172,6 +189,9 @@
 
       setDisplay(); // clear figures until user picks a coverage
     }catch(e){
+      // Restore previous options on network/parse errors
+      $benef.innerHTML = prevBenefHTML;
+      $cov.innerHTML   = prevCovHTML;
       setDisplay(null, 'Failed to load options.');
     }
   }
@@ -206,7 +226,8 @@
 
     if(!cid || !cov){ setDisplay(); return; }
 
-    const url = `{{ route('bancassurance.coverage.remaining', ':cid') }}`
+  // coverage.remaining route only requires {contributor}; do not pass extra params
+  const url = `{{ route('bancassurance.coverage.remaining', ['contributor' => ':cid']) }}`
       .replace(':cid', cid)
       + `?coverage_id=${encodeURIComponent(cov)}`
       + (bid ? `&beneficiary_id=${encodeURIComponent(bid)}` : '')

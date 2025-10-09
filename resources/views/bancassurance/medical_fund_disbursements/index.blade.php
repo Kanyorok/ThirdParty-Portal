@@ -6,7 +6,7 @@
         <h4 class="mb-0">Disbursements — {{ $medical_fund->FundName }}</h4>
         <div class="d-flex gap-2">
             <a href="{{ route('bancassurance.medicalfunds.disbursements.create',$medical_fund->ID) }}" class="btn btn-primary">New Disbursement</a>
-            <a href="{{ route('bancassurance.medicalfunds.edit', $medical_fund->ID) }}" class="btn btn-outline-secondary">Back to Fund</a>
+            <a href="{{ route('bancassurance.medicalfunds.edit', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back to Fund</a>
         </div>
     </div>
 

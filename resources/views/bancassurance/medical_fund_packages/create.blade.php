@@ -12,7 +12,7 @@
   @endif
 
   <div class="card"><div class="card-body">
-    <form action="{{ route('bancassurance.medicalfunds.packages.store', $medical_fund->ID) }}" method="POST" id="pkgForm">
+    <form action="{{ route('bancassurance.medicalfunds.packages.store', ['medical_fund' => $medical_fund->ID]) }}" method="POST" id="pkgForm">
       @csrf
 
       <div class="row g-3">
@@ -99,7 +99,7 @@
 
       <div class="mt-3 d-flex gap-2">
         <button class="btn btn-primary">Save</button>
-        <a href="{{ route('bancassurance.medicalfunds.packages.index', $medical_fund->ID) }}" class="btn btn-outline-secondary">Cancel</a>
+        <a href="{{ route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Cancel</a>
       </div>
     </form>
   </div></div>

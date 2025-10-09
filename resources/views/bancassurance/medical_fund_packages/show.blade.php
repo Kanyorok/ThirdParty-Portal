@@ -6,7 +6,7 @@
     <h4 class="mb-0">Package: {{ $package->Name }}</h4>
     <div class="d-flex gap-2">
       @if($package->fund)
-        <a href="{{ route('bancassurance.medicalfunds.show', $package->FundID) }}" class="btn btn-outline-secondary">Back to Fund</a>
+        <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $package->FundID]) }}" class="btn btn-outline-secondary">Back to Fund</a>
       @endif
       <a href="{{ route('bancassurance.packages.edit', $package->ID) }}" class="btn btn-primary">Edit Package</a>
       <a href="{{ route('bancassurance.packages.show', $package->ID) }}" class="btn btn-sm btn-outline-secondary">View</a>

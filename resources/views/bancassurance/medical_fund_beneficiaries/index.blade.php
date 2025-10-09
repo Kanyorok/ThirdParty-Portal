@@ -5,8 +5,8 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">Beneficiaries — {{ $medical_fund->FundName }}</h4>
         <div class="d-flex gap-2">
-            <a href="{{ route('bancassurance.medicalfunds.beneficiaries.create', $medical_fund->ID) }}" class="btn btn-primary">Add Beneficiary</a>
-            <a href="{{ route('bancassurance.medicalfunds.edit', $medical_fund->ID) }}" class="btn btn-outline-secondary">Back to Fund</a>
+            <a href="{{ route('bancassurance.medicalfunds.beneficiaries.create', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-primary">Add Beneficiary</a>
+            <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $medicalfund->ID]) }}" class="btn btn-outline-secondary">Back to Fund</a>
         </div>
     </div>
 

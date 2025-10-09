@@ -105,7 +105,7 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
     \App\Models\Insurance\MedicalFundDisbursement::create($data);
 
     return redirect()
-        ->route('bancassurance.medicalfunds.disbursements.index', $medical_fund->ID)
+        ->route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->ID])
         ->with('success','Disbursement recorded.')
         ->with('filter_contributor', $contributor->ID);
 }
@@ -130,7 +130,7 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
         $disbursement->update($data);
 
         return redirect()
-            ->route('bancassurance.medicalfunds.disbursements.index', $disbursement->FundID)
+            ->route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $disbursement->FundID])
             ->with('success','Disbursement updated.');
     }
 
@@ -140,7 +140,7 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
         $disbursement->delete();
 
         return redirect()
-            ->route('bancassurance.medicalfunds.disbursements.index', $fundId)
+            ->route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $fundId])
             ->with('success','Disbursement deleted.');
     }
 
@@ -164,25 +164,22 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
     $cov = $allowed->get($coverageId);
     $pivot = $cov->pivot; // AnnualLimit, PerVisitLimit, WaitingPeriodDays, Scope
 
-    $subscribedOn = optional(
-        $contributor->packages()->where('t_MedicalFundPackages.ID',$cov->ID)->first()
-    )->pivot?->SubscribedOn;
+    // find the specific contributor-package that contains this coverage
+    $pkgWithCoverage = $contributor->packages->first(function($p) use ($coverageId){
+        return $p->coverages->firstWhere('ID', $coverageId);
+    });
+    $subscribedOn = optional($pkgWithCoverage?->pivot)->SubscribedOn ?? $contributor->CreatedOn;
 
     // waiting period check
     $waitingOk = true;
     $waitingMsg = null;
     if ($pivot->WaitingPeriodDays) {
-        $wpEnd = \Carbon\Carbon::parse($subscribedOn ?? $contributor->CreatedOn)->addDays($pivot->WaitingPeriodDays);
+        $wpEnd = \Carbon\Carbon::parse($subscribedOn)->addDays($pivot->WaitingPeriodDays);
         if ($onDate->lt($wpEnd)) {
             $waitingOk = false;
             $waitingMsg = 'Waiting period not satisfied until '.$wpEnd->toDateString().'.';
         }
     }
-$pkgWithCoverage = $contributor->packages->first(function($p) use ($coverageId){
-    return $p->coverages->firstWhere('ID', $coverageId);
-});
-
-$subscribedOn = optional($pkgWithCoverage?->pivot)->SubscribedOn ?? $contributor->CreatedOn;
     // Calculate used YTD
     $yearStart = $onDate->copy()->startOfYear();
     $yearEnd   = $onDate->copy()->endOfYear();

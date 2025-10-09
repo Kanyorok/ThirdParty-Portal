@@ -54,10 +54,30 @@ class MedicalFundContributorController extends Controller
             'EffectiveTo'   => ['nullable','date','after_or_equal:EffectiveFrom'],
             'Status'        => ['nullable','in:Active,Suspended,Closed'],
             'PartyID'       => ['nullable','integer'],
+            'package_ids'   => ['nullable','array'],
+            'package_ids.*' => ['integer'],
         ]);
         $data['FundID'] = $medical_fund->ID;
 
         $contributor = MedicalFundContributor::create($data);
+
+        // Sync selected packages (including compulsory hidden inputs)
+        $ids = collect($request->input('package_ids', []))
+            ->map(fn($v)=>(int)$v)
+            ->unique()
+            ->values();
+
+        if ($ids->count()) {
+            // Choose a primary: keep single selection as primary; multiple -> pick first
+            $primaryId = $ids->first();
+            $today = \Carbon\Carbon::now()->toDateString();
+
+            $sync = $ids->mapWithKeys(function($pid) use ($primaryId, $today){
+                return [ $pid => ['IsActive'=>1,'SubscribedOn'=>$today,'IsPrimary'=> $pid === $primaryId ? 1 : 0] ];
+            })->all();
+
+            $contributor->packages()->sync($sync);
+        }
 
         return redirect()
             ->route('bancassurance.contributors.show', $contributor->ID)
@@ -101,8 +121,10 @@ public function show(MedicalFundContributor $contributor)
 
 public function edit($id)
 {
-    $contributor = MedicalFundContributor::findOrFail($id);
-    return view('insurance.medicalfundcontributors.edit', compact('contributor'));
+    $contributor   = MedicalFundContributor::with('fund')->findOrFail($id);
+    $medical_fund  = $contributor->fund ?: MedicalFund::find($contributor->FundID);
+
+    return view('bancassurance.medical_fund_contributors.edit', compact('contributor','medical_fund'));
 }
     public function update(Request $request, MedicalFundContributor $contributor)
     {
@@ -115,9 +137,47 @@ public function edit($id)
             'EffectiveTo'   => ['nullable','date','after_or_equal:EffectiveFrom'],
             'Status'        => ['required','in:Active,Suspended,Closed'],
             'PartyID'       => ['nullable','integer'],
+            'package_ids'   => ['nullable','array'],
+            'package_ids.*' => ['integer'],
         ]);
 
         $contributor->update($data);
+
+        // Sync selected packages
+        $ids = collect($request->input('package_ids', []))
+            ->map(fn($v)=>(int)$v)
+            ->unique()
+            ->values();
+
+        if ($ids->count()) {
+            // Preserve existing primary if still selected; otherwise pick first
+            $existingPrimary = optional(
+                $contributor->packages()->wherePivot('IsPrimary',1)->first()
+            )->ID;
+
+            $primaryId = $existingPrimary && $ids->contains($existingPrimary)
+                ? $existingPrimary
+                : $ids->first();
+
+            // Preserve existing SubscribedOn where present; default to today for new links
+            $today = \Carbon\Carbon::now()->toDateString();
+            $existing = $contributor->packages()
+                ->whereIn('t_MedicalFundPackages.ID', $ids)
+                ->get()
+                ->mapWithKeys(function($p){
+                    return [ (int)$p->ID => optional($p->pivot)->SubscribedOn ];
+                });
+
+            $sync = $ids->mapWithKeys(function($pid) use ($primaryId, $today, $existing){
+                $subOn = $existing->get((int)$pid) ?: $today;
+                return [ $pid => ['IsActive'=>1,'SubscribedOn'=>$subOn,'IsPrimary'=> $pid === $primaryId ? 1 : 0] ];
+            })->all();
+
+            $contributor->packages()->sync($sync);
+        } else {
+            // If nothing selected, detach all
+            $contributor->packages()->detach();
+        }
 
         return redirect()
             ->route('bancassurance.contributors.show', $contributor->ID)
@@ -130,7 +190,7 @@ public function edit($id)
         $contributor->delete();
 
         return redirect()
-            ->route('bancassurance.medicalfunds.contributors.index', $fundId)
+            ->route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $fundId])
             ->with('success','Contributor archived.');
     }
 }

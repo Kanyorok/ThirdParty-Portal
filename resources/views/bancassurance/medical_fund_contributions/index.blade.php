@@ -13,18 +13,18 @@
           Filtered: {{ $contributor->FullName }}
         </span>
         <a class="btn btn-primary"
-           href="{{ route('bancassurance.medicalfunds.contributions.create', $medical_fund->ID) }}?contributor={{ $contributor->ID }}">
+           href="{{ route('bancassurance.medicalfunds.contributions.create', ['medical_fund' => $medical_fund->ID]) }}?contributor={{ $contributor->ID }}">
           New Contribution
         </a>
       @else
         <a class="btn btn-primary"
-           href="{{ route('bancassurance.medicalfunds.contributions.create', $medical_fund->ID) }}">
+           href="{{ route('bancassurance.medicalfunds.contributions.create', ['medical_fund' => $medical_fund->ID]) }}">
           New Contribution
         </a>
       @endif
 
       <a class="btn btn-outline-secondary"
-         href="{{ route('bancassurance.medicalfunds.show',$medical_fund->ID) }}">
+         href="{{ route('bancassurance.medicalfunds.show',['medical_fund' => $medical_fund->ID]) }}">
         Back to Fund
       </a>
     </div>
@@ -35,7 +35,7 @@
   {{-- Filters --}}
   <div class="card mb-3">
     <div class="card-body">
-      <form method="GET" action="{{ route('bancassurance.medicalfunds.contributions.index', $medical_fund->ID) }}" class="row g-2">
+      <form method="GET" action="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->ID]) }}" class="row g-2">
         <div class="col-md-3">
           <label class="form-label">From</label>
           <input type="date" name="date_from" class="form-control"

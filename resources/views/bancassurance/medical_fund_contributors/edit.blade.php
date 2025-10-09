@@ -113,7 +113,7 @@
 
           <div class="mt-3 d-flex gap-2">
             <button class="btn btn-primary">Update</button>
-            <a href="{{ route('bancassurance.medicalfunds.contributors.index', $medical_fund->ID) }}" class="btn btn-outline-secondary">Back</a>
+            <a href="{{ route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back</a>
           </div>
 
         </form>

@@ -80,7 +80,6 @@
         </div>
     </div>
 
-    <!-- CHIPS (active filters summary) -->
     @php
       $chips = [];
       foreach (['search'=>'Q','provider_id'=>'Provider','coverage_type'=>'Coverage','active'=>'Active','min_limit'=>'Min','max_limit'=>'Max','from'=>'From','to'=>'To','sort'=>'Sort'] as $k=>$label){
@@ -165,10 +164,17 @@
                                 <td>{{ optional($f->CreatedOn)->format('Y-m-d') }}</td>
                                 <td class="text-end">
                                     <div class="btn-group">
-                                        <a href="{{ route('bancassurance.medicalfunds.show', $f->ID) }}" class="btn btn-sm btn-outline-info">Open</a>
-                                        <a href="{{ route('bancassurance.medicalfunds.edit', $f->ID) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                        <form action="{{ route('bancassurance.medicalfunds.destroy', $f->ID) }}" method="POST" onsubmit="return confirm('Archive this fund?');">
-                                            @csrf @method('DELETE')
+                                        <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $f->ID]) }}"
+                                           class="btn btn-sm btn-outline-info">Open</a>
+
+                                        <a href="{{ route('bancassurance.medicalfunds.edit', ['medical_fund' => $f->ID]) }}"
+                                           class="btn btn-sm btn-outline-primary">Edit</a>
+
+                                        <form action="{{ route('bancassurance.medicalfunds.destroy', ['medical_fund' => $f->ID]) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Archive this fund?');">
+                                            @csrf
+                                            @method('DELETE')
                                             <button class="btn btn-sm btn-outline-danger">Archive</button>
                                         </form>
                                     </div>
@@ -182,6 +188,7 @@
                 <div class="p-4 text-center text-muted">No medical funds found. Adjust filters or create a new one.</div>
             @endif
         </div>
+
         @if($funds->hasPages())
             <div class="card-footer">
                 {{ $funds->links() }}
