@@ -36,7 +36,7 @@ public function rules(): array
     }
 
     return [
-        'ItemID' => ['required', 'integer', 'exists:t_Items,Id'],
+        'ItemID' => ['required', 'integer', 'exists:t_StockItems,Id'],
         'UOM' => ['required', 'integer', 'exists:t_UOM,Id'],
         'Quantity' => ['required', 'numeric', 'min:0'],
         'SKUID' => ['nullable', 'integer', 'exists:t_StockItems,Id'],

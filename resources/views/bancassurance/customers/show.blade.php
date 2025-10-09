@@ -13,11 +13,12 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">Full Name</label>
-                    <input type="text" class="form-control bg-light" value="{{ $customer->FullName ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $customer->thirdParty->ThirdPartyName ?? '-' }}" readonly>
                 </div>
+                
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">Referred By</label>
-                    <input type="text" class="form-control bg-light" value="{{ $customer->referrals->ClientName ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $customer->referrals->referredByEmployee->Name ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -26,7 +27,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">KRA PIN</label>
-                    <input type="text" class="form-control bg-light" value="{{ $customer->KRAPIN ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $customer->ThirdParty->TaxPIN ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -49,16 +50,16 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">Phone</label>
-                    <input type="text" class="form-control bg-light" value="{{ $customer->PhoneNumber ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $customer->ThirdParty->Phone ?? '-' }}" readonly>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold text-muted">Email</label>
-                    <input type="text" class="form-control bg-light" value="{{ $customer->Email ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ $customer->ThirdParty->Email ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-12">
                     <label class="form-label fw-semibold text-muted">Address</label>
-                    <textarea class="form-control bg-light" rows="2" readonly>{{ $customer->Address ?? '-' }}</textarea>
+                    <textarea class="form-control bg-light" rows="2" readonly>{{ $customer->ThirdParty->PhysicalAddress ?? '-' }}</textarea>
                 </div>
 
                 {{-- Footer --}}

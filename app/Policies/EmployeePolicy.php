@@ -13,7 +13,7 @@ class EmployeePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(PermissionEnum::EmployeesView);
+        return $user->can(PermissionEnum::EmployeesView->value);
     }
 
     /**
@@ -21,7 +21,7 @@ class EmployeePolicy
      */
     public function view(User $user, Employee $employee): bool
     {
-        return $user->can(PermissionEnum::EmployeesView);
+        return $user->can(PermissionEnum::EmployeesView->value);
     }
 
     /**
@@ -29,7 +29,7 @@ class EmployeePolicy
      */
     public function create(User $user): bool
     {
-        return $user->can(PermissionEnum::EmployeesCreate);
+        return $user->can(PermissionEnum::EmployeesCreate->value);
     }
 
     /**
@@ -37,7 +37,7 @@ class EmployeePolicy
      */
     public function update(User $user, Employee $employee): bool
     {
-        return $user->can(PermissionEnum::EmployeesUpdate);
+        return $user->can(PermissionEnum::EmployeesUpdate->value);
     }
 
     /**
@@ -45,7 +45,7 @@ class EmployeePolicy
      */
     public function delete(User $user, Employee $employee): bool
     {
-        return $user->can(PermissionEnum::EmployeesDelete);
+        return $user->can(PermissionEnum::EmployeesDelete->value);
     }
 
     /**

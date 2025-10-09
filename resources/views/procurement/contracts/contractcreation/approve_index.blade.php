@@ -137,12 +137,12 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($contract->winningSupplier)
+                                                @if($contract->winningSupplier && $contract->winningSupplier->thirdParty)
                                                     <div>
-                                                        <strong>{{ $contract->winningSupplier->SupplierName }}</strong>
-                                                        @if($contract->winningSupplier->ContactPerson)
+                                                        <strong>{{ $contract->winningSupplier->thirdParty->TradingName ?? $contract->winningSupplier->thirdParty->Name }}</strong>
+                                                        @if($contract->winningSupplier->thirdParty->ContactPerson)
                                                             <div class="text-muted small">
-                                                                {{ $contract->winningSupplier->ContactPerson }}
+                                                                {{ $contract->winningSupplier->thirdParty->ContactPerson }}
                                                             </div>
                                                         @endif
                                                     </div>
@@ -186,19 +186,24 @@
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     
-                                                    @if($contract->ContractStatus === 'Draft Created')
+                                                    @if($contract->ContractStatus === 'Under Review')
                                                         <button type="button" class="btn btn-sm btn-success" 
-                                                                onclick="approveContract({{ $contract->Id }})" title="Approve">
-                                                            <i class="fas fa-check"></i>
+                                                                onclick="approveContract({{ $contract->Id }})" title="Approve Contract">
+                                                            <i class="fas fa-check"></i> Approve
                                                         </button>
-                                                    @elseif($contract->ContractStatus === 'Under Review')
-                                                        <button type="button" class="btn btn-sm btn-primary" 
-                                                                onclick="reviewContract({{ $contract->Id }})" title="Review">
-                                                            <i class="fas fa-search"></i>
+                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                                onclick="rejectContract({{ $contract->Id }})" title="Reject Contract">
+                                                            <i class="fas fa-times"></i> Reject
+                                                        </button>
+                                                    @elseif($contract->ContractStatus === 'Draft Created')
+                                                        <span class="badge bg-secondary">Awaiting Review</span>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                onclick="reviewContract({{ $contract->Id }})" title="View Details">
+                                                            <i class="fas fa-eye"></i> View
                                                         </button>
                                                     @elseif($contract->ContractStatus === 'Approved')
-                                                        <span class="btn btn-sm btn-outline-success" title="Approved">
-                                                            <i class="fas fa-check-circle"></i>
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check-circle"></i> Approved
                                                         </span>
                                                     @endif
                                                 </div>
@@ -258,11 +263,49 @@
         </div>
     </div>
 
+    <!-- Rejection Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="rejectForm" method="POST">
+                    @csrf
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">Reject Contract</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Warning:</strong> This will return the contract to draft status for revision.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                            <textarea name="rejection_reason" class="form-control" rows="4" required
+                                      placeholder="Please explain why this contract is being rejected and what changes are needed..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Reject Contract
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         function approveContract(contractId) {
             const form = document.getElementById('approveForm');
             form.action = `{{ url('/procurement/contracts') }}/${contractId}/approve`;
             new bootstrap.Modal(document.getElementById('approveModal')).show();
+        }
+        
+        function rejectContract(contractId) {
+            const form = document.getElementById('rejectForm');
+            form.action = `{{ url('/procurement/contracts') }}/${contractId}/reject`;
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
         
         function reviewContract(contractId) {

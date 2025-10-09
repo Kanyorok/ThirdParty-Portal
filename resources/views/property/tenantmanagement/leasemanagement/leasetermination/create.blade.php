@@ -19,7 +19,7 @@
                                 <option value="">-- Select Lease --</option>
                                 @foreach ($newtenants as $newtenant)
                                     <option value="{{ $newtenant->Id }}">
-                                        LSno: {{ $newtenant->LeaseNumber }} — Name: {{ $newtenant->tenant->thirdParty->TradingName }}
+                                        LSno: {{ $newtenant->LeaseNumber }} — Name: {{ $newtenant->tenant->thirdParty->ThirdPartyName }}
                                     </option>
                                 @endforeach
                             </select>

@@ -108,13 +108,6 @@
                        value="{{ old('Coolant', $inspection->Coolant) }}" required>
             </div>
 
-            <div class="col-md-4">
-                <label class="form-label">Speedometer</label>
-                <input type="number" name="Speedometer" class="form-control" 
-                       value="{{ old('Speedometer', $inspection->Speedometer) }}" required>
-            </div>
-        </div>
-
         <!-- Safety Equipment -->
         <div class="row mt-4">
             <div class="col-md-12">

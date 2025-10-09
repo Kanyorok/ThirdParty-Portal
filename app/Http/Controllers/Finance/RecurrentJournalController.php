@@ -37,7 +37,7 @@ class RecurrentJournalController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
         try {
-            $gls = FinanceGLAccounts::select('Id', 'GLName')->get();
+            $gls = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
             $branches = Branch::select('Id', 'Name')->get();
             $departments = Department::select('Id', 'Name')->get();
             $paymentFrequency = CodeDetail::select('CodeID', 'Description', 'Value')->where('CodeID', 'JournalPaymentFrequency')->get();
@@ -158,7 +158,7 @@ class RecurrentJournalController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
         $journalEntry = FinanceJournalEntry::with('journalLines','recurringJournals')->findOrFail($id);
-        $gls         = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $gls         = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
         $branches    = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
         $paymentFrequency = CodeDetail::select('CodeID', 'Description', 'Value')->where('CodeID', 'JournalPaymentFrequency')->get();

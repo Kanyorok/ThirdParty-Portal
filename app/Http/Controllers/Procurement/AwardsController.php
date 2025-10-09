@@ -14,6 +14,7 @@ use App\Models\Procurement\BidResponsiveness;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AwardsController extends Controller
 {
@@ -29,17 +30,27 @@ class AwardsController extends Controller
         $tenderAwards = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->get()
             ->map(function ($award) {
+                // Use actual AwardStatus from database
+                $status = $award->AwardStatus;
+                $statusClass = match($status) {
+                    'Pending' => 'bg-warning text-dark',
+                    'Approved' => 'bg-success',
+                    'Rejected' => 'bg-danger',
+                    'Cancelled' => 'bg-secondary',
+                    default => 'bg-light text-dark'
+                };
+                
                 return [
                     'type' => 'tender',
                     // show TenderNo and Title together in the Ref column
                     'ref_no' => trim((($award->tender->TenderNo ?? '') . ' - ' . ($award->tender->Title ?? ''))) ?: 'N/A',
                     'title' => $award->tender->Title ?? 'N/A',
-                    'status' => 'Awarded', // Treat any created tender award as Awarded (per requirement)
-                    'status_class' => 'bg-success',
+                    'status' => $status,
+                    'status_class' => $statusClass,
                     'winning_bidder' => $award->winningSupplier->thirdParty->TradingName
                         ?? '--',
                     'award_date' => optional($award->AwardDate)->format('Y-m-d') ?? ($award->CreatedOn?->format('Y-m-d') ?? '--'),
-                    'id' => $award->tender->Id ?? null,
+                    'id' => $award->Id, // Use award ID not tender ID for approval actions
                 ];
             })
             ->values()
@@ -90,7 +101,8 @@ class AwardsController extends Controller
                     'status_class' => 'bg-success',
                     'winning_bidder' => $award->supplier->thirdParty->TradingName ?? '--',
                     'award_date' => ($award->CreatedOn?->format('Y-m-d')) ?? '--',
-                    'id' => $award->rfq->Id ?? null,
+                    // Prefer FK to ensure presence
+                    'id' => $award->RFQId ?? ($award->rfq->Id ?? null),
                 ];
             })
             ->values()
@@ -150,7 +162,8 @@ class AwardsController extends Controller
         if ($statusFilter === 'Pending') {
             $items = $items->where('status', 'Pending')->values();
         } elseif ($statusFilter === 'Awarded') {
-            $items = $items->where('status', 'Awarded')->values();
+            // Map "Awarded" filter to "Approved" status for compatibility
+            $items = $items->where('status', 'Approved')->values();
         }
 
         // Sort by award_date desc, then ref_no
@@ -424,13 +437,23 @@ class AwardsController extends Controller
         return \App\Models\Procurement\TenderSection::where('TenderID', $tenderId)
             ->with(['sections.criteria'])
             ->get()
+            ->filter(function ($tenderSection) {
+                if (!$tenderSection->sections) {
+                    Log::warning('TenderSection missing related Section, skipping', [
+                        'tender_section_id' => $tenderSection->Id ?? null,
+                        'tender_id' => $tenderSection->TenderID ?? null,
+                    ]);
+                    return false;
+                }
+                return true;
+            })
             ->map(function ($tenderSection) {
                 $section = $tenderSection->sections;
                 return [
                     'id' => $section->Id,
                     'name' => $section->SectionName,
                     'weight' => $tenderSection->Weight ?? 100,
-                    'criteria' => $section->criteria->map(function($criteria) {
+                    'criteria' => ($section->criteria ?? collect())->map(function($criteria) {
                         return [
                             'id' => $criteria->Id,
                             'name' => $criteria->CriteriaName,
@@ -438,7 +461,8 @@ class AwardsController extends Controller
                         ];
                     })
                 ];
-            });
+            })
+            ->values();
     }
 
     /**

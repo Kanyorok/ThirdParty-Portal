@@ -77,7 +77,6 @@ class FleetTripLog extends Model
     {
         return $this->hasMany(FleetTripLog::class, 'ParentTripID', 'Id');
     }
-
     
     public function creator()
     {

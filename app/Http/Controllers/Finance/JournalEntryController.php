@@ -30,7 +30,7 @@ class JournalEntryController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
-        $gls = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $gls = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
         return view('finance.generalledger.journalentry.create', compact('gls', 'branches', 'departments'));
@@ -133,7 +133,7 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
-        $gls         = FinanceGLAccounts::select('Id', 'GLName')->get();
+        $gls         = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
         $branches    = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
 

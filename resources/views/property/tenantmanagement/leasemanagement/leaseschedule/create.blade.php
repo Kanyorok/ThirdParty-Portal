@@ -24,7 +24,7 @@
                   <option value="{{ $lease->Id }}" 
                     data-leasenumber="{{ $lease->LeaseNumber }}"
                     data-tenant-id="{{ $lease->Tenant }}" 
-                    data-tenant-name="{{ $lease->tenant->thirdParty->TradingName ?? 'N/A' }}"
+                    data-tenant-name="{{ $lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
                     data-property-id="{{ $lease->PropertyID }}"
                     data-property-name="{{ $lease->property->PropertyName ?? 'N/A' }}"
                     data-frequency-id="{{ $lease->PaymentFrequency }}"
@@ -108,6 +108,7 @@
 
           <!-- Submit Button -->
           <div class="text-end">
+            <a href="{{ route('schedulelease.index') }}" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-success"
               onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"> Generate Schedule </button>
           </div>

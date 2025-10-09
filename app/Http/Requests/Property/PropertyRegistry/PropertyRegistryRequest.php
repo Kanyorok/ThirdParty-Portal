@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Property\PropertyRegistry;
 
+use App\Models\PropertyManagement\PropertyRegistry;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +20,7 @@ class PropertyRegistryRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('t_PropertyRegistry', 'PropertyName')
+                Rule::unique(PropertyRegistry::class, 'PropertyName')
                     ->ignore($this->route('Id'), 'Id') // match your route param & table PK
                     ->where(fn($query) => $query
                         ->where('PropertyType', $this->PropertyType)

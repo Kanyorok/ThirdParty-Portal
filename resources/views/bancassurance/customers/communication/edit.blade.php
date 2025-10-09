@@ -8,16 +8,8 @@
             @method('PUT')
 
             <div class="col-md-4">
-                <label class="form-label">CustomerID </label>
-                <select name="CustomerID" class="form-select">
-                    <option value="">-- Select CustomerID --</option>
-                    @foreach($customers as $customer)
-                        <option value="{{ $customer->Id }}"
-                            {{ $log->CustomerID == $customer->Id ? 'selected' : '' }}>
-                            {{ $customer->FullName }}
-                        </option>
-                    @endforeach
-                </select>
+                <label class="form-label">Customer</label>
+                <input type="text" class="form-control" value="{{ $log->customers->thirdParty->ThirdPartyName }}" disabled>
             </div>
 
             <div class="row mb-3">
@@ -66,9 +58,7 @@
             </div>
 
             <div class="text-end">
-                <button type="submit" class="btn btn-success">
-                    💾 Update Log
-                </button>
+                <button type="submit" class="btn btn-success">Update Log</button>
             </div>
         </form>
     </div>

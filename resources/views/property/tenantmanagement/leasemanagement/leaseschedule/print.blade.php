@@ -103,7 +103,7 @@
     </div>
     <div class="form-row">
         <div class="form-label">Tenant Name</div>
-        <div class="form-value">{{ $leaseschedule->lease->tenant->thirdParty->TradingName }}</div>
+        <div class="form-value">{{ $leaseschedule->lease->tenant->thirdParty->ThirdPartyName }}</div>
     </div>
     <div class="form-row">
         <div class="form-label">Property</div>

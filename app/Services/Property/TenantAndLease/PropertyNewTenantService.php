@@ -57,7 +57,7 @@ class PropertyNewTenantService
     public static function update(
         PropertyNewTenant $propertyNewTenant,
         CodeDetail $TenantType,
-        ?string $Remarks,
+        ?string $Remarks = null,
         bool $IsActive,
         User $user,
         UploadedFile $document = null

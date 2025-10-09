@@ -29,9 +29,22 @@ class InventoryTypeRequest extends FormRequest
     public function rules()
     {
         return [
-            'Type' => 'required|string|max:255',
+            'Type' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_InventoryTypes', 'Type')->ignore($this->route('Id')),
+            ],
             'Status' => 'required|boolean',
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'Type.unique' => 'The Inventory Type already exists.',
+        ];
+    }
+
 
 }

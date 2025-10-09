@@ -91,8 +91,8 @@ class PropertyMaintenanceWorkCompletionController extends Controller
                 $workCompletions,
                 $validated['CompletionDate'],
                 $validated['WorkDoneSummary'],
-                $validated['PartsUsed'],
-                $validated['Cost'],
+                $validated['PartsUsed'] ?? '',
+                $validated['Cost'] ?? '0',
                 $finalstatus,
                 Auth::user(),
                 $document

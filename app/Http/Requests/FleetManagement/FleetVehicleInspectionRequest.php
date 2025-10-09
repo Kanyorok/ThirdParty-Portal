@@ -32,7 +32,6 @@ class FleetVehicleInspectionRequest extends FormRequest
             'Fuel'           => 'required|numeric|min:0',
             'EngineOil'      => 'required|numeric|min:0',
             'Coolant'        => 'required|numeric|min:0',
-            'Speedometer'    => 'required|integer|min:0',
             'Reflector'       => 'nullable|boolean',
             'FireExtinguisher'=> 'nullable|boolean',
             'FirstAidKit'     => 'nullable|boolean',

@@ -68,6 +68,11 @@ class InventoryHold extends Model
         return $this->belongsTo(CodeDetail::class, 'Source');
     }
 
+    public function inventoryHoldReview()
+    {
+        return $this->hasOne(InventoryHoldReview::class, 'InventoryHoldID', 'Id');
+    }
+
     public static function getPrimaryKey(): string
     {
         return 'Id';

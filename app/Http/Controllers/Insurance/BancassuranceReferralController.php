@@ -29,7 +29,7 @@ public function index()
 }
 public function create()
 {
-    //$this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
     $insurers = InsuranceProvider::all();
     $users = User::with('employee')->get();
     return view('bancassurance.referrals.create', compact('users', 'insurers'));
@@ -45,7 +45,7 @@ public function getProductsByInsurer($insurerId)
 
 public function store(BancAssuranceReferralRequest $request)
 {
-//$this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
+    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
     $user = auth()->user();
     $validated = $request->validated();
 
@@ -54,9 +54,9 @@ public function store(BancAssuranceReferralRequest $request)
 
         $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
 
-    $InsuranceProductId = !empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
+        $InsuranceProductId = !empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
 
-    $PreferredInsurerId = InsuranceProvider::findOrFail($validated['PreferredInsurerId']);
+        $PreferredInsurerId = InsuranceProvider::findOrFail($validated['PreferredInsurerId']);
 
         $branchId = $user->employee->BranchId ?? null;
         $BranchId = Branch::findOrFail($branchId);
@@ -109,9 +109,9 @@ public function update(BancAssuranceReferralRequest $request, $Id)
 
         $AssignedTo = !empty($validated['AssignedTo']) ? User::findOrFail($validated['AssignedTo']) : null;
 
-    $InsuranceProductId = !empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
+        $InsuranceProductId = !empty($validated['InsuranceProductId']) ? InsuranceProduct::findOrFail($validated['InsuranceProductId']) : null;
 
-    $PreferredInsurerId = InsuranceProvider::findOrFail($validated['PreferredInsurerId']);
+        $PreferredInsurerId = InsuranceProvider::findOrFail($validated['PreferredInsurerId']);
 
         $Status = $AssignedTo ? InsuranceReferralStatus::Assigned : InsuranceReferralStatus::Pending;
 
@@ -185,15 +185,17 @@ public function assign(Request $request, $Id)
 public function performanceView()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['referredByEmployee.branch'])->get();
+    $referrals = BancAssuranceReferral::with(['referredByEmployee.employee.branch'])->get();
 
         $grouped = $referrals->groupBy(function ($referral) {
             return $referral->referredByEmployee?->Id ?? 'Unknown';
         });
 
         $performance = $grouped->map(function ($items) {
-            $employee = $items->first()->referredByEmployee;
+            $employee = $items->first()->referredByEmployee->employee;
             $branch = $employee?->branch;
+
+           // dd($employee, $branch);
 
             return [
                 'StaffName' => $employee ? $employee->FirstName . ' ' . $employee->LastName : 'Unknown',
@@ -211,6 +213,11 @@ Public function destroy($Id)
 {
     $this->authorize(PermissionEnum::BancassuranceReferralDelete, BancAssuranceReferral::class);
     $referral = BancAssuranceReferral::findOrFail($Id);
+
+    if ($referral->customerreferral()->exists()) {
+        return redirect()->back()
+        ->withErrors(['error' => 'This Property Block is in use and cannot be deleted.']);
+    }  
     $referral->DeletedBy = Auth()->Id();
     $referral->save();
     $referral->delete();

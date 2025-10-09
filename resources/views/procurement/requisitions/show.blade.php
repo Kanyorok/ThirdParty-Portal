@@ -29,6 +29,7 @@
                             <th>Description</th>
                             <th>UOM</th>
                             <th>Quantity</th>
+                            <th>Need ID</th>
                             <th>Est. Unit Cost</th>
                             <th>Estimated Cost</th>
                             <th>Urgency</th>
@@ -48,6 +49,7 @@
                                 <td>{{ $item->Description }}</td>
                                 <td>{{ $item->UOM}}</td>
                                 <td>{{ $item->Quantity }}</td>
+                                <td>{{ $item->NeedRef ?? 'N/A' }}</td>
                                 <td>{{ isset($item->UnitPrice) && is_numeric($item->UnitPrice) ? number_format($item->UnitPrice, 2) : 'N/A' }}</td>
                                 <td>{{ isset($item->ExpectedPrice) && is_numeric($item->ExpectedPrice) ? number_format($item->ExpectedPrice, 2) : '0.00' }}</td>
 {{--                                <td>{{ $item->NeededBy }}</td>--}}

@@ -37,10 +37,10 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Vendor <span class="text-danger">*</span></label>
-                    <select id="VendorSelect" name="SupplierID" class="form-select" required>
+                    <select id="VendorSelect" name="ThirdPartyID" class="form-select" required>
                         <option disabled value="">-- Select Vendor --</option>
                         @foreach($suppliers as $item)
-                            <option value="{{ $item->Id }}" {{ $invoice->SupplierID == $item->Id ? 'selected' : '' }}>
+                            <option value="{{ $item->ThirdPartyID }}" {{ $invoice->SupplierID == $item->ThirdPartyID ? 'selected' : '' }}>
                                 {{ $item->SupplierName }}
                             </option>
                         @endforeach
