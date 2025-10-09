@@ -27,10 +27,10 @@ class PropertyLeaseRenewalRequest extends FormRequest
             'EndDateCurrentLease' => 'required|date',
             'NewStartDate' => 'required|date',
             'NewEndDate' => 'required|date',
-            'NewMonthlyRent' => 'required|integer',
-            'ServiceCharge' => 'nullable|integer',
-            'ParkingFee' => 'nullable|integer',
-            'OtherCharges' => 'nullable|integer',
+            'NewMonthlyRent' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/',
+            'ServiceCharge' => 'nullable|numeric|regex:/^\d+(\.\d{1,2})?$/',
+            'ParkingFee' => 'nullable|numeric|regex:/^\d+(\.\d{1,2})?$/',
+            'OtherCharges' => 'nullable|numeric|regex:/^\d+(\.\d{1,2})?$/',
             'Remarks' => 'nullable|string|max:100',
         ];
     }

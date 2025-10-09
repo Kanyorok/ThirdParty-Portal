@@ -4,6 +4,7 @@ namespace App\Services\DMS\Files;
 
 use App\Enums\Core\ExtensionsEnum;
 use App\Enums\DMS\ContentEnum;
+use App\Exceptions\ErroredException;
 use App\Models\DMS\Document;
 use App\Services\DMS\AutoTaggingService;
 use App\Services\DMS\DocumentService;
@@ -50,6 +51,9 @@ abstract class FileExtraction extends DocumentService
         }
     }
 
+    /**
+     * @throws ErroredException
+     */
     protected function createTempFile(): ?string
     {
         $name = Uuid::uuid4()->toString() . '.' . $this->extension->value;

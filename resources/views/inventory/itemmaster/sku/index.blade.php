@@ -22,17 +22,17 @@
                             <th>#</th>
                             <th>SKU Code</th>
                             <th>Item</th>
-                            <th>Batch</th>
-                            <th>Serial</th>
+                            {{-- <th>Batch</th> --}}
+                            {{-- <th>Serial</th>
                             <th>Perishable</th>
                             <th>Saleable</th>
-                            <th>Purchasable</th>
+                            <th>Purchasable</th> --}}
                             <th>Branch</th>
                             <th>Store</th>
                             <th>Current Qty</th>
                             <th>Min</th>
                             <th>Reorder</th>
-                            <th>Max</th>
+                            {{-- <th>Max</th> --}}
                             <th>Last Received</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -44,17 +44,17 @@
                                 <td>{{ $key + 1 }}</td>
                                 <td>{{ $item->SKUCode }}</td>
                                 <td>{{ $item->item->ItemName ?? 'N/A' }}</td>
-                                <td>{!! $item->Batch ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
-                                <td>{!! $item->Serial ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
+                                {{-- <td>{!! $item->Batch ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td> --}}
+                                {{-- <td>{!! $item->Serial ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
                                 <td>{!! $item->Perishable ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
                                 <td>{!! $item->Saleable ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
-                                <td>{!! $item->Purchasable ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
+                                <td>{!! $item->Purchasable ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td> --}}
                                 <td>{{ $item->branch->Name ?? 'N/A' }}</td>
                                 <td>{{ $item->store->StoreName ?? 'N/A' }}</td>
                                 <td>{{($item->CurrentQty)}}</td>
                                 <td>{{($item->Min)}}</td>
                                 <td>{{($item->Reorder)}}</td>
-                                <td>{{($item->Max)}}</td>
+                                {{-- <td>{{($item->Max)}}</td> --}}
                                 <td>{{ \Carbon\Carbon::parse($item->LastReceived)->format('d/m/Y') }}</td>
                                 <td>
               <span class="badge {{ $item->Status ? 'bg-success' : 'bg-warning' }}">

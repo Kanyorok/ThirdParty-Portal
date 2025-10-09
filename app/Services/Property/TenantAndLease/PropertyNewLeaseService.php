@@ -46,12 +46,21 @@ class PropertyNewLeaseService
         UploadedFile $document = null
     ): self {
 
-        $lastLeaseNumber = PropertyNewLease::withTrashed() // in case you're using soft deletes
-        ->selectRaw("MAX(CAST(SUBSTRING(LeaseNumber, 7, LEN(LeaseNumber)) AS INT)) as max_number")
-            ->value('max_number');
+        $lastLeaseNumber = PropertyNewLease::withTrashed()
+            ->selectRaw("CAST(SUBSTRING(LeaseNumber, 7, 5) AS INT) as num")
+            ->orderByDesc('num')
+            ->value('num');
 
         $nextNumber = $lastLeaseNumber ? $lastLeaseNumber + 1 : 1;
         $leaseNumber = 'LEASE-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+
+
+        $Unit = PropertyUnit::findOrFail($Unit->Id);
+            $Unit->update([
+                'IsRentable'    => 0,
+                'CurrentStatus' => 0,
+            ]);
 
 
         $newlease = PropertyNewLease::create([
@@ -76,11 +85,11 @@ class PropertyNewLeaseService
         ]);
 
         if ($document) {
-        $newlease->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::PropertyNewLeaseView->value],
-            $user
+            $newlease->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyNewLeaseView->value],
+                $user
             );
         }
 
@@ -144,11 +153,11 @@ class PropertyNewLeaseService
         ]);
 
         if ($document) {
-        $lease->newDocument(
-            ModulesEnum::Property,
-            $document,
-            [PermissionEnum::PropertyNewLeaseView->value],
-            $user
+            $lease->newDocument(
+                ModulesEnum::Property,
+                $document,
+                [PermissionEnum::PropertyNewLeaseView->value],
+                $user
             );
         }
 

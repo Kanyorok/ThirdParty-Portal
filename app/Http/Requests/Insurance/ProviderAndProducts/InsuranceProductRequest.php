@@ -22,11 +22,11 @@ class InsuranceProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'InsuranceProviderID' => 'required|exists:t_InsuranceProviders,Id',
-        'Name' => 'required|string|max:50',
-        'Type' => 'required|string|max:100',
-        'Description' => 'required|string|max:100',
-        'IsActive' => 'nullable|boolean',
+            'InsuranceProviderID' => 'required|exists:t_InsuranceProviders,Id',
+            'Name' => 'required|string|max:50',
+            'Type' => 'required|string|max:100',
+            'Description' => 'nullable|string|max:100',
+            'IsActive' => 'nullable|boolean',
         ];
     }
 }

@@ -14,6 +14,9 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">📑 GRN Listing – Goods Receipt Notes</h4>
+    <a href="{{ route('goods-receipt.index', ['item_type' => 'service']) }}" class="btn btn-outline-primary me-2" title="Service Receipt Notes (SRN)">
+      SRN (Services)
+    </a>
     <a href="{{ route('procurementreceipts.create') }}" class="btn btn-success">
       + New GRN
     </a>
@@ -38,7 +41,7 @@
             <td>{{ $key + 1 }}</td>
             <td>{{ $receipt->GRNID }}</td>
             <td>{{ $receipt->POID }}</td>
-              <td>{{ $receipt->supplier->SupplierName ?? 'N/A' }}</td>
+              <td>{{ $receipt->supplier?->thirdParty?->ThirdPartyName ?? $receipt->supplier?->thirdParty?->TradingName ?? $receipt->supplier->SupplierName ?? 'N/A' }}</td>
               <td>{{ \Carbon\Carbon::parse($receipt->ReceivedDate)->format('d/m/Y') }}</td>
             <td>
               <span class="badge bg-{{ $receipt->InspectionStatus->badgeColor() }}">

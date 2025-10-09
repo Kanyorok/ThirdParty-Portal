@@ -31,7 +31,7 @@ class FleetInsuranceTrackerRequest extends FormRequest
             'PremiumAmount' => 'required|numeric|min:0',
             'RenewalReminderDate' => 'required|date',
             'Notes' => 'nullable|string',
-            'DocumentPath' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
+            'Document' => 'nullable|file|max:2048',
             'Status' => 'required|integer|exists:t_CodeDetails,ID',
             //
         ];

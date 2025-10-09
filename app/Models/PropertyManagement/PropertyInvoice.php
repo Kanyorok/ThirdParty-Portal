@@ -6,6 +6,7 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Auth\User;
 
 class PropertyInvoice extends Model
 {
@@ -48,4 +49,13 @@ class PropertyInvoice extends Model
     {
         return $this->hasMany(PropertyReceipt::class, 'InvoiceID', 'Id');
     }
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
+    }
+
 }

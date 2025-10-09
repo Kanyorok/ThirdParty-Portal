@@ -4,13 +4,19 @@
 @section('content')
 <div class="card p-1 shadow rounded-4">
     <div class="card-body">
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <p class="text-muted">Fill in the details below to register a new loan security or collateral.</p>
         <form action="{{ route('legal.securities.store') }}" method="POST">
             @csrf
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label>Security Type</label>
-                    <select class="form-select" name="SecurityType" id="SecurityType">
+                    <select class="form-select" name="SecurityType" id="SecurityType" required>
                         <option selected disabled value="">-- Select Security Type --</option>
                             @foreach( $details as $item)
                                 <option value="{{ $item->Value}}">{{ $item->Value }}</option>
@@ -49,7 +55,7 @@
                 </div>
                 <div class="col-md-6">
                     <label>Loacation</label>
-                    <select class="form-select" name="Locations" id="SecurityType">
+                    <select class="form-select" name="Locations" id="SecurityType" required>
                         <option selected disabled value="">-- Select Loacation  --</option>
                             @foreach( $locations as $item)
                                 <option value="{{ $item->Value}}">{{ $item->Value }}</option>
@@ -59,7 +65,7 @@
             </div>
             <div class="mb-3">
                 <label>Remarks</label>
-                <textarea name="Remarks" class="form-control" rows="2" placeholder="Additional notes or details"></textarea>
+                <textarea name="Remarks" class="form-control" rows="2" placeholder="Additional notes or details" required></textarea>
             </div>
             <div class="d-flex justify-content-end gap-2 mb-3">
                 <a href="{{ route('legal.securities.index') }}" class="btn btn-outline-secondary"><i class="fas fa-long-arrow-alt-left"></i> Back</a>

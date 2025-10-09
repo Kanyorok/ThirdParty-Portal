@@ -9,12 +9,13 @@ use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetGLMaster;
 use App\Models\CRM\Lead;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    protected const MONTHS = 6;
+    protected const int MONTHS = 6;
     /**
      * Handle the incoming request.
      *
@@ -79,7 +80,7 @@ class DashboardController extends Controller
             try {
                 $converted = Lead::withTrashed()->whereBetween('DeletedOn', [$dateTime->copy()->startOfMonth(), $dateTime->copy()->endOfMonth()])
                     ->where('Status', LeadStatusEnum::Won->value)->where('RelationshipManagerID', $actor->Id)->count();
-            } catch (\Exception) {
+            } catch (Exception) {
             }
             $data->add($converted);
         }

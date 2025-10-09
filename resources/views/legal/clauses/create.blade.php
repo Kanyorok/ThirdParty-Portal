@@ -22,7 +22,7 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Clause Type</label>
-                    <select class="form-select" name="ClauseType" id="ClauseType">\
+                    <select class="form-select" name="ClauseType" id="ClauseType" required>
                         <option selected disabled value="">-- Select Clause Type --</option>
                             @foreach( $details as $item)
                                 <option value="{{ $item->Value}}">{{ $item->Value}}</option>
@@ -33,7 +33,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Version</label>
-                <input type="text" name="Version" class="form-control" placeholder="e.g. v1.0, Draft 2" required>
+                <input type="number"step="0.0001"  name="Version" class="form-control" placeholder="e.g. 1.0" required>
             </div>
 
             <div class="mb-3">

@@ -4,6 +4,8 @@ namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetRepairLog;
+use App\Models\Fleet\FleetMaintenanceSchedule;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +17,8 @@ use App\Models\HRM\Employee;
 
 
 class FleetTripLog extends Model
-{ use UserActorTrait, SoftDeletes;
+{
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -26,9 +29,11 @@ class FleetTripLog extends Model
 
     protected $fillable = [
         'TripNo',
-        'VehicleID',
-        'DriverType',
-        'DriverID',
+        'ParentTripID',
+        'TripType',
+        'TripCode',
+        'VehicleType',
+        'LoadType',
         'TripStartDate',
         'StartTime',
         'TripEndDate',
@@ -40,37 +45,52 @@ class FleetTripLog extends Model
         'Notes',
         'CreatedBy',
         'CreatedOn',
-        
+
     ];
+
     public static function getPrimaryKey(): string
     {
         return 'TripId';
     }
-
-    public function vehicle()
+   
+    public function parentTripType()
     {
-        return $this->belongsTo(FleetVehicle::class, 'VehicleID','Id');
+        return $this->belongsTo(CodeDetail::class, 'TripType', 'ID');
     }
 
-      public function driverType()
+    public function parentLoadType()
     {
-        return $this->belongsTo(CodeDetail::class, 'DriverType','ID');
+        return $this->belongsTo(CodeDetail::class, 'LoadType', 'ID');
     }
+
+    public function parentVehicleType()
+    {
+        return $this->belongsTo(CodeDetail::class, 'VehicleType', 'ID');
+    }
+
+    public function parentTrip()
+    {
+        return $this->belongsTo(FleetTripLog::class, 'ParentTripID', 'Id');
+    }
+
+    public function childTrips()
+    {
+        return $this->hasMany(FleetTripLog::class, 'ParentTripID', 'Id');
+    }
+
     
-
-    public function driverPermanent()
-    {
-        return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
-    }
-
-    public function driverContracted()
-    {
-        return $this->belongsTo(ContractedDriver::class, 'DriverID', 'Id'); 
-    }
-
-
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy');
     }
+
+   public function employee()
+        {
+            return $this->belongsTo(Employee::class, 'EmployeeID', 'Id');
+        }
+
+
+
+
+
 }

@@ -63,6 +63,8 @@ use App\Http\Controllers\Budget\TopLoansController;
 use App\Http\Controllers\Budget\TopSavingAccountsController;
 use App\Http\Controllers\Budget\TrendAndGrowthController;
 use App\Http\Controllers\Budget\YieldRateController;
+use App\Http\Controllers\Budget\BudgetLineLedgerLimitController;
+use App\Http\Controllers\Budget\BudgetReallocationController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -82,12 +84,14 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     //Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::resource('budgetprojections', BudgetProjectionsController::class);
     Route::post('/storeProjections', [BudgetProjectionsController::class, 'storeProjections'])->name('budgetprojections.storeProjections');
-    Route::post('/deleteProjection', [BudgetProjectionsController::class, 'deleteProjection'])->name('budgetprojections.deleteProjection');
+    Route::post('/deleteProjection', [BudgetProjectionsController::class, 'deleteProjection'])->name('budgetprojections.deleteProjection.post');
     Route::get('/budget-lines/{id}/product-types', [BudgetProjectionsController::class, 'getProductTypes'])->name('budget-lines.product-types');
     Route::resource('entrybyglline', BudgetGLLineEntryController::class);
     Route::get('/entrybyglline/glview/{budgetId}', [BudgetGLLineEntryController::class, 'glview'])->name('entrybyglline.glview');
     Route::resource('submitapproval', BudgetSubmitController::class);
     Route::resource('budgetapproval', BudgetApprovalController::class);
+    Route::post('/budgetapproval/approve', [BudgetApprovalController::class, 'approve'])->name('budgetapproval.approve');
+    Route::post('/budgetapproval/reject', [BudgetApprovalController::class, 'reject'])->name('budgetapproval.reject');
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
     Route::post('/topdownallocation/display', [BudgetTopDownAllocationController::class, 'display'])->name('topdownallocation.display');
     Route::resource('topdownallocation', BudgetTopDownAllocationController::class);
@@ -163,3 +167,52 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::delete('budget/delete-gl-attachment/{id}', [BudgetPeriodController::class, 'delGLAttachment'])->name('budget.delete-gl-attachment');
     Route::delete('budget/delete-budget/{id}', [BudgetPeriodController::class, 'delBudget'])->name('budget.delete-budget');
 });
+
+
+Route::prefix('budgetandanalytics/limits')->name('budgetandanalytics.limits.')->group(function () {
+    Route::get('/', [BudgetLineLedgerLimitController::class, 'index'])->name('index');
+    Route::get('/create', [BudgetLineLedgerLimitController::class, 'create'])->name('create');
+    Route::post('/store', [BudgetLineLedgerLimitController::class, 'store'])->name('store');
+
+    Route::get('/showLimits', [BudgetLineLedgerLimitController::class, 'showUpdateForm'])->name('showUpdateForm');
+    Route::post('/updateLimits', [BudgetLineLedgerLimitController::class, 'runUpdate'])->name('runUpdate');
+
+    // optional future routes
+    Route::get('/{id}/edit', [BudgetLineLedgerLimitController::class, 'edit'])->name('edit');
+    Route::post('/{id}/update', [BudgetLineLedgerLimitController::class, 'update'])->name('update');
+    Route::post('/{id}/delete', [BudgetLineLedgerLimitController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('budgetandanalytics/reallocation')
+    ->name('budgetandanalytics.reallocation.')
+    ->group(function () {
+        Route::get('/', [BudgetReallocationController::class, 'index'])->name('index');
+        Route::get('/create', [BudgetReallocationController::class, 'create'])->name('create');
+        Route::post('/store', [BudgetReallocationController::class, 'store'])->name('store');
+        Route::get('/allocate', [BudgetReallocationController::class, 'allocate'])->name('allocate');
+
+        // Optional future routes
+        Route::get('/{id}/review', [BudgetReallocationController::class, 'review'])->name('review');
+        Route::post('/{id}/approve', [BudgetReallocationController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [BudgetReallocationController::class, 'reject'])->name('reject');
+
+        // ✅ AJAX routes (unique names; paths match your JS)
+        Route::get('/budget-lines/{deptId}/{branchId?}', [BudgetReallocationController::class, 'getBudgetLines'])
+            ->name('budget-lines'); // name used ONLY here
+
+        Route::get('/budget-line/{lineId}/details/{branchId?}', [BudgetReallocationController::class, 'getBudgetLineDetails'])
+            ->name('budget-line.details');
+
+        // ✅ Allocations endpoint expected by your fetch()
+        Route::post('/allocations', [BudgetReallocationController::class, 'getAllocations'])
+            ->name('allocations');
+    });
+
+// Budget Approvals
+Route::prefix('budgetandanalytics/budget-approvals')->name('budgetandanalytics.budget-approvals.')->group(function () {
+    Route::get('/approve', [BudgetPeriodController::class, 'approve'])->name('approve');
+    Route::get('/reject', [BudgetPeriodController::class, 'reject'])->name('reject');
+});
+
+//Fetch Data for modal in the reallocation index
+Route::get('/budgetandanalytics/reallocation/{id}/details', [BudgetReallocationController::class, 'getDetails'])->name('budgetandanalytics.reallocation.details');

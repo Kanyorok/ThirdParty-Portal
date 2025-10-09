@@ -1,69 +1,100 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
-@section('title', 'Maintenance request details')
+@section('title', 'Maintenance Request Details')
 
 @section('content')
-<div class="container mt-5" style="max-width: 800px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Lease Agreement Details</h3>
-        <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
-    </div>
+<div class="container mt-4" style="max-width: 1000px;">
 
-    <form>
-        <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
 
-            <div class="card-body">
-                <h5 class="card-title">Maintenance Request Details</h5>
-                <div class="mb-3">
-                    <label class="form-label">Request Number</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->RequestNumber ?? '-' }}" readonly>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Property</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->property->PropertyName ?? '-' }}" readonly>
+            {{-- Maintenance Request Info --}}
+            <h6 class="mb-3 text-dark">Maintenance Request Information</h6>
+            <hr>
+            <div class="row g-3 text-dark">
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Request Number</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                           value="{{ $maintenancerequest->RequestNumber ?? '-' }}" readonly>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Block</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->block->BlockName ?? '-' }}" readonly>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Property</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                           value="{{ $maintenancerequest->property->PropertyName ?? '-' }}" readonly>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Floor</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->floor->FloorLabel ?? '-' }}" readonly>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Block</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                           value="{{ $maintenancerequest->block->BlockName ?? '-' }}" readonly>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Unit</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->unit->UnitCode ?? '-' }}" readonly>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Floor</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                           value="{{ $maintenancerequest->floor->FloorLabel ?? '-' }}" readonly>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">ReportedBy</label>
-                        <input type="text" class="form-control" value="{{ $maintenancerequest->ReportedBy ?? '-' }}" readonly>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Unit</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                           value="{{ $maintenancerequest->unit->UnitCode ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Reported By</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                           value="{{ $maintenancerequest->ReportedBy ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Issue Type</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                           value="{{ $maintenancerequest->issueType->Description ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Priority</label>
+                    <input type="text" class="form-control bg-light text-dark" 
+                           value="{{ $maintenancerequest->priority->Description ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Issue Description</label>
+                    <textarea class="form-control bg-light text-dark" rows="3" readonly>{{ $maintenancerequest->IssueDescription ?? '-' }}</textarea>
+                </div>
+                    <div class="col-12">
+                        <label class="form-label">Attached Documents</label>
+                        <div class="p-2 border rounded bg-light">
+                            @forelse($maintenancerequest->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                            @empty
+                                <span class="text-muted">No documents attached.</span>
+                            @endforelse
+                        </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label"> IssueType</label>
-                        <input type="text" class="form-control" value="{{ $maintenancerequest->issueType->Description ?? '-' }}" readonly>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label"> Priority</label>
-                    <input type="text" class="form-control" value="{{ $maintenancerequest->priority->Description ?? '-' }}" readonly>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label"> Issue Description</label>
-                        <input type="text" class="form-control" value="{{ $maintenancerequest->IssueDescription ?? '-' }}" readonly>
-                    </div>
-                    
-            <div class="card-footer bg-light d-flex justify-content-between">
-                <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Edit</a>
-                <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary">Back</a>
             </div>
         </div>
-    </form>
+
+        {{-- Footer with Audit Info + Actions --}}
+        <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
+            <div>
+                Created by <strong>{{ $maintenancerequest->createdByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $maintenancerequest->CreatedOn ? Carbon::parse($maintenancerequest->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                | Modified by <strong>{{ $maintenancerequest->modifiedByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $maintenancerequest->ModifiedOn ? Carbon::parse($maintenancerequest->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
+            </div>
+            <div>
+                <a href="{{ route('maintenancerequest.edit', $maintenancerequest->Id) }}" class="btn btn-sm btn-dark">Edit</a>
+                <a href="{{ route('maintenancerequest.index') }}" class="btn btn-sm btn-outline-dark">Back</a>
+            </div>
+        </div>
+    </div>
 </div>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

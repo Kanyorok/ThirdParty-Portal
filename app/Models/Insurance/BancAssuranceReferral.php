@@ -3,7 +3,6 @@
 namespace App\Models\Insurance;
 
 use App\Models\Auth\User;
-use App\Models\Core\CodeDetail;
 use App\Models\HRM\Employee;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +27,7 @@ class BancAssuranceReferral extends Model
     ];
 
     protected $casts = [
-    'Status' => InsuranceReferralStatus::class,
+        'Status' => InsuranceReferralStatus::class,
     ];
 
     public static function getPrimaryKey(): string
@@ -38,12 +37,12 @@ class BancAssuranceReferral extends Model
 
     public function insuranceProduct()
     {
-        return $this->belongsTo(CodeDetail::class, 'InsuranceProductId', 'ID');
+        return $this->belongsTo(InsuranceProduct::class, 'InsuranceProductId', 'Id');
     }
 
     public function preferredInsurer()
     {
-        return $this->belongsTo(CodeDetail::class, 'PreferredInsurerId', 'ID');
+        return $this->belongsTo(InsuranceProvider::class, 'PreferredInsurerId', 'Id');
     }
 
     public function assignedToUser()
@@ -53,8 +52,20 @@ class BancAssuranceReferral extends Model
 
     public function referredByEmployee()
     {
-        return $this->belongsTo(Employee::class, 'ReferredBy', 'Id');
+        return $this->belongsTo(employee::class, 'ReferredBy', 'Id');
     }
 
-    
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+    public function employee()
+    {
+        return $this->belongsTo(user::class, 'ReferredBy', 'Id');
+    }
 }

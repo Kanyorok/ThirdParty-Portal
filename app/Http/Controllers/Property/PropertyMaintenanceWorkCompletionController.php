@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Enums\Core\PostingEnum;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionRequest;
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceWorkCompletionService;
@@ -36,22 +37,33 @@ class PropertyMaintenanceWorkCompletionController extends Controller
         $validated = $request->validated();
 
         $requestNumber = PropertyMaintenanceAssign::findOrFail($validated['RequestNumber']);
-        $finalstatus = CodeDetail::findOrFail((int) $validated['FinalStatus']);
-        $document = $request->file('Document');
+        $finalstatus = CodeDetail::findOrFail((int)$validated['FinalStatus']);
 
         $user = Auth::user();
 
+        $uploadedFile = $request->file('Document')[0] ?? null;
         $workCompletion = PropertyMaintenanceWorkCompletionService::create(
             $requestNumber,
             $validated['CompletionDate'],
             $validated['WorkDoneSummary'],
-            $validated['PartsUsed'],
-            $validated['Cost'],
+            $validated['PartsUsed'] ?? '',
+            $validated['Cost'] ?? '0',
             $finalstatus,
-             Auth::user(),
-            $document
+            Auth::user(),
+            $uploadedFile
         );
-        
+
+        if ($request->hasFile('Document')) {
+            foreach (array_slice($request->file('Document'), 1) as $uploadedFile) {
+                $workCompletion->propertyMaintenanceWorkCompletion->newDocument(
+                    ModulesEnum::Property,
+                    $uploadedFile,
+                    [PermissionEnum::PropertyMaintenanceWorkCompletionView->value],
+                    $request->user()
+                );
+            }
+        }
+
         return redirect()->route('workcompletion.index')->with('success', 'Work completion created successfully');
 
     }
@@ -67,9 +79,9 @@ class PropertyMaintenanceWorkCompletionController extends Controller
 
     public function update(PropertyMaintenanceWorkCompletionRequest $request, $Id)
     {
-      $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionUpdate, PropertyMaintenanceWorkCompletion::class);
+        $this->authorize(PermissionEnum::PropertyMaintenanceWorkCompletionUpdate, PropertyMaintenanceWorkCompletion::class);
         $validated = $request->validated();
-        
+
             $workCompletions = PropertyMaintenanceWorkCompletion::findOrFail($Id);
 
             $document = $request->file('Document');
@@ -82,7 +94,7 @@ class PropertyMaintenanceWorkCompletionController extends Controller
                 $validated['PartsUsed'],
                 $validated['Cost'],
                 $finalstatus,
-                 Auth::user(),
+                Auth::user(),
                 $document
             );
 

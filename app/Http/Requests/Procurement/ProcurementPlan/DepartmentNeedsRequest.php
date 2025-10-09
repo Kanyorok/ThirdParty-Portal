@@ -23,7 +23,7 @@ class DepartmentNeedsRequest extends FormRequest
             'FiscalYear' => 'required|integer',
             'PriorityLevel' => 'nullable|string',
             'IsEmergency' => 'nullable|boolean',
-            'RequestedDate' => 'required|date',
+            'RequestedDate' => 'required|date|after_or_equal:today',
             'BranchID' => 'required|exists:t_Branches,Id',
             'DepartmentID' => 'required|exists:t_Departments,Id',
         ];

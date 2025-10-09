@@ -11,15 +11,16 @@ use App\Models\Fleet\FleetVehicleDocument;
 
 class VehicleDocumentController extends Controller
 {
-  
-public function index()
-{
-    $documents = FleetVehicleDocument::with('vehicle')
-        ->orderByDesc('CreatedOn')
-        ->get();
 
-    return view('fleet.documents.index', compact('documents'));
-}
+    public function index()
+    {
+        $documents = FleetVehicleDocument::with('vehicle')
+            ->orderByDesc('CreatedOn')
+            ->get();
+
+        return view('fleet.documents.index', compact('documents'));
+    }
+
     public function create()
     {
         $vehicles = FleetVehicle::where('IsActive', 1)->get();

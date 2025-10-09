@@ -4,6 +4,12 @@
 @section('content')
 <div class="card p-1 shadow rounded-4">
     <div class="card-body">
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <p class="text-muted">Update the details of this loan security or collateral.</p>
 
         <form action="{{ route('legal.securities.update', $security->Id) }}" method="POST">
@@ -82,7 +88,7 @@
             
             <div class="mb-3">
                 <label for="SecurityStatus" class="form-label">Security Status</label>
-                <select name="SecurityStatus" class="form-select">{{ old('SecurityStatus', $security->SecurityStatus)}}
+                <select name="SecurityStatus" class="form-select" required>{{ old('SecurityStatus', $security->SecurityStatus)}}
                     <option value="Held">Held</option>
                     <option value="Released">Released</option>
                     <option value="Discharged">Discharged</option>
@@ -92,7 +98,7 @@
 
             <div class="mb-3">
                 <label>Remarks</label>
-                <textarea name="Remarks" class="form-control" rows="2">{{ old('Remarks', $security->Remarks) }}</textarea>
+                <textarea name="Remarks" class="form-control" rows="2" required>{{ old('Remarks', $security->Remarks) }}</textarea>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mb-3">

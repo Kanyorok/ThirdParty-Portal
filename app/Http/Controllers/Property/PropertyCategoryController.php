@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Property\PropertyRegistry\PropertyCategoryRequest;
 use App\Models\Core\CategoryMaster;
@@ -18,24 +18,27 @@ class PropertyCategoryController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyCategoryView, CategoryMaster::class);
         $categories = CategoryMaster::where('Code', '500000')->get();
         //dd($categories);
         return view('property.propertyregistry.propertycategory.index', compact('categories'));
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::PropertyCategoryCreate, CategoryMaster::class);
         return view('property.propertyregistry.propertycategory.create');
     }
 
     public function store(PropertyCategoryRequest $request)
     {
+        $this->authorize(PermissionEnum::PropertyCategoryCreate, CategoryMaster::class);
         $validated = $request->validated();
         //Type and Code have been hardcoded
         $propertyCategory = PropertyCategoryService::create(
             $validated['Name'],
             $validated['Description'],
             'PropertyCategory',
-            '500000',   
+            '500000',
             Auth::user()
         );
 
@@ -44,8 +47,7 @@ class PropertyCategoryController extends Controller
 
     public function edit($id)
     {
-        //Check if user has permission to edit tender categories
-        $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
+       $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
         $category = CategoryMaster::findOrFail($id);
 
         return view('property.propertyregistry.propertycategory.edit', compact('category'));
@@ -53,11 +55,9 @@ class PropertyCategoryController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
+       $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
         $validated = $request->validate([
-            'Name' => 'required|string|max:50',
             'Description' => 'nullable|string|max:100',
-
         ]);
 
         DB::beginTransaction();
@@ -66,7 +66,6 @@ class PropertyCategoryController extends Controller
             $category = CategoryMaster::findOrFail($id);
 
             $category->update([
-                'Name' => $validated['Name'],
                 'Description' => $validated['Description'] ?? '',
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
@@ -90,10 +89,15 @@ class PropertyCategoryController extends Controller
 
     public function destroy($id)
     {
-        //Check if user has permission to delete property categories
-        $this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
+       $this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
         try {
             $category = CategoryMaster::findOrFail($id);
+
+            if ($category->propertytypes()->exists()) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'This Property category is in use and cannot be deleted.']);
+            }            
+
             $category->delete();
 
             return redirect()->route('propertycategory.index')

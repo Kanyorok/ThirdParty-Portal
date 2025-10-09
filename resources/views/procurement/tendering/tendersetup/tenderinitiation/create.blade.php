@@ -2,10 +2,13 @@
 @section('title', 'Tender Initiation Form')
 @section('content')
 <style>
-    .is-invalid, .form-control.is-invalid, .form-select.is-invalid {
+    .is-invalid,
+    .form-control.is-invalid,
+    .form-select.is-invalid {
         border-color: #dc3545 !important;
-        box-shadow: 0 0 0 0.2rem rgba(220,53,69,.25) !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, .25) !important;
     }
+
     .invalid-feedback.d-block {
         color: #dc3545;
         font-weight: bold;
@@ -14,6 +17,12 @@
 </style>
 <div class="container mt-4">
     <h4 class="mb-4">Tender Initiation Form</h4>
+    <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
+        <i class="fa fa-info-circle me-2"></i>
+        <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.">
+            <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
+        </span>
+    </div>
     <form action="{{ route('initiatetender.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('POST')
@@ -25,16 +34,16 @@
             @error('title')
             <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
-        </div>
+                </div>
 
         <!-- Tender Type -->
         <div class="mb-3">
             <label class="form-label fw-bold">Tender Type: <span class="text-danger">*</span></label>
-            <div>
+                    <div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input @error('tender_type') is-invalid @enderror" type="radio" name="tender_type" id="openTender" value="op" {{ old('tender_type') == 'op' ? 'checked' : '' }} required>
                     <label class="form-check-label" for="openTender">Open Tender (Public posting)</label>
-                </div>
+                    </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input @error('tender_type') is-invalid @enderror" type="radio" name="tender_type" id="restrictedTender" value="rs" {{ old('tender_type') == 'rs' ? 'checked' : '' }} required>
                     <label class="form-check-label" for="restrictedTender">Restricted Tender (Selected vendors only)</label>
@@ -46,55 +55,55 @@
         </div>
 
         <!-- Category and Requisition -->
-        <div class="row">
-            <div class="col-md-4 mb-3">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
                 <label for="tenderCategory" class="form-label fw-bold">Tender Category: <span class="text-danger">*</span></label>
                 <select class="form-select @error('tender_category_id') is-invalid @enderror" id="tenderCategory" name="tender_category_id" required>
                     <option selected disabled>-- Select Category --</option>
                     @foreach ($tenderCategories as $item)
-                        <option value="{{$item->Id}}" {{ old('tender_category_id') == $item->Id ? 'selected' : '' }}>{{$item->TenderCategory}}</option>
+                    <option value="{{$item->Id}}" {{ old('tender_category_id') == $item->Id ? 'selected' : '' }}>{{$item->TenderCategory}}</option>
                     @endforeach
                 </select>
                 @error('tender_category_id')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-            <div class="col-md-4 mb-3">
+                    </div>
+                    <div class="col-md-4 mb-3">
                 <label for="itemCategory" class="form-label fw-bold">Item Category <span class="text-danger">*</span></label>
                 <select class="form-select @error('item_category_id') is-invalid @enderror" id="itemCategory" name="item_category_id" required>
                     <option selected disabled>-- Item Categories --</option>
                     @foreach ($allItemsCategories as $item)
-                        <option value="{{$item->Id}}" {{ old('item_category_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}}</option>
+                    <option value="{{$item->Id}}" {{ old('item_category_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}}</option>
                     @endforeach
-                </select>
+                        </select>
                 @error('item_category_id')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-            <div class="col-md-4 mb-3">
+                    </div>
+                    <div class="col-md-4 mb-3">
                 <label for="currencyType" class="form-label fw-bold">Currency <span class="text-danger">*</span></label>
                 <select class="form-select @error('currency_id') is-invalid @enderror" id="currencyType" name="currency_id" required>
                     <option selected disabled>-- Select Your Currency --</option>
                     @foreach ($allCurrency as $item)
-                        <option value="{{$item->Id}}" {{ old('currency_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}} ({{$item->Code}})</option>
+                    <option value="{{$item->Id}}" {{ old('currency_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}} ({{$item->Code}})</option>
                     @endforeach
-                </select>
+                        </select>
                 @error('currency_id')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-        </div>
+                    </div>
+                </div>
 
         <!-- Tender Items Tabs -->
         <ul class="nav nav-tabs mt-4" id="itemEntryTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="fromPlan-tab" data-bs-toggle="tab" data-bs-target="#fromPlan"
-                        type="button" role="tab">From Procurement Plan
+                    type="button" role="tab">From Procurement Plan
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manualEntry"
-                        type="button" role="tab">Manual Entry
+                    type="button" role="tab">Manual Entry
                 </button>
             </li>
         </ul>
@@ -106,41 +115,42 @@
                 <div class="mb-3">
                     <label class="form-label fw-bold">Select Procurement Plan:</label>
                     <select class="form-select" id="selectedProcurementPlan" name="procurement_plan_id"
-                            onchange="loadPlanItemsForPlan()">
+                        onchange="loadPlanItemsForPlan()">
                         <option selected disabled>-- Choose Procurement Plan --</option>
                         @foreach ($procurementPlan as $item)
-                            <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
+                        <option value="{{$item->PlanID}}">{{$item->Title}} - {{$item->ReferenceNumber}}</option>
                         @endforeach
                     </select>
-                </div>
+        </div>
 
                 <div class="row mb-3">
                     <div class="col-md-9">
                         <label class="form-label fw-bold">Select Procurement Plan Item:</label>
                         <select class="form-select" id="planItemSelect">
-                            <option selected disabled>-- Select Item --</option>
+                            <option selected disabled>-- Select Item (Tender-method, not already used) --</option>
                         </select>
-                    </div>
+            </div>
                     <div class="col-md-3 d-flex align-items-end">
                         <button type="button" class="btn btn-primary w-100" onclick="addPlanItemToGrid()">➕ Add to
                             Grid
-                        </button>
-                    </div>
-                </div>
+                </button>
+            </div>
+</div>
 
                 <!-- Dynamic Plan Items Grid -->
                 <div class="mb-3">
                     <label class="form-label fw-bold">Selected Items</label>
                     <table class="table table-bordered" id="planItemsGrid">
                         <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th>Planned Qty</th>
-                            <th>Qty to Tender</th>
-                            <th>Specs</th>
-                            <th>PR Ref (optional)</th>
-                            <th></th>
-                        </tr>
+                            <tr>
+                                <th>Item</th>
+                                <th>Need ID</th>
+                                <th>Planned Qty</th>
+                                <th>Qty to Tender</th>
+                                <th>Specs</th>
+                                <th>PR Ref (optional)</th>
+                                <th></th>
+                            </tr>
                         </thead>
                         <tbody name="plan_items">
                         </tbody>
@@ -152,30 +162,30 @@
             <div class="tab-pane fade" id="manualEntry" role="tabpanel">
                 <table class="table table-bordered">
                     <thead>
-                    <tr>
-                        <th>Item Description</th>
-                        <th>Qty</th>
-                        <th>Specs</th>
-                        <th>PR Ref (optional)</th>
-                        <th></th>
-                    </tr>
+                        <tr>
+                            <th>Item Description</th>
+                            <th>Qty</th>
+                            <th>Specs</th>
+                            <th>PR Ref (optional)</th>
+                            <th></th>
+                        </tr>
                     </thead>
-            <tbody id="manualItemsBody">
-            <!-- No default row; rows will be added dynamically -->
-            </tbody>
+                    <tbody id="manualItemsBody">
+                        <!-- No default row; rows will be added dynamically -->
+                    </tbody>
                 </table>
                 <button type="button" class="btn btn-sm btn-primary" onclick="addManualItemRow()">➕ Add Item</button>
-            </div>
-        </div>
+    </div>
+</div>
 
         <!-- Scope -->
-        <div class="mb-3">
+                    <div class="mb-3">
             <label for="scopeOfWork" class="form-label fw-bold">Scope of Work <span class="text-danger">*</span></label>
             <textarea class="form-control @error('scope_of_work') is-invalid @enderror" id="scopeOfWork" name="scope_of_work" rows="3" required>{{ old('scope_of_work') }}</textarea>
             @error('scope_of_work')
             <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
-        </div>
+                    </div>
 
         <!-- Instructions -->
         <div class="mb-3">
@@ -184,31 +194,31 @@
             @error('instructions')
             <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
-        </div>
+                    </div>
 
         <!-- Dates -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                 <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline: <span class="text-danger">*</span></label>
                 <input type="date" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
                 @error('submission_deadline')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-            <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
                 <label for="openingDate" class="form-label fw-bold">Opening Date: <span class="text-danger">*</span></label>
                 <input type="date" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
                 @error('opening_date')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
-            </div>
-        </div>
+                        </div>
+                    </div>
 
         <!-- Upload -->
-        <div class="mb-3">
+                    <div class="mb-3">
             <label for="tenderDocuments" class="form-label fw-bold">Attach Tender Document:</label>
             <input class="form-control" type="file" id="tenderDocuments" name="documents[]" multiple>
-        </div>
+                    </div>
 
         <!-- Restricted Suppliers -->
         <div class="mb-3" id="restrictedSuppliersSection" style="display: none;">
@@ -216,56 +226,66 @@
             <select class="form-select" id="suppliersList" name="suppliers[]" multiple>
                 <!-- Filled dynamically -->
             </select>
-        </div>
+                    </div>
 
         <!-- Buttons -->
         <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-primary">Save Tender</button>
-            {{-- <button type="button" class="btn btn-outline-secondary">Save Draft</button> --}}
-            {{-- <button type="reset" class="btn btn-outline-dark">Cancel</button>
-            <button type="button" class="btn btn-outline-info">Edit</button> --}}
-        </div>
-    </form>
+                    </div>
+                </form>
 
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Toggle supplier section based on tender type
-    const open = document.getElementById('openTender');
-    const restricted = document.getElementById('restrictedTender');
-    const section = document.getElementById('restrictedSuppliersSection');
+document.addEventListener('DOMContentLoaded', function() {
+        const openTender = document.getElementById('openTender');
+        const restricted = document.getElementById('restrictedTender');
+        const section = document.getElementById('restrictedSuppliersSection');
 
-    open.addEventListener('change', () => section.style.display = 'none');
-    restricted.addEventListener('change', () => section.style.display = 'block');
+        openTender.addEventListener('change', () => {
+            section.style.display = 'none';
+            suppliersList.innerHTML = '';
+        });
+        restricted.addEventListener('change', () => {
+            section.style.display = 'block';
+            const catId = document.getElementById('itemCategory').value;
+            if (catId) {
+                try { populateSuppliers(catId); } catch(e) { console.warn('Populate suppliers failed', e); }
+            }
+        });
 
-    // Initialize manual item dropdowns
-    updateManualItemSelects();
-});
-
-// Store all items with their category for filtering
-const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
-
-// Track selected item category
-let selectedItemCategory = document.getElementById('itemCategory').value;
-
-// Helper to create filtered options HTML
-function getFilteredItemOptions(categoryId) {
-    let html = '<option selected disabled>-- Select Item --</option>';
-    allItemsWithCategoryIds.forEach(item => {
-        if (String(item.Category) === String(categoryId)) { // Use String comparison to avoid type issues
-            html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+        // Initial state: if Restricted is pre-selected, show section and populate by current category
+        if (restricted.checked) {
+            section.style.display = 'block';
+            const catId = document.getElementById('itemCategory').value;
+            if (catId) {
+                try { populateSuppliers(catId); } catch(e) { console.warn('Populate suppliers failed', e); }
+            }
         }
+
+        updateManualItemSelects();
     });
-    return html;
-}
 
-let manualItemIndex = 1;
+    const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
 
-function addManualItemRow() {
-    const tableBody = document.getElementById('manualItemsBody');
-    const row = document.createElement('tr');
-    row.innerHTML = `
+    let selectedItemCategory = document.getElementById('itemCategory').value;
+
+    function getFilteredItemOptions(categoryId) {
+        let html = '<option selected disabled>-- Select Item --</option>';
+        allItemsWithCategoryIds.forEach(item => {
+            if (String(item.Category) === String(categoryId)) {
+                html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+            }
+        });
+        return html;
+    }
+
+    let manualItemIndex = 1;
+
+    function addManualItemRow() {
+        const tableBody = document.getElementById('manualItemsBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
         <td>
             <select class="form-select manual-item-select" name="manual_items[${manualItemIndex}][item_id]" required>
                 ${getFilteredItemOptions(selectedItemCategory)}
@@ -284,82 +304,78 @@ function addManualItemRow() {
             <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">🗑</button>
         </td>
     `;
-    tableBody.appendChild(row);
-    manualItemIndex++;
-}
+        tableBody.appendChild(row);
+        manualItemIndex++;
+    }
 
-// Update all manual item selects when category changes
-function updateManualItemSelects() {
-    selectedItemCategory = document.getElementById('itemCategory').value;
-    const selects = document.querySelectorAll('.manual-item-select');
-    selects.forEach(select => {
-        const prevValue = select.value;
-        select.innerHTML = getFilteredItemOptions(selectedItemCategory);
-        // Restore previous value if still valid
-        if ([...select.options].some(opt => opt.value === prevValue)) {
-            select.value = prevValue;
-        }
-    });
-}
-
-document.getElementById('itemCategory').addEventListener('change', updateManualItemSelects);
-
-// Debug: Output all categories and items for troubleshooting
-console.log('AllItemsWithCategoryIds:', allItemsWithCategoryIds);
-console.log('ItemCategory dropdown options:', Array.from(document.getElementById('itemCategory').options).map(opt => ({ value: opt.value, text: opt.text })));
-
-// ----- Procurement Plan Section -----
-const procurementPlans = @json($procurementPlansOutput);
-const planItemData = @json($planItemData);
-const addedPlanItems = new Set();
-
-function loadPlanItemsForPlan() {
-    const planId = document.getElementById('selectedProcurementPlan').value;
-    const select = document.getElementById('planItemSelect');
-    select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
-
-    if (procurementPlans[planId]) {
-        procurementPlans[planId].forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.itemId;
-            opt.textContent = `${item.name} (${item.plannedQty})`;
-            select.appendChild(opt);
+    function updateManualItemSelects() {
+        selectedItemCategory = document.getElementById('itemCategory').value;
+        const selects = document.querySelectorAll('.manual-item-select');
+        selects.forEach(select => {
+            const prevValue = select.value;
+            select.innerHTML = getFilteredItemOptions(selectedItemCategory);
+            if ([...select.options].some(opt => opt.value === prevValue)) {
+                select.value = prevValue;
+            }
         });
     }
-}
 
-function addPlanItemToGrid() {
-    const planId = document.getElementById('selectedProcurementPlan').value;
-    const select = document.getElementById('planItemSelect');
-    const itemId = select.value;
-    const tbody = document.querySelector('#planItemsGrid tbody');
+    document.getElementById('itemCategory').addEventListener('change', updateManualItemSelects);
 
-    if (!planId || !itemId) {
-        alert('Please select both a plan and an item.');
-        return;
+    const procurementPlans = @json($procurementPlansOutput);
+    const planItemData = @json($planItemData);
+    const addedPlanItems = new Set();
+
+    function loadPlanItemsForPlan() {
+        const planId = document.getElementById('selectedProcurementPlan').value;
+        const select = document.getElementById('planItemSelect');
+        select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
+
+        if (procurementPlans[planId]) {
+            procurementPlans[planId].forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.planLineItemId;
+                opt.textContent = `${item.name} — Need ${item.needId || '—'} (Planned: ${item.plannedQty})`;
+                opt.dataset.itemId = item.itemId;
+                opt.dataset.needId = item.needId || '';
+                select.appendChild(opt);
+            });
+        }
     }
 
-    const uniqueKey = `${planId}-${itemId}`;
+    function addPlanItemToGrid() {
+        const planId = document.getElementById('selectedProcurementPlan').value;
+        const select = document.getElementById('planItemSelect');
+        const planLineItemId = select.value; // now holds LineItemID
+        const tbody = document.querySelector('#planItemsGrid tbody');
 
-    if (addedPlanItems.has(uniqueKey)) {
-        alert('Item already added for this plan.');
-        return;
-    }
+        if (!planId || !planLineItemId) {
+            alert('Please select both a plan and an item.');
+            return;
+        }
 
-    const itemList = planItemData[planId] || [];
-    const item = itemList.find(obj => String(obj.itemId) === String(itemId));
+        const uniqueKey = `${planId}-${planLineItemId}`;
 
-    if (!item) {
-        alert('Item not found in plan data.');
-        return;
-    }
+        if (addedPlanItems.has(uniqueKey)) {
+            alert('Item already added for this plan.');
+            return;
+        }
 
-    const row = `
+        const itemList = planItemData[planId] || [];
+        const item = itemList.find(obj => String(obj.planLineItemId) === String(planLineItemId));
+
+        if (!item) {
+            alert('Item not found in plan data.');
+            return;
+        }
+
+        const row = `
         <tr data-id="${uniqueKey}">
             <td>${item.name}</td>
+            <td>${item.needId || '—'}</td>
             <td>${item.plannedQty}</td>
             <td>
-                <input type="hidden" name="plan_items[${uniqueKey}][item_id]" value="${itemId}">
+                <input type="hidden" name="plan_items[${uniqueKey}][item_id]" value="${item.itemId}">
                 <input type="number" class="form-control" name="plan_items[${uniqueKey}][qty]" value="${item.plannedQty}" min="1" max="${item.plannedQty}" required>
             </td>
             <td>
@@ -374,73 +390,69 @@ function addPlanItemToGrid() {
         </tr>
     `;
 
-    tbody.insertAdjacentHTML('beforeend', row);
-    addedPlanItems.add(uniqueKey);
-    select.selectedIndex = 0;
-}
+        tbody.insertAdjacentHTML('beforeend', row);
+        addedPlanItems.add(uniqueKey);
+        select.selectedIndex = 0;
+    }
 
-function removePlanItemFromGrid(uniqueKey) {
-    const row = document.querySelector(`#planItemsGrid tr[data-id="${uniqueKey}"]`);
-    if (row) row.remove();
-    addedPlanItems.delete(uniqueKey);
-}
+    function removePlanItemFromGrid(uniqueKey) {
+        const row = document.querySelector(`#planItemsGrid tr[data-id="${uniqueKey}"]`);
+        if (row) row.remove();
+        addedPlanItems.delete(uniqueKey);
+    }
 </script>
 
 <script>
-const suppliers = @json($suppliers);
-const openTender = document.getElementById('openTender');
-const restrictedTender = document.getElementById('restrictedTender');
-const suppliersSection = document.getElementById('restrictedSuppliersSection');
-const suppliersList = document.getElementById('suppliersList');
-const itemCategory = document.getElementById('itemCategory');
+    const suppliers = @json($suppliers);
+    const openTender = document.getElementById('openTender');
+    const restrictedTender = document.getElementById('restrictedTender');
+    const suppliersSection = document.getElementById('restrictedSuppliersSection');
+    const suppliersList = document.getElementById('suppliersList');
+    const itemCategory = document.getElementById('itemCategory');
 
-function populateSuppliers(categoryId = null) {
-    suppliersList.innerHTML = '';
-    const filteredSuppliers = categoryId
-        ? suppliers.filter(supplier => String(supplier.CategoryId) === String(categoryId))
-        : suppliers;
+    function populateSuppliers(categoryId = null) {
+        suppliersList.innerHTML = '';
+        let filteredSuppliers = suppliers;
+        if (categoryId) {
+            const catNum = parseInt(categoryId);
+            filteredSuppliers = suppliers.filter(supplier => {
+                const arr = Array.isArray(supplier.ItemCategoryIds) ? supplier.ItemCategoryIds : [];
+                return arr.map(Number).includes(catNum);
+            });
+        }
 
-    if (filteredSuppliers.length === 0) {
-        const option = document.createElement('option');
-        option.disabled = true;
-        option.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
-        suppliersList.appendChild(option);
+        if (filteredSuppliers.length === 0) {
+            const option = document.createElement('option');
+            option.disabled = true;
+            option.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
+            suppliersList.appendChild(option);
         return;
     }
-
-    filteredSuppliers.forEach(supplier => {
-        const option = document.createElement('option');
-        option.value = supplier.Id;
-        option.textContent = supplier.SupplierName;
-        suppliersList.appendChild(option);
-    });
-}
-
-openTender.addEventListener('change', () => {
-    suppliersSection.style.display = 'none';
-    suppliersList.innerHTML = '';
-    itemCategory.value = '';
-});
-
-restrictedTender.addEventListener('change', () => {
-    suppliersSection.style.display = 'block';
-    populateSuppliers(itemCategory.value || null);
-});
-
-itemCategory.addEventListener('change', () => {
-    if (restrictedTender.checked) {
-        suppliersSection.style.display = 'block';
-        populateSuppliers(itemCategory.value);
-    } else {
-        suppliersSection.style.display = 'none';
-        suppliersList.innerHTML = '';
+    
+        filteredSuppliers.forEach(supplier => {
+            const option = document.createElement('option');
+            option.value = supplier.Id;
+            option.textContent = supplier.ThirdPartyName || supplier.SupplierName || `Supplier #${supplier.Id}`;
+            suppliersList.appendChild(option);
+        });
     }
-});
+
+    // Remove duplicate event handlers - already handled in first script block
+
+    itemCategory.addEventListener('change', () => {
+        if (restrictedTender.checked) {
+            suppliersSection.style.display = 'block';
+            populateSuppliers(itemCategory.value);
+        } else {
+            suppliersSection.style.display = 'none';
+            suppliersList.innerHTML = '';
+        }
+    });
 </script>
 
 <script>
     const originalItemOptions = [];
-    const categoryData = [/* your category objects with id and parentId */];
+    const categoryData = @json($categoryData ?? []);
 
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.manual-item-select option').forEach(opt => {
@@ -453,10 +465,9 @@ itemCategory.addEventListener('change', () => {
     document.getElementById('itemCategory').addEventListener('change', (e) => {
         const selectedCategoryId = e.target.value;
 
-        // Get list of subcategory IDs
         const subCategoryIds = categoryData
-            .filter(cat => cat.parentId === selectedCategoryId)
-            .map(cat => cat.id);
+            .filter(cat => String(cat.parentId) === String(selectedCategoryId))
+            .map(cat => String(cat.id));
 
         document.querySelectorAll('.manual-item-select').forEach(select => {
             const defaultOption = select.querySelector('option:first-child');
@@ -465,7 +476,7 @@ itemCategory.addEventListener('change', () => {
 
             originalItemOptions.forEach(opt => {
                 const itemCat = opt.dataset.itemCategory;
-                if (itemCat === selectedCategoryId || subCategoryIds.includes(itemCat)) {
+                if (String(itemCat) === String(selectedCategoryId) || subCategoryIds.includes(String(itemCat))) {
                     select.appendChild(opt.cloneNode(true));
                 }
             });

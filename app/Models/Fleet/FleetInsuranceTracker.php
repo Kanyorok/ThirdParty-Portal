@@ -7,6 +7,7 @@ use App\Models\Fleet\FleetVehicle;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
+use App\Traits\Model\DocumentsTrait;
 use App\Models\Insurance\InsuranceProvider;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ use App\Models\Auth\User;
 class FleetInsuranceTracker extends Model
 {
 
-    use UserActorTrait, SoftDeletes;
+    use SoftDeletes,UserActorTrait, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -39,7 +40,6 @@ class FleetInsuranceTracker extends Model
         'PremiumAmount',
         'RenewalReminderDate',
         'Notes',
-        'DocumentPath',
         'Status',
         'CreatedBy',
         'CreatedOn',
@@ -61,14 +61,14 @@ class FleetInsuranceTracker extends Model
     }
 
 
-   public function insurance()
+    public function insurance()
     {
         return $this->belongsTo(InsuranceProvider::class, 'InsuranceProvider', 'Id');
     }
 
-     public function insuranceStatus()
+    public function insuranceStatus()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
     }
-    
+
 }

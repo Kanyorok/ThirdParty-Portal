@@ -1,18 +1,26 @@
-FROM php:8.3-apache-bullseye
+FROM php:8.3-apache-trixie
 
-# Install system dependencies including imap
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     unzip cron poppler-utils ghostscript zip curl git gnupg2 \
     apt-transport-https unixodbc unixodbc-dev imagemagick \
     supervisor lsb-release libwebp-dev libzip-dev \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    libxml2-dev libonig-dev nodejs wget ca-certificates\
-    libssl-dev software-properties-common \
-    libc-client-dev libkrb5-dev libgssapi-krb5-2  \
+    libpng-dev libjpeg-dev pdftk libfreetype6-dev \
+    libxml2-dev libonig-dev nodejs wget ca-certificates \
+    libssl-dev poppler-utils libicu-dev \
+    libkrb5-dev libgssapi-krb5-2 \
     tesseract-ocr tesseract-ocr-eng libtesseract-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    build-essential wget
+
+# Install libc-client from Debian Bookworm (needed for PHP IMAP)
+RUN echo "deb http://deb.debian.org/debian bookworm main" > /etc/apt/sources.list.d/bookworm.list \
+    && apt-get update \
+    && apt-get install -y libc-client2007e-dev libkrb5-dev \
+    && rm -rf /etc/apt/sources.list.d/bookworm.list
+
+# Configure PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) mbstring zip exif bcmath gd intl imap
 
 # Add Microsoft SQL Server repository and key
@@ -32,7 +40,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 RUN apt-get update && apt-get install -y \
     chromium chromium-driver \
     --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -51,7 +59,16 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 
 # Copy Laravel source code
+
 COPY . .
+#COPY --chown=www-data:www-data . .
+RUN rm -rf database/
+
+# Ensure Laravel storage and log paths exist
+RUN mkdir -p /var/www/storage/logs \
+    && touch /var/www/storage/logs/worker.log \
+    && mkdir -p /var/www/bootstrap/cache \
+    && chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www && \
@@ -69,6 +86,7 @@ RUN chown -R www-data:www-data /var/www && \
 RUN cd /var/www && composer install --no-interaction --optimize-autoloader --no-dev
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # Install Node.js dependencies
 RUN npm install --prefix /var/www
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CRM\Client;
 
+use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\RoleEnum;
 use App\Enums\TicketStatusEnum;
 use App\Exceptions\ErroredException;
@@ -23,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 use TypeError;
 
 class ClientTicketController extends Controller
@@ -101,7 +103,12 @@ class ClientTicketController extends Controller
                 if (($emailConversation instanceof EmailConversation)) {//attach documents in email to ticket
                     foreach ($emailConversation->email->attachments as $attachment) {
                         if ($attachment instanceof Image) {
-                            $service->documentContent($attachment->Image, $attachment->MIMEType, $attachment->Name, SystemHelper::user());
+                            try {
+                                $extension = ExtensionsEnum::fromMimeType($attachment->MIMEType);
+                            } catch (ErroredException) {
+                                continue;
+                            }
+                            $service->documentContent($attachment->Image, $extension, $attachment->Name, SystemHelper::user());
                         }
                     }
                 }
@@ -109,7 +116,7 @@ class ClientTicketController extends Controller
             });
         } catch (ErroredException $e) {
             return $e->toJson();
-        } catch (\Throwable | Exception $e) {
+        } catch (Throwable | Exception $e) {
             Log::error('Error creating Client ticket ' . $e->getMessage());
             return $this->errored('unexpected error creating ticket, try again later');
         }

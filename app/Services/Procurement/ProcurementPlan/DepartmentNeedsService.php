@@ -14,15 +14,15 @@ class DepartmentNeedsService
         $departmentId = $actor->employee->DepartmentId;
         $itemId = $data['ItemID'];
 
-        // Check for existing need with same combination
+        // Prevent duplicate raise while a need is pending approval for same dept/branch/item
         $existing = DepartmentNeed::where('BranchID', $branchId)
             ->where('DepartmentID', $departmentId)
             ->where('ItemID', $itemId)
-            ->where('IsUsed', '0') // Correct usage
+            ->where('Status', \App\Enums\Procurement\DepartmentNeedsEnum::Pending)
             ->first();
 
         if ($existing) {
-            throw new \Exception('A need for this item already exists in this branch and department.');
+            throw new \Exception('A pending need for this item already exists for your department.');
         }
 
         // Generate NeedID

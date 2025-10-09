@@ -19,10 +19,10 @@ class BancassuranceCustomersBeneficiariesRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
- public function rules(): array
+    public function rules(): array
     {
         return [
-           'CustomerID'=>'required|exists:t_BancassuranceCustomers,Id',
+            'CustomerID' => 'required|exists:t_BancassuranceCustomers,Id',
             'PolicyID' => 'required|nullable|exists:t_BancassurancePolicies,Id',
             'FullName' => 'required|string|max:255',
             'Relationship' => 'nullable|exists:t_CodeDetails,ID',

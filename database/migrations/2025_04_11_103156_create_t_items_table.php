@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('Category')->constrained('t_ItemCategories', 'Id');
             $table->string('UOM');//syetem codes
             $table->string('InventoryType'); // system codes
-            $table->foreignId('ImageId')->nullable()->constrained('t_Images', 'ImageID');
+            $table->unsignedBigInteger('ImageId')->nullable();
             $table->string('ItemDescription')->nullable();
             $table->string('DocumentUpload')->nullable();
 

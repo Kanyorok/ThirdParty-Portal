@@ -19,25 +19,25 @@ class InsuranceProductController extends Controller
     // Show all products
     public function index()
     {
-      $products = InsuranceProduct::all();
+        $products = InsuranceProduct::all();
         return view('bancassurance.products.index', compact('products'));
     }
 
     // Show create form
     public function create()
     {
-     $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
+      //  $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
 
-     $providers = InsuranceProvider::all();
+        $providers = InsuranceProvider::all();
 
-      $products = InsuranceProduct::all();
-        return view('bancassurance.products.create', compact('providers','products'));
+        $products = InsuranceProduct::all();
+        return view('bancassurance.products.create', compact('providers', 'products'));
     }
 
     // Store product
     public function store(InsuranceProductRequest $request)
-    { 
-      $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
+    {
+       // $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
 
         $validated = $request->validated();
 
@@ -45,12 +45,12 @@ class InsuranceProductController extends Controller
 
         $providers = InsuranceProductService::create(
             $InsuranceProviderID,
-                $validated['Name'],
-                $validated['Type'],
-                $validated['Description'],
-                $validated['IsActive'],
-                Auth::user(),
-            );
+            $validated['Name'],
+            $validated['Type'],
+            $validated['Description'] ?? '',
+            $validated['IsActive'] ?? null,
+            Auth::user(),
+        );
 
         return redirect()->route('bancassurance.products.index')->with('success', 'Product created successfully.');
     }
@@ -58,18 +58,18 @@ class InsuranceProductController extends Controller
     // Edit product
     public function edit($Id)
     {
-       $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
+        $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
 
-       $product = InsuranceProduct::findOrFail($Id);
-       $providers = InsuranceProvider::all();
-     
-        return view('bancassurance.products.edit', compact('product','providers'));
+        $product = InsuranceProduct::findOrFail($Id);
+        $providers = InsuranceProvider::all();
+
+        return view('bancassurance.products.edit', compact('product', 'providers'));
     }
 
     // Update product
-    public function update (InsuranceProductRequest $request, $id)
+    public function update(InsuranceProductRequest $request, $id)
     {
-       $this->authorize(PermissionEnum::InsuranceProductUpdate, InsuranceProduct::class);
+        $this->authorize(PermissionEnum::InsuranceProductUpdate, InsuranceProduct::class);
         $validated = $request->validated();
 
         DB::beginTransaction();
@@ -81,7 +81,7 @@ class InsuranceProductController extends Controller
                 'InsuranceProviderID' => $validated['InsuranceProviderID'],
                 'Name' => $validated['Name'],
                 'Type' => $validated['Type'],
-                'Description' => $validated['Description'],            
+                'Description' => $validated['Description'] ?? '',
                 'IsActive' => $validated['IsActive'] ?? '',
                 'ModifiedBy' => Auth::Id(),
             ]);
@@ -104,7 +104,7 @@ class InsuranceProductController extends Controller
 
     public function destroy($Id)
     {
-       $this->authorize(PermissionEnum::InsuranceProductDelete, InsuranceProduct::class);
+        $this->authorize(PermissionEnum::InsuranceProductDelete, InsuranceProduct::class);
         try {
             $product = InsuranceProduct::findOrFail($Id);
             $product->delete();
@@ -120,39 +120,39 @@ class InsuranceProductController extends Controller
         }
     }
 
-    public function mapForm($id)
-{
-    $product = DB::table('t_InsuranceProducts')->find($id);
+    // public function mapForm($id)
+    // {
+    //     $product = DB::table('t_InsuranceProducts')->find($id);
 
-    $providers = DB::table('t_InsuranceProviders')->pluck('Name', 'Id')->toArray();
+    //     $providers = DB::table('t_InsuranceProviders')->pluck('Name', 'Id')->toArray();
 
-    $policyTypes = DB::table('t_CodeDetails')
-        ->where('CodeID', 'POLICY_TYPE')
-        ->pluck('Description', 'Id')
-        ->toArray();
+    //     $policyTypes = DB::table('t_CodeDetails')
+    //         ->where('CodeID', 'POLICY_TYPE')
+    //         ->pluck('Description', 'Id')
+    //         ->toArray();
 
-    return view('bancassurance.products.map', compact('product', 'providers', 'policyTypes'));
-}
+    //     return view('bancassurance.products.map', compact('product', 'providers', 'policyTypes'));
+    // }
 
-public function storeMap(Request $request, $id)
-{
-    $request->validate([
-        'InsuranceProviderID' => 'required|exists:t_InsuranceProviders,Id',
-        'PolicyTypeID' => 'nullable|exists:t_CodeDetails,Id',
-        'CustomName' => 'nullable|string|max:150',
-        'CommissionType' => 'required|in:Flat,Tiered',
-    ]);
+    // public function storeMap(Request $request, $id)
+    // {
+    //     $request->validate([
+    //         'InsuranceProviderID' => 'required|exists:t_InsuranceProviders,Id',
+    //         'PolicyTypeID' => 'nullable|exists:t_CodeDetails,Id',
+    //         'CustomName' => 'nullable|string|max:150',
+    //         'CommissionType' => 'required|in:Flat,Tiered',
+    //     ]);
 
-    DB::table('t_InsuranceProviderProducts')->insert([
-        'ProductID' => $id,
-        'InsuranceProviderID' => $request->InsuranceProviderID,
-        'PolicyTypeID' => $request->PolicyTypeID,
-        'CustomName' => $request->CustomName,
-        'CommissionType' => $request->CommissionType,
-        'CreatedAt' => now(),
-    ]);
+    //     DB::table('t_InsuranceProviderProducts')->insert([
+    //         'ProductID' => $id,
+    //         'InsuranceProviderID' => $request->InsuranceProviderID,
+    //         'PolicyTypeID' => $request->PolicyTypeID,
+    //         'CustomName' => $request->CustomName,
+    //         'CommissionType' => $request->CommissionType,
+    //         'CreatedAt' => now(),
+    //     ]);
 
-    return redirect()->route('bancassurance.products.index')->with('success', 'Product mapped to provider successfully.');
-}
+    //     return redirect()->route('bancassurance.products.index')->with('success', 'Product mapped to provider successfully.');
+    // }
 
 }

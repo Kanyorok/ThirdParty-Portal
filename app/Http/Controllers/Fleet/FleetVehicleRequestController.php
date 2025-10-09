@@ -30,6 +30,7 @@ class FleetVehicleRequestController extends Controller
     // List all vehicle requests
     public function index()
     {
+        $this->authorize('viewAny', FleetVehicleRequest::class);
         $requests = FleetVehicleRequest::with(['requester', 'approver', 'trip','status','statusDetail'])
             ->orderByDesc('RequestDate')
             ->get();
@@ -40,39 +41,43 @@ class FleetVehicleRequestController extends Controller
     // Show create form
     public function create()
     {
+        $this->authorize('create', FleetVehicleRequest::class);
         $branchId = Auth::user()->employee?->BranchId;
         $vehicleType = CodeDetail::where('CodeID', 'VehicleType')
             ->orderBy('Value')
             ->get();
         $departments = Department::all();
         $trips = FleetTripLog::whereNull('EndTime')
-        ->orderByDesc('CreatedOn')
-        ->get();
+            ->orderByDesc('CreatedOn')
+            ->get();
 
         $requester = Employee::where('BranchId', $branchId)
             ->select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
 
 
-        return view('fleet.vehicle_requests.create', compact('vehicleType', 'departments', 'trips','requester'));
+        return view('fleet.vehicle_requests.create', compact('vehicleType', 'departments', 'trips', 'requester'));
     }
+
     // Show approve form
 public function approveForm($id)
 {
+    $this->authorize('view', FleetVehicleRequest::class);
     $vehicleRequest  = FleetVehicleRequest::with(['requester', 'approver', 'status', 'vehicle', 'statusDetail', 'department','trip'])
         ->findOrFail($id);
 
         
 
-    return view('fleet.vehicle_requests.approval', compact('vehicleRequest'));
-}
+        return view('fleet.vehicle_requests.approval', compact('vehicleRequest'));
+    }
 
 
     // Store new vehicle request
- // In App\Http\Controllers\Fleet\FleetVehicleRequestController.php
+    // In App\Http\Controllers\Fleet\FleetVehicleRequestController.php
 
 public function store(FleetVehicleRequestsRequest $request)
 {
+    $this->authorize('create', FleetVehicleRequest::class);
     try {
         $this->service->create($request->validated()); 
         return redirect()
@@ -86,6 +91,7 @@ public function store(FleetVehicleRequestsRequest $request)
     // Update an existing request
     public function update(FleetVehicleRequestsRequest $request, FleetVehicleRequest $vehicleRequest)
     {
+        $this->authorize('update', FleetVehicleRequest::class);
         try {
             $this->service->update($vehicleRequest, $request->validated());
             return redirect()
@@ -98,6 +104,7 @@ public function store(FleetVehicleRequestsRequest $request)
 
    public function approve(Request $request, $id)
 {
+    $this->authorize('approve', FleetVehicleRequest::class);
     $request->validate([
         'ApprovedOn' => 'required|date',
         'ApprovedBy' => 'required|integer',
@@ -105,27 +112,28 @@ public function store(FleetVehicleRequestsRequest $request)
         'RejectionReason' => 'nullable|string|max:255',
     ]);
 
-    try {
-        if ($request->Status === 'Approved') {
-            $this->service->approve($id, $request->ApprovedOn, $request->ApprovedBy);
-            $msg = 'Vehicle request approved.';
-        } else {
-            $this->service->reject($id, $request->RejectionReason, $request->ApprovedBy);
-            $msg = 'Vehicle request rejected.';
+        try {
+            if ($request->Status === 'Approved') {
+                $this->service->approve($id, $request->ApprovedOn, $request->ApprovedBy);
+                $msg = 'Vehicle request approved.';
+            } else {
+                $this->service->reject($id, $request->RejectionReason, $request->ApprovedBy);
+                $msg = 'Vehicle request rejected.';
+            }
+
+            return redirect()
+                ->route('fleet.vehicle_requests.index')
+                ->with('success', $msg);
+
+        } catch (Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
-
-        return redirect()
-            ->route('fleet.vehicle_requests.index')
-            ->with('success', $msg);
-
-    } catch (Exception $e) {
-        return back()->withErrors(['error' => $e->getMessage()]);
     }
-}
 
     // Delete a request
     public function destroy(FleetVehicleRequest $vehicleRequest)
     {
+        $this->authorize('destroy', FleetVehicleRequest::class);
         try {
             $this->service->delete($vehicleRequest);
             return redirect()

@@ -10,56 +10,58 @@
     </div>
     <div class="card-body">
         <p class="text-muted">Manage and track official search requests for legal entities, ensuring timely processing and accurate record-keeping.</p>
-        <table class="table table-hover table-sm align-middle text-centre"
-               style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-            <thead>
-                <tr>
-                    <th>Request Type</th>
-                    <th>Entity Name</th>
-                    <th>Requested By</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if($requests->count())
-                    @foreach($requests as $request)
-                        <tr>
-                            <td>{{ $request->RequestType }}</td>
-                            <td>{{ $request->EntityName }}</td>
-                            <td>{{ $request->RequestedBy }}</td>
-                            <td>{{ \Carbon\Carbon::parse($request->RequestedOn)->format('d-m-Y') }}</td>
-                            <td>
-                                @if($request->Status == 'Pending')
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                @elseif($request->Status == 'Approved')
-                                    <span class="badge bg-success">Approved</span>
-                                @elseif($request->Status == 'Rejected')
-                                    <span class="badge bg-danger">Rejected</span>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('legal.search_requests.show', $request->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                                <a href="{{ route('legal.search_requests.edit', $request->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a> 
-                                <button type="button"
-                                        class="btn btn-sm btn-danger custom-delete-btn"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#customDeleteConfirmModal"
-                                        data-name="{{$request->RequestType}}-{{$request->EntityName}}"    {{-- Pass item name--}}
-                                        data-route="{{ route('legal.search_requests.destroy', $request->Id) }}"> 
-                                    <i  class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    @endforeach
-                @else
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle text-centre"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                <thead>
                     <tr>
-                        <td colspan="6" class="text-center text-muted">No search requests found.</td>
+                        <th>Request Type</th>
+                        <th>Entity Name</th>
+                        {{-- <th>Requested By</th> --}}
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
-                @endif
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if($requests->count())
+                        @foreach($requests as $request)
+                            <tr>
+                                <td>{{ $request->RequestType }}</td>
+                                <td>{{ $request->EntityName }}</td>
+                                {{-- <td>{{ $request->RequestedBy }}</td> --}}
+                                <td>{{ \Carbon\Carbon::parse($request->RequestedOn)->format('d-m-Y') }}</td>
+                                <td>
+                                    @if($request->Status == 'Pending')
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    @elseif($request->Status == 'Approved')
+                                        <span class="badge bg-success">Approved</span>
+                                    @elseif($request->Status == 'Rejected')
+                                        <span class="badge bg-danger">Rejected</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('legal.search_requests.show', $request->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                    <a href="{{ route('legal.search_requests.edit', $request->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a> 
+                                    <button type="button"
+                                            class="btn btn-sm btn-danger custom-delete-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{$request->RequestType}}-{{$request->EntityName}}"    {{-- Pass item name--}}
+                                            data-route="{{ route('legal.search_requests.destroy', $request->Id) }}"> 
+                                        <i  class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No search requests found.</td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
  @include('components.modals.delete-confirm')

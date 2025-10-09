@@ -30,8 +30,8 @@ class BancAssuranceReferralRequest extends FormRequest
         'ClientEmail'   => 'required|email',
         'ReferredBy'    => 'nullable|exists:t_Users,Id',
         'ReferralDate'  => 'nullable|date',
-        'InsuranceProductId'   => 'nullable|exists:t_CodeDetails,ID',
-        'PreferredInsurerId' => 'required|exists:t_CodeDetails,ID',
+        'InsuranceProductId'   => 'nullable|exists:t_InsuranceProducts,Id',
+        'PreferredInsurerId' => 'required|exists:t_InsuranceProviders,Id',
         'Remarks' => 'nullable|string',
         'AssignedTo' => 'nullable|exists:t_Employees,Id',
         ];

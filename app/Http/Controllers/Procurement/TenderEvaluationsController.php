@@ -177,12 +177,12 @@ class TenderEvaluationsController extends Controller
             ->get();
 
         foreach ($tenderSections as $section) {
-            // Get criteria manually for this section
-            $criteriaList = Criteria::where('SectionID', $section->sections->id)->get();
+            // Get criteria manually for this section (note: primary key is 'Id')
+            $criteriaList = Criteria::where('SectionID', $section->sections->Id)->get();
 
-            // Add `isChecked` to each criterion
+            // Add `isChecked` to each criterion against TenderCriteria
             foreach ($criteriaList as $criteria) {
-                $criteria->isChecked = isset($existingCriteria) && in_array($criteria->id, $existingCriteria);
+                $criteria->isChecked = !empty($existingCriteria) && in_array($criteria->Id, $existingCriteria);
             }
 
             // Attach the criteria list to the section manually

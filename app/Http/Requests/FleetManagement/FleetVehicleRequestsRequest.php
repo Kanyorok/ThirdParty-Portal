@@ -22,22 +22,22 @@ class FleetVehicleRequestsRequest extends FormRequest
     public function rules(): array
     {
 
-    return [
-        'RequestedBy' => 'required|exists:t_Employees,Id',
-        'Department' => 'required|exists:t_Departments,Id',
-        'RequestDate' => 'required|date',
-        'TripNo' => 'required|exists:t_TripLogs,Id',
-        'TripDate' => 'required|date|after_or_equal:today',
-        'Purpose' => 'required|string|max:255',
-        'FromLocation' => 'required|string|max:255',
-        'ToLocation' => 'required|string|max:255',
-        'PassengerCount' => 'nullable|integer|min:1',
-        'PreferredVehicleType' => 'nullable|string|exists:t_CodeDetails,ID',
-        'Status' => 'nullable|string|exists:t_CodeDetails,ID',
-        'ApprovedBy' => 'nullable|exists:t_Employees,Id',
-        'ApprovedOn' => 'nullable|date|after_or_equal:today',
-        'RejectionReason' => 'nullable|string|max:255',
-    ];
+        return [
+            'RequestedBy' => 'required|exists:t_Employees,Id',
+            'Department' => 'required|exists:t_Departments,Id',
+            'RequestDate' => 'required|date',
+            'TripNo' => 'required|exists:t_TripLogs,Id',
+            'TripDate' => 'required|date|after_or_equal:today',
+            'Purpose' => 'required|string|max:255',
+            'FromLocation' => 'required|string|max:255',
+            'ToLocation' => 'required|string|max:255',
+            'PassengerCount' => 'nullable|integer|min:1',
+            'PreferredVehicleType' => 'nullable|string|exists:t_CodeDetails,ID',
+            'Status' => 'nullable|string|exists:t_CodeDetails,ID',
+            'ApprovedBy' => 'nullable|exists:t_Employees,Id',
+            'ApprovedOn' => 'nullable|date|after_or_equal:today',
+            'RejectionReason' => 'nullable|string|max:255',
+        ];
 
     }
 }

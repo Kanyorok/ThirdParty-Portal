@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class InsuranceProvider extends Model
 {
     use SoftDeletes, UserActorTrait;
+
     //
     protected $table = 't_InsuranceProviders';
     const CREATED_AT = 'CreatedOn';
@@ -23,14 +24,18 @@ class InsuranceProvider extends Model
         'ContactPerson',
         'Email',
         'Phone',
-        'IsActive',      
+        'IsActive',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy'
     ];
-    
+
     public static function getPrimaryKey(): string
     {
         return 'InsuranceProvidersId';
+    }
+        public function getProductByProvider()
+    {
+        return $this->hasMany(InsuranceProduct::class, 'InsuranceproviderID', 'Id');
     }
 }

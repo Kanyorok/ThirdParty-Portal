@@ -11,13 +11,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Auth\User;
 use App\Models\Core\Currency;
+use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementMode;
 use App\Models\Procurement\ProcurementPlan;
 use App\Models\procurement\TenderItems;
+use App\Models\Procurement\TenderAward;
+use App\Models\Procurement\TenderSection;
+use App\Models\Procurement\TenderSupplier;
 use App\Traits\Model\UserActorTrait;
+use Carbon\Carbon;
 
 class Tender extends Model
 {
@@ -47,7 +53,7 @@ class Tender extends Model
         'DeletedBy',
         'StartDate',
         'CurrencyId',
-        //'TenderCategory',
+        // 'TenderCategory',
         'ApprovalRemarks',
         'ApprovalStatus', // 1 for approved, 2 for rejected, 0 for pending
     ];
@@ -56,7 +62,7 @@ class Tender extends Model
         'TenderType' => TenderTypeEnum::class,
         'Status' => TenderStatusEnum::class,
         'ApprovalStatus' => TenderApprovalStatusEnum::class,
-        //'TenderCategory' => TenderCategoryEnum::class,
+        // 'TenderCategory' => TenderCategoryEnum::class,
         'SubmissionDeadline' => 'datetime',
         'OpeningDate' => 'datetime',
         'ModifiedOn' => 'datetime',
@@ -66,6 +72,11 @@ class Tender extends Model
     ];
 
     // Relationships
+
+    public function tenderCategoryRelation()
+    {
+        return $this->belongsTo(TenderCategory::class, 'TenderCategory', 'Id');
+    }
     public function procurementMode(): BelongsTo
     {
         return $this->belongsTo(ProcurementMode::class, 'ProcurementModeId');
@@ -76,6 +87,10 @@ class Tender extends Model
         return $this->belongsToMany(Supplier::class, 't_TenderVendors', 'TenderID', 'SupplierID')
             ->using(TenderVendor::class)
             ->withPivot('InvitationStatus', 'CreatedOn', 'ModifiedOn', 'DeletedOn');
+    }
+    public function itemCategoryRelation()
+    {
+        return $this->belongsTo(ItemCategories::class, 'ItemCategoryId', 'Id');
     }
 
     //TODO: with tenderinvitations
@@ -89,12 +104,12 @@ class Tender extends Model
 
     public function invitations(): HasMany
     {
-        return $this->hasMany(TenderInvitation::class, 'TenderID');
+        return $this->hasMany(TenderInvitation::class, 'TenderId');
     }
 
     public function invitedSuppliers(): BelongsToMany
     {
-        return $this->belongsToMany(Supplier::class, 't_TenderInvitations', 'TenderID', 'SupplierID')
+        return $this->belongsToMany(Supplier::class, 't_TenderInvitations', 'TenderId', 'SupplierId')
             ->using(TenderInvitation::class)
             ->withPivot([
                 'InvitationID',
@@ -102,7 +117,7 @@ class Tender extends Model
                 'ResponseStatus',
                 'ResponseDate',
                 'DeclineReason',
-                'ConfirmationAttachmentPath'
+                'ConfirmationAttachment'
             ]);
     }
     public function currency(): BelongsTo
@@ -125,10 +140,56 @@ class Tender extends Model
         return $this->hasMany(TenderDocument::class, 'TenderID', 'Id');
     }
 
-    public function creator(): BelongsTo
+    public function submissions(): HasMany
     {
-        return $this->belongsTo(User::class, 'CreatedBy');
+        return $this->hasMany(\App\Models\Procurement\BidSubmission::class, 'TenderRef', 'TenderNo');
     }
+
+    public function tenderSections()
+    {
+        return $this->hasMany(TenderSection::class, 'TenderID', 'Id');
+    }
+
+    public function tenderSuppliers(): HasMany
+    {
+        return $this->hasMany(TenderSupplier::class, 'TenderID', 'Id');
+    }
+
+    /**
+     * Get evaluation readiness status
+     */
+    public function getEvaluationReadiness()
+    {
+        if ($this->tenderSections->isEmpty()) {
+            return ['ready' => false, 'message' => 'No evaluation sections assigned'];
+        }
+
+        $totalWeight = $this->tenderSections->where('IsActive', true)->sum('Weight');
+        if (abs($totalWeight - 100) > 0.01) {
+            return ['ready' => false, 'message' => "Section weights sum to {$totalWeight}%, should be 100%"];
+        }
+
+        $responsiveBids = $this->submissions()
+            ->where('BidStatus', 'responsive')
+            ->where('IsResponsive', true)
+            ->count();
+
+        if ($responsiveBids === 0) {
+            return ['ready' => false, 'message' => 'No responsive bids available for evaluation'];
+        }
+
+        return [
+            'ready' => true,
+            'message' => "Ready: {$responsiveBids} responsive bid(s), {$this->tenderSections->count()} section(s)",
+            'responsive_bids' => $responsiveBids,
+            'sections_count' => $this->tenderSections->count()
+        ];
+    }
+
+    // public function creator(): BelongsTo
+    // {
+    //     return $this->belongsTo(User::class, 'CreatedBy');
+    // }
 
     public function modifier(): BelongsTo
     {
@@ -138,8 +199,9 @@ class Tender extends Model
     // Scopes
     public function scopeActiveTenders($query)
     {
+        // Active if published and deadline is today or later (inclusive day)
         return $query->where('Status', TenderStatusEnum::Published->value)
-            ->where('SubmissionDeadline', '>=', now()->toDateString());
+            ->whereDate('SubmissionDeadline', '>=', Carbon::now()->toDateString());
     }
 
     public function scopeClosedTenders($query)
@@ -162,8 +224,13 @@ class Tender extends Model
 
     public function canAcceptSubmissions(): bool
     {
-        return $this->Status === TenderStatusEnum::Published &&
-            now()->lessThan($this->SubmissionDeadline);
+        if ($this->Status !== TenderStatusEnum::Published) {
+            return false;
+        }
+        if (!$this->SubmissionDeadline) {
+            return true;
+        }
+        return Carbon::now()->lte(Carbon::parse($this->SubmissionDeadline)->endOfDay());
     }
 
     // New helper methods
@@ -212,4 +279,19 @@ class Tender extends Model
         return 'TenderID';
     }
 
+    /**
+     * Get all awards for this tender (HasMany relationship)
+     */
+    public function awards(): HasMany
+    {
+        return $this->hasMany(TenderAward::class, 'TenderID', 'Id');
+    }
+
+    /**
+     * Get the single award for this tender (HasOne relationship)
+     */
+    public function award(): HasOne
+    {
+        return $this->hasOne(TenderAward::class, 'TenderID', 'Id');
+    }
 }

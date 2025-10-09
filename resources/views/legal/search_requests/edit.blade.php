@@ -4,6 +4,12 @@
 @section('content')
 <div class="card p-1 shadow rounded-4">
     <div class="card-body">
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <p class="text-muted">
             Update the details of this legal search request. You can modify the request type, entity name, or remarks as needed.
         </p>
@@ -37,7 +43,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Remarks</label>
-                <textarea name="Remarks" rows="3" class="form-control">{{ old('Remarks', $request->Remarks) }}</textarea>
+                <textarea name="Remarks" rows="3" class="form-control" required>{{ old('Remarks', $request->Remarks) }}</textarea>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mb-3">

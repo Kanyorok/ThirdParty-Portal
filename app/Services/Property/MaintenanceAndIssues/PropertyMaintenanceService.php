@@ -25,9 +25,9 @@ class PropertyMaintenanceService
     }
    public static function create(
         PropertyRegistry $Property,
-        PropertyBlock $Block,
-        PropertyFloor $Floor,
-        PropertyUnit  $Unit,
+        ?PropertyBlock $Block = null,
+        ?PropertyFloor $Floor = null,
+        ?PropertyUnit  $Unit = null,
         string   $ReportedBy,
         CodeDetail   $IssueType,
         CodeDetail   $Priority,
@@ -35,23 +35,21 @@ class PropertyMaintenanceService
         User    $user,
         UploadedFile $document = null
     ):self {
-        
-            $lastRequestNumber = PropertyMaintenanceRequest::withTrashed()
-                ->where('RequestNumber', 'LIKE', 'REQUEST-%')
-                ->selectRaw("MAX(CAST(SUBSTRING(RequestNumber, 8, LEN(RequestNumber)) AS INT)) as max_number")
-                ->value('max_number');
+
+       $lastRequestNumber = PropertyMaintenanceRequest::withTrashed()
+           ->selectRaw("CAST(SUBSTRING(RequestNumber, 9, 5) AS INT) as num")
+           ->orderByDesc('num')
+           ->value('num');
 
     $nextNumber = $lastRequestNumber ? $lastRequestNumber + 1 : 1;
-
     $RequestNumber = 'REQUEST-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-
         {
             $maintenancerequest = PropertyMaintenanceRequest::create([
                 'RequestNumber' => $RequestNumber,
                 'Property' => $Property->Id,
-                'Block' => $Block->Id,
-                'Floor' => $Floor->Id,
-                'Unit' => $Unit->Id,
+                'Block' => $Block->Id ?? null,
+                'Floor' => $Floor->Id ?? null,
+                'Unit' => $Unit->Id ?? null,
                 'ReportedBy' =>$ReportedBy,
                 'IssueType'  => $IssueType->ID,
                 'Priority'    => $Priority->ID,
@@ -75,10 +73,10 @@ class PropertyMaintenanceService
     }
     public static function update(
         PropertyMaintenanceRequest $maintenancerequest,
-        PropertyRegistry $Property,
-        PropertyBlock $Block,
-        PropertyFloor $Floor,
-        PropertyUnit $Unit,
+        PropertyRegistry $Property = null,
+        PropertyBlock $Block  = null,
+        PropertyFloor $Floor  = null,
+        PropertyUnit $Unit  = null,
         string $ReportedBy,
         CodeDetail $IssueType,
         CodeDetail $Priority,
@@ -88,9 +86,9 @@ class PropertyMaintenanceService
     ): self {
         $maintenancerequest->update([
             'Property' => $Property->Id,
-            'Block' => $Block->Id,
-            'Floor' => $Floor->Id,
-            'Unit' => $Unit->Id,
+            'Block' => $Block->Id ?? null,
+            'Floor' => $Floor->Id ?? null,
+            'Unit' => $Unit->Id ?? null,
             'ReportedBy' => $ReportedBy,
             'IssueType' => $IssueType->ID,
             'Priority' => $Priority->ID,

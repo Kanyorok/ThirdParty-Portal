@@ -145,7 +145,8 @@
           <textarea name="GeneralRemarks" class="form-control">{{ old('GeneralRemarks') }}</textarea>
       </div>
 
-                <button type="submit" class="btn btn-success">Post Receipt</button>
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Post Receipt</button>
+
     </form>
   </div>
     </div>

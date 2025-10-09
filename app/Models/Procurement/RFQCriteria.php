@@ -45,12 +45,12 @@ class RFQCriteria extends Model
 
     public function criteria()
     {
-        return $this->belongsTo(RFQSettingCriteria::class, 'CriteriaID', 'id');
+        return $this->belongsTo(\App\Models\Procurement\Criteria::class, 'CriteriaID', 'Id');
     }
 
     public function section()
     {
-        return $this->belongsTo(RFQSettingSection::class, 'SectionID', 'id');
+        return $this->belongsTo(\App\Models\Procurement\Section::class, 'SectionID', 'Id');
     }
 
     public function rfq()
@@ -60,7 +60,9 @@ class RFQCriteria extends Model
 
     public function weightedSection()
     {
-        return $this->belongsTo(RFQSection::class, 'SectionID', 'id');
+        // Per-instance scoped relation: avoid cross-table whereColumn to prevent SQL binding errors on eager loads
+        return $this->hasOne(RFQSection::class, 'SectionID', 'SectionID')
+            ->where('t_RFQSection.RFQID', $this->RFQID);
     }
 
 }

@@ -2,9 +2,12 @@
 
 namespace App\Services\FleetManagement;
 
-use Illuminate\Support\Facades\DB;  
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetInsuranceTracker;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class FleetInsuranceTrackerService
@@ -12,10 +15,10 @@ class FleetInsuranceTrackerService
     /**
      * Create a new Fleet Vehicle
      */
-   
-    public function create(array $data): FleetInsuranceTracker
+
+  public function create(array $data,UploadedFile $document = null): FleetInsuranceTracker
 {
-    return DB::transaction(function () use ($data) {
+    return DB::transaction(function () use ($data, $document) {
         $data['InsuranceNo'] = $this->generateInsuranceNo();
         $data['VehicleID'] = $data['VehicleID'] ?? null;
         $data['InsuranceProvider'] = $data['InsuranceProvider'] ?? null;
@@ -24,20 +27,36 @@ class FleetInsuranceTrackerService
         $data['PremiumAmount'] = $data['PremiumAmount'] ?? null;
         $data['RenewalReminderDate'] = $data['RenewalReminderDate'] ?? null;
         $data['Notes'] = $data['Notes'] ?? null;
-        $data['DocumentPath'] = $data['DocumentPath'] ?? null;
         $data['Status'] = $data['Status'] ?? null;
         $data['CreatedBy'] = Auth::id();
         $data['CreatedOn'] = now();
+        
 
-        return FleetInsuranceTracker::create($data); 
+        
+        $insurance = FleetInsuranceTracker::create($data);
+
+        // If you still want to attach via newDocument service
+        if ($document) {
+            $insurance->newDocument(
+                ModulesEnum::Fleet,
+                $document,
+                [PermissionEnum::FleetInsuranceTrackerView->value],
+                Auth::user()
+            );
+        }
+
+        // Activity log
+        activity()
+            ->performedOn($insurance)
+            ->causedBy(Auth::user())
+            ->log('Insurance Created');
+
+        return $insurance;
     });
-    activity()
-        ->performedOn($driver)
-        ->causedBy(Auth::user())
-        ->log('Insurance Created');
 }
 
-     private function generateInsuranceNo(): string
+
+    private function generateInsuranceNo(): string
     {
         $latestInsurance = FleetInsuranceTracker::withTrashed()->latest('CreatedOn')->first();
 
@@ -45,7 +64,7 @@ class FleetInsuranceTrackerService
             return 'INS-0001';
         }
 
-        $lastId = (int) str_replace('INS-', '', $latestInsurance->InsuranceNo);
+        $lastId = (int)str_replace('INS-', '', $latestInsurance->InsuranceNo);
         $newId = $lastId + 1;
 
         return 'INS-' . str_pad($newId, 4, '0', STR_PAD_LEFT);

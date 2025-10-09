@@ -61,7 +61,7 @@
                     <div id="itemsContainer"></div>
 
                     <div class="text-end">
-                        <button type="submit" class="btn btn-success">Submit Requisition</button>
+                        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Requisition</button>
                     </div>
                 </div>
             </div>

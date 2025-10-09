@@ -91,16 +91,13 @@
     <div class="card shadow-sm border rounded-4 overflow-hidden">
         <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
             <h5 class="text-info mb-0"><i class="fas fa-user-tie"></i> Assigned Legal Counsels</h5>
-            <a href="{{ route('legal.disputes.counsels.create', $case->Id) }}" class="btn btn-sm btn-infos">
+            <a href="{{ route('legal.disputes.counsels.create', $case->Id) }}" class="btn btn-sm btn-info">
                 <i class="fas fa-plus"></i> Assign Counsel
             </a>
         </div>
         
         <div class="card-body bg-white">
             <p class="text-muted">List of legal counsels assigned to this case.</p>
-            @if($case->counsels->isEmpty())
-                <p class="text-muted">No legal counsels assigned yet.</p>
-            @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle text-center">
                     <thead class="table-light">
@@ -110,12 +107,12 @@
                             <th>Email</th>
                             <th>Phone</th>
                             <th>Role</th>
-                            {{-- <th>Actions</th> --}}
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if($case->counsels->count())
-                        @foreach ($case->counsels as $counsel)
+                            @foreach ($counsels as $counsel)
                             <tr>
                                 <td class="fw-semibold">{{ $counsel->CounselName }}</td>
                                 <td>{{ $counsel->FirmName }}</td>
@@ -142,11 +139,11 @@
                                     </button> 
                                 </td>
                             </tr>
-                        @endforeach
+                            @endforeach
                         @else
                             <tr>
                                 <td colspan="8" class="p-0">
-                                    <div class="text-centre p-4 border rounded-3 bg-light">
+                                    <div class="text-center p-4 border rounded-3 bg-light">
                                         <p class="mb-3 text-muted fs-5">
                                             <i class="fas fa-info-circle me-2 text-info"></i>
                                             <i>No counsels assigned yet.</i>
@@ -161,7 +158,6 @@
                     </tbody>
                 </table>
             </div>
-            @endif
         </div>
     </div>
 </div>

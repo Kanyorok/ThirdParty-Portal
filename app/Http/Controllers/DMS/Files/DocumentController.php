@@ -132,16 +132,15 @@ class DocumentController extends Controller
         }
 
         try {
-            return DB::transaction(function () use ($document) {
+            return DB::transaction(function () use ($repository, $document) {
                 $document->forceFill([
                     'DeletedOn' => now(),
                     'DeletedBy' => auth()->user()->Id,
                 ])->save();
 
                 activity()->causedBy(auth()->user())->performedOn($document)->event('delete')->log('trashed document  ' . $document->Name . '.');
-                return $this->succeeded('document trashed successfully', data: [
-                    'data' => new FileResource($document)
-                ]);
+                return $this->succeeded(message: 'document trashed successfully', route: route('repo.show', [$repository->RepositoryId]),
+                    data: ['data' => new FileResource($document)]);
             });
         } catch (Throwable|Exception $e) {
             Log::error('deleting file failed :');

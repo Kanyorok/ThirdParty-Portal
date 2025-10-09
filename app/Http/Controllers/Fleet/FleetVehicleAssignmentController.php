@@ -13,23 +13,25 @@ use App\Models\User;
 class FleetVehicleAssignmentController extends Controller
 {
     public function index()
-{
-    $assignments = FleetVehicleAssignment::with(['vehicle', 'user', 'branch', 'assignedBy'])
-        ->orderByDesc('AssignmentDate')
-        ->get();
+    {
+        $assignments = FleetVehicleAssignment::with(['vehicle', 'user', 'branch', 'assignedBy'])
+            ->orderByDesc('AssignmentDate')
+            ->get();
 
-    return view('fleet.assignments.index', compact('assignments'));
-}
+        return view('fleet.assignments.index', compact('assignments'));
+    }
+
     public function create($id)
     {
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
         $branches = Branch::all(); // No IsActive filter
         $users = User::all(); // You may filter based on roles or branch
 
         return view('fleet.assignments.create', compact('vehicles', 'branches', 'users'));
     }
 
-    public function show (){
+    public function show()
+    {
 
     }
 

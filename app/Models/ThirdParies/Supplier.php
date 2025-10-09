@@ -2,83 +2,127 @@
 
 namespace App\Models\ThirdParies;
 
-use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ProcurementPeriod;
+use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\Tender;
-use App\Traits\Model\UserActorTrait;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Procurement\Prequalification\PrequalificationApplication;
+use App\Models\ThirdParty\ThirdParties;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Supplier extends Model
+
+class Supplier extends ThirdParties
 {
-    use SoftDeletes, UserActorTrait;
-
-    const CREATED_AT = 'CreatedOn';
-    const UPDATED_AT = 'ModifiedOn';
-    const DELETED_AT = 'DeletedOn';
-
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
-    public static function getPrimaryKey(): string
-    {
-        return 'SuppliersId';
-    }
-
+    // Limit fillable to actual supplier table columns to avoid parent fillables bleeding in
     protected $fillable = [
-        'SupplierName',
-        'ContactEmail',
-        'ContactPhone',
-        'Address',
-        'IsPrequalified',
-        'CategoryId',
+        'RoundID',
+        'ThirdPartyID',
+        'RoundID',
+    'CategoryId',
+        'Active_Status',
+        'SupplierCategoryID',
         'CreatedBy',
+        'CreatedOn',
         'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
     ];
 
-    public function getIsPrequalifiedAttribute($value)
+    protected $casts = [
+    'Active_Status' => 'boolean',
+    'CategoryId' => 'integer',
+    ];
+
+    protected static function booted()
     {
-        return (bool)$value;
+        // Intentionally empty: suppress parent ThirdParties booted() logic that sets ApprovalStatus/Status
+        // because t_Suppliers does not have those columns.
     }
 
-    public function setIsPrequalifiedAttribute($value)
+    public function thirdParty(): BelongsTo
     {
-        $this->attributes['IsPrequalified'] = (bool)$value;
+        return $this->belongsTo(\App\Models\ThirdParty\ThirdParties::class, 'ThirdPartyID', 'Id');
     }
 
-    public function category()
+    public function rfqEvaluations(): HasMany
     {
-        return $this->belongsTo(ItemCategories::class, 'CategoryId', 'Id');
+        return $this->hasMany(RFQEvaluation::class, 'SupplierId', 'Id');
     }
 
-    public function rfqEvaluations()
+    public function procurementPeriods(): BelongsToMany
     {
-        return $this->hasMany(RFQEvaluation::class, 'SupplierId');
+        return $this->belongsToMany(ProcurementPeriod::class, 't_ProcurementPeriodSupplier', 'SupplierId', 'ProcurementPeriodId', 'Id', 'Id');
     }
 
-    public function ProcurementPeriods()
+    public function rfqLines(): HasMany
     {
-        return $this->belongsToMany(ProcurementPeriod::class, 't_ProcurementPeriodSupplier', 'SupplierId', 'ProcurementPeriodId');
+        return $this->hasMany(RFQLine::class, 'SupplierId', 'Id');
     }
 
-    public function rfqs()
+    public function rfqs(): BelongsToMany
     {
-        return $this->hasMany(RFQLine::class, 'SupplierId');
-    }
-
-    public function suppliers()
-    {
-        return $this->belongsToMany(Supplier::class, 't_RFQ_Supplier', 'RFQId', 'SupplierId')
+        return $this->belongsToMany(RFQ::class, 't_RFQ_Supplier', 'SupplierId', 'RFQId', 'Id', 'RFQId')
             ->withPivot('Status')
             ->withTimestamps();
     }
 
-    public function tenders()
+    public function tenders(): BelongsToMany
     {
-        return $this->belongsToMany(Tender::class, 'TenderSupplier', 'SupplierID', 'TenderID')
+        return $this->belongsToMany(Tender::class, 'TenderSupplier', 'SupplierID', 'TenderID', 'Id', 'TenderID')
             ->withTimestamps();
     }
 
+    public function prequalificationApplications(): HasMany
+    {
+        return $this->hasMany(PrequalificationApplication::class, 'SupplierID', 'Id');
+    }
+
+    public function scopeApprovedAndPrequalified($query)
+    {
+    // Treat Active_Status true as approved/active supplier row for the round/category
+    return $query
+        ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
+        ->where('Active_Status', 1);
+    }
+
+
+    /**
+     * Relationship to SupplierCategory via SupplierCategoryID
+     */
+    public function supplierCategory()
+    {
+        return $this->belongsTo(\App\Models\ThirdParty\SupplierCategory::class, 'SupplierCategoryID', 'SupplierCategoryID');
+    }
+
+    /**
+     * Relationship to PrequalificationRound via RoundID
+     */
+    public function round()
+    {
+        return $this->belongsTo(\App\Models\Procurement\Prequalification\PrequalificationRound::class, 'RoundID', 'RoundID');
+    }
+
+    /**
+     * Many-to-many relationship to SupplierCategories through pivot table
+     */
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\ThirdParty\SupplierCategory::class,
+            't_ThirdParty_SupplierCategory',
+            'third_party_id',
+            'supplier_category_id'
+        )->withTimestamps();
+    }
+
+    public function scopeOnlySuppliers($query)
+    {
+        return $query->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'));
+    }
 }

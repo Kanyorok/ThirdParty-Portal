@@ -29,7 +29,7 @@ class PropertyTenantClearanceController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyTenantClearance::class);
+        $this->authorize(PermissionEnum::TenantClearanceCreate, PropertyTenantClearance::class);
         $newtenants = PropertyLeaseTermination::whereNotIn('LeaseID', PropertyTenantClearance::pluck('LeaseId'))
             ->with('lease.tenant', 'code')->get();
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
@@ -38,15 +38,14 @@ class PropertyTenantClearanceController extends Controller
 
     public function show($Id)
     {
-        $this->authorize(PermissionEnum::TenantMentenanceView, PropertyTenantClearance::class);
+        $this->authorize(PermissionEnum::TenantClearanceView, PropertyTenantClearance::class);
         $clearancetenant = PropertyTenantClearance::find($Id);
         return view('property.tenantmanagement.tenantclearance.show', compact('clearancetenant'));
     }
 
     public function store(PropertyTenantClearanceRequest $request)
     {
-        $this->authorize(PermissionEnum::TenantMentenanceCreate, PropertyTenantClearance::class);
-
+        $this->authorize(PermissionEnum::TenantClearanceCreate, PropertyTenantClearance::class);
         $validatedData = $request->validated();
         $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
         $lease = PropertyLeaseTermination::where('LeaseID', $validatedData['LeaseId'])->firstOrFail();
@@ -74,7 +73,7 @@ class PropertyTenantClearanceController extends Controller
 
     public function edit($Id)
     {
-        $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
+        $this->authorize(PermissionEnum::TenantClearanceUpdate, PropertyTenantClearance::class);
         $clearancetenant = PropertyTenantClearance::with('lease')->get()->find($Id);
         $codedetails = CodeDetail::where('CodeID', 'DepositRefunded')->get();
         return view('property.tenantmanagement.tenantclearance.edit', compact('clearancetenant', 'codedetails'));
@@ -82,7 +81,7 @@ class PropertyTenantClearanceController extends Controller
 
     public function update(PropertyTenantClearanceRequest $request, $Id)
     {
-        $this->authorize(PermissionEnum::PropertyCategoryUpdate, PropertyTenantClearance::class);
+        $this->authorize(PermissionEnum::TenantClearanceUpdate, PropertyTenantClearance::class);
         $validatedData = $request->validated();
         $statusEnum = TenantClearanceEnum::from($validatedData['Status']);
         $depositRefunded = $validatedData['DepositRefunded'] ? CodeDetail::findOrFail($validatedData['DepositRefunded']) : null;

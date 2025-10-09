@@ -2,13 +2,17 @@
 
 namespace App\Models\Legal;
 
+use App\Models\Auth\User;
+use App\Models\Core\Module;
+use App\Models\DMS\Document;
+use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LegalDocument extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait,DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -32,13 +36,30 @@ class LegalDocument extends Model
         'ReviewedOn',
         'Remarks',
         'CreatedBy',
+        'CreatedOn',
+        'ModifiedOn',
         'ModifiedBy',
         'IsActive',
     ];
 
-    public static function getPrimaryKey() : string 
+    public static function getPrimaryKey() : string
     {
-        return 'FinanceCDNotesId'; 
+        return 'LegalDocumentId';
     }
 
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function modules()
+    {
+        return $this->belongsTo(Module::class,'ModuleID','SourceID');
+    }
+
+    public function modifiedBy()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
 }

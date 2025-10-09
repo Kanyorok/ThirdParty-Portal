@@ -8,7 +8,6 @@ use App\Models\Procurement\DepartmentNeed;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
-
 class ConsolidatedDashboardController extends Controller
 {
     public function index(Request $request)
@@ -33,7 +32,7 @@ class ConsolidatedDashboardController extends Controller
             $query->where('FiscalYear', $year);
         }
 
-        $needs = $query->get();
+        $needs = $query->orderByDesc('CreatedOn')->get();
 
         // Load filter dropdown options
         $branches = \App\Models\Core\Branch::orderBy('Name')->pluck('Name', 'Id')->prepend('All Branches', 'All Branches');
@@ -41,7 +40,13 @@ class ConsolidatedDashboardController extends Controller
         $years = ['All Years', 2025, 2026, 2027];
 
         return view('procurement.procurementplan.planconsolidation.dashboard.index', compact(
-            'needs', 'branches', 'departments', 'years', 'branch', 'department', 'year'
+            'needs',
+            'branches',
+            'departments',
+            'years',
+            'branch',
+            'department',
+            'year'
         ));
     }
 

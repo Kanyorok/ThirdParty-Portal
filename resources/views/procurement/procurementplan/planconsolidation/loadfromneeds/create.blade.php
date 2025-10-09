@@ -104,7 +104,7 @@
                     <thead class="table-light">
                     <tr>
                         <th><input type="checkbox" id="selectAll"></th>
-                        <th>Item</th>
+                        <th>Item / Need ID</th>
                         <th>Branch</th>
                         <th>Dept</th>
                         <th>Qty</th>
@@ -119,7 +119,10 @@
                         <tr>
                             <td><input type="checkbox" class="need-checkbox" name="selected_needs[]"
                                        value="{{ $need->Id }}"></td>
-                            <td>{{ $need->item->ItemName ?? 'N/A' }}</td>
+                            <td>
+                                {{ $need->item->ItemName ?? 'N/A' }}
+                                <div class="text-muted small">Need ID: {{ $need->NeedID }}</div>
+                            </td>
                             <td>{{ $need->branch->Name ?? 'N/A' }}</td>
                             <td>{{ $need->department->Name ?? 'N/A' }}</td>
                             <td>{{ $need->RequestedQty }}</td>
@@ -127,11 +130,10 @@
                             <td>{{ \Carbon\Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
                             <td>{{ $need->Justification }}</td>
                             <td>
-                                <select name="budget_line_id[{{ $need->Id }}]" class="form-select" required>
-                                    <option selected disabled>Select Budget Line</option>
+                                <select name="budget_line_id[{{ $need->Id }}]" class="form-select budget-select" {{ old('selected_needs') && !in_array($need->Id, old('selected_needs', [])) ? 'disabled' : '' }}>
+                                    <option disabled {{ old('budget_line_id.'.$need->Id) ? '' : 'selected' }}>Select Budget Line</option>
                                     @foreach($budgetLines as $budgetLine)
-                                        <option
-                                            value="{{ $budgetLine->BudgetLineID }}">{{ $budgetLine->Description }}</option>
+                                        <option value="{{ $budgetLine->Id }}" @selected(old('budget_line_id.'.$need->Id) == $budgetLine->Id)>{{ $budgetLine->LineName }}</option>
                                     @endforeach
                                 </select>
                             </td>
@@ -207,6 +209,7 @@
         const checkboxes = document.querySelectorAll('.need-checkbox');
         const selectAll = document.getElementById('selectAll');
         const submitBtn = document.getElementById('submitBtn');
+        const getBudgetSelectFor = (cb) => cb.closest('tr')?.querySelector('.budget-select');
 
         if (!selectAll || checkboxes.length === 0) return;
 
@@ -215,7 +218,14 @@
         selectAll.parentNode.replaceChild(newSelectAll, selectAll);
 
         newSelectAll.addEventListener('change', function () {
-            checkboxes.forEach(cb => cb.checked = newSelectAll.checked);
+            checkboxes.forEach(cb => {
+                cb.checked = newSelectAll.checked;
+                const select = getBudgetSelectFor(cb);
+                if (select) {
+                    select.disabled = !cb.checked;
+                    if (!cb.checked) select.selectedIndex = 0;
+                }
+            });
             toggleSubmitButton();
         });
 
@@ -225,6 +235,11 @@
                     newSelectAll.checked = false;
                 } else if (Array.from(checkboxes).every(c => c.checked)) {
                     newSelectAll.checked = true;
+                }
+                const select = getBudgetSelectFor(cb);
+                if (select) {
+                    select.disabled = !cb.checked;
+                    if (!cb.checked) select.selectedIndex = 0;
                 }
                 toggleSubmitButton();
             });
@@ -237,6 +252,14 @@
             }
         }
 
+        // Initialize selects on load
+        checkboxes.forEach(cb => {
+            const select = getBudgetSelectFor(cb);
+            if (select) {
+                select.disabled = !cb.checked;
+                if (!cb.checked) select.selectedIndex = 0;
+            }
+        });
         toggleSubmitButton();
     }
 

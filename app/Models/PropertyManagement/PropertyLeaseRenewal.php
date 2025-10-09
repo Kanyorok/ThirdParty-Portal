@@ -6,6 +6,7 @@ use App\Models\Core\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Model\UserActorTrait;
+use App\Models\Auth\User;
 
 class PropertyLeaseRenewal extends Model
 {
@@ -46,5 +47,14 @@ class PropertyLeaseRenewal extends Model
     public function paymentFrequency()
     {
         return $this->belongsTo(CodeDetail::class, 'PaymentFrequency', 'ID');
+    }
+        public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy');
+    }
+
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy');
     }
 }

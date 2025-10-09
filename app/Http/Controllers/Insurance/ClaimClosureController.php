@@ -2,46 +2,45 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Insurance\InsuranceClosureEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Http\Requests\Insurance\BancassuranceClaimClosureRequest;
+use App\Models\Insurance\BancassuranceClaim;
+use App\Models\Insurance\BancassuranceClaimClosure;
+use App\Models\Insurance\BancassuranceClaimPayment;
+use App\Services\Insurance\BancassuranceClaimClosureService;
+use Illuminate\Support\Carbon;
 
 class ClaimClosureController extends Controller
 {
-    public function create($id)
-    {
-        $claim = DB::table('t_BancassuranceClaims')->where('Id', $id)->first();
-        $statuses = DB::table('t_CodeDetails')
-            ->where('CodeID', 'CLAIM_FINAL_STATUS')
-            ->pluck('Description', 'Description')
-            ->toArray();
+public function closedClaimsIndex()
+{
+    $closedClaims = BancassuranceClaimClosure::all();
+    return view('bancassurance.claims.closed_claims_index', compact('closedClaims'));
+}
+public function initiateClosureForm()
+{
+    $claims = BancassuranceClaimPayment::all();
+    $status = InsuranceClosureEnum::cases();
 
-        return view('bancassurance.claims.close', compact('claim', 'statuses'));
-    }
+    return view('bancassurance.claims.initiate_closure_form', compact('claims','status'));
+}
 
-    public function store(Request $request, $id)
-    {
-        $request->validate([
-            'FinalStatus' => 'required|string|max:50',
-            'FinalRemarks' => 'nullable|string|max:500',
-            'ClosureDate' => 'required|date',
-        ]);
+public function storeClosureFromList(BancassuranceClaimClosureRequest $request)
+{
+    $validated = $request->validated();
+    $ClaimId = BancassuranceClaim::findOrFail($validated['ClaimId']);
+    $FinalStatus = InsuranceClosureEnum::from($validated['FinalStatus']);
 
-        DB::table('t_BancassuranceClaimClosures')->insert([
-            'ClaimID' => $id,
-            'FinalStatus' => $request->FinalStatus,
-            'FinalRemarks' => $request->FinalRemarks,
-            'ClosureDate' => $request->ClosureDate,
-            'ClosedBy' => auth()->id(),
-            'CreatedAt' => now(),
-        ]);
+    $closedClaims = BancassuranceClaimClosureService::create(
+        $ClaimId,
+        $FinalStatus,
+        $validated['FinalRemarks'],
+        Carbon::parse($validated['ClosureDate']),
+        $request->user(),
+    );
 
-        DB::table('t_BancassuranceClaims')->where('Id', $id)->update([
-            'Status' => $request->FinalStatus,
-            'ModifiedBy' => auth()->id(),
-            'ModifiedOn' => now(),
-        ]);
+    return redirect()->route('bancassurance.claims.closed')->with('success', 'Claim successfully closed.');
+}
 
-        return redirect()->route('bancassurance.claims.index')->with('success', 'Claim successfully closed.');
-    }
 }

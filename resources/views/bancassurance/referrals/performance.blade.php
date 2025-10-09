@@ -5,10 +5,10 @@
 @endsection
 
 @section('content')
-<div class="container mt-4">
-    <h4 class="mb-3">📊 Staff & Branch Referral Performance</h4>
-    <table class="table table-bordered" id="performanceTable">
-        <thead>
+    <div class="container mt-4">
+        <h4 class="mb-3">Staff & Branch Referral Performance</h4>
+        <table class="table table-bordered" id="performanceTable">
+            <thead>
             <tr>
                 <th>Staff</th>
                 <th>Branch</th>
@@ -16,8 +16,8 @@
                 <th>Converted</th>
                 <th>Pending</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach($performance as $entry)
                 <tr>
                     <td>{{ $entry['StaffName'] }}</td>
@@ -27,22 +27,22 @@
                     <td>{{ $entry['Pending'] }}</td>
                 </tr>
             @endforeach
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>
 
-@section('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#performanceTable').DataTable({
-                pageLength: 10,
-                ordering: true,
-                searching: true,
-                lengthChange: true
+    @section('scripts')
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $('#performanceTable').DataTable({
+                    pageLength: 10,
+                    ordering: true,
+                    searching: true,
+                    lengthChange: true
+                });
             });
-        });
-    </script>
-@endsection
+        </script>
+    @endsection
 @endsection

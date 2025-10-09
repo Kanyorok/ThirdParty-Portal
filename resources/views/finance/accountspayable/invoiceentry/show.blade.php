@@ -37,7 +37,7 @@
 
                 <div class="text-md-end">
                     <div class="display-6 fw-semibold mb-1">
-                        <span class="opacity-75">{{ $currencySymbol }}</span>{{ $amount }}
+                        <span class="opacity-75">{{ $currencySymbol }} </span>{{ $amount }}
                     </div>
                     <div class="small text-muted">
                         Exchange Rate: <strong>{{ number_format($exRate, 4) }}</strong>
@@ -49,9 +49,9 @@
                         <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>
                             <i data-feather="file-text"></i> View PO Items
                         </button>
-{{--                        <button type="button" class="btn btn-success" onclick="window.print()">--}}
-{{--                            <i data-feather="printer"></i> Print--}}
-{{--                        </button>--}}
+                        <button type="button" class="btn btn-success" onclick="window.print()">
+                            <i data-feather="printer"></i> Print
+                        </button>
                     </div>
                 </div>
             </div>
@@ -100,20 +100,20 @@
                                     <tr>
                                         <td class="text-muted">Invoice Amount</td>
                                         <td class="text-end">
-                                            <strong>{{ $currencySymbol }}{{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
+                                            <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-muted">PO Subtotal (Items)</td>
                                         <td class="text-end">
-                                            <span>{{ $currencySymbol }}{{ number_format($poSub, 2) }}</span>
+                                            <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
                                         </td>
                                     </tr>
                                     @if(property_exists($invoice, 'TaxAmount') || isset($invoice->TaxAmount))
                                         <tr>
                                             <td class="text-muted">Tax Amount</td>
                                             <td class="text-end">
-                                                <span>{{ $currencySymbol }}{{ number_format((float)($invoice->TaxAmount ?? 0), 2) }}</span>
+                                                <span>{{ $currencySymbol }} {{ number_format((float)($invoice->TaxAmount ?? 0), 2) }}</span>
                                             </td>
                                         </tr>
                                     @endif
@@ -121,7 +121,7 @@
                                         <tr>
                                             <td class="text-muted">Withholding</td>
                                             <td class="text-end">
-                                                <span>- {{ $currencySymbol }}{{ number_format((float)($invoice->WithholdingTax ?? 0), 2) }}</span>
+                                                <span>- {{ $currencySymbol }} {{ number_format((float)($invoice->WithholdingTax ?? 0), 2) }}</span>
                                             </td>
                                         </tr>
                                     @endif
@@ -132,7 +132,7 @@
                                     <tr class="table-light">
                                         <td class="fw-semibold">Net Payable</td>
                                         <td class="text-end fw-semibold">
-                                            {{ $currencySymbol }}{{ number_format($netPayable, 2) }}
+                                            {{ $currencySymbol }} {{ number_format($netPayable, 2) }}
                                         </td>
                                     </tr>
                                     </tbody>
@@ -147,7 +147,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-3">
+                <div class="col-lg-3 lifecycle">
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
@@ -227,8 +227,8 @@
                                         @endif
                                     </td>
                                     <td class="text-end">{{ number_format((float)$row->Quantity, 2) }}</td>
-                                    <td class="text-end">{{ $currencySymbol }}{{ number_format((float)$row->UnitCost, 2) }}</td>
-                                    <td class="text-end">{{ $currencySymbol }}{{ number_format($lineTotal, 2) }}</td>
+                                    <td class="text-end">{{ $currencySymbol }} {{ number_format((float)$row->UnitCost, 2) }}</td>
+                                    <td class="text-end">{{ $currencySymbol }} {{ number_format($lineTotal, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -240,7 +240,7 @@
                                 <tfoot class="table-light">
                                 <tr>
                                     <th colspan="3" class="text-end">PO Subtotal</th>
-                                    <th class="text-end">{{ $currencySymbol }}{{ number_format($poSub, 2) }}</th>
+                                    <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
                                 </tr>
                                 </tfoot>
                             @endif
@@ -435,7 +435,7 @@
         // Nice print styles (hide nav/buttons on print)
         const printCSS = `
         @media print {
-            .navbar, .btn, .modal { display: none !important; }
+            .navbar, .btn,.lifecycle, .modal { display: none !important; }
             .card { box-shadow: none !important; border: none !important; }
             a[href]:after { content: ""; }
         }

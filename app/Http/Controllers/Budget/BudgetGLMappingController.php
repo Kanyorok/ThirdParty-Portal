@@ -14,9 +14,20 @@ class BudgetGLMappingController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetGLAccount::class);
-        $gls = BudgetGLMaster::all();
+
+        // Fetch with pagination
+        $gls = BudgetGLMaster::select(
+            'BudgetGLID',
+            'AccountID',
+            'Description',
+            'CurrencyID',
+            'GLAccountTypeID',
+            'GLSubAccountTypeID'
+        )->paginate(25);
+
         return view('budgetandanalytics.glmapping.index', compact('gls'));
     }
+
 
     public function create()
     {

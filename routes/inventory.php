@@ -147,11 +147,13 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'update'])->name('interbranchrequisition.update');
     Route::delete('/interbranchrequisition/{Id}', [InterBranchRequisitionController::class, 'destroy'])->name('interbranchrequisition.destroy');
     Route::get('/interbranchrequisition/get-items', [InterBranchRequisitionController::class, 'getItemsByCategoryOrSubcategory'])->name('interbranchrequisition.getItemsByCategoryOrSubcategory');
-    Route::get('/items/code/{Id}', [InterBranchRequisitionController::class, 'getItemCode']);
+    Route::get('/items/code/{Id}', [InterBranchRequisitionController::class, 'getItemCode'])->name('inventory.items.code');
+
 
     Route::get('/get-categories-by-branch', [InterBranchRequisitionController::class, 'getCategoriesByBranch'])->name('inventory.get-categories-by-branch');
     Route::get('/get-subcategories-by-branch-and-category', [InterBranchRequisitionController::class, 'getSubcategoriesByBranchAndCategory'])->name('inventory.get-subcategories-by-branch-and-category');
     Route::get('/get-items', [InterBranchRequisitionController::class, 'getItemsByBranchAndCategoryOrSubcategory'])->name('inventory.get-items');
+
     Route::get('/get-subcategories', [InterBranchRequisitionController::class, 'getSubcategories'])->name('inventory.getSubcategories');
 
     //Route::resource('transactionstransfers', TransactionTransfersController::class);
@@ -218,7 +220,7 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
 
     //Route::resource('rentdashboard', RentDashboardController::class);
 
-   // Route::resource('unitofmeasure', UOMController::class);
+    // Route::resource('unitofmeasure', UOMController::class);
     Route::get('/unitofmeasure', [UOMController::class, 'index'])->name('unitofmeasure.index');
     Route::get('/unitofmeasure/create', [UOMController::class, 'create'])->name('unitofmeasure.create');
     Route::post('/unitofmeasure', [UOMController::class, 'store'])->name('unitofmeasure.store');
@@ -235,6 +237,8 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::put('/pricemanagement/{Id}', [PriceManagementController::class, 'update'])->name('pricemanagement.update');
     Route::delete('/pricemanagement/{Id}', [PriceManagementController::class, 'destroy'])->name('pricemanagement.destroy');
     Route::post('/pricemanagement/upload', [PriceManagementController::class, 'importPricing'])->name('pricemanagement.upload');
+    Route::get('/downloads/price_management_sample', [PriceManagementController::class, 'downloadSampleTemplate'])->name('pricemanagement.sample');
+
 
     //Route::resource('itemtype', ItemTypeController::class);
     Route::get('/itemtype', [ItemTypeController::class, 'index'])->name('itemtype.index');
@@ -256,7 +260,5 @@ Route::namespace('Inventory')->prefix('inventory')->group(function () {
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'inventory-reports.index',
         'show' => 'inventory-reports.show'
-
-
     ]);
 });

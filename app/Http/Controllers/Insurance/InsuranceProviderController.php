@@ -17,58 +17,60 @@ class InsuranceProviderController extends Controller
 {
     //
     public function create()
-{
-    $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
-    $providers = InsuranceProvider::all();
+    {
+        //$this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
+        $providers = InsuranceProvider::all();
 
-    return view('bancassurance.insurers.create', compact('providers'));
-}
-public function store(InsuranceProviderRequest $request)
-{
-    $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
-    $validated = $request->validated();
+        return view('bancassurance.insurers.create', compact('providers'));
+    }
+
+    public function store(InsuranceProviderRequest $request)
+    {
+       // $this->authorize(PermissionEnum::InsuranceProviderCreate, InsuranceProvider::class);
+        $validated = $request->validated();
 
 
         $providers = InsuranceProviderService::create(
-                $validated['Name'],
-                $validated['Country'],
-                $validated['ContactPerson'],
-                $validated['Email'],
-                $validated['Phone'],
-                $validated['IsActive'],
-                Auth::user(),
-            );
-    return redirect()->route('bancassurance.insurers.index')->with('success', 'Insurance Provider registered.');
-}
+            $validated['Name'],
+            $validated['Country'],
+            $validated['ContactPerson'],
+            $validated['Email'],
+            $validated['Phone'],
+            $validated['IsActive'] ?? null,
+            Auth::user(),
+        );
+        return redirect()->route('bancassurance.insurers.index')->with('success', 'Insurance Provider registered.');
+    }
 
-public function index()
-{
-    $providers = InsuranceProvider::all();
+    public function index()
+    {
+        $providers = InsuranceProvider::all();
 
-    return view('bancassurance.insurers.index', compact('providers'));
-}
-public function edit($Id)
-{
-    $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
-    $provider = InsuranceProvider::findOrFail($Id);
+        return view('bancassurance.insurers.index', compact('providers'));
+    }
 
-    return view('bancassurance.insurers.edit', compact('provider'));
-}
+    public function edit($Id)
+    {
+        $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
+        $provider = InsuranceProvider::findOrFail($Id);
 
-public function viewProducts($Id)
-{
-    $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
-    
-    $provider = InsuranceProvider::findOrFail($Id);
+        return view('bancassurance.insurers.edit', compact('provider'));
+    }
 
-    // Only fetch products linked to this provider
-    $products = InsuranceProduct::where('InsuranceProviderID', $Id)->get();
-    
-    return view('bancassurance.insurers.products', compact('provider','products'));
-}
+    public function viewProducts($Id)
+    {
+        $this->authorize(PermissionEnum::InsuranceProviderView, InsuranceProvider::class);
+
+        $provider = InsuranceProvider::findOrFail($Id);
+
+        // Only fetch products linked to this provider
+        $products = InsuranceProduct::where('InsuranceProviderID', $Id)->get();
+
+        return view('bancassurance.insurers.products', compact('provider', 'products'));
+    }
 
 
-    public function update (InsuranceProviderRequest $request, $id)
+    public function update(InsuranceProviderRequest $request, $id)
     {
         $this->authorize(PermissionEnum::InsuranceProviderUpdate, InsuranceProvider::class);
         $validated = $request->validated();
@@ -123,15 +125,15 @@ public function viewProducts($Id)
     }
 
 
-public function detachProduct($providerId, $productId)
-{
-    DB::table('t_InsuranceProviderProducts')
-        ->where('InsuranceProviderID', $providerId)
-        ->where('ProductID', $productId)
-        ->update(['IsActive' => 0]);
+    // public function detachProduct($providerId, $productId)
+    // {
+    //     DB::table('t_InsuranceProviderProducts')
+    //         ->where('InsuranceProviderID', $providerId)
+    //         ->where('ProductID', $productId)
+    //         ->update(['IsActive' => 0]);
 
-    return redirect()->route('bancassurance.insurers.products', $providerId)->with('success', 'Product detached successfully.');
-}
+    //     return redirect()->route('bancassurance.insurers.products', $providerId)->with('success', 'Product detached successfully.');
+    // }
 
 
 }

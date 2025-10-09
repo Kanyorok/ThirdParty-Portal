@@ -22,7 +22,8 @@ class ItemCategories extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'ItemCategoriesId';
+        // return 'ItemCategoriesId'; 
+        return 'Id';
     }
 
     protected $fillable = [
@@ -61,6 +62,11 @@ class ItemCategories extends Model
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(ItemMasterList::class, 'Category', 'Id');
+    }
+
     public function deleter()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
@@ -84,33 +90,33 @@ class ItemCategories extends Model
 
 
     protected static function booted()
-{
-    static::creating(function ($category) {
-        // Generate top-level CategoryCode
-        if (empty($category->CategoryCode) && empty($category->ParentId)) {
-            $lastCategory = ItemCategories::whereNull('ParentId')
-                                          ->where('CategoryCode', 'like', 'CAT-%')
-                                          ->orderBy('Id', 'desc')
-                                          ->first();
+    {
+        static::creating(function ($category) {
+            // Generate top-level CategoryCode
+            if (empty($category->CategoryCode) && empty($category->ParentId)) {
+                $lastCategory = ItemCategories::whereNull('ParentId')
+                    ->where('CategoryCode', 'like', 'CAT-%')
+                    ->orderBy('Id', 'desc')
+                    ->first();
 
-            $lastCode = $lastCategory ? $lastCategory->CategoryCode : 'CAT-000';
-            $lastNumber = (int) substr($lastCode, 4);
-            $category->CategoryCode = 'CAT-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-        }
+                $lastCode = $lastCategory ? $lastCategory->CategoryCode : 'CAT-000';
+                $lastNumber = (int) substr($lastCode, 4);
+                $category->CategoryCode = 'CAT-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+            }
 
-        // Generate sub-category CategoryCode
-        if (empty($category->CategoryCode) && !empty($category->ParentId)) {
-            $parentCategory = ItemCategories::find($category->ParentId);
+            // Generate sub-category CategoryCode
+            if (empty($category->CategoryCode) && !empty($category->ParentId)) {
+                $parentCategory = ItemCategories::find($category->ParentId);
 
-            $lastSubCategory = ItemCategories::where('ParentId', $category->ParentId)
-                                             ->where('CategoryCode', 'like', 'SUB-%')
-                                             ->orderBy('Id', 'desc')
-                                             ->first();
+                $lastSubCategory = ItemCategories::where('ParentId', $category->ParentId)
+                    ->where('CategoryCode', 'like', 'SUB-%')
+                    ->orderBy('Id', 'desc')
+                    ->first();
 
-            $lastSubCode = $lastSubCategory ? $lastSubCategory->CategoryCode : 'SUB-000';
-            $lastSubNumber = (int) substr($lastSubCode, 4);
-            $category->CategoryCode = 'SUB-' . str_pad($lastSubNumber + 1, 3, '0', STR_PAD_LEFT);
-        }
-    });
-}
+                $lastSubCode = $lastSubCategory ? $lastSubCategory->CategoryCode : 'SUB-000';
+                $lastSubNumber = (int) substr($lastSubCode, 4);
+                $category->CategoryCode = 'SUB-' . str_pad($lastSubNumber + 1, 3, '0', STR_PAD_LEFT);
+            }
+        });
+    }
 }

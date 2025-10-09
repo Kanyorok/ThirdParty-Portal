@@ -5,59 +5,70 @@
 @endsection
 
 @section('content')
-<div class="card p-4 shadow rounded-4">
+    <div class="card p-4 shadow rounded-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-4">📂 My Department's Procurement Needs</h4>
-    <a href="{{ route('procurementdepartmentalplan.create') }}" class="btn btn-success">+ Add Need</a>
+        <h4 class="mb-4">📂 My Department's Procurement Needs</h4>
+        <a href="{{ route('procurementdepartmentalplan.create') }}" class="btn btn-success">+ Add Need</a>
     </div>
 
     <table id="raisedneeds" class="table table-bordered table-striped align-middle">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Item Name</th>
-        <th>Category</th>
-        <th>Quantity</th>
-        <th>Est. Cost</th>
-        <th>Status</th>
-        <th>Submitted By</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-    @forelse ($departmentneedviews as $index => $departmentneedview)
-      <tr>
-          <td>{{ $index + 1 ?? 'N/A'}}</td>
-        <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
-          <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
-          <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
-          <td>{{ (isset($departmentneedview->RequestedQty, $departmentneedview->EstimatedUnitCost) && is_numeric($departmentneedview->RequestedQty) && is_numeric($departmentneedview->EstimatedUnitCost))
-                  ? number_format($departmentneedview->RequestedQty * $departmentneedview->EstimatedUnitCost, 2, '.', ',')
-                  : 'N/A' }}</td>
-          <td>{{ $departmentneedview->Status->label() ?? 'N/A' }}</td>
-          <td>{{ $departmentneedview->creator->Name ?? 'N/A' }}</td>
-        <td>
-            <button onclick="openEditModal('{{ $departmentneedview->NeedID }}')" class="btn btn-sm btn-outline-primary">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Item Name</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Est. Unit Cost</th>
+            <th>Est. Cost</th>
+            <th>Status</th>
+            <th>Submitted By</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        @forelse ($departmentneedviews as $index => $departmentneedview)
+            <tr>
+                <td>{{ $index + 1 ?? 'N/A' }}</td>
+                <td>{{ $departmentneedview->item->ItemName ?? 'N/A' }}</td>
+                <td>{{ $departmentneedview->item->category->Name ?? 'N/A' }}</td>
+                <td>{{ $departmentneedview->RequestedQty ?? 'N/A' }}</td>
+                <td>
+                    {{ is_numeric($departmentneedview->EstimatedUnitCost ?? null)
+                        ? number_format($departmentneedview->EstimatedUnitCost, 2, '.', ',')
+                        : 'N/A' }}
+                </td>
+                <td>
+                    {{ isset($departmentneedview->RequestedQty, $departmentneedview->EstimatedUnitCost) &&
+                    is_numeric($departmentneedview->RequestedQty) &&
+                    is_numeric($departmentneedview->EstimatedUnitCost)
+                        ? number_format($departmentneedview->RequestedQty * $departmentneedview->EstimatedUnitCost, 2, '.', ',')
+                        : 'N/A' }}
+                </td>
+                <td>{{ $departmentneedview->Status->label() ?? 'N/A' }}</td>
+                <td>{{ $departmentneedview->creator->Name ?? 'N/A' }}</td>
+                <td>
+                    <button onclick="openEditModal('{{ $departmentneedview->NeedID }}')"
+                            class="btn btn-sm btn-outline-primary">
                 Edit
-            </button>
+                    </button>
 
-            <form action="{{ route('procurementdepartmentalplan.destroy', $departmentneedview->NeedID) }}" method="POST"
-                  class="d-inline" onsubmit="return confirm('Are you sure you want to delete this need?');">
+                    <form action="{{ route('procurementdepartmentalplan.destroy', $departmentneedview->NeedID) }}"
+                          method="POST" class="d-inline"
+                          onsubmit="return confirm('Are you sure you want to delete this need?');">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-            </form>
-        </td>
-      </tr>
-    @empty
+                    </form>
+                </td>
+            </tr>
+        @empty
+        @endforelse
+        </tbody>
+    </table>
+    </div>
 
-    @endforelse
-    </tbody>
-  </table>
-</div>
-
-<!-- Edit Modal -->
-<div class="modal fade" id="editNeedsModal" tabindex="-1" aria-labelledby="editNeedsLabel" aria-hidden="true">
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editNeedsModal" tabindex="-1" aria-labelledby="editNeedsLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <form method="POST" action="{{ route('procurementdepartmentalplan.updateLine') }}">
             @csrf
@@ -79,10 +90,10 @@
             </div>
         </form>
     </div>
-</div>
+    </div>
 
-<!-- JavaScript for fetching and populating modal -->
-<script>
+    <!-- JavaScript for fetching and populating modal -->
+    <script>
     function openEditModal(NeedID) {
         const fetchLineRouteTemplate = "{{ route('procurementdepartmentalplan.view', ['NeedID' => '__NEED_ID__']) }}";
         const fetchUrl = fetchLineRouteTemplate.replace('__NEED_ID__', NeedID);
@@ -113,7 +124,7 @@
 
               <div class="col-md-3">
                 <label class="form-label">Estimated Unit Cost</label>
-                <input type="text" name="Needs[${index}][EstimatedUnitCost]" value="${need.EstimatedUnitCost ?? ''}" class="form-control">
+                <input type="text" name="Needs[${index}][EstimatedUnitCost]" value="${need.EstimatedUnitCost ?? ''}" class="form-control" readonly>
               </div>
 
               <div class="col-md-2">
@@ -131,18 +142,18 @@
                 alert('Could not load department need lines.');
             });
     }
-</script>
+    </script>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script>
-    $(document).ready(function () {
-    $('#raisedneeds').DataTable({
-      pageLength: 10,
-      ordering: true,
-      searching: true,
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#raisedneeds').DataTable({
+                pageLength: 10,
+                ordering: true,
+                searching: true,
         lengthChange: true,
-    });
-  });
-</script>
+            });
+        });
+    </script>
 @endsection

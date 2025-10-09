@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Insurance\InsurancePolicyStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Insurance\InsuranceProductRider;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Insurance\PremiumManagement\BancassurancePremiumPaymentsRequest;
 use Illuminate\Support\Facades\DB;
@@ -20,10 +22,29 @@ public function create()
 {
     $this->authorize(PermissionEnum::BancassurancePremiumPaymentsView, BancassurancePremiumPayments::class);
     $payment = BancassurancePremiumPayments::all();
-    $policies= BancassurancePolicy::all();
-    $paymentModes = CodeDetail::where('CodeID', 'PaymentModes',)->get();
+    $policies = BancassurancePolicy::where('Status', InsurancePolicyStatus::Issued)->get();
+    $balances = [];
+    $filteredPolicies = $policies->filter(function ($policy) use (&$balances) {
+        $totalPaid = BancassurancePremiumPayments::where('PolicyID', $policy->Id)->sum('Amount');
+        $riderPremium = 0;
+        if ($policy->RiderAddOnId) {
+            $rider = $policy->rideraddon;
+            if ($rider) {
+                $riderPremium = $rider->AdditionalPremium ?? 0;
+            }
+        }
+        $balance = ($policy->PremiumAmount + $riderPremium) - $totalPaid;
+        $balances[$policy->Id] = $balance;
+        return $balance != 0;
+    });
+    $paymentModes = CodeDetail::where('CodeID', 'PaymentModes')->get();
 
-    return view('bancassurance.premiums.create', compact('policies','paymentModes','payment'));
+    return view('bancassurance.premiums.create', [
+        'policies' => $filteredPolicies,
+        'paymentModes' => $paymentModes,
+        'payment' => $payment,
+        'balances' => $balances,
+    ]);
 }
 
 public function store(BancassurancePremiumPaymentsRequest $request)
@@ -57,6 +78,7 @@ public function index()
 
     return view('bancassurance.premiums.index', compact('payments'));
 }
+
 public function show($id)
 {
     $payment = BancassurancePremiumPayments::find($id);

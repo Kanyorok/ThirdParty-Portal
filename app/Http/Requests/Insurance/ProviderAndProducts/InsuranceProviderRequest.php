@@ -22,12 +22,12 @@ class InsuranceProviderRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'Name' => 'required|string|max:100',
-        'Country' => 'required|string|max:50',
-        'ContactPerson' => 'required|string|max:100',
-        'Email' => 'required|email|max:100',
-        'Phone' => 'required|string|max:50',
-        'IsActive' => 'nullable|boolean',
+            'Name' => 'required|string|max:100',
+            'Country' => 'required|string|max:50',
+            'ContactPerson' => 'required|string|max:100',
+            'Email' => 'required|email|max:100',
+            'Phone' => 'required|string|max:50',
+            'IsActive' => 'nullable|boolean',
         ];
     }
 }

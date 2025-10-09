@@ -53,21 +53,21 @@ class CleanSysCommand extends Command
 
     protected function _cleanTmp(): void
     {
-        $tempFolder = storage_path('app/temp');
-        $files = scandir($tempFolder);
+        /*  $tempFolder = Storage::disk('temp')->path('');
+          $files = scandir($tempFolder);
 
-        foreach ($files as $file) {
-            $filePath = $tempFolder . DIRECTORY_SEPARATOR . $file;
+          foreach ($files as $file) {
+              $filePath = $tempFolder . DIRECTORY_SEPARATOR . $file;
 
-            if (is_file($filePath)) {
-                $lastModified = filemtime($filePath);
-                $twoHoursAgo = now()->subHours(2)->timestamp;
+              if (is_file($filePath)) {
+                  $lastModified = filemtime($filePath);
+                  $twoHoursAgo = now()->subHours(2)->timestamp;
 
-                if ($lastModified < $twoHoursAgo) {
-                    unlink($filePath);
-                }
-            }
-        }
+                  if ($lastModified < $twoHoursAgo) {
+                      unlink($filePath);
+                  }
+              }
+          }*/
     }
 
 

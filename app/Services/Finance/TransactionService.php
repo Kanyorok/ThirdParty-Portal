@@ -62,6 +62,7 @@ class TransactionService
 
         $base = [
             'TransactionDate'   => $payload['TransactionDate'] ?? Carbon::now()->toDateString(),
+            'ThirdPartyID'      =>$payload['ThirdPartyID'] ?? null,
             'ReferenceNumber'   => $payload['ReferenceNumber'] ?? uniqid('REF-'),
             'TransactionType'   => (string)($payload['TransactionType'] ?? 'External'),
             'ModuleID'          => (int)$payload['ModuleID'],
@@ -75,6 +76,7 @@ class TransactionService
             'IsTaxable'         => (bool)($tax > 0),
             'SystemDescription' => $payload['SystemDescription'] ?? null,
             'IdempotencyKey'    => $idempotencyKey,
+            'JournalRefNo'      => null,
         ];
 
         $lines = [
@@ -118,8 +120,15 @@ class TransactionService
             'CurrencyID'      => $payload['CurrencyID'],
         ];
 
-        $this->createJournal($journalHeader, $lines);
+        $journalResult =$this->createJournal($journalHeader, $lines);
 
+        //Add The Journal Ref No
+        if (!empty($journalResult['journal_ref'])) {
+            foreach ($lines as &$line) {
+                $line['JournalRefNo'] = $journalResult['journal_ref'];
+            }
+            unset($line); // break reference
+        }
         // 9) Persist atomically
         return $this->persist($lines, ['batch' => $batch]);
     }
@@ -319,24 +328,49 @@ class TransactionService
     }
 
     /** Persist lines atomically */
+
     protected function persist(array $lines, array $options): array
     {
-        return DB::transaction(function () use ($lines, $options) {
-            DB::table($this->txTable)->insert($lines);
+        if (empty($lines)) {
+            throw new \InvalidArgumentException('No lines to post.');
+        }
 
+        $batch = $options['batch'] ?? null;
+        $ids   = [];
+
+        DB::transaction(function () use ($lines, $batch, &$ids) {
+            foreach ($lines as $line) {
+                // Ensure Amount sign convention: DR -> negative, CR -> positive
+                $isDebit = array_key_exists('IsDebit', $line)
+                    ? (bool)$line['IsDebit']
+                    : (($line['DRCR'] ?? null) === 'DR');
+                $amt = abs((float)($line['Amount'] ?? 0));
+                $storageLine = $line;
+                $storageLine['Amount'] = $isDebit ? -$amt : $amt;
+
+                // 1) insert one line, get its ID
+                $trxId = DB::table($this->txTable)->insertGetId($storageLine);
+                $ids[] = $trxId;
+
+                // 2) update balances for that line (use abs amount internally)
+                $this->updateBalanceForLine($trxId, $storageLine);
+            }
+
+            // 3) audit
             if (function_exists('activity')) {
                 activity('Transaction Posting')
                     ->causedBy(Auth::id())
-                    ->withProperties(['batch' => $options['batch'], 'lines' => count($lines)])
-                    ->log("Posted batch {$options['batch']}");
+                    ->withProperties(['batch' => $batch, 'lines' => count($lines)])
+                    ->log("Posted batch {$batch}");
             }
-
-            return [
-                'status'      => 'success',
-                'batchNumber' => $options['batch'],
-                'count'       => count($lines),
-            ];
         });
+
+        return [
+            'status'          => 'success',
+            'transactionIds'  => $ids,       // all inserted IDs
+            'batchNumber'     => $batch,
+            'count'           => count($lines),
+        ];
     }
 
     /** Batch helpers
@@ -430,8 +464,8 @@ class TransactionService
                 'BranchID'     => $l['BranchID'] ?? null,
                 'DepartmentID' => $l['DepartmentID'] ?? null,
                 'IsDebit'      => $isDebit,
-                'Amount'       => $amount,
-                'Debit'        => $debit,
+                'Amount'       => $isDebit?$amount*-1:$amount,
+                'Debit'        => $debit*-1,
                 'Credit'       => $credit,
                 'Narration'    => $l['Narration'] ?? null,
             ];
@@ -455,7 +489,7 @@ class TransactionService
                 'Reference'      => $header['ReferenceNumber'] ?? null, // if your table has a Reference column
                 'BatchNumber'    => $header['BatchNumber'] ?? null,     // add column if you want linkage
                 'IdempotencyKey' => $jKey ?? null,                      // add column if you decide to store it
-                'TotalDebit'     => $totalDebit ?? null,                // optional summary cols if present
+                'TotalDebit'     => $totalDebit*-1 ?? null,                // optional summary cols if present
                 'TotalCredit'    => $totalCredit ?? null,
                 'CurrencyID'     => $header['CurrencyID'] ?? null,
                 'ApprovalStatus'=>'posted',
@@ -490,8 +524,8 @@ class TransactionService
                     'BranchID'       => $ln['BranchID'],
                     'DepartmentID'   => $ln['DepartmentID'],
                     'IsDebit'        => $ln['IsDebit'],
-                    'Amount'         => $ln['Amount'],
-                    'Debit'          => $ln['Debit'],
+                    'Amount'         => $ln['IsDebit']?$ln['Amount']*-1:$ln['Amount'],
+                    'Debit'          => $ln['Debit']*-1,
                     'Credit'         => $ln['Credit'],
                     'Narration'      => $ln['Narration'],
                     'SystemDescription'      => $ln['Narration'],
@@ -511,8 +545,90 @@ class TransactionService
             return [
                 'status'       => 'success',
                 'journal_id'   => $journal->Id,
+                'journal_ref'  =>$journal->RefNo,
                 'lines_count'  => count($norm),
             ];
         });
     }
+
+    protected function updateBalanceForLine(int $trxId, array $trx): void
+    {
+        $glAccountId = (int)$trx['GLAccountID'];
+        $branchId    = $trx['BranchID'] ?? null;
+        $amount      = abs((float)$trx['Amount']);
+        $drcr        = strtoupper($trx['DRCR'] ?? 'DR');     // DR or CR
+        $rate        = (float)($trx['ExchangeRate'] ?? 1);
+        $currencyId  = $trx['CurrencyID'] ?? null;
+
+        // Sign: DR = -, CR = + (always start from absolute amount)
+        $signed       = $drcr === 'DR' ? -$amount : $amount;
+
+        // Base/ledger currency deltas (t_FinanceGLBranch stores all three)
+        $localDelta   = $signed * $rate;   // base/ledger currency delta
+        $foreignDelta = $currencyId ? $signed : 0;
+
+        // Format to avoid float noise in SQL
+        $fmt = fn($n) => number_format((float)$n, 5, '.', '');
+
+        $uid = $trx['ModifiedBy'] ?? $trx['CreatedBy'] ?? (Auth::id() ?? 0);
+        $now = now();
+
+        // Grab GL meta (code + type). Prefer character "A/L/E/I/X" if available.
+        $glMeta = DB::table('t_FinanceGLAccounts')
+            ->select('GLCode', 'GLAccountTypeID')
+            ->where('Id', $glAccountId)
+            ->first();
+
+        $glCode        = $trx['GLCode']        ?? ($glMeta->GLCode ?? '');
+        $glAccountType = $trx['GLAccountTypeID'] ?? ($glMeta->GLAccountType ?? ($glMeta->GLAccountTypeID ?? null));
+
+        // Does the (GLAccountID, BranchID) row exist?
+        $exists = DB::table('t_FinanceGLBranch')
+            ->where('GLAccountID', $glAccountId)
+            ->when(is_null($branchId), fn($q) => $q->whereNull('BranchID'),
+                fn($q) => $q->where('BranchID', $branchId))
+            ->exists();
+
+        if ($exists) {
+            // UPDATE path → increment balances
+            DB::table('t_FinanceGLBranch')
+                ->when(true, function ($q) use ($glAccountId, $branchId) {
+                    $q->where('GLAccountID', $glAccountId);
+                    return is_null($branchId) ? $q->whereNull('BranchID') : $q->where('BranchID', $branchId);
+                })
+                ->update([
+                    'LastTransactionId' => $trxId,
+                    // increment with DB::raw – use base/ledger delta for Balance/LocalBalance
+                    'Balance'           => DB::raw('Balance + '      . $fmt($localDelta)),
+                    'LocalBalance'      => DB::raw('LocalBalance + ' . $fmt($localDelta)),
+                    'ForeignBalance'    => DB::raw('ForeignBalance + ' . $fmt($foreignDelta)),
+                    'ModifiedOn'        => $now,
+                    'ModifiedBy'        => $uid,
+                ]);
+
+        } else {
+            // INSERT path → set starting balances (no arithmetic here)
+            DB::table('t_FinanceGLBranch')->insert([
+                'GLAccountID'       => $glAccountId,
+                'BranchID'          => $branchId,
+                'GLCode'            => $glCode,
+                'GLAccountType'     => (string)$glAccountType,
+                'LastTransactionId' => $trxId,
+                'IsActive'          => 1,
+                'BankID'            => $trx['BankID'] ?? null,
+
+                // starting balances (base/ledger = localDelta)
+                'Balance'           => $fmt($localDelta),
+                'LocalBalance'      => $fmt($localDelta),
+                'ForeignBalance'    => $fmt($foreignDelta),
+
+                // audit — set BOTH created & modified to satisfy NOT NULL constraints
+                'CreatedOn'         => $now,
+                'CreatedBy'         => $trx['CreatedBy'] ?? $uid,
+                'ModifiedOn'        => $now,
+                'ModifiedBy'        => $uid,
+            ]);
+        }
+    }
+
 }
