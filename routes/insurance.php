@@ -93,7 +93,6 @@ Route::prefix('bancassurance/policies')->name('bancassurance.policies.')->group(
     Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
     Route::post('{id}/endorsement/store', [PolicyController::class, 'storeEndorsement'])->name('storeEndorsement');
     Route::get('endorsements/list', [PolicyController::class, 'endorsementList'])->name('endorsements.list');
-    Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
     Route::get('register', [PolicyController::class, 'register'])->name('register');
     Route::post('{id}/renew/store', [PolicyController::class, 'storeRenewal'])->name('storeRenewal');
     Route::get('{id}/show', [PolicyController::class, 'show'])->name('show');
@@ -244,13 +243,13 @@ Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(
 });
 
 Route::middleware(['web','auth'])
-    ->prefix('bancassurance')
+    ->prefix('insurance/bancassurance')
     ->as('bancassurance.')
     ->group(function () {
 
         // Medical Funds (no hyphen → clean names)
         Route::resource('medicalfunds', MedicalFundController::class)
-            ->parameters(['medicalfunds' => 'medicalfund']);
+            ->parameters(['medicalfunds' => 'medical_fund']);
 
         // Nested: Beneficiaries
         Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
@@ -280,7 +279,7 @@ Route::middleware(['web','auth'])
         // Quick add beneficiary from contributor show
         Route::post('contributors/{contributor}/beneficiaries', [ContributorBeneficiaryController::class, 'store'])
             ->name('contributors.beneficiaries.store');
-            Route::get('contributors/{contributor}/coverage-remaining', [\App\Http\Controllers\Insurance\MedicalFundDisbursementController::class,'remainingLimit'])
+            Route::get('medicalfunds/{medical_fund}/contributors/{contributor}/coverage-remaining', [\App\Http\Controllers\Insurance\MedicalFundDisbursementController::class,'remainingLimit'])
     ->name('coverage.remaining'); // GET params: beneficiary_id, coverage_id, on_date (Y-m-d optional)
    
         Route::get(
