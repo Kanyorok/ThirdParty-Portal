@@ -30,7 +30,8 @@
                 <tbody>
                 @foreach($rfqs as $rfq)
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
+                        {{-- pagination-aware index: first item on current page + loop index --}}
+                        <td>{{ ($rfqs->currentPage() - 1) * $rfqs->perPage() + $loop->iteration }}</td>
                         <td>{{ $rfq->RFQNumber ?? '-' }}</td>
                         <td>{{ $rfq->requisition->RequisitionNo ?? '-' }}</td>
                         <td>{{ $rfq->Status ?? '-' }}</td>
@@ -43,6 +44,9 @@
                 @endforeach
                 </tbody>
             </table>
+            <div class="d-flex justify-content-center">
+                {{ $rfqs->links() }}
+            </div>
         @else
             <p>No RFQs created yet.</p>
         @endif
