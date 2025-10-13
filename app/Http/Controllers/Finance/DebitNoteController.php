@@ -16,17 +16,47 @@ class DebitNoteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsReceivableView, FinanceCDNotes::class);
+        $invoices = FinanceInvoice::select('Id','InvoiceNumber','InvoiceTitle','TotalAmount')->get();
 
-        $invoices = FinanceInvoice::select('Id','InvoiceNumber','InvoiceTitle','TotalAmount')
-            ->get();
-
-        $notes = FinanceCDNotes::with('invoiceDebit:Id,InvoiceNumber')
+        $query = FinanceCDNotes::with('invoiceDebit:Id,InvoiceNumber')
             ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description','ApprovalStatus')
-            ->where('NoteType','debit')->latest()->get();
-        return view('finance.accountsreceivable.debitnote.index', compact('notes','invoices'));
+            ->where('NoteType','debit');
+
+        if ($request->filled('cd_number')) {
+            $query->where('CDNumber', 'like', '%'.$request->cd_number.'%');
+        }
+        if ($request->filled('invoice_number')) {
+            $invNum = $request->invoice_number;
+            $query->whereHas('invoiceDebit', function($q) use ($invNum) {
+                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            });
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('NoteDate', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('NoteDate', '<=', $request->date_to);
+        }
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+        if ($request->filled('amount_min')) {
+            $query->where('NoteAmount', '>=', (float)$request->amount_min);
+        }
+
+        $sortField = $request->sort_by ?? 'NoteDate';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 10);
+        $notes = $query->paginate($perPage)->withQueryString();
+
+        $approvalStatuses = FinanceCDNotes::where('NoteType','debit')->distinct()->pluck('ApprovalStatus')->filter()->unique()->values();
+
+        return view('finance.accountsreceivable.debitnote.index', compact('notes','invoices','approvalStatuses'));
     }
 
     /**

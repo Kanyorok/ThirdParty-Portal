@@ -3,12 +3,27 @@
 @section('styles')
     <style>
         .je-table { min-width: 1100px; }
-        .je-table th, .je-table td { white-space: nowrap; vertical-align: middle; }
+        .je-table th, .je-table td { white-space: nowrap; vertical-align: middle; text-align: left; }
         .je-table th.col-gl, .je-table td.col-gl { min-width: 360px; }
         .je-table th.col-debit, .je-table td.col-debit,
         .je-table th.col-credit, .je-table td.col-credit,
-        .je-table th.col-amount, .je-table td.col-amount { min-width: 160px; text-align: right; }
-        .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; }
+        .je-table th.col-amount, .je-table td.col-amount { min-width: 160px; text-align: left; }
+        .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; white-space: normal; word-break: break-word; }
+
+        /* Narration UX */
+        .narration-details { max-width: 100%; }
+        .narration-summary { cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 100%; }
+        .narration-full { display: none; white-space: normal; }
+        .narration-details[open] .narration-full { display: block; }
+        @media print {
+            html, body { margin: 0 !important; padding: 0 !important; }
+            .btn, .navbar, .pagination { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .container { max-width: none !important; width: 100% !important; }
+            .table-responsive { overflow: visible !important; }
+            .narration-summary { display: none !important; }
+            .narration-full { display: block !important; }
+        }
     </style>
 @endsection
 
@@ -18,7 +33,7 @@
             <div class="card-header bg-white border-bottom">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-info">📘 Journal Entry Details</h5>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2 no-print">
                         <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
                             <i class="fas fa-print me-1"></i> Print
                         </button>
@@ -76,14 +91,19 @@
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{$line->glAccount->GLCode}}  <small>({{ $line->glAccount->GLName }})</small></td>
-                                <td class="{{ $line->Debit > 0 ? 'text-danger' : '' }}">
+                                <td class="{{ $line->Debit > 0 ? 'text-danger' : '' }} text-start">
                                     {{ number_format($line->Debit, 2) }}
                                 </td>
-                                <td class="{{ $line->Credit > 0 ? 'text-success' : '' }}">
+                                <td class="{{ $line->Credit > 0 ? 'text-success' : '' }} text-start">
                                     {{ number_format($line->Credit, 2) }}
                                 </td>
-                                <td>{{ number_format($line->Amount, 2) }}</td>
-                                <td>{{ $line->Narration }}</td>
+                                <td class="text-start">{{ number_format($line->Amount, 2) }}</td>
+                                <td>
+                                    <details class="narration-details">
+                                        <summary class="narration-summary">{{ Str::limit($line->Narration, 50) }}</summary>
+                                        <div class="narration-full">{{ $line->Narration }}</div>
+                                    </details>
+                                </td>
                             </tr>
                         @endforeach
                         </tbody>
@@ -102,7 +122,7 @@
                     </div>
                 @endif
 
-                <a href="{{ route('journalentry.index') }}">
+                <a href="{{ route('journalentry.index') }}" class="no-print">
                     <button class="btn btn-outline-secondary">
                         <i class="fas fa-backward-step me-1"></i> Back
                     </button>

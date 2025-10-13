@@ -7,8 +7,15 @@
         .je-table th.col-gl, .je-table td.col-gl { min-width: 360px; }
         .je-table th.col-debit, .je-table td.col-debit,
         .je-table th.col-credit, .je-table td.col-credit,
-        .je-table th.col-amount, .je-table td.col-amount { min-width: 160px; text-align: right; }
+        .je-table th.col-amount, .je-table td.col-amount { min-width: 160px; text-align: left; }
         .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; }
+        @media print {
+            html, body { margin: 0 !important; padding: 0 !important; }
+            .btn, .navbar, .pagination, .no-print { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .container { max-width: none !important; width: 100% !important; }
+            .table-responsive { overflow: visible !important; }
+        }
     </style>
 @endsection
 
@@ -18,7 +25,11 @@
             <div class="card-header bg-white border-bottom">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-danger"><i class="fas fa-undo-alt"></i> Reverse Journal <i class="text-info">#{{ $originalJournalRef }}</i></h5>
-                    <span class="text-end">Approval Status:
+                    <div class="no-print d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                            <i class="fas fa-print me-1"></i> Print
+                        </button>
+                        <span class="text-end">Approval Status:
                         @if($journalEntry->ApprovalStatus == 'posted')
                             <span class="badge bg-success">Approved</span>
                         @elseif($journalEntry->ApprovalStatus == 'rejected')
@@ -26,7 +37,8 @@
                         @elseif($journalEntry->ApprovalStatus == 'draft')
                             <span class="badge bg-warning text-dark">Pending</span>
                         @endif
-                    </span>
+                        </span>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -96,7 +108,7 @@
                     </div>
                 @endif
 
-                <a href="{{ route('reversingjournal.index') }}">
+                <a href="{{ route('reversingjournal.index') }}" class="no-print">
                     <button class="btn btn-outline-secondary">
                         <i class="fas fa-backward-step me-1"></i> Back
                     </button>

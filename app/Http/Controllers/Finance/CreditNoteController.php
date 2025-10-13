@@ -16,17 +16,52 @@ use PhpOffice\PhpSpreadsheet\Calculation\Financial;
 
 class CreditNoteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceCDNotes::class);
 
-        $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')
-            ->get();
+        $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->get();
 
-        $notes = FinanceCDNotes::with('invoice:Id,InvoiceNumber')
+        $query = FinanceCDNotes::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description','ApprovalStatus')
-            ->where('NoteType','credit')->latest()->get();
-        return view('finance.accountspayable.creditnote.index', compact('notes','invoices'));
+            ->where('NoteType','credit');
+
+        if ($request->filled('cd_number')) {
+            $query->where('CDNumber', 'like', '%'.$request->cd_number.'%');
+        }
+
+        if ($request->filled('invoice_number')) {
+            $invNum = $request->invoice_number;
+            $query->whereHas('invoice', function($q) use ($invNum) {
+                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('NoteDate', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('NoteDate', '<=', $request->date_to);
+        }
+
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+
+        if ($request->filled('amount_min')) {
+            $query->where('NoteAmount', '>=', (float)$request->amount_min);
+        }
+
+        $sortField = $request->sort_by ?? 'NoteDate';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 10);
+        $notes = $query->paginate($perPage)->withQueryString();
+
+        $approvalStatuses = FinanceCDNotes::where('NoteType','credit')->distinct()->pluck('ApprovalStatus')->filter()->unique()->values();
+
+        return view('finance.accountspayable.creditnote.index', compact('notes','invoices','approvalStatuses'));
     }
 
     public function create(){

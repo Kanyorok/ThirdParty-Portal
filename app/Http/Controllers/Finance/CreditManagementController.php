@@ -59,8 +59,13 @@ class CreditManagementController extends Controller
             $query->where('CreditLimit', '<=', $request->get('credit_to'));
         }
 
-        $credits = $query->orderBy('Id', 'desc')
-            ->paginate(25)
+        $sortField = $request->sort_by ?? 'Id';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 25);
+        $credits = $query
+            ->paginate($perPage)
             ->appends($request->query())
             ->through(function (FinanceCreditManagement $c) {
                 $utilization = $this->creditService->calculateCustomerCreditUtilization($c->CustomerID);

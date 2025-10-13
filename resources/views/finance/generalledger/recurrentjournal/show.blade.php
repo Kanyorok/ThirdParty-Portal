@@ -13,7 +13,7 @@
                 </div>
 
                 <!-- Right side -->
-                <div class="text-end d-flex align-items-center gap-2">
+                <div class="text-end d-flex align-items-center gap-2 no-print">
                     <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
                         <i class="fas fa-print me-1"></i> Print
                     </button>
@@ -43,12 +43,10 @@
                             <div class="small text-muted"><i class="fas fa-info-circle me-1"></i>No recurring schedule defined.</div>
                         @endif
                     </div>
-
                     <div class="col-md-4">
                         <label class="text-muted fw-semibold">Description:</label>
                         <div class="text-break">{{ $journalEntry->Description }}</div>
                     </div>
-
                     <div class="col-md-4">
                         <label class="text-muted fw-semibold">Created By:</label>
                         <div>{{ $journalEntry->createdBy->Name ?? 'System' }}</div>
@@ -58,14 +56,14 @@
                 {{-- Journal Lines --}}
                 <h6 class="border-bottom pb-2 text-info">Journal Lines</h6>
                 <div class="table-responsive">
-                    <table class="table table-bordered table-sm table-hover align-middle">
+                    <table class="table table-bordered table-sm table-hover align-middle" style="table-layout:auto; width:100%">
                         <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>GL Account</th>
-                            <th>Debit</th>
-                            <th>Credit</th>
-                            <th>Amount</th>
+                            <th class="text-start">Debit</th>
+                            <th class="text-start">Credit</th>
+                            <th class="text-start">Amount</th>
                             <th>Narration</th>
                         </tr>
                         </thead>
@@ -74,14 +72,19 @@
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $line->glAccount->GLName ?? '-' }}</td>
-                                <td class="text-danger">
+                                <td class="text-danger text-start">
                                     {{ number_format($line->Debit, 2) }}
                                 </td>
-                                <td class="text-success">
+                                <td class="text-success text-start">
                                     {{ number_format($line->Credit, 2) }}
                                 </td>
-                                <td>{{ number_format($line->Amount, 2) }}</td>
-                                <td>{{ $line->Narration }}</td>
+                                <td class="text-start">{{ number_format($line->Amount, 2) }}</td>
+                                <td>
+                                    <details>
+                                        <summary class="narration-summary">{{ Str::limit($line->Narration, 50) }}</summary>
+                                        <div class="narration-full">{{ $line->Narration }}</div>
+                                    </details>
+                                </td>
                             </tr>
                         @endforeach
                         </tbody>
@@ -100,7 +103,7 @@
                     </div>
                 @endif
 
-                <a href="{{ route('recurrentjournal.index') }}">
+                <a href="{{ route('recurrentjournal.index') }}" class="no-print">
                     <button class="btn btn-outline-secondary">
                         <i class="fas fa-backward-step me-1"></i> Back
                     </button>
@@ -165,4 +168,16 @@
             </div>
         </div>
     @endif
+@endsection
+
+@section('styles')
+    <style>
+        @media print {
+            html, body { margin: 0 !important; padding: 0 !important; }
+            .btn, .navbar, .pagination, .no-print { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .container { max-width: none !important; width: 100% !important; }
+            .table-responsive { overflow: visible !important; }
+        }
+    </style>
 @endsection

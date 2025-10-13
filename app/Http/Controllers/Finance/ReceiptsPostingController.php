@@ -23,11 +23,36 @@ class ReceiptsPostingController extends Controller
 {
     // Removed constructor dependency injection to fix route registration issues
 
-    public function index()
+    public function index(Request $request)
     {
-        $receipts = FinanceReceipt::with(['customer', 'allocations'])
-            ->orderBy('CreatedOn', 'desc')
-            ->paginate(15);
+        $query = FinanceReceipt::with(['customer', 'allocations']);
+
+        if ($request->filled('receipt_number')) {
+            $query->where('ReceiptNumber', 'like', '%'.$request->receipt_number.'%');
+        }
+        if ($request->filled('customer')) {
+            $cust = $request->customer;
+            $query->whereHas('customer', function($q) use ($cust){
+                $q->where('ThirdPartyName', 'like', '%'.$cust.'%');
+            });
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('Status', $request->status);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('ReceiptDate', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('ReceiptDate', '<=', $request->date_to);
+        }
+        if ($request->filled('amount_min')) {
+            $query->where('AmountReceived', '>=', (float)$request->amount_min);
+        }
+
+        $query->orderBy('CreatedOn', 'desc');
+
+        $perPage = (int)($request->per_page ?? 15);
+        $receipts = $query->paginate($perPage)->withQueryString();
 
         return view('finance.accountsreceivable.receiptsposting.index', compact('receipts'));
     }
