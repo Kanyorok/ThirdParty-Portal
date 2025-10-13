@@ -44,15 +44,54 @@
                         </thead>
                         <tbody>
                         @foreach(($lineInfo ?? []) as $i => $line)
+                            @php
+                                // Raw fields from OrderService.fetchOrderLineDetails
+                                $qtyRaw = $line->fQuantity ?? null; // quantity
+                                $discRaw = $line->fLineDiscount ?? null; // absolute or percent? assumed absolute amount per line
+                                $unitExcl = $line->fUnitPriceExcl ?? null; // unit price exclusive
+                                $taxRate = $line->fTaxRate ?? null; // tax percentage (already percent value e.g. 16)
+                                $lineTotal = $line->LineTotal ?? null; // inclusive line total (assumed)
+
+                                // Derive display quantity
+                                $qty = is_numeric($qtyRaw) ? (float)$qtyRaw : 0.0;
+
+                                // Derive unit price (exclusive). If missing, attempt back calculation from line total minus discount & tax when possible
+                                $unitPrice = is_numeric($unitExcl) ? (float)$unitExcl : null;
+
+                                // Determine discount percent: if fLineDiscount present and qty & unitPrice known
+                                $discountPercent = 0.0;
+                                if (is_numeric($discRaw) && $qty > 0 && $unitPrice !== null && $unitPrice > 0) {
+                                    // Assume discount raw is total discount amount across line
+                                    $discountPercent = ((float)$discRaw) / ($qty * $unitPrice) * 100.0;
+                                }
+
+                                // If unit price unknown, attempt to compute from (lineTotal + discount) / qty when tax known (approx exclusive)
+                                if ($unitPrice === null && $qty > 0 && is_numeric($lineTotal)) {
+                                    $grossBeforeDiscount = (float)$lineTotal + (is_numeric($discRaw) ? (float)$discRaw : 0.0);
+                                    if (is_numeric($taxRate) && $taxRate > 0) {
+                                        $exclusiveTotal = $grossBeforeDiscount / (1 + ($taxRate/100));
+                                        $unitPrice = $exclusiveTotal / $qty;
+                                    } else {
+                                        $unitPrice = $grossBeforeDiscount / $qty;
+                                    }
+                                }
+
+                                // Normalize values for display
+                                $displayQty = number_format($qty, 2);
+                                $displayUnit = number_format($unitPrice ?? 0, 2);
+                                $displayTax = number_format(is_numeric($taxRate) ? (float)$taxRate : 0.0, 2);
+                                $displayDisc = number_format($discountPercent, 2);
+                                $displayLineTotal = number_format(is_numeric($lineTotal) ? (float)$lineTotal : 0.0, 2);
+                            @endphp
                             <tr>
-                                <td>{{ $i + 1 }}</td>
-                                <td>{{ $line->ItemName ?? ('#'.$line->ItemId) }}</td>
-                                <td>{{ $line->ItemDescription ?? '' }}</td>
-                                <td class="text-end">{{ number_format((float)($line->Quantity ?? 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float)($line->UnitPrice ?? 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float)($line->Tax ?? 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float)($line->Discount ?? 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float)($line->LineTotal ?? 0), 2) }}</td>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $line->ItemName ?? ('#'.$line->ItemID) }}</td>
+                                <td>{{ $line->Description ?? '' }}</td>
+                                <td class="text-end" title="Raw: {{ $qtyRaw }}">{{ $displayQty }}</td>
+                                <td class="text-end" title="Raw excl: {{ $unitExcl }}">{{ $displayUnit }}</td>
+                                <td class="text-end" title="Stored Tax Rate: {{ $taxRate }}%">{{ $displayTax }}</td>
+                                <td class="text-end" title="Computed from discount amount {{ $discRaw }}">{{ $displayDisc }}</td>
+                                <td class="text-end" title="Raw total: {{ $lineTotal }}">{{ $displayLineTotal }}</td>
                             </tr>
                         @endforeach
                         </tbody>

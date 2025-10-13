@@ -150,4 +150,24 @@ class ThirdParties extends Model
     {
         return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
     }
+
+    /**
+     * Legacy category mappings (t_ThirdPartiesCategories -> CodeDetail) used by prequalification screen.
+     */
+    public function legacyCategories()
+    {
+        return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
+            ->whereNull('DeletedOn')
+            ->with('category');
+    }
+
+    /**
+     * Prequalification applications submitted by this supplier.
+     */
+    public function prequalificationApplications()
+    {
+        return $this->hasMany(\App\Models\Procurement\Prequalification\PrequalificationApplication::class, 'SupplierID', 'Id')
+            ->whereNull('DeletedOn')
+            ->with('category');
+    }
 }

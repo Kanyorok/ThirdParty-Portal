@@ -78,7 +78,7 @@
 
                         <div class="row mb-2">
                             <div class="col-4"><strong>Name:</strong></div>
-                            <div class="col-8">{{ $invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName ?? '—' }}</div>
+                            <div class="col-8">{{ $invoice->thirdParty->TradingName ?? optional($item->thirdParty)->ThirdPartyName ?? '—' }}</div>
                         </div>
 
                         @if($invoice->thirdParty->RegistrationNumber)
@@ -153,13 +153,13 @@
                                         <span>{{ $document->Name }}</span>
                                     </div>
                                     <div>
-                                        <a href="{{ route('legal.documents.show', $document->Id) }}" 
-                                           class="btn btn-sm btn-outline-primary me-2" 
+                                        <a href="{{ route('legal.documents.show', $document->Id) }}"
+                                           class="btn btn-sm btn-outline-primary me-2"
                                            target="_blank" title="Preview">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('legal.documents.download', $document->Id) }}" 
-                                           class="btn btn-sm btn-outline-secondary" 
+                                        <a href="{{ route('legal.documents.download', $document->Id) }}"
+                                           class="btn btn-sm btn-outline-secondary"
                                            title="Download">
                                             <i class="fas fa-download"></i>
                                         </a>

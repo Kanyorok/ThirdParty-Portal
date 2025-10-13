@@ -131,7 +131,8 @@ class BudgetConsolidationController extends Controller
 
                             //Fetch Actuals
                             //For Just pick for branch
-                            $b_id = Branch::find(session('LoginBranchId'))->BranchID ?? 1;
+                            //$b_id = Branch::find(session('LoginBranchId'))->BranchID ?? 1;
+                            $b_id ='001';// Branch::find(session('LoginBranchId'))->BranchID ?? 1;
                             $asDate = date('Y-m-d');
                             $budgetLineID = $entry->BudgetLineID;
                             $result = DB::select(

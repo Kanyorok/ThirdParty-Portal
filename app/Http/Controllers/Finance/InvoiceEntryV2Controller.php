@@ -90,8 +90,8 @@ class InvoiceEntryV2Controller extends Controller
                 ->select(
                     'i.ItemName',
                     'i.ItemDescription as Description',
-                    'ol.fQuantity as Quantity',
-                    'ol.fUnitPriceExcl as UnitCost'
+                    DB::raw('COALESCE(ol.fQuantity, 0) as Quantity'),
+                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as UnitCost')
                 )
                 ->get();
 
@@ -278,7 +278,16 @@ class InvoiceEntryV2Controller extends Controller
             $orders = DB::table('t_Orders as o')
                 ->join('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
                 ->where('s.ThirdPartyID', '=', (int) $supplier->ThirdPartyID)
-                ->select('o.Id', 'o.OrderNo', 'o.Description', DB::raw('COALESCE(o.OrdTotExcl, 0) as TotalAmount'), 'o.OrderDate')
+                ->select(
+                    'o.Id',
+                    'o.OrderNo',
+                    'o.Description',
+                    DB::raw('COALESCE(o.OrdTotExcl, 0) as OrdTotExcl'),
+                    DB::raw('COALESCE(o.OrdTotTax, 0) as OrdTotTax'),
+                    DB::raw('COALESCE(o.OrdDiscAmnt, 0) as OrdDiscAmnt'),
+                    DB::raw('COALESCE(o.OrdTotIncl, 0) as OrdTotIncl'),
+                    'o.OrderDate'
+                )
                 ->orderByRaw(Schema::hasColumn('t_Orders', 'OrderDate') ? 'OrderDate desc' : 'Id desc')
                 ->distinct()
                 ->get()
@@ -295,7 +304,12 @@ class InvoiceEntryV2Controller extends Controller
                         'Id' => $order->Id,
                         'OrderNo' => $order->OrderNo,
                         'Description' => $order->Description ?? '',
-                        'TotalAmount' => number_format((float)$order->TotalAmount, 2),
+                        'OrdTotExcl' => number_format((float)$order->OrdTotExcl, 2),
+                        'OrdDiscAmnt' => number_format((float)$order->OrdDiscAmnt, 2),
+                        'OrdTotTax' => number_format((float)$order->OrdTotTax, 2),
+                        'OrdTotIncl' => number_format((float)$order->OrdTotIncl, 2),
+                        // Backward compatibility: treat TotalAmount as inclusive amount
+                        'TotalAmount' => number_format((float)$order->OrdTotIncl, 2),
                         'OrderDate' => $order->OrderDate ? \Carbon\Carbon::parse($order->OrderDate)->format('d M Y') : '',
                         'Currency' => [
                             'Id' => $currency->Id ?? $defaultCurrency->Id,
@@ -367,24 +381,51 @@ class InvoiceEntryV2Controller extends Controller
     private function getOrderLines($orderId)
     {
         try {
-            return DB::table('t_OrderLines as ol')
+            $rows = DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
                 ->where('ol.iOrderID', $orderId)
                 ->select(
                     DB::raw('COALESCE(i.ItemName, ol.cDescription, \'Unknown Item\') as ItemName'),
-                    DB::raw('COALESCE(ol.fQuantity, 0) as Quantity'),
-                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as UnitPrice'),
-                    DB::raw('COALESCE(ol.fQuantity, 0) * COALESCE(ol.fUnitPriceExcl, 0) as LineTotal')
+                    DB::raw('COALESCE(i.ItemDescription, ol.cDescription, \'\') as ItemDescription'),
+                    DB::raw('COALESCE(ol.fQuantity, 0) as fQuantity'),
+                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as fUnitPriceExcl'),
+                    DB::raw('COALESCE(ol.fUnitPriceIncl, 0) as fUnitPriceIncl'),
+                    DB::raw('COALESCE(ol.fLineDiscount, 0) as fLineDiscount'),
+                    DB::raw('COALESCE(ol.fTaxRate, 0) as fTaxRate'),
+                    DB::raw('COALESCE(ol.LineTotal, 0) as LineTotal')
                 )
-                ->get()
-                ->map(function($line) {
-                    return [
-                        'ItemName' => $line->ItemName ?? 'Unknown Item',
-                        'Quantity' => $line->Quantity ?? 0,
-                        'UnitPrice' => number_format((float)$line->UnitPrice, 2),
-                        'LineTotal' => number_format((float)$line->LineTotal, 2)
-                    ];
-                });
+                ->get();
+
+            return $rows->map(function ($r) {
+                $quantity = (float)($r->fQuantity ?? 0);
+                $unitExcl = (float)($r->fUnitPriceExcl ?? 0);
+                $unitIncl = (float)($r->fUnitPriceIncl ?? 0);
+                $discount = (float)($r->fLineDiscount ?? 0); // assume line amount
+                $taxRate = (float)($r->fTaxRate ?? 0);
+
+                $lineExcl = $quantity * $unitExcl;
+                if ($unitIncl > 0) {
+                    $lineInclGiven = $quantity * $unitIncl;
+                    $lineTax = max(0.0, $lineInclGiven - max(0.0, $lineExcl - $discount));
+                    $lineIncl = $r->LineTotal !== null ? (float)$r->LineTotal : $lineInclGiven;
+                } else {
+                    $lineTax = max(0.0, max(0.0, $lineExcl - $discount) * ($taxRate / 100.0));
+                    $lineIncl = $r->LineTotal !== null ? (float)$r->LineTotal : max(0.0, $lineExcl - $discount + $lineTax);
+                }
+
+                return [
+                    'ItemName' => $r->ItemName ?? 'Unknown Item',
+                    'Description' => $r->ItemDescription ?? '',
+                    'Quantity' => $quantity,
+                    'UnitPriceExcl' => $unitExcl,
+                    'UnitPriceIncl' => $unitIncl,
+                    'Discount' => $discount,
+                    'TaxRate' => $taxRate,
+                    'TaxAmount' => $lineTax,
+                    'LineExclusive' => $lineExcl,
+                    'LineInclusive' => $lineIncl,
+                ];
+            });
         } catch (\Exception $e) {
             Log::error('Error fetching order lines: ' . $e->getMessage(), [
                 'orderId' => $orderId,
@@ -448,7 +489,7 @@ class InvoiceEntryV2Controller extends Controller
 
             $invoice = FinanceInvoiceEntry::create([
                 //'ThirdPartyID' => $validated['ThirdPartyID'], // Store in correct field for relationship
-                'SupplierID' => $validated['SupplierID'], // Also store SupplierID separately if needed
+                'SupplierID' => $validated['ThirdPartyID'], // Also store SupplierID separately if needed
                 'POId' => $validated['POReference'], // This is actually the PO ID from the form
                 'POReference'=>  $validated['POReference'],
                 'GRNId' => 1,//$validated['GRNReference'], //Set to one to avoid data type conversion since with po we can get the grn
@@ -456,7 +497,18 @@ class InvoiceEntryV2Controller extends Controller
                 'InvoiceNumber' => $validated['InvoiceNumber'],
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'DueDate' => $validated['DueDate'],
-                'InvoiceAmount' => $validated['Amount'],
+                // Store inclusive amount for posting/approval
+                'InvoiceAmount' => (function() use ($validated) {
+                    // If form provided Amount, prefer it; otherwise if PO is present, fetch OrdTotIncl
+                    $formAmount = (float)$validated['Amount'];
+                    if (!empty($validated['POReference'])) {
+                        $ordTotIncl = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->value('OrdTotIncl');
+                        if ($ordTotIncl !== null) {
+                            return (float)$ordTotIncl;
+                        }
+                    }
+                    return $formAmount;
+                })(),
                 'Description' => $validated['Description'],
                 'CurrencyID' => 56, // Set to default currency
                 'ExchangeRate' => 1.0, // Set exchange rate to 1
