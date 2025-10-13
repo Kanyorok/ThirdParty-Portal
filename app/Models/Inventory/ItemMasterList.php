@@ -111,39 +111,34 @@ public function inUse(): bool
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
     
-    
-
     public function price()
     {
         return $this->belongsTo(PriceManagement::class, 'ItemPrice', 'Id');
     }
-
 
     public function inventoryType()
     {
         return $this->belongsTo(InventoryType::class, 'InventoryType', 'Id');
     }
 
-    // App\Models\Inventory\ItemMasterList.php
+    public function stockItems()
+    {
+        return $this->hasMany(StockItem::class, 'ItemID', 'Id');
+    }
 
-public function stockItems()
-{
-    return $this->hasMany(StockItem::class, 'ItemID', 'Id');
-}
+    public function transferItems()
+    {
+        return $this->hasMany(TransactionTransferItem::class, 'Item', 'Id');
+    }
 
-public function transferItems()
-{
-    return $this->hasMany(TransactionTransferItem::class, 'Item', 'Id');
-}
+    public function receiptItems()
+    {
+        return $this->hasMany(TransactionReceiptItem::class, 'Item', 'Id');
+    }
 
-public function receiptItems()
-{
-    return $this->hasMany(TransactionReceiptItem::class, 'Item', 'Id');
-}
-
-public function requisitionItems()
-{
-    return $this->hasMany(InterBranchRequisitionItem::class, 'Item', 'Id');
-}
+    public function requisitionItems()
+    {
+        return $this->hasMany(InterBranchRequisitionItem::class, 'Item', 'Id');
+    }
 
 }

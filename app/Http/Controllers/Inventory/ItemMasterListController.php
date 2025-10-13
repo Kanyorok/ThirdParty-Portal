@@ -25,96 +25,96 @@ class ItemMasterListController extends Controller
     }
 
    public function index(Request $request)
-{
-    if ($request->ajax()) {
-        $items = ItemMasterList::with([
-            'category.parent',
-            'itemType',
-            'inventoryType',
-            'uom',
-            'price',
-            'status'
-        ]);
+    {
+        if ($request->ajax()) {
+            $items = ItemMasterList::with([
+                'category.parent',
+                'itemType',
+                'inventoryType',
+                'uom',
+                'price',
+                'status'
+            ]);
 
-        return DataTables::of($items)
-            ->addIndexColumn()
+            return DataTables::of($items)
+                ->addIndexColumn()
 
-            ->addColumn('Category', function ($item) {
-                return optional($item->category)->Name ?? 'Uncategorized';
-            })
+                ->addColumn('Category', function ($item) {
+                    return optional($item->category)->Name ?? 'Uncategorized';
+                })
 
-            ->addColumn('ParentCategory', function ($item) {
-                return optional(optional($item->category)->parent)->Name ?? '—';
-            })
+                ->addColumn('ParentCategory', function ($item) {
+                    return optional(optional($item->category)->parent)->Name ?? '—';
+                })
 
-            ->addColumn('ItemType', function ($item) {
-                return optional($item->itemType)->TypeName ?? '—';
-            })
+                ->addColumn('ItemType', function ($item) {
+                    return optional($item->itemType)->TypeName ?? '—';
+                })
 
-            ->addColumn('InventoryType', function ($item) {
-                return optional($item->inventoryType)->Type ?? '—';
-            })
+                ->addColumn('InventoryType', function ($item) {
+                    return optional($item->inventoryType)->Type ?? '—';
+                })
 
-            ->addColumn('UOM', function ($item) {
-                return optional($item->uom)->Code ?? '—';
-            })
+                ->addColumn('UOM', function ($item) {
+                    return optional($item->uom)->Code ?? '—';
+                })
 
-            ->addColumn('Status', function ($item) {
-                if ($item->status && $item->status->Description) {
-                    $desc = $item->status->Description;
-                    $badgeClass = match (strtolower($desc)) {
-                        'active'   => 'bg-success',
-                        'inactive' => 'bg-secondary',
-                        default    => 'bg-warning',
-                    };
-                    return '<span class="badge ' . $badgeClass . '">' . e($desc) . '</span>';
-                }
-                return '<span class="badge bg-warning">Unknown</span>';
-            })
+                ->addColumn('Status', function ($item) {
+                    if ($item->status && $item->status->Description) {
+                        $desc = $item->status->Description;
+                        $badgeClass = match (strtolower($desc)) {
+                            'active'   => 'bg-success',
+                            'inactive' => 'bg-secondary',
+                            default    => 'bg-warning',
+                        };
+                        return '<span class="badge ' . $badgeClass . '">' . e($desc) . '</span>';
+                    }
+                    return '<span class="badge bg-warning">Unknown</span>';
+                })
 
-            ->addColumn('ItemPrice', function ($item) {
-                return optional($item->price)->ActualPrice ?? '—';
-            })
+                ->addColumn('ItemPrice', function ($item) {
+                    return optional($item->price)->ActualPrice ?? '—';
+                })
 
-         ->addColumn('Action', function ($item) {
-    $viewUrl   = route('itemmasterlist.show', $item->Id);
-    $editUrl   = route('itemmasterlist.edit', $item->Id);
-    $deleteUrl = route('itemmasterlist.destroy', $item->Id);
+            ->addColumn('Action', function ($item) {
+        $viewUrl   = route('itemmasterlist.show', $item->Id);
+        $editUrl   = route('itemmasterlist.edit', $item->Id);
+        $deleteUrl = route('itemmasterlist.destroy', $item->Id);
 
-    $actions = '
-        <a href="' . $viewUrl . '" class="btn btn-sm btn-primary">View</a>
-        <a href="' . $editUrl . '" class="btn btn-sm btn-warning">Edit</a>
-    ';
-
-    if ($item->inUse()) {
-        $actions .= '<span class="badge bg-info">In Use</span>';
-    } else {
-        $actions .= '
-            <button type="button" class="btn btn-danger btn-sm"
-                onclick="if(confirm(\'⚠️ Are you sure you want to delete this unit?\')) { 
-                    this.disabled=true; 
-                    this.innerText=\'Submitting...\'; 
-                    document.getElementById(\'delete-form-' . $item->Id . '\').submit(); 
-                }">
-                Delete
-            </button>
-            <form id="delete-form-' . $item->Id . '" 
-                  action="' . $deleteUrl . '" 
-                  method="POST" style="display:none;">
-                ' . csrf_field() . '
-                ' . method_field('DELETE') . '
-            </form>
+        $actions = '
+            <a href="' . $viewUrl . '" class="btn btn-sm btn-primary">View</a>
+            <a href="' . $editUrl . '" class="btn btn-sm btn-warning">Edit</a>
         ';
-    }
 
-    return $actions;
-})
-->rawColumns(['Status', 'Action'])
-->make(true);
-    }
+        if ($item->inUse()) {
+            $actions .= '<span class="badge bg-info">In Use</span>';
+        } else {
+            $actions .= '
+                <button type="button" class="btn btn-danger btn-sm"
+                    onclick="if(confirm(\'⚠️ Are you sure you want to delete this unit?\')) { 
+                        this.disabled=true; 
+                        this.innerText=\'Submitting...\'; 
+                        document.getElementById(\'delete-form-' . $item->Id . '\').submit(); 
+                    }">
+                    Delete
+                </button>
+                <form id="delete-form-' . $item->Id . '" 
+                    action="' . $deleteUrl . '" 
+                    method="POST" style="display:none;">
+                    ' . csrf_field() . '
+                    ' . method_field('DELETE') . '
+                </form>
+            ';
+        }
 
-    return view('inventory.itemmaster.itemmasterlist.index');
-}
+        return $actions;
+    })
+    ->rawColumns(['Status', 'Action'])
+    ->make(true);
+        }
+
+        return view('inventory.itemmaster.itemmasterlist.index');
+    }
 
     public function create()
     {
