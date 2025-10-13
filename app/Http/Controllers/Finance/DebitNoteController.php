@@ -102,10 +102,16 @@ class DebitNoteController extends Controller
     public function show(int $id)
     {
         $note = FinanceCDNotes::with([
+            // AP invoice relations (FinanceInvoiceEntry)
             'invoice',
             'invoice.supplier',
             'invoice.order:Id,OrderNo',
             'invoice.currency:Id,Code',
+            // AR invoice relations (FinanceInvoice)
+            'invoiceDebit',
+            'invoiceDebit.customer',
+            'invoiceDebit.currency:Id,Code',
+            // audit
             'createdBy:Id,Name',
             'modifiedBy:Id,Name'
         ])->findOrFail($id);
