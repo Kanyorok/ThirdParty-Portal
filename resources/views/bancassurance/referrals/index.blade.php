@@ -64,16 +64,22 @@
                                class="btn btn-sm btn-warning">
                                 <i class="bi bi-pencil-square"></i> Edit
                             </a>
-                            <form action="{{ route('bancassurance.referrals.destroy', $referral->Id) }}" 
-                                  method="POST" 
-                                  onsubmit="return confirm('Are you sure you want to delete this referral?')" 
-                                  class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="bi bi-trash"></i> Delete
+                            @if($referral->customerreferral()->exists())
+                                <button class="btn btn-sm btn-secondary" disabled>
+                                    <i class="bi bi-lock"></i> In Use
                                 </button>
-                            </form>
+                            @else
+                                <form action="{{ route('bancassurance.referrals.destroy', $referral->Id) }}" 
+                                        method="POST" 
+                                        onsubmit="return confirm('Are you sure you want to delete this referral?');"
+                                        class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @empty

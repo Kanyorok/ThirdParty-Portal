@@ -22,7 +22,7 @@ class BancassuranceReferralController extends Controller
 public function index()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])
+    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser','customerreferral'])
     ->orderByDesc('Id')->get();
 
     return view('bancassurance.referrals.index', compact('referrals'));
