@@ -18,10 +18,21 @@ class RFQController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // paginate RFQs 10 per page so the listing shows items 1-10 on page 1, then 11-20 on page 2, etc.
-        $rfqs = RFQ::with(['category', 'suppliers', 'requisition'])->orderBy('Id', 'desc')->paginate(10);
+        // Build base query
+        $query = RFQ::with(['category', 'suppliers', 'requisition'])->orderBy('Id', 'desc');
+
+        // Apply filters from query string
+        if ($request->filled('status')) {
+            $query->where('Status', $request->query('status'));
+        }
+        if ($request->filled('created_by')) {
+            $query->where('CreatedBy', $request->query('created_by'));
+        }
+
+        // paginate RFQs 10 per page
+        $rfqs = $query->paginate(10)->withQueryString();
 
         $requisitions = DB::table('t_Requisitions as r')
             ->join('t_CodeDetails as cd', 'r.StatusID', '=', 'cd.Id')
@@ -44,7 +55,11 @@ class RFQController extends Controller
             }
         }
 
-        return view('procurement.rfqs.index', compact('rfqs', 'requisitions', 'createdByMap'));
+        // For filter dropdowns: get distinct statuses and all users (small set assumed)
+        $statuses = DB::table('t_RFQ')->select('Status')->distinct()->pluck('Status')->filter()->values();
+        $allUsers = DB::table('t_Users')->select('Id', 'Name')->orderBy('Name')->get();
+
+        return view('procurement.rfqs.index', compact('rfqs', 'requisitions', 'createdByMap', 'statuses', 'allUsers'));
     }
 
     /**

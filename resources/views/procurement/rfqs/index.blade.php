@@ -5,6 +5,29 @@
 
 @section('content')
     <div class="container">
+        <!-- Filters -->
+        <form method="GET" class="row g-2 mb-3">
+            <div class="col-auto">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    @foreach($statuses as $st)
+                        <option value="{{ $st }}" {{ request('status') == $st ? 'selected' : '' }}>{{ $st }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
+                <select name="created_by" class="form-select">
+                    <option value="">All Creators</option>
+                    @foreach($allUsers as $u)
+                        <option value="{{ $u->Id }}" {{ request('created_by') == $u->Id ? 'selected' : '' }}>{{ $u->Name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+                <a href="{{ route('rfqs.index') }}" class="btn btn-link">Reset</a>
+            </div>
+        </form>
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
