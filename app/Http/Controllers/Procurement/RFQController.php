@@ -148,9 +148,21 @@ class RFQController extends Controller
         $actor = Auth::user();
         if ($actor) {
             $subject = 'RFQ Approved: ' . $rfq->RFQNumber;
+            // Read SubmissionDeadline explicitly from the t_RFQ table to ensure we use the stored DB value
+            $rawSubmissionDeadline = DB::table('t_RFQ')->where('Id', $rfq->Id)->value('SubmissionDeadline');
+            $submissionDeadlineFormatted = 'N/A';
+            if ($rawSubmissionDeadline) {
+                try {
+                    $submissionDeadlineFormatted = \Carbon\Carbon::parse($rawSubmissionDeadline)->format('Y-m-d');
+                } catch (\Throwable $e) {
+                    // fallback to the raw value if parsing fails
+                    $submissionDeadlineFormatted = $rawSubmissionDeadline;
+                }
+            }
+
             $body = '<p>Hello ' . e($actor->Name) . ',</p>' .
                 '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
-                '<p>Submission Deadline: <b>' . e(optional($rfq->SubmissionDeadline)->format('Y-m-d')) . '</b></p>' .
+                '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
                 '<p>Selected suppliers have been notified.</p>';
 
             (new UserService($actor))
