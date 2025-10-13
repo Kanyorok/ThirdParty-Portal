@@ -20,17 +20,73 @@ use Illuminate\Support\Facades\Log;
 class RecurrentJournalController extends Controller
 {
     //
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
-        $recurringJournals = FinanceJournalEntry::with( 'recurringJournals:Id,JournalEntryId,StartDate,CuttOffDate,Frequency,ReferenceName,Description,NextRunDate')
-            ->where('Type','recurring')->get();
 
-        $frequencies =CodeDetail::where('CodeID', 'JournalPaymentFrequency')
-            ->pluck('Description', 'Value') // ['w' => 'Weekly', 'd' => 'Daily', ...]
+        // Build query with filters
+        $query = FinanceJournalEntry::with('recurringJournals:Id,JournalEntryId,StartDate,CuttOffDate,Frequency,ReferenceName,Description,NextRunDate')
+            ->where('Type', 'recurring');
+
+        // Apply filters if provided
+        if ($request->filled('ref_no')) {
+            $query->where('RefNo', 'like', '%' . $request->ref_no . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereHas('recurringJournals', function($q) use ($request) {
+                $q->whereDate('StartDate', '>=', $request->date_from);
+            });
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereHas('recurringJournals', function($q) use ($request) {
+                $q->whereDate('StartDate', '<=', $request->date_to);
+            });
+        }
+
+        if ($request->filled('reference_name')) {
+            $query->whereHas('recurringJournals', function($q) use ($request) {
+                $q->where('ReferenceName', 'like', '%' . $request->reference_name . '%');
+            });
+        }
+
+        if ($request->filled('frequency') && $request->frequency !== 'all') {
+            $query->whereHas('recurringJournals', function($q) use ($request) {
+                $q->where('Frequency', $request->frequency);
+            });
+        }
+
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+
+        // Apply sorting
+        $sortField = $request->sort_by ?? 'Date';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        // Paginate results
+        $perPage = $request->per_page ?? 10;
+        $recurringJournals = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options for dropdowns
+        $frequencies = CodeDetail::where('CodeID', 'JournalPaymentFrequency')
+            ->pluck('Description', 'Value')
             ->toArray();
 
-        return view('finance.generalledger.recurrentjournal.index', compact('recurringJournals','frequencies'));
+        $approvalStatuses = FinanceJournalEntry::distinct()
+            ->where('Type', 'recurring')
+            ->pluck('ApprovalStatus')
+            ->filter()
+            ->unique()
+            ->values();
+
+        return view('finance.generalledger.recurrentjournal.index', compact(
+            'recurringJournals',
+            'frequencies',
+            'approvalStatuses'
+        ));
     }
 
     public function create()

@@ -15,13 +15,69 @@ use Illuminate\Support\Facades\Log;
 class ReversingJournalController extends Controller
 {
     //
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
-        $reversingJournals=FinanceJournalEntry::select('Id','Date','RefNo','Type','ApprovalStatus','Description','CreatedBy')
-                                ->with('reverseJournals:Id,JournalEntryId,OriginalReferenceNumber,OriginalJournalEntryID,ReversalDate,Reason,SystemDescription','createdBy:Id,Name')
-                                ->where('Type','reversing')->get();
-        return view('finance.generalledger.reversingjournal.index',compact('reversingJournals'));
+
+        // Build query with filters
+        $query = FinanceJournalEntry::select('Id','Date','RefNo','Type','ApprovalStatus','Description','CreatedBy')
+            ->with('reverseJournals:Id,JournalEntryId,OriginalReferenceNumber,OriginalJournalEntryID,ReversalDate,Reason,SystemDescription','createdBy:Id,Name')
+            ->where('Type','reversing');
+
+        // Apply filters if provided
+        if ($request->filled('ref_no')) {
+            $query->where('RefNo', 'like', '%' . $request->ref_no . '%');
+        }
+
+        if ($request->filled('original_ref')) {
+            $query->whereHas('reverseJournals', function($q) use ($request) {
+                $q->where('OriginalReferenceNumber', 'like', '%' . $request->original_ref . '%');
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereHas('reverseJournals', function($q) use ($request) {
+                $q->whereDate('ReversalDate', '>=', $request->date_from);
+            });
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereHas('reverseJournals', function($q) use ($request) {
+                $q->whereDate('ReversalDate', '<=', $request->date_to);
+            });
+        }
+
+        if ($request->filled('reason')) {
+            $query->whereHas('reverseJournals', function($q) use ($request) {
+                $q->where('Reason', 'like', '%' . $request->reason . '%');
+            });
+        }
+
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+
+        // Apply sorting
+        $sortField = $request->sort_by ?? 'Date';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        // Paginate results
+        $perPage = $request->per_page ?? 10;
+        $reversingJournals = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options for dropdowns
+        $approvalStatuses = FinanceJournalEntry::distinct()
+            ->where('Type', 'reversing')
+            ->pluck('ApprovalStatus')
+            ->filter()
+            ->unique()
+            ->values();
+
+        return view('finance.generalledger.reversingjournal.index', compact(
+            'reversingJournals',
+            'approvalStatuses'
+        ));
     }
 
     public function create()
