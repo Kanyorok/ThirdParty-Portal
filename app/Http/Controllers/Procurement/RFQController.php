@@ -205,8 +205,8 @@ class RFQController extends Controller
                 }
             }
 
-            $body = '<p>Hello ' . e($actor->Name) . ',</p>' .
-                '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
+            // We'll build a personalized body for each recipient inside the loop below
+            $bodyTemplate = '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
                 '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
                 '<p>Selected suppliers have been notified.</p>';
 
@@ -248,8 +248,12 @@ class RFQController extends Controller
                     $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
                 }
 
+                // Build personalized body so recipient sees their own name in the salutation
+                $salutationName = $recipientName ?? $recipientEmail;
+                $personalBody = '<p>Hello ' . e($salutationName) . ',</p>' . $bodyTemplate;
+
                 // Use CRMEmailService::createRaw to persist and send the email with explicit To/BCC
-                $service = \App\Services\CRMEmailService::createRaw($actor, $subject, $body, $to, 'ThirdParty', '', [], $bcc, EmailPriorityEnum::Important);
+                $service = \App\Services\CRMEmailService::createRaw($actor, $subject, $personalBody, $to, 'ThirdParty', '', [], $bcc, EmailPriorityEnum::Important);
                 $service->send(true);
             }
         }
