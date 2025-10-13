@@ -23,6 +23,7 @@
                     <th>Requisition No</th>
                     <th>Quotation Status</th>
                     <th>Submission Deadline</th>
+                    <th>Created By</th>
                     <th>Created On</th>
                     <th>Actions</th>
                 </tr>
@@ -36,6 +37,7 @@
                         <td>{{ $rfq->requisition->RequisitionNo ?? '-' }}</td>
                         <td>{{ $rfq->Status ?? '-' }}</td>
                         <td>{{ $rfq->SubmissionDeadline ? Carbon::parse($rfq->SubmissionDeadline)->format('d/m/Y') : '-' }}</td>
+                        <td>{{ $createdByMap[$rfq->CreatedBy] ?? '-' }}</td>
                         <td>{{ $rfq->CreatedOn ? Carbon::parse($rfq->CreatedOn)->format('d/m/Y') : '-' }}</td>
                         <td>
                             <a href="{{ route('rfqs.show', $rfq->Id) }}" class="btn btn-sm btn-info">View</a>

@@ -34,7 +34,17 @@ class RFQController extends Controller
             ->distinct()
             ->get();
 
-        return view('procurement.rfqs.index', compact('rfqs', 'requisitions'));
+        // Build CreatedBy map (Id -> Name) for users referenced by the RFQs on this page
+        $createdByIds = $rfqs->pluck('CreatedBy')->unique()->filter()->values()->all();
+        $createdByMap = [];
+        if (!empty($createdByIds)) {
+            $users = DB::table('t_Users')->whereIn('Id', $createdByIds)->select('Id', 'Name')->get();
+            foreach ($users as $u) {
+                $createdByMap[$u->Id] = $u->Name;
+            }
+        }
+
+        return view('procurement.rfqs.index', compact('rfqs', 'requisitions', 'createdByMap'));
     }
 
     /**
