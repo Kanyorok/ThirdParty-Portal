@@ -25,7 +25,7 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $policy->PolicyNumber ?? '—' }}</td>
-                <td>{{ $policy->customer->FullName ?? '-' }}</td>
+                <td>{{ $policy->customer->thirdParty->ThirdPartyName ?? '-' }}</td>
                 <td>{{ $policy->product->Name ?? '-' }}</td>
                 <td>{{ $policy->insurer->Name ?? '-' }}</td>
                 <td>{{ $policy->Status->label() ?? '-' }}</td>

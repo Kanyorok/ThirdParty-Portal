@@ -7,7 +7,7 @@
         <div class="auth-form">
             <div class="card my-5">
                 <form method="POST" action="{{ route('login') }}" class="card-body">@csrf
-                    <div class="text-center"><img src="{{ asset('assets/img/icons/cbt-logo.png') }}" alt="">
+                    <div class="text-center"><img src="{{ asset('assets/img/CBT-Logo.jpg') }}" height="100" width="120" alt="">
                     </div>
                     <h4 class="text-center f-w-500 mb-3 mt-lg-5">Login with your USERID or Email </h4>
                     {{-- Branch Selection FIRST --}}

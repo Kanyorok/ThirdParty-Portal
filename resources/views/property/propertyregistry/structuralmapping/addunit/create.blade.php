@@ -80,12 +80,10 @@
           </div>
 
           {{-- Submit --}}
-          <div class="d-grid">
             <button type="submit" class="btn btn-success"
               onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
               Save Unit
             </button>
-          </div>
 
         </div>
       </div>

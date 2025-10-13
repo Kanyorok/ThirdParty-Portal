@@ -19,12 +19,17 @@ use App\Enums\Procurement\PrequalificationApplicationEnum;
 use App\Http\Resources\Procurement\PrequalificationRoundResource;
 use App\Http\Resources\Procurement\PrequalificationApplicationResource;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\ThirdPartyApprovalStatusEnum;
+use App\Models\Procurement\Prequalification\PrequalificationResult;
 
 class PrequalificationApplicationController extends Controller
 {
     public function index(): View
     {
-        $applications = PrequalificationApplication::with('round', 'supplier', 'category')->paginate(10);
+        $applications = PrequalificationApplication::with('round', 'supplier', 'category')
+            ->orderByDesc('SubmittedOn')
+            ->orderByDesc('CreatedOn')
+            ->paginate(10);
         return view('procurement.suppliers.prequalification.supplier-applications.index', compact('applications'));
     }
 
@@ -64,6 +69,16 @@ class PrequalificationApplicationController extends Controller
             $user = Auth::user();
             Log::debug('apiIndex: authenticated user', ['id' => $user->Id ?? null, 'email' => $user->email ?? $user->Email ?? null]);
             $supplierId = $user && $user->thirdParty ? $user->thirdParty->Id : null;
+
+            // Supplier eligibility: only supplier third parties with Approved status can apply
+            $supplierEligible = false;
+            if ($user && $user->thirdParty) {
+                $third = $user->thirdParty->loadMissing('types');
+                $typeCodes = $third->relationLoaded('types') ? $third->types->pluck('Code') : collect();
+                $isSupplierUser = $typeCodes->contains(fn($c) => is_string($c) && str_starts_with($c, 'SU-'));
+                $isApprovedUser = ($third->ApprovalStatus ?? null) === ThirdPartyApprovalStatusEnum::Approved;
+                $supplierEligible = $isSupplierUser && $isApprovedUser;
+            }
 
         // Get query parameters with defaults
         $page = (int) $request->get('page', 1);
@@ -140,6 +155,10 @@ class PrequalificationApplicationController extends Controller
                     ->select('prc.RoundID', 'sc.SupplierCategoryID', 'sc.CategoryName', 'sc.Description')
                     ->orderBy('sc.CategoryName')
                     ->get();
+                // Deduplicate categories per round by SupplierCategoryID
+                $rows = $rows->unique(function ($row) {
+                    return $row->RoundID . ':' . $row->SupplierCategoryID;
+                })->values();
                 $categoriesByRound = $rows->groupBy('RoundID');
             }
 
@@ -169,6 +188,15 @@ class PrequalificationApplicationController extends Controller
                     ->groupBy('ApplicationId');
             }
 
+            // Fetch persisted results per application to expose actual awarded % per category
+            $resultsByAppId = collect();
+            if ($appIds->isNotEmpty()) {
+                $resultsByAppId = PrequalificationResult::query()
+                    ->whereIn('ApplicationID', $appIds)
+                    ->get()
+                    ->keyBy('ApplicationID');
+            }
+
             // Helper to map status codes/enums to required labels
             $mapStatus = function ($appStatusCode = null, $catStatusCode = null, $stage = null) {
                 // Category status overrides application status when present
@@ -185,10 +213,10 @@ class PrequalificationApplicationController extends Controller
             };
 
             // Build output rounds with categories array
-            $data = $availableRounds->map(function ($round) use ($categoriesByRound, $appsByKey, $catStatuses, $mapStatus, $applications, $supplierId) {
+            $data = $availableRounds->map(function ($round) use ($categoriesByRound, $appsByKey, $catStatuses, $mapStatus, $applications, $supplierId, $supplierEligible, $resultsByAppId) {
                 $roundId = $round->RoundID;
                 $roundCats = $categoriesByRound->get($roundId, collect());
-                $cats = $roundCats->map(function ($cat) use ($roundId, $appsByKey, $catStatuses, $mapStatus) {
+                $cats = $roundCats->map(function ($cat) use ($roundId, $appsByKey, $catStatuses, $mapStatus, $resultsByAppId) {
                     $key = $roundId . ':' . $cat->SupplierCategoryID;
                     /** @var \App\Models\Procurement\Prequalification\PrequalificationApplication|null $app */
                     $app = $appsByKey->get($key);
@@ -198,7 +226,8 @@ class PrequalificationApplicationController extends Controller
                     }
 
                     $hasApplied = (bool) $app;
-                    $progress = $statusRow?->ProgressPercent ?? 0;
+                    $resultRow = $app ? $resultsByAppId->get($app->ApplicationID) : null;
+                    $progress = $resultRow?->TotalScore ?? ($statusRow?->ProgressPercent ?? 0);
                     $stage = $statusRow?->Stage ?? null;
                     $stageLabel = $statusRow?->StageLabel ?? null;
                     $decisionDate = $statusRow && $statusRow->DecisionDate ? $statusRow->DecisionDate->format('Y-m-d') : null;
@@ -244,7 +273,38 @@ class PrequalificationApplicationController extends Controller
                 $hasUnapplied = $cats->contains(function ($c) { return empty($c['has_applied']); });
                 $supplierHasNoAppsInRound = $roundAppsCount === 0;
                 $backendCanApply = $supplierId !== null && $windowOpen && $statusOpen && $hasCategories;
-                $canApply = $backendCanApply && ($hasUnapplied || $supplierHasNoAppsInRound);
+
+                // New flags
+                $isFutureWindow = ($round->StartDate && $round->StartDate > $now);
+
+                // Mark as duplicate/not applicable when another round covers this window and was created earlier
+                $primaryCovering = \App\Models\Procurement\Prequalification\PrequalificationRound::query()
+                    ->where('StartDate', '<=', $round->StartDate)
+                    ->where('EndDate', '>=', $round->EndDate)
+                    ->where(\App\Models\Procurement\Prequalification\PrequalificationRound::getPrimaryKey(), '!=', $roundId)
+                    ->orderBy('CreatedOn', 'asc')
+                    ->first(['RoundID', 'Title', 'CreatedOn', 'StartDate', 'EndDate']);
+
+                $duplicateWithinRange = false;
+                $primaryWindowRoundId = null;
+                $primaryWindowRoundTitle = null;
+                if ($primaryCovering) {
+                    // Only latest shows Not Applicable: mark duplicate if primary (earlier) exists
+                    $duplicateWithinRange = $primaryCovering->CreatedOn && $round->CreatedOn
+                        ? ($primaryCovering->CreatedOn < $round->CreatedOn)
+                        : true; // fallback to true if timestamps unavailable
+                    if ($duplicateWithinRange) {
+                        $primaryWindowRoundId = (int) $primaryCovering->RoundID;
+                        $primaryWindowRoundTitle = (string) $primaryCovering->Title;
+                    }
+                }
+
+                // Final canApply must also respect supplier eligibility and not-applicable conditions
+                $canApply = $backendCanApply
+                    && ($hasUnapplied || $supplierHasNoAppsInRound)
+                    && $supplierEligible
+                    && !$isFutureWindow
+                    && !$duplicateWithinRange;
 
                 return [
                     'id' => (int) $round->RoundID,
@@ -259,6 +319,12 @@ class PrequalificationApplicationController extends Controller
                     'categoryCount' => $cats->count(),
                     'appliedCount' => $cats->where('has_applied', true)->count(),
                     'unappliedCount' => $cats->where('has_applied', false)->count(),
+                    // New flags for frontend alignment
+                    'supplierEligible' => (bool) $supplierEligible,
+                    'isFutureWindow' => (bool) $isFutureWindow,
+                    'duplicateWithinRange' => (bool) $duplicateWithinRange,
+                    'primaryWindowRoundId' => $primaryWindowRoundId,
+                    'primaryWindowRoundTitle' => $primaryWindowRoundTitle,
                 ];
             })->values();
 

@@ -32,7 +32,7 @@
                 <div class="col-md-6">
                     <label class="form-label">Tenant</label>
                     <input type="text" class="form-control" 
-                           value="{{ $invoices->lease->tenant->thirdParty->TradingName }}" readonly>
+                           value="{{ $invoices->lease->tenant->thirdParty->ThirdPartyName }}" readonly>
                     <input type="hidden" name="TenantId" value="{{ $invoices->TenantId }}">
                 </div>
             </div>

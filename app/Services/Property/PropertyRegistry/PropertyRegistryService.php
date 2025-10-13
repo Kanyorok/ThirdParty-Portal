@@ -47,7 +47,7 @@ class PropertyRegistryService
             'CountryId' => $CountryId->Id,
             'LocationId' => $LocationId->ID,
             'Address' => $Address,
-            'PropertyDescription' => $PropertyDescription,
+            'PropertyDescription' => $PropertyDescription ?? '',
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
@@ -75,7 +75,7 @@ public static function update(
     Country          $CountryId,
     Locality         $LocationId,
     string           $Address,
-    ?string          $PropertyDescription,
+    ?string          $PropertyDescription = null,
     User             $user,
     bool            $IsActive,
     UploadedFile     $document = null
@@ -90,7 +90,7 @@ public static function update(
         'CountryId'             => $CountryId->Id,
         'LocationId'            => $LocationId->ID,
         'Address'              => $Address,
-        'PropertyDescription' => $PropertyDescription,
+        'PropertyDescription' => $PropertyDescription ?? '',
         'ModifiedBy'          => $user->Id,
         'IsActive'            => $IsActive,
         'ModifiedOn'          => now(),

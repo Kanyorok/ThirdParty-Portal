@@ -26,7 +26,7 @@ class PropertyAttachmentsRequest extends FormRequest
             'DocumentTitle' => 'required|string|max:100',
             'DocumentType' => 'required|exists:t_CodeDetails,ID',
             'Description' => 'nullable|string|max:255',
-            'file' => 'nullable|array',
+            'file' => 'required|array',
             'file.*' => 'file|max:9000',
         ];
     }

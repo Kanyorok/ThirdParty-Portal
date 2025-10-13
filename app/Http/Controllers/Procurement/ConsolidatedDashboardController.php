@@ -13,31 +13,40 @@ class ConsolidatedDashboardController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', DepartmentNeed::class);
-        $branch = $request->input('branch', 'All Branches');
-        $department = $request->input('department', 'All Departments');
-        $year = $request->input('year', 'All Years');
+        // Normalize inputs: treat empty / 'all' (case-insensitive) as null (no filter)
+        $branchInput = trim((string)$request->input('branch', ''));
+        $departmentInput = trim((string)$request->input('department', ''));
+        $yearInput = trim((string)$request->input('year', ''));
 
+        $branch = $branchInput === '' ? null : $branchInput; // expecting numeric id
+        $department = $departmentInput === '' ? null : $departmentInput; // numeric id
+        $year = (strcasecmp($yearInput, 'All Years') === 0 || $yearInput === '') ? null : $yearInput;
 
         $query = DepartmentNeed::with(['item', 'branch', 'department']);
 
-        if ($branch !== 'All Branches' && !empty($branch)) {
+        if ($branch) {
             $query->where('BranchID', $branch);
         }
-
-        if ($department !== 'All Departments' && !empty($department)) {
+        if ($department) {
             $query->where('DepartmentID', $department);
         }
-
-        if ($year !== 'All Years') {
-            $query->where('FiscalYear', $year);
+        if ($year) {
+            // Filter by year component of RequestedDate
+            $query->whereYear('RequestedDate', $year);
         }
 
         $needs = $query->orderByDesc('CreatedOn')->get();
 
-        // Load filter dropdown options
-        $branches = \App\Models\Core\Branch::orderBy('Name')->pluck('Name', 'Id')->prepend('All Branches', 'All Branches');
-        $departments = \App\Models\HRM\Department::orderBy('Name')->pluck('Name', 'Id')->prepend('All Departments', 'All Departments');
-        $years = ['All Years', 2025, 2026, 2027];
+        // Load filter dropdown options (prepend blank for all)
+        $branches = \App\Models\Core\Branch::orderBy('Name')->pluck('Name', 'Id');
+        $departments = \App\Models\HRM\Department::orderBy('Name')->pluck('Name', 'Id');
+        // Dynamic years from RequestedDate
+        $yearsCollection = DepartmentNeed::query()
+            ->selectRaw('DISTINCT YEAR(RequestedDate) as yr')
+            ->whereNotNull('RequestedDate')
+            ->orderBy('yr')
+            ->pluck('yr');
+        $years = $yearsCollection->toArray();
 
         return view('procurement.procurementplan.planconsolidation.dashboard.index', compact(
             'needs',
