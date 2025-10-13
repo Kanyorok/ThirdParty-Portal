@@ -19,10 +19,16 @@ class MedicalFundBeneficiary extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FundID','FullName','Relationship','DateOfBirth','NationalID','Contact','IsActive',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'FundID',
+        'ContributorID',   
+        'FullName',
+        'Relationship',
+        'DateOfBirth',
+        'NationalID',
+        'Contact',
+        'IsActive',
+        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn'
     ];
-
     protected $casts = [
         'IsActive'   => 'boolean',
         'DateOfBirth'=> 'date',
@@ -45,5 +51,10 @@ class MedicalFundBeneficiary extends Model
     public function fund()
     {
         return $this->belongsTo(MedicalFund::class, 'FundID', 'ID');
+    }
+
+    public function contributor()
+    { 
+        return $this->belongsTo(MedicalFundContributor::class, 'ContributorID','ID'); 
     }
 }

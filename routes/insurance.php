@@ -25,6 +25,13 @@ use App\Http\Controllers\Insurance\MedicalFundContributionController;
 use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
 use App\Http\Controllers\Insurance\UnderwritingController;
 use App\Http\Controllers\Insurance\MedicalFundBeneficiaryController;
+use App\Http\Controllers\Insurance\MedicalFundContributorController;
+use App\Http\Controllers\Insurance\ContributorBeneficiaryController; // new, see quick store below
+use App\Http\Controllers\Insurance\MedicalFundPackageController;
+
+
+
+
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
 
@@ -88,8 +95,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
         Route::post('{id}/endorsement/store', [PolicyController::class, 'storeEndorsement'])->name('storeEndorsement');
         Route::get('endorsements/list', [PolicyController::class, 'endorsementList'])->name('endorsements.list');
-        Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
-        Route::get('register', [PolicyController::class, 'register'])->name('register');
+            Route::get('register', [PolicyController::class, 'register'])->name('register');
         Route::post('{id}/renew/store', [PolicyController::class, 'storeRenewal'])->name('storeRenewal');
         Route::get('{id}/show', [PolicyController::class, 'show'])->name('show');
     });
@@ -268,3 +274,55 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         'show' => 'insurance-reports.show'
     ]);
 });
+
+Route::middleware(['web','auth'])
+    ->prefix('insurance/bancassurance')   // keep your current base URL
+    ->as('bancassurance.')
+    ->group(function () {
+
+        // Medical Funds
+        Route::resource('medicalfunds', MedicalFundController::class)
+            ->parameters(['medicalfunds' => 'medical_fund']);
+
+        // Beneficiaries (nested under fund) — shallow member routes:
+        // index/create/store need {medical_fund}; show/edit/update/destroy use shallow names.
+        Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'beneficiaries' => 'beneficiary']);
+
+        // Contributions (nested under fund) — shallow for member routes
+        Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'contributions' => 'contribution']);
+
+        // Disbursements (nested under fund) — shallow for member routes
+        Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'disbursements' => 'disbursement']);
+
+        // Packages (nested under fund) — shallow for member routes
+        Route::resource('medicalfunds.packages', MedicalFundPackageController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'packages' => 'package']);
+
+        // Contributors (nested under fund) — shallow for member routes
+        Route::resource('medicalfunds.contributors', MedicalFundContributorController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'contributors' => 'contributor']);
+
+        // Quick add beneficiary from contributor show page
+        Route::post('contributors/{contributor}/beneficiaries', [ContributorBeneficiaryController::class, 'store'])
+            ->name('contributors.beneficiaries.store');
+
+        // Coverage remaining (AJAX): only {contributor} in the URL (matches your JS)
+        // Controller signature: remainingLimit(Request $request, MedicalFundContributor $contributor)
+        Route::get('contributors/{contributor}/coverage-remaining',
+            [MedicalFundDisbursementController::class, 'remainingLimit']
+        )->name('coverage.remaining');
+
+        // Contributor options (AJAX): beneficiaries + coverages for a contributor in a given fund
+        // Controller signature: options(MedicalFund $medical_fund, MedicalFundContributor $contributor)
+        Route::get('medicalfunds/{medical_fund}/contributors/{contributor}/options',
+            [MedicalFundDisbursementController::class, 'options']
+        )->name('medicalfunds.contributors.options');
+    });

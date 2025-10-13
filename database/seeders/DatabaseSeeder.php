@@ -73,6 +73,8 @@ class DatabaseSeeder extends Seeder
         $this->call(FinanceTransactionTypesSeeder::class);
         $this->call(FinanceModuleTransactionSeeder::class);
         $this->call(FinanceGlTransactionsMappingSeeder::class);
+        // Ensure GRN transaction types and GL mappings (incl. GRN-SERVICE) are present
+        $this->call(GRNTransactionTypesSeeder::class);
 
         $this->call(LegalClauseSeeder::class);
         $this->call(LegalCasesSeeder::class);
@@ -104,6 +106,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(financeroleseeder::class);
         $this->call(ThirdPartyTypesSeeder::class);
+        $this->call(MedicalFundsCatalogSeeder::class);
         // $this->call(GRNPOSeeder::class);
     }
 }

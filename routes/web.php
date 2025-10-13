@@ -32,6 +32,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
     // Prequalification pages temporarily disabled due to stability issues
     require __DIR__ . '/prequalification.php';
     require __DIR__ . '/supplier-cat.php';
+    require __DIR__ . '/assets.php';
 
     Route::namespace('Settings')->prefix('settings')->group(function () {
         Route::get('lists', 'SettingsController@lists')->name('settings.lists');

@@ -13,7 +13,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('bancassurance.medicalfunds.disbursements.update',$disbursement->ID) }}" method="POST">
+            <form action="{{ route('bancassurance.disbursements.update',$disbursement->ID) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row g-3">
                     <div class="col-md-4">
