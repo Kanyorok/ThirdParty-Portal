@@ -42,12 +42,47 @@
                 <thead>
                 <tr>
                     <th>#</th>
-                    <th>Quotation Number</th>
+                    <th>
+                        @php $dir = request('sort_by') === 'RFQNumber' && request('sort_dir') === 'asc' ? 'desc' : 'asc'; @endphp
+                        <a href="?{{ http_build_query(array_merge(request()->except('page'), ['sort_by' => 'RFQNumber', 'sort_dir' => $dir])) }}">Quotation Number
+                            @if(request('sort_by') === 'RFQNumber')
+                                {!! request('sort_dir') === 'asc' ? '&uarr;' : '&darr;' !!}
+                            @endif
+                        </a>
+                    </th>
                     <th>Requisition No</th>
-                    <th>Quotation Status</th>
-                    <th>Submission Deadline</th>
-                    <th>Created By</th>
-                    <th>Created On</th>
+                    <th>
+                        @php $dir = request('sort_by') === 'Status' && request('sort_dir') === 'asc' ? 'desc' : 'asc'; @endphp
+                        <a href="?{{ http_build_query(array_merge(request()->except('page'), ['sort_by' => 'Status', 'sort_dir' => $dir])) }}">Quotation Status
+                            @if(request('sort_by') === 'Status')
+                                {!! request('sort_dir') === 'asc' ? '&uarr;' : '&darr;' !!}
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php $dir = request('sort_by') === 'SubmissionDeadline' && request('sort_dir') === 'asc' ? 'desc' : 'asc'; @endphp
+                        <a href="?{{ http_build_query(array_merge(request()->except('page'), ['sort_by' => 'SubmissionDeadline', 'sort_dir' => $dir])) }}">Submission Deadline
+                            @if(request('sort_by') === 'SubmissionDeadline')
+                                {!! request('sort_dir') === 'asc' ? '&uarr;' : '&darr;' !!}
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php $dir = request('sort_by') === 'CreatedBy' && request('sort_dir') === 'asc' ? 'desc' : 'asc'; @endphp
+                        <a href="?{{ http_build_query(array_merge(request()->except('page'), ['sort_by' => 'CreatedBy', 'sort_dir' => $dir])) }}">Created By
+                            @if(request('sort_by') === 'CreatedBy')
+                                {!! request('sort_dir') === 'asc' ? '&uarr;' : '&darr;' !!}
+                            @endif
+                        </a>
+                    </th>
+                    <th>
+                        @php $dir = request('sort_by') === 'CreatedOn' && request('sort_dir') === 'asc' ? 'desc' : 'asc'; @endphp
+                        <a href="?{{ http_build_query(array_merge(request()->except('page'), ['sort_by' => 'CreatedOn', 'sort_dir' => $dir])) }}">Created On
+                            @if(request('sort_by') === 'CreatedOn')
+                                {!! request('sort_dir') === 'asc' ? '&uarr;' : '&darr;' !!}
+                            @endif
+                        </a>
+                    </th>
                     <th>Actions</th>
                 </tr>
                 </thead>

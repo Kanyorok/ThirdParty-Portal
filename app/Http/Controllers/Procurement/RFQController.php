@@ -21,7 +21,7 @@ class RFQController extends Controller
     public function index(Request $request)
     {
         // Build base query
-        $query = RFQ::with(['category', 'suppliers', 'requisition'])->orderBy('Id', 'desc');
+        $query = RFQ::with(['category', 'suppliers', 'requisition']);
 
         // Apply filters from query string
         if ($request->filled('status')) {
@@ -31,7 +31,26 @@ class RFQController extends Controller
             $query->where('CreatedBy', $request->query('created_by'));
         }
 
-        // paginate RFQs 10 per page
+        // Sorting: allow a restricted set of columns to prevent SQL injection
+        $allowedSorts = [
+            'RFQNumber' => 'RFQNumber',
+            'Status' => 'Status',
+            'SubmissionDeadline' => 'SubmissionDeadline',
+            'CreatedOn' => 'CreatedOn',
+            'CreatedBy' => 'CreatedBy'
+        ];
+
+        $sortBy = $request->query('sort_by');
+        $sortDir = strtolower($request->query('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy && isset($allowedSorts[$sortBy])) {
+            $query->orderBy($allowedSorts[$sortBy], $sortDir);
+        } else {
+            // default ordering
+            $query->orderBy('Id', 'desc');
+        }
+
+        // paginate RFQs 10 per page, preserving query string
         $rfqs = $query->paginate(10)->withQueryString();
 
         $requisitions = DB::table('t_Requisitions as r')
