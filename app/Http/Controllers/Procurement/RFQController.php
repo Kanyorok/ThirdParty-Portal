@@ -205,13 +205,57 @@ class RFQController extends Controller
                 }
             }
 
-            $body = '<p>Hello ' . e($actor->Name) . ',</p>' .
-                '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
+            // We'll build a personalized body for each recipient inside the loop below
+            $bodyTemplate = '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
                 '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
                 '<p>Selected suppliers have been notified.</p>';
 
-            (new UserService($actor))
-                ->sendEmail($subject, $body, $cc, true, EmailPriorityEnum::Important);
+            // Prepare list of unique supplier email addresses and mapping to names
+            $supplierList = [];
+            foreach ($cc as $entry) {
+                foreach ($entry as $name => $email) {
+                    $supplierList[] = ['name' => $name, 'email' => $email];
+                }
+            }
+
+            // Send one email per supplier so that each supplier sees themselves in To and the others in BCC
+            $uniqueEmails = array_values(array_unique(array_map(fn($s) => strtolower($s['email']), $supplierList)));
+            foreach ($uniqueEmails as $idx => $recipientEmail) {
+                // find display name
+                $recipientName = null;
+                foreach ($supplierList as $s) {
+                    if (strtolower($s['email']) === $recipientEmail) {
+                        $recipientName = $s['name'];
+                        break;
+                    }
+                }
+
+                // Build to array: only the current recipient
+                $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
+
+                // Build bcc array: all other supplier emails
+                $bcc = [];
+                foreach ($uniqueEmails as $otherEmail) {
+                    if ($otherEmail === $recipientEmail) continue;
+                    // Attempt to find name for the bcc entry
+                    $otherName = null;
+                    foreach ($supplierList as $s) {
+                        if (strtolower($s['email']) === $otherEmail) {
+                            $otherName = $s['name'];
+                            break;
+                        }
+                    }
+                    $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
+                }
+
+                // Build personalized body so recipient sees their own name in the salutation
+                $salutationName = $recipientName ?? $recipientEmail;
+                $personalBody = '<p>Hello ' . e($salutationName) . ',</p>' . $bodyTemplate;
+
+                // Use CRMEmailService::createRaw to persist and send the email with explicit To/BCC
+                $service = \App\Services\CRMEmailService::createRaw($actor, $subject, $personalBody, $to, 'ThirdParty', '', [], $bcc, EmailPriorityEnum::Important);
+                $service->send(true);
+            }
         }
 
         return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');
