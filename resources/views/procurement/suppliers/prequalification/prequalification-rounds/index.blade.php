@@ -24,7 +24,18 @@
                 <i class="fa fa-plus-circle me-1"></i> Create a New Round
             </a>
         </div>
-        
+        <div class="px-3 pt-2 d-flex justify-content-end align-items-center">
+            <form method="get" class="me-2">
+                <input type="hidden" name="include_deleted" value="{{ request()->query('include_deleted') ? 0 : 1 }}">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                    {{ request()->query('include_deleted') ? 'Hide archived' : 'Include archived' }}
+                </button>
+            </form>
+            @if(!empty($includeDeleted))
+                <span class="badge bg-secondary">Showing archived too</span>
+            @endif
+        </div>
+
         <div class="px-3 pt-3">
             <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
                 <i class="fa fa-info-circle me-2"></i>
@@ -33,10 +44,10 @@
                 </span>
             </div>
         </div>
-        
+
         {{-- Table --}}
         <div class="table-responsive">
-            <table id="roundsTable" class="table table-striped table-hover mb-0 align-middle" data-datatable="auto" data-dt-opts='{"pageLength":10,"order":[[3,"desc"]],"responsive":true,"language":{"search":"_INPUT_","searchPlaceholder":"Search rounds..."}}'>
+            <table id="roundsTable" class="table table-striped table-hover mb-0 align-middle">
                 <thead class="table-light">
                     <tr>
                         <th style="width: 5%;">Round ID</th>
@@ -104,6 +115,21 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+        {{-- Pagination controls --}}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <div class="small text-muted">
+                @if(isset($prequalificationRounds) && $prequalificationRounds->total() > 0)
+                    Showing {{ $prequalificationRounds->firstItem() }} to {{ $prequalificationRounds->lastItem() }} of {{ $prequalificationRounds->total() }} entries
+                @else
+                    No entries
+                @endif
+            </div>
+            <div>
+                @if(isset($prequalificationRounds))
+                    {{ $prequalificationRounds->withQueryString()->links() }}
+                @endif
+            </div>
         </div>
     </div>
 </div>
