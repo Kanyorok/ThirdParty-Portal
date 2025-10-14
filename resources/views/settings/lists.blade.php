@@ -357,6 +357,7 @@
                                 <thead>
                                 <tr>
                                     <th>Code</th>
+                                    <th>ISOnum</th>
                                     <th>Symbol</th>
                                     <th>Name</th>
                                     <th>Decimal</th>
@@ -968,6 +969,7 @@
                     },
                     columns: [
                         {data: "Code", name: 'Code'},
+                        {data: 'ISOnum', name: 'ISOnum'},
                         {data: 'Symbol', name: 'Symbol'},
                         {data: 'Name', name: 'Name'},
                         {data: 'DecimalDigits', name: 'DecimalDigits'},
