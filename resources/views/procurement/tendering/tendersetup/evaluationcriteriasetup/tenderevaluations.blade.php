@@ -25,6 +25,10 @@
             @php
                 // Build a paginator from $data (collection) so we can support per-page selection without controller changes
                 $collection = collect($data ?? []);
+                // Show the last record first by reversing the collection (preserve indexes)
+                if ($collection->isNotEmpty()) {
+                    $collection = $collection->reverse()->values();
+                }
                 $perPage = max(1, (int) request()->query('perPage', 10));
                 $page = max(1, (int) request()->query('page', 1));
                 $slice = $collection->slice(($page - 1) * $perPage, $perPage)->values();
