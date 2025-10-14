@@ -214,11 +214,10 @@ class PurchaseOrderController extends Controller
 //        User::query()->hasPermission(PermissionEnum::Users->value)->dd();
 
         try {
-            $details = $this->orderService->fetchOrders();
-            // Debug: log the details to storage/logs/laravel.log
-            Log::info('PurchaseOrderController@index details:', ['details' => $details]);
-            // Optionally, uncomment the next line to dump to browser (remove after checking)
-            // dd($details);
+            $perPage = (int) request()->query('perPage', 20);
+            $perPage = $perPage > 0 ? $perPage : 20;
+            $details = $this->orderService->fetchOrdersPaginated($perPage);
+            Log::info('PurchaseOrderController@index paginator', ['perPage' => $perPage, 'total' => $details->total()]);
             return view('procurement.orders.index', compact('details'));
         } catch (\Exception $e) {
             Log::error('Create page failed: ' . $e->getMessage());
