@@ -120,6 +120,7 @@
                                 </a>
                             </th>
                             <th scope="col">Description</th>
+                            <th scope="col">Source</th>
                             <th scope="col">Total Debit</th>
                             <th scope="col">Total Credit</th>
                             <th scope="col">
@@ -139,9 +140,15 @@
                         @forelse($journalEntries as $index => $journalEntry)
                             <tr>
                                 <td>{{ $journalEntries->firstItem() + $index }}</td>
-                                <td>{{ $journalEntry->RefNo ?? '-' }}</td>
+                                <td>
+                                    {{ $journalEntry->RefNo ?? '-' }}
+                                    @if(!empty($journalEntry->IsReversed) && $journalEntry->IsReversed)
+                                        <span class="badge bg-danger ms-2">Reversed</span>
+                                    @endif
+                                </td>
                                 <td>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') }}</td>
                                 <td>{{ $journalEntry->Description ?? '-' }}</td>
+                                <td>{{ $journalEntry->source_module_name }}</td>
                                 <td>
                                     {{ number_format($journalEntry->journalLines->sum(function($line) {
                                         return floatval($line->Debit);

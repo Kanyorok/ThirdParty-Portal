@@ -158,7 +158,12 @@
                             <tr>
                                 <td>{{ $recurringJournals->firstItem() + $index }}</td>
 
-                                <td>{{ $recurring->RefNo }}</td>
+                                <td>
+                                    {{ $recurring->RefNo }}
+                                    @if(!empty($recurring->IsReversed) && $recurring->IsReversed)
+                                        <span class="badge bg-danger ms-2">Reversed</span>
+                                    @endif
+                                </td>
 
                                 {{-- Reference Name --}}
                                 <td>

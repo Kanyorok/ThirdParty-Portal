@@ -25,7 +25,7 @@ class JournalEntryController extends Controller
 
         // Build query with filters
         $query = FinanceJournalEntry::with('journalLines:Id,JournalEntryId,Debit,Credit,Amount,IsDebit,Narration')
-            ->select('Id', 'RefNo', 'Date', 'Description', 'ApprovalStatus', 'Type')
+            ->select('Id', 'RefNo', 'Date', 'Description', 'ApprovalStatus', 'Type', 'SourceModule', 'IsReversed')
             ->where('Type', 'normal');
 
         // Apply filters if provided
@@ -169,7 +169,15 @@ class JournalEntryController extends Controller
     public function show($id)
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
-        $journalEntry = FinanceJournalEntry::with('journalLines.glAccount','createdBy:Id,Name')->findOrFail($id);
+        $journalEntry = FinanceJournalEntry::with([
+            'journalLines.glAccount',
+            'sourceModule',
+            'createdBy:Id,Name',
+            'modifiedBy:Id,Name',
+            'reversalsAsOriginal' => function($query) {
+                $query->with('journalEntry.createdBy:Id,Name');
+            }
+        ])->findOrFail($id);
         return view('finance.generalledger.journalentry.show', compact('journalEntry'));
     }
 

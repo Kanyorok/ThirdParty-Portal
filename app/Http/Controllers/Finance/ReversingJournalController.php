@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
 
 class ReversingJournalController extends Controller
 {
@@ -83,8 +84,31 @@ class ReversingJournalController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
-        $journalEntries=FinanceJournalEntry::select('Id','RefNo','Description')->where('ApprovalStatus','posted')->get();
-        return view('finance.generalledger.reversingjournal.create',compact('journalEntries'));
+        
+        // Get IDs of journals that are already reversed
+        $reversedJournalIds = FinanceJournalEntry::where('IsReversed', true)->pluck('Id');
+        
+        // Get IDs of original journals that have a pending reversal (draft reversing journal)
+        $pendingReversalOriginalIds = ReverseJournalEntry::whereHas('journalEntry', function ($query) {
+            $query->where('ApprovalStatus', 'draft');
+        })->pluck('OriginalJournalEntryID');
+
+        // Get journals that can be reversed (posted, not reversed, no pending reversal, not already reversing journals)
+        $journalEntries = FinanceJournalEntry::select('Id', 'RefNo', 'Description', 'Type')
+            ->where('ApprovalStatus', 'posted')
+            ->where('Type', '!=', 'reversing')
+            ->whereNotIn('Id', $reversedJournalIds)
+            ->whereNotIn('Id', $pendingReversalOriginalIds)
+            ->orderByDesc('Id')
+            ->get();
+
+        // Get journals with pending reversals (to show as disabled)
+        $pendingEntries = FinanceJournalEntry::select('Id', 'RefNo', 'Description', 'Type')
+            ->whereIn('Id', $pendingReversalOriginalIds)
+            ->orderByDesc('Id')
+            ->get();
+
+        return view('finance.generalledger.reversingjournal.create', compact('journalEntries', 'pendingEntries'));
     }
 
     public function store(Request $request){
@@ -142,7 +166,8 @@ class ReversingJournalController extends Controller
                 ->withProperties(['Original Reference Number' =>$originalJournal->RefNo])
                 ->log('Reversing Journal Entry');
             DB::commit();
-            return back()->with('success','Reverse Journal Entry created successfully.');
+            return redirect()->route('reversingjournal.index')
+                ->with('success','Reverse Journal Entry created successfully.');
         }catch(\Throwable $th){
             DB::rollBack();
             Log::error('Error storing Reverse Journal Entry: '.$th);
@@ -155,8 +180,38 @@ class ReversingJournalController extends Controller
     public function show($id){
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, ReverseJournalEntry::class);
         $originalJournalRef=ReverseJournalEntry::where('JournalEntryId',$id)->pluck('OriginalReferenceNumber')->first();
-        $journalEntry = FinanceJournalEntry::with('journalLines.glAccount','createdBy:Id,Name')->findOrFail($id);
+        $journalEntry = FinanceJournalEntry::with([
+            'journalLines.glAccount',
+            'sourceModule',
+            'createdBy:Id,Name',
+            'modifiedBy:Id,Name',
+            'reversalsAsOriginal' => function($query) {
+                $query->with('journalEntry.createdBy:Id,Name');
+            }
+        ])->findOrFail($id);
         return view('finance.generalledger.reversingjournal.show', compact('journalEntry','originalJournalRef'));;
+    }
+
+    // AJAX: preview original journal by id
+    public function preview($id): JsonResponse
+    {
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
+        $je = FinanceJournalEntry::with(['journalLines.glAccount:id,GLName,GLCode'])->findOrFail($id);
+        return response()->json([
+            'Id' => $je->Id,
+            'RefNo' => $je->RefNo,
+            'Date' => $je->Date,
+            'Type' => $je->Type,
+            'Lines' => $je->journalLines->map(function($l){
+                return [
+                    'GLName' => ($l->glAccount? ($l->glAccount->GLCode.' ('.$l->glAccount->GLName.')') : ''),
+                    'Debit' => (float)($l->Debit ?? 0),
+                    'Credit' => (float)($l->Credit ?? 0),
+                    'Amount' => (float)($l->Amount ?? 0),
+                    'Narration' => $l->Narration,
+                ];
+            }),
+        ]);
     }
 
     public function destroy($id)

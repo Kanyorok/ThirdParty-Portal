@@ -200,11 +200,16 @@ class RecurrentJournalController extends Controller
 
     public function show($id){
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, ReverseJournalEntry::class);
-        $journalEntry = FinanceJournalEntry::with(
+        $journalEntry = FinanceJournalEntry::with([
             'recurringJournals',
             'journalLines.glAccount',
-            'createdBy:Id,Name'
-        )->findOrFail($id);
+            'sourceModule',
+            'createdBy:Id,Name',
+            'modifiedBy:Id,Name',
+            'reversalsAsOriginal' => function($query) {
+                $query->with('journalEntry.createdBy:Id,Name');
+            }
+        ])->findOrFail($id);
         $frequencies =CodeDetail::where('CodeID', 'JournalPaymentFrequency')->pluck('Description', 'Value')->toArray();
 
         return view('finance.generalledger.recurrentjournal.show', compact('journalEntry','frequencies'));

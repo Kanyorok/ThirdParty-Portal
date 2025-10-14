@@ -65,7 +65,7 @@ class TransactionService
             'ThirdPartyID'      =>$payload['ThirdPartyID'] ?? null,
             'ReferenceNumber'   => $payload['ReferenceNumber'] ?? uniqid('REF-'),
             'TransactionType'   => (string)($payload['TransactionType'] ?? 'External'),
-            'ModuleID'          => (int)$payload['ModuleID'],
+            'ModuleID'          => $payload['ModuleID'],
             'SourceTable'       => $payload['SourceTable'] ?? null,
             'BranchID'          => (int)($payload['BranchID'] ?? 1),
             'DepartmentID'      => $payload['DepartmentID'] ?? null,
@@ -212,7 +212,7 @@ class TransactionService
     protected function validatePayloadForMapping(array $payload): void
     {
         $rules = [
-            'ModuleID'          => 'required|integer|exists:t_Modules,ModuleID', // adjust column if needed
+            'ModuleID'          => 'required',//|integer|exists:t_Modules,ModuleID', // adjust column if needed
             'ThirdPartyID'=> 'nullable|integer',
             'TransactionTypeID' => 'nullable|integer|exists:t_FinanceTransactionTypes,Id', // adjust
             'ReferenceNumber'   => 'required|string|max:100',
@@ -251,7 +251,7 @@ class TransactionService
             '*.ReferenceNumber'   => 'required|string|max:100',
             '*.TransactionType'   => 'required|string|max:100',
             '*.TransactionTypeID'   => 'nullable|string|max:100',
-            '*.ModuleID'          => 'nullable|integer', // FK not enforced here; already validated in payload
+            '*.ModuleID'          => 'nullable',//|integer', // FK not enforced here; already validated in payload
             '*.SourceTable'       => 'nullable|string|max:100',
             '*.GLAccountID'       => 'required|integer|exists:t_FinanceGLAccounts,Id',
             '*.BranchID'          => 'nullable|integer|exists:t_Branches,Id',
@@ -484,6 +484,7 @@ class TransactionService
             $journal = FinanceJournalEntry::create([
                 'Date'           => $header['Date'],
                 'Type'=> $header['IsScheduled']?'recurring':'normal',
+                'SourceModule'   => $payload['ModuleID'] ?? '1100000', // Default to Finance module if not specified
                 'Description'    => $header['Description'] ?? null,
                 'SystemDescription'=>$header['Description'] ?? null,
                 'Reference'      => $header['ReferenceNumber'] ?? null, // if your table has a Reference column
