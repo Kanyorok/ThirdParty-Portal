@@ -24,11 +24,20 @@ class DocumentApiController extends Controller
                 ->with(['current', 'repository'])
                 ->orderByDesc('ModifiedOn');
 
-            // ERP users: respect DMS permissions via user() scope; Third-party users: limit to Public visibility
+            $onlyMine = $request->boolean('my');
+            // ERP users: optionally filter to only their own documents
             if ($actor instanceof ThirdPartyUser) {
+                // Third-party users: always restrict to Public, and if my=1 then also CreatedBy = actor id
                 $query->where('t_Documents.Visibility', VisibilityEnum::Public->value);
+                if ($onlyMine) {
+                    $query->where('t_Documents.CreatedBy', $actor->Id);
+                }
             } else {
+                // Internal users: apply permission scope first
                 $query->user($actor);
+                if ($onlyMine) {
+                    $query->where('t_Documents.CreatedBy', $actor->Id);
+                }
             }
 
             if ($q !== '') {
