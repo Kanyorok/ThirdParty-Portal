@@ -233,7 +233,7 @@ class PurchaseOrderController extends Controller
     {
         try {
             $itemTypes = $this->itemService->getTypes();
-            
+
             // Load all items for the dropdown
             $allItems = DB::table('t_Items as i')
                 ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
@@ -241,7 +241,7 @@ class PurchaseOrderController extends Controller
                 ->whereNull('i.DeletedBy')
                 ->select(
                     'i.Id as itemCode',
-                    'i.ItemName as itemName', 
+                    'i.ItemName as itemName',
                     'i.ItemDescription as description',
                     'i.ItemPrice as unitPrice',
                     'it.TypeName as itemType',
@@ -249,7 +249,7 @@ class PurchaseOrderController extends Controller
                 )
                 ->orderBy('i.ItemName')
                 ->get();
-            
+
             $rfqResponses = $this->rfqService->fetchRFQ();
             $uniqueRfqs = collect($rfqResponses)->unique('RFQNumber')->values();
             $suppliers = $this->supplierService->getSuppliers();
@@ -323,7 +323,7 @@ class PurchaseOrderController extends Controller
                         DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
                     )
                     ->get();
-                
+
                 Log::info('Filtered awarded tenders without contracts', ['count' => $awardedTenders->count()]);
             } catch (\Throwable $e) {
                 Log::warning('Skipping TenderAwards join for awarded tenders', ['error' => $e->getMessage()]);
@@ -354,7 +354,7 @@ class PurchaseOrderController extends Controller
                     'ta.ContractStatus' // Include status for display
                 )
                 ->get();
-                
+
             Log::info('Active contracts loaded for LPO', ['count' => $contracts->count()]);
 
             // Optional contract prefill support: if contractId is present, pre-select reference and supplier
@@ -554,7 +554,7 @@ class PurchaseOrderController extends Controller
                     'terms' => $validatedData['terms'],
                     'user_id' => $actor->Id ?? null,
                 ]);
-                
+
                 if ($request->expectsJson()) {
                     return response()->json([
                         'message' => 'Invalid payment term selected.',
@@ -670,14 +670,14 @@ class PurchaseOrderController extends Controller
 
             // Everything succeeded
             $successMessage = $POAdd['message'] ?? 'Purchase order created successfully';
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => $successMessage,
                     'route' => route('purchaseOrder.index')
                 ], 200);
             }
-            
+
             return redirect()->route('purchaseOrder.index')
                 ->with('success', $successMessage);
 
@@ -688,14 +688,14 @@ class PurchaseOrderController extends Controller
             ]);
 
             $errorMessage = 'Failed to create purchase order: ' . $e->getMessage();
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Failed to create order',
                     'error' => $e->getMessage()
                 ], 500);
             }
-            
+
             return redirect()->back()
                 ->with('error', $errorMessage)
                 ->withInput();
@@ -792,7 +792,11 @@ class PurchaseOrderController extends Controller
             $orderInfo = $this->orderService->fetchOrderDetails($id);
             $lineInfo = $this->orderService->fetchOrderLineDetails($id);
 
-            return view('procurement.orders.approval', compact('orderInfo', 'lineInfo'));
+            // Fetch payment term description from t_CodeDetails where CodeID = 'PaymentTerm'
+            $paymentTermRow = DB::table('t_CodeDetails')->where('CodeID', 'PaymentTerm')->first();
+            $paymentTerms = $paymentTermRow->Description ?? null;
+
+            return view('procurement.orders.approval', compact('orderInfo', 'lineInfo', 'paymentTerms'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $uid = null;
@@ -963,7 +967,7 @@ public function getRFQItems($rfqId)
                     DB::raw("COALESCE(tp.PhysicalAddress, '') as Address")
                 )
                 ->get();
-                
+
             Log::info('AJAX: Filtered awarded tenders without contracts', ['count' => $rows->count()]);
             return response()->json(['success' => true, 'data' => $rows]);
         } catch (\Throwable $e) {

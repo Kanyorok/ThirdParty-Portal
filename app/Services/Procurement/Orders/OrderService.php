@@ -176,7 +176,7 @@ class OrderService
      * @param int $perPage
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public static function fetchOrdersPaginated(int $perPage = 20)
+    public static function fetchOrdersPaginated(int $perPage = 10)
     {
         $query = DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
