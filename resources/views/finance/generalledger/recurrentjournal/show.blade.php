@@ -130,55 +130,128 @@
 
         /* Print optimizations */
         @media print {
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 11px !important;
+                line-height: 1.3 !important;
+            }
+
+            /* Hide navigation and header elements */
+            .navbar, .sidebar, .breadcrumb, .top-navbar, .main-header,
+            .btn:not(.print-btn), .no-print, .btn-outline-secondary,
+            .modal, .dropdown, .alert { display: none !important; }
+
+            /* Container and layout */
             .journal-container {
-                max-width: none;
-                margin: 0;
-                padding: 1cm;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 10mm !important;
+                width: 100% !important;
             }
 
-            @page { size: A4; margin: 10mm; }
-            .audit-list { column-count: 2; column-gap: 16px; }
-            body { font-size: 11px; }
-            .table th, .table td { padding: .35rem .5rem; font-size: 12px; }
+            .journal-header {
+                background: #f8f9fa !important;
+                color: #495057 !important;
+                padding: 1rem !important;
+                margin-bottom: 1rem !important;
+                -webkit-print-color-adjust: exact !important;
+            }
 
-            .info-card {
+            /* Cards in print layout */
+            .info-card, .audit-trail-card {
                 background: white !important;
                 border: 1px solid #dee2e6 !important;
-                break-inside: avoid;
+                box-shadow: none !important;
+                page-break-inside: avoid !important;
             }
 
-            .audit-trail-card {
-                background: white !important;
-                border: 1px solid #dee2e6 !important;
+            /* Two-column layout for cards */
+            .print-cards-row {
+                display: flex !important;
+                gap: 12px !important;
+                margin-bottom: 1rem !important;
             }
 
-            .audit-item {
-                break-inside: avoid;
-                margin-bottom: 0.5rem;
+            .print-cards-col {
+                width: 50% !important;
+                flex: 1 !important;
             }
 
+            /* Journal lines table */
             .journal-lines-card {
-                break-inside: avoid;
+                page-break-inside: avoid !important;
+                margin-top: 1rem !important;
             }
 
-            .btn, .no-print {
-                display: none !important;
+            .je-table {
+                font-size: 10px !important;
+                margin-bottom: 0 !important;
             }
 
-            body {
-                font-size: 12px;
+            .je-table th, .je-table td {
+                padding: 0.25rem 0.5rem !important;
+                font-size: 10px !important;
+            }
+
+            /* Audit trail in columns */
+            .audit-list {
+                column-count: 2 !important;
+                column-gap: 16px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .audit-list li {
+                break-inside: avoid !important;
+                margin-bottom: 0.5rem !important;
+                display: block !important;
+            }
+
+            /* Status badge positioning */
+            .status-badge {
+                position: relative !important;
+                top: auto !important;
+                right: auto !important;
+                display: inline-block !important;
+                margin-left: 1rem !important;
+            }
+
+            /* Typography adjustments */
+            .journal-title {
+                font-size: 1.2rem !important;
+                margin-bottom: 0.25rem !important;
+            }
+
+            .journal-subtitle {
+                font-size: 0.9rem !important;
+            }
+
+            .info-card .info-label {
+                font-size: 0.8rem !important;
             }
 
             .info-card .info-value {
-                font-size: 1rem;
+                font-size: 0.9rem !important;
             }
 
             .audit-label {
-                font-size: 0.9rem;
+                font-size: 0.8rem !important;
             }
 
             .audit-value {
-                font-size: 0.85rem;
+                font-size: 0.8rem !important;
+            }
+
+            /* Page break controls */
+            .journal-lines-card {
+                page-break-inside: avoid !important;
+            }
+
+            /* Remove hover effects and transitions */
+            * {
+                transition: none !important;
+                animation: none !important;
             }
         }
 
@@ -241,8 +314,8 @@
             @endif
 
                 {{-- Top Row: Journal Info + Audit Trail --}}
-                <div class="row mb-3 g-3">
-                    <div class="col-lg-6">
+                <div class="row mb-3 g-3 print-cards-row">
+                    <div class="col-lg-6 print-cards-col">
                         <div class="info-card h-100">
                             <h6 class="mb-3 text-primary"><i class="fas fa-receipt me-2"></i>Journal Info</h6>
                             <ul class="info-list">
@@ -272,7 +345,7 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-6">
+                    <div class="col-lg-6 print-cards-col">
                         <div class="audit-trail-card h-100">
                             <h6 class="mb-3 text-primary"><i class="fas fa-history me-2"></i>Audit Trail</h6>
                             <ul class="audit-list">
@@ -292,9 +365,6 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- Audit Trail --}}
-                
 
                 {{-- Journal Lines --}}
                 <div class="journal-lines-card">
