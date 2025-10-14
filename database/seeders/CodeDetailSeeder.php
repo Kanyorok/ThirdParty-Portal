@@ -238,6 +238,12 @@ class CodeDetailSeeder extends Seeder
             //['CodeID' => 'PaymentType', 'Description' => 'Scheduled', 'Value' => 'S'],
 
             // Termination Reason
+            // Tender Status codes
+            ['CodeID' => 'TenderStatus', 'Description' => 'Draft', 'Value' => 'dr'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Published', 'Value' => 'pb'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Closed', 'Value' => 'cl'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Opening In Progress', 'Value' => 'opening_in_progress'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Awarded', 'Value' => 'aw'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Relocation', 'Value' => 'R'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],

@@ -23,9 +23,9 @@
           </tr>
         </thead>
         <tbody>
-          @foreach ($rfqs as $index => $rfq)
+          @foreach ($rfqs as $rfq)
             <tr>
-              <td>{{ $index + 1 }}</td>
+              <td>{{ $rfqs->firstItem() + $loop->index }}</td>
               <td>{{ $rfq->RFQNumber }}</td>
               <td>{{ $rfq->sections_count ?? 0 }}</td>
               <td>
@@ -49,6 +49,15 @@
           @endforeach
         </tbody>
       </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+      <div>
+        Showing {{ $rfqs->firstItem() ?? 0 }} to {{ $rfqs->lastItem() ?? 0 }} of {{ $rfqs->total() }} entries
+      </div>
+      <div>
+        {{ $rfqs->withQueryString()->links() }}
+      </div>
     </div>
   </div>
 
