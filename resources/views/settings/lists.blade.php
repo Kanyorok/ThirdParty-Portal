@@ -357,9 +357,9 @@
                                 <thead>
                                 <tr>
                                     <th>Code</th>
-                                    <th>ISOnum</th>
                                     <th>Symbol</th>
                                     <th>Name</th>
+                                    <th>ISOnum</th>
                                     <th>Decimal</th>
                                     <th>Actions</th>
                                 </tr>
@@ -969,9 +969,9 @@
                     },
                     columns: [
                         {data: "Code", name: 'Code'},
-                        {data: 'ISOnum', name: 'ISOnum'},
                         {data: 'Symbol', name: 'Symbol'},
                         {data: 'Name', name: 'Name'},
+                        {data: 'ISOnum', name: 'ISOnum'},
                         {data: 'DecimalDigits', name: 'DecimalDigits'},
                         {data: 'action', name: 'action', orderable: false, searchable: false},
                     ], "oLanguage": {
