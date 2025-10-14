@@ -3,40 +3,36 @@
 @section('content')
 
     <div class="container mt-4">
-        <!-- Success/Error Messages -->
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📑 Tender Section Settings</h4>
-            <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addSection1Modal">
-                + Tender Criteria</a>
+            <div class="d-flex align-items-center">
+                <label for="perPage" class="me-2 mb-0">Show</label>
+                <form id="perPageForm" method="GET" class="me-3">
+                    <select id="perPage" name="perPage" class="form-select form-select-sm" onchange="document.getElementById('perPageForm').submit()">
+                        @php $currentPer = (int) request()->query('perPage', 10); @endphp
+                        @foreach([5,10,15,20,25] as $p)
+                            <option value="{{ $p }}" {{ $currentPer === $p ? 'selected' : '' }}>{{ $p }}</option>
+                        @endforeach
+                    </select>
+                </form>
+                <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addSection1Modal">
+                    + Tender Criteria</a>
+            </div>
         </div>
 
         <!-- Index Table -->
-        <div class="table-responsive">
+            <div class="table-responsive">
+            @php
+                // Build a paginator from $data (collection) so we can support per-page selection without controller changes
+                $collection = collect($data ?? []);
+                $perPage = max(1, (int) request()->query('perPage', 10));
+                $page = max(1, (int) request()->query('page', 1));
+                $slice = $collection->slice(($page - 1) * $perPage, $perPage)->values();
+                $paginator = new \Illuminate\Pagination\LengthAwarePaginator($slice, $collection->count(), $perPage, $page, [
+                    'path' => request()->url(),
+                    'query' => request()->query(),
+                ]);
+            @endphp
             <table class="table table-striped table-bordered align-middle">
                 <thead class="table-light">
                 <tr>
@@ -51,9 +47,9 @@
                 </thead>
                 <tbody>
                 <!-- Example Row -->
-                @foreach ($data as $item)
+                @foreach ($paginator as $item)
                     <tr>
-                        <td>{{$loop->index+1}}</td>
+                        <td>{{ $paginator->firstItem() + $loop->index }}</td>
                         <td>
                             <strong>{{ $item['TenderNo'] }}</strong>
                             @if(!empty($item['Title']))
@@ -78,9 +74,13 @@
 
                 @endforeach
 
-                <!-- More rows dynamically -->
                 </tbody>
             </table>
+
+            {{-- Pagination links --}}
+            <div class="d-flex justify-content-center mt-3">
+                {{ $paginator->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
         </div>
     </div>
 
@@ -125,13 +125,13 @@
                             <tbody>
                             @foreach ($sections as $item)
                                 <tr>
-                                    <td><input type="checkbox" name="sections[]" value="{{$item->Id}}" data-section-id="{{$item->Id}}"></td>
+                                    <td><input type="checkbox" name="sections[]" value="{{$item->id}}"></td>
                                     @error('sections')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
                                     <td>{{$item->SectionName}}</td>
-                                    <td><input type="number" class="form-control weight-input" name="weights[{{$item->Id}}]"
-                                               value="0.00" step="1" data-section-id="{{$item->Id}}"></td>
+                                    <td><input type="number" class="form-control weight-input" name="weights[]"
+                                               value="0.00" step="1"></td>
                                     @error('weights')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
@@ -181,11 +181,10 @@
                     const weightInput = row.querySelector('input[type="number"]');
 
                     if (checkbox.checked) {
-                        weightInput.style.backgroundColor = '#fff';
+                        weightInput.disabled = false;
                         total += parseFloat(weightInput.value) || 0;
                     } else {
-                        weightInput.style.backgroundColor = '#f5f5f5';
-                        weightInput.value = '0.00';
+                        weightInput.disabled = true;
                     }
                 });
 
@@ -198,19 +197,8 @@
                 const checkbox = row.querySelector('input[type="checkbox"]');
                 const weightInput = row.querySelector('input[type="number"]');
 
-                checkbox.addEventListener('change', function() {
-                    if (!this.checked) {
-                        weightInput.value = '0.00';
-                    }
-                    updateTotal();
-                });
-                
-                weightInput.addEventListener('input', function() {
-                    const checkbox = row.querySelector('input[type="checkbox"]');
-                    if (checkbox.checked) {
-                        updateTotal();
-                    }
-                });
+                checkbox.addEventListener('change', updateTotal);
+                weightInput.addEventListener('input', updateTotal);
             });
 
             // Validate on submit
@@ -224,18 +212,6 @@
 
             // Initialize on load
             updateTotal();
-
-            // Close modal on successful submission (if page has success message)
-            @if(session('success'))
-                const modalInstance = bootstrap.Modal.getInstance(modal);
-                if (modalInstance) {
-                    modalInstance.hide();
-                }
-                // Refresh the page after modal closes to show updated data
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
-            @endif
         });
     </script>
 
