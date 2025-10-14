@@ -30,19 +30,19 @@
         </div>
     @endif
 
-    <div class="card shadow rounded-4 border-0 invoice-page">
+    <div class="card shadow rounded-4 border-0 invoice-page" id="invoice-print-section">
         <!-- Header -->
-        <div class="p-3 p-md-4 border-bottom bg-light rounded-top-4"
+        <div class="p-3 p-md-4 border-bottom bg-light rounded-top-4 avoid-break invoice-header"
              style="background: linear-gradient(135deg, #f8fafc, #eef2ff);">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <img src="{{asset('assets/img/icons/craft-logo.png')}}" alt="Logo" style="height:38px" class="rounded bg-white p-1">
+                    <img src="{{asset('assets/img/icons/craft-logo.png')}}" alt="Logo" style="height:28px" class="rounded bg-white p-1">
                     <div>
                         <div class="fw-bold">Craft Silicon Limited</div>
                         <div class="small text-muted">Financial Technology • Core Banking • Digital Channels</div>
                     </div>
                 </div>
-                <div class="text-md-end">
+                <div class="text-md-end invoice-meta">
                     <span class="badge rounded-pill text-bg-info px-3 py-2">{{ $invoice->source->Name ?? '—' }}</span>
                     <span class="badge rounded-pill text-bg-secondary px-3 py-2">{{ $invoice->currency->Code ?? '' }}</span>
                     @php
@@ -68,9 +68,9 @@
 
         <!-- Body -->
         <div class="p-3 p-md-4">
-            <div class="row g-3">
+            <div class="row g-3 print-row">
                 <!-- Bill To -->
-                <div class="col-lg-4">
+                <div class="col-lg-4 print-col">
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">Bill To</h6>
@@ -86,7 +86,7 @@
                 </div>
 
                 <!-- From -->
-                <div class="col-lg-4">
+                <div class="col-lg-4 print-col">
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">From</h6>
@@ -102,11 +102,11 @@
                 </div>
 
                 <!-- Summary -->
-                <div class="col-lg-4">
+                <div class="col-lg-4 print-col">
                     <div class="card h-100 border-0 shadow-sm rounded-4">
                         <div class="card-body py-3">
                             <h6 class="text-uppercase text-muted mb-0">Summary</h6>
-                            <table class="table align-middle mb-0 mt-2">
+                            <table class="table align-middle mb-0 mt-2 summary-table">
                                 <tbody>
                                 <tr>
                                     <td class="text-muted">Subtotal</td>
@@ -192,10 +192,10 @@
             </div>
 
             <!-- Items -->
-            <div class="card mt-3 border-0 shadow-sm rounded-4">
+            <div class="card mt-3 border-0 shadow-sm rounded-4 avoid-break">
                 <div class="card-body py-3">
                     <h6 class="mb-0">Items</h6>
-                    <table class="table table-hover align-middle mt-2">
+                    <table class="table table-hover align-middle mt-2 invoice-items-table">
                         <thead class="table-light">
                         <tr>
                             <th>#</th>
@@ -244,33 +244,42 @@
                 </div>
             </div>
 
-            <!-- Remarks -->
-            <div class="card mt-3 border-0 shadow-sm rounded-4">
-                <div class="card-body py-3">
-                    <h6 class="mb-2">Invoice Remarks</h6>
-                    <div>{{ $invoice->InvoiceRemarks ?? '—' }}</div>
-                </div>
-            </div>
-
-            <!-- Footer meta -->
-            <div class="row g-3 mt-2 small">
+            <!-- Remarks + Footer meta in columns -->
+            <div class="row g-3 mt-2">
                 <div class="col-md-6">
-                    <div class="border rounded-3 p-2">
-                        <div class="text-muted">Prepared On</div>
-                        <div class="fw-medium">{{ \Carbon\Carbon::parse($invoice->CreatedOn)->format('Y-m-d H:i') }}</div>
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-body py-3">
+                            <h6 class="mb-2">Invoice Remarks</h6>
+                            <div>{{ $invoice->InvoiceRemarks ?? '—' }}</div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="border rounded-3 p-2">
-                        <div class="text-muted">Modified On</div>
-                        <div class="fw-medium">{{ \Carbon\Carbon::parse($invoice->ModifiedOn)->format('Y-m-d H:i') }}</div>
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-body py-3 small">
+                            <h6 class="mb-2">Document Meta</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="border rounded-3 p-2">
+                                        <div class="text-muted">Prepared On</div>
+                                        <div class="fw-medium">{{ \Carbon\Carbon::parse($invoice->CreatedOn)->format('Y-m-d H:i') }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border rounded-3 p-2">
+                                        <div class="text-muted">Modified On</div>
+                                        <div class="fw-medium">{{ \Carbon\Carbon::parse($invoice->ModifiedOn)->format('Y-m-d H:i') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Tear-off Remittance -->
             <hr class="my-3 print-only">
-            <div class="border rounded-3 p-2 print-only small">
+            <div class="border rounded-3 p-2 print-only small break-before">
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="fw-bold">Remittance Advice</div>
@@ -283,6 +292,9 @@
                     </div>
                 </div>
                 <div class="mt-1">Pay to: Craft Silicon Limited • A/C 0012345678900</div>
+            </div>
+            <div class="sys-gen-note print-only">
+                This document is system-generated by BR_ERP on {{ now()->format('Y-m-d H:i') }} and does not require a physical signature.
             </div>
         </div>
     </div>
@@ -468,18 +480,42 @@
 
 @section('styles')
     <style>
-        @page { size: A4 portrait; margin: 10mm; }
+        @page { size: A4 portrait; margin: 2mm 8mm 8mm 8mm; }
         @media print {
+            html, body { margin: 0 !important; padding: 0 !important; }
             body * { visibility: hidden; }
-            .invoice-page, .invoice-page * { visibility: visible; }
-            .invoice-page { position: relative; font-size: 12px; }
+            #invoice-print-section, #invoice-print-section * { visibility: visible; }
+            #invoice-print-section { position: relative; width: 194mm; margin: 0 auto; font-size: 11px; }
             .navbar, .btn, .modal, .pagination { display: none !important; }
-            .card, .shadow { box-shadow: none !important; border: none !important; }
-            .table { font-size: 12px; }
+            .card, .shadow { box-shadow: none !important; }
+            .invoice-page { border: 1px solid #000 !important; }
+            .table { font-size: 11px; }
             .print-only { display: block !important; }
-            .card, .table, .table * { page-break-inside: avoid; }
+            .avoid-break { page-break-inside: avoid; }
+            .break-before { page-break-before: always; }
+            .invoice-header { padding: 2mm 6mm !important; }
+            .invoice-meta .badge { padding: 2px 6px !important; font-size: 10px; }
+            .print-row { display: flex; gap: 6mm; }
+            .print-col { flex: 1 1 0; }
+            .summary-table td, .summary-table th { padding: 2px 6px !important; }
+            .sys-gen-note { position: fixed; bottom: 4mm; left: 8mm; right: 8mm; text-align: center; font-size: 9.5px; color: #666; }
         }
         .print-only { display: none; }
+        .invoice-items-table { table-layout: fixed; }
+        .invoice-items-table th:nth-child(2),
+        .invoice-items-table td:nth-child(2) { width: 18%; }
+        .invoice-items-table th:nth-child(3),
+        .invoice-items-table td:nth-child(3) { width: 32%; }
+        .invoice-items-table th:nth-child(4),
+        .invoice-items-table td:nth-child(4) { width: 7%; }
+        .invoice-items-table th:nth-child(5),
+        .invoice-items-table td:nth-child(5) { width: 12%; }
+        .invoice-items-table th:nth-child(6),
+        .invoice-items-table td:nth-child(6) { width: 7%; }
+        .invoice-items-table th:nth-child(7),
+        .invoice-items-table td:nth-child(7) { width: 10%; }
+        .invoice-items-table th:nth-child(8),
+        .invoice-items-table td:nth-child(8) { width: 14%; }
     </style>
 @endsection
 

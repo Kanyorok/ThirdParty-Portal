@@ -184,6 +184,7 @@ Route::get('debug/invoices-with-credit', function() {
     Route::resource('reconupload', ReconUploadController::class);
     Route::resource('recurrentjournal', RecurrentJournalController::class);
     Route::resource('reversingjournal', ReversingJournalController::class);
+    Route::get('/reversingjournal/preview/{id}', [\App\Http\Controllers\Finance\ReversingJournalController::class, 'preview'])->name('reversingjournal.preview');
     Route::resource('salaryjournaltemplate', SalaryJournalTemplateController::class);
     Route::resource('taxefilling', TaxEfillingController::class);
     Route::resource('taxglmapping', TaxGLMappingController::class);

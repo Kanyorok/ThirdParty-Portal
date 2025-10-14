@@ -24,9 +24,9 @@ class InvoiceGenerationController extends Controller
         $this->creditService = $creditService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = FinanceInvoice::select([
+        $query = FinanceInvoice::select([
             'Id',
             'RequestID',
             'InvoiceNumber',
@@ -44,9 +44,36 @@ class InvoiceGenerationController extends Controller
                 'customer:Id,ThirdPartyName',
                 'source:ModuleID,Name',
                 'currency:Id,Code'
-            ])
-            ->orderByDesc('CreatedOn')
-            ->paginate(15);
+            ]);
+
+        if ($request->filled('request_id')) {
+            $query->where('RequestID', 'like', '%'.$request->request_id.'%');
+        }
+        if ($request->filled('invoice_number')) {
+            $query->where('InvoiceNumber', 'like', '%'.$request->invoice_number.'%');
+        }
+        if ($request->filled('customer')) {
+            $customer = $request->customer;
+            $query->whereHas('customer', function($q) use ($customer){
+                $q->where('ThirdPartyName', 'like', '%'.$customer.'%');
+            });
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('ApprovalStatus', $request->status);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('DueDate', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('DueDate', '<=', $request->date_to);
+        }
+
+        $sortField = $request->sort_by ?? 'CreatedOn';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 15);
+        $invoices = $query->paginate($perPage)->withQueryString();
 
         return view('finance.accountsreceivable.invoicegeneration.index', compact('invoices'));
     }
