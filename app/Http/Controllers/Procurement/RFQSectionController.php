@@ -21,6 +21,7 @@ class RFQSectionController extends Controller
     {
         $rfqs = RFQ::withCount(['sections', 'criteria'])
             ->with('sections')
+            ->orderByDesc('Id')
             ->get();
         // Use Sections maintained at tendering settings (t_Sections)
         $sections = Section::isActive()->get();
