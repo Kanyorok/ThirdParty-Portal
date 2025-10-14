@@ -545,6 +545,35 @@ enum PermissionEnum: string
     case BudgetSetupUpdate = 'budgetSetup-update';
     case BudgetSetupDelete = 'budgetSetup-delete';
 
+    case BudgetActivityView = 'budgetActivity-view';
+    case BudgetActivityCreate = 'budgetActivity-create';
+    case BudgetActivityUpdate = 'budgetActivity-update';
+    case BudgetActivityDelete = 'budgetActivity-delete';
+
+    case NewBudgetView = 'newBudget-view';
+    case NewBudgetCreate = 'newBudget-create';
+    case NewBudgetUpdate = 'newBudget-update';
+    case NewBudgetDelete = 'newBudget-delete';
+
+    case BudgetProjectionView = 'budgetProjection-view';
+    case BudgetProjectionCreate = 'budgetProjection-create';
+    case BudgetProjectionUpdate = 'budgetProjection-update';
+    case BudgetProjectionDelete = 'budgetProjection-delete';
+
+    case BudgetEntryByLineView = 'budgetEntryByLine-view';
+    case BudgetEntryByLineCreate = 'budgetEntryByLine-create';
+    case BudgetEntryByLineUpdate = 'budgetEntryByLine-update';
+    case BudgetEntryByLineDelete = 'budgetEntryByLine-delete';
+
+    case BudgetReallocationView = 'budgetReallocation-view';
+    case BudgetReallocationCreate = 'budgetReallocation-create';
+    case BudgetReallocationUpdate = 'budgetReallocation-update';
+    case BudgetReallocationDelete = 'budgetReallocation-delete';
+
+    case BudgetConsolidationView = 'budgetConsolidation-view';
+    case ApproveNewBudget = 'approveNewBudget';
+    case ApproveReallocation = 'approveReallocation';
+
 
 /** ======================================== Document Management System ========================================*/
 
@@ -800,6 +829,14 @@ enum PermissionEnum: string
 
             /////////////////////////// Budget and Analytics  ///////////////////////
             [self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete],
+            [self::BudgetActivityView, self::BudgetActivityCreate, self::BudgetActivityUpdate, self::BudgetActivityDelete],
+            [self::NewBudgetView, self::NewBudgetCreate, self::NewBudgetUpdate, self::NewBudgetDelete],
+            [self::BudgetProjectionView, self::BudgetProjectionCreate, self::BudgetProjectionUpdate, self::BudgetProjectionDelete],
+            [self::BudgetEntryByLineView, self::BudgetEntryByLineCreate, self::BudgetEntryByLineUpdate, self::BudgetEntryByLineDelete],
+            [self::BudgetReallocationView, self::BudgetReallocationCreate, self::BudgetReallocationUpdate, self::BudgetReallocationDelete],
+            [self::BudgetConsolidationView],
+            [self::ApproveNewBudget],
+            [self::ApproveReallocation],
 
 
             ///////////////////////  Finance  /////////////////////////////////////
@@ -1056,7 +1093,15 @@ enum PermissionEnum: string
 
 
             ///////////////^*********** Budget and Analytics ******************/////////////////
-            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete
+            self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete,
+            self::BudgetActivityView, self::BudgetActivityCreate, self::BudgetActivityUpdate, self::BudgetActivityDelete,
+            self::NewBudgetView, self::NewBudgetCreate, self::NewBudgetUpdate, self::NewBudgetDelete,
+            self::BudgetProjectionView, self::BudgetProjectionCreate, self::BudgetProjectionUpdate, self::BudgetProjectionDelete,
+            self::BudgetEntryByLineView, self::BudgetEntryByLineCreate, self::BudgetEntryByLineUpdate, self::BudgetEntryByLineDelete,
+            self::BudgetReallocationView, self::BudgetReallocationCreate, self::BudgetReallocationUpdate, self::BudgetReallocationDelete,
+            self::BudgetConsolidationView,
+            self::ApproveNewBudget,
+            self::ApproveReallocation
             => ModulesEnum::BudgetLine,
 
 
@@ -1171,6 +1216,14 @@ enum PermissionEnum: string
 
             ////////////////////////// Budget and Analytics //////////////////////////////
             self::BudgetSetupView, self::BudgetSetupCreate, self::BudgetSetupUpdate, self::BudgetSetupDelete => 'Budget Setup',
+            self::BudgetActivityView, self::BudgetActivityCreate, self::BudgetActivityUpdate, self::BudgetActivityDelete => 'Budget Activity',
+            self::NewBudgetView, self::NewBudgetCreate, self::NewBudgetUpdate, self::NewBudgetDelete => 'New Budget',
+            self::BudgetProjectionView, self::BudgetProjectionCreate, self::BudgetProjectionUpdate, self::BudgetProjectionDelete => 'Budget Projection',
+            self::BudgetEntryByLineView, self::BudgetEntryByLineCreate, self::BudgetEntryByLineUpdate, self::BudgetEntryByLineDelete => 'Budget Entry By Line',
+            self::BudgetReallocationView, self::BudgetReallocationCreate, self::BudgetReallocationUpdate, self::BudgetReallocationDelete => 'Budget Reallocation',
+            self::BudgetConsolidationView => 'Budget Consolidation',
+            self::ApproveNewBudget => 'Approve New Budget',
+            self::ApproveReallocation => 'Approve Reallocation',
 
             //Property Management
             self::PropertyCategoryView, self::PropertyCategoryCreate, self::PropertyCategoryUpdate, self::PropertyCategoryDelete => 'Property Category',

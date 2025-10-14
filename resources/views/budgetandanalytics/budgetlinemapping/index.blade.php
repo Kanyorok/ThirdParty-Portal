@@ -67,7 +67,8 @@
                                 </td>
                                 <td class="small text-start">
                                     @forelse($item->newGlAccounts as $gl)
-                                        <div>GL{{ $gl->Id }} – {{ $gl->Description }}</div>
+                                        <div>GL{{ $gl->Id }} – {{ $gl->AccountID }}</div>
+                                        <div>( {{ $gl->Description }} )</div>
                                     @empty
                                         <span class="text-muted">—</span>
                                     @endforelse

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Budget;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivity;
@@ -29,6 +30,7 @@ class BudgetConsolidationController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::BudgetConsolidationView, BudgetConsolidationController::class);
         // /return 1;
         //Define data array that will store the data for all types entry
         $data = [];

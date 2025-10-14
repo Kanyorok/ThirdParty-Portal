@@ -39,7 +39,7 @@
                             <th>From</th>
                             <th>To</th>
                             <th>Status</th>
-                            <th>View GL</th>
+                            {{-- <th>View GL</th> --}}
                             <th>Approval</th>
 {{--                            <th>Notes</th>--}}
                             <th>Actions</th>
@@ -59,12 +59,12 @@
                                     </span>
                                 </td>
 
-                                <td>
+                                {{-- <td>
                                     <a href="{{ route('budgetperiod.show', $budget->Id) }}"
                                        class="badge rounded-pill bg-info text-white text-decoration-none">
                                         View GL
                                     </a>
-                                </td>
+                                </td> --}}
 
                                 <td>
                                     @php

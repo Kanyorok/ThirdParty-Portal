@@ -76,7 +76,7 @@
                         @enderror
                     </div>
 
-                    <!-- GL Selection Section -->
+                    {{-- <!-- GL Selection Section -->
                     <h5 class="mt-4 mb-3 fw-bold text-primary">Select General Ledger Accounts</h5>
                     <div class="row g-3">
                         <div class="col-md-6 mb-3">
@@ -107,10 +107,10 @@
                                 <i class="bi bi-plus-circle me-1"></i>Add Selected GLs
                             </button>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <!-- Selected GLs Table -->
-                    <h6 class="mt-3 mb-2 fw-bold">Selected GL Accounts</h6>
+                    {{-- <h6 class="mt-3 mb-2 fw-bold">Selected GL Accounts</h6>
                     <div class="table-responsive">
                         <table class="table table-hover table-bordered rounded-3" id="selectedGlTable">
                             <thead class="table-light">
@@ -125,7 +125,7 @@
                             <!-- Selected GLs will be appended here -->
                             </tbody>
                         </table>
-                    </div>
+                    </div> --}}
 
                     <!-- Hidden input to store selected GLs -->
                     <input type="hidden" name="selected_gls" id="selected_gls" value="{{ old('selected_gls') }}">
