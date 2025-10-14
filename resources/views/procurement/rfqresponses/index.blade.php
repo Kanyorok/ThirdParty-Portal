@@ -30,7 +30,7 @@
                         $daysRemaining = $today->diffInDays($deliveryDate, false);
                     @endphp
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $rfqResponses->firstItem() + $loop->index }}</td>
                         <td>{{ $response->RFQResponseNumber }}</td>
                         <td>{{ $response->RFQNumber }}</td>
                         <td>{{ $response->SupplierName }}</td>
@@ -77,6 +77,19 @@
                 @endforeach
                 </tbody>
             </table>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="small text-muted">
+                    @if($rfqResponses->total() > 0)
+                        Showing {{ $rfqResponses->firstItem() }} to {{ $rfqResponses->lastItem() }} of {{ $rfqResponses->total() }} entries
+                    @else
+                        No entries
+                    @endif
+                </div>
+                <div>
+                    {{ $rfqResponses->withQueryString()->links() }}
+                </div>
+            </div>
 
             {{-- Modals --}}
             @foreach($rfqResponses as $response)
