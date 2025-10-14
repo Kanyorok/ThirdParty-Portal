@@ -10,6 +10,20 @@
 @endsection
 @section('content')
 
+  @php
+    $detailsCollection = isset($details) ? collect($details) : collect();
+    if ($detailsCollection->isNotEmpty()) {
+      $first = $detailsCollection->first();
+      if (is_array($first) ? array_key_exists('CreatedOn', $first) : isset($first->CreatedOn)) {
+        $detailsSorted = $detailsCollection->sortByDesc(fn($d) => is_array($d) ? ($d['CreatedOn'] ?? null) : ($d->CreatedOn ?? null))->values();
+      } else {
+        $detailsSorted = $detailsCollection->sortByDesc(fn($d) => is_array($d) ? ($d['Id'] ?? null) : ($d->Id ?? null))->values();
+      }
+    } else {
+      $detailsSorted = $detailsCollection;
+    }
+  @endphp
+
   <div class="row mb-3">
     <div class="col-12 d-flex justify-content-end">
       <a href="{{ route('purchaseOrder.create') }}" class="btn btn-primary">
@@ -38,7 +52,7 @@
               </tr>
             </thead>
             <tbody>
-              @forelse($details as $item)
+              @forelse($detailsSorted as $item)
                 <tr>
                   <td>{{ $loop->iteration }}</td>
                   <td>{{ $item->OrderNo }}</td>
