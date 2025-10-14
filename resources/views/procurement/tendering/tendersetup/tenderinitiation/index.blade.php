@@ -22,6 +22,21 @@
 
 @section('content')
     <div class="container mt-4">
+        @php
+            // Ensure newest (last) record appears first in the listing.
+            $isPaginator = isset($tenders) && method_exists($tenders, 'links');
+            if ($isPaginator) {
+                $tendersSorted = $tenders; // assume controller handled ordering for paginator
+            } else {
+                $tendersCollection = isset($tenders) ? collect($tenders) : collect();
+                if ($tendersCollection->isNotEmpty()) {
+                    // Prefer sorting by Id (descending) as a proxy for newest items
+                    $tendersSorted = $tendersCollection->sortByDesc(fn($t) => $t->Id ?? null)->values();
+                } else {
+                    $tendersSorted = $tendersCollection;
+                }
+            }
+        @endphp
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="mb-0 text-primary"><i class="fas fa-list-alt me-2"></i>Initiated Tenders</h3>
             <a href="{{ route('initiatetender.create') }}" class="btn btn-success">
@@ -71,9 +86,9 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @forelse($tenders as $tender)
+                        @forelse($tendersSorted as $tender)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $isPaginator ? ($tenders->firstItem() + $loop->index) : $loop->iteration }}</td>
                                 <td>{{ $tender->TenderNo }}</td>
                                 <td>
                                     <a href="{{ route('initiatetender.show', $tender->Id) }}" title="View {{ $tender->Title }}">
