@@ -23,17 +23,12 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Tender Type</label>
-                            <select class="form-select" id="tenderCategory" name="tender_category_id" required>
-                                <option>-- Select Tender Type --</option>
-                                <option value="op" name="tender_type"
-                                        id="openTender" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender
-                                </option>
-                                <option value="rs" name="tender_type"
-                                        id="restrictedTender" {{$tender->TenderType->value=='rs'?'selected':''}}>
-                                    Restricted Tender
-                                </option>
+                            <select class="form-select" id="tenderType" name="TenderType" required>
+                                <option value="">-- Select Tender Type --</option>
+                                <option value="op" id="openTender" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender</option>
+                                <option value="rs" id="restrictedTender" {{$tender->TenderType->value=='rs'?'selected':''}}>Restricted Tender</option>
                             </select>
-                            @error('tender_category_id')
+                            @error('TenderType')
                             <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
@@ -55,7 +50,7 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Item Type</label>
+                            <label class="form-label fw-bold">Item Category</label>
                             <select class="form-select" id="itemCategory" value="{{$itemCategory }}" required
                                     name="item_category_id">
                                 <option selected disabled>{{$itemCategory }}</option>
@@ -403,3 +398,35 @@
 
 
 @endsection
+@push('scripts')
+<script>
+(function(){
+  const tenderCatSel = document.getElementById('tenderCategory');
+  const itemCatSel   = document.getElementById('itemCategory');
+
+  async function refreshItemCategories(){
+    const catId = tenderCatSel && tenderCatSel.value ? tenderCatSel.value : '';
+    if (!catId) { return; }
+    const url = `{{ route('initiatetender.allowedCategories') }}` + `?tender_category_id=${encodeURIComponent(catId)}`;
+    try{
+      const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+      if(!data.ok) return;
+      const current = itemCatSel.value;
+      itemCatSel.innerHTML = '<option value="" disabled selected>-- Select Category --</option>';
+      (data.categories || []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.Id; opt.textContent = c.Name;
+        if (String(c.Id) === String(current)) opt.selected = true;
+        itemCatSel.appendChild(opt);
+      });
+    }catch(e){ /* ignore */ }
+  }
+
+  if (tenderCatSel) {
+    tenderCatSel.addEventListener('change', refreshItemCategories);
+    if (tenderCatSel.value) { refreshItemCategories(); }
+  }
+})();
+</script>
+@endpush

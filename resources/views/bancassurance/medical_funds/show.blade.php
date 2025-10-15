@@ -1,104 +1,153 @@
 @extends('layouts.app')
 
-@section('title', 'Medical Fund Details')
-
 @section('content')
-<div class="container mt-4" style="max-width: 1000px;">
-
-    {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <p class="fw-bold mb-0">
-            Medical Fund: <span class="text-dark">{{ $medicalfund->FundName }}</span>
-        </p>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Medical Fund: {{ $medical_fund->FundName }}</h4>
         <div class="d-flex gap-2">
-            <a href="{{ route('bancassurance.medicalfunds.edit', $medicalfund->Id) }}" class="btn btn-primary px-4">
-                <i class="bi bi-pencil-square me-1"></i> Edit
-            </a>
-            <a href="{{ route('bancassurance.medicalfunds.index') }}" class="btn btn-outline-secondary px-4">
-                <i class="bi bi-arrow-left-circle me-1"></i> Back
-            </a>
+            <a href="{{ route('bancassurance.medicalfunds.edit', ['medical_fund' => $medical_fund->ID]) }}"
+               class="btn btn-primary">Edit</a>
+            <a href="{{ route('bancassurance.medicalfunds.index') }}" class="btn btn-outline-secondary">Back</a>
         </div>
     </div>
 
-    {{-- Success Message --}}
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+    @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
 
-    <div class="row g-4">
-        {{-- Fund Information as Readonly Form --}}
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 rounded-4 h-100">
-                <div class="card-header bg-light fw-semibold text-secondary rounded-top-4">
-                    Fund Information
+    <div class="row g-3">
+        <!-- Packages & Coverages (accordion) -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Packages & Coverages</h6>
+                    <a href="{{ route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $medical_fund->ID]) }}"
+                       class="btn btn-sm btn-primary">
+                        Manage Packages
+                    </a>
                 </div>
+
                 <div class="card-body">
-                    <form>
-                        @csrf
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted">Fund Name</label>
-                                <input type="text" class="form-control bg-light" value="{{ $medicalfund->FundName }}" readonly>
-                            </div>
+                    @if($medical_fund->packages->count())
+                        <div class="accordion" id="pkgAccordion">
+                            @foreach($medical_fund->packages as $pkg)
+                                @php
+                                  $collapseId = "pkgCollapse{$pkg->ID}";
+                                  $headingId  = "pkgHeading{$pkg->ID}";
+                                @endphp
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted">Provider</label>
-                                <input type="text" class="form-control bg-light" 
-                                       value="{{ optional($medicalfund->provider)->Name ?? '—' }}" readonly>
-                            </div>
+                                <div class="accordion-item mb-2 border rounded">
+                                    <h2 class="accordion-header" id="{{ $headingId }}">
+                                        <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}"
+                                                aria-expanded="false" aria-controls="{{ $collapseId }}">
+                                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                                <div>
+                                                    <span class="fw-semibold">{{ $pkg->Name }}</span>
+                                                    @if($pkg->IsCompulsory)
+                                                        <span class="badge bg-warning text-dark ms-2">Compulsory</span>
+                                                    @endif
+                                                    <div class="small text-muted">
+                                                        Premium: {{ number_format((float)$pkg->Premium,2) }}
+                                                        @if($pkg->CoverageDescription)
+                                                            • {{ $pkg->CoverageDescription }}
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <span class="small text-muted ms-3">click to view coverages</span>
+                                            </div>
+                                        </button>
+                                    </h2>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted">Coverage Type</label>
-                                <input type="text" class="form-control bg-light" 
-                                       value="{{ $medicalfund->coverages->Description ?? '—' }}" readonly>
-                            </div>
+                                    <div id="{{ $collapseId }}"
+                                         class="accordion-collapse collapse"
+                                         aria-labelledby="{{ $headingId }}"
+                                         data-bs-parent="#pkgAccordion">
+                                        <div class="accordion-body">
+                                            @php $covs = $pkg->coverages ?? collect(); @endphp
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted">Coverage Limit</label>
-                                <input type="text" class="form-control bg-light text-end" 
-                                       value="{{ number_format((float)($medicalfund->CoverageLimit ?? 0), 2) }}" readonly>
-                            </div>
+                                            @if($covs->count())
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>Coverage</th>
+                                                                <th class="text-end">Annual Limit</th>
+                                                                <th class="text-end">Per-Visit</th>
+                                                                <th>Scope</th>
+                                                                <th>Waiting</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($covs as $cov)
+                                                                <tr>
+                                                                    <td>
+                                                                        <div class="fw-semibold">{{ $cov->Name }}</div>
+                                                                        @if($cov->Description)
+                                                                            <div class="small text-muted">{{ $cov->Description }}</div>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="text-end">
+                                                                        {{ $cov->pivot->AnnualLimit !== null ? number_format((float)$cov->pivot->AnnualLimit,2) : '—' }}
+                                                                    </td>
+                                                                    <td class="text-end">
+                                                                        {{ $cov->pivot->PerVisitLimit !== null ? number_format((float)$cov->pivot->PerVisitLimit,2) : '—' }}
+                                                                    </td>
+                                                                    <td>{{ $cov->pivot->Scope ?? 'PerBeneficiary' }}</td>
+                                                                    <td>{{ $cov->pivot->WaitingPeriodDays ? $cov->pivot->WaitingPeriodDays.' days' : '—' }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @else
+                                                <div class="text-muted">No coverages attached to this package.</div>
+                                            @endif
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold text-muted">Active</label>
-                                <input type="text" class="form-control bg-light" 
-                                       value="{{ $medicalfund->IsActive ? 'Yes' : 'No' }}" readonly>
-                            </div>
-
-                            <div class="col-md-12">
-                                <label class="form-label fw-semibold text-muted">Description</label>
-                                <textarea class="form-control bg-light" rows="3" readonly>{{ $medicalfund->Description ?? '—' }}</textarea>
-                            </div>
+                                            <div class="mt-3">
+                                                {{-- Shallow routes for package member actions --}}
+                                                <a href="{{ route('bancassurance.packages.edit', $pkg->ID) }}"
+                                                   class="btn btn-sm btn-outline-primary">Edit Package</a>
+                                                <a href="{{ route('bancassurance.packages.show', $pkg->ID) }}"
+                                                   class="btn btn-sm btn-outline-secondary">View Package</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                    </form>
+                    @else
+                        <p class="text-muted mb-0">No packages defined yet.</p>
+                    @endif
                 </div>
             </div>
         </div>
 
-        {{-- Quick Links --}}
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 rounded-4 h-100">
-                <div class="card-header bg-light fw-semibold text-secondary rounded-top-4">
-                    Quick Links
+        <!-- Contributors Section -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Contributors</h6>
+                    <a href="{{ route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $medical_fund->ID]) }}"
+                       class="btn btn-sm btn-primary">
+                        Manage Contributors
+                    </a>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-3">
-                        <a href="{{ route('bancassurance.medicalfunds.beneficiaries.index', $medicalfund->Id) }}" 
-                           class="btn btn-outline-primary rounded-3">
-                            <i class="bi bi-people me-1"></i> Manage Beneficiaries
-                        </a>
-                        <a href="{{ route('bancassurance.medicalfunds.contributions.index', $medicalfund->Id) }}" 
-                           class="btn btn-outline-success rounded-3">
-                            <i class="bi bi-wallet2 me-1"></i> View Contributions
-                        </a>
-                        <a href="{{ route('bancassurance.medicalfunds.disbursements.index', $medicalfund->Id) }}" 
-                           class="btn btn-outline-secondary rounded-3">
-                            <i class="bi bi-cash-stack me-1"></i> View Disbursements
-                        </a>
-                    </div>
+                    @if($medical_fund->contributors->count())
+                        <ul class="list-group list-group-flush">
+                            @foreach($medical_fund->contributors->take(5) as $c)
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>{{ $c->FullName }} ({{ $c->Status }})</span>
+                                    <a href="{{ route('bancassurance.contributors.show', $c->ID) }}"
+                                       class="btn btn-sm btn-outline-info">Open</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                        @if($medical_fund->contributors->count() > 5)
+                            <div class="mt-2"><em>Showing first 5. View all from Manage Contributors.</em></div>
+                        @endif
+                    @else
+                        <p class="text-muted">No contributors registered yet.</p>
+                    @endif
                 </div>
             </div>
         </div>

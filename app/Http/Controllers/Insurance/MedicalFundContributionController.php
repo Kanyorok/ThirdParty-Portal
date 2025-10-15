@@ -3,15 +3,9 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Insurance\MedicalFundContributionRequest;
-use App\Models\Core\CodeDetail;
 use App\Models\Insurance\MedicalFund;
 use App\Models\Insurance\MedicalFundContribution;
-use App\Models\ThirdParty\ThirdParties;
-use App\Services\Insurance\MedicalFundContributionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 
 class MedicalFundContributionController extends Controller
 {
@@ -20,46 +14,61 @@ class MedicalFundContributionController extends Controller
         $this->middleware(['auth']);
     }
 
-    public function index(MedicalFund $medical_fund)
-    {
-        $contributions = $medical_fund->contributions()->orderBy('ContributionDate','desc')->paginate(20);
-        $totals = [
-            'sum' => $medical_fund->contributions()->sum('Amount')
-        ];
-        return view('bancassurance.medical_fund_contributions.index', compact('medical_fund','contributions','totals'));
+    // /bancassurance/medical-funds/{medical_fund}/contributions
+public function index(\App\Models\Insurance\MedicalFund $medical_fund, \Illuminate\Http\Request $request)
+{
+    $q = $medical_fund->contributions()->newQuery(); // if you have relation; else base query with FundID
+
+    $contributor = null;
+    if ($cid = (int)$request->query('contributor')) {
+        $q->where('ContributorID', $cid);
+        $contributor = \App\Models\Insurance\MedicalFundContributor::where('FundID',$medical_fund->ID)->find($cid);
     }
 
-    public function create(MedicalFund $medical_fund)
-    {
-        $contributortypes = CodeDetail::where('CodeID', 'ContributorType')->get();
-        $contributors = ThirdParties::orderBy('ThirdPartyName')->get(['Id','ThirdPartyName']);
-        return view('bancassurance.medical_fund_contributions.create', compact('medical_fund','contributortypes','contributors'));
+    // other filters (date range, type, etc.) go here…
+
+    $total = (float) $q->clone()->sum('Amount');
+    $contributions = $q->orderByDesc('ContributionDate')->paginate(20)->appends($request->query());
+
+    return view('bancassurance.medical_fund_contributions.index', compact('medical_fund','contributions','total','contributor'));
+}
+
+public function create(\App\Models\Insurance\MedicalFund $medical_fund, \Illuminate\Http\Request $request)
+{
+    $contributor = null;
+    if ($cid = (int)$request->query('contributor')) {
+        $contributor = \App\Models\Insurance\MedicalFundContributor::where('FundID',$medical_fund->ID)->find($cid);
     }
 
-    public function store(MedicalFundContributionRequest $request, MedicalFund $medical_fund)
-    {
-        $validated = $request->validated();
+    // If not coming from a contributor, you may pass a list to choose from
+    $contributors = $contributor
+        ? collect()
+        : \App\Models\Insurance\MedicalFundContributor::where('FundID',$medical_fund->ID)->orderBy('FullName')->get(['ID','FullName']);
 
-    // Ensure we use the validated keys safely. Use null-coalescing to avoid undefined array key notices.
-    $FundId = MedicalFund::findOrFail($medical_fund->Id);
-    $ContributorType = CodeDetail::findOrFail($validated['ContributorType']);
-    $contributorIdKey = $validated['ContributorId'] ?? null;
-    $ContributorId = $contributorIdKey ? ThirdParties::find($contributorIdKey) : null;
+    return view('bancassurance.medical_fund_contributions.create', compact('medical_fund','contributor','contributors'));
+}
+public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illuminate\Http\Request $request)
+{
+    $data = $request->validate([
+        'ContributionDate' => ['required','date'],
+        'Amount'           => ['required','numeric','min:0.01'],
+        'Notes'            => ['nullable','string','max:500'],
+        'ContributorID'    => ['required','integer'],
+        'ContributorType'  => ['nullable','in:Employee,Employer'], // if you use it
+    ]);
 
-        $contribution = MedicalFundContributionService::create(
-            $FundId,
-            $ContributorType,
-            $ContributorId,
-            $validated['Amount'],
-            Carbon::parse($validated['ContributionDate']),
-            $validated['Notes'] ?? null,
-            Auth::user(),
-        );
+    $contributor = \App\Models\Insurance\MedicalFundContributor::where('FundID',$medical_fund->ID)
+        ->findOrFail($data['ContributorID']); // ✅ guarantees the contributor is from this fund
 
-        return redirect()
-            ->route('bancassurance.medicalfunds.contributions.index', $medical_fund->Id)
-            ->with('success','Contribution recorded.');
-    }
+    $data['FundID'] = $medical_fund->ID;
+
+    \App\Models\Insurance\MedicalFundContribution::create($data);
+
+    return redirect()
+        ->route('bancassurance.medicalfunds.contributions.index', $medical_fund->ID)
+        ->with('success','Contribution recorded.')
+        ->with('filter_contributor', $contributor->ID);
+}
 
     public function edit(MedicalFundContribution $contribution)
     {

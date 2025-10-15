@@ -75,7 +75,7 @@
                     @foreach ($allItemsCategories as $item)
                     <option value="{{$item->Id}}" {{ old('item_category_id') == $item->Id ? 'selected' : '' }}>{{$item->Name}}</option>
                     @endforeach
-                        </select>
+                </select>
                 @error('item_category_id')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
@@ -235,253 +235,141 @@
                 </form>
 
 </div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-        const openTender = document.getElementById('openTender');
-        const restricted = document.getElementById('restrictedTender');
-        const section = document.getElementById('restrictedSuppliersSection');
+(function () {
+  // ---- DOM refs
+  const tenderCatSel    = document.getElementById('tenderCategory');
+  const itemCatSel      = document.getElementById('itemCategory');
+  const openTender      = document.getElementById('openTender');
+  const restricted      = document.getElementById('restrictedTender');
+  const suppliersSection= document.getElementById('restrictedSuppliersSection');
+  const suppliersList   = document.getElementById('suppliersList');
 
-        openTender.addEventListener('change', () => {
-            section.style.display = 'none';
-            suppliersList.innerHTML = '';
-        });
-        restricted.addEventListener('change', () => {
-            section.style.display = 'block';
-            const catId = document.getElementById('itemCategory').value;
-            if (catId) {
-                try { populateSuppliers(catId); } catch(e) { console.warn('Populate suppliers failed', e); }
-            }
-        });
+  // ---- Data injected from Blade
+  const suppliers = @json($suppliers);
+  const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
 
-        // Initial state: if Restricted is pre-selected, show section and populate by current category
-        if (restricted.checked) {
-            section.style.display = 'block';
-            const catId = document.getElementById('itemCategory').value;
-            if (catId) {
-                try { populateSuppliers(catId); } catch(e) { console.warn('Populate suppliers failed', e); }
-            }
-        }
+  // ---- Helpers
+  async function refreshItemCategories() {
+    const catId = tenderCatSel && tenderCatSel.value ? tenderCatSel.value : '';
+    if (!catId || !itemCatSel) return;
 
-        updateManualItemSelects();
-    });
+    const url = `{{ route('initiatetender.allowedCategories') }}?tender_category_id=${encodeURIComponent(catId)}`;
 
-    const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
-
-    let selectedItemCategory = document.getElementById('itemCategory').value;
-
-    function getFilteredItemOptions(categoryId) {
-        let html = '<option selected disabled>-- Select Item --</option>';
-        allItemsWithCategoryIds.forEach(item => {
-            if (String(item.Category) === String(categoryId)) {
-                html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
-            }
-        });
-        return html;
-    }
-
-    let manualItemIndex = 1;
-
-    function addManualItemRow() {
-        const tableBody = document.getElementById('manualItemsBody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
-        <td>
-            <select class="form-select manual-item-select" name="manual_items[${manualItemIndex}][item_id]" required>
-                ${getFilteredItemOptions(selectedItemCategory)}
-            </select>
-        </td>
-        <td>
-            <input type="number" class="form-control" name="manual_items[${manualItemIndex}][qty]" value="1" min="1" required>
-        </td>
-        <td>
-            <input type="file" class="form-control" name="manual_items[${manualItemIndex}][specs_file]">
-        </td>
-        <td>
-            <input type="text" class="form-control" name="manual_items[${manualItemIndex}][pr_ref]" placeholder="PR/2025/XXX">
-        </td>
-        <td>
-            <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">🗑</button>
-        </td>
-    `;
-        tableBody.appendChild(row);
-        manualItemIndex++;
-    }
-
-    function updateManualItemSelects() {
-        selectedItemCategory = document.getElementById('itemCategory').value;
-        const selects = document.querySelectorAll('.manual-item-select');
-        selects.forEach(select => {
-            const prevValue = select.value;
-            select.innerHTML = getFilteredItemOptions(selectedItemCategory);
-            if ([...select.options].some(opt => opt.value === prevValue)) {
-                select.value = prevValue;
-            }
-        });
-    }
-
-    document.getElementById('itemCategory').addEventListener('change', updateManualItemSelects);
-
-    const procurementPlans = @json($procurementPlansOutput);
-    const planItemData = @json($planItemData);
-    const addedPlanItems = new Set();
-
-    function loadPlanItemsForPlan() {
-        const planId = document.getElementById('selectedProcurementPlan').value;
-        const select = document.getElementById('planItemSelect');
-        select.innerHTML = `<option selected disabled>-- Select Item --</option>`;
-
-        if (procurementPlans[planId]) {
-            procurementPlans[planId].forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.planLineItemId;
-                opt.textContent = `${item.name} — Need ${item.needId || '—'} (Planned: ${item.plannedQty})`;
-                opt.dataset.itemId = item.itemId;
-                opt.dataset.needId = item.needId || '';
-                select.appendChild(opt);
-            });
-        }
-    }
-
-    function addPlanItemToGrid() {
-        const planId = document.getElementById('selectedProcurementPlan').value;
-        const select = document.getElementById('planItemSelect');
-        const planLineItemId = select.value; // now holds LineItemID
-        const tbody = document.querySelector('#planItemsGrid tbody');
-
-        if (!planId || !planLineItemId) {
-            alert('Please select both a plan and an item.');
-            return;
-        }
-
-        const uniqueKey = `${planId}-${planLineItemId}`;
-
-        if (addedPlanItems.has(uniqueKey)) {
-            alert('Item already added for this plan.');
-            return;
-        }
-
-        const itemList = planItemData[planId] || [];
-        const item = itemList.find(obj => String(obj.planLineItemId) === String(planLineItemId));
-
-        if (!item) {
-            alert('Item not found in plan data.');
-            return;
-        }
-
-        const row = `
-        <tr data-id="${uniqueKey}">
-            <td>${item.name}</td>
-            <td>${item.needId || '—'}</td>
-            <td>${item.plannedQty}</td>
-            <td>
-                <input type="hidden" name="plan_items[${uniqueKey}][item_id]" value="${item.itemId}">
-                <input type="number" class="form-control" name="plan_items[${uniqueKey}][qty]" value="${item.plannedQty}" min="1" max="${item.plannedQty}" required>
-            </td>
-            <td>
-                <input type="file" class="form-control" name="plan_items[${uniqueKey}][file]">
-            </td>
-            <td>
-                <input type="text" class="form-control" name="plan_items[${uniqueKey}][pr_ref]" placeholder="PR/2025/XXX">
-            </td>
-            <td>
-                <button type="button" class="btn btn-sm btn-danger" onclick="removePlanItemFromGrid('${uniqueKey}')">🗑</button>
-            </td>
-        </tr>
-    `;
-
-        tbody.insertAdjacentHTML('beforeend', row);
-        addedPlanItems.add(uniqueKey);
-        select.selectedIndex = 0;
-    }
-
-    function removePlanItemFromGrid(uniqueKey) {
-        const row = document.querySelector(`#planItemsGrid tr[data-id="${uniqueKey}"]`);
-        if (row) row.remove();
-        addedPlanItems.delete(uniqueKey);
-    }
-</script>
-
-<script>
-    const suppliers = @json($suppliers);
-    const openTender = document.getElementById('openTender');
-    const restrictedTender = document.getElementById('restrictedTender');
-    const suppliersSection = document.getElementById('restrictedSuppliersSection');
-    const suppliersList = document.getElementById('suppliersList');
-    const itemCategory = document.getElementById('itemCategory');
-
-    function populateSuppliers(categoryId = null) {
-        suppliersList.innerHTML = '';
-        let filteredSuppliers = suppliers;
-        if (categoryId) {
-            const catNum = parseInt(categoryId);
-            filteredSuppliers = suppliers.filter(supplier => {
-                const arr = Array.isArray(supplier.ItemCategoryIds) ? supplier.ItemCategoryIds : [];
-                return arr.map(Number).includes(catNum);
-            });
-        }
-
-        if (filteredSuppliers.length === 0) {
-            const option = document.createElement('option');
-            option.disabled = true;
-            option.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
-            suppliersList.appendChild(option);
+    try {
+      const res = await fetch(url, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin'
+      });
+      if (!res.ok) {
+        console.warn('allowedCategories HTTP error', res.status, res.statusText);
         return;
+      }
+      const data = await res.json();
+      const previous = itemCatSel.value;
+
+      itemCatSel.innerHTML = '<option value="" disabled selected>-- Item Categories --</option>';
+      if (data && data.ok && Array.isArray(data.categories)) {
+        data.categories.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.Id; opt.textContent = c.Name;
+          if (String(c.Id) === String(previous)) opt.selected = true;
+          itemCatSel.appendChild(opt);
+        });
+      }
+
+      // When item categories change, refresh manual-items options and suppliers (if restricted)
+      updateManualItemSelects();
+      if (restricted.checked) populateSuppliers(itemCatSel.value);
+
+    } catch (e) {
+      console.warn('allowedCategories fetch failed', e);
     }
-    
-        filteredSuppliers.forEach(supplier => {
-            const option = document.createElement('option');
-            option.value = supplier.Id;
-            option.textContent = supplier.ThirdPartyName || supplier.SupplierName || `Supplier #${supplier.Id}`;
-            suppliersList.appendChild(option);
-        });
+  }
+
+  function getFilteredItemOptions(categoryId) {
+    let html = '<option selected disabled>-- Select Item --</option>';
+    (allItemsWithCategoryIds || []).forEach(item => {
+      if (String(item.Category) === String(categoryId)) {
+        html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+      }
+    });
+    return html;
+  }
+
+  function updateManualItemSelects() {
+    const selectedItemCategory = itemCatSel.value;
+    document.querySelectorAll('.manual-item-select').forEach(select => {
+      const prevValue = select.value;
+      select.innerHTML = getFilteredItemOptions(selectedItemCategory);
+      // keep previous if still valid
+      if ([...select.options].some(opt => opt.value === prevValue)) {
+        select.value = prevValue;
+      }
+    });
+  }
+
+  function populateSuppliers(categoryId = null) {
+    suppliersList.innerHTML = '';
+    let filtered = suppliers || [];
+    if (categoryId) {
+      const catNum = Number(categoryId);
+      filtered = filtered.filter(s =>
+        Array.isArray(s.ItemCategoryIds) && s.ItemCategoryIds.map(Number).includes(catNum)
+      );
     }
-
-    // Remove duplicate event handlers - already handled in first script block
-
-    itemCategory.addEventListener('change', () => {
-        if (restrictedTender.checked) {
-            suppliersSection.style.display = 'block';
-            populateSuppliers(itemCategory.value);
-        } else {
-            suppliersSection.style.display = 'none';
-            suppliersList.innerHTML = '';
-        }
+    if (!filtered.length) {
+      const opt = document.createElement('option');
+      opt.disabled = true;
+      opt.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
+      suppliersList.appendChild(opt);
+      return;
+    }
+    filtered.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.Id;
+      opt.textContent = s.ThirdPartyName || s.SupplierName || `Supplier #${s.Id}`;
+      suppliersList.appendChild(opt);
     });
-</script>
+  }
 
-<script>
-    const originalItemOptions = [];
-    const categoryData = @json($categoryData ?? []);
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.manual-item-select option').forEach(opt => {
-            if (opt.value !== "" && opt.value !== "-- Select Item --") {
-                originalItemOptions.push(opt.cloneNode(true));
-            }
-        });
+  // ---- Events
+  if (tenderCatSel) {
+    tenderCatSel.addEventListener('change', refreshItemCategories);
+  }
+  if (itemCatSel) {
+    itemCatSel.addEventListener('change', () => {
+      updateManualItemSelects();
+      if (restricted && restricted.checked) {
+        suppliersSection.style.display = 'block';
+        populateSuppliers(itemCatSel.value);
+      }
     });
-
-    document.getElementById('itemCategory').addEventListener('change', (e) => {
-        const selectedCategoryId = e.target.value;
-
-        const subCategoryIds = categoryData
-            .filter(cat => String(cat.parentId) === String(selectedCategoryId))
-            .map(cat => String(cat.id));
-
-        document.querySelectorAll('.manual-item-select').forEach(select => {
-            const defaultOption = select.querySelector('option:first-child');
-            select.innerHTML = '';
-            select.appendChild(defaultOption.cloneNode(true));
-
-            originalItemOptions.forEach(opt => {
-                const itemCat = opt.dataset.itemCategory;
-                if (String(itemCat) === String(selectedCategoryId) || subCategoryIds.includes(String(itemCat))) {
-                    select.appendChild(opt.cloneNode(true));
-                }
-            });
-        });
+  }
+  if (openTender) {
+    openTender.addEventListener('change', () => {
+      suppliersSection.style.display = 'none';
+      suppliersList.innerHTML = '';
     });
+  }
+  if (restricted) {
+    restricted.addEventListener('change', () => {
+      suppliersSection.style.display = 'block';
+      if (itemCatSel.value) populateSuppliers(itemCatSel.value);
+    });
+  }
+
+  // ---- Initial load
+  // Populate categories if a tender category is preselected
+  if (tenderCatSel && tenderCatSel.value) {
+    refreshItemCategories(); // call immediately (don’t rely on DOMContentLoaded timing)
+  }
+  // Show supplier section if Restricted was preselected
+  if (restricted && restricted.checked) {
+    suppliersSection.style.display = 'block';
+    if (itemCatSel && itemCatSel.value) populateSuppliers(itemCatSel.value);
+  }
+})();
 </script>
 
 @endsection

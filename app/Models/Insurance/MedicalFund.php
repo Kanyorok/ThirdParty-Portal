@@ -2,18 +2,16 @@
 
 namespace App\Models\Insurance;
 
-use App\Models\Core\CodeDetail;
-use App\Traits\Model\UserActorTrait;
-use App\Models\Insurance\InsuranceProvider;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class MedicalFund extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_MedicalFunds';
-    protected $primaryKey = 'Id';
+    protected $primaryKey = 'ID';
 
     public $timestamps = true;
     const CREATED_AT = 'CreatedOn';
@@ -21,35 +19,67 @@ class MedicalFund extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FundName','ProviderId','CoverageType','CoverageLimit','Description','IsActive',
+        'FundName','ProviderID','CoverageType','CoverageLimit','Description','IsActive',
         'CreatedBy','ModifiedBy','DeletedBy'
     ];
 
-    public static function getPrimaryKey(): string
+    protected $casts = [
+        'IsActive'      => 'boolean',
+        'CoverageLimit' => 'decimal:2',
+        'CreatedOn'     => 'datetime',
+        'ModifiedOn'    => 'datetime',
+        'DeletedOn'     => 'datetime',
+    ];
+
+    protected static function booted()
     {
-        return 'MedicalFundsId';
+        static::creating(function ($m) {
+            $m->CreatedBy = Auth::id();
+            $m->ModifiedBy = Auth::id();
+            $m->IsActive = $m->IsActive ?? 1;
+        });
+
+        static::updating(function ($m) {
+            $m->ModifiedBy = Auth::id();
+        });
+
+        static::deleting(function ($m) {
+            $m->DeletedBy = Auth::id();
+            $m->save();
+        });
     }
 
-
+    // Relationships
     public function provider()
     {
-        return $this->belongsTo(InsuranceProvider::class, 'ProviderId', 'Id');
-    }
-    public function beneficiaries()
-    {
-        return $this->hasMany(MedicalFundBeneficiary::class, 'FundId', 'Id');
-    }
-    public function contributions()
-    {
-        return $this->hasMany(MedicalFundContribution::class, 'FundId', 'Id');
-    }
-    public function disbursements()
-    {
-        return $this->hasMany(MedicalFundDisbursement::class, 'FundId', 'Id');
-    }
-    public function coverages()
-    {
-        return $this->belongsTo(CodeDetail::class, 'CoverageType', 'ID');
+        // Adjust model/keys if your provider model differs
+        return $this->belongsTo(InsuranceProvider::class, 'ProviderID', 'ID');
     }
 
+    public function beneficiaries()
+    {
+        return $this->hasMany(MedicalFundBeneficiary::class, 'FundID', 'ID');
+    }
+
+    public function contributions()
+    {
+        return $this->hasMany(MedicalFundContribution::class, 'FundID', 'ID');
+    }
+
+    public function disbursements()
+    {
+        return $this->hasMany(MedicalFundDisbursement::class, 'FundID', 'ID');
+    }
+
+    public function contributors() 
+    { 
+        return $this->hasMany(MedicalFundContributor::class, 'FundID', 'ID'); 
+    }
+
+    public function packages() 
+    { 
+        return $this->hasMany(MedicalFundPackage::class,'FundID','ID');
+    }
+
+    
 }

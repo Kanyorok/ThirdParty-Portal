@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Insurance\MedicalFund;
 use App\Models\Insurance\MedicalFundBeneficiary;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class MedicalFundBeneficiaryController extends Controller
 {
@@ -21,10 +23,33 @@ class MedicalFundBeneficiaryController extends Controller
         return view('bancassurance.medical_fund_beneficiaries.index', compact('medical_fund','beneficiaries'));
     }
 
-    public function create(MedicalFund $medical_fund)
-    {
-        return view('bancassurance.medical_fund_beneficiaries.create', compact('medical_fund'));
+
+
+public function create(MedicalFund $medical_fund)
+{
+    $relationships = collect();
+    try {
+        if (DB::getSchemaBuilder()->hasTable('t_BeneficiaryRelationships')) {
+            $relationships = DB::table('t_BeneficiaryRelationships')
+                ->where('IsActive',1)->orderBy('Name')->get(['Code','Name']);
+        }
+    } catch (\Throwable $e) { /* ignore */ }
+
+    if ($relationships->isEmpty()) {
+        $relationships = collect([
+            (object)['Code'=>'SELF','Name'=>'Self'],
+            (object)['Code'=>'SPOUSE','Name'=>'Spouse'],
+            (object)['Code'=>'CHILD','Name'=>'Child'],
+            (object)['Code'=>'PARENT','Name'=>'Parent'],
+            (object)['Code'=>'GUARDIAN','Name'=>'Guardian'],
+            (object)['Code'=>'SIBLING','Name'=>'Sibling'],
+            (object)['Code'=>'OTHER','Name'=>'Other'],
+        ]);
     }
+
+    return view('bancassurance.medical_fund_beneficiaries.create', compact('medical_fund','relationships'));
+}
+
 
     public function store(Request $request, MedicalFund $medical_fund)
     {

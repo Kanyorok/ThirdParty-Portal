@@ -9,6 +9,7 @@ use App\Enums\TenderCategoryEnum;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderCategory;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class TenderCategoryController extends Controller
 {
@@ -123,5 +124,40 @@ class TenderCategoryController extends Controller
                 ->withErrors(['error' => 'Failed to delete Tender Category. Please try again.'])
                 ->withInput();
         }
+    }
+
+    // Show mapping screen: TenderCategory ↔ ItemTypes
+    public function itemTypes($id)
+    {
+        //Check if user has permission to edit tender categories
+        $this->authorize(PermissionEnum::TenderWrite, Tender::class);
+
+        $category = TenderCategory::findOrFail($id);
+        $allTypes = DB::table('t_ItemTypes')->select('Id','TypeName','StockTracked','RequiresTagging','Active')->orderBy('TypeName')->get();
+        $selected = DB::table('t_TenderCategoryItemTypes')->where('TenderCategoryId',$id)->pluck('ItemTypeId')->toArray();
+
+        return view('procurement.tendering.tendersetup.tendercategory.map_itemtypes', compact('category','allTypes','selected'));
+    }
+
+    // Update mapping: replace rows with submitted set
+    public function updateItemTypes(\Illuminate\Http\Request $request, $id)
+    {
+        //Check if user has permission to edit tender categories
+        $this->authorize(PermissionEnum::TenderWrite, Tender::class);
+
+        $ids = collect($request->input('item_type_ids', []))->map(fn($v)=>(int)$v)->filter()->unique()->values();
+
+        DB::transaction(function() use ($id,$ids){
+            DB::table('t_TenderCategoryItemTypes')->where('TenderCategoryId',$id)->delete();
+            foreach ($ids as $typeId) {
+                DB::table('t_TenderCategoryItemTypes')->insert([
+                    'TenderCategoryId' => $id,
+                    'ItemTypeId' => $typeId,
+                    'IsActive' => 1,
+                ]);
+            }
+        });
+
+        return redirect()->route('tendercategory.itemtypes', $id)->with('success','Mapping updated.');
     }
 }
