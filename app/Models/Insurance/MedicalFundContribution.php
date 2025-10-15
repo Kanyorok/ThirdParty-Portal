@@ -2,19 +2,16 @@
 
 namespace App\Models\Insurance;
 
-use App\Models\Core\CodeDetail;
-use App\Models\ThirdParty\ThirdParties;
-use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 class MedicalFundContribution extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
 
     protected $table = 't_MedicalFundContributions';
-    protected $primaryKey = 'Id';
+    protected $primaryKey = 'ID';
 
     public $timestamps = true;
     const CREATED_AT = 'CreatedOn';
@@ -22,26 +19,32 @@ class MedicalFundContribution extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FundId','ContributorType','ContributorId','Amount','ContributionDate','Notes',
+        'FundID','ContributorType','ContributorID','Amount','ContributionDate','Notes',
         'CreatedBy','ModifiedBy','DeletedBy'
     ];
 
-    public static function getPrimaryKey(): string
-    {
-        return 'MedicalFundContributionId';
-    }
+    protected $casts = [
+        'Amount'          => 'decimal:2',
+        'ContributionDate'=> 'date',
+        'CreatedOn'       => 'datetime',
+        'ModifiedOn'      => 'datetime',
+        'DeletedOn'       => 'datetime',
+    ];
 
+    protected static function booted()
+    {
+        static::creating(function ($m) { $m->CreatedBy = Auth::id(); $m->ModifiedBy = Auth::id(); });
+        static::updating(function ($m) { $m->ModifiedBy = Auth::id(); });
+        static::deleting(function ($m) { $m->DeletedBy = Auth::id(); $m->save(); });
+    }
 
     public function fund()
     {
-        return $this->belongsTo(MedicalFund::class, 'FundId', 'Id');
+        return $this->belongsTo(MedicalFund::class, 'FundID', 'ID');
     }
-    public function contributorType()
-    {
-        return $this->belongsTo(CodeDetail::class, 'ContributorType', 'ID');
-    }
+
     public function contributor()
-    {
-        return $this->belongsTo(ThirdParties::class, 'ContributorId', 'Id');
+    { 
+        return $this->belongsTo(MedicalFundContributor::class, 'ContributorID','ID'); 
     }
 }

@@ -13,7 +13,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('bancassurance.medicalfunds.contributions.update',$contribution->ID) }}" method="POST">
+            <form action="{{ route('bancassurance.contributions.update',$contribution->ID) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -39,7 +39,7 @@
                 </div>
                 <div class="mt-3 d-flex gap-2">
                     <button class="btn btn-primary">Update</button>
-                    <a href="{{ route('bancassurance.medicalfunds.contributions.index',$medical_fund->ID) }}" class="btn btn-outline-secondary">Back</a>
+                    <a href="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back</a>
                 </div>
             </form>
         </div>

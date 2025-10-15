@@ -13,7 +13,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('bancassurance.medicalfunds.store',$medical_fund->id) }}" method="POST">
+            <form action="{{ route('bancassurance.medicalfunds.beneficiaries.store', ['medical_fund' => $medical_fund->ID]) }}" method="POST">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -21,9 +21,14 @@
                         <input type="text" name="FullName" class="form-control" value="{{ old('FullName') }}" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Relationship</label>
-                        <input type="text" name="Relationship" class="form-control" value="{{ old('Relationship') }}" placeholder="Spouse / Child">
+                        <label class="form-label">Relationship *</label>
+                        <select name="Relationship" class="form-select" required>
+                            @foreach($relationships as $rel)
+                            <option value="{{ $rel->Name }}">{{ $rel->Name }}</option>
+                            @endforeach
+                        </select>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label">Date of Birth</label>
                         <input type="date" name="DateOfBirth" class="form-control" value="{{ old('DateOfBirth') }}">
@@ -45,7 +50,7 @@
                 </div>
                 <div class="mt-3 d-flex gap-2">
                     <button class="btn btn-primary">Save</button>
-                    <a href="{{ route('bancassurance.medicalfunds.index',$medical_fund->id) }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('bancassurance.medicalfunds.beneficiaries.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
