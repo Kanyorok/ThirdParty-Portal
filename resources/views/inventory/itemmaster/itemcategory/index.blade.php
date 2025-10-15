@@ -27,10 +27,11 @@
                         <tbody>
                             @foreach($categories as $key => $category)
                                 <tr>
-                                    <td>{{ $key + 1 }}</td>
+                                    {{-- paginator-aware row number --}}
+                                    <td>{{ ($categories->currentPage() - 1) * $categories->perPage() + $loop->iteration }}</td>
                                     <td>{{ $category->CategoryCode }}</td>
                                     <td>{{ $category->Name }}</td>
-                                    <td>{{ $category->Description }}</td>
+                                    <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $category->Description }}</td>
 
                                     <td>
                                         @php $desc = $category->status->Description ?? null; @endphp
@@ -69,6 +70,26 @@
                         </tbody>
                     </table>
                 </div>
+                {{-- Pagination and summary inside card body --}}
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        Showing {{ $categories->firstItem() ?? 0 }} to {{ $categories->lastItem() ?? 0 }} of {{ $categories->total() }} entries
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <label for="perPageSelect" class="me-2 mb-0">Per page</label>
+                        <form id="perPageForm" method="GET" action="{{ route('itemcategory.index') }}">
+                            <select id="perPageSelect" name="perPage" class="form-select form-select-sm" onchange="document.getElementById('perPageForm').submit()" style="width:auto; display:inline-block;">
+                                @php $currentPer = request()->query('perPage', session('itemcategory.perPage', 20)); @endphp
+                                @foreach([5,10,20,50] as $opt)
+                                    <option value="{{ $opt }}" {{ intval($currentPer) === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                        <div class="ms-3">
+                            {{ $categories->withQueryString()->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -83,4 +104,20 @@
             }
         }
     </script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Disable DataTables paging because we use Laravel server-side pagination.
+        $('#itemCategoryTbl').DataTable({
+            paging: false,
+            ordering: true,
+            searching: true,
+            lengthChange: false
+        });
+    });
+
+</script>
+
 @endsection
