@@ -369,6 +369,15 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimType','Description' => 'Medical', 'Value' => 'M'],
             ['CodeID' => 'ClaimType','Description' => 'Other', 'Value' => 'O'],
 
+            //Insurance Cover Type
+            ['CodeID' => 'CoverType','Description' => 'Comprehensive', 'Value' => 'C'],
+            ['CodeID' => 'CoverType','Description' => 'InPatient', 'Value' => 'I'],
+            ['CodeID' => 'CoverType','Description' => 'OutPatient', 'Value' => 'O'],
+
+            //Insurance Contributor Types
+            ['CodeID' => 'ContributorType','Description' => 'Employee', 'Value' => 'I'],
+            ['CodeID' => 'ContributorType','Description' => 'Employer', 'Value' => 'C'],
+
             //Insurance Claim Status
             ['CodeID' => 'ClaimStatus','Description' => 'Initiated', 'Value' => 'I'],
             ['CodeID' => 'ClaimStatus','Description' => 'Under Assessment', 'Value' => 'U'],

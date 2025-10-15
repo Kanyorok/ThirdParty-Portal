@@ -26,7 +26,7 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $pay->claim->policy->PolicyNumber ?? '-'}}</td>
-                <td>{{ $pay->claim->policy->customer->FullName ?? '-'}}</td>
+                <td>{{ $pay->claim->policy->customer->ThirdParty->ThirdPartyName ?? '-'}}</td>
                 <td>{{ $pay->claim->claimtype->Description ?? '-'}}</td>
                 <td>{{ $pay->PaymentAmount ?? '-'}}</td>
                 <td>{{ \Carbon\Carbon::parse($pay->PaymentDate)->format('d/m/Y') }}</td>

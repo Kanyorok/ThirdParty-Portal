@@ -36,8 +36,13 @@
                 <td>{{ $assessment->decision->Description ?? '-' }}</td>
                 <td>{{ Str::limit($assessment->AssessmentComments, 40) ?? '-' }}</td>
                 <td>
-                    <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}" class="btn btn-sm btn-outline-info">View</a>
-                    <a href="{{ route('bancassurance.claims.assessment_edit', $assessment->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}" class="btn btn-sm btn-outline-info">View</a>                
+
+                    @if($assessment->claimpaiyments()->exists())
+                        <button class="btn btn-sm btn-secondary" disabled>Paid</button>
+                    @else
+                        <a href="{{ route('bancassurance.claims.assessment_edit', $assessment->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    @endif
                 </td>
             </tr>
         @empty

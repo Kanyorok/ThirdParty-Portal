@@ -100,9 +100,12 @@
                 </div>
             </div>
             <div class="card-footer text-end">
+                    <a href="{{ route('bancassurance.referrals.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left-circle me-1"></i> Back
+                    </a>
                 <button type="submit" class="btn btn-primary px-4" 
                 onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-                    <i class="fas fa-paper-plane"></i> Submit Referral
+                    Submit Referral
                 </button>
             </div>
         </div>
