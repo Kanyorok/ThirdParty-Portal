@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { Input } from '@/components/common/input'
 import { Button } from '@/components/common/button'
 import { Card, CardContent, CardHeader } from '@/components/common/card'
@@ -23,12 +23,28 @@ export default function DocumentsPage() {
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string|null>(null)
+  const [page, setPage] = useState(1)
+  const [pages, setPages] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [limit] = useState(20)
+  const [pendingSearch, setPendingSearch] = useState<NodeJS.Timeout|null>(null)
 
-  const fetchDocs = async () => {
+  const humanSize = (bytes?: number) => {
+    if (!bytes || bytes <= 0) return '—'
+    const units = ['B','KB','MB','GB','TB']
+    let i = 0; let val = bytes
+    while (val >= 1024 && i < units.length-1) { val /= 1024; i++ }
+    return `${val.toFixed(val >= 10 || i===0 ? 0 : 1)} ${units[i]}`
+  }
+
+  const fetchDocs = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
       const url = new URL('/api/dms/documents', window.location.origin)
+      url.searchParams.set('my', '1')
+      url.searchParams.set('page', String(page))
+      url.searchParams.set('limit', String(limit))
       if (q) url.searchParams.set('q', q)
       const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } })
       if (!res.ok) {
@@ -37,15 +53,25 @@ export default function DocumentsPage() {
       }
       const data = await res.json()
       setDocs(Array.isArray(data?.data) ? data.data : [])
+      setPages(data?.pages ?? 1)
+      setTotal(data?.total ?? 0)
     } catch (e: any) {
       setError(e?.message || 'Failed to load documents')
       setDocs([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [q, page, limit])
 
-  useEffect(() => { fetchDocs() }, [])
+  useEffect(() => { fetchDocs() }, [fetchDocs])
+
+  // Debounced search
+  const onSearchChange = (val: string) => {
+    setQ(val)
+    if (pendingSearch) clearTimeout(pendingSearch)
+    const t = setTimeout(() => { setPage(1); fetchDocs() }, 450)
+    setPendingSearch(t)
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-50">
@@ -59,13 +85,14 @@ export default function DocumentsPage() {
           <CardContent>
             <div className="flex gap-3 items-center">
               <Input
-                placeholder="Search documents..."
+                placeholder="Search my documents..."
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => onSearchChange(e.target.value)}
                 onKeyUp={(e) => { if (e.key === 'Enter') fetchDocs() }}
               />
-              <Button onClick={fetchDocs}>Search</Button>
+              <Button onClick={() => { setPage(1); fetchDocs() }}>Search</Button>
             </div>
+            <div className="mt-3 text-xs text-gray-500">Total: {total} • Page {page} / {pages}</div>
           </CardContent>
         </Card>
 
@@ -87,7 +114,7 @@ export default function DocumentsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-gray-600 dark:text-gray-300 flex flex-col gap-1">
-                    <div>Size: {typeof d.size === 'number' ? `${(d.size / 1024).toFixed(1)} KB` : '—'}</div>
+                    <div>Size: {humanSize(d.size)}</div>
                     <div>Modified: {d.modifiedOn ? new Date(d.modifiedOn).toLocaleString() : '—'}</div>
                   </div>
                   <div className="mt-4 flex gap-3">
@@ -98,6 +125,13 @@ export default function DocumentsPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+        {pages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <Button variant="secondary" disabled={page<=1 || loading} onClick={() => setPage(p => Math.max(1, p-1))}>Prev</Button>
+            <span className="text-sm">Page {page} / {pages}</span>
+            <Button variant="secondary" disabled={page>=pages || loading} onClick={() => setPage(p => Math.min(pages, p+1))}>Next</Button>
           </div>
         )}
       </div>
