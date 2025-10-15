@@ -75,8 +75,19 @@
                     <div>
                         Showing {{ $categories->firstItem() ?? 0 }} to {{ $categories->lastItem() ?? 0 }} of {{ $categories->total() }} entries
                     </div>
-                    <div>
-                        {{ $categories->withQueryString()->links('pagination::bootstrap-5') }}
+                    <div class="d-flex align-items-center">
+                        <label for="perPageSelect" class="me-2 mb-0">Per page</label>
+                        <form id="perPageForm" method="GET" action="{{ route('itemcategory.index') }}">
+                            <select id="perPageSelect" name="perPage" class="form-select form-select-sm" onchange="document.getElementById('perPageForm').submit()" style="width:auto; display:inline-block;">
+                                @php $currentPer = request()->query('perPage', session('itemcategory.perPage', 20)); @endphp
+                                @foreach([5,10,20,50] as $opt)
+                                    <option value="{{ $opt }}" {{ intval($currentPer) === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                        <div class="ms-3">
+                            {{ $categories->withQueryString()->links('pagination::bootstrap-5') }}
+                        </div>
                     </div>
                 </div>
             </div>

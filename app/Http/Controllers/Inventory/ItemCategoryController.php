@@ -24,8 +24,24 @@ class ItemCategoryController extends Controller
 
     public function index()
     {
-        // Server-side pagination: newest-first, 20 per page
-        $perPage = 20;
+        // Server-side pagination: newest-first; allow per-page to be set via ?perPage= and persist in session
+        $allowed = [5, 10, 20, 50];
+        $requested = request()->query('perPage');
+
+        if ($requested !== null) {
+            $perPage = intval($requested);
+            if (!in_array($perPage, $allowed)) {
+                $perPage = 20;
+            }
+            // persist user choice
+            session(['itemcategory.perPage' => $perPage]);
+        } else {
+            $perPage = session('itemcategory.perPage', 20);
+            if (!in_array($perPage, $allowed)) {
+                $perPage = 20;
+            }
+        }
+
         $categories = ItemCategories::whereNull('ParentId')
             ->with('parent', 'status')
             ->orderByDesc('Id')
