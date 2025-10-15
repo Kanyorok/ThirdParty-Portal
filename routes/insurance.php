@@ -24,10 +24,7 @@ use App\Http\Controllers\Insurance\MedicalFundController;
 use App\Http\Controllers\Insurance\MedicalFundContributionController;
 use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
 use App\Http\Controllers\Insurance\UnderwritingController;
-use App\Http\Controllers\Insurance\MedicalFundController;
 use App\Http\Controllers\Insurance\MedicalFundBeneficiaryController;
-use App\Http\Controllers\Insurance\MedicalFundContributionController;
-use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
 
 use App\Http\Controllers\Insurance\MedicalFundContributorController;
 use App\Http\Controllers\Insurance\ContributorBeneficiaryController; // new, see quick store below
