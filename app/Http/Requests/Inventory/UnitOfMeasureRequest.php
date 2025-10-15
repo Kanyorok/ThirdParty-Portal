@@ -13,7 +13,6 @@ class UnitOfMeasureRequest extends FormRequest
 {
     public function authorize()
     {
-
         return true;
     }
 
@@ -22,14 +21,34 @@ class UnitOfMeasureRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
     public function rules()
     {
         return [
-            'Code' => 'required|string|max:50',
-            'Name' => 'required|string|max:255',
+            'Code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('t_UOM', 'Code')->ignore($this->route('id')),
+            ],
+            'Name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_UOM', 'Name')->ignore($this->route('id')),
+            ],
             'BaseUnit' => 'nullable|boolean',
             'Active' => 'required|boolean',
+        ];
+    }
+
+    /**
+     * Get custom error messages for validator errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'Code.unique' => 'The Unit of Measure code already exists.',
+            'Name.unique' => 'The Unit of Measure name already exists.',
         ];
     }
 }

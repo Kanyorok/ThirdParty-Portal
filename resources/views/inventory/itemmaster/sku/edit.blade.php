@@ -57,13 +57,9 @@
                         <div class="col-md-4">
                             <label for="Branch" class="form-label">Branch</label>
                             <select name="Branch" id="Branch" class="form-select" required>
-                                <option value="">-- Select Branch --</option>
-                                @foreach($branches as $branch)
-                                    <option value="{{ $branch->Id }}" {{ $item->Branch == $branch->Id ? 'selected' : '' }}>
-                                        {{ $branch->Name }}
-                                    </option>
-                                @endforeach
+                                <option value="{{ $branch->Id }}" selected>{{ $branch->Name }}</option>
                             </select>
+
                         </div>
                         <div class="col-md-4">
                             <label for="Store" class="form-label">Store</label>
