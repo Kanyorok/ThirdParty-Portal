@@ -24,7 +24,13 @@ class ItemCategoryController extends Controller
 
     public function index()
     {
-        $categories = ItemCategories::whereNull('ParentId')->with('parent')->get();
+        // Server-side pagination: newest-first, 20 per page
+        $perPage = 20;
+        $categories = ItemCategories::whereNull('ParentId')
+            ->with('parent', 'status')
+            ->orderByDesc('Id')
+            ->paginate($perPage);
+
         return view('inventory.itemmaster.itemcategory.index', compact('categories'));
     }
 
