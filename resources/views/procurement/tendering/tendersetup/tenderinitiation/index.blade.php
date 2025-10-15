@@ -60,21 +60,7 @@
             <i class="fa fa-info-circle me-2"></i>
             <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.">
                 <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
-                                <td>
-                                    @if($tender->Status)
-                                        @php
-                                            // tender->Status is an enum instance; get its value (code)
-                                            $statusCode = is_object($tender->Status) && isset($tender->Status->value) ? $tender->Status->value : (string)$tender->Status;
-                                            $statusLabel = $tenderStatusMap[$statusCode] ?? ($tender->Status->displayName() ?? 'Unknown');
-                                        @endphp
-                                        <span class="badge rounded-pill {{ $tender->Status->badgeClass() }}">
-                                            {{ $statusLabel }}
-                                        </span>
-                                    @else
-                                        N/A
-                                    @endif
-                                </td>
-        <div class="card shadow-sm">
+            <div class="card shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered" id="tendersTable">
