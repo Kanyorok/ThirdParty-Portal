@@ -1,12 +1,10 @@
 <?php
 
 namespace App\Http\Requests\Inventory;
+
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\Inventory\ItemCategories;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class ItemMasterListRequest extends FormRequest
 {
@@ -20,12 +18,21 @@ class ItemMasterListRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
     public function rules()
     {
         return [
-            'BarCode' => 'required|string|max:255',
-            'ItemName' => 'required|string|max:255',
+            'BarCode' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_Items', 'BarCode')->ignore($this->route('id')),
+            ],
+            'ItemName' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_Items', 'ItemName')->ignore($this->route('id')),
+            ],
             'ItemType' => 'required|exists:t_ItemTypes,Id',
             'Category' => 'required|exists:t_ItemCategories,Id',
             'SubCategory' => 'nullable|exists:t_ItemCategories,Id',
@@ -37,6 +44,17 @@ class ItemMasterListRequest extends FormRequest
             'Status' => 'nullable|exists:t_CodeDetails,ID',
             'ItemPrice' => 'nullable|string',
             'remove_image' => 'nullable|in:1',
+        ];
+    }
+
+    /**
+     * Get custom error messages for validator errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'BarCode.unique' => 'This barcode already exists in the system.',
+            'ItemName.unique' => 'This item name already exists in the system.',
         ];
     }
 }

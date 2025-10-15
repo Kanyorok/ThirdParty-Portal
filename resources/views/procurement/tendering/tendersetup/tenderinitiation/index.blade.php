@@ -22,6 +22,33 @@
 
 @section('content')
     <div class="container mt-4">
+        @php
+            // Ensure newest (last) record appears first in the listing.
+            $isPaginator = isset($tenders) && method_exists($tenders, 'links');
+            if ($isPaginator) {
+                $tendersSorted = $tenders; // assume controller handled ordering for paginator
+            } else {
+                $tendersCollection = isset($tenders) ? collect($tenders) : collect();
+                if ($tendersCollection->isNotEmpty()) {
+                    // Prefer sorting by Id (descending) as a proxy for newest items
+                    $tendersSorted = $tendersCollection->sortByDesc(fn($t) => $t->Id ?? null)->values();
+                } else {
+                    $tendersSorted = $tendersCollection;
+                }
+            }
+        @endphp
+        @php
+            // Load TenderStatus descriptions from t_CodeDetails (Value -> Description)
+            $tenderStatusMap = [];
+            try {
+                $rows = \Illuminate\Support\Facades\DB::table('t_CodeDetails')->where('CodeID', 'TenderStatus')->get();
+                foreach ($rows as $r) {
+                    $tenderStatusMap[$r->Value] = $r->Description;
+                }
+            } catch (\Throwable $e) {
+                // ignore and fallback to enum displayName
+            }
+        @endphp
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3 class="mb-0 text-primary"><i class="fas fa-list-alt me-2"></i>Initiated Tenders</h3>
             <a href="{{ route('initiatetender.create') }}" class="btn btn-success">
@@ -33,22 +60,20 @@
             <i class="fa fa-info-circle me-2"></i>
             <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.">
                 <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
-            </span>
-        </div>
-
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
+                                <td>
+                                    @if($tender->Status)
+                                        @php
+                                            // tender->Status is an enum instance; get its value (code)
+                                            $statusCode = is_object($tender->Status) && isset($tender->Status->value) ? $tender->Status->value : (string)$tender->Status;
+                                            $statusLabel = $tenderStatusMap[$statusCode] ?? ($tender->Status->displayName() ?? 'Unknown');
+                                        @endphp
+                                        <span class="badge rounded-pill {{ $tender->Status->badgeClass() }}">
+                                            {{ $statusLabel }}
+                                        </span>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
@@ -71,9 +96,9 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @forelse($tenders as $tender)
+                        @forelse($tendersSorted as $tender)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $isPaginator ? ($tenders->firstItem() + $loop->index) : $loop->iteration }}</td>
                                 <td>{{ $tender->TenderNo }}</td>
                                 <td>
                                     <a href="{{ route('initiatetender.show', $tender->Id) }}" title="View {{ $tender->Title }}">

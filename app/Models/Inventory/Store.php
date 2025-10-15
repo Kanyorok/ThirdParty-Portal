@@ -29,6 +29,7 @@ class Store extends Model
         'StoreName',
         'BranchID',
         'Status',
+        'IsMainStore',
         'CreatedBy',
         'ModifiedBy',
         'DeletedBy',

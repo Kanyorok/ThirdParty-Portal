@@ -25,7 +25,7 @@
                 </div>
                 <div class="row mb-2">
                     <div class="col-md-6"><strong>Supplier:</strong> {{ $orderInfo->SupplierName ?? $orderInfo->TradingName ?? ('Supplier #' . ($orderInfo->SupplierId ?? '')) }}</div>
-                    <div class="col-md-6"><strong>Payment Terms:</strong> {{ $orderInfo->TermsDescription ?? '--' }}</div>
+                    <div class="col-md-6"><strong>Payment Terms:</strong> {{ $paymentTerms ?? $orderInfo->TermsDescription ?? '--' }}</div>
                 </div>
 
                 <div class="table-responsive">

@@ -39,5 +39,9 @@ class BancassuranceClaimAssessment extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'Decision', 'ID');
     }
+    public function claimpaiyments()
+    {
+        return $this->hasMany(BancassuranceClaimPayment::class, 'ClaimId', 'ClaimId');
+    }
 
 }

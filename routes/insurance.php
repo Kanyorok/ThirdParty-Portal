@@ -18,9 +18,11 @@ use App\Http\Controllers\Insurance\InsuranceProviderProductController;
 use App\Http\Controllers\Insurance\PolicyController;
 use App\Http\Controllers\Insurance\PremiumController;
 use App\Http\Controllers\Insurance\PricingRuleController;
-use App\Http\Controllers\Insurance\ProductLifecycleController;
 use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\ReportsController;
+use App\Http\Controllers\Insurance\MedicalFundController;
+use App\Http\Controllers\Insurance\MedicalFundContributionController;
+use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
 use App\Http\Controllers\Insurance\UnderwritingController;
 use App\Http\Controllers\Insurance\MedicalFundController;
 use App\Http\Controllers\Insurance\MedicalFundBeneficiaryController;
@@ -36,6 +38,7 @@ use App\Http\Controllers\Insurance\MedicalFundPackageController;
 
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
+
 
     Route::prefix('bancassurance/referrals')->name('bancassurance.referrals.')->group(function () {
         Route::get('create', [BancassuranceReferralController::class, 'create'])->name('create');
@@ -238,9 +241,26 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('/{ProductId}', [PricingRuleController::class, 'getProductByProvider'])->name('getProductByProvider');
     });
 
-    Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->group(function () {
-        Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');
-        Route::post('toggle/{id}', [ProductLifecycleController::class, 'toggleStatus'])->name('toggle');
+    Route::prefix('medical')->as('bancassurance.')->group(function () {
+ 
+        // Medical Funds (no hyphen → clean names)
+        Route::resource('medicalfunds', MedicalFundController::class)
+            ->parameters(['medicalfunds' => 'medicalfund']);
+ 
+        // Nested: Beneficiaries
+        Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund','beneficiaries' => 'beneficiary']);
+ 
+        // Nested: Contributions
+        Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund','contributions' => 'contribution']);
+ 
+        // Nested: Disbursements
+        Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund','disbursements' => 'disbursement']);
     });
 
     Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {

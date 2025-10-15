@@ -12,6 +12,8 @@ use App\Models\Procurement\TenderCommittee;
 use App\Models\Procurement\TenderCommitteeMember;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Procurement\RFQ;
@@ -20,7 +22,7 @@ class TenderCommitteeController extends Controller
 {
     //
 
-    public function index()
+    public function index(Request $request)
     {
         // Tender Committees
         $tenderCommittees = TenderCommittee::with('tender')->withCount('members')->get()->map(function ($item) {
@@ -46,11 +48,21 @@ class TenderCommitteeController extends Controller
             ];
         });
 //dd($rfqCommittees);
-        // Combine both
-        $committees = collect($tenderCommittees)
+        // Combine both and sort
+        $committeesCollection = collect($tenderCommittees)
             ->merge($rfqCommittees)
             ->sortByDesc('appointment_date')
             ->values();
+
+        // Pagination: convert collection to LengthAwarePaginator
+        $perPage = 10;
+        $page = (int) $request->query('page', 1);
+        $total = $committeesCollection->count();
+        $currentPageItems = $committeesCollection->forPage($page, $perPage)->values();
+        $committees = new LengthAwarePaginator($currentPageItems, $total, $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+            'query' => $request->query(),
+        ]);
 
         // All employees (used in modal)
         $employees = Employee::select('Id', 'EmployeeID', 'FirstName', 'LastName', 'JobTitle')->get();

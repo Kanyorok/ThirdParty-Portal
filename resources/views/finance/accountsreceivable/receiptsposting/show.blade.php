@@ -39,7 +39,7 @@
 
         <div id="printRoot" class="card shadow-sm rounded-4 border-0 p-3 p-md-4">
             <!-- Header -->
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start avoid-break receipt-header">
                 <div>
                     <div class="h5 mb-0">Receipt — <span class="fw-semibold">{{ $receipt->ReceiptNumber }}</span></div>
                     <div class="small text-muted">{{ $receipt->customer->ThirdPartyName ?? '-' }}</div>
@@ -60,8 +60,8 @@
                 </div>
             </div>
 
-            <!-- Payment Details -->
-            <div class="row g-3 mt-3">
+            <!-- Summary Cards: Row 1 (3 cards) -->
+            <div class="row g-3 mt-3 avoid-break print-row-1">
                 @php
                     // Determine wallet usage/refund tied to this receipt
                     $walletTxns = \App\Models\Finance\CustomerWalletTransaction::where('CustomerID', $receipt->CustomerID)
@@ -81,21 +81,21 @@
                         $displayMethod = $baseMethod;
                     }
                 @endphp
-                <div class="col-md-3">
+                <div class="col-md-4 print-col">
                     <div class="border rounded-3 p-3 h-100">
                         <div class="small text-muted">Amount Received</div>
                         <div class="fs-5 fw-semibold text-success">KSh {{ number_format($receipt->AmountReceived, 2) }}</div>
                         <div class="small text-muted">{{ $displayMethod }}</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4 print-col">
                     <div class="border rounded-3 p-3 h-100">
                         <div class="small text-muted">Applied to Invoices</div>
                         <div class="fs-5 fw-semibold text-primary">KSh {{ number_format($receipt->total_allocated, 2) }}</div>
                         <div class="small text-muted">{{ $receipt->allocations->count() }} invoice(s)</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4 print-col">
                     <div class="border rounded-3 p-3 h-100">
                         <div class="small text-muted">Unapplied Amount</div>
                         <div class="fs-5 fw-semibold {{ $receipt->UnappliedAmount > 0 ? 'text-warning' : 'text-muted' }}">
@@ -108,18 +108,18 @@
                         @endif
                     </div>
                 </div>
-                <div class="col-md-3">
+            </div>
+
+            <!-- Summary Cards: Row 2 (2 cards) -->
+            <div class="row g-3 mt-1 avoid-break print-row-2">
+                <div class="col-md-6 print-col">
                     <div class="border rounded-3 p-3 h-100">
                         <div class="small text-muted">Reference</div>
                         <div class="fw-semibold">{{ $receipt->ReferenceNumber ?: 'No reference' }}</div>
                         <div class="small text-muted">Value: {{ $receipt->ValueDate->format('M d, Y') }}</div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Funding Breakdown -->
-            <div class="row g-3 mt-1">
-                <div class="col-md-6">
+                <div class="col-md-6 print-col">
                     <div class="border rounded-3 p-3 h-100">
                         <div class="text-muted small text-uppercase mb-2">Funding Breakdown</div>
                         <div class="d-flex justify-content-between small mb-1">
@@ -142,20 +142,20 @@
 
             <!-- Invoice Allocations -->
             @if($receipt->allocations->count() > 0)
-                <div class="mt-4">
+                <div class="mt-4 avoid-break">
                     <h6 class="text-muted mb-3">
                         <i class="fas fa-file-invoice text-info me-2"></i> Invoice Allocations
                     </h6>
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm align-middle mb-0">
+                        <table class="table table-hover table-sm align-middle mb-0 alloc-table">
                             <thead class="table-light">
                                 <tr>
                                     <th>Invoice No.</th>
                                     <th>Issue Date</th>
                                     <th class="text-end">Invoice Total</th>
                                     <th class="text-end">Amount Paid</th>
-                                    <th class="text-end">This Payment</th>
-                                    <th class="text-end">Remaining Balance</th>
+                                    <th class="text-end">Payment</th>
+                                    <th class="text-end">Balance</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -185,7 +185,7 @@
             @endif
 
             <!-- Additional Details -->
-            <div class="row g-3 mt-3">
+            <div class="row g-3 mt-3 avoid-break">
                 <div class="col-lg-6">
                     <div class="border rounded-3 p-3 h-100">
                         <div class="text-muted small text-uppercase mb-2">Payment Details</div>
@@ -239,7 +239,7 @@
             </div>
 
             <!-- Audit Trail -->
-            <div class="mt-4">
+            <div class="mt-4 avoid-break">
                 <h6 class="text-muted mb-3">
                     <i class="fas fa-history text-info me-2"></i> Audit Trail
                 </h6>
@@ -265,6 +265,9 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+            <div class="sys-gen-note print-only">
+                This document is system-generated by BR_ERP on {{ now()->format('Y-m-d H:i') }} and does not require a physical signature.
             </div>
         </div>
 
@@ -324,12 +327,52 @@
             filter: brightness(0.97);
         }
         @media print {
+            html, body { margin: 0 !important; padding: 0 !important; background: #fff; }
             body * { visibility: hidden; }
             #printRoot, #printRoot * { visibility: visible; }
-            #printRoot { position: absolute; left: 0; top: 0; width: 100%; }
-            @page { size: A4 portrait; margin: 14mm; }
+            /* Use the full printable width (page width minus margins) */
+            @page { size: A4 portrait; margin: 8mm; }
+            #printRoot {
+                position: static !important;
+                box-sizing: border-box;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 11px;
+                overflow: visible !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+            }
+            /* allow full bleed within container */
+            .container { max-width: none !important; width: 100% !important; padding: 0 !important; }
             .btn, .navbar { display:none !important; }
             .shadow-sm { box-shadow: none !important; }
+            .avoid-break { page-break-inside: avoid; }
+            .receipt-header { padding: 1mm 0 2mm 0; }
+            .print-only { display: block !important; }
+            .sys-gen-note { position: fixed; bottom: 6mm; left: 8mm; right: 8mm; text-align: center; font-size: 9.5px; color: #666; }
+            /* tighten gutters and paddings */
+            .row.g-3 { --bs-gutter-x: .5rem; --bs-gutter-y: .5rem; }
+            .border.rounded-3.p-3 { padding: 6px !important; }
+            /* remove outer card padding to maximize width */
+            #printRoot.card.p-3, #printRoot.card.p-4, #printRoot.p-md-4 { padding: 0 !important; }
+            .h5 { font-size: 13px !important; }
+            .fs-5 { font-size: 12px !important; }
+            /* tables should not scroll in print */
+            .table-responsive { overflow: visible !important; }
+            table { page-break-inside: auto; }
+            tr, td, th { page-break-inside: avoid; }
+            /* grid helpers for print */
+            .print-row-1 .print-col { flex: 0 0 32%; max-width: 32%; }
+            .print-row-2 .print-col { flex: 0 0 49%; max-width: 49%; }
+            .alloc-table { table-layout: fixed; border-collapse: collapse; font-size: 11px; width: 100% !important; }
+            .alloc-table th, .alloc-table td { white-space: nowrap; padding: 4px 6px !important; }
+            .alloc-table th:nth-child(1) { width: 18%; }
+            .alloc-table th:nth-child(2) { width: 14%; }
+            .alloc-table th:nth-child(3),
+            .alloc-table th:nth-child(4),
+            .alloc-table th:nth-child(5),
+            .alloc-table th:nth-child(6) { width: 17%; }
         }
     </style>
 @endsection
