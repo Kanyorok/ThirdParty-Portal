@@ -257,7 +257,10 @@ Route::namespace('Procurement')->group(function () {
         ->name('initiatetender.allowedCategories');
 
     Route::resource('initiatetender', TenderController::class);
-        
+
+    // Tender Categories CRUD
+    Route::resource('tendercategory', TenderCategoryController::class);
+    
     // Map Tender Category to Item Types
     Route::get('tendercategory/{id}/itemtypes', [TenderCategoryController::class, 'itemTypes'])->name('tendercategory.itemtypes');
     Route::post('tendercategory/{id}/itemtypes', [TenderCategoryController::class, 'updateItemTypes'])->name('tendercategory.itemtypes.update');
