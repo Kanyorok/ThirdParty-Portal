@@ -15,6 +15,12 @@ return new class extends Migration
             $table->id('Id');
             $table->string('JurisdictionName', 100)->unique();
             $table->foreignId('Currency')->constrained('t_Currencies', 'Id');
+            // Country reference to drive jurisdiction selection
+            if (Schema::hasTable('t_Countries')) {
+                $table->foreignId('CountryID')->nullable()->constrained('t_Countries', 'Id');
+            } else {
+                $table->unsignedBigInteger('CountryID')->nullable();
+            }
             $table->string('TaxAuthority');
             $table->boolean('Status')->default(true);
             
