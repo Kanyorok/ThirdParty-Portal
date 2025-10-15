@@ -24,6 +24,30 @@ class ConsolidatedDashboardController extends Controller
 
         $query = DepartmentNeed::with(['item', 'branch', 'department']);
 
+        // Status filtering
+        $statusInput = trim((string)$request->input('status', ''));
+        $status = $statusInput === '' ? null : $statusInput;
+        if ($status) {
+            // Accept either enum name (Approved) or value (a/r/p)
+            $possible = [
+                strtolower($status) => $status,
+                strtoupper($status) => $status,
+            ];
+            // Map common textual inputs to enum values
+            $map = [
+                'approved' => \App\Enums\Procurement\DepartmentNeedsEnum::Approved->value,
+                'rejected' => \App\Enums\Procurement\DepartmentNeedsEnum::Rejected->value,
+                'pending'  => \App\Enums\Procurement\DepartmentNeedsEnum::Pending->value,
+            ];
+            $lower = strtolower($status);
+            if (isset($map[$lower])) {
+                $query->where('Status', $map[$lower]);
+            } else {
+                // If user passed raw value (a/r/p)
+                $query->where('Status', $status);
+            }
+        }
+
         if ($branch) {
             $query->where('BranchID', $branch);
         }
@@ -48,6 +72,12 @@ class ConsolidatedDashboardController extends Controller
             ->pluck('yr');
         $years = $yearsCollection->toArray();
 
+        // Status dropdown options using enum labels
+        $statusOptions = collect(\App\Enums\Procurement\DepartmentNeedsEnum::cases())
+            ->mapWithKeys(function ($case) {
+                return [$case->value => $case->label()];
+            })->toArray();
+
         return view('procurement.procurementplan.planconsolidation.dashboard.index', compact(
             'needs',
             'branches',
@@ -55,7 +85,9 @@ class ConsolidatedDashboardController extends Controller
             'years',
             'branch',
             'department',
-            'year'
+            'year',
+            'status',
+            'statusOptions'
         ));
     }
 

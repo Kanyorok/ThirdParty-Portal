@@ -13,6 +13,15 @@
         <form method="GET" action="{{ route('dashboard.index') }}">
             <div class="row mb-4">
                 <div class="col-md-3">
+                    <label class="form-label">Filter by Status</label>
+                    <select class="form-select filter-auto" name="status">
+                        <option value="" {{ empty($status) ? 'selected' : '' }}>All Statuses</option>
+                        @foreach($statusOptions as $val => $label)
+                            <option value="{{ $val }}" {{ (string)$val === (string)$status ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label">Filter by Branch</label>
                     <select class="form-select filter-auto" name="branch">
                         <option value="" {{ empty($branch) ? 'selected' : '' }}>All Branches</option>
@@ -81,7 +90,22 @@
                     </td>
                     <td>{{ number_format($need->RequestedQty * $need->EstimatedUnitCost, 2) }}</td>
                     <td>{{ Carbon::parse($need->RequestedDate)->format('d/m/Y') }}</td>
-                    <td><span class="badge bg-info">{{ $need->Status->label() }}</span></td>
+                    @php
+                        // Determine status label and map to badge classes
+                        $statusLabel = (is_object($need->Status) && method_exists($need->Status, 'label'))
+                            ? $need->Status->label()
+                            : (string)($need->Status ?? '');
+                        $statusKey = strtolower(trim($statusLabel));
+                        $badgeClass = 'bg-secondary';
+                        if ($statusKey === 'approved') {
+                            $badgeClass = 'bg-success';
+                        } elseif ($statusKey === 'rejected') {
+                            $badgeClass = 'bg-danger';
+                        } elseif ($statusKey === 'pending') {
+                            $badgeClass = 'bg-warning text-dark';
+                        }
+                    @endphp
+                    <td><span class="badge {{ $badgeClass }}">{{ $statusLabel }}</span></td>
                     <td>
                         <button
                             class="btn btn-sm btn-outline-info view-need-btn"
