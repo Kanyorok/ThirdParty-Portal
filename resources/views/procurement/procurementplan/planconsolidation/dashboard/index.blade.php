@@ -13,6 +13,15 @@
         <form method="GET" action="{{ route('dashboard.index') }}">
             <div class="row mb-4">
                 <div class="col-md-3">
+                    <label class="form-label">Filter by Status</label>
+                    <select class="form-select filter-auto" name="status">
+                        <option value="" {{ empty($status) ? 'selected' : '' }}>All Statuses</option>
+                        @foreach($statusOptions as $val => $label)
+                            <option value="{{ $val }}" {{ (string)$val === (string)$status ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label">Filter by Branch</label>
                     <select class="form-select filter-auto" name="branch">
                         <option value="" {{ empty($branch) ? 'selected' : '' }}>All Branches</option>
