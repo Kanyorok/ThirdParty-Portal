@@ -39,15 +39,16 @@ const formSchema = z.object({
         .max(100, 'Company name must be less than 100 characters')
         .regex(/^[a-zA-Z0-9\s&.-]+$/, 'Company name contains invalid characters'),
     TradingName: z.string()
+        .min(2, 'Trading name must be at least 2 characters')
         .max(100, 'Trading name must be less than 100 characters')
-        .optional(),
+        .regex(/^[a-zA-Z0-9\s&.-]+$/, 'Trading name contains invalid characters'),
     BusinessType: z.string().min(1, 'Please select a business type'),
     RegistrationNumber: z.string()
         .min(1, 'Registration number is required')
         .max(50, 'Registration number must be less than 50 characters'),
     TaxPIN: z.string()
-        .max(20, 'Tax PIN must be less than 20 characters')
-        .optional(),
+        .min(1, 'Tax PIN is required')
+        .max(20, 'Tax PIN must be less than 20 characters'),
     VATNumber: z.string()
         .max(20, 'VAT number must be less than 20 characters')
         .optional(),
@@ -154,7 +155,7 @@ const formFields = [
         name: 'TradingName' as const,
         label: 'Trading Name',
         placeholder: 'Enter trading name (optional)',
-        required: false,
+        required: true,
         icon: Building2,
         gridSpan: 'col-span-full sm:col-span-1',
     },
@@ -177,8 +178,8 @@ const formFields = [
     {
         name: 'TaxPIN' as const,
         label: 'Tax PIN',
-        placeholder: 'Enter tax PIN (optional)',
-        required: false,
+        placeholder: 'Enter tax PIN',
+        required: true,
         gridSpan: 'col-span-full sm:col-span-1',
     },
     {
@@ -274,7 +275,9 @@ export default function RegisterThirdPartyDetails() {
             Website: '',
             ThirdPartyType: '',
         },
-        mode: 'onBlur',
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+    criteriaMode: 'all',
     });
 
     const isFormValid = useMemo(() => {
