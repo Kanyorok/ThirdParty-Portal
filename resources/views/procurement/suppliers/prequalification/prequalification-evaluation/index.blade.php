@@ -105,7 +105,7 @@ function actionButtons(row) {
         .replace('__CID__', row.category_id);
 
     let buttons = '';
-    
+
     // Do not show a separate 'View Results' eye button here. Keep the evaluate action when needed.
     if (row.decision) {
         // Decision exists (Passed/Failed) — we intentionally don't render a standalone view button.
@@ -113,14 +113,14 @@ function actionButtons(row) {
     } else {
         buttons += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1" title="Evaluate Application"><i class='fas fa-edit'></i></a>`;
     }
-    
+
     if (row.prequalify_allowed) {
         const prequalifyTitle = (row.decision === 'Passed') ? 'Prequalify Supplier' : 'Force Prequalify Supplier';
         buttons += `<form method='POST' action='${singleUrl}' class='d-inline prequalify-single-form'>@csrf<button type='submit' class='btn btn-sm btn-success' title='${prequalifyTitle}'><i class="fas fa-check"></i></button></form>`;
     } else {
         buttons += `<span class="btn btn-sm btn-secondary disabled" title="Already Prequalified"><i class="fas fa-check-circle"></i></span>`;
     }
-    
+
     return buttons;
 }
 
