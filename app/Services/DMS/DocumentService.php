@@ -223,12 +223,12 @@ class DocumentService extends PermissionsService
     protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, Collection $properties = null, string $checksum = null): static
     {
         // Read the encrypted content from the file system to store in Blob
-        $encryptedContent = '';
-        try {
-            $encryptedContent = Storage::disk($disk->value)->get($path);
-        } catch (\Exception $e) {
-            Log::error("Failed to read encrypted content from path: {$path}", ['error' => $e->getMessage()]);
-        }
+        /* $encryptedContent = '';
+         try {
+             $encryptedContent = Storage::disk($disk->value)->get($path);
+         } catch (\Exception $e) {
+             Log::error("Failed to read encrypted content from path: {$path}", ['error' => $e->getMessage()]);
+         }*/
 
         $this->document->versions()->create([
             "Name" => $name,
@@ -237,7 +237,7 @@ class DocumentService extends PermissionsService
             "Disk" => $disk->value,
             "Checksum" => $checksum ?? (new FileProperties($this->document))->generateChecksum($disk, $path),
             "Size" => $sizeInBytes,
-            "Blob" => $encryptedContent, // Store encrypted content in Blob field
+            "Blob" => '', // Uses for search params
             'CreatedBy' => $actor->Id,
             'ModifiedBy' => $actor->Id,
         ]);

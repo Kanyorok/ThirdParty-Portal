@@ -169,8 +169,10 @@
                                  aria-labelledby="filePropertiesHeader" data-bs-parent="#filePropertiesAccordion">
                                 <ul class="list-group list-group-flush">
                                     @foreach($file->properties as $property)
-                                        <li class="list-group-item ">{{ $property->Name }} : <b
-                                                class="float-end">{{ $property->formated_value }}</b></li>
+                                        <li class="list-group-item"
+                                            style="overflow-wrap: break-word;">{{ $property->Name }}
+                                            <br> <b
+                                                class="text-start">{{ $property->formated_value }}</b></li>
                                     @endforeach
                                 </ul>
                             </div>

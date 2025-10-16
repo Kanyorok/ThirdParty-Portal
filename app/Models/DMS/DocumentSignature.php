@@ -2,62 +2,43 @@
 
 namespace App\Models\DMS;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentSignature extends Model
 {
-    /**
-     * Indicates if the model should be timestamped.
-     *
-     * @var bool
-     */
-    public $timestamps = true;
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'document_signatures';
-    /**
-     * The database connection that should be used by the model.
-     *
-     * @var string
-     */
-    protected $connection = 'sqlsrv';
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    use SoftDeletes, UserActorTrait;
+
+    const string CREATED_AT = 'CreatedOn';
+    const string UPDATED_AT = 'ModifiedOn';
+    const string DELETED_AT = 'DeletedOn';
+
+    protected $table = 't_DocumentSignatures';
+    protected $primaryKey = 'Id';
+
     protected $fillable = [
-        'document_id',
-        'user_id',
-        'signature',
-        'signed_at',
-        'status',
-        'notes'
+        "DocumentId", "SignatureId", "Extra", "Content",
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
-    /**
-     * Get the document that owns the signature.
-     */
+    protected $casts = [
+        'Extra' => 'array',
+    ];
+
     public function document(): BelongsTo
     {
-        return $this->belongsTo(Document::class);
+        return $this->belongsTo(Document::class, 'DocumentId', 'Id');
     }
 
-    /**
-     * Get the user that owns the signature.
-     */
-    public function user(): BelongsTo
+    public function signature(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(DMSSignature::class, 'SignatureId', 'Id');
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'DocumentSignatureId';
     }
 }

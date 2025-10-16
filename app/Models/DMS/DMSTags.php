@@ -4,6 +4,7 @@ namespace App\Models\DMS;
 
 use App\Enums\Core\VisibilityEnum;
 use App\Models\Auth\User;
+use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DMSTags extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
@@ -54,12 +55,13 @@ class DMSTags extends Model
 
     public function scopeUser(Builder $q, User $user): Builder
     {
-        return $q->where(function (Builder $query) use ($user) {
-            $query->where($this->getTable() . '.Visibility', VisibilityEnum::Public->value)
-                ->orWhere(function (Builder $query) use ($user) {
-                    $query->where($this->getTable() . '.Visibility', VisibilityEnum::Private->value)
-                        ->where($this->getTable() . '.CreatedBy', $user->Id);
-                });
-        });
+        return $this->userCreator($q, $user);
+        /*  return $q->where(function (Builder $query) use ($user) {
+              $query->where($this->getTable() . '.Visibility', VisibilityEnum::Public->value)
+                  ->orWhere(function (Builder $query) use ($user) {
+                      $query->where($this->getTable() . '.Visibility', VisibilityEnum::Private->value)
+                          ->where($this->getTable() . '.CreatedBy', $user->Id);
+                  });
+          });*/
     }
 }
