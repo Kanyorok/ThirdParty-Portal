@@ -75,7 +75,7 @@
                             showToast('success', response.message || 'Item deleted successfully');
                             // Redirect to index page after short delay
                             setTimeout(() => {
-                                window.location.href = '{{ route("invoiceentry.index") }}';
+                                window.location.href = '{{ route("glpostingmap.index") }}';
                             }, 1500);
                         } else {
                             // Show error message
@@ -89,7 +89,7 @@
                         modal.hide();
                         showToast('success', 'Item deleted successfully');
                         setTimeout(() => {
-                            window.location.href = '{{ route("invoiceentry.index") }}';
+                            window.location.href = '{{ route("glpostingmap.index") }}';
                         }, 1500);
                     }
                 } else {
