@@ -42,7 +42,7 @@
                                     data-doc="{{ $group->DocType }}">
                                     ✏️ Edit
                                 </button>
-                                <form method="POST" action="{{ route('settings.workflows.delete', $group->Id) }}" class="d-inline">
+                                <form method="POST" action="{{ route('settings.workflows.destroy', $group->Id) }}" class="d-inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger"

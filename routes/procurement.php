@@ -57,6 +57,8 @@ use App\Http\Controllers\Procurement\RFQEvaluationController;
 use App\Http\Controllers\Procurement\RFQLinesController;
 use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQSectionController;
+use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
+use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
 use App\Http\Controllers\Procurement\RFQSettingController;

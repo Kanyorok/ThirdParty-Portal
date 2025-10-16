@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\Settings\WorkFlowRequest;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Settings\WorkFlow;
 use App\Models\Settings\WorkFlowStage;
@@ -48,10 +49,20 @@ class WorkFlowController extends Controller
         $user = Auth::user();
 
         try {
+            // Resolve the user's selection to an Eloquent table name.
+            // Accept either a fully-qualified class name or a morph alias key.
+            $selection = (string) ($validated['DocType'] ?? '');
+            $tableName = $this->resolveSelectedToTable($selection);
+
+            if (!$tableName) {
+                throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
+            }
+
             $workFlow = WorkFlow::create([
                 'Name' => $validated['Name'],
                 'Description' => $validated['Description'],
-                'Source' => $validated['DocType'],
+                // Store the Eloquent table name for the selected model
+                'Source' => $tableName,
                 'CreatedBy' => Auth::id(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
@@ -122,7 +133,41 @@ class WorkFlowController extends Controller
      */
     public function destroy(string $id)
     {
-        $workFlow = WorkFlow::findOrFail($id);
-        $workFlow->delete();
+        try {
+            $workFlow = WorkFlow::findOrFail($id);
+            $workFlow->delete(); // Soft deletes via DeletedOn column
+
+            return redirect()
+                ->route('settings.workflows.index')
+                ->with('success', 'Approval workflow deleted.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Delete failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Resolve a selected value (class or morph alias) to its Eloquent table name.
+     */
+    private function resolveSelectedToTable(?string $selection): ?string
+    {
+        if (!$selection) {
+            return null;
+        }
+
+        // If selection is a known morph alias, convert to class
+        $morphMap = Relation::morphMap();
+        $class = $morphMap[$selection] ?? $selection;
+
+        // Ensure class exists and is a Model
+        if (!class_exists($class)) {
+            return null;
+        }
+
+        $instance = app($class);
+        if (!$instance instanceof Model) {
+            return null;
+        }
+
+        return $instance->getTable();
     }
 }
