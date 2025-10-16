@@ -391,6 +391,8 @@ class AppServiceProvider extends ServiceProvider
 
 
             //Third Parties
+            // Allow resolving morph type 'ThirdParty' used by legacy data
+            'ThirdParty' => \App\Models\ThirdParty\ThirdParties::class,
             \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
