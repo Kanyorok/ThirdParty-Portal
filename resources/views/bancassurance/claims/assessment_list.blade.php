@@ -24,32 +24,35 @@
                 <th>Comments</th>
                 <th>Actions</th>
             </tr>
-            </thead>
-            <tbody>
-            @forelse ($assessments as $assessment)
-                <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>{{ $assessment->ClaimId ?? '-' }} _ {{$assessment->claim->policy->PolicyNumber ?? '-'}}</td>
-                    <td>{{ $assessment->assessedby->Name ?? '-' }}</td>
-                    <td>{{ \Carbon\Carbon::parse($assessment->AssessmentDate)->format('d/m/Y') }}</td>
-                    <td>{{ number_format($assessment->AssessmentAmount, 2) }}</td>
-                    <td>{{ $assessment->decision->Description ?? '-' }}</td>
-                    <td>{{ Str::limit($assessment->AssessmentComments, 40) ?? '-' }}</td>
-                    <td>
-                        <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}"
-                           class="btn btn-sm btn-outline-info">View</a>
-                        <a href="{{ route('bancassurance.claims.assessment_edit', $assessment->Id) }}"
-                           class="btn btn-sm btn-outline-primary">Edit</a>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="8" class="text-center text-muted">No assessments available.</td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
+        </thead>
+        <tbody>
+        @forelse ($assessments as $assessment)
+            <tr>
+                <td>{{ $loop->iteration }}</td>
+                <td>{{ $assessment->ClaimId ?? '-' }} _ {{$assessment->claim->policy->PolicyNumber ?? '-'}}</td>
+                <td>{{ $assessment->assessedby->Name ?? '-' }}</td>
+                <td>{{ \Carbon\Carbon::parse($assessment->AssessmentDate)->format('d/m/Y') }}</td>
+                <td>{{ number_format($assessment->AssessmentAmount, 2) }}</td>
+                <td>{{ $assessment->decision->Description ?? '-' }}</td>
+                <td>{{ Str::limit($assessment->AssessmentComments, 40) ?? '-' }}</td>
+                <td>
+                    <a href="{{ route('bancassurance.claims.assessment_show', $assessment->Id) }}" class="btn btn-sm btn-outline-info">View</a>                
+
+                    @if($assessment->claimpaiyments()->exists())
+                        <button class="btn btn-sm btn-secondary" disabled>Paid</button>
+                    @else
+                        <a href="{{ route('bancassurance.claims.assessment_edit', $assessment->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                    @endif
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="8" class="text-center text-muted">No assessments available.</td>
+            </tr>
+        @endforelse
+        </tbody>
+    </table>
+</div>
 @endsection
 
 @section('scripts')

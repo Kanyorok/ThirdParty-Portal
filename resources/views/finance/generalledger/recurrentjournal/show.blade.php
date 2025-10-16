@@ -1,23 +1,297 @@
 @extends('layouts.app')
 
-@section('content')
-    <div class="container mt-4">
-        <div class="card shadow-sm border-0 rounded-4">
-            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between">
-                <!-- Left side -->
-                <div>
-                    <h5 class="mb-0 text-info">
-                        <i class="fas fa-retweet me-2"></i> Recurrent Journal Details
-                        <small class="text-muted">#{{ $journalEntry->RefNo }}</small>
-                    </h5>
-                </div>
+@section('styles')
+    <style>
+        /* Journal container styling */
+        .journal-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+        }
 
-                <!-- Right side -->
-                <div class="text-end d-flex align-items-center gap-2">
-                    <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
-                        <i class="fas fa-print me-1"></i> Print
-                    </button>
-                    Approval Status:
+        /* Header - minimalist */
+        .journal-header {
+            background: #ffffff;
+            color: #343a40;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            position: relative;
+        }
+
+        .journal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: .25rem; }
+
+        .journal-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        .status-badge { position: absolute; top: .75rem; right: 1rem; font-size: .85rem; padding: .35rem .75rem; border-radius: .5rem; }
+
+        /* Info cards with modern design */
+        .info-card { background: #fff; border: 1px solid #e9ecef; border-radius: .5rem; padding: 1rem; height: 100%; }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .info-card .info-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card .info-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #495057;
+            line-height: 1.3;
+        }
+
+        /* Audit trail with elegant design */
+        .audit-trail-card { background: #fff; border: 1px solid #dee2e6; border-radius: .5rem; padding: 1rem 1.25rem; }
+        .audit-list { list-style: none; padding: 0; margin: 0; }
+        .audit-list li { margin-bottom: .35rem; color: #495057; display: flex; gap: .5rem; align-items: baseline; }
+        .audit-list .label { min-width: 160px; font-weight: 600; color: #6c757d; }
+
+        .audit-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: white;
+            border-radius: 0.75rem;
+            border-left: 4px solid #007bff;
+            transition: all 0.2s ease;
+        }
+
+        .audit-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .audit-item.reversed {
+            border-left-color: #dc3545;
+        }
+
+        .audit-item.approved {
+            border-left-color: #28a745;
+        }
+
+        .audit-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .audit-icon.created { background: linear-gradient(135deg, #e3f2fd, #bbdefb); color: #1976d2; }
+        .audit-icon.modified { background: linear-gradient(135deg, #fff3e0, #ffcc80); color: #f57c00; }
+        .audit-icon.approved { background: linear-gradient(135deg, #e8f5e8, #c8e6c9); color: #388e3c; }
+        .audit-icon.reversed { background: linear-gradient(135deg, #ffebee, #ffcdd2); color: #d32f2f; }
+
+        .audit-details {
+            flex: 1;
+        }
+
+        .audit-label {
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 0.25rem;
+            font-size: 1.1rem;
+        }
+
+        .audit-value {
+            color: #6c757d;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .audit-timestamp {
+            font-size: 0.85rem;
+            color: #868e96;
+            font-style: italic;
+        }
+
+        /* Journal lines table */
+        .journal-lines-card { background: #fff; border: 1px solid #dee2e6; border-radius: .5rem; overflow: hidden; }
+
+        .journal-lines-header { background: #f8f9fa; color: #495057; padding: .75rem 1rem; font-size: 1rem; font-weight: 600; border-bottom: 1px solid #e9ecef; }
+
+        /* Print optimizations */
+        @media print {
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 11px !important;
+                line-height: 1.3 !important;
+            }
+
+            /* Hide navigation and header elements */
+            .navbar, .sidebar, .breadcrumb, .top-navbar, .main-header,
+            .btn:not(.print-btn), .no-print, .btn-outline-secondary,
+            .modal, .dropdown, .alert { display: none !important; }
+
+            /* Container and layout */
+            .journal-container {
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 10mm !important;
+                width: 100% !important;
+            }
+
+            .journal-header {
+                background: #f8f9fa !important;
+                color: #495057 !important;
+                padding: 1rem !important;
+                margin-bottom: 1rem !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+
+            /* Cards in print layout */
+            .info-card, .audit-trail-card {
+                background: white !important;
+                border: 1px solid #dee2e6 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid !important;
+            }
+
+            /* Two-column layout for cards */
+            .print-cards-row {
+                display: flex !important;
+                gap: 12px !important;
+                margin-bottom: 1rem !important;
+            }
+
+            .print-cards-col {
+                width: 50% !important;
+                flex: 1 !important;
+            }
+
+            /* Journal lines table */
+            .journal-lines-card {
+                page-break-inside: avoid !important;
+                margin-top: 1rem !important;
+            }
+
+            .je-table {
+                font-size: 10px !important;
+                margin-bottom: 0 !important;
+            }
+
+            .je-table th, .je-table td {
+                padding: 0.25rem 0.5rem !important;
+                font-size: 10px !important;
+            }
+
+            /* Audit trail in columns */
+            .audit-list {
+                column-count: 2 !important;
+                column-gap: 16px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .audit-list li {
+                break-inside: avoid !important;
+                margin-bottom: 0.5rem !important;
+                display: block !important;
+            }
+
+            /* Status badge positioning */
+            .status-badge {
+                position: relative !important;
+                top: auto !important;
+                right: auto !important;
+                display: inline-block !important;
+                margin-left: 1rem !important;
+            }
+
+            /* Typography adjustments */
+            .journal-title {
+                font-size: 1.2rem !important;
+                margin-bottom: 0.25rem !important;
+            }
+
+            .journal-subtitle {
+                font-size: 0.9rem !important;
+            }
+
+            .info-card .info-label {
+                font-size: 0.8rem !important;
+            }
+
+            .info-card .info-value {
+                font-size: 0.9rem !important;
+            }
+
+            .audit-label {
+                font-size: 0.8rem !important;
+            }
+
+            .audit-value {
+                font-size: 0.8rem !important;
+            }
+
+            /* Page break controls */
+            .journal-lines-card {
+                page-break-inside: avoid !important;
+            }
+
+            /* Remove hover effects and transitions */
+            * {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .journal-header {
+                padding: 1.5rem;
+            }
+
+            .journal-title {
+                font-size: 1.5rem;
+            }
+
+            .info-card {
+                padding: 1rem;
+            }
+
+            .audit-item {
+                padding: 0.75rem;
+            }
+
+            .audit-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+@endsection
+
+@section('content')
+    <div class="journal-container">
+        <!-- Header Section -->
+        <div class="journal-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="journal-title">📘 Recurrent Journal Details</h1>
+                    <p class="journal-subtitle">Reference: {{ $journalEntry->RefNo }}</p>
+                </div>
+                <div class="status-badge">
                     @if($journalEntry->ApprovalStatus == 'posted')
                         <span class="badge bg-success">Approved</span>
                     @elseif($journalEntry->ApprovalStatus == 'rejected')
@@ -27,70 +301,120 @@
                     @endif
                 </div>
             </div>
+            <button class="btn btn-light btn-sm mt-3 no-print" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Print Journal
+            </button>
+        </div>
 
-            <div class="card-body">
-                {{-- Header Info --}}
-                <div class="row g-4 mb-4">
-                    <div class="col-md-4">
-                        <h6>Recurring Schedule</h6>
-                        @if ($journalEntry->recurringJournals->isNotEmpty())
-                            @php $recurring = $journalEntry->recurringJournals->first(); @endphp
-                            <div class="small">Start: <strong>{{ $recurring->StartDate ? \Carbon\Carbon::parse($recurring->StartDate)->format('d/m/Y') : 'N/A' }}</strong></div>
-                            <div class="small">Next Run: <strong>{{ $recurring->NextRunDate ? \Carbon\Carbon::parse($recurring->NextRunDate)->format('d/m/Y') : 'N/A' }}</strong></div>
-                            <div class="small">Frequency: <strong>{{ ucfirst( $frequencies[$recurring->Frequency ?? ''] ?? '-' ) }}</strong></div>
-                            <div class="small">End: <strong>{{ $recurring->CutOffDate ? \Carbon\Carbon::parse($recurring->CutOffDate)->format('d/m/Y') : ($journalEntry->Date ? \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') : 'N/A') }}</strong></div>
-                        @else
-                            <div class="small text-muted"><i class="fas fa-info-circle me-1"></i>No recurring schedule defined.</div>
-                        @endif
+        <div class="position-relative px-3 pb-3">
+            @if(!empty($journalEntry->IsReversed) && $journalEntry->IsReversed)
+                <div style="position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center; opacity:0.03; z-index:0;">
+                    <div style="transform:rotate(-25deg); font-size: 140px; font-weight: 900; color:#dc3545;">REVERSED</div>
+                </div>
+            @endif
+
+                {{-- Top Row: Journal Info + Audit Trail --}}
+                <div class="row mb-3 g-3 print-cards-row">
+                    <div class="col-lg-6 print-cards-col">
+                        <div class="info-card h-100">
+                            <h6 class="mb-3 text-primary"><i class="fas fa-receipt me-2"></i>Journal Info</h6>
+                            <ul class="info-list">
+                            <li><span class="label">Reference Number</span><span>{{ $journalEntry->RefNo }}</span></li>
+                            <li><span class="label">Date</span><span>{{ \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') }}</span></li>
+                            <li><span class="label">Type</span>
+                                <span>
+                                    @if($journalEntry->Type === 'recurring')
+                                        Recurring
+                                    @elseif($journalEntry->Type === 'reversing')
+                                        Reversing
+                                    @else
+                                        Normal
+                                    @endif
+                                </span>
+                            </li>
+                            <li><span class="label">Source</span><span><span class="badge bg-light text-dark border">{{ $journalEntry->source_module_name ?? 'Finance' }}</span></span></li>
+                            <li><span class="label">Description</span><span>{{ $journalEntry->Description }}</span></li>
+                            @if ($journalEntry->recurringJournals->isNotEmpty())
+                                @php $recurring = $journalEntry->recurringJournals->first(); @endphp
+                                <li><span class="label">Start Date</span><span>{{ $recurring->StartDate ? \Carbon\Carbon::parse($recurring->StartDate)->format('d/m/Y') : 'N/A' }}</span></li>
+                                <li><span class="label">Next Run</span><span>{{ $recurring->NextRunDate ? \Carbon\Carbon::parse($recurring->NextRunDate)->format('d/m/Y') : 'N/A' }}</span></li>
+                                <li><span class="label">Frequency</span><span>{{ ucfirst( $frequencies[$recurring->Frequency ?? ''] ?? '-' ) }}</span></li>
+                                <li><span class="label">End Date</span><span>{{ $recurring->CutOffDate ? \Carbon\Carbon::parse($recurring->CutOffDate)->format('d/m/Y') : ($journalEntry->Date ? \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') : 'N/A') }}</span></li>
+                            @endif
+                            </ul>
+                        </div>
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="text-muted fw-semibold">Description:</label>
-                        <div class="text-break">{{ $journalEntry->Description }}</div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="text-muted fw-semibold">Created By:</label>
-                        <div>{{ $journalEntry->createdBy->Name ?? 'System' }}</div>
+                    <div class="col-lg-6 print-cards-col">
+                        <div class="audit-trail-card h-100">
+                            <h6 class="mb-3 text-primary"><i class="fas fa-history me-2"></i>Audit Trail</h6>
+                            <ul class="audit-list">
+                                <li><span class="label">Created By</span><span>{{ $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d/m/Y H:i') }}</span></li>
+                                @if($journalEntry->ModifiedBy && $journalEntry->ModifiedBy != $journalEntry->CreatedBy)
+                                    <li><span class="label">Last Modified By</span><span>{{ $journalEntry->modifiedBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d/m/Y H:i') }}</span></li>
+                                @endif
+                                @if($journalEntry->ApprovalStatus == 'posted' || $journalEntry->ApprovalStatus == 'rejected')
+                                    <li><span class="label">Approval Action</span><span>{{ ucfirst($journalEntry->ApprovalStatus) }} by {{ $journalEntry->modifiedBy->Name ?? $journalEntry->createdBy->Name ?? 'System' }} — {{ \Carbon\Carbon::parse($journalEntry->ModifiedOn)->format('d/m/Y H:i') }}</span></li>
+                                @endif
+                                @if($journalEntry->IsReversed && $journalEntry->reversed_by)
+                                    <li><span class="label">Reversed By</span><span>{{ $journalEntry->reversed_by->Name ?? 'System' }}@if($journalEntry->reversal_info && $journalEntry->reversal_info->CreatedOn) — {{ \Carbon\Carbon::parse($journalEntry->reversal_info->CreatedOn)->format('d/m/Y H:i') }}@endif</span></li>
+                                @elseif($journalEntry->Type === 'reversing')
+                                    <li><span class="label">Reversal Journal</span><span>This is a reversing journal — {{ \Carbon\Carbon::parse($journalEntry->CreatedOn)->format('d/m/Y H:i') }}</span></li>
+                                @endif
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Journal Lines --}}
-                <h6 class="border-bottom pb-2 text-info">Journal Lines</h6>
+                <div class="journal-lines-card">
+                    <div class="journal-lines-header">
+                        <i class="fas fa-list me-2"></i>Journal Lines
+                    </div>
                 <div class="table-responsive">
-                    <table class="table table-bordered table-sm table-hover align-middle">
+                        <table class="table table-sm mb-0" style="table-layout:auto; width:100%">
                         <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>GL Account</th>
-                            <th>Debit</th>
-                            <th>Credit</th>
-                            <th>Amount</th>
+                            <th class="text-start">Debit</th>
+                            <th class="text-start">Credit</th>
+                            <th class="text-start">Amount</th>
                             <th>Narration</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($journalEntry->journalLines as $index => $line)
-                            <tr>
+                            @php
+                                $isDebit = $line->Debit > 0 || $line->IsDebit;
+                                $rowClass = $isDebit ? 'row-debit' : 'row-credit';
+                            @endphp
+                            <tr class="{{ $rowClass }}">
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $line->glAccount->GLName ?? '-' }}</td>
-                                <td class="text-danger">
+                                <td class="fw-semibold text-start">
                                     {{ number_format($line->Debit, 2) }}
                                 </td>
-                                <td class="text-success">
+                                <td class="fw-semibold text-start">
                                     {{ number_format($line->Credit, 2) }}
                                 </td>
-                                <td>{{ number_format($line->Amount, 2) }}</td>
-                                <td>{{ $line->Narration }}</td>
+                                <td class="text-start">{{ number_format($line->Amount, 2) }}</td>
+                                <td>
+                                    <details>
+                                        <summary class="narration-summary">{{ Str::limit($line->Narration, 50) }}</summary>
+                                        <div class="narration-full">{{ $line->Narration }}</div>
+                                    </details>
+                                </td>
                             </tr>
                         @endforeach
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
                 {{-- Action Buttons --}}
                 @if($journalEntry->ApprovalStatus=='draft')
-                    <div class="mt-4 d-flex justify-content-end gap-3">
+                    <div class="mt-4 d-flex justify-content-end gap-3 no-print">
                         <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
                             <i class="fas fa-times-circle me-1"></i> Reject
                         </button>
@@ -100,11 +424,11 @@
                     </div>
                 @endif
 
-                <a href="{{ route('recurrentjournal.index') }}">
-                    <button class="btn btn-outline-secondary">
-                        <i class="fas fa-backward-step me-1"></i> Back
-                    </button>
-                </a>
+                <div class="mt-4 text-center no-print">
+                    <a href="{{ route('recurrentjournal.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Recurrent Journals
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -165,4 +489,26 @@
             </div>
         </div>
     @endif
+@endsection
+
+@section('styles')
+    <style>
+        /* Row color coding for DR/CR */
+        .table tbody tr.row-debit,
+        .table tbody tr.row-debit td {
+            color: #dc3545 !important;
+        }
+        .table tbody tr.row-credit,
+        .table tbody tr.row-credit td {
+            color: #28a745 !important;
+        }
+
+        @media print {
+            html, body { margin: 0 !important; padding: 0 !important; }
+            .btn, .navbar, .pagination, .no-print { display: none !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .container { max-width: none !important; width: 100% !important; }
+            .table-responsive { overflow: visible !important; }
+        }
+    </style>
 @endsection

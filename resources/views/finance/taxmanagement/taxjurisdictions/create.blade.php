@@ -34,10 +34,10 @@
             <form method="POST" action="{{ route('taxjurisdiction.store') }}">
                 @csrf
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label>Jurisdiction Name</label>
-                        <input type="text"
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label>Jurisdiction Name</label>
+                    <input type="text"
                         name="JurisdictionName"
                                value="{{ old('JurisdictionName') }}"
                         class="form-control @error('JurisdictionName') is-invalid @enderror"
@@ -48,21 +48,35 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-6">
-                        <label>Currency</label>
-                        <select name="Currency" class="form-select @error('Currency') is-invalid @enderror" required>
-                            <option value="" disabled selected>Select Currency</option>
-                            @foreach($currencies as $currency)
-                                <option value="{{ $currency->Id }}" {{ old('Currency') == $currency->Id ? 'selected' : '' }}>
-                                    {{ $currency->Code }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('Currency')
+                <div class="col-md-4">
+                    <label>Currency</label>
+                    <select name="Currency" class="form-select @error('Currency') is-invalid @enderror" required>
+                        <option value="" disabled selected>Select Currency</option>
+                        @foreach($currencies as $currency)
+                            <option value="{{ $currency->Id }}" {{ old('Currency') == $currency->Id ? 'selected' : '' }}>
+                                {{ $currency->Code }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('Currency')
                         <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    @enderror
                 </div>
+                <div class="col-md-4">
+                    <label>Country</label>
+                    <select name="CountryID" class="form-select @error('CountryID') is-invalid @enderror" required>
+                        <option value="" selected disabled>-- Select Country --</option>
+                        @foreach($countries as $country)
+                            <option value="{{ $country->Id }}" {{ old('CountryID') == $country->Id ? 'selected' : '' }}>
+                                {{ $country->Name ?? $country->CountryCode ?? ('#'.$country->Id) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('CountryID')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
 
                 <div class="mb-3">
                     <label>Tax Authority</label>

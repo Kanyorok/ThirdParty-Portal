@@ -22,24 +22,69 @@ use Illuminate\Validation\Rule;
 
 class ChartOfAccountsController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceCOAView, FinanceGLAccounts::class);
 
-        $charts = FinanceGLAccounts::with([
+        // Build query with filters
+        $query = FinanceGLAccounts::with([
             'typeGroup:Id,Description',
             'subAccount:Id,Description',
-        ])
-            ->orderByDesc('Id')              // or ->orderBy('GLCode')
-            ->paginate(25)                   // page size
-            ->withQueryString();             // keep query params if you add filters later
+        ]);
+
+        // Apply filters if provided
+        if ($request->filled('gl_name')) {
+            $query->where('GLName', 'like', '%' . $request->gl_name . '%');
+        }
+
+        if ($request->filled('gl_code')) {
+            $query->where('GLCode', 'like', '%' . $request->gl_code . '%');
+        }
+
+        if ($request->filled('gl_type')) {
+            $query->where('GLAccountTypeID', $request->gl_type);
+        }
+
+        if ($request->filled('gl_type_group')) {
+            $query->where('GLTypeGroupID', $request->gl_type_group);
+        }
+
+        if ($request->filled('description')) {
+            $query->where('Description', 'like', '%' . $request->description . '%');
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('IsActive', $request->status === 'active');
+        }
+
+        // Apply sorting
+        $sortField = $request->sort_by ?? 'Id';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        // Paginate results
+        $perPage = $request->per_page ?? 25;
+        $charts = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options for dropdowns
+        $glTypes = CodeDetail::where('CodeID', 'GLAccountType')
+            ->pluck('Description', 'Value')
+            ->toArray();
+
+        $glTypeGroups = FinanceGLTypeGroup::pluck('Description', 'Id')
+            ->toArray();
 
         // Keep if you still need segment order elsewhere in the view
         $glOrders = SegmentOrder::select('Id', 'SegmentType', 'Description')
             ->orderBy('Id')
             ->get();
 
-        return view('finance.chartofaccounts.chartofaccounts.index', compact('charts', 'glOrders'));
+        return view('finance.chartofaccounts.chartofaccounts.index', compact(
+            'charts',
+            'glOrders',
+            'glTypes',
+            'glTypeGroups'
+        ));
     }
 
 

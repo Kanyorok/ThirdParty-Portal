@@ -150,16 +150,40 @@ class BidOpeningCeremonyController extends Controller
         }
 
         try {
-            // Decrypt and prepare documents for viewing
+            // Decrypt and prepare documents for viewing (support DMS-backed names)
             $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
-            $accessibleDocs = [];
 
+            // Gather DMS document IDs and fetch metadata in bulk
+            $docIds = collect($encryptedDocs)
+                ->map(fn($d) => $d['document_id'] ?? null)
+                ->filter()
+                ->values()
+                ->all();
+
+            $dmsDocs = [];
+            if (!empty($docIds)) {
+                $dmsDocs = \App\Models\DMS\Document::whereIn('DocumentId', $docIds)
+                    ->with('current')
+                    ->get()
+                    ->keyBy('DocumentId');
+            }
+
+            $accessibleDocs = [];
             foreach ($encryptedDocs as $doc) {
+                $documentId = $doc['document_id'] ?? null;
+                $linked = $documentId && isset($dmsDocs[$documentId]) ? $dmsDocs[$documentId] : null;
+                $name = $linked?->Name ?? ($doc['original_name'] ?? ($doc['original_filename'] ?? 'Unknown Document'));
+                $sizeBytes = $linked?->current?->Size ?? ($doc['file_size'] ?? null);
+                $uploadedAtVal = $linked?->getAttribute('CreatedOn');
+                $uploadedAt = ($uploadedAtVal instanceof \Carbon\Carbon)
+                    ? $uploadedAtVal->format('d/m/Y H:i:s')
+                    : ($uploadedAtVal ?: ($doc['uploaded_at'] ?? null));
+
                 $accessibleDocs[] = [
-                    'id' => $doc['id'] ?? 'unknown',
-                    'name' => $doc['original_filename'] ?? 'Unknown Document',
-                    'size' => $this->formatFileSize($doc['file_size'] ?? 0),
-                    'uploaded_at' => $doc['uploaded_at'] ?? null,
+                    'id' => $documentId ?? ($doc['id'] ?? 'unknown'),
+                    'name' => $name,
+                    'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
+                    'uploaded_at' => $uploadedAt,
                     'can_download' => true
                 ];
             }

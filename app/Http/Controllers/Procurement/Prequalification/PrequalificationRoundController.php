@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Models\Procurement\Prequalification\PrequalificationSection;
 use App\Models\Procurement\Prequalification\PrequalificationCriteria;
@@ -18,10 +19,18 @@ use Illuminate\Validation\ValidationException;
 
 class PrequalificationRoundController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $prequalificationRounds = PrequalificationRound::withCount('applications')->latest()->paginate(10);
-        return view('procurement.suppliers.prequalification.prequalification-rounds.index', compact('prequalificationRounds'));
+        // Allow optionally including soft-deleted (archived) rounds via ?include_deleted=1
+        $includeDeleted = (bool) $request->query('include_deleted', false);
+
+        $query = PrequalificationRound::withCount('applications')->latest();
+        if ($includeDeleted) {
+            $query = $query->withTrashed();
+        }
+
+        $prequalificationRounds = $query->paginate(10);
+        return view('procurement.suppliers.prequalification.prequalification-rounds.index', compact('prequalificationRounds', 'includeDeleted'));
     }
 
     public function create(): View

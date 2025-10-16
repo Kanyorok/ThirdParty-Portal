@@ -23,7 +23,6 @@ class CommissionPayoutController extends Controller
 
         return view('bancassurance.commissions.payouts.index', compact('payouts', 'policies', 'paymentmodes'));
     }
-
     public function pay()
     {
         $paymentmodes = CodeDetail::where('CodeID', 'PaymentModes')->get();

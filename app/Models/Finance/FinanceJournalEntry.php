@@ -3,6 +3,7 @@
 namespace App\Models\Finance;
 
 use App\Models\Auth\User;
+use App\Models\Finance\ReverseJournalEntry;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,6 +32,7 @@ class FinanceJournalEntry extends Model
         'Date',
         'RefNo',
         'Type',
+        'SourceModule',
         'ApprovalStatus',
         'ApprovalReason',
         'Status',
@@ -38,6 +40,7 @@ class FinanceJournalEntry extends Model
         'CurrencyID',
         'Description',
         'SystemDescription',
+        'IsReversed',
 
         'CreatedBy',
         'CreatedOn',
@@ -50,6 +53,7 @@ class FinanceJournalEntry extends Model
         'CreatedOn' => 'datetime',
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
+        'IsReversed' => 'boolean',
     ];
 
     protected static function boot()
@@ -93,9 +97,51 @@ class FinanceJournalEntry extends Model
         return $this->hasMany(ReverseJournalEntry::class, 'JournalEntryId', 'Id');
     }
 
-    public function createdBy(): BelongsTo
+    // Relationship to find reversals where this journal is the original
+    public function reversalsAsOriginal(){
+        return $this->hasMany(ReverseJournalEntry::class,'OriginalJournalEntryID','Id');
+    }
+
+    public function sourceModule()
     {
-        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+        return $this->belongsTo(\App\Models\Core\Module::class, 'SourceModule', 'ModuleID');
+    }
+
+    public function modifiedBy():BelongsTo
+    {
+        return $this->belongsTo(User::class,'ModifiedBy','Id');
+    }
+
+    public function createdBy():BelongsTo
+    {
+        return $this->belongsTo(User::class,'CreatedBy','Id');
+    }
+
+    // Accessor to get source module name
+    public function getSourceModuleNameAttribute()
+    {
+        return $this->sourceModule ? $this->sourceModule->Name : 'Finance';
+    }
+
+    // Get the reversal information if this journal was reversed
+    public function getReversalInfoAttribute()
+    {
+        if ($this->Type === 'reversing') {
+            return null; // This is a reversing journal, not reversed
+        }
+
+        $reversal = ReverseJournalEntry::where('OriginalJournalEntryID', $this->Id)->first();
+        return $reversal;
+    }
+
+    // Get who reversed this journal
+    public function getReversedByAttribute()
+    {
+        $reversal = $this->getReversalInfoAttribute();
+        if ($reversal) {
+            return User::find($reversal->CreatedBy);
+        }
+        return null;
     }
 
 }

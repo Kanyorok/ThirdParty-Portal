@@ -21,6 +21,41 @@
             </div>
 
             <div class="card-body px-4 py-3">
+                <form action="{{ route('receiptsposting.index') }}" method="GET" class="row g-2 align-items-end mb-3">
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Receipt No</label>
+                        <input type="text" class="form-control form-control-sm" name="receipt_number" value="{{ request('receipt_number') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Customer</label>
+                        <input type="text" class="form-control form-control-sm" name="customer" value="{{ request('customer') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Status</label>
+                        <select class="form-select form-select-sm" name="status">
+                            <option value="all" {{ request('status')=='all' ? 'selected' : '' }}>All</option>
+                            @foreach(['Draft','Posted'] as $s)
+                                <option value="{{ $s }}" {{ request('status')==$s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Date From</label>
+                        <input type="date" class="form-control form-control-sm" name="date_from" value="{{ request('date_from') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Date To</label>
+                        <input type="date" class="form-control form-control-sm" name="date_to" value="{{ request('date_to') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Min Amount</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm" name="amount_min" value="{{ request('amount_min') }}">
+                    </div>
+                    <div class="col-12 d-flex justify-content-end mt-2">
+                        <button type="submit" class="btn btn-sm btn-primary me-2"><i class="fas fa-filter me-1"></i> Filter</button>
+                        <a href="{{ route('receiptsposting.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                    </div>
+                </form>
                 <div class="table-responsive">
                     <table class="table table-hover table-sm align-middle mb-0">
                         <thead class="table-light">
@@ -116,7 +151,7 @@
                             Showing {{ $receipts->firstItem() }} to {{ $receipts->lastItem() }} of {{ $receipts->total() }} results
                         </div>
                         <nav>
-                            {{ $receipts->links('pagination::bootstrap-4') }}
+                            {{ $receipts->links('pagination::bootstrap-5') }}
                         </nav>
                     </div>
                 @endif

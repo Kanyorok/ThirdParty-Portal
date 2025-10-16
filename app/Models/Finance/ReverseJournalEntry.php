@@ -5,6 +5,7 @@ namespace App\Models\Finance;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReverseJournalEntry extends Model
 {
@@ -36,4 +37,9 @@ class ReverseJournalEntry extends Model
         'ModifiedOn',
         'DeletedBy',
     ];
+
+    public function journalEntry(): BelongsTo
+    {
+        return $this->belongsTo(FinanceJournalEntry::class, 'JournalEntryId', 'Id');
+    }
 }

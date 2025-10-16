@@ -131,7 +131,20 @@ class ModuleService
     {
         $routeUrl = 'javascript:void(0)';
         if (is_string($module->Route) && Route::has($module->Route)) {
-            try { $routeUrl = route($module->Route); } catch (\Throwable $e) { $routeUrl = 'javascript:void(0)'; }
+            // Safely resolve route URL only if it has no required parameters
+            try {
+                $named = Route::getRoutes()->getByName($module->Route);
+                if ($named) {
+                    $uri = method_exists($named, 'uri') ? $named->uri() : '';
+                    // Detect required parameters like {param} (without ?)
+                    $hasRequiredParams = is_string($uri) && preg_match('/\{[^}\?]+\}/', $uri);
+                    if (!$hasRequiredParams) {
+                        $routeUrl = route($module->Route);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $routeUrl = 'javascript:void(0)';
+            }
         }
 
         $item = [

@@ -11,7 +11,16 @@
 
     <div class="row mb-3">
         <div class="col-md-6"><strong>Item:</strong> {{ $tender->Title ?? 'N/A' }}</div>
-        <div class="col-md-6"><strong>Evaluators:</strong> {{ $evaluatorCount }} Committee Members</div>
+        <div class="col-md-6">
+            <strong>Evaluators:</strong> {{ $evaluatorCount }} Committee Members
+            @if(!empty($existingAward))
+                <span class="badge bg-info ms-2">Awarded to
+                    {{ $existingAward->winningSupplier->thirdParty->ThirdPartyName
+                        ?? $existingAward->winningSupplier->thirdParty->TradingName
+                        ?? $existingAward->winningSupplier->SupplierName
+                        ?? ('Supplier #'.$existingAward->WinningSupplierID) }}</span>
+            @endif
+        </div>
     </div>
 
     <div class="table-responsive mb-3">
@@ -39,17 +48,35 @@
                         <td><strong>{{ number_format($row['average'], 2) }}</strong></td>
                         <td>{{ $row['rank'] }}</td>
                         <td>
-                            <form method="POST" action="{{ route('procawards.store') }}" class="d-inline">
-                                @csrf
-                                <input type="hidden" name="tender_id" value="{{ $tender->Id }}">
-                                <input type="hidden" name="winning_supplier_id" value="{{ $row['supplier_id'] }}">
-                                <input type="hidden" name="award_justification" value="Awarded based on highest consolidated average score">
-                                <input type="hidden" name="technical_score" value="{{ $row['average'] }}">
-                                <input type="hidden" name="total_score" value="{{ $row['average'] }}">
-                                <button type="submit" class="btn btn-sm btn-success">
-                                    <i class="fas fa-trophy"></i> Award
-                                </button>
-                            </form>
+                            <div class="btn-group mb-1" role="group">
+                                <a href="{{ route('bidscores.section-drilldown', $tender->Id) }}?supplier_id={{ $row['supplier_id'] }}" class="btn btn-sm btn-outline-primary" title="Section drilldown for this supplier">
+                                    <i class="fas fa-list-alt"></i>
+                                </a>
+                                <a href="{{ route('bidscores.evaluator-drilldown', $tender->Id) }}?supplier_id={{ $row['supplier_id'] }}" class="btn btn-sm btn-outline-info" title="Evaluator drilldown for this supplier">
+                                    <i class="fas fa-user-friends"></i>
+                                </a>
+                            </div>
+                            @if(empty($awardBlocks) || !$awardBlocks)
+                                <form method="POST" action="{{ route('procawards.store') }}" class="d-inline">
+                                    @csrf
+                                    <input type="hidden" name="tender_id" value="{{ $tender->Id }}">
+                                    <input type="hidden" name="winning_supplier_id" value="{{ $row['supplier_id'] }}">
+                                    <input type="hidden" name="award_justification" value="Awarded based on highest consolidated average score">
+                                    <input type="hidden" name="technical_score" value="{{ $row['average'] }}">
+                                    <input type="hidden" name="total_score" value="{{ $row['average'] }}">
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-trophy"></i> Award
+                                    </button>
+                                </form>
+                            @else
+                                @if($row['is_awarded'])
+                                    <span class="badge bg-success"><i class="fas fa-trophy"></i> Awarded</span>
+                                @else
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Tender already awarded">
+                                        <i class="fas fa-ban"></i> Award
+                                    </button>
+                                @endif
+                            @endif
                         </td>
                     </tr>
                 @empty

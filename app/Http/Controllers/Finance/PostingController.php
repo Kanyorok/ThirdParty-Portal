@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\QueryException;
+use App\Models\Finance\ReverseJournalEntry;
 
 class PostingController extends Controller
 {
@@ -61,6 +62,14 @@ class PostingController extends Controller
 
                 // Proceed to posting
                 $result = $this->journalPosting($validated['journalID']);
+
+                // If this is a reversing journal, mark the original journal as reversed
+                if (strtolower($journal->Type ?? '') === 'reversing') {
+                    $rev = ReverseJournalEntry::where('JournalEntryId', $journal->Id)->first();
+                    if ($rev) {
+                        FinanceJournalEntry::where('Id', $rev->OriginalJournalEntryID)->update(['IsReversed' => true]);
+                    }
+                }
                 DB::commit();
                 return $result;
             }
