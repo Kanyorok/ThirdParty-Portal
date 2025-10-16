@@ -38,7 +38,7 @@ class FleetInspectionScheduleController extends Controller
         
         $branchId = Auth::user()->employee?->BranchId;
 
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+       $vehicles = FleetVehicle::all();
 
         $inspectionStatus = CodeDetail::where('CodeID', 'InspectionStatus')
             ->orderBy('Value')
@@ -78,7 +78,7 @@ class FleetInspectionScheduleController extends Controller
 
         $branchId = Auth::user()->employee?->BranchId;
 
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $vehicles = FleetVehicle::all();
 
         $inspectionStatus = CodeDetail::where('CodeID', 'InspectionStatus')
             ->orderBy('Value')

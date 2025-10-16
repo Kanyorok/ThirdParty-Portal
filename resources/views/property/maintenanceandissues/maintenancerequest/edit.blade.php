@@ -4,7 +4,6 @@
 @section('content')
 <div class="container mt-5" style="max-width: 800px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Edit Maintenance Request</h3>
         <a href="{{ route('maintenancerequest.index') }}" class="btn btn-outline-secondary btn-sm">← Back to List</a>
     </div>
 
@@ -18,78 +17,91 @@
         </div>
     @endif
 
-    <form action="{{ route('maintenancerequest.update', $maintenancerequest->Id) }}" method="POST">
+    <form action="{{ route('maintenancerequest.update', $maintenancerequest->Id) }}" enctype="multipart/form-data"
+          method="POST">
         @csrf
         @method('PUT')
 
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
 
-                {{-- Request Number --}}
-                <div class="mb-3">
-                    <label class="form-label">Request Number</label>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Request Number<span class="text-danger">*</span></label>
                     <input type="text" class="form-control" value="{{ $maintenancerequest->RequestNumber }}" disabled>
                 </div>
 
-{{-- Property --}}
-<div class="mb-3">
-    <label class="form-label">Property</label>
-    <select name="Property" id="property-select" class="form-select @error('Property') is-invalid @enderror">
-        <option value="">-- Select Property --</option>
-        @foreach($properties as $property)
-            <option value="{{ $property->Id }}" {{ $property->Id == old('Property', $maintenancerequest->Property) ? 'selected' : '' }}>
-                {{ $property->PropertyName }}
-            </option>
-        @endforeach
-    </select>
-    @error('Property') <div class="invalid-feedback">{{ $message }}</div> @enderror
-</div>
+                    {{-- Property --}}
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Property<span class="text-danger">*</span></label>
+                        <select name="Property" id="property-select"
+                                class="form-select @error('Property') is-invalid @enderror" required>
+                            <option value="">-- Select Property --</option>
+                            @foreach($properties as $property)
+                                <option
+                                    value="{{ $property->Id }}" {{ $property->Id == old('Property', $maintenancerequest->Property) ? 'selected' : '' }}>
+                                    {{ $property->PropertyName }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('Property')
+                        <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
 
-{{-- Block --}}
-<div class="mb-3">
-    <label class="form-label">Block</label>
-    <select name="Block" id="block-select" class="form-select @error('Block') is-invalid @enderror">
-        <option value="">-- Select Block --</option>
-        @if($maintenancerequest->block)
-            <option value="{{ $maintenancerequest->Block }}" selected>{{ $maintenancerequest->block->BlockName }}</option>
-        @endif
-    </select>
-    @error('Block') <div class="invalid-feedback">{{ $message }}</div> @enderror
-</div>
+                    {{-- Block --}}
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Block</label>
+                        <select name="Block" id="block-select" class="form-select @error('Block') is-invalid @enderror">
+                            <option value="">-- Select Block --</option>
+                            @if($maintenancerequest->block)
+                                <option value="{{ $maintenancerequest->Block }}"
+                                        selected>{{ $maintenancerequest->block->BlockName }}</option>
+                            @endif
+                        </select>
+                        @error('Block')
+                        <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
 
-{{-- Floor --}}
-<div class="mb-3">
-    <label class="form-label">Floor</label>
-    <select name="Floor" id="floor-select" class="form-select @error('Floor') is-invalid @enderror">
-        <option value="">-- Select Floor --</option>
-        @if($maintenancerequest->floor)
-            <option value="{{ $maintenancerequest->Floor }}" selected>{{ $maintenancerequest->floor->FloorLabel }}</option>
-        @endif
-    </select>
-    @error('Floor') <div class="invalid-feedback">{{ $message }}</div> @enderror
-</div>
+                {{-- Floor --}}
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Floor</label>
+                        <select name="Floor" id="floor-select" class="form-select @error('Floor') is-invalid @enderror">
+                            <option value="">-- Select Floor --</option>
+                            @if($maintenancerequest->floor)
+                                <option value="{{ $maintenancerequest->Floor }}"
+                                        selected>{{ $maintenancerequest->floor->FloorLabel }}</option>
+                            @endif
+                        </select>
+                        @error('Floor')
+                        <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
 
-{{-- Unit --}}
-<div class="mb-3">
-    <label class="form-label">Unit</label>
-    <select name="Unit" id="unit-select" class="form-select @error('Unit') is-invalid @enderror">
-        <option value="">-- Select Unit --</option>
-        @if($maintenancerequest->unit)
-            <option value="{{ $maintenancerequest->Unit }}" selected>{{ $maintenancerequest->unit->UnitCode }}</option>
-        @endif
-    </select>
-    @error('Unit') <div class="invalid-feedback">{{ $message }}</div> @enderror
-</div>
+                    {{-- Unit --}}
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Unit</label>
+                        <select name="Unit" id="unit-select" class="form-select @error('Unit') is-invalid @enderror">
+                            <option value="">-- Select Unit --</option>
+                            @if($maintenancerequest->unit)
+                                <option value="{{ $maintenancerequest->Unit }}"
+                                        selected>{{ $maintenancerequest->unit->UnitCode }}</option>
+                            @endif
+                        </select>
+                        @error('Unit')
+                        <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
 
-                {{-- Reported By / Issue / Priority --}}
+                {{-- Request Details --}}
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label">Reported By</label>
+                        <label class="form-label">Reported By<span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="ReportedBy" placeholder="Optional"
-                            value="{{ old('ReportedBy', $maintenancerequest->ReportedBy) }}">
+                               value="{{ old('ReportedBy', $maintenancerequest->ReportedBy) }}" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Issue Type</label>
+                        <label class="form-label">Issue Type<span class="text-danger">*</span></label>
                         <select class="form-select" name="IssueType" required>
                             <option value="">-- Select Issue Type --</option>
                             @foreach ($issuetypes as $issuetype)
@@ -101,8 +113,8 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Priority</label>
-                        <select class="form-select" name="Priority">
+                        <label class="form-label">Priority<span class="text-danger">*</span></label>
+                        <select class="form-select" name="Priority" required>
                             <option value="">-- Select Priority Level --</option>
                             @foreach ($priorities as $priority)
                                 <option value="{{ $priority->ID }}"
@@ -115,15 +127,27 @@
                 </div>
 
                 {{-- Issue Description --}}
+
                 <div class="mb-3">
                     <label class="form-label">Issue Description</label>
                     <textarea name="IssueDescription" class="form-control" rows="3" placeholder="Optional">{{ old('IssueDescription', $maintenancerequest->IssueDescription) }}</textarea>
                 </div>
 
-                        <!-- Document Upload -->
+                <!-- Document Upload -->
+
+                <div class="col-12">
+                    <label class="form-label">Attached Documents</label>
+                    <div class="p-2 border rounded bg-light">
+                        @forelse($maintenancerequest->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                            {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted">No documents attached.</span>
+                        @endforelse
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label class="form-label">Upload Relevant Documents</label>
-                    <input type="file" name="Document" class="form-control" multiple>
+                    <input type="file" name="Document[]" class="form-control" multiple>
                 </div>
 
             </div>
@@ -140,9 +164,9 @@
 
 <script>
 const routes = {
-    getBlocks: "{{ route('getblockbyproperty', ['PropertyId' => '__ID__']) }}",
-    getFloors: "{{ route('getfloorbyblock', ['BlockId' => '__ID__']) }}",
-    getUnits: "{{ route('getunitbyfloor', ['FloorId' => '__ID__']) }}"
+    getBlocks: "{{ route('getblockbyproperty.maintenance', ['PropertyId' => '__ID__']) }}",
+    getFloors: "{{ route('getfloorbyblock.maintenance', ['BlockId' => '__ID__']) }}",
+    getUnits: "{{ route('getunitbyfloor.maintenance', ['FloorId' => '__ID__']) }}"
 };
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -226,4 +250,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+@endsection
+
+@section('scripts')
+    @include('snippets.actions.preview-files')
 @endsection

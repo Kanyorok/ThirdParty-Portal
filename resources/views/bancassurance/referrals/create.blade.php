@@ -9,38 +9,40 @@
             <div class="card-body">
                 {{-- Client Info --}}
                 <h6 class="mb-3 text-secondary">Client Information</h6>
+                <hr class="text-muted">
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Client Name <span class="text-danger">*</span></label>
-                        <input type="text" name="ClientName" class="form-control" 
+                        <input type="text" name="ClientName" class="form-control"
                                value="{{ old('ClientName') }}" required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">ID Number <span class="text-danger">*</span></label>
-                        <input type="text" name="ClientIDNumber" class="form-control" 
+                        <input type="text" name="ClientIDNumber" class="form-control"
                                value="{{ old('ClientIDNumber') }}" required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Phone <span class="text-danger">*</span></label>
-                        <input type="text" name="ClientPhone" class="form-control" 
+                        <input type="text" name="ClientPhone" class="form-control"
                                value="{{ old('ClientPhone') }}" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" name="ClientEmail" class="form-control" 
+                        <input type="email" name="ClientEmail" class="form-control"
                                value="{{ old('ClientEmail') }}" required>
                     </div>
                 </div>
 
                 {{-- Insurance Details --}}
                 <h6 class="mb-3 text-secondary">Insurance Details</h6>
+                <hr class="text-muted">
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Preferred Insurer <span class="text-danger">*</span></label>
                         <select id="insurer-select" name="PreferredInsurerId" class="form-select" required>
                             <option value="">-- Select Insurer --</option>
                             @foreach ($insurers as $insurer)
-                                <option value="{{ $insurer->Id }}" 
+                                <option value="{{ $insurer->Id }}"
                                     {{ old('PreferredInsurerId') == $insurer->Id ? 'selected' : '' }}>
                                     {{ $insurer->Name }}
                                 </option>
@@ -57,10 +59,11 @@
 
                 {{-- Referral & Assignment --}}
                 <h6 class="mb-3 text-secondary">Referral & Assignment</h6>
+                <hr class="text-muted">
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <label class="form-label">Referral Date</label>
-                        <input type="date" name="ReferralDate" class="form-control" 
+                        <input type="date" name="ReferralDate" class="form-control"
                                value="{{ old('ReferralDate', now()->toDateString()) }}">
                     </div>
                     <div class="col-md-4">
@@ -68,9 +71,9 @@
                         <select name="ReferredBy" class="form-select">
                             <option value="">-- Select User --</option>
                             @foreach ($users as $user)
-                                <option value="{{ $user->Id }}" 
+                                <option value="{{ $user->Id }}"
                                     {{ old('ReferredBy') == $user->Id ? 'selected' : '' }}>
-                                    {{ $user->Name }} 
+                                    {{ $user->Name }}
                                     {{ $user->employee ? ' - ' . $user->employee->FullName : '' }}
                                 </option>
                             @endforeach
@@ -81,7 +84,7 @@
                         <select name="AssignedTo" class="form-select">
                             <option value="">-- Optional Assignment --</option>
                             @foreach ($users as $user)
-                                <option value="{{ $user->Id }}" 
+                                <option value="{{ $user->Id }}"
                                     {{ old('AssignedTo') == $user->Id ? 'selected' : '' }}>
                                     {{ $user->employee->FirstName ?? $user->Name }}
                                 </option>
@@ -97,7 +100,8 @@
                 </div>
             </div>
             <div class="card-footer text-end">
-                <button type="submit" class="btn btn-primary px-4">
+                <button type="submit" class="btn btn-primary px-4"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
                     <i class="fas fa-paper-plane"></i> Submit Referral
                 </button>
             </div>

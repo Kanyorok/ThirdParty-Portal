@@ -32,17 +32,17 @@ public function store(CommissionRuleRequest $request)
     $validated = $request->validated();
 
         $ProductId = InsuranceProduct::findOrFail($validated['ProductId']);
-        $PolicyTypeId = CodeDetail::findOrFail($validated['PolicyTypeId']);
-        $AppliesTo = CodeDetail::findOrFail($validated['AppliesTo']);
+    $PolicyTypeId = CodeDetail::findOrFail($validated['PolicyTypeId']) ?? null;
+    $AppliesTo = CodeDetail::findOrFail($validated['AppliesTo']) ?? null;
 
         $rule = CommissionRuleService::create(
                 $validated['RuleName'],
                 $ProductId,
-                $PolicyTypeId, 
+                $PolicyTypeId,
                 $validated['CommissionRate'],
                 $validated['FixedAmount'],
                 $AppliesTo,
-                $validated['IsActive'],
+            $validated['IsActive'] ?? '',
                 Auth::user(),
             );
 
@@ -82,7 +82,7 @@ public function edit($id)
                 'CommissionRate' => $validated['CommissionRate'],
                 'FixedAmount' => $validated['FixedAmount'],
                 'AppliesTo' => $validated['AppliesTo'],
-                'IsActive' => $validated['IsActive'],
+                'IsActive' => $validated['IsActive'] ?? '',
                 'ModifiedBy' => Auth::id(),
             ]);
 
@@ -90,7 +90,7 @@ public function edit($id)
             activity()
                 ->performedOn($rule)
                 ->causedBy(Auth::user())
-                ->withProperties(['action' => 'update'])    
+                ->withProperties(['action' => 'update'])
                 ->log('Updated rule');
 
             return redirect()->route('commissions.rules.index')->with('success', 'Rule updated successfully');

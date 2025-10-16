@@ -27,7 +27,6 @@ class PrequalificationEvaluation extends Model
         'CriteriaID',
         'Score',
         'MaxScore',
-        'Remarks',
     ];
 
     protected $casts = [

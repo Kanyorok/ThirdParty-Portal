@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
+use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetLine;
 use App\Models\Budget\BudgetManualEntry;
 use App\Models\Budget\BudgetManualEntryAllocations;
@@ -24,7 +25,7 @@ class BudgetGLLineEntryController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetManualEntry::class);
 
         $entries = BudgetManualEntry::with([
-            'budget:Id,Name',
+            'budget:Id,Name,Status',
             'budgetLine:Id,LineName',])
             ->get();
 
@@ -36,9 +37,14 @@ class BudgetGLLineEntryController extends Controller
     public function create()
     {
 
-        $budgets = Budget::select('Id', 'Name','From','To')->get();
+        $budgets = Budget::select('Id', 'Name', 'From', 'To')->where('Status', 'draft')->get();
         $branches = Branch::select('Id', 'Name')->get();
-        $budgetLines = BudgetLine::select('Id', 'LineName')->get();
+        //Pick budgetlines that have activities only.
+        $checkIds = BudgetActivityMaster::query()
+            ->distinct()
+            ->pluck('BudgetLineID')
+            ->toArray();
+        $budgetLines = BudgetLine::select('Id', 'LineName')->whereNotIn('Id', $checkIds)->get();
 
         return view('budgetandanalytics.budgetworkspace.entrybyglline.create', compact(
             'budgets',
@@ -52,9 +58,9 @@ class BudgetGLLineEntryController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetManualEntry::class);
         $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
-            'BranchID' => 'required|exists:t_Branches,Id',
+            //'BranchID' => 'required|exists:t_Branches,Id',
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
-            'Amount' => 'required|numeric|min:0',
+            //'Amount' => 'required|numeric|min:0',
             'monthly_allocations' => 'required|array',
             'monthly_allocations.*' => 'nullable|numeric|min:0',
         ]);
@@ -62,19 +68,20 @@ class BudgetGLLineEntryController extends Controller
         DB::beginTransaction();
         try {
             $userId = Auth::id();
-
+            $branchId = session('LoginBranchId');
             $entry = BudgetManualEntry::create([
                 'BudgetID' => $request->BudgetID,
-                'BranchID' => $request->BranchID,
+                'BranchID' => $branchId,
                 'BudgetLineID' => $request->BudgetLineID,
-                'Amount' => $request->Amount,
+                'Amount' => 0,//$request->Amount, //set to zero as this column will be updated below with allocation summations
                 'Comments' => $request->Comments,
                 'CreatedBy' => $userId,
                 'CreatedOn' => now(),
                 'ModifiedBy' => $userId,
                 'ModifiedOn' => now(),
             ]);
-
+            // Increment allocation counter and save them cumulatively
+            $alloc = 0;
             foreach ($request->monthly_allocations as $month => $allocation) {
                 BudgetManualEntryAllocations::create([
                     'EntryID' => $entry->Id,
@@ -86,7 +93,10 @@ class BudgetGLLineEntryController extends Controller
                     'ModifiedBy' => $userId,
                     'ModifiedOn' => now(),
                 ]);
+                $alloc += $allocation;
             }
+            //Update the Amount in the entry table
+            BudgetManualEntry::where('Id', $entry->Id)->update(['Amount' => $alloc]);
 
             DB::commit();
             activity()
@@ -178,9 +188,9 @@ class BudgetGLLineEntryController extends Controller
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetManualEntry::class);
 
         $request->validate([
-            'BranchID' => 'required|exists:t_Branches,Id',
+            //'BranchID' => 'required|exists:t_Branches,Id',
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
-            'Amount' => 'required|numeric|min:0',
+            //'Amount' => 'required|numeric|min:0',
             'monthly_allocations' => 'required|array',
             'monthly_allocations.*' => 'nullable|numeric|min:0',
         ]);
@@ -189,18 +199,19 @@ class BudgetGLLineEntryController extends Controller
         try {
             $entry = BudgetManualEntry::with('allocations')->findOrFail($id);
             $userId = Auth::id();
-
+            $branchId = session('LoginBranchId');
             $entry->update([
                 // 'BudgetID' => $entry->BudgetID, // BudgetID should not be changed
-                'BranchID' => $request->BranchID,
+                'BranchID' => $branchId,
                 'BudgetLineID' => $request->BudgetLineID,
-                'Amount' => $request->Amount,
+                'Amount' => 0,//$request->Amount, //set to zero since the totals will be summed up an stored
                 'Comments' => $request->Comments,
                 'ModifiedBy' => $userId,
                 'ModifiedOn' => now(),
             ]);
 
             // Update allocations
+            $alloc = 0;
             $entry->allocations()->delete();
             foreach ($request->monthly_allocations as $month => $allocation) {
                 BudgetManualEntryAllocations::create([
@@ -213,7 +224,10 @@ class BudgetGLLineEntryController extends Controller
                     'ModifiedBy' => $userId,
                     'ModifiedOn' => now(),
                 ]);
+                $alloc += $allocation;
             }
+
+            BudgetManualEntry::where('Id', $entry->Id)->update(['Amount' => $alloc]);
 
             DB::commit();
             activity()

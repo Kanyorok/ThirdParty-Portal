@@ -10,6 +10,7 @@
         <h4>Insurance Claims Register</h4>
         <a href="{{ route('bancassurance.claims.create') }}" class="btn btn-primary">Initiate New Claim</a>
     </div>
+    <p><small>This is a list of all initiated claims</small></p>
 
     <table class="table table-bordered table-striped" id="claim">
         <thead class="table-light">
@@ -18,24 +19,24 @@
                 <th>Policy No.</th>
                 <th>Claim Type</th>
                 <th>Claim Reason</th>
-                <th>Amount (KES)</th>
+                <th>Amount</th>
                 <th>Date</th>
                 <th>Status</th>
-                <th>Actions</th> {{-- Added column --}}
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
             @forelse ($claims as $claim)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $claim->policy->PolicyNumber }}</td>
-                <td>{{ $claim->claimtype->Description }}</td>
-                <td>{{ $claim->ClaimReason }}</td>
+                <td>{{ $claim->policy->PolicyNumber ?? '-'}}</td>
+                <td>{{ $claim->claimtype->Description ?? '-'}}</td>
+                <td>{{ $claim->ClaimReason ?? '-'}}</td>
                 <td>{{ number_format($claim->ClaimAmount, 2) }}</td>
                 <td>{{ \Carbon\Carbon::parse($claim->ClaimDate)->format('d/m/Y') }}</td>
                 <td>
                     <span class="#">
-                        {{ $claim->status->Description}}
+                        {{ $claim->status->Description ?? '-'}}
                     </span>
                 </td>
                 <td><a href="{{ route('bancassurance.claims.assessForm', $claim->Id) }}" class="btn btn-sm btn-outline-info">Assess</a></td>

@@ -35,9 +35,12 @@
                         'Email' => $party->Email,
                         'Phone' => $party->Phone,
                         'Website' => $party->Website,
+                        'Primary Contact' => $primaryUser?->FullName,
+                        'Primary Email' => $primaryUser?->Email,
                         'Approval Status' => $party->ApprovalStatus?->label(),
                         'Operational Status' => $party->Status?->value,
-                        'Third Party Type' => $party->ThirdPartyType?->label(),
+                        // New multi-type display: join Codes; fallback to legacy enum label
+                        'Third Party Types' => ($party->types && $party->types->count()) ? $party->types->pluck('Code')->filter()->unique()->join(', ') : $party->ThirdPartyType?->label(),
                         'Is Prequalified' => $party->IsPrequalified,
                         'Created On' => $party->CreatedOn?->format('Y-m-d H:i:s'),
                         'Modified On' => $party->ModifiedOn?->format('Y-m-d H:i:s'),

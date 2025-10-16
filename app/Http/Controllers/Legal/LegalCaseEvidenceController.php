@@ -38,7 +38,7 @@ class LegalCaseEvidenceController extends Controller
 
         $validated = $request->validate([
             'EvidenceTitle' => 'required|string',
-            'Description' => 'nullable|string',
+            'Description' => 'required|string',
             'DMSDocumentID' =>  'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
             'ExternalLink' => 'nullable|url'
         ],[
@@ -134,7 +134,7 @@ class LegalCaseEvidenceController extends Controller
 
             $validated = $request->validate([
                 'EvidenceTitle' => 'required|string',
-                'Description' => 'nullable|string',
+                'Description' => 'required|string',
                 'DMSDocumentID' => 'nullable|string',
                 'ExternalLink' => 'nullable|url',
                 'IsActive' => 'string'

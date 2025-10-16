@@ -447,7 +447,8 @@
                 </div>
                 @endif
 
-                <form action="{{ route('thirdparty.parties.update', ['party' => $party->Id]) }}" method="POST">
+                    <form action="{{ route('thirdparty.parties.update', ['party' => $party->Id]) }}" method="POST"
+                          id="thirdPartyEditForm">
                     @csrf
                     @method('PATCH')
 
@@ -533,6 +534,29 @@
                             </div>
                         </div>
                     </div>
+
+                        <div class="section">
+                            <h3 class="section-title">
+                                <i class="fas fa-user"></i>
+                                Primary Contact
+                            </h3>
+                            <div class="form-grid cols-2">
+                                <div class="form-field">
+                                    <label class="form-label">Primary Contact</label>
+                                    <div class="form-control"
+                                         style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
+                                        {{ $primaryUser?->FullName ?: 'N/A' }}
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Primary Email</label>
+                                    <div class="form-control"
+                                         style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
+                                        {{ $primaryUser?->Email ?: 'N/A' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                     <div class="section">
                         <h3 class="section-title">
@@ -667,27 +691,11 @@
                         </h3>
                         <div class="form-grid cols-3">
                             <div class="form-field">
-                                <label for="ThirdPartyType" class="form-label">
-                                    Third Party Type <span class="required">*</span>
-                                </label>
-                                <select class="form-control @error('ThirdPartyType') error @enderror"
-                                    id="ThirdPartyType"
-                                    name="ThirdPartyType"
-                                    required
-                                    aria-describedby="ThirdPartyType-error">
-                                    <option value="">Select Third Party Type</option>
-                                    @foreach (\App\Enums\ThirdPartyTypeEnum::cases() as $type)
-                                    <option value="{{ $type->value }}" @selected(old('ThirdPartyType', $party->ThirdPartyType?->value) === $type->value)>
-                                        {{ $type->label() }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                                @error('ThirdPartyType')
-                                <div class="form-error" id="ThirdPartyType-error">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ $message }}
+                                <label class="form-label">Third Party Types</label>
+                                <div class="form-control" style="background:#f8f9fa;cursor:not-allowed;opacity:.85;">
+                                    @php $typeCodes = $party->types->pluck('Code')->filter()->unique(); @endphp
+                                    {{ $typeCodes->isNotEmpty() ? $typeCodes->join(', ') : 'N/A' }}
                                 </div>
-                                @enderror
                             </div>
 
                             <div class="form-field">
@@ -738,24 +746,6 @@
                                 @enderror
                             </div>
 
-                            <div class="form-field">
-                                <div class="form-checkbox">
-                                    <input id="IsPrequalified"
-                                        name="IsPrequalified"
-                                        type="checkbox"
-                                        value="1"
-                                        @checked(old('IsPrequalified', $party->IsPrequalified))
-                                    class="@error('IsPrequalified') error @enderror"
-                                    aria-describedby="IsPrequalified-error">
-                                    <label for="IsPrequalified">Is Prequalified</label>
-                                </div>
-                                @error('IsPrequalified')
-                                <div class="form-error" id="IsPrequalified-error">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    {{ $message }}
-                                </div>
-                                @enderror
-                            </div>
                         </div>
                     </div>
 
@@ -772,4 +762,50 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+    <script>
+        $(document).ready(function () {
+            // Debug form submission
+            $('#thirdPartyEditForm').on('submit', function (e) {
+                console.log('Form submission started');
+                console.log('ApprovalStatus value:', $('#ApprovalStatus').val());
+                console.log('Status value:', $('#Status').val());
+                console.log('Form data:', $(this).serialize());
+
+                // Check if required fields are filled
+                const approvalStatus = $('#ApprovalStatus').val();
+                const status = $('#Status').val();
+
+                if (!approvalStatus) {
+                    console.error('ApprovalStatus is empty');
+                    alert('Please select an Approval Status');
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (!status) {
+                    console.error('Status is empty');
+                    alert('Please select a Status');
+                    e.preventDefault();
+                    return false;
+                }
+
+                console.log('Form validation passed, submitting...');
+            });
+
+            // Debug dropdown changes
+            $('#ApprovalStatus, #Status').on('change', function () {
+                console.log('Dropdown changed:', $(this).attr('id'), 'Value:', $(this).val());
+            });
+
+            // Debug initial values
+            console.log('Initial ApprovalStatus:', $('#ApprovalStatus').val());
+            console.log('Initial Status:', $('#Status').val());
+            console.log('Current party ID:', '{{ $party->Id }}');
+            console.log('Current ApprovalStatus enum value:', '{{ $party->ApprovalStatus?->value }}');
+            console.log('Current Status enum value:', '{{ $party->Status?->value }}');
+        });
+    </script>
 @endsection

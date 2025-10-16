@@ -6,19 +6,19 @@
 @section('content')
   <div class="container mt-4">
     <a href="{{ route('rentreceipt.create') }}" class="btn btn-primary mb-3">New Reciept</a>
-    <h4 class="fw-bold mb-3">Tenant Payments</h4>
 
+    <p><small>This is a list of tenant payments/receipts</small></p>
     @if ($receipts->count())
       <table class="table table-bordered table-striped align-middle" id='Rentreceipt'>
         <thead class="table-light">
           <tr>
             <th>#</th>
             <th>Invoice</th>
-            <th>TenantID</th>
+            <th>Tenant</th>
             <th>Billing Month</th>
             <th>Payment Date</th>
             <th>Total Due</th>
-            <th>Amount Paid Now</th>
+            <th>Current Pay</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -27,21 +27,19 @@
             <tr>
               <td>{{ $loop->iteration ?? '_' }}</td>
               <td>{{ $receipt->invoice->InvoiceNumber ?? '_' }}</td>
-              <th>{{ $receipt->invoice->lease->tenant->TenantName ?? '_' }}</td>
+              <th>{{ $receipt->invoice->lease->tenant->thirdParty->ThirdPartyName ?? '_' }}</td>
               <td>{{ $receipt->BillingMonth ?? '_' }}</td>
               <td>{{ $receipt->PaymentDate ? \Carbon\Carbon::parse($receipt->PaymentDate)->format('d/m/Y') : '-' }}</td>
               <td>{{ $receipt->Balance ?? '_' }}</td>
               <td>{{ $receipt->AmountPaidNow ?? '_' }}</td>
               <td>
-                <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}" class="btn btn-sm btn-outline-secondary">Print
-                  Receipt</a>
+                <a href="{{ route('rentreceipt.pdf', $receipt->Id) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Print Receipt</a>
                 <a href="{{ route('rentreceipt.show', $receipt->Id) }}" class="btn btn-sm btn-info">View</a>
-                <a href="{{ route('rentreceipt.edit', $receipt->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                 <form action="{{ route('rentreceipt.destroy', $receipt->Id) }}" method="POST" class="d-inline">
                   @csrf
                   @method('DELETE')
                   <button type="submit" class="btn btn-sm btn-danger"
-                    onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete
+                    onclick="return confirm('Are you sure you want to delete this lease schedule?');">Return 
                   </button>
                 </form>
               </td>

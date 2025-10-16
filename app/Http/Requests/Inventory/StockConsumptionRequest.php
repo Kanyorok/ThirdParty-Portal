@@ -36,11 +36,11 @@ public function rules(): array
     }
 
     return [
-        'ItemID' => ['required', 'integer', 'exists:t_Items,Id'],
+        'ItemID' => ['required', 'integer', 'exists:t_StockItems,Id'],
         'UOM' => ['required', 'integer', 'exists:t_UOM,Id'],
         'Quantity' => ['required', 'numeric', 'min:0'],
         'SKUID' => ['nullable', 'integer', 'exists:t_StockItems,Id'],
-        'StoreID' => ['required', 'integer', 'exists:t_Stores,Id'], 
+        'StoreID' => ['nullable', 'integer', 'exists:t_Stores,Id'], 
         'BranchID' => ['required', 'integer', 'exists:t_Branches,Id'],
         'IssuedToType' => ['required', 'integer', 'exists:t_CodeDetails,ID'],
         'IssuedToID' => $issuedToIDRules, 

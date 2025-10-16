@@ -1,5 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Add License – Contracted Driver')
+
+@section('content')
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -9,7 +11,6 @@
             </ul>
         </div>
     @endif
-@section('content')
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">➕ Add License – {{ $driver->FullName }}</h4>
 

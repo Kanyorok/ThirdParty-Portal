@@ -22,16 +22,11 @@ class PropertyNewTenantRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'ThirdPartyId' => 'required|exists:t_ThirdParties,Id',
             'TenantType' => 'required|exists:t_CodeDetails,ID',
-            'TenantName' => 'required|string|max:100',
-            'IDRegistrationNo' => 'required|string|max:50',
-            'PhoneNumber' => 'required|string|max:50',
-            'EmailAddress' => 'required|string|max:100',
-            'Nationality' => 'required|string|max:50',
-            'PostalAddress' => 'required|string|max:50',
             'Remarks' => 'nullable|string|max:255',
             'IsActive' => 'boolean',
-            'Document' => 'nullable|file|max:2048',
+            'Document' => 'nullable|file|max:9048',
         ];
     }
 }

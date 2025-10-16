@@ -17,6 +17,13 @@
 </style>
 <div class="container mt-4">
     <h4 class="mb-4">Tender Initiation Form</h4>
+    <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
+        <i class="fa fa-info-circle me-2"></i>
+        <span
+            title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.">
+            <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
+        </span>
+    </div>
     <form action="{{ route('initiatetender.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('POST')
@@ -121,7 +128,7 @@
                     <div class="col-md-9">
                         <label class="form-label fw-bold">Select Procurement Plan Item:</label>
                         <select class="form-select" id="planItemSelect">
-                            <option selected disabled>-- Select Item --</option>
+                            <option selected disabled>-- Select Item (Tender-method, not already used) --</option>
                         </select>
                     </div>
                     <div class="col-md-3 d-flex align-items-end">
@@ -138,6 +145,7 @@
                         <thead>
                             <tr>
                                 <th>Item</th>
+                                <th>Need ID</th>
                                 <th>Planned Qty</th>
                                 <th>Qty to Tender</th>
                                 <th>Specs</th>
@@ -230,13 +238,39 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const open = document.getElementById('openTender');
+    document.addEventListener('DOMContentLoaded', function () {
+        const openTender = document.getElementById('openTender');
         const restricted = document.getElementById('restrictedTender');
         const section = document.getElementById('restrictedSuppliersSection');
 
-        open.addEventListener('change', () => section.style.display = 'none');
-        restricted.addEventListener('change', () => section.style.display = 'block');
+        openTender.addEventListener('change', () => {
+            section.style.display = 'none';
+            suppliersList.innerHTML = '';
+        });
+        restricted.addEventListener('change', () => {
+            section.style.display = 'block';
+            const catId = document.getElementById('itemCategory').value;
+            if (catId) {
+                try {
+                    populateSuppliers(catId);
+                } catch (e) {
+                    console.warn('Populate suppliers failed', e);
+                }
+            }
+        });
+
+        // Initial state: if Restricted is pre-selected, show section and populate by current category
+        if (restricted.checked) {
+            section.style.display = 'block';
+            const catId = document.getElementById('itemCategory').value;
+            if (catId) {
+                try {
+                    populateSuppliers(catId);
+                } catch (e) {
+                    console.warn('Populate suppliers failed', e);
+                }
+            }
+        }
 
         updateManualItemSelects();
     });
@@ -309,8 +343,10 @@
         if (procurementPlans[planId]) {
             procurementPlans[planId].forEach(item => {
                 const opt = document.createElement('option');
-                opt.value = item.itemId;
-                opt.textContent = `${item.name} (${item.plannedQty})`;
+                opt.value = item.planLineItemId;
+                opt.textContent = `${item.name} — Need ${item.needId || '—'} (Planned: ${item.plannedQty})`;
+                opt.dataset.itemId = item.itemId;
+                opt.dataset.needId = item.needId || '';
                 select.appendChild(opt);
             });
         }
@@ -319,15 +355,15 @@
     function addPlanItemToGrid() {
         const planId = document.getElementById('selectedProcurementPlan').value;
         const select = document.getElementById('planItemSelect');
-        const itemId = select.value;
+        const planLineItemId = select.value; // now holds LineItemID
         const tbody = document.querySelector('#planItemsGrid tbody');
 
-        if (!planId || !itemId) {
+        if (!planId || !planLineItemId) {
             alert('Please select both a plan and an item.');
             return;
         }
 
-        const uniqueKey = `${planId}-${itemId}`;
+        const uniqueKey = `${planId}-${planLineItemId}`;
 
         if (addedPlanItems.has(uniqueKey)) {
             alert('Item already added for this plan.');
@@ -335,7 +371,7 @@
         }
 
         const itemList = planItemData[planId] || [];
-        const item = itemList.find(obj => String(obj.itemId) === String(itemId));
+        const item = itemList.find(obj => String(obj.planLineItemId) === String(planLineItemId));
 
         if (!item) {
             alert('Item not found in plan data.');
@@ -345,9 +381,10 @@
         const row = `
         <tr data-id="${uniqueKey}">
             <td>${item.name}</td>
+            <td>${item.needId || '—'}</td>
             <td>${item.plannedQty}</td>
             <td>
-                <input type="hidden" name="plan_items[${uniqueKey}][item_id]" value="${itemId}">
+                <input type="hidden" name="plan_items[${uniqueKey}][item_id]" value="${item.itemId}">
                 <input type="number" class="form-control" name="plan_items[${uniqueKey}][qty]" value="${item.plannedQty}" min="1" max="${item.plannedQty}" required>
             </td>
             <td>
@@ -384,9 +421,14 @@
 
     function populateSuppliers(categoryId = null) {
         suppliersList.innerHTML = '';
-        const filteredSuppliers = categoryId ?
-            suppliers.filter(supplier => String(supplier.CategoryId) === String(categoryId)) :
-            suppliers;
+        let filteredSuppliers = suppliers;
+        if (categoryId) {
+            const catNum = parseInt(categoryId);
+            filteredSuppliers = suppliers.filter(supplier => {
+                const arr = Array.isArray(supplier.ItemCategoryIds) ? supplier.ItemCategoryIds : [];
+                return arr.map(Number).includes(catNum);
+            });
+        }
 
         if (filteredSuppliers.length === 0) {
             const option = document.createElement('option');
@@ -399,21 +441,12 @@
         filteredSuppliers.forEach(supplier => {
             const option = document.createElement('option');
             option.value = supplier.Id;
-            option.textContent = supplier.ThirdPartyName;
+            option.textContent = supplier.ThirdPartyName || supplier.SupplierName || `Supplier #${supplier.Id}`;
             suppliersList.appendChild(option);
         });
     }
 
-    openTender.addEventListener('change', () => {
-        suppliersSection.style.display = 'none';
-        suppliersList.innerHTML = '';
-        itemCategory.value = '';
-    });
-
-    restrictedTender.addEventListener('change', () => {
-        suppliersSection.style.display = 'block';
-        populateSuppliers(itemCategory.value || null);
-    });
+    // Remove duplicate event handlers - already handled in first script block
 
     itemCategory.addEventListener('change', () => {
         if (restrictedTender.checked) {

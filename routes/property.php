@@ -54,6 +54,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::post('propertyregistry', [PropertyRegistryController::class, 'store'])->name('propertyregistry.store');
     Route::get('propertyregistry/show/{id}', [PropertyRegistryController::class, 'show'])->name('PropertyRegistry.show');
     Route::get('/propertyregistry/types/{categoryId}', [PropertyRegistryController::class, 'getTypesByCategory'])->name('gettypes');
+    Route::get('/propertyregistry/localities/{country}', [PropertyRegistryController::class, 'getLocalityByCountry'])->name('getlocalities');
     Route::delete('propertyregistry/delete/{Id}', [PropertyRegistryController::class, 'destroy'])->name('PropertyRegistry.destroy');
     Route::get('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'edit'])->name('PropertyRegistry.edit');
     Route::put('propertyregistry/edit/{Id}', [PropertyRegistryController::class, 'update'])->name('PropertyRegistry.update');
@@ -86,8 +87,7 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddfloor', [PropertyFloorController::class, 'index'])->name('addfloor.index');
     Route::get('propertyaddfloor/create', [PropertyFloorController::class, 'create'])->name('addfloor.create');
     Route::post('propertyaddfloor', [PropertyFloorController::class, 'store'])->name('addfloor.store');
-    Route::get('propertyaddfloor/show/', [PropertyFloorController::class, 'show'])->name('addfloor.show');
-    Route::get('/propertyaddfloor/{BlockId}', [PropertyFloorController::class, 'getBlockByProperty'])->name('getblockbyproperty');
+    Route::get('/propertyaddfloor/{PropertyId}', [PropertyFloorController::class, 'getBlocksForFloor'])->name('getblocksforfloor');
     Route::delete('propertyaddfloor/delete/{Id}', [PropertyFloorController::class, 'destroy'])->name('addfloor.destroy');
     Route::get('propertyaddfloor/edit/{Id}', [PropertyFloorController::class, 'edit'])->name('addfloor.edit');
     Route::put('propertyaddfloor/edit/{Id}', [PropertyFloorController::class, 'update'])->name('addfloor.update');
@@ -98,8 +98,8 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddunit/create', [PropertyUnitController::class, 'create'])->name('addunit.create');
     Route::post('propertyaddunit', [PropertyUnitController::class, 'store'])->name('addunit.store');
     Route::get('propertyaddunit/show', [PropertyUnitController::class, 'show'])->name('addunit.show');
-    Route::get('/propertyaddunit/blocks/{PropertyId}', [PropertyUnitController::class, 'getBlockByProperty'])->name('getblockbyproperty');
-    Route::get('/propertyaddunit/floors/{BlockId}', [PropertyUnitController::class, 'getFloorByBlock'])->name('getfloorbyblock');
+    Route::get('/propertyaddunit/blocks/{PropertyId}', [PropertyUnitController::class, 'getBlockByProperty'])->name('getblockbyproperty.unit');
+    Route::get('/propertyaddunit/floors/{BlockId}', [PropertyUnitController::class, 'getFloorByBlock'])->name('getfloorbyblock.unit');
     Route::delete('propertyaddunit/delete/{Id}', [PropertyUnitController::class, 'destroy'])->name('addunit.destroy');
     Route::get('propertyaddunit/edit/{Id}', [PropertyUnitController::class, 'edit'])->name('addunit.edit');
     Route::put('propertyaddunit/edit/{Id}', [PropertyUnitController::class, 'update'])->name('addunit.update');
@@ -132,9 +132,9 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('propertyaddlease/edit/{Id}', [PropertyNewLeaseController::class, 'edit'])->name('addlease.edit');
     Route::put('propertyaddlease/edit/{Id}', [PropertyNewLeaseController::class, 'update'])->name('addlease.update');
     Route::delete('propertyaddlease/delete/{Id}', [PropertyNewLeaseController::class, 'destroy'])->name('addlease.destroy');
-    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty');
-    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock');
-    Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor');
+    Route::get('/propertyaddlease/blocks/{PropertyId}', [PropertyNewLeaseController::class, 'getBlockByProperty'])->name('getblockbyproperty.lease');
+    Route::get('/propertyaddlease/floors/{BlockId}', [PropertyNewLeaseController::class, 'getFloorByBlock'])->name('getfloorbyblock.lease');
+    Route::get('/propertyaddlease/Units/{FloorId}', [PropertyNewLeaseController::class, 'getUnitByFloor'])->name('getunitbyfloor.lease');
 
 
     //Route::resource('terminatelease', PropertyLeaseTerminationController::class);
@@ -163,8 +163,8 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('renewlease', [PropertyLeaseRenewalController::class, 'index'])->name('renewlease.index');
     Route::get('renewlease/create', [PropertyLeaseRenewalController::class, 'create'])->name('renewlease.create');
     Route::post('renewlease', [PropertyLeaseRenewalController::class, 'store'])->name('renewlease.store');
-    Route::get('renewlease/property/{Id}', [PropertyLeaseRenewalController::class, 'getPropertyByTenant'])->name('getpropertybytenant');
-    Route::get('renewlease/lease/{Id}', [PropertyLeaseRenewalController::class, 'getLeaseByProperty'])->name('getleasebyproperty');
+    Route::get('renewlease/property/{Id}', [PropertyLeaseRenewalController::class, 'getPropertyByTenant'])->name('getpropertybytenant.renew');
+    Route::get('renewlease/lease/{Id}', [PropertyLeaseRenewalController::class, 'getLeaseByProperty'])->name('getleasebyproperty.renew');
     Route::get('renewlease/show/{id}', [PropertyLeaseRenewalController::class, 'show'])->name('renewlease.show');
     Route::get('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'edit'])->name('renewlease.edit');
     Route::put('renewlease/edit/{Id}', [PropertyLeaseRenewalController::class, 'update'])->name('renewlease.update');
@@ -185,8 +185,6 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('rentreceipt/create', [PropertyReceiptController::class, 'create'])->name('rentreceipt.create');
     Route::post('rentreceipt', [PropertyReceiptController::class, 'store'])->name('rentreceipt.store');
     Route::get('rentreceipt/show/{Id}', [PropertyReceiptController::class, 'show'])->name('rentreceipt.show');
-    Route::get('rentreceipt/edit/{Id}', [PropertyReceiptController::class, 'edit'])->name('rentreceipt.edit');
-    Route::put('rentreceipt/edit/{Id}', [PropertyReceiptController::class, 'update'])->name('rentreceipt.update');
     Route::delete('rentreceipt/delete/{Id}', [PropertyReceiptController::class, 'destroy'])->name('rentreceipt.destroy');
     Route::get('/rentreceipt/print/{Id}', [PropertyReceiptController::class, 'print'])->name('rentreceipt.pdf');
 
@@ -202,6 +200,9 @@ Route::namespace('Property')->prefix('property')->group(function () {
     Route::get('maintenancerequest', [PropertyMaintenanceRequestController::class, 'index'])->name('maintenancerequest.index');
     Route::get('maintenancerequest/create', [PropertyMaintenanceRequestController::class, 'create'])->name('maintenancerequest.create');
     Route::post('maintenancerequest', [PropertyMaintenanceRequestController::class, 'store'])->name('maintenancerequest.store');
+    Route::get('/propertyaddmaintenance/blocks/{PropertyId}', [PropertyMaintenanceRequestController::class, 'getBlockByProperty'])->name('getblockbyproperty.maintenance');
+    Route::get('/propertyaddmaintenance/floors/{BlockId}', [PropertyMaintenanceRequestController::class, 'getFloorByBlock'])->name('getfloorbyblock.maintenance');
+    Route::get('/propertyaddmaintenance/Units/{FloorId}', [PropertyMaintenanceRequestController::class, 'getUnitByFloor'])->name('getunitbyfloor.maintenance');
     Route::get('maintenancerequest/show/{Id}', [PropertyMaintenanceRequestController::class, 'show'])->name('maintenancerequest.show');
     Route::get('maintenancerequest/edit/{Id}', [PropertyMaintenanceRequestController::class, 'edit'])->name('maintenancerequest.edit');
     Route::put('maintenancerequest/edit/{Id}', [PropertyMaintenanceRequestController::class, 'update'])->name('maintenancerequest.update');

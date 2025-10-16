@@ -12,7 +12,6 @@
         </div>
     @endif
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">📝 Physical Stock Take</h4>
 
     <form action="{{ route('stocktake.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
@@ -24,7 +23,7 @@
                 <select name="BranchId" id="branch-select" class="form-select" required>
                     <option value="">-- Select Branch --</option>
                     @foreach ($branches as $branch)
-                        <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                        <option value="{{ $branch->Id }}">{{ $branch->Name ?? '-'}}</option>
                     @endforeach
                 </select>
             </div>
@@ -41,7 +40,7 @@
                 <select name="CountedBy" class="form-select select2" required>
                     <option value="">-- Select User --</option>
                     @foreach ($users as $user)
-                        <option value="{{ $user->Id }}">{{ $user->Name }}</option>
+                        <option value="{{ $user->Id }}">{{ $user->Name ?? '-'}}</option>
                     @endforeach
                 </select>
             </div>
@@ -73,7 +72,7 @@
         </div>
 
         <div class="text-end">
-            <button class="btn btn-success mt-3">✅ Submit Stock Count</button>
+            <button class="btn btn-success mt-3">Submit Stock Count</button>
         </div>
     </form>
 </div>
@@ -105,7 +104,7 @@
                             <td>${index + 1}</td>
                             <td>${stock.item?.ItemCode ?? 'N/A'}</td>
                             <td>${stock.item?.ItemName ?? 'N/A'}</td>
-                            <td class="system-qty">${stock.CurrentQty}</td>
+                            <td class="system-qty">${stock.CurrentQty ?? '-'}</td>
 
                             <input type="hidden" name="lines[${index}][ItemId]" value="${stock.Id}">
                             <input type="hidden" name="lines[${index}][ActualQuantity]" value="${stock.CurrentQty}">

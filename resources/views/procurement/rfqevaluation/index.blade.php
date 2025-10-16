@@ -4,12 +4,12 @@
 
 @section('content')
   <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>Supplier Evaluations</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">RFQ Evaluations</h2>
       <a href="{{ route('evaluations.create') }}" class="btn btn-success">+ Create Evaluation</a>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive mt-3">
       <table class="table table-bordered table-striped">
         <thead class="table-light">
           <tr>
@@ -26,11 +26,29 @@
         </thead>
         <tbody>
           @php
-            $groupedByRFQ = collect($evaluationsRanked)->groupBy('rfq.RFQNumber');
+            // Group evaluations by RFQ number, then sort groups so the RFQs with the latest responses appear first.
+            $groupedByRFQ = collect($evaluationsRanked)
+              ->groupBy('rfq.RFQNumber')
+              ->sortByDesc(function($group) {
+                // determine latest response/evaluation id in the group (best-effort fallbacks)
+                return $group->max(function($item) {
+                  return $item['response']->Id ?? $item['response']->id ?? $item['evaluation']->Id ?? $item['evaluation']->id ?? 0;
+                });
+              });
           @endphp
           @forelse ($groupedByRFQ as $rfqNumber => $group)
-            <tr class="table-primary fw-bold">
-              <td colspan="9">RFQ Number: {{ $rfqNumber }}</td>
+            <tr class="table-primary fw-bold"></tr>
+              <td colspan="9">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>RFQ Number: {{ $rfqNumber }}</span>
+                  @php $rfqIdForGroup = optional($group->first()['rfq'] ?? null)->Id ?? ($group->first()['rfq']->id ?? null); @endphp
+                  @if($rfqIdForGroup)
+                    <a href="{{ route('evaluations.consolidated', ['rfq' => $rfqIdForGroup]) }}" class="btn btn-sm btn-outline-primary">
+                      Consolidated Scores
+                    </a>
+                  @endif
+                </div>
+              </td>
             </tr>
 
             @php
@@ -52,7 +70,7 @@
                 <td>{{ $Index + 1 }}</td>
                 <td>{{ $evaluation->CommitteeMemberName }}</td>
                 <td>{{ $rfqNumber }}</td>
-                <td>{{ $supplier->SupplierName ?? 'N/A' }}</td>
+                <td>{{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}</td>
                 <td>{{ number_format($response->TotalPayable ?? 0, 2) }}</td>
                 <td>{{ $response->DurationDays ?? '-' }} Days</td>
                 <td>{{ $weightedTotal }}%</td>
@@ -87,7 +105,7 @@
             ->where('SupplierId', $supplierId)
             ->where('RFQId', $evaluation->RFQId)
             ->first();
-        $groupedBySection = $evalGroup->groupBy(fn($e) => $e->rfqCriteria?->section?->SectionName ?? 'Uncategorized');
+        $groupedBySection = $evalGroup->groupBy(fn($e) => $e->rfqCriteriaUnscoped?->section?->SectionName ?? 'Uncategorized');
       @endphp
       <!-- View Modal -->
       <div class="modal fade" id="viewModal-{{ $evaluation->Id }}-{{ $supplierId }}" tabindex="-1"
@@ -121,7 +139,7 @@
                 <hr>
               <div class="card mb-4">
                 <div class="card-header bg-light fw-bold">
-                  Supplier: {{ $supplier->SupplierName ?? 'N/A' }}
+                  Supplier: {{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}
                 </div>
                 <div class="card-body">
                   <p><strong>Total Quoted:</strong> KES {{ number_format($response->TotalPayable ?? 0, 2) }}</p>
@@ -171,7 +189,8 @@
                         @php
                           $firstEntry = $criteriaList->first();
                           $sectionName = $firstEntry->rfqCriteriaUnscoped?->section?->SectionName ?? 'Uncategorized';
-                          $sectionWeight = $firstEntry->rfqCriteriaUnscoped?->weightedSection?->Weight ?? 0;
+                          $sectionId = $firstEntry->rfqCriteriaUnscoped?->SectionID ?? null;
+                          $sectionWeight = $sectionId ? ($rfqSectionWeights[$evaluation->RFQId][$sectionId] ?? 0) : 0;
                           $sectionTotal = 0;
                           $maxScorePerCriteria = 10;
                           $totalMaxSectionScore = $maxScorePerCriteria * $criteriaList->count();
@@ -189,7 +208,7 @@
                           @endphp
                           <tr>
                             <td></td>
-                            <td>{{ $entry->criteria->CriteriaName ?? 'N/A' }}</td>
+                            <td>{{ $entry->rfqCriteriaUnscoped?->criteria?->CriteriaName ?? 'N/A' }}</td>
                             <td>{{ $maxScorePerCriteria }}</td>
                             <td>{{ $entry->Score }}</td>
                             <td>{{ $entry->Comments ?? '-' }}</td>

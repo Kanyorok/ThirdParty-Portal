@@ -4,40 +4,49 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class CommissionTierController extends Controller
 {
-    //
     public function index($ruleId)
     {
-        $tiers = DB::table('t_BancassuranceCommissionTiers')
-            ->where('RuleID', $ruleId)
-            ->orderBy('MinValue')
+        // Return tiers for a specific commission rule
+        $tiers = DB::table('t_CommissionTiers')
+            ->where('CommissionRuleID', $ruleId)
+            ->orderBy('MinAmount')
             ->get();
 
-        return view('bancassurance.commissions.tiers.index', compact('tiers', 'ruleId'));
+        return response()->json($tiers);
     }
 
     public function store(Request $request, $ruleId)
     {
-        $request->validate([
-            'MinValue' => 'required|numeric|min:0',
-            'MaxValue' => 'nullable|numeric|gt:MinValue',
+        $validated = $request->validate([
+            'MinAmount' => 'required|numeric|min:0',
+            'MaxAmount' => 'nullable|numeric|min:0',
             'CommissionRate' => 'required|numeric|min:0|max:100',
+            'Description' => 'nullable|string',
         ]);
 
-        DB::table('t_BancassuranceCommissionTiers')->insert([
-            'RuleID' => $ruleId,
-            'MinValue' => $request->MinValue,
-            'MaxValue' => $request->MaxValue,
-            'CommissionRate' => $request->CommissionRate,
-            'CreatedAt' => now(),
-        ]);
+        try {
+            DB::table('t_CommissionTiers')->insert([
+                'CommissionRuleID' => $ruleId,
+                'MinAmount' => $validated['MinAmount'],
+                'MaxAmount' => $validated['MaxAmount'] ?? null,
+                'CommissionRate' => $validated['CommissionRate'],
+                'Description' => $validated['Description'] ?? null,
+                'CreatedBy' => Auth::id() ?? 1,
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id() ?? 1,
+                'ModifiedOn' => now(),
+            ]);
 
-        return redirect()->route('bancassurance.commissions.tiers.index', $ruleId)->with('success', 'Tier added.');
+            return response()->json(['message' => 'Commission tier created successfully'], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create commission tier: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to create commission tier'], 500);
+        }
     }
-
 }

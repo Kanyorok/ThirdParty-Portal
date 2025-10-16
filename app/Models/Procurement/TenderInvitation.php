@@ -55,6 +55,7 @@ class TenderInvitation extends Model
     {
         return $this->belongsTo(Tender::class, 'TenderId', 'Id');
     }
+    
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'SupplierId', 'Id');

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Property;
 
+use App\Enums\Core\PermissionEnum;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Enums\Core\PermissionEnum;
 use App\Http\Requests\Property\MaintenanceAndIssues\PropertyMaintenanceAssignRequest;
 use App\Services\Property\MaintenanceAndIssues\PropertyMaintenanceAssignService;
 use App\Models\PropertyManagement\PropertyMaintenanceAssign;
@@ -27,7 +27,10 @@ class PropertyMaintananceAssignController extends Controller
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignCreate, PropertyMaintenanceAssign::class);
         $maintenancerequests = PropertyMaintenanceRequest::all();
         $employees = Employee::all();
-        $suppliers = Supplier::all();
+        $suppliers = Supplier::where('Active_Status', true)
+                     ->select('ThirdPartyID')
+                     ->distinct()
+                     ->get();
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
         $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
         return view('property.maintenanceandissues.assignrequests.create', compact('maintenancerequests', 'employees', 'suppliers', 'priorityLevels','assignmentTypes'));
@@ -54,7 +57,7 @@ class PropertyMaintananceAssignController extends Controller
         $InternalTechnician = $validated['InternalTechnician'] ?? null;
         $InternalTechnician = $InternalTechnician ? Employee::findOrFail($InternalTechnician) : null;
 
-        // Convert date strings to DateTime objects
+
         $assignmentDate = new \DateTime($validated['AssignmentDate']);
         $expectedStartDate = new \DateTime($validated['ExpectedStartDate']);
         $expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
@@ -76,7 +79,7 @@ class PropertyMaintananceAssignController extends Controller
     }
     public function edit($Id)
     {
-        $this->authorize(PermissionEnum::PropertyMaintenanceAssignView, PropertyMaintenanceAssign::class);
+        $this->authorize(PermissionEnum::PropertyMaintenanceAssignUpdate, PropertyMaintenanceAssign::class);
         $assignment = PropertyMaintenanceAssign::with('request')->findOrFail($Id);
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
         $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
@@ -87,16 +90,17 @@ class PropertyMaintananceAssignController extends Controller
 
     public function update(PropertyMaintenanceAssignRequest $request, $Id)
     {
+        $this->authorize(PermissionEnum::PropertyMaintenanceAssignUpdate, PropertyMaintenanceAssign::class);
         $assignment = PropertyMaintenanceAssign::findOrFail($Id);
 
         $validated = $request->validated();
 
-        // Convert date strings to DateTime objects
+
         $assignmentDate = new \DateTime($validated['AssignmentDate']);
         $expectedStartDate = new \DateTime($validated['ExpectedStartDate']);
         $expectedCompletion = new \DateTime($validated['ExpectedCompletion']);
 
-        // Resolve full model instances from IDs
+
         $assignmentType = CodeDetail::findOrFail($validated['AssignmentType']);
         $priorityLevel = CodeDetail::findOrFail($validated['PriorityLevel']);
 
@@ -106,7 +110,7 @@ class PropertyMaintananceAssignController extends Controller
         $prequalifiedVendor = $validated['PrequalifiedVendor'] ?? null;
         $prequalifiedVendor = $prequalifiedVendor ? Supplier::findOrFail($prequalifiedVendor) : null;
 
-        // Call the service to update
+
         $service = new PropertyMaintenanceAssignService($assignment);
 
         $service->update(
@@ -128,16 +132,22 @@ class PropertyMaintananceAssignController extends Controller
 
     public function destroy($id)
     {
-        //Check if user has permission to delete property categories
+
         $this->authorize(PermissionEnum::PropertyMaintenanceAssignDelete, PropertyMaintenanceAssign::class);
         try {
             $assignment = PropertyMaintenanceAssign::findOrFail($id);
+
+            if ($assignment->taskcompletion()->exists()) {
+                return redirect()->back()
+                ->withErrors(['error' => 'This Maintenance assignment is in use and cannot be deleted.']);
+            }
+
             $assignment->delete();
 
             return redirect()->route('assignrequest.index')
                 ->with('success', 'Property Assignment Deleted Successfully!');
         } catch (\Throwable $th) {
-            // Log the error for debugging
+
             Log::error('Error deleting property assignment: ' . $th->getMessage());
             return redirect()->back()
                 ->withErrors(['error' => 'Failed to delete Property Maintenance Assignment. Please try again.'])

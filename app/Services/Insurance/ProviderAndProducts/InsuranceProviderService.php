@@ -20,7 +20,7 @@ class InsuranceProviderService
         string $ContactPerson,
         string $Email,
         string $Phone,
-        bool   $IsActive,
+        ?bool   $IsActive = null,
         User   $user
     ): self
     {
@@ -51,7 +51,7 @@ class InsuranceProviderService
             'ContactPerson' => $ContactPerson,
             'Email' => $Email,
             'Phone' => $Phone,
-            'IsActive' => $IsActive ? 1 : 0,
+            'IsActive' => $IsActive ? 1 : 0 ?? null,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);

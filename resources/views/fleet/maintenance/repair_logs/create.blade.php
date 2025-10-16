@@ -2,6 +2,15 @@
 @section('title', 'Log Repair Entry')
 
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">🔧 Log Repair Entry</h4>
 

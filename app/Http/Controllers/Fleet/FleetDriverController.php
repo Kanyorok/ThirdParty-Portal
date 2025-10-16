@@ -14,6 +14,7 @@ use App\Services\FleetManagement\FleetDriverService;
 use App\Models\Core\CodeDetail;
 use App\Http\Requests\FleetManagement\FleetDriverRequest;
 use App\Models\HRM\Employee;
+use App\Services\DMS\DocumentService;
 
 class FleetDriverController extends Controller
 {
@@ -49,8 +50,9 @@ class FleetDriverController extends Controller
         }
 
         $staffNo = $employeesQuery
+            ->with('image') 
             ->orderBy('LastName')
-            ->get(['Id', 'FirstName', 'LastName', 'EmployeeID', 'Email', 'Phone']);
+            ->get();
 
         $employmentType = CodeDetail::where('CodeID', 'EmploymentType')
             ->orderBy('Value')
@@ -60,13 +62,22 @@ class FleetDriverController extends Controller
         return view('fleet.drivers.create', compact('staffNo', 'employmentType'));
     }
 
-    public function store(FleetDriverRequest $request)
-    {
-        $this->authorize('create', FleetDriver::class);
-        $this->fleetDriverService->create($request->validated());
-        return redirect()->route('fleet.drivers.index')
-            ->with('success', 'Driver registered successfully.');
-    }
+
+        public function store(FleetDriverRequest $request)
+        {
+            $this->authorize('create', FleetDriver::class);
+
+            $validated = $request->validated();
+            $document = $request->file('Document');
+
+            $validated = $request->validated();
+            $imageId = $request->input('ImageId'); 
+
+            $this->fleetDriverService->create(array_merge($validated, ['ImageId' => $imageId]), $document);
+            return redirect()->route('fleet.drivers.index')
+                ->with('success', 'Driver registered successfully.');
+        }
+
 
     public function edit($id)
     {
@@ -83,8 +94,9 @@ class FleetDriverController extends Controller
         }
 
         $staffNo = $employeesQuery
+            ->with('image') 
             ->orderBy('LastName')
-            ->get(['Id', 'FirstName', 'LastName', 'EmployeeID', 'Email', 'Phone']);
+            ->get();
 
         $employmentType = CodeDetail::where('CodeID', 'EmploymentType')
             ->orderBy('Value')
@@ -96,10 +108,16 @@ class FleetDriverController extends Controller
     public function update(FleetDriverRequest $request, $id)
     {
         $this->authorize('update', FleetDriver::class);
-        $this->fleetDriverService->update($id, $request->validated());
+
+        $validated = $request->validated();
+        $document = $request->file('Document'); 
+
+        $this->fleetDriverService->update($id, $validated, $document);
+
         return redirect()->route('fleet.drivers.index')
             ->with('success', 'Driver details updated successfully.');
     }
+
 
     public function destroy($id)
     {
@@ -111,34 +129,37 @@ class FleetDriverController extends Controller
 
 
       public function show($Id)
-{
-    $this->authorize('view', FleetDriver::class);
-    $driver = FleetDriver::findOrFail($Id);
-    $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
-    $assignments = FleetDriverAssignment::where('DriverID', $Id)
-        ->with('vehicle')
-        ->orderByDesc('AssignmentDate')
-        ->get();
-    $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        {
+            $this->authorize('view', FleetDriver::class);
+            $driver = FleetDriver::findOrFail($Id);
+            $licenses = FleetDriverLicenseTracking::where('DriverID', $Id)->get();
+            $assignments = FleetDriverAssignment::where('DriverID', $Id)
+                ->with('vehicle')
+                ->orderByDesc('AssignmentDate')
+                ->get();
+            $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+                ->where('Description', 'Active')
+                ->value('Id');
 
-    $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-        ->pluck('name', 'Id');
+            $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
 
-  
-      $trips = FleetTripLog::with(['vehicle'])
-        ->where('DriverID', $driver->Id)
-        ->orderByDesc('TripStartDate')
-        ->get();
+            $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+                ->pluck('name', 'Id');
 
-    return view('fleet.drivers.show', compact(
-        'driver',
-        'licenses',
-        'assignments',
-        'vehicles',
-        'assigners',
-        'trips'
-    ));
-}
+        
+            // $trips = FleetTripLog::with(['vehicle'])
+            //     ->where('DriverID', $driver->Id)
+            //     ->orderByDesc('TripStartDate')
+            //     ->get();
+
+            return view('fleet.drivers.show', compact(
+                'driver',
+                'licenses',
+                'assignments',
+                'vehicles',
+                'assigners'
+            ));
+        }
     
 
 

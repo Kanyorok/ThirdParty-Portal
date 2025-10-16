@@ -24,7 +24,7 @@ class LegalObligationController extends Controller
         $details = CodeDetail::select('Value')
             ->where('CodeID','LegalSourceTypes')
             ->get();
-            
+
         return view('legal.obligations.index', compact('obligations', 'details'));
     }
 
@@ -46,16 +46,16 @@ class LegalObligationController extends Controller
             'Title' => 'required|string|max:255',
             'SourceType' => 'required|exists:t_CodeDetails,Value',
             'DueDate' => 'required|date',
-            'Description' => 'nullable|string',
+            'Description' => 'required|string',
         ]);
 
         $duplicate = LegalObligation::where('Title', $validated['Title'])
             ->where('SourceType', $validated['SourceType'])
             ->exists();
-        
-            if($duplicate){
-                return back()->with('error', 'There is an existing record same as this');
-            }
+
+        if($duplicate){
+            return back()->with('error', 'There is an existing record same as this');
+        }
 
         try{
             DB::beginTransaction();
@@ -112,7 +112,7 @@ class LegalObligationController extends Controller
             'SourceType' => 'required|in:Contract,Case',
             'DueDate' => 'required|date',
             'Status' => 'required|string',
-            'Description' => 'nullable|string',
+            'Description' => 'required|string',
         ]);
 
         try{
@@ -123,7 +123,7 @@ class LegalObligationController extends Controller
 
             $obligation->update($data);
 
-            
+
             activity()
                 ->performedOn(new LegalObligation())
                 ->causedBy(Auth::user())
@@ -170,18 +170,18 @@ class LegalObligationController extends Controller
             $obligation->delete();
 
             activity()
-                    ->performedOn(new LegalObligation())
-                    ->causedBy(Auth::user())
-                    ->withProperties(['action' => 'delete'])
-                    ->log('Obligation successfully deleted');
+                ->performedOn(new LegalObligation())
+                ->causedBy(Auth::user())
+                ->withProperties(['action' => 'delete'])
+                ->log('Obligation successfully deleted');
 
             DB::commit();
-            
+
             return back()->with('success','Obligation successfully deleted');
 
         }catch(\Throwable $th){
             DB::rollBack();
-            
+
             activity()
                 ->performedOn(new LegalObligation())
                 ->causedBy(Auth::user())
@@ -212,42 +212,42 @@ class LegalObligationController extends Controller
         }
         else{
 
-        //Store in scheduled table
-        $schedule = Schedule::create([
-            'Title' => $obligation->Title,
-            'Notes' => $obligation->Description,
-            // 'ScheduledTypeID' => $obligation->Id,
-            'ScheduleStatusID' => 'sc',
-            'StartOn' => $obligation->DueDate,
-            'EndOn' => $obligation->DueDate,
-            'Type' => 'Legal',
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
+            //Store in scheduled table
+            $schedule = Schedule::create([
+                'Title' => $obligation->Title,
+                'Notes' => $obligation->Description,
+                // 'ScheduledTypeID' => $obligation->Id,
+                'ScheduleStatusID' => 'sc',
+                'StartOn' => $obligation->DueDate,
+                'EndOn' => $obligation->DueDate,
+                'Type' => 'Legal',
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
-        $userschedule = ScheduleUser::create([
-            'ScheduleId' => $schedule->ScheduleID,
-            'UserID' => $validated['UserId'],
-            'ScheduleUserStatus' => 'ac',
-            'DecidedOn' => now(),
-            'ReminderOn' => $obligation->DueDate, // Example reminder 7 days before due date
-            'CreatedBy' => Auth::id(),
-            'CreatedOn' => now(),
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
+            $userschedule = ScheduleUser::create([
+                'ScheduleId' => $schedule->ScheduleID,
+                'UserID' => $validated['UserId'],
+                'ScheduleUserStatus' => 'ac',
+                'DecidedOn' => now(),
+                'ReminderOn' => $obligation->DueDate, // Example reminder 7 days before due date
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
-        $obligation->update([
-            'AssignedTo' => $validated['UserId'],
-            'ScheduledID' => $obligation->ScheduleID,
-            'ModifiedBy' => Auth::id(),
-            'ModifiedOn' => now(),
-        ]);
+            $obligation->update([
+                'AssignedTo' => $validated['UserId'],
+                'ScheduledID' => $obligation->ScheduleID,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
 
-        return redirect()->route('legal.obligations.show', $id)->with('success', 'User assigned successfully.');
-    }
+            return redirect()->route('legal.obligations.show', $id)->with('success', 'User assigned successfully.');
+        }
     }
 
     // public function markComplete($id)

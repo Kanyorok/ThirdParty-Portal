@@ -6,6 +6,18 @@
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     <form action="{{ route('tenderclarification.update') }}" method="POST">
         @csrf
         @method('PATCH')
@@ -13,7 +25,8 @@
 
         <div class="mb-3">
             <label for="supplierName" class="form-label">From Supplier</label>
-            <input type="text" class="form-control" name="supplierName" value="{{ $clarification->VendorID ?? 'Unknown Vendor' }}" readonly>
+            <input type="text" class="form-control" name="supplierName"
+                   value="{{ $clarification->supplierName ?? 'Unknown Supplier' }}" readonly>
         </div>
 
         <div class="mb-3">
@@ -23,7 +36,8 @@
 
         <div class="mb-3">
             <label for="responseText" class="form-label">Response</label>
-            <textarea class="form-control" id="responseText" name="answer" rows="4" placeholder="Enter official response...">{{ $clarification->Answer ?? '' }}</textarea>
+            <textarea class="form-control" id="responseText" name="answer" rows="4"
+                      placeholder="Enter official response...">{{ old('answer', $clarification->Answer ?? '') }}</textarea>
         </div>
 
         <div class="form-check mb-3">

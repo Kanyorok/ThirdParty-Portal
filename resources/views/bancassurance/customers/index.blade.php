@@ -20,15 +20,15 @@
             <tbody>
             @forelse ($customers as $i => $customer)
                 <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $customer->FullName }}</td>
-                    <td>{{ $customer->NationalID }}</td>
-                    <td>{{ $customer->PhoneNumber }}</td>
-                    <td>{{ $customer->Email }}</td>
+                    <td>{{ $loop->iteration}}</td>
+                    <td>{{ $customer->thirdParty->ThirdPartyName ?? '-'}}</td>
+                    <td>{{ $customer->NationalID ?? '-'}}</td>
+                    <td>{{ $customer->thirdParty->Phone ?? '-'}}</td>
+                    <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
                     <td>{{ $customer->DateOfBirth ? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                     <td>
                         <a href="{{ route('bancassurance.customers.portfolio', $customer->Id) }}" class="btn btn-sm btn-info">View Portfolio</a> 
-                        <a href="{{ route('bancassurance.customers.communication.index', $customer->Id) }}" class="btn btn-sm btn-secondary">Communication History</a>
+                        <a href="{{ route('bancassurance.customers.communication.index') }}" class="btn btn-sm btn-secondary">Add Communication</a>
                         <a href="{{ route('bancassurance.customers.beneficiaries.create') }}" class="btn btn-sm btn-primary">Add Beneficiary</a>
                     </td>
                 </tr>

@@ -26,4 +26,7 @@ enum WorkflowStatus: string
     case RejectedDelete = 'rd';
     case RejectedCancel = 'rc';
     case RejectReturn = 'rr';
+    case Available = 'av';
+    case OnTrip = 'ot';
+    case AssignedTrip = 'at';
 }

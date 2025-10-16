@@ -14,17 +14,22 @@ class BudgetProductMasterController extends Controller
     //
     public function index()
     {
-        $products = BudgetProduct::all();
-        $data = [];
-        foreach ($products as $p) {
-            $data[] = [
+        // Fetch paginated products
+        $products = BudgetProduct::paginate(25);
+
+        // Transform into structured array
+        $data = $products->map(function ($p) {
+            return [
                 'Code' => $p->ProductTypeID,
                 'Name' => $p->Description,
-                'Type' => BudgetProductType::where('ProductCode',$p->ProductTypeID)->pluck('Name')->first(),
-                'GLCode' => BudgetGLMaster::where('AccountID',$p->GLAccountID)->pluck('GLAccountTypeID')->first(),
+                'Type' => BudgetProductType::where('ProductCode', $p->ProductTypeID)->pluck('Name')->first(),
+                'GLCode' => BudgetGLMaster::where('AccountID', $p->GLAccountID)->pluck('GLAccountTypeID')->first(),
             ];
-        }
-        return view('budgetandanalytics.productmaster.index', compact('data'));
+        });
+
+
+        // Pass both data and paginator instance
+        return view('budgetandanalytics.productmaster.index', compact('data', 'products'));
     }
 
     public function create()

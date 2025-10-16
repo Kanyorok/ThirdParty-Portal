@@ -1,107 +1,92 @@
 @extends('layouts.app')
-@section('title', 'Property Management')
-
+@section('title', 'Edit Tenant Details')
 @section('content')
-    <div class="container mt-5" style="max-width: 850px;">
-        <h4 class="fw-bold mb-4">Edit Tenant Details</h4>
+    <div class="container mt-4">
 
-        <div class="card shadow border-0">
-            <div class="card-header bg-light fw-semibold text-primary">
-                🛠 Tenant Information
-            </div>
+        <form action="{{ route('addtenant.update', $tenants->Id) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+            <p><small>This screen is used in editing the tenant creation. (Tenant Profile is edited from the Third Party
+                    Portal) </small></p>
 
-            <form method="POST" action="{{ route('addtenant.update', $newtenant->Id) }}" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
-
+            <div class="card shadow">
+                <div class="card-header bg-light fw-bold">Tenant</div>
                 <div class="card-body">
-                    <!-- Basic Info -->
+
+                    <!-- Tenant -->
                     <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Tenant Type</label>
-                            <select name="TenantType" class="form-select">
-                                @foreach($tenantTypes as $type)
-                                    <option
-                                        value="{{ $type->ID }}" {{ $newtenant->TenantType == $type->ID ? 'selected' : '' }}>
-                                        {{ $type->Description }}
+                        <div class="col-md-5">
+                            <label class="form-label">Tenant<span class="text-danger">*</span></label>
+                            <input type="hidden" name="ThirdPartyId" value="{{ $tenants->ThirdPartyId }}">
+                            <input type="text" class="form-control"
+                                   value="{{ $tenants->thirdParty->ThirdPartyName }}" readonly>
+                            <small class="text-muted">Tenant cannot be changed once created.</small>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Tenant Type<span class="text-danger">*</span></label>
+                            <select class="form-select" name="TenantType" required>
+                                @foreach ($tenantTypes as $tenanttype)
+                                    <option value="{{ $tenanttype->ID }}"
+                                        {{ old('TenantType', $tenants->TenantType) == $tenanttype->ID ? 'selected' : '' }}>
+                                        {{ $tenanttype->Description }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
-
-                        <div class="col-md-5">
-                            <label class="form-label">Tenant Name</label>
-                            <input type="text" name="TenantName" class="form-control"
-                                   value="{{ old('TenantName', $newtenant->TenantName) }}">
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">ID/Registration No.</label>
-                            <input type="text" name="IDRegistrationNo" class="form-control"
-                                   value="{{ old('IDRegistrationNo', $newtenant->IDRegistrationNo) }}">
-                        </div>
-                    </div>
-
-                    <!-- Contact Info -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Phone Number</label>
-                            <input type="text" name="PhoneNumber" class="form-control"
-                                   value="{{ old('PhoneNumber', $newtenant->PhoneNumber) }}">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" name="EmailAddress" class="form-control"
-                                   value="{{ old('EmailAddress', $newtenant->EmailAddress) }}">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Nationality</label>
-                            <input type="text" name="Nationality" class="form-control"
-                                   value="{{ old('Nationality', $newtenant->Nationality) }}">
-                        </div>
-                    </div>
-
-                    <!-- Address & Notes -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Postal Address</label>
-                            <input type="text" name="PostalAddress" class="form-control"
-                                   value="{{ old('PostalAddress', $newtenant->PostalAddress) }}">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Remarks</label>
-                            <input type="text" name="Remarks" class="form-control"
-                                   value="{{ old('Remarks', $newtenant->Remarks) }}">
-                        </div>
-                    </div>
-
-
-                    <!-- Documents Upload -->
-                    <div class="mb-3">
-                        <label class="form-label">Upload New Documents (optional)</label>
-                        <input type="file" name="Documents[]" class="form-control" multiple>
-                        <small class="text-muted">Leave blank if no changes are needed.</small>
                     </div>
 
                     <!-- Status -->
-                    <div class="row g-3 mb-4">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" name="IsActive">
-                            <option value="1">Active</option>
-                            <option value="0">Inactive</option>
-                        </select>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Status<span class="text-danger">*</span></label>
+                            <select class="form-select" name="IsActive" required>
+                                <option value="1" {{ $tenants->IsActive ? 'selected' : '' }}>Active</option>
+                                <option value="0" {{ !$tenants->IsActive ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- Buttons -->
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-success">Update Tenant</button>
-                        <a href="{{ route('addtenant.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <!-- Existing Documents -->
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Attached Documents</label>
+                        <div class="p-2 border rounded bg-light">
+                            @forelse($tenants->documents as $document)
+                                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+                            @empty
+                                <span class="text-muted">No documents attached.</span>
+                            @endforelse
+                        </div>
                     </div>
+
+                    <!-- Upload Documents -->
+                    <div class="mb-3">
+                        <label class="form-label">Upload Supporting Documents</label>
+                        <input type="file" name="Documents[]" class="form-control" multiple>
+                        <small class="text-muted">Leave blank if no new documents are needed.</small>
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="mb-3">
+                        <label class="form-label">Remarks</label>
+                        <textarea name="Remarks" class="form-control" rows="3"
+                                  placeholder="Optional">{{ old('Remarks', $tenants->Remarks) }}</textarea>
+                    </div>
+
                 </div>
-            </form>
-        </div>
-</div>
+
+                <div class="card-footer text-end py-2">
+                    <a href="{{ route('addtenant.index') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update
+                        Tenant
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+@endsection
+
+@section('scripts')
+    @include('snippets.actions.preview-files')
 @endsection

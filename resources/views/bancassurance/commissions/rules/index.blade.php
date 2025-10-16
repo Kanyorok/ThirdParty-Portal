@@ -8,6 +8,8 @@
 
     <a href="{{ route('commissions.rules.create') }}" class="btn btn-primary mb-3">Add Commission Rule</a>
 
+    <p><small>The list below Consists of commission rules</small></p>
+
         <table id='commissionrules' class="table table-bordered">
             <thead class="table-light">
                 <tr>
@@ -25,14 +27,20 @@
                 <tbody>
                 @foreach($rules as $rule)
                 <tr>
-                    <td>{{ $rule->Id }}</td>
-                    <td>{{ $rule->RuleName }}</td>
-                    <td>{{ $rule->product->Name}}</td>
-                    <td>{{ $rule->policytypes->Description }}</td>
-                    <td>{{ $rule->CommissionRate}}</td>
-                    <td>{{ $rule->FixedAmount }}</td>
-                    <td>{{ $rule->appliesto->Description }}</td>
-                    <td>{{ $rule->IsActive ? '✅ Active' : '❌ Inactive' }}</td>
+                    <td>{{ $loop->iteration ?? '-'}}</td>
+                    <td>{{ $rule->RuleName ?? '-'}}</td>
+                    <td>{{ $rule->product->Name ?? '-'}}</td>
+                    <td>{{ $rule->policytypes->Description ?? '-'}}</td>
+                    <td>{{ $rule->CommissionRate ?? '-'}}</td>
+                    <td>{{ $rule->FixedAmount ?? '-'}}</td>
+                    <td>{{ $rule->appliesto->Description ?? '-'}}</td>
+                    <td>
+                        @if($rule->IsActive)
+                            <span class="badge bg-success">Active</span>
+                        @else
+                            <span class="badge bg-secondary">Inactive</span>
+                        @endif
+                    </td>
                     <td>
                     <a href="{{ route('commissions.rules.edit', $rule->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                     <form action="{{ route('commissions.rules.destroy', $rule->Id) }}" method="POST" class="d-inline">

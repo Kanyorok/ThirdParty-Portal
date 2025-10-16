@@ -20,12 +20,10 @@
         <label for="Type" class="form-label">Inventory Type</label>
         <input type="text" class="form-control" id="Type" name="Type" placeholder="e.g., Asset">
     </div>
-        <div class="form-check mb-3">
-            <input type="hidden" name="Status" value="0">
-            <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" checked>
-            <label class="form-check-label" for="Status">Is Active</label>
-        </div>
-    <button type="submit" class="btn btn-primary">Save</button>
+        <input type="hidden" name="Active" value="1">
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save
+        </button>
     </form>
 </div>
 

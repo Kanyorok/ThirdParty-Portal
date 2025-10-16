@@ -52,11 +52,13 @@
                 <tbody>
                 <tr>
                     <td>
-                        @if($note->invoice && $note->invoice->supplier)
-                            <strong>{{ $note->invoice->supplier->SupplierName }}</strong><br>
-                            {{ $note->invoice->supplier->ContactEmail ?? '-' }}<br>
-                            {{ $note->invoice->supplier->ContactPhone ?? '-' }}<br>
-                            {{ $note->invoice->supplier->Address ?? '-' }}
+                        @if($note->invoice && $note->invoice->thirdParty)
+                            <strong>{{ $note->invoice->thirdParty->TradingName ?? $note->invoice->thirdParty->ThirdPartyName }}</strong><br>
+                            {{ $note->invoice->thirdParty->Email ?? '-' }}<br>
+                            {{ $note->invoice->thirdParty->Phone ?? '-' }}<br>
+                            {{ $note->invoice->thirdParty->Address ?? '-' }}<br>
+                            @php($taxNo = $note->invoice->thirdParty->TaxNumber ?? $note->invoice->thirdParty->RegistrationNumber ?? null)
+                            <span>Tax No: {{ $taxNo ?? '-' }}</span>
                         @else
                             N/A
                         @endif

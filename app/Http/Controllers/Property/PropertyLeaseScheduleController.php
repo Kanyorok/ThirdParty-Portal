@@ -24,6 +24,7 @@ class PropertyLeaseScheduleController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyLeaseScheduleView, PropertyLeaseSchedule::class);
         $leaseschedules = PropertyLeaseSchedule::with(['lease'])->where('isActive', true)->get();
         return view('property.tenantmanagement.leasemanagement.leaseschedule.index', compact('leaseschedules'));
     }
@@ -70,6 +71,7 @@ class PropertyLeaseScheduleController extends Controller
     public function store(PropertyLeaseScheduleRequest $request)
     {
         try {
+            $this->authorize(PermissionEnum::PropertyLeaseScheduleCreate, PropertyLeaseSchedule::class);
             $validated = $request->validated();
             $leaseId = (int)$validated['LeaseId'];
             $paymentFrequencyId = (int)$validated['PaymentFrequency'];
@@ -174,6 +176,7 @@ class PropertyLeaseScheduleController extends Controller
 
     public function print($Id)
     {
+        $this->authorize(PermissionEnum::PropertyLeaseSchedulePrint, PropertyLeaseSchedule::class);
         $leaseschedule = PropertyLeaseSchedule::with('lease.tenant', 'lease.property', 'paymentFrequency')
             ->findOrFail($Id);
 

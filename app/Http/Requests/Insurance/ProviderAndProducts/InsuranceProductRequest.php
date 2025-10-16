@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Insurance\ProviderAndProducts;
 
+use App\Models\Insurance\InsuranceProduct;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class InsuranceProductRequest extends FormRequest
 {
@@ -23,9 +25,18 @@ class InsuranceProductRequest extends FormRequest
     {
         return [
             'InsuranceProviderID' => 'required|exists:t_InsuranceProviders,Id',
-            'Name' => 'required|string|max:50',
-            'Type' => 'required|string|max:100',
-            'Description' => 'required|string|max:100',
+            'Name' => [
+            'required',
+            'string',
+            'max:50',
+            Rule::unique(InsuranceProduct::class, 'Name')
+                ->where(function ($query) {
+                    return $query->where('InsuranceProviderID', $this->InsuranceProviderID)
+                                 ->where('Type', $this->Type);
+                }),
+            ],
+            'Type' => 'required|exists:t_CodeDetails,ID',
+            'Description' => 'nullable|string|max:100',
             'IsActive' => 'nullable|boolean',
         ];
     }

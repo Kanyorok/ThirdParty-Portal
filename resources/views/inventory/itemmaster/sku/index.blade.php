@@ -32,7 +32,7 @@
                             <th>Current Qty</th>
                             <th>Min</th>
                             <th>Reorder</th>
-                            <th>Max</th>
+                            {{-- <th>Max</th> --}}
                             <th>Last Received</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -54,7 +54,7 @@
                                 <td>{{($item->CurrentQty)}}</td>
                                 <td>{{($item->Min)}}</td>
                                 <td>{{($item->Reorder)}}</td>
-                                <td>{{($item->Max)}}</td>
+                                {{-- <td>{{($item->Max)}}</td> --}}
                                 <td>{{ \Carbon\Carbon::parse($item->LastReceived)->format('d/m/Y') }}</td>
                                 <td>
               <span class="badge {{ $item->Status ? 'bg-success' : 'bg-warning' }}">

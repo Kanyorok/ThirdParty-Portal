@@ -46,7 +46,9 @@ class ContractedDriverController extends Controller
         {
             $this->authorize('create', ContractedDriver::class);
             $validated = $request->validated();
-            $this->driverService->create($validated);
+            $document = $request->file('Document');
+            $this->driverService->create($validated, $document);
+
 
         return redirect()->route('fleet.contracted_drivers.index')
             ->with('success', 'Contracted driver registered successfully.');

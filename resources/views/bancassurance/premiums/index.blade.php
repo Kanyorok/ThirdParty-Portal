@@ -26,9 +26,9 @@
             @forelse($payments as $payment)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $payment->policies->PolicyNumber }}</td>
+                <td>{{ $payment->policies->PolicyNumber ?? '-'}}</td>
                 <td>{{ $payment->CustomerID ?? 'N/A' }}</td>
-                <td>{{ $payment->PaymentFrequency }}</td>
+                <td>{{ $payment->PaymentFrequency ?? '-'}}</td>
                 <td>{{ \Carbon\Carbon::parse($payment->PaymentDate)->format('d/m/Y') }}</td>
                 <td>{{ number_format($payment->Amount, 2) }}</td>
                 <td>

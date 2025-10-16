@@ -3,95 +3,81 @@
 
 @section('content')
 <div class="container mt-4">
-    <form method="POST" action="{{ route('bancassurance.customers.store') }}"enctype="multipart/form-data">
+    <form method="POST" action="{{ route('bancassurance.customers.store') }}" enctype="multipart/form-data">
         @csrf
 
+        {{-- Customer Selection --}}
         <div class="row mb-3">
             <div class="col-md-6">
-                <label class="form-label">Full Name <span class="text-danger">*</span></label>
-                <input type="text" name="FullName" class="form-control" required>
+                <label for="ThirdPartyId" class="form-label">Customer <span class="text-danger">*</span></label>
+                <select name="ThirdPartyId" id="ThirdPartyId" class="form-select" required>
+                    <option value="">-- Select Customer --</option>
+                    @foreach ($ThirdPartyIds as $ThirdPartyId)
+                        <option value="{{ $ThirdPartyId->Id }}">
+                            {{ $ThirdPartyId->ThirdPartyName }} — {{ $ThirdPartyId->Phone }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
+
             <div class="col-md-6">
-                <label class="form-label">Referred By</label>     
-                <select name="ReferralID" class="form-select">
-                <option value="">--Select a status--</option>
-              @foreach ($referrals as $referral)
-                <option value="{{ $referral->Id }}">
-                  {{ $referral->ClientName }}
-                </option>
-              @endforeach
-            </select>
-          </div>
-            <div class="col-md-3">
-                <label class="form-label">National ID <span class="text-danger">*</span></label>
-                <input type="text" name="NationalID" class="form-control" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">KRA PIN <span class="text-danger">*</span></label>
-                <input type="text" name="KRAPIN" class="form-control" required>
+                <label for="ReferralID" class="form-label">Client Referral Name</label>
+                <select name="ReferralID" id="ReferralID" class="form-select">
+                    <option value="">-- Select a referral --</option>
+                    @foreach ($referrals as $referral)
+                        <option value="{{ $referral->Id }}">
+                            {{ $referral->ClientName }} — {{ $referral->ClientPhone }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
         </div>
 
+        {{-- Personal Information --}}
         <div class="row mb-3">
             <div class="col-md-3">
-                <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
-                <input type="date" name="DateOfBirth" class="form-control" required>
+                <label for="DateOfBirth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                <input type="date" name="DateOfBirth" id="DateOfBirth" class="form-control" required>
             </div>
+
             <div class="col-md-3">
-                <label class="form-label">Gender <span class="text-danger">*</span></label>
-                <select name="Gender" class="form-select" required>
-                <option value="">--Select a status--</option>
-              @foreach ($genders as $gender)
-                <option value="{{ $gender->ID }}">
-                  {{ $gender->Description }}
-                </option>
-              @endforeach
-            </select>
-          </div>
-            <div class="col-md-3">
-                <label class="form-label">Marital Status <span class="text-danger">*</span></label>
-                <select name="MaritalStatus" class="form-select" required>
-                <option value="">--Select a status--</option>
-              @foreach ($maritalstatus as $status)
-                <option value="{{ $status->ID }}">
-                  {{ $status->Description }}
-                </option>
-              @endforeach
-            </select>
+                <label for="Gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                <select name="Gender" id="Gender" class="form-select" required>
+                    <option value="">-- Select Gender --</option>
+                    @foreach ($genders as $gender)
+                        <option value="{{ $gender->ID }}">{{ $gender->Description }}</option>
+                    @endforeach
+                </select>
             </div>
+
             <div class="col-md-3">
-                <label class="form-label">Occupation </label>
-                <select name="Occupation" class="form-select">
-                <option value="">--Select Occupation--</option>
-              @foreach ($occupations as $occupation)
-                <option value="{{ $occupation->ID }}">
-                  {{ $occupation->Description }}
-                </option>
-              @endforeach
-            </select>
+                <label for="MaritalStatus" class="form-label">Marital Status <span class="text-danger">*</span></label>
+                <select name="MaritalStatus" id="MaritalStatus" class="form-select" required>
+                    <option value="">-- Select Status --</option>
+                    @foreach ($maritalstatus as $status)
+                        <option value="{{ $status->ID }}">{{ $status->Description }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="Occupation" class="form-label">Employment Status</label>
+                <select name="Occupation" id="Occupation" class="form-select">
+                    <option value="">-- Select Occupation --</option>
+                    @foreach ($occupations as $occupation)
+                        <option value="{{ $occupation->ID }}">{{ $occupation->Description }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label class="form-label">Phone <span class="text-danger">*</span></label>
-                <input type="text" name="PhoneNumber" class="form-control" required>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Email <span class="text-danger">*</span></label>
-                <input type="email" name="Email" class="form-control" required>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Address</label>
-                <input type="text" name="Address" class="form-control">
-            </div>
+        {{-- Submit --}}
+        <div class="text-end">
+            <button class="btn btn-success" type="submit"
+                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                <i class="fas fa-save"></i> Save Profile
+            </button>
         </div>
-
-            <div class="text-end">
-                <button class="btn btn-success" type="submit">
-                    <i class="fas fa-save"></i> Save Profile
-                </button>
-            </div>
-        </form>
-    </div>
+    </form>
+</div>
 @endsection

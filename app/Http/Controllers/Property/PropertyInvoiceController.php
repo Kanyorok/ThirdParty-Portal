@@ -20,6 +20,7 @@ class PropertyInvoiceController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
         $invoices = PropertyInvoice::all();
         return view('property.billingandreceipting.invoicing.index', compact('invoices'));
     }
@@ -41,7 +42,7 @@ class PropertyInvoiceController extends Controller
 
     public function store(PropertyInvoiceRequest $request)
     {
-        //dd($request->all());
+
         $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
         $validated = $request->validated();
 
@@ -115,7 +116,14 @@ class PropertyInvoiceController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyInvoiceDelete, PropertyInvoice::class);
         try {
+
             $invoice = PropertyInvoice::findOrFail($id);
+
+            if ($invoice->receipts()->exists()) {
+            return redirect()->back()
+            ->withErrors(['error' => 'This Invoice is in use and cannot be deleted.']);
+            } 
+
             $invoice->delete();
 
             return redirect()->route('rentinvoice.index')

@@ -25,9 +25,9 @@
         @forelse ($proposals as $p)
             <tr>
                 <td>{{$loop->iteration}}</td>
-                <td>{{ $p->PolicyNumber }}</td>
-                <td>{{ $p->customer->FullName }}</td>
-                <td>{{ $p->product->Name }}</td>
+                <td>{{ $p->PolicyNumber ?? '-'}}</td>
+                <td>{{ $p->customer->thirdParty->ThirdPartyName ?? '-'}}</td>
+                <td>{{ $p->product->Name ?? '-'}}</td>
                 <td>{{ number_format($p->SumAssured, 2) }}</td>
                 <td>
                     <span class="badge bg-{{ $p->Status->badgeColor() }}">

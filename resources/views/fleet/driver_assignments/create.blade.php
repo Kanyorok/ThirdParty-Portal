@@ -1,6 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Assign Driver to Vehicle')
 
+
+@section('content')
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -10,8 +12,6 @@
             </ul>
         </div>
     @endif
-    
-@section('content')
     <div class="card p-4 shadow rounded-4">
         <h4 class="mb-4">👨‍✈️ Assign Driver to Vehicle</h4>
 
@@ -30,19 +30,18 @@
                     <select name="VehicleID" class="form-select" required>
                         <option value="">-- Select Vehicle --</option>
                         @foreach($vehicles as $vehicle)
-                            <option value="{{ $vehicle->VehicleID }}">{{ $vehicle->RegistrationNumber }}
-                                - {{ $vehicle->Make }} {{ $vehicle->Model }}</option>
+                            <option value="{{ $vehicle->Id }}">{{ $vehicle->RegistrationNo }}</option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="col-md-4">
-                    <label for="AssignmentDate" class="form-label">Assignment Date</label>
+                    <label for="AssignmentDate" class="form-label">Assigned On</label>
                     <input type="date" name="AssignmentDate" class="form-control" required>
                 </div>
 
                 <div class="col-md-4">
-                    <label for="UnassignmentDate" class="form-label">Unassignment Date</label>
+                    <label for="UnassignmentDate" class="form-label">Unassigned On</label>
                     <input type="date" name="UnassignmentDate" class="form-control">
                 </div>
 

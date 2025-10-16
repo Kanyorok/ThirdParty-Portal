@@ -2,6 +2,15 @@
 @section('title', 'Schedule Maintenance')
 
 @section('content')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <div class="card p-4 shadow rounded-4">
         <form method="POST"
               action="{{ isset($schedule) ? route('fleet.maintenance_schedule.update', $schedule->Id) : route('fleet.maintenance_schedule.store') }}">

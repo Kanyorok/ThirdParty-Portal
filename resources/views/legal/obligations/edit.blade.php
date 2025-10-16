@@ -16,12 +16,14 @@
 
         <div class="mb-3">
             <label for="Description" class="form-label">Description</label>
-            <textarea name="Description" class="form-control" rows="4">{{ old('Description', $obligation->Description) }}</textarea>
+            <textarea name="Description" class="form-control" rows="4"
+                      required>{{ old('Description', $obligation->Description) }}</textarea>
         </div>
 
         <div class="mb-3">
             <label for="DueDate" class="form-label">Due Date</label>
-            <input type="date" name="DueDate" class="form-control" value="{{ old('DueDate', \Carbon\Carbon::parse($obligation->DueDate)->format('Y-m-d')) }}">
+            <input type="date" name="DueDate" class="form-control"
+                   value="{{ old('DueDate', \Carbon\Carbon::parse($obligation->DueDate)->format('Y-m-d')) }}" required>
         </div>
 
         <div class="mb-3">

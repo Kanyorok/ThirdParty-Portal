@@ -23,7 +23,7 @@ class BudgetActivitiesController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupView, BudgetActivity::class);
         $activities = BudgetActivity::with([
-            'budget:Id,Name,From,To',
+            'budget:Id,Name,From,To,Status',
             //'allocations:Id,BudgetActivityID,Month,Amount',
             //'branch:Id,Name',
             //'budgetLine:Id,LineName',
@@ -41,9 +41,14 @@ class BudgetActivitiesController extends Controller
     {
         $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivity::class);
 
-        $budgetLines = BudgetLine::select('Id', 'LineName')->get();
+        //Pick budgetlines that have activities only.
+        $checkIds = BudgetActivityMaster::query()
+            ->distinct()
+            ->pluck('BudgetLineID')
+            ->toArray();
+        $budgetLines = BudgetLine::select('Id', 'LineName')->whereIn('Id', $checkIds)->get();
         $branches = Branch::select('Id', 'Name')->get();
-        $budgets = Budget::all();
+        $budgets = Budget::select('Id', 'Name')->where('Status', 'draft')->get();
 
         return view('budgetandanalytics.budgetactivities.create', compact(
             'budgetLines',
@@ -68,6 +73,15 @@ class BudgetActivitiesController extends Controller
             'FullAllocation' => 'nullable|numeric|min:0',
             'monthly_allocations' => 'nullable|array',
             'monthly_allocations.*' => 'nullable|numeric|min:0',
+        ],
+            [
+                'ActivityID.required' => 'Please select an activity from the list.',
+                'BudgetID.required' => 'Please select a budget from the list.',
+                'BudgetLineID.required' => 'Please select a budget line from the list.',
+                'Description.required' => 'Please enter a description.',
+                'AllocationType.required' => 'Please select an allocation type.',
+                'monthly_allocations.*.numeric' => 'Monthly allocation must be a number.',
+                'monthly_allocations.*.min' => 'Monthly allocation must be greater than 0.',
         ]);
 
         try {
@@ -86,12 +100,13 @@ class BudgetActivitiesController extends Controller
                 $fullAllocation = $validated['FullAllocation'] ?? 0;
             }
             // Create Budget Activity
+            $branchId = session('LoginBranchId');
             $activity = BudgetActivity::create([
                 'BudgetLineID' => $validated['BudgetLineID'],
                 'BudgetID' => $validated['BudgetID'],
                 'ActivityID' => $validated['ActivityID'],
                 'Description' => $validated['Description'],
-                'BranchID' => 1,//$validated['BranchID'], To be fixed when Login branch is implemented
+                'BranchID' => $branchId,//$validated['BranchID'], To be fixed when Login branch is implemented
                 'AllocationType' => $validated['AllocationType'],
                 'FullAllocation' => $fullAllocation,
                 'CreatedBy' => $userId,
@@ -209,12 +224,14 @@ class BudgetActivitiesController extends Controller
             } elseif ($validated['AllocationType'] === 'full') {
                 $fullAllocation = $validated['FullAllocation'] ?? 0;
             }
+
+            $branchId = session('LoginBranchId');
             $activity->update([
                 'BudgetLineID' => $validated['BudgetLineID'],
                 // 'BudgetID' => $validated['BudgetID'],
                 'ActivityID' => $validated['ActivityID'],
                 'Description' => $validated['Description'],
-                'BranchID' => 1,//$validated['BranchID'],
+                'BranchID' => $branchId,//$validated['BranchID'],
                 'AllocationType' => $validated['AllocationType'],
                 'FullAllocation' => $fullAllocation,
                 'ModifiedBy' => $userId,

@@ -8,9 +8,8 @@ use App\Models\Procurement\RFQEvaluation;
 use App\Models\Procurement\RFQLine;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\Prequalification\PrequalificationApplication;
-use App\Enums\ThirdPartyTypeEnum;
-use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Models\ThirdParty\ThirdParties;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -20,13 +19,36 @@ class Supplier extends ThirdParties
     protected $table = 't_Suppliers';
     protected $primaryKey = 'Id';
 
+    // Limit fillable to actual supplier table columns to avoid parent fillables bleeding in
     protected $fillable = [
-        'IsPrequalified',
+        'RoundID',
+        'ThirdPartyID',
+        'RoundID',
+        'CategoryId',
+        'Active_Status',
+        'SupplierCategoryID',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
     ];
 
     protected $casts = [
-        'IsPrequalified' => 'boolean',
+    'Active_Status' => 'boolean',
+    'CategoryId' => 'integer',
     ];
+
+    protected static function booted()
+    {
+        // Intentionally empty: suppress parent ThirdParties booted() logic that sets ApprovalStatus/Status
+        // because t_Suppliers does not have those columns.
+    }
+
+    public function thirdParty(): BelongsTo
+    {
+        return $this->belongsTo(ThirdParties::class, 'ThirdPartyID', 'Id');
+    }
 
     public function rfqEvaluations(): HasMany
     {
@@ -63,12 +85,32 @@ class Supplier extends ThirdParties
 
     public function scopeApprovedAndPrequalified($query)
     {
-        return $query
-            ->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier)
-            ->where('IsPrequalified', true)
-            ->where('ApprovalStatus', ThirdPartyApprovalStatusEnum::Approved);
+    // Treat Active_Status true as approved/active supplier row for the round/category
+    return $query
+        ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
+        ->where('Active_Status', 1);
     }
 
+
+    /**
+     * Relationship to SupplierCategory via SupplierCategoryID
+     */
+    public function supplierCategory()
+    {
+        return $this->belongsTo(\App\Models\ThirdParty\SupplierCategory::class, 'SupplierCategoryID', 'SupplierCategoryID');
+    }
+
+    /**
+     * Relationship to PrequalificationRound via RoundID
+     */
+    public function round()
+    {
+        return $this->belongsTo(\App\Models\Procurement\Prequalification\PrequalificationRound::class, 'RoundID', 'RoundID');
+    }
+
+    /**
+     * Many-to-many relationship to SupplierCategories through pivot table
+     */
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -81,6 +123,6 @@ class Supplier extends ThirdParties
 
     public function scopeOnlySuppliers($query)
     {
-        return $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier);
+        return $query->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'));
     }
 }

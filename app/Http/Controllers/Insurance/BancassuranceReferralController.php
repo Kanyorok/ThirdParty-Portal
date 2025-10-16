@@ -22,13 +22,14 @@ class BancassuranceReferralController extends Controller
 public function index()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])->get();
+    $referrals = BancAssuranceReferral::with(['insuranceProduct', 'preferredInsurer', 'assignedToUser',])
+        ->orderByDesc('Id')->get();
 
     return view('bancassurance.referrals.index', compact('referrals'));
 }
 public function create()
 {
-    $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
+    $this->authorize(PermissionEnum::BancassuranceReferralCreate, BancAssuranceReferral::class);
     $insurers = InsuranceProvider::all();
     $users = User::with('employee')->get();
     return view('bancassurance.referrals.create', compact('users', 'insurers'));
@@ -96,7 +97,7 @@ public function edit($Id)
     }
 
 public function update(BancAssuranceReferralRequest $request, $Id)
-{  
+{
     $this->authorize(PermissionEnum::BancassuranceReferralUpdate, BancAssuranceReferral::class);
     $user = auth()->user();
     $validated = $request->validated();
@@ -142,8 +143,7 @@ public function update(BancAssuranceReferralRequest $request, $Id)
 public function show($Id)
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referral = BancAssuranceReferral::findOrFail($Id);
-
+    $referral = BancAssuranceReferral::with('employee')->findOrFail($Id);
     return view('bancassurance.referrals.show', compact('referral'));
 }
 
@@ -153,7 +153,7 @@ public function assignList()
     $referrals = BancAssuranceReferral::with('insuranceProduct')
         ->whereNull('AssignedTo')
         ->where('Status',InsuranceReferralStatus::Pending->value) // Assuming 'P' stands for 'Pending'
-        ->get();
+        ->orderByDesc('Id')->get();
 
         $employees = Employee::whereNull('DeletedOn')
             ->select('Id', 'FirstName', 'LastName')
@@ -185,15 +185,17 @@ public function assign(Request $request, $Id)
 public function performanceView()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['referredByEmployee.branch'])->get();
+    $referrals = BancAssuranceReferral::with(['referredByEmployee.employee.branch'])->get();
 
         $grouped = $referrals->groupBy(function ($referral) {
             return $referral->referredByEmployee?->Id ?? 'Unknown';
         });
 
         $performance = $grouped->map(function ($items) {
-            $employee = $items->first()->referredByEmployee;
+            $employee = $items->first()->referredByEmployee->employee;
             $branch = $employee?->branch;
+
+            // dd($employee, $branch);
 
             return [
                 'StaffName' => $employee ? $employee->FirstName . ' ' . $employee->LastName : 'Unknown',
@@ -211,6 +213,11 @@ Public function destroy($Id)
 {
     $this->authorize(PermissionEnum::BancassuranceReferralDelete, BancAssuranceReferral::class);
     $referral = BancAssuranceReferral::findOrFail($Id);
+
+    if ($referral->customerreferral()->exists()) {
+        return redirect()->back()
+            ->withErrors(['error' => 'This Property Block is in use and cannot be deleted.']);
+    }
     $referral->DeletedBy = Auth()->Id();
     $referral->save();
     $referral->delete();

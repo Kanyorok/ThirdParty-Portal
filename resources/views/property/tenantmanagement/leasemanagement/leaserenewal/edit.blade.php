@@ -11,9 +11,6 @@
             </ul>
         </div>
     @endif
-
-    <h1>Edit Lease Renewal</h1>
-
     <form action="{{ route('renewlease.update', $leaserenewal->Id) }}" method="POST">
         @csrf
         @method('PUT')
@@ -31,27 +28,27 @@
             <div class="col-md-6">
                 <label class="form-label">Tenant</label>
                 <input type="text" class="form-control" readonly
-                       value="{{ old('TenantName', $leaserenewal->lease->tenant->TenantName ?? '') }}">
+                       value="{{ old('TenantName', $leaserenewal->lease->tenant->ThirdPartyName ?? '-') }}">
                 <input type="hidden" name="TenantId"
-                       value="{{ old('TenantId', $leaserenewal->lease->tenant->Id ?? '') }}">
+                       value="{{ old('TenantId', $leaserenewal->lease->tenant->Id ?? '-') }}">
             </div>
 
             <!-- Auto-filled Property -->
             <div class="col-md-6">
                 <label class="form-label">Property</label>
                 <input type="text" class="form-control" readonly
-                       value="{{ old('PropertyName', $leaserenewal->lease->property->PropertyName ?? '') }}">
+                       value="{{ old('PropertyName', $leaserenewal->lease->property->PropertyName ?? '-') }}">
                 <input type="hidden" name="PropertyId"
-                       value="{{ old('PropertyId', $leaserenewal->lease->property->Id ?? '') }}">
+                       value="{{ old('PropertyId', $leaserenewal->lease->property->Id ?? '-') }}">
             </div>
 
             <!-- Auto-filled Payment Frequency -->
             <div class="col-md-6">
                 <label class="form-label">Payment Frequency</label>
                 <input type="text" class="form-control" readonly
-                       value="{{ old('FrequencyName', $leaserenewal->paymentFrequency->Description ?? '') }}">
+                       value="{{ old('FrequencyName', $leaserenewal->paymentFrequency->Description ?? '-') }}">
                 <input type="hidden" name="PaymentFrequency"
-                       value="{{ old('PaymentFrequency', $leaserenewal->PaymentFrequency ?? '') }}">
+                       value="{{ old('PaymentFrequency', $leaserenewal->PaymentFrequency ?? '-') }}">
             </div>
         </div>
 
@@ -100,7 +97,9 @@
                       name="Remarks">{{ old('Remarks', $leaserenewal->Remarks) }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-success">Update Lease Renewal</button>
         <a href="{{ route('renewlease.index') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Lease Renewal
+        </button>
     </form>
 @endsection

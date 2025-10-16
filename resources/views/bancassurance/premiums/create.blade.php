@@ -13,9 +13,12 @@
                 @foreach ($policies as $policy)
                     <option
                         value="{{ $policy->Id }}"
-                        data-paymentfrequency="{{ $policy->paymentfrequency->Description}}"
-                        data-customerid="{{ $policy->customerID }}">
+                        data-paymentfrequency="{{ $policy->paymentfrequency->Description ?? '-'}}"
+                        data-customerid="{{ $policy->customer->thirdParty->ThirdPartyName ?? '-'}}"
+                        data-balance="{{ isset($balances[$policy->Id]) ? $balances[$policy->Id] : 0 }}">
                         {{ $policy->PolicyNumber }}
+                        (Pending: {{ isset($balances[$policy->Id]) ? number_format($balances[$policy->Id], 2) : '0.00' }}
+                        )
                     </option>
                 @endforeach
             </select>
@@ -46,7 +49,7 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Amount Paid</label>
+                <label class="form-label">Amount Paid</label> <small id="pending-balance-label"></small>
                 <input type="number" name="Amount" step="0.01" class="form-control" required>
             </div>
 
@@ -91,6 +94,7 @@
             const selected = this.options[this.selectedIndex];
             const frequency = selected.getAttribute('data-paymentfrequency');
             const customerId = selected.getAttribute('data-customerid');
+            const balance = selected.getAttribute('data-balance');
 
             // Fill customer
             document.getElementById('customer-id-display').value = customerId || '';
@@ -100,11 +104,19 @@
             document.getElementById('payment-frequency-display').value = frequency || '';
             document.getElementById('payment-frequency-id').value = frequency || '';
 
+            // Show pending balance
+            document.getElementById('pending-balance-label').innerText = balance !== null ? `Pending: ${parseFloat(balance).toFixed(2)}` : '';
+
             // Reset next payment date if payment date is already filled
             autoCalculateNextPaymentDate();
         });
 
         document.getElementById('payment-date').addEventListener('change', autoCalculateNextPaymentDate);
+
+        // Trigger change event on page load to show balance if a policy is preselected
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('request-select').dispatchEvent(new Event('change'));
+        });
 
         function autoCalculateNextPaymentDate() {
             const paymentDateInput = document.getElementById('payment-date');
