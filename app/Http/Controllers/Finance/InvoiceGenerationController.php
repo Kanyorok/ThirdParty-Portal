@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceInvoice;
 use App\Models\Finance\FinanceInvoiceEntry;
@@ -26,6 +27,7 @@ class InvoiceGenerationController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableView, FinanceInvoice::class);
         $query = FinanceInvoice::select([
             'Id',
             'RequestID',
@@ -79,6 +81,7 @@ class InvoiceGenerationController extends Controller
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceInvoice::class);
         // Get customers with their credit information
         $customers = DB::table('t_ThirdParties as tp')
             ->leftJoin('t_FinanceCreditManagement as fcm', function($join) {
@@ -103,6 +106,7 @@ class InvoiceGenerationController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceInvoice::class);
         $validated = $request->validate([
             'CustomerID' => 'required|integer|exists:t_ThirdParties,Id',
             'InvoiceTitle' => 'required|string|max:255',
@@ -208,6 +212,7 @@ class InvoiceGenerationController extends Controller
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsReceivableView, FinanceInvoice::class);
         $invoice = FinanceInvoice::with([
             'customer.country',
             'source:ModuleID,Name',
@@ -399,6 +404,7 @@ class InvoiceGenerationController extends Controller
      */
     private function checkCreditAvailability(int $customerId, float $invoiceAmount): array
     {
+        
         return $this->creditService->canApplyCredit($customerId, $invoiceAmount);
     }
 

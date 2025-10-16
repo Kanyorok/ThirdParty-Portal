@@ -22,6 +22,7 @@ class InvoiceEntryV2Controller extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         // Build query with filters
         $query = FinanceInvoiceEntry::with(['thirdParty', 'currency']);
 
@@ -81,6 +82,7 @@ class InvoiceEntryV2Controller extends Controller
 
     public function create()
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
         $paymentMethods = CodeDetail::where('CodeID', 'PaymentMethod')
             ->orderBy('Description')
             ->get(['ID', 'Value', 'Description']);
@@ -93,6 +95,7 @@ class InvoiceEntryV2Controller extends Controller
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         // Load invoice with relationships like the original controller
         $invoice = FinanceInvoiceEntry::with([
             'thirdParty:Id,ThirdPartyName,TradingName',
@@ -175,6 +178,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function quickSearchSuppliers(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             // Support both Select2 (q) and our previous (search_term) parameter styles
             $q = trim((string) ($request->input('search_term') ?? $request->input('q') ?? ''));
@@ -270,6 +274,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function findSupplier(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             // This method can accept either search_term or supplier_id
             if ($request->has('supplier_id')) {
@@ -443,6 +448,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     private function getOrderLines($orderId)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             $rows = DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
@@ -503,6 +509,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     private function getGRNItems($grnId)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             return DB::table('t_GoodsReceipts as gr')
                 ->leftJoin('t_Items as i', 'gr.ItemNo', '=', 'i.Id')
@@ -534,6 +541,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
         try {
             $validated = $request->validate([
                 'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
@@ -618,6 +626,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function update(Request $request, $id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceInvoiceEntry::class);
         try {
             $invoice = FinanceInvoiceEntry::findOrFail($id);
 
@@ -660,6 +669,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function edit($id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceInvoiceEntry::class);
         $invoice = FinanceInvoiceEntry::with(['thirdParty'])->findOrFail($id);
 
         // Suppliers: fetch from suppliers joined to third parties for the dropdown
@@ -686,7 +696,8 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function destroy($id)
     {
-        try {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceInvoiceEntry::class);
+            try {
             DB::beginTransaction();
 
             $invoice = FinanceInvoiceEntry::findOrFail($id);

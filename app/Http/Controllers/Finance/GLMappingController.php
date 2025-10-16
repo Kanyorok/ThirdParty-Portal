@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Module;
 use App\Models\Finance\FinanceGLAccounts;
@@ -17,6 +18,7 @@ class GLMappingController extends Controller
 {
     public function index()
     {
+        $this->authorize(PermissionEnum::FinanceGLMappingView, FinanceGLMapping::class);
         $mappings = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName', 'creditAccount:Id,GLName')
             ->orderBy('Id','desc')->get();
 
@@ -25,6 +27,7 @@ class GLMappingController extends Controller
 
     public function create()
     {
+        $this->authorize(PermissionEnum::FinanceGLMappingCreate, FinanceGLMapping::class);
         $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
         $moduleIds=FinanceModuleTransactions::distinct()->pluck('ModuleID')->toArray();
         $modules = Module::select('ModuleID','Name')->whereIn('ModuleID', $moduleIds)
@@ -36,6 +39,7 @@ class GLMappingController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceGLMappingCreate, FinanceGLMapping::class);
         $validated = $request->validate([
             'ModuleID' => 'required|string|exists:t_Modules,ModuleID',
             'TransactionType' => 'required|string|exists:t_FinanceTransactionTypes,Id',
@@ -69,6 +73,7 @@ class GLMappingController extends Controller
     }
     public function list()
     {
+        $this->authorize(PermissionEnum::FinanceGLMappingView, FinanceGLMapping::class);
         $accounts = DB::table('t_FinanceGLAccounts')  // Table name
             ->select('Id', 'GLName')            // Columns we need
             ->orderBy('GLName')                 // Sort for better UX

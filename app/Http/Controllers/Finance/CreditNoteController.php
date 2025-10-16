@@ -18,7 +18,7 @@ class CreditNoteController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteView, FinanceCDNotes::class);
 
         $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->get();
 
@@ -65,7 +65,7 @@ class CreditNoteController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
         $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->where('ApprovalStatus','posted')
             ->get();
@@ -75,7 +75,7 @@ class CreditNoteController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
         $validated = $request->validate([
             'InvoiceRefNo'=> 'required|exists:t_FinanceInvoiceEntry,Id',
@@ -126,6 +126,7 @@ class CreditNoteController extends Controller
 
     public function show(int $id)
     {
+        $this->authorize(PermissionEnum::CreditNoteView, FinanceCDNotes::class);
         $note = FinanceCDNotes::with([
             'invoice',
             'invoice.thirdParty',
@@ -288,7 +289,7 @@ class CreditNoteController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteDelete, FinanceCDNotes::class);
 
         $note = FinanceCDNotes::findOrFail($id);
 
@@ -311,7 +312,7 @@ class CreditNoteController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteUpdate, FinanceCDNotes::class);
 
         $note = FinanceCDNotes::findOrFail($id);
 

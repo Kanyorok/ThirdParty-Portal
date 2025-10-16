@@ -18,7 +18,7 @@ class DebitNoteController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsReceivableView, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::DebitNoteView, FinanceCDNotes::class);
         $invoices = FinanceInvoice::select('Id','InvoiceNumber','InvoiceTitle','TotalAmount')->get();
 
         $query = FinanceCDNotes::with('invoiceDebit:Id,InvoiceNumber')
@@ -63,7 +63,7 @@ class DebitNoteController extends Controller
      * Show the form for creating a new resource.
      */
     public function create(){
-        $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::DebitNoteCreate, FinanceCDNotes::class);
 
          $invoices = FinanceInvoice::select('Id','InvoiceNumber','InvoiceTitle','TotalAmount')->where('ApprovalStatus','posted')
             ->get();
@@ -76,7 +76,7 @@ class DebitNoteController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::DebitNoteCreate, FinanceCDNotes::class);
 
         $validated = $request->validate([
             'InvoiceRefNo'=> 'required|exists:t_FinanceInvoices,Id',
@@ -131,6 +131,7 @@ class DebitNoteController extends Controller
      */
     public function show(int $id)
     {
+        $this->authorize(PermissionEnum::DebitNoteView, FinanceCDNotes::class);
         $note = FinanceCDNotes::with([
             // AP invoice relations (FinanceInvoiceEntry)
             'invoice',
@@ -163,7 +164,7 @@ class DebitNoteController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsReceivableUpdate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::DebitNoteUpdate, FinanceCDNotes::class);
 
         $validated = $request->validate([
             'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
@@ -204,6 +205,9 @@ class DebitNoteController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $this->authorize(PermissionEnum::DebitNoteDelete, FinanceCDNotes::class);
+        $note = FinanceCDNotes::findOrFail($id);
+        $note->delete();
+        return redirect()->route('debitnote.index')->with('success', 'Debit Note deleted successfully.');
     }
 }
