@@ -154,14 +154,33 @@
                                                     data-role="{{ $assignment->role_id }}">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <form method="POST" action="{{ route('user_roles.delete_branch', ['modelRole' => $assignmentKey]) }}" style="display:inline-block;">
+                                                <form method="POST" action="{{ route('user_roles.delete_branch', ['modelRole' => $assignmentKey]) }}" style="display:inline-block;" class="branch-role-delete">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                                                 </form>
                                             </div>
                                         @else
-                                            <span class="text-muted small">(unresolvable assignment)</span>
+                                            {{-- Render fallback forms that post composite keys so actions work even without ModelRoleId --}}
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary edit-branch-role-btn"
+                                                    data-id=""
+                                                    data-update-url=""
+                                                    data-branch="{{ $assignment->BranchId }}"
+                                                    data-role="{{ $assignment->role_id }}"
+                                                    data-model_id="{{ $assignment->model_id }}"
+                                                    data-model_type="{{ $assignment->model_type }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <form method="POST" action="{{ route('user_roles.delete_branch_by_keys') }}" style="display:inline-block;" class="branch-role-delete">
+                                                    @csrf
+                                                    <input type="hidden" name="model_id" value="{{ $assignment->model_id }}">
+                                                    <input type="hidden" name="model_type" value="{{ $assignment->model_type }}">
+                                                    <input type="hidden" name="BranchId" value="{{ $assignment->BranchId }}">
+                                                    <input type="hidden" name="role_id" value="{{ $assignment->role_id }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                                </form>
+                                            </div>
                                         @endif
                                     </td>
                                 </tr>
@@ -272,25 +291,86 @@
             });
 
             // Initialize Select2
+            // Ensure selects inside modal render above it
             $('.select2').select2({width: '100%'});
+            $('#editBranchSelect, #editRoleSelect').select2({width: '100%', dropdownParent: $('#editBranchRoleModal')});
 
             // Edit branch role button handler
             $(document).on('click', '.edit-branch-role-btn', function () {
                 const id = $(this).data('id');
                 const branch = $(this).data('branch');
                 const role = $(this).data('role');
-                const updateUrl = $(this).data('update-url');
+                let updateUrl = $(this).data('update-url');
 
-                $('#editBranchRoleForm').attr('action', updateUrl);
+                // If updateUrl not present (fallback case), use composite-keys endpoint and we'll populate hidden inputs
+                if (!updateUrl || updateUrl.length === 0) {
+                    updateUrl = '{{ route('user_roles.update_branch_by_keys') }}';
+                    $('#editBranchRoleForm').attr('action', updateUrl);
+                    // ensure hidden inputs exist
+                    if ($('#editBranchRoleForm input[name="model_id"]').length === 0) {
+                        $('#editBranchRoleForm').append('<input type="hidden" name="model_id" value="">');
+                        $('#editBranchRoleForm').append('<input type="hidden" name="model_type" value="">');
+                    }
+                    // remove method override so Laravel treats this as a POST to the specific endpoint
+                    $('#editBranchRoleForm input[name="_method"]').remove();
+                    // set composite key values from data attributes if present on the button
+                    $('#editBranchRoleForm input[name="model_id"]').val($(this).data('model_id') || '');
+                    $('#editBranchRoleForm input[name="model_type"]').val($(this).data('model_type') || '');
+                } else {
+                    $('#editBranchRoleForm').attr('action', updateUrl);
+                    // remove any composite hidden inputs (keep form clean)
+                    $('#editBranchRoleForm input[name="model_id"]').remove();
+                    $('#editBranchRoleForm input[name="model_type"]').remove();
+                    // ensure method override exists for route-model update (PATCH)
+                    if ($('#editBranchRoleForm input[name="_method"]').length === 0) {
+                        $('#editBranchRoleForm').append('<input type="hidden" name="_method" value="PATCH">');
+                    } else {
+                        $('#editBranchRoleForm input[name="_method"]').val('PATCH');
+                    }
+                }
                 $('#editBranchSelect').val(branch).trigger('change');
                 $('#editRoleSelect').val(role).trigger('change');
                 var modal = new bootstrap.Modal(document.getElementById('editBranchRoleModal'));
                 modal.show();
             });
 
-            // Handle edit form submission via normal post to update route
-            $('#editBranchRoleForm').submit(function (e) {
-                // allow normal submission to server (will return back)
+            // Handle edit form submission via AJAX so we can show messages and update the UI without full reload
+            $('#editBranchRoleForm').submit(async function (e) {
+                e.preventDefault();
+                const form = $(this);
+                const action = form.attr('action');
+                const data = form.serialize();
+                try {
+                    const res = await $.ajax({url: action, method: 'POST', data: data, dataType: 'json'});
+                    nSuccess(res.message || 'Updated');
+                    // reload page to reflect changes (simple, safe)
+                    setTimeout(function () { window.location.reload(); }, 700);
+                } catch (err) {
+                    console.error('Edit error', err);
+                    const msg = (err && err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : (err && err.responseText) ? err.responseText : 'Server error';
+                    nError(msg);
+                    // also call formRequest for validation handling
+                    formRequest(err, true, true);
+                }
+            });
+
+            // Intercept delete forms (both modelRole route and composite keys) to run via AJAX and show notification
+            $(document).on('submit', 'form.branch-role-delete', async function (e) {
+                e.preventDefault();
+                const form = $(this);
+                if (!confirm('⚠️ Are you sure you want to delete this assignment?')) return;
+                try {
+                    const res = await $.ajax({url: form.attr('action'), method: 'POST', data: form.serialize(), dataType: 'json'});
+                    nSuccess(res.message || 'Deleted');
+                    // remove the row from the table
+                    form.closest('tr').fadeOut(200, function () { $(this).remove(); });
+                } catch (err) {
+                    // show server message if present
+                    console.error('Delete error', err);
+                    const msg = (err && err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : (err && err.responseText) ? err.responseText : 'Server error';
+                    nError(msg);
+                    formRequest(err, true, false);
+                }
             });
         });
 
