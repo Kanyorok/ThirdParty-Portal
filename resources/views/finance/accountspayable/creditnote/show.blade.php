@@ -36,8 +36,8 @@
                 <div class="text-end">
                     {{-- Optional logo (remove if not needed) --}}
                     {{-- <img src="{{ asset('images/company-logo.png') }}" alt="Company Logo" height="60"> --}}
-                    <h4 class="fw-bold mt-2">
-                        <i>{{$note->invoice->currency->Code}} </i> {{ number_format($note->NoteAmount, 2) }}</h4>
+                    @php($inv = $note->invoice ?? $note->invoiceDebit)
+                    <h4 class="fw-bold mt-2"><i>{{ $inv->currency->Code ?? '' }} </i> {{ number_format($note->NoteAmount, 2) }}</h4>
                 </div>
             </div>
 
@@ -54,24 +54,33 @@
                 <tbody>
                 <tr>
                     <td>
-                        @if($note->invoice && $note->invoice->thirdParty)
-                            <strong>{{ $note->invoice->thirdParty->TradingName ?? $note->invoice->thirdParty->ThirdPartyName }}</strong><br>
-                            {{ $note->invoice->thirdParty->Email ?? '-' }}<br>
-                            {{ $note->invoice->thirdParty->Phone ?? '-' }}<br>
-                            {{ $note->invoice->thirdParty->Address ?? '-' }}<br>
-                            @php($taxNo = $note->invoice->thirdParty->TaxNumber ?? $note->invoice->thirdParty->RegistrationNumber ?? null)
-                            <span>Tax No: {{ $taxNo ?? '-' }}</span>
+                        @php($inv = $note->invoice ?? $note->invoiceDebit)
+                        @if($inv)
+                            @php($party = $inv->thirdParty ?? $inv->customer ?? null)
+                            @if($party)
+                                <strong>{{ $party->TradingName ?? $party->ThirdPartyName ?? '-' }}</strong><br>
+                                {{ $party->Email ?? '-' }}<br>
+                                {{ $party->Phone ?? '-' }}<br>
+                                {{ $party->Address ?? '-' }}<br>
+                                @php($taxNo = $party->TaxNumber ?? $party->RegistrationNumber ?? null)
+                                <span>Tax No: {{ $taxNo ?? '-' }}</span>
+                            @else
+                                N/A
+                            @endif
                         @else
                             N/A
                         @endif
                     </td>
                     <td>
-                        @if($note->invoice)
-                            <strong>{{ $note->invoice->InvoiceNumber }}</strong><br>
-                            Date: {{ \Carbon\Carbon::parse($note->invoice->InvoiceDate)->format('d-m-Y') }}<br>
-                            Amount: {{ number_format($note->invoice->InvoiceAmount, 2) }} {{ $note->invoice->currency->Code ?? '' }}
-                            <br>
-                            PO Ref: {{ $note->invoice->order->OrderNo ?? $note->invoice->POReference ?? 'N/A' }}
+                        @php($inv = $note->invoice ?? $note->invoiceDebit)
+                        @if($inv)
+                            <strong>{{ $inv->InvoiceNumber ?? '-' }}</strong><br>
+                            @php($invDate = $inv->InvoiceDate ?? $inv->CreatedOn ?? null)
+                            Date: {{ $invDate ? \Carbon\Carbon::parse($invDate)->format('d-m-Y') : '-' }}<br>
+                            @php($invAmount = $inv->InvoiceAmount ?? $inv->TotalAmount ?? null)
+                            Amount: {{ $invAmount ? number_format($invAmount, 2) : '-' }} {{ $inv->currency->Code ?? '' }}<br>
+                            @php($po = $inv->order->OrderNo ?? $inv->POReference ?? null)
+                            PO Ref: {{ $po ?? 'N/A' }}
                         @else
                             N/A
                         @endif

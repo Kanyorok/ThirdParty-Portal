@@ -16,7 +16,7 @@
 
 <div class="container mt-4">
     <div class="card shadow-sm rounded-3">
-        <div class="card-header bg-info text-white">
+        <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="bi bi-gear-fill me-2"></i> Commission Info</h5>
         </div>
         <div class="card-body">
@@ -65,7 +65,8 @@
                     <!-- Fixed Amount -->
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Fixed Amount <span class="text-danger">*</span></label>
-                        <input type="number" name="FixedAmount" step="0.01" class="form-control rounded-3" placeholder="e.g. 1000" required>
+                        <input type="amount" name="FixedAmount" id="FixedAmount" class="form-control rounded-3 text-end" 
+                        placeholder="e.g. 1,000.00" required onblur="formatDecimal(this)">
                     </div>
 
                     <!-- Applies To -->
@@ -101,4 +102,21 @@
         </div>
     </div>
 </div>
+
+{{-- JS for decimal formatting --}}
+<script>
+function formatDecimal(input) {
+    let value = input.value.replace(/,/g, '').trim();
+    if (value === '' || isNaN(value)) {
+        input.value = '';
+        return;
+    }
+    // Format with commas and 2 decimals
+    const formatted = parseFloat(value).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    input.value = formatted;
+}
+</script>
 @endsection

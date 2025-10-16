@@ -230,7 +230,7 @@ class TransactionReceiptService
                     'Reason' => $status,
                     'Source' => $transferSource,
                     'SourceID' => $receipt->Id,
-                    'Status' => Transfers::InTransit->value,
+                    'Status' => Transfers::AwaitingReview->value,
                     'Remarks' => $itemData['remarks'] ?? null,
                     'CreatedBy' => Auth::id(),
                     'CreatedOn' => now(),

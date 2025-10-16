@@ -12,6 +12,9 @@ use App\Models\Procurement\RFQResponse;
 use App\Models\Procurement\RFQSupplierResponseEvaluation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Services\CRMEmailService;
+use App\Enums\EmailPriorityEnum;
 
 class RFQEvaluationController extends Controller
 {
@@ -330,6 +333,37 @@ class RFQEvaluationController extends Controller
             }
         } catch (\Throwable $e) {
             \Log::error('Supplier award notify exception', ['rfqId' => $rfqId, 'supplierId' => $supplierId, 'error' => $e->getMessage()]);
+        }
+
+        // Send award email to supplier (if email available)
+        try {
+            $responseRecord = \App\Models\Procurement\RFQResponse::where('RFQId', $rfqId)->where('SupplierId', $supplierId)->with('supplier.thirdParty')->first();
+            $recipientEmail = null;
+            $recipientName = null;
+            if ($responseRecord && $responseRecord->supplier && $responseRecord->supplier->thirdParty) {
+                $tp = $responseRecord->supplier->thirdParty;
+                $recipientEmail = $tp->Email ?? null;
+                $recipientName = $tp->ThirdPartyName ?? $tp->TradingName ?? null;
+            }
+
+            if ($recipientEmail && filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+                $actor = auth()->user();
+                $subject = "Award Notification: RFQ #{$rfqId} - {$award->Id}";
+                $body = "<p>Dear " . ($recipientName ?? 'Supplier') . ",</p>";
+                $body .= "<p>We are pleased to inform you that you have been awarded for RFQ <strong>" . ($award->RFQId ?? $rfqId) . "</strong>.</p>";
+                $body .= "<p>Comments: " . e($request->input('Comments') ?? '') . "</p>";
+                $body .= "<p>Please log in to the supplier portal for details.</p>";
+                $body .= "<p>Regards,<br>" . e(config('org.name')) . "</p>";
+
+                // Prepare to/to array format expected by createRaw: [ [ 'Name' => 'email' ] ]
+                $to = [[ $recipientName ?? $recipientEmail => $recipientEmail ]];
+
+                CRMEmailService::createRaw($actor, $subject, $body, $to, 'ThirdParty', (string)($responseRecord->supplier->thirdParty->Id ?? ''), [], [], EmailPriorityEnum::Normal)->send(true);
+            } else {
+                Log::warning('Award email not sent: no valid email for supplier', ['rfqId' => $rfqId, 'supplierId' => $supplierId]);
+            }
+        } catch (\Throwable $ex) {
+            Log::error('Error sending award email', ['error' => $ex->getMessage(), 'rfqId' => $rfqId, 'supplierId' => $supplierId]);
         }
 
         return back()->with('success', 'Award saved and supplier notified.');

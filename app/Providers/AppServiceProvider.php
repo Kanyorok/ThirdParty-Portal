@@ -396,6 +396,7 @@ class AppServiceProvider extends ServiceProvider
 
 
             //Third Parties
+            \App\Models\ThirdParty\ThirdParties::getPrimaryKey() => \App\Models\ThirdParty\ThirdParties::class,
             //Fleet Management
             // FleetMake::getPrimaryKey() => FleetMake::class,
             // FleetModel::getPrimaryKey() => FleetModel::class,

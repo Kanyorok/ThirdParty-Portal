@@ -25,15 +25,30 @@ class UpdateItemCategoryRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
     public function rules(): array
     {
         return [
-            'Name' => 'required|string|max:255',
+            'Name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_ItemCategories', 'Name')
+                    ->ignore($this->route('id'))
+                    ->where('ParentId', $this->ParentId),
+            ],
             'Description' => 'nullable|string',
             'ParentId' => 'nullable|exists:t_ItemCategories,Id',
             'Status' => 'nullable|exists:t_CodeDetails,ID',
         ];
     }
-}
 
+    /**
+     * Get custom error messages for validator errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'Name.unique' => 'The Item Category name already exists.',
+        ];
+    }
+}

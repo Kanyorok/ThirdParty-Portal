@@ -14,14 +14,50 @@
             </div>
 
             <div class="card-body pt-3">
-                <p class="text-muted">Below is the list of all saved credit and debit notes with their details.</p>
-                {{--                <div class="mb-3">--}}
-                {{--                    <div class="btn-group" role="group">--}}
-                {{--                        <button type="button" class="btn btn-outline-info btn-sm" onclick="filterNotes('All')">All</button>--}}
-                {{--                        <button type="button" class="btn btn-outline-success btn-sm" onclick="filterNotes('Credit')">Credit Notes</button>--}}
-                {{--                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="filterNotes('Debit')">Debit Notes</button>--}}
-                {{--                    </div>--}}
-                {{--                </div>--}}
+                <form action="{{ route('creditnote.index') }}" method="GET" id="filter-form" class="row g-2 align-items-end mb-3">
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">CD Number</label>
+                        <input type="text" class="form-control form-control-sm" name="cd_number" value="{{ request('cd_number') }}" placeholder="Search CD#">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Invoice #</label>
+                        <input type="text" class="form-control form-control-sm" name="invoice_number" value="{{ request('invoice_number') }}" placeholder="Invoice ref">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Date From</label>
+                        <input type="date" class="form-control form-control-sm" name="date_from" value="{{ request('date_from') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Date To</label>
+                        <input type="date" class="form-control form-control-sm" name="date_to" value="{{ request('date_to') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Min Amount</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm" name="amount_min" value="{{ request('amount_min') }}" placeholder="0.00">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Status</label>
+                        <select class="form-select form-select-sm" name="approval_status">
+                            <option value="all" {{ request('approval_status')=='all' ? 'selected' : '' }}>All</option>
+                            @isset($approvalStatuses)
+                                @foreach($approvalStatuses as $status)
+                                    <option value="{{ $status }}" {{ request('approval_status')==$status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex justify-content-end mt-2">
+                        <button type="submit" class="btn btn-sm btn-primary me-2"><i class="fas fa-filter me-1"></i> Filter</button>
+                        <a href="{{ route('creditnote.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                    </div>
+                </form>
+{{--                <div class="mb-3">--}}
+{{--                    <div class="btn-group" role="group">--}}
+{{--                        <button type="button" class="btn btn-outline-info btn-sm" onclick="filterNotes('All')">All</button>--}}
+{{--                        <button type="button" class="btn btn-outline-success btn-sm" onclick="filterNotes('Credit')">Credit Notes</button>--}}
+{{--                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="filterNotes('Debit')">Debit Notes</button>--}}
+{{--                    </div>--}}
+{{--                </div>--}}
 
                 <div class="table-responsive">
                     <table class="table table-hover table-sm align-middle mb-0 text-center"
@@ -128,6 +164,16 @@
                         </tbody>
                     </table>
                 </div>
+                @if(method_exists($notes,'links'))
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted small">
+                            Showing {{ $notes->firstItem() ?? 0 }} to {{ $notes->lastItem() ?? 0 }} of {{ $notes->total() ?? $notes->count() }} entries
+                        </div>
+                        <div>
+                            {{ $notes->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

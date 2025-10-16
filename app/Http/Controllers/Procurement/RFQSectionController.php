@@ -19,9 +19,11 @@ class RFQSectionController extends Controller
      */
     public function evaluationSetup()
     {
+        // Order newest first and paginate so the view shows a pager
         $rfqs = RFQ::withCount(['sections', 'criteria'])
             ->with('sections')
-            ->get();
+            ->orderByDesc('Id')
+            ->paginate(10);
         // Use Sections maintained at tendering settings (t_Sections)
         $sections = Section::isActive()->get();
     // Include Comments so the modal select can show RFQNumber-Comments

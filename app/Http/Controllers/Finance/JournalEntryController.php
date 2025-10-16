@@ -19,12 +19,57 @@ use Illuminate\Validation\ValidationException;
 class JournalEntryController extends Controller
 {
     //
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
-        $journalEntries = FinanceJournalEntry::with('journalLines:Id,JournalEntryId,Debit,Credit,Amount,IsDebit,Narration')
-            ->select('Id','RefNo','Date','Description','ApprovalStatus','Type')->where('Type','normal')->get();
-        return view('finance.generalledger.journalentry.index',compact('journalEntries'));
+
+        // Build query with filters
+        $query = FinanceJournalEntry::with('journalLines:Id,JournalEntryId,Debit,Credit,Amount,IsDebit,Narration')
+            ->select('Id', 'RefNo', 'Date', 'Description', 'ApprovalStatus', 'Type', 'SourceModule', 'IsReversed')
+            ->where('Type', 'normal');
+
+        // Apply filters if provided
+        if ($request->filled('ref_no')) {
+            $query->where('RefNo', 'like', '%' . $request->ref_no . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('Date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('Date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('description')) {
+            $query->where('Description', 'like', '%' . $request->description . '%');
+        }
+
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+
+        // Apply sorting
+        $sortField = $request->sort_by ?? 'Date';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        // Paginate results
+        $perPage = $request->per_page ?? 10;
+        $journalEntries = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options for dropdowns
+        $approvalStatuses = FinanceJournalEntry::distinct()
+            ->where('Type', 'normal')
+            ->pluck('ApprovalStatus')
+            ->filter()
+            ->unique()
+            ->values();
+
+        return view('finance.generalledger.journalentry.index', compact(
+            'journalEntries',
+            'approvalStatuses'
+        ));
     }
 
     public function create()
@@ -124,7 +169,15 @@ class JournalEntryController extends Controller
     public function show($id)
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerView, FinanceJournalEntry::class);
-        $journalEntry = FinanceJournalEntry::with('journalLines.glAccount','createdBy:Id,Name')->findOrFail($id);
+        $journalEntry = FinanceJournalEntry::with([
+            'journalLines.glAccount',
+            'sourceModule',
+            'createdBy:Id,Name',
+            'modifiedBy:Id,Name',
+            'reversalsAsOriginal' => function($query) {
+                $query->with('journalEntry.createdBy:Id,Name');
+            }
+        ])->findOrFail($id);
         return view('finance.generalledger.journalentry.show', compact('journalEntry'));
     }
 

@@ -118,6 +118,12 @@ class ClaimController extends Controller
         $validated = $request->validated();
 
         $assessment = BancassuranceClaimAssessment::findOrFail($id);
+
+        if ($assessment->claimpaiyments()->exists()) {
+            return redirect()->back()
+            ->withErrors(['error' => 'This claim has been paid cannot be modified.']);
+        }
+         
         $Decision = CodeDetail::findOrFail($validated['Decision']);
 
         $assessment = BancassuranceClaimAssessmentService::update(
@@ -129,7 +135,7 @@ class ClaimController extends Controller
         );
 
 
-        return redirect()->route('bancassurance.claims.index')
+        return redirect()->route('bancassurance.claims.assessment_list')
             ->with('success', 'Claim assessment updated successfully.');
     }
 }

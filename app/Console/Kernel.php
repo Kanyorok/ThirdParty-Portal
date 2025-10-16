@@ -10,7 +10,9 @@ class Kernel extends ConsoleKernel
 {
     // ✅ Register your custom Artisan commands
     protected $commands = [
+        \\App\\Console\\Commands\\SeedGrnMappingCommand::class,
         \App\Console\Commands\SendTenderReminders::class,
+        \\App\\Console\\Commands\\SeedGrnMappingCommand::class,
     ];
 
     // ✅ Define your task scheduling here

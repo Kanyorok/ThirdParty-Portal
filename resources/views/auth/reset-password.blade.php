@@ -19,15 +19,25 @@
                 </div>
                 <div class="mb-3">
                     <label for="password" class="col-form-label text-md-end">{{ __('Password') }}</label>
-                    <input id="password" type="password" class="form-control" name="password" required
-                           autocomplete="new-password">
+                    <div class="input-group">
+                        <input id="password" type="password" class="form-control" name="password" required
+                               autocomplete="new-password">
+                        <button type="button" id="togglePassword" class="btn btn-outline-secondary" aria-label="Show password">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <span id="password_error" class="invalid-feedback" role="alert"></span>
                 </div>
                 <div class="mb-3">
                     <label for="password_confirmation"
                            class="col-form-label text-md-end">{{ __('Confirm Password') }}</label>
-                    <input id="password_confirmation" type="password" class="form-control" name="password_confirmation"
-                           required autocomplete="new-password">
+                    <div class="input-group">
+                        <input id="password_confirmation" type="password" class="form-control" name="password_confirmation"
+                               required autocomplete="new-password">
+                        <button type="button" id="togglePasswordConfirmation" class="btn btn-outline-secondary" aria-label="Show confirm password">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
                     <span id="password_confirmation_error" class="invalid-feedback" role="alert"></span>
                 </div>
                 <div class="text-center my-2">
@@ -97,6 +107,33 @@
                 e.preventDefault();
                 await saveForm($(this), $('#recoverAccountBtn'), true, false, true);
             });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const pwd = document.getElementById('password');
+            const toggle = document.getElementById('togglePassword');
+            const pwdConfirm = document.getElementById('password_confirmation');
+            const toggleConfirm = document.getElementById('togglePasswordConfirmation');
+
+            function wireToggle(input, button) {
+                if (!input || !button) return;
+                button.addEventListener('click', function () {
+                    const icon = this.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        this.setAttribute('aria-label', 'Hide password');
+                        if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+                    } else {
+                        input.type = 'password';
+                        this.setAttribute('aria-label', 'Show password');
+                        if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+                    }
+                });
+            }
+
+            wireToggle(pwd, toggle);
+            wireToggle(pwdConfirm, toggleConfirm);
         });
     </script>
 @endsection

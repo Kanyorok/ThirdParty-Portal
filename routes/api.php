@@ -23,6 +23,7 @@ use App\Http\Controllers\Procurement\TenderInvitationController;
 use App\Http\Controllers\API\DMS\DocumentApiController;
 use App\Http\Controllers\Procurement\TenderDocumentController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -188,6 +189,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::get('{third_party}', [ThirdPartyController::class, 'show']);
         Route::put('{third_party}', [ThirdPartyController::class, 'update']);
         Route::delete('{third_party}', [ThirdPartyController::class, 'destroy']);
+    // Upload supporting documents for a third party
+    Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
         // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
         // Route::patch('{third_party}/approve', [ThirdPartyController::class, 'approve']);
         // Route::patch('{third_party}/reject', [ThirdPartyController::class, 'reject']);

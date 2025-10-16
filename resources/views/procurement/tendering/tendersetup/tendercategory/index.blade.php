@@ -26,8 +26,9 @@
                     <td>{{ $type->CategoryCode }}</td>
                     <td>{{ $type->TenderCategory }}</td>
                     <td>{{ $type->Description }}</td>
-                    <td>
+                    <td class="d-flex gap-1">
                         <a href="{{ route('tendercategory.edit', $type->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{{ route('tendercategory.itemtypes', $type->Id) }}" class="btn btn-sm btn-outline-primary">Map Item Types</a>
                         <form action="{{ route('tendercategory.destroy', $type->Id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')

@@ -215,7 +215,7 @@
                             Showing {{ $credits->firstItem() }} to {{ $credits->lastItem() }} of {{ $credits->total() }} results
                         </div>
                         <nav>
-                            {{ $credits->links('pagination::bootstrap-4') }}
+                            {{ $credits->links('pagination::bootstrap-5') }}
                         </nav>
                     </div>
                 @endif

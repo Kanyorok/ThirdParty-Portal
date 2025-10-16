@@ -21,15 +21,14 @@ class BancassuranceClaimPaymentService
 
     public static function create(
         BancassuranceClaim $ClaimId,
-        Carbon             $PaymentDate,
-        float              $PaymentAmount,
-        string             $PaymentReference,
-        string             $Note,
-        string             $PaidBy,
-        CodeDetail         $PaymentMethod,
-        User               $user
-    ): self
-    {
+        Carbon $PaymentDate,
+        float $PaymentAmount,
+        string $PaymentReference,
+        ?string $Note = null,
+        string $PaidBy,
+        CodeDetail $PaymentMethod,
+        User $user
+    ):self{
         $payment = BancassuranceClaimPayment::create([
             'ClaimId' => $ClaimId->Id,
             'PaymentDate' => $PaymentDate,
