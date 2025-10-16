@@ -144,12 +144,25 @@
                                     <td>{{ $assignment->branch->Name ?? '—' }}</td>
                                     <td>{{ $assignment->role->name ?? '—' }}</td>
                                     <td>
-                                        <form method="POST" action="#">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger"><i
-                                                    class="fas fa-trash"></i></button>
-                                        </form>
+                                        @php $assignmentKey = $assignment->getKey() ?? $assignment->ModelRoleId ?? null; @endphp
+                                        @if($assignmentKey)
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary edit-branch-role-btn"
+                                                    data-id="{{ $assignmentKey }}"
+                                                    data-update-url="{{ route('user_roles.update_branch', ['modelRole' => $assignmentKey]) }}"
+                                                    data-branch="{{ $assignment->BranchId }}"
+                                                    data-role="{{ $assignment->role_id }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <form method="POST" action="{{ route('user_roles.delete_branch', ['modelRole' => $assignmentKey]) }}" style="display:inline-block;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                                </form>
+                                            </div>
+                                        @else
+                                            <span class="text-muted small">(unresolvable assignment)</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -160,16 +173,20 @@
 
                         <form method="POST" action="{{ route('user_roles.store',$user->UserID)}}">
                             @csrf
-                            <input type="hidden" name="model_id" value="{{ $user->UserID }}">
-                            <input type="hidden" name="model_type" value="App\Models\User">
+                            {{-- Use numeric Id as model_id and the canonical primary key name for model_type --}}
+                            <input type="hidden" name="model_id" value="{{ $user->Id }}">
+                            <input type="hidden" name="model_type" value="{{ $user::getPrimaryKey() }}">
 
                             <div class="row">
                                 <div class="col-md-6">
                                     <label>Branch</label>
-                                    <select name="BranchId" class="form-control select2">
+                                    @php $assigned = $user->branchRoles->pluck('BranchId')->filter()->values()->toArray(); @endphp
+                                    <select name="BranchId" class="form-control select2" id="branchSelect">
                                         <option disabled selected>Select Branch</option>
                                         @foreach($branches as $branch)
-                                            <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                                            @if(!in_array($branch->Id, $assigned))
+                                                <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                                            @endif
                                         @endforeach
                                     </select>
                                 </div>
@@ -189,6 +206,43 @@
                                 </div>
                             </div>
                         </form>
+                        <!-- Edit Branch Role Modal -->
+                        <div class="modal fade" id="editBranchRoleModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Branch Role</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form id="editBranchRoleForm" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label>Branch</label>
+                                                <select id="editBranchSelect" name="BranchId" class="form-control select2">
+                                                    @foreach($branches as $branch)
+                                                        <option value="{{ $branch->Id }}">{{ $branch->Name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label>Role</label>
+                                                <select id="editRoleSelect" name="role_id" class="form-control select2">
+                                                    @foreach($roles as $role)
+                                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Save changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -215,6 +269,28 @@
             $('form#trashUserForm').submit(async function (e) {
                 e.preventDefault();
                 await saveForm($(this), $('#trashUserBtn'), true, true, true);
+            });
+
+            // Initialize Select2
+            $('.select2').select2({width: '100%'});
+
+            // Edit branch role button handler
+            $(document).on('click', '.edit-branch-role-btn', function () {
+                const id = $(this).data('id');
+                const branch = $(this).data('branch');
+                const role = $(this).data('role');
+                const updateUrl = $(this).data('update-url');
+
+                $('#editBranchRoleForm').attr('action', updateUrl);
+                $('#editBranchSelect').val(branch).trigger('change');
+                $('#editRoleSelect').val(role).trigger('change');
+                var modal = new bootstrap.Modal(document.getElementById('editBranchRoleModal'));
+                modal.show();
+            });
+
+            // Handle edit form submission via normal post to update route
+            $('#editBranchRoleForm').submit(function (e) {
+                // allow normal submission to server (will return back)
             });
         });
 

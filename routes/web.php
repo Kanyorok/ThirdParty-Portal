@@ -13,12 +13,12 @@ require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function () {
     require __DIR__ . '/crm.php';
-    
+
     // Procurement routes with prefix
     Route::prefix('procurement')->group(function () {
         require __DIR__ . '/procurement.php';
     });
-    
+
     require __DIR__ . '/inventory.php';
     require __DIR__ . '/property.php';
     require __DIR__ . '/finance.php';
@@ -72,6 +72,9 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
             Route::post('user_roles/branch', 'UserRoleController@storeBranch')->name('user_roles.store_branch');
             Route::delete('settings/users/branch-role/{modelRole}', 'UserRoleController@destroy')
                 ->name('user_roles.delete_branch');
+            // Update an existing branch role assignment
+            Route::patch('settings/users/branch-role/{modelRole}', 'UserRoleController@update')
+                ->name('user_roles.update_branch');
             Route::prefix('users/{user}')->group(function () {
                 Route::resource('user_roles', 'UserRoleController')->only(['index', 'store']);
                 Route::get('activities', 'UserActivitiesController')->name('user.activities');
