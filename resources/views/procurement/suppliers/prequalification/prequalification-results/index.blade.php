@@ -53,9 +53,7 @@
                                 @if (!$hasRound)
                                     {{-- Prevent actions that require a configured round to avoid 404 from controller --}}
                                     @if (optional($app)->result)
-                                        <button class="btn btn-sm btn-secondary" disabled title="Prequalification round not configured for this application">
-                                            <i class="fas fa-eye me-1"></i> View Results
-                                        </button>
+                                        {{-- Result exists but round not configured: no view button shown --}}
                                     @else
                                         <button class="btn btn-sm btn-secondary" disabled title="Prequalification round not configured for this application">
                                             <i class="fas fa-edit me-1"></i> Evaluate
@@ -63,9 +61,7 @@
                                     @endif
                                 @else
                                     @if (optional($app)->result)
-                                        <a href="{{ route('prequalification.prequalification-evaluation.results', $evaluation->ApplicationID) }}" class="btn btn-sm btn-info text-white">
-                                            <i class="fas fa-eye me-1"></i> View Results
-                                        </a>
+                                        {{-- View button removed by request --}}
                                     @else
                                         <a href="{{ route('prequalification.prequalification-evaluation.show', $evaluation->ApplicationID) }}" class="btn btn-sm btn-warning text-dark">
                                             <i class="fas fa-edit me-1"></i> Evaluate

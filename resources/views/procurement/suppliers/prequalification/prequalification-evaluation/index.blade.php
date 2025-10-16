@@ -106,8 +106,10 @@ function actionButtons(row) {
 
     let buttons = '';
     
+    // Do not show a separate 'View Results' eye button here. Keep the evaluate action when needed.
     if (row.decision) {
-        buttons += `<a href="${viewUrl}" class="btn btn-sm btn-info text-white me-1" title="View Results"><i class='fas fa-eye'></i></a>`;
+        // Decision exists (Passed/Failed) — we intentionally don't render a standalone view button.
+        // Optionally, you could keep some other action here if required in future.
     } else {
         buttons += `<a href="${evalUrl}" class="btn btn-sm btn-warning text-dark me-1" title="Evaluate Application"><i class='fas fa-edit'></i></a>`;
     }
