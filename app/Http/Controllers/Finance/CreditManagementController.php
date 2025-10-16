@@ -159,7 +159,7 @@ class CreditManagementController extends Controller
     }
 
     public function show($id){
-        $credit = FinanceCreditManagement::with(['customer:Id,ThirdPartyName,RegistrationNumber,Email'])
+         $credit = FinanceCreditManagement::with(['customer:Id,ThirdPartyName,RegistrationNumber,Email'])
             ->findOrFail($id);
 
         $utilization = $this->creditService->calculateCustomerCreditUtilization($credit->CustomerID);
