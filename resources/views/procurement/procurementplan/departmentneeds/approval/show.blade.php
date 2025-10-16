@@ -74,7 +74,7 @@
     <!-- Rejection Reason Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="rejectForm" method="POST" action="{{ route('department-need-approval.destroy', $need->Id) }}">
+            <form id="rejectForm" method="POST" action="{{ route('department-need-approval.destroy', $need->DepartmentNeedID) }}">
                 @csrf
                 @method('DELETE')
                 <div class="modal-content">
@@ -98,7 +98,7 @@
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">
-        <form action="{{ route('department-need-approval.update', $need->Id) }}" method="POST" class="d-inline">
+        <form action="{{ route('department-need-approval.update', $need->DepartmentNeedID) }}" method="POST" class="d-inline">
             @csrf
             @method('PUT')
             <button type="submit" class="btn btn-success">Approve</button>

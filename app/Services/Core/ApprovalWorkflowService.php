@@ -25,7 +25,7 @@ abstract class ApprovalWorkflowService
         if ($code instanceof CodeDetail) {
             return $code;
         }
-        throw new ErroredException('Invalid Status');
+        throw new ErroredException("Invalid Status : {$status ->value} for codeID: {$CodeID} ");
     }
 
     /**

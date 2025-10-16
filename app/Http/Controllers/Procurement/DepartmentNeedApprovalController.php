@@ -23,52 +23,61 @@ class DepartmentNeedApprovalController extends Controller
         return view('procurement.procurementplan.departmentneeds.approval.index', compact('NeedsApprovalviews'));
     }
 
-    public function show($Id)
+    public function show($DepartmentNeedId)
     {
-        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($Id);
+        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($DepartmentNeedId);
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
-    public function update(Request $request, $departmentNeed_ID): RedirectResponse
+    //approve
+
+    public function update(Request $request, $DepartmentNeedID): RedirectResponse
     {
-        $departmentNeeds = DepartmentNeed::query()->findOrFail($departmentNeed_ID);
+         $departmentNeed = DepartmentNeed::query()->findOrFail($DepartmentNeedID);
 
-        $this->authorize('approve', $departmentNeeds);
+    $this->authorize('approve', $departmentNeed);
 
-        $lock = Cache::lock('approve-DepartmentNeeds-' . $departmentNeeds->NeedID, 5);
-        if (!$lock->get()) {
-            return redirect()
-                ->back()
-                ->with('error', 'Department Needs has been approved, or another user is working on it.');
-        }
-
-        $actor = $request->user();
-
-        try {
-            DB::transaction(static function () use ($departmentNeeds, $actor) {
-                (new DepartmentNeedsApprovalService($departmentNeeds))
-                    ->workflowApprove($actor);
-            });
-        } catch (ErroredException $e) {
-            return redirect()
-                ->back()
-                ->with('error', $e->getMessage());
-        } catch (\Throwable|Exception $e) {
-            Log::error('Error approve department needs failed: ' . $e->getMessage());
-            return redirect()
-                ->back()
-                ->with('error', 'Unexpected error, try again later.');
-        }
-
+    $lock = Cache::lock('approve-DepartmentNeeds-' . $departmentNeed->NeedID, 5);
+    if (!$lock->get()) {
         return redirect()
-            ->route('department-need-approval.index')
-            ->with('success', 'Department needs approved successfully.');
+            ->back()
+            ->with('error', 'Department Needs has been approved, or another user is working on it.');
+    }
+
+    $actor = $request->user();
+
+    try {
+        DB::transaction(static function () use ($departmentNeed, $actor) {
+            $approvalService = new \App\Services\Procurement\ProcurementPlan\DepartmentNeedsApprovalService($departmentNeed);
+
+            //  Submit the need first
+            $approvalService->submit($actor);
+
+            //  Approve the need immediately after submission
+            $approvalService->workflowApprove($actor);
+        });
+    } catch (\App\Exceptions\ErroredException $e) {
+        return redirect()
+            ->back()
+            ->with('error', $e->getMessage());
+    } catch (\Throwable|Exception $e) {
+        Log::error('Error approving department need: ' . $e->getMessage());
+        return redirect()
+            ->back()
+            ->with('error', 'Unexpected error, try again later.');
+    }
+
+    return redirect()
+        ->route('department-need-approval.index')
+        ->with('success', 'Department need submitted & approved successfully.');
     }
 
 
-    public function destroy(Request $request, $departmentNeed_ID): RedirectResponse
+    //reject
+
+    public function destroy(Request $request, $DepartmentNeedID): RedirectResponse
     {
-        $departmentNeeds = DepartmentNeed::findOrFail($departmentNeed_ID);
+        $departmentNeeds = DepartmentNeed::findOrFail($DepartmentNeedID);
         $this->authorize('destroy', $departmentNeeds);
 
         $actor = $request->user();

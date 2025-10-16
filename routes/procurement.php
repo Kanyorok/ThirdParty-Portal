@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
@@ -84,6 +85,21 @@ Route::namespace('Procurement')->group(function () {
     //Requisitions
     Route::resource('requisition', 'RequisitionsController');
     Route::resource('requisitionItem', 'RequisitionItemsController');
+    Route::post('department-needs/{NeedID}/submit', [DepartmentNeedsController::class, 'submit'])
+    ->name('department-needs.submit');
+
+    Route::resource('approvals/department-need', DepartmentNeedApprovalController::class)->only([
+    'index',
+    'show',
+    'update',
+    'destroy'
+])->names([
+    'index' => 'department-need-approval.index',
+    'show' => 'department-need-approval.show',
+    'update' => 'department-need-approval.update',
+    'destroy' => 'department-need-approval.destroy'
+]);
+
 
     //this route is static affecting orders\create.blade.php & requisitions\show
     Route::get('requisitionItem/getItem/{type}', [RequisitionItemsController::class, 'getItems'])->name('requisitionItem.getItems');

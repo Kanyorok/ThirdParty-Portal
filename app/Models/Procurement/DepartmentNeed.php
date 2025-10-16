@@ -3,11 +3,13 @@
 namespace App\Models\Procurement;
 
 use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Enums\WorkflowStatus;
 use App\Models\Core\Branch;
 use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
+use App\Services\Procurement\ProcurementPlan\DepartmentNeedsWorkflowService;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -62,6 +64,29 @@ class DepartmentNeed extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'BranchID');
+    }
+
+    // Workflow status helpers
+    public function isPendingApproval(): bool
+    {
+        return in_array($this->Status, [
+            Workflowstatus::Submitted,
+            WorkflowStatus::Pending,
+            WorkflowStatus::UnderReview,
+        ]);
+    }
+
+    // Auto-submit for approval when created
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function (DepartmentNeed $departmentNeed) {
+            if ($departmentNeed->isPendingApproval()) {
+                $workflowService = app(DepartmentNeedsWorkflowService::class);
+                $workflowService->submit($departmentNeed, $departmentNeed->creator, 'Initial submission');
+            }
+        });
     }
 
 }

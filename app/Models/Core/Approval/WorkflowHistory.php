@@ -2,41 +2,37 @@
 
 namespace App\Models\Core\Approval;
 
-use App\Enums\WorkflowStatus;
-use App\Models\Core\CodeDetail;
-use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkflowHistory extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes;
 
-    const string CREATED_AT = 'CreatedOn';
-    const string UPDATED_AT = 'ModifiedOn';
-    const string DELETED_AT = 'DeletedOn';
+    protected $table = 't_WorkFlowHistory'; // Change to your actual table name if different
 
-    protected $table = 't_WorkFlowHistory';
     protected $primaryKey = 'Id';
 
+    public $timestamps = false; // Since the columns don't follow Laravel's default `created_at`/`updated_at`
 
     protected $fillable = [
-        "Source", "SourceID", "Stage", "Amount", "Notes", "StatusId",
-        "CreatedBy", "ModifiedBy", "DeletedBy"
+        'Source',
+        'SourceID',
+        'Stage',
+        'Amount',
+        'Notes',
+        'StatusId',
+        'CreatedBy',
+        'CreatedOn',
+        'ModifiedBy',
+        'ModifiedOn',
+        'DeletedBy',
+        'DeletedOn'
     ];
 
-    protected $casts = [
-        'Status' => WorkflowStatus::class,
+   protected $casts = [
+    'CreatedOn' => 'datetime',
+    'ModifiedOn' => 'datetime',
+    'DeletedOn' => 'datetime',
     ];
-
-    public static function getPrimaryKey(): string
-    {
-        return 'WorkFlowHistoryId';
-    }
-
-    public function status(): BelongsTo
-    {
-        return $this->belongsTo(CodeDetail::class, 'StatusId', 'ID');
-    }
 }

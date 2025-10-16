@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Procurement\RequisitionsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
@@ -288,7 +289,17 @@ Route::prefix('procurement')->name('api.procurement.')
         Route::post('rfq-responses', [SupplierRFQController::class, 'submitResponse']);
         Route::post('rfq-clarifications', [SupplierRFQController::class, 'postClarification']);
         Route::get('rfq-clarifications/{rfq}', [SupplierRFQController::class, 'listClarifications']);
+
+ 
     });
+
+//purchase requistion
+Route::apiResource('purchase-requisitions', RequisitionsController::class);
+Route::post('purchase-requisitions/{purchaseRequisition}/approve', [RequisitionsController::class, 'approve']);
+Route::post('purchase-requisitions/{purchaseRequisition}/reject', [RequisitionsController::class, 'reject']);
+Route::post('purchase-requisitions/{purchaseRequisition}/return', [RequisitionsController::class, 'return']);
+Route::get('purchase-requisitions/{purchaseRequisition}/workflow-status', [RequisitionsController::class, 'getWorkflowStatus']);
+Route::get('purchase-requisitions/pending/my-approvals', [RequisitionsController::class, 'getUserPendingApprovals']);
 
 // Prequalification routes (protected) – keep same paths but require auth to align with dashboard usage
 Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])
