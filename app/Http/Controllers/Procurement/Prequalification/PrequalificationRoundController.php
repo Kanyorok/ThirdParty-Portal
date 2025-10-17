@@ -91,6 +91,15 @@ class PrequalificationRoundController extends Controller
         $isCreating = is_null($prequalificationRound);
         $saveAsDraft = filter_var($request->input('save_as_draft'), FILTER_VALIDATE_BOOLEAN) || $request->input('save_as_draft') === '1';
 
+        // Prevent any modifications to expired rounds
+        if (!$isCreating) {
+            $now = now();
+            if ($prequalificationRound->EndDate && $prequalificationRound->EndDate < $now) {
+                return redirect()->route('prequalification.prequalification-rounds.index')
+                    ->with('error', 'This round has expired and can no longer be modified.');
+            }
+        }
+
         if ($isCreating) {
             $incomingStatus = $request->input('Status');
             $validated['Status'] = $saveAsDraft

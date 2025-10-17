@@ -22,6 +22,14 @@ return new class extends Migration
         }
 
         DB::statement("ALTER TABLE t_PrequalificationRounds ADD CONSTRAINT CK_PrequalificationRounds_Status CHECK (Status IN ('D','O','CL'))");
+
+        // Optional: add a constraint/index to reduce overlapping windows (best-effort; SQL Server cannot express no-overlap directly)
+        // Here we create a non-overlapping helper unique index on StartDate/EndDate pairs for identical windows to avoid duplicates
+        try {
+            DB::statement("CREATE UNIQUE INDEX UX_PrequalificationRounds_Window ON t_PrequalificationRounds (StartDate, EndDate)");
+        } catch (\Throwable $e) {
+            // ignore if already exists or not supported
+        }
     }
 
     public function down(): void
@@ -36,5 +44,9 @@ return new class extends Migration
         });
 
         DB::statement("ALTER TABLE t_PrequalificationRounds ADD CONSTRAINT CK_PrequalificationRounds_Status CHECK (Status IN ('O','CL'))");
+
+        try {
+            DB::statement("DROP INDEX UX_PrequalificationRounds_Window ON t_PrequalificationRounds");
+        } catch (\Throwable $e) {}
     }
 };

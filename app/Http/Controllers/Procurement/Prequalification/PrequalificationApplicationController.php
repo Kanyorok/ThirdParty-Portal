@@ -270,11 +270,14 @@ class PrequalificationApplicationController extends Controller
                 $windowOpen = (!$round->StartDate || $round->StartDate <= $now) && (!$round->EndDate || $round->EndDate >= $now);
                 $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status;
                 $statusOpen = strtolower((string) $statusValue) === 'open' || (defined('App\\Enums\\Procurement\\PrequalificationRoundEnum::Open') && (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value);
+                $isClosed = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Closed->value;
+                $isExpired = $round->EndDate && $round->EndDate < $now;
                 $hasCategories = $cats->count() > 0;
                 $roundAppsCount = $applications->where('RoundID', $roundId)->count();
                 $hasUnapplied = $cats->contains(function ($c) { return empty($c['has_applied']); });
                 $supplierHasNoAppsInRound = $roundAppsCount === 0;
-                $backendCanApply = $supplierId !== null && $windowOpen && $statusOpen && $hasCategories;
+                // Enforce Closed and Expired
+                $backendCanApply = $supplierId !== null && $windowOpen && $statusOpen && $hasCategories && !$isClosed && !$isExpired;
 
                 // New flags
                 $isFutureWindow = ($round->StartDate && $round->StartDate > $now);
@@ -317,6 +320,9 @@ class PrequalificationApplicationController extends Controller
                     'maxVendors' => $round->MaxVendors,
                     'categories' => $cats,
                     'canApply' => (bool) $canApply,
+                    'isClosed' => (bool) $isClosed,
+                    'isExpired' => (bool) $isExpired,
+                    'windowOpen' => (bool) $windowOpen,
                     'canApplyToMore' => (bool) $hasUnapplied,
                     'categoryCount' => $cats->count(),
                     'appliedCount' => $cats->where('has_applied', true)->count(),
@@ -349,8 +355,7 @@ class PrequalificationApplicationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
-                'message' => 'Failed to fetch rounds',
-                'error' => $e->getMessage(),
+                'message' => 'Failed to fetch rounds. Please try again later.',
             ], 500);
         }
     }
@@ -367,8 +372,7 @@ class PrequalificationApplicationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
-                'message' => 'Failed to fetch round',
-                'error' => $e->getMessage(),
+                'message' => 'Failed to fetch round. Please try again later.',
             ], 500);
         }
     }
@@ -416,6 +420,22 @@ class PrequalificationApplicationController extends Controller
                 'message' => 'Some categories have already been applied for this round.',
                 'duplicates' => $duplicates,
             ], 409);
+        }
+
+        // server-side guard: round must be Open, within window, not expired, not closed
+        $round = PrequalificationRound::query()->find($roundId);
+        if (!$round) return response()->json(['error' => 'Round not found.'], 404);
+        $now = now();
+        $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status;
+    $isClosed = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Closed->value;
+    $isOpen = (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value;
+        $windowOpen = (!$round->StartDate || $round->StartDate <= $now) && (!$round->EndDate || $round->EndDate >= $now);
+        $isExpired = $round->EndDate && $round->EndDate < $now;
+        if ($isClosed || !$isOpen || !$windowOpen || $isExpired) {
+            $reason = $isExpired ? 'This round has expired.' : ($isClosed ? 'Applications are closed for this round.' : (!$isOpen ? 'Round is not open for applications.' : 'Application window is not active.'));
+            // 410 Gone for expired, 403 Forbidden for closed/not-open
+            $code = $isExpired ? 410 : 403;
+            return response()->json(['message' => $reason], $code);
         }
 
         // create records — one row per category

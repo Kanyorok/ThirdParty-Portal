@@ -3,9 +3,11 @@
 namespace App\Http\Requests\Procurement\Suppliers\Prequalification;
 
 use App\Enums\Procurement\PrequalificationRoundEnum;
+use App\Models\Procurement\Prequalification\PrequalificationRound;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
+use Carbon\Carbon;
 
 abstract class PrequalificationRoundRequest extends FormRequest
 {
@@ -107,6 +109,44 @@ abstract class PrequalificationRoundRequest extends FormRequest
             // Validate that the total weight of all sections is 100
             if ($totalSectionWeight !== 100) {
                 $validator->errors()->add('sections', "The total weight of all included sections must equal 100. Current total: {$totalSectionWeight}.");
+            }
+
+            // Prevent overlapping rounds: only one round can exist for a given window
+            $startInput = $this->input('StartDate');
+            $endInput = $this->input('EndDate');
+            if (!empty($startInput) && !empty($endInput)) {
+                try {
+                    $start = Carbon::parse($startInput);
+                    $end = Carbon::parse($endInput);
+                    if ($end->lt($start)) {
+                        $validator->errors()->add('EndDate', 'End Date must be after or equal to Start Date.');
+                        return;
+                    }
+
+                    $excludeId = null;
+                    $routeModel = $this->route('prequalificationRound') ?? $this->route('prequalification_round') ?? null;
+                    if ($routeModel) {
+                        // routeModel may be the model or the id
+                        $excludeId = is_object($routeModel) ? ($routeModel->RoundID ?? $routeModel->getKey()) : (int) $routeModel;
+                    }
+
+                    $overlap = PrequalificationRound::query()
+                        ->when($excludeId, fn($q) => $q->where('RoundID', '!=', $excludeId))
+                        ->where(function ($q) use ($start, $end) {
+                            // Overlap if new.start <= existing.EndDate AND new.end >= existing.StartDate
+                            $q->where('StartDate', '<=', $end)
+                              ->where('EndDate', '>=', $start);
+                        })
+                        ->first(['RoundID', 'Title', 'StartDate', 'EndDate']);
+
+                    if ($overlap) {
+                        $existingTitle = (string) ($overlap->Title ?? ('Round #' . $overlap->RoundID));
+                        $existingWindow = ($overlap->StartDate ? $overlap->StartDate->format('Y-m-d') : 'N/A') . ' — ' . ($overlap->EndDate ? $overlap->EndDate->format('Y-m-d') : 'N/A');
+                        $validator->errors()->add('StartDate', "The selected dates overlap with an existing prequalification round ({$existingTitle}) [{$existingWindow}]. Only one round can exist for a given time window.");
+                    }
+                } catch (\Throwable $e) {
+                    // If parsing fails, let the default validators handle it
+                }
             }
         });
     }
