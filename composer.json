@@ -19,6 +19,7 @@
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-zlib": "*",
+        "ext-libxml": "*",
         "barryvdh/laravel-dompdf": "^3.0",
         "davmixcool/php-sentiment-analyzer": "^1.2",
         "echolabsdev/prism": "^0.34.0",

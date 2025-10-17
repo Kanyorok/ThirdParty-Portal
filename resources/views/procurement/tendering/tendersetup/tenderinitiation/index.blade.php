@@ -58,9 +58,10 @@
 
         <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
             <i class="fa fa-info-circle me-2"></i>
-            <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.">
+            <span title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.'">
                 <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
-            <div class="card shadow-sm">
+        </div>
+        <div class="card shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered" id="tendersTable">
@@ -220,11 +221,13 @@
             });
         });
 
-        // Dismiss alerts automatically after some time
-        window.setTimeout(function() {
-            $(".alert").fadeTo(500, 0).slideUp(500, function(){
-                $(this).remove();
-            });
-        }, 5000); // 5 seconds
+        // Auto-dismiss of alerts disabled to keep the initiated tender list and guidance visible.
+        // If you want alerts to auto-dismiss later, re-enable with a timeout value.
+        // Example re-enable (uncomment):
+        // window.setTimeout(function() {
+        //     $(".alert").fadeTo(500, 0).slideUp(500, function(){
+        //         $(this).remove();
+        //     });
+        // }, 5000);
     </script>
 @endpush

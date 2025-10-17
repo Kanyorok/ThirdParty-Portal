@@ -33,6 +33,7 @@ class IntegrationRequest extends FormRequest
 
             // SSRS Integration Validation Rules
             'SSRS_Host' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'url:http,https', 'max:200'],
+            'SSRS_Path' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
             'SSRS_Username' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
             'SSRS_Password' => ['exclude_unless:Integration,' . IntegrationsEnum::ReportService->value, 'required', 'string', 'max:200'],
 
@@ -157,7 +158,7 @@ class IntegrationRequest extends FormRequest
     /**
      * @throws ValidationException
      */
-    public function getCSSRS_Host(): string
+    public function getSSRS_Host(): string
     {
         try {
             Http::get($this->string('SSRS_Host')->trim()->toString());
