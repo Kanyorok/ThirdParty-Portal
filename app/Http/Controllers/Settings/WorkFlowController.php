@@ -26,8 +26,22 @@ class WorkFlowController extends Controller
         $workFlowGroups = WorkFlow::all();
 
         $sourceOptions = array_flip($morphMap);
+        // Build reverse map: table name => alias for preselect when editing
+        $tableToAlias = collect($morphMap)
+            ->mapWithKeys(function ($class, $alias) {
+                try {
+                    $instance = app($class);
+                    if ($instance instanceof Model) {
+                        return [$instance->getTable() => $alias];
+                    }
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+                return [];
+            })
+            ->toArray();
 
-        return view('settings.approvals.sections', compact('workFlowGroups', 'sourceOptions'));
+        return view('settings.approvals.sections', compact('workFlowGroups', 'sourceOptions', 'tableToAlias'));
     }
 
     /**
@@ -35,7 +49,7 @@ class WorkFlowController extends Controller
      */
     public function create()
     {
-        //
+    // Not used
     }
 
     /**
@@ -125,7 +139,32 @@ class WorkFlowController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validated = $request->validate([
+            'Name' => ['required', 'string', 'max:255'],
+            'Description' => ['required', 'string', 'max:1000'],
+            'DocType' => ['required', 'string'], // alias or class
+        ]);
+
+        try {
+            $workFlow = WorkFlow::findOrFail($id);
+            $selection = (string) ($validated['DocType'] ?? '');
+            $tableName = $this->resolveSelectedToTable($selection);
+            if (!$tableName) {
+                throw new \InvalidArgumentException('Unrecognized model selection: ' . $selection);
+            }
+
+            $workFlow->update([
+                'Name' => $validated['Name'],
+                'Description' => $validated['Description'],
+                'Source' => $tableName,
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]);
+
+            return redirect()->back()->with('success', 'Approval workflow updated.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to update workflow: ' . $e->getMessage()]);
+        }
     }
 
     /**

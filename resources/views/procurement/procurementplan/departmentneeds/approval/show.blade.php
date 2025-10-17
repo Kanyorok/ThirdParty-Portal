@@ -4,6 +4,13 @@
 
 @section('content')
     <div class="card shadow rounded-4 p-4">
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
         <h3 class="mb-4 text-primary">Needs Details</h3>
 
         <div class="row g-3">
@@ -74,7 +81,7 @@
     <!-- Rejection Reason Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="rejectForm" method="POST" action="{{ route('department-need-approval.destroy', $need->DepartmentNeedID) }}">
+            <form id="rejectForm" method="POST" action="{{ route('department-need-approval.destroy', ['department_need' => $need->Id]) }}">
                 @csrf
                 @method('DELETE')
                 <div class="modal-content">
@@ -98,11 +105,15 @@
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">
-        <form action="{{ route('department-need-approval.update', $need->DepartmentNeedID) }}" method="POST" class="d-inline">
-            @csrf
-            @method('PUT')
-            <button type="submit" class="btn btn-success">Approve</button>
-        </form>
+        @can('approve', $need)
+            <form action="{{ route('department-need-approval.update', ['department_need' => $need->Id]) }}" method="POST" class="d-inline">
+                @csrf
+                @method('PUT')
+                <button type="submit" class="btn btn-success">Approve</button>
+            </form>
+        @else
+            <button type="button" class="btn btn-success" disabled title="You cannot approve this item">Approve</button>
+        @endcan
         <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject
         </button>
         <a href="{{ route('department-need-approval.index') }}" class="btn btn-secondary">

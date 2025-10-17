@@ -9,7 +9,7 @@ use App\Models\Core\PendingWorkflow;
 use App\Models\Core\Workflow;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
-use App\Services\Procurement\ProcurementPlan\DepartmentNeedsWorkflowService;
+use App\Services\Procurement\DepartmentNeedsWorkflow;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -83,7 +83,8 @@ class DepartmentNeed extends Model
 
         static::created(function (DepartmentNeed $departmentNeed) {
             if ($departmentNeed->isPendingApproval()) {
-                $workflowService = app(DepartmentNeedsWorkflowService::class);
+                /** @var DepartmentNeedsWorkflow $workflowService */
+                $workflowService = app(DepartmentNeedsWorkflow::class);
                 $workflowService->submit($departmentNeed, $departmentNeed->creator, 'Initial submission');
             }
         });

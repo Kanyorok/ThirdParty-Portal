@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Procurement\DepartmentNeed;
 use App\Services\Procurement\ProcurementPlan\DepartmentNeedsService;
-use App\Services\Procurement\ProcurementPlan\DepartmentNeedsApprovalService;
+use App\Services\Procurement\DepartmentNeedsWorkflow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -89,9 +89,9 @@ class DepartmentNeedsController extends Controller
 
     try {
         DB::transaction(function () use ($departmentNeed, $actor) {
-        
-            (new DepartmentNeedsApprovalService($departmentNeed))
-                ->submit($actor);
+            /** @var DepartmentNeedsWorkflow $workflow */
+            $workflow = app(DepartmentNeedsWorkflow::class);
+            $workflow->submit($departmentNeed, $actor, 'Submitted for approval');
         });
 
         return redirect()

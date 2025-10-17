@@ -3,6 +3,13 @@
 @section('title', 'Department Needs Approval')
 @section('content')
     <div class="card p-4 shadow rounded-4">
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
         <h4 class="mb-4">✅ Departmental/Branch Needs - Approval Queue</h4>
 
         <table id="needs-approval" class="table table-hover table-bordered">

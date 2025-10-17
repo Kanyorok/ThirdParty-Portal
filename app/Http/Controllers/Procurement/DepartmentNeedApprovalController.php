@@ -7,7 +7,7 @@ use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use Exception;
 use App\Models\Procurement\DepartmentNeed;
-use App\Services\Procurement\ProcurementPlan\DepartmentNeedsApprovalService;
+use App\Services\Procurement\DepartmentNeedsWorkflow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,17 +23,17 @@ class DepartmentNeedApprovalController extends Controller
         return view('procurement.procurementplan.departmentneeds.approval.index', compact('NeedsApprovalviews'));
     }
 
-    public function show($DepartmentNeedId)
+    public function show(DepartmentNeed $department_need)
     {
-        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($DepartmentNeedId);
+        $need = DepartmentNeed::with(['item.category', 'item.uom', 'creator'])->findOrFail($department_need->Id);
         return view('procurement.procurementplan.departmentneeds.approval.show', compact('need'));
     }
 
     //approve
 
-    public function update(Request $request, $DepartmentNeedID): RedirectResponse
+    public function update(Request $request, DepartmentNeed $department_need): RedirectResponse
     {
-         $departmentNeed = DepartmentNeed::query()->findOrFail($DepartmentNeedID);
+        $departmentNeed = $department_need;
 
     $this->authorize('approve', $departmentNeed);
 
@@ -48,13 +48,11 @@ class DepartmentNeedApprovalController extends Controller
 
     try {
         DB::transaction(static function () use ($departmentNeed, $actor) {
-            $approvalService = new \App\Services\Procurement\ProcurementPlan\DepartmentNeedsApprovalService($departmentNeed);
+            $workflow = app(DepartmentNeedsWorkflow::class);
 
-            //  Submit the need first
-            $approvalService->submit($actor);
-
-            //  Approve the need immediately after submission
-            $approvalService->workflowApprove($actor);
+            // Submit then approve using the new unified workflow service
+            $workflow->submit($departmentNeed, $actor, 'Submitted for approval');
+            $workflow->approve($departmentNeed, $actor, 'Approved');
         });
     } catch (\App\Exceptions\ErroredException $e) {
         return redirect()
@@ -75,9 +73,9 @@ class DepartmentNeedApprovalController extends Controller
 
     //reject
 
-    public function destroy(Request $request, $DepartmentNeedID): RedirectResponse
+    public function destroy(Request $request, DepartmentNeed $department_need): RedirectResponse
     {
-        $departmentNeeds = DepartmentNeed::findOrFail($DepartmentNeedID);
+        $departmentNeeds = $department_need;
         $this->authorize('destroy', $departmentNeeds);
 
         $actor = $request->user();
@@ -87,8 +85,8 @@ class DepartmentNeedApprovalController extends Controller
 
         try {
             DB::transaction(static function () use ($departmentNeeds, $actor, $data) {
-                (new DepartmentNeedsApprovalService($departmentNeeds))
-                    ->workflowReject($actor, $data['Department_needs_reject_reason']);
+                $workflow = app(DepartmentNeedsWorkflow::class);
+                $workflow->reject($departmentNeeds, $actor, $data['Department_needs_reject_reason']);
             });
         } catch (ErroredException $e) {
             return redirect()

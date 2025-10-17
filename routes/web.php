@@ -39,6 +39,7 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
         Route::get('users-roles', 'SettingsController@users')->name('settings.users');
         Route::get('workflows', 'WorkFlowController@index')->name('settings.workflows.index');
         Route::post('workflows/create', 'WorkFlowController@store')->name('settings.workflows.store');
+    Route::put('workflows/{id}', 'WorkFlowController@update')->name('settings.workflows.update');
     // Delete workflow: use proper HTTP verb. Remove old GET delete route.
     Route::delete('workflows/{id}', 'WorkFlowController@destroy')->name('settings.workflows.destroy');
     // Optional fallback if DELETE is blocked by infra

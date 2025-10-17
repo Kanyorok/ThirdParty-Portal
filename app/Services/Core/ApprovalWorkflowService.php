@@ -5,9 +5,9 @@ namespace App\Services\Core;
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
 use App\Models\Core\Approval\WorkflowHistory;
-use App\Models\Core\CodeDetail;
+use App\Models\Core\Approval\CodeDetail;
 use BackedEnum;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -121,7 +121,7 @@ abstract class ApprovalWorkflowService
         }
 
         try {
-            WorkflowHistory::create([
+            $history = WorkflowHistory::create([
                 "Source" => $table,
                 "SourceID" => (string)$sourceId,
                 "StatusId" => $status->ID,
@@ -129,26 +129,31 @@ abstract class ApprovalWorkflowService
                 //"Amount",
                 "Notes" => $remarks,
                 "CreatedBy" => $actor->Id,
+                "CreatedOn" => now(),
                 "ModifiedBy" => $actor->Id,
+                "ModifiedOn" => now(),
             ]);
 
-            /// execute pending SP
-            DB::statement("EXEC p_ProcessWorkflowPending");
-            //$ExecPendingWorkFlow = '';
-            /// //Execeute stages SP
-            // $ExecSatgesWorkFlow = '';
-            DB::statement("EXEC p_ProcessWorkflowStages");
+            // After the outer transaction commits, run the SPs
+            DB::afterCommit(function () {
+                try {
+                    DB::statement("EXEC p_ProcessWorkflowPending");
+                    DB::statement("EXEC p_ProcessWorkflowStages");
+                } catch (\Throwable $e) {
+                    // Log but don't affect already-committed history
+                    Log::error('Workflow post-commit SPs failed', ['error' => $e->getMessage()]);
+                }
+            });
 
         } catch (QueryException $e) {
-            dd($e);
+            Log::error('WorkflowHistory insert failed', ['error' => $e->getMessage()]);
             throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         } catch (Exception $e) {
             Log::error($e);
             throw new ErroredException("Unexpected Error Occurred.");
         }
 
-
-        return true;
+    return (bool) $history;
     }
 
     /**
