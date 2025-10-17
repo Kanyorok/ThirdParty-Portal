@@ -258,6 +258,11 @@ export default function RegisterThirdPartyDetails() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const [uploadedDocs, setUploadedDocs] = useState<Array<{id:number; name:string; size?:number; previewUrl?:string;}>>([]);
+    const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+    const [thirdPartyId, setThirdPartyId] = useState<number | null>(null);
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -303,6 +308,22 @@ export default function RegisterThirdPartyDetails() {
         }
     }, [form]);
 
+    const fetchMyThirdParty = useCallback(async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/me`, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'include',
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+            // backend returns { data: { Id, ... } } or direct object; support both
+            const tp = (data?.data ?? data) as { Id?: number };
+            if (tp?.Id) setThirdPartyId(tp.Id);
+    } catch {
+            // ignore silently; uploader will stay hidden if not available
+        }
+    }, []);
+
     const handleError = useCallback((errorMessage: string) => {
         setError(errorMessage);
         // Auto-clear error after 10 seconds
@@ -316,7 +337,9 @@ export default function RegisterThirdPartyDetails() {
         
         // Fetch countries on component mount
         fetchCountries();
-    }, [userId, handleError, fetchCountries]);
+        // Try fetch my third party (if session is active)
+        fetchMyThirdParty();
+    }, [userId, handleError, fetchCountries, fetchMyThirdParty]);
 
     const onSubmit = async (data: FormData) => {
         if (!userId) {
@@ -375,6 +398,46 @@ export default function RegisterThirdPartyDetails() {
             handleError('Network error occurred. Please check your connection and try again.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSelectedFiles(e.target.files);
+        setUploadError(null);
+    };
+
+    const uploadSupportingDocuments = async () => {
+        if (!thirdPartyId) {
+            setUploadError('Third party not ready yet. Complete details first or sign in.');
+            return;
+        }
+        if (!selectedFiles || selectedFiles.length === 0) {
+            setUploadError('Please select one or more files to upload.');
+            return;
+        }
+        setUploading(true);
+        setUploadError(null);
+        try {
+            const formData = new FormData();
+            Array.from(selectedFiles).forEach((file) => formData.append('files[]', file));
+            const resp = await fetch(`${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/third-parties/${thirdPartyId}/documents`, {
+                method: 'POST',
+                body: formData,
+                // include cookies/session for sanctum
+                credentials: 'include',
+            });
+            const payload = await resp.json();
+            if (!resp.ok) {
+                throw new Error(payload?.message || 'Upload failed');
+            }
+            const docs = (payload?.documents ?? []) as Array<{id:number; name:string; size?:number; previewUrl?:string;}>;
+            setUploadedDocs((prev) => [...docs, ...prev]);
+            setSelectedFiles(null);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Upload failed';
+            setUploadError(msg);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -596,6 +659,47 @@ export default function RegisterThirdPartyDetails() {
                                                 </p>
                                             </div>
                                         </motion.div>
+                                        {/* Supporting Documents Uploader */}
+                                        {thirdPartyId && (
+                                            <motion.div variants={formFieldVariants} className="space-y-4">
+                                                <div className="border-t border-slate-100 pt-6" />
+                                                <div className="space-y-2">
+                                                    <h3 className="text-lg font-semibold text-slate-900">Supporting Documents</h3>
+                                                    <p className="text-sm text-slate-600">Upload any required certificates or supporting files. You can add multiple files.</p>
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                                    <input
+                                                        type="file"
+                                                        multiple
+                                                        onChange={handleFilesChange}
+                                                        className="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                    />
+                                                    <Button type="button" onClick={uploadSupportingDocuments} disabled={uploading || !selectedFiles || selectedFiles.length === 0} className="h-10">
+                                                        {uploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/> Uploading...</> : 'Upload'}
+                                                    </Button>
+                                                </div>
+                                                {uploadError && (
+                                                    <div className="text-sm text-red-600">{uploadError}</div>
+                                                )}
+                                                {uploadedDocs.length > 0 && (
+                                                    <div className="mt-2 space-y-2">
+                                                        <h4 className="text-sm font-medium text-slate-800">Uploaded</h4>
+                                                        <ul className="space-y-1">
+                                                            {uploadedDocs.map((d) => (
+                                                                <li key={d.id} className="text-sm text-slate-700 flex items-center gap-2">
+                                                                    <span className="truncate">{d.name}</span>
+                                                                    {typeof d.size === 'number' && <span className="text-slate-400">• {(d.size/1024).toFixed(1)} KB</span>}
+                                                                    {d.previewUrl && (
+                                                                        <a className="text-blue-600 hover:underline" href={d.previewUrl} target="_blank" rel="noreferrer">Preview</a>
+                                                                    )}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        )}
+
                                     </form>
                                 </Form>
                             </div>

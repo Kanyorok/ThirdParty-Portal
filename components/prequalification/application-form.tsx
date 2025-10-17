@@ -397,8 +397,9 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     const names = duplicates.map((d: { name?: string }) => d.name || 'Unknown').join(', ');
                     setFormMessage({ type: "warning", message: `⚠️ You have already applied for the category: ${names} in this round.` });
                     setFormLoadingState("warning");
-                } else if (resp.status === 401 || resp.status === 403) {
-                    setFormMessage({ type: "error", message: "You are not authorized to apply to this round." });
+                } else if (resp.status === 401 || resp.status === 403 || resp.status === 410) {
+                    const msg = resp.data?.message || (resp.status === 410 ? 'This round has expired.' : 'You are not authorized to apply to this round.');
+                    setFormMessage({ type: "error", message: msg });
                     setFormLoadingState("error");
                 } else if (resp.status === 422) {
                     const firstErr = (() => {
