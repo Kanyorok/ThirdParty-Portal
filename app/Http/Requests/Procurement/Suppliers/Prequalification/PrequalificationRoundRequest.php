@@ -16,7 +16,10 @@ abstract class PrequalificationRoundRequest extends FormRequest
 
     public function rules(): array
     {
+        $isDraft = $this->isDraftContext();
+
         return [
+            // Always require basic fields on create to satisfy DB constraints; relax only on update
             'Title' => [$this->isUpdate() ? 'sometimes' : 'required', 'string', 'max:255'],
             'Description' => ['sometimes', 'string', 'nullable'],
             'StartDate' => [$this->isUpdate() ? 'sometimes' : 'required', 'date'],
@@ -24,11 +27,13 @@ abstract class PrequalificationRoundRequest extends FormRequest
             'MaxVendors' => ['sometimes', 'integer', 'min:1', 'nullable'],
             'Status' => ['sometimes', new Enum(PrequalificationRoundEnum::class), 'nullable'],
             'ModifiedBy' => ['sometimes', 'exists:t_Users,Id'],
-            'sections' => ['required', 'array', 'min:1', 'bail'],
-            'sections.*.section_id' => ['required', 'integer', 'exists:t_Sections,Id'],
+            'sections' => [$isDraft ? 'nullable' : 'required', 'array', $isDraft ? 'min:0' : 'min:1', 'bail'],
+            'sections.*.section_id' => [$isDraft ? 'sometimes' : 'required', 'integer', 'exists:t_Sections,Id'],
             'sections.*.included' => ['nullable', 'boolean'],
             'sections.*.weight' => [
-                function ($attribute, $value, $fail) {
+                function ($attribute, $value, $fail) use ($isDraft) {
+                    if ($isDraft) return; // skip weight validation when saving as draft
+
                     $sections = $this->input('sections', []);
                     preg_match('/sections\.(\d+)\.weight/', $attribute, $matches);
                     $sectionIndex = $matches[1] ?? null;
@@ -46,13 +51,15 @@ abstract class PrequalificationRoundRequest extends FormRequest
             ],
             'sections.*.criteria' => ['nullable', 'array'],
             'sections.*.criteria.*.criteria_id' => [
-                'required',
+                $isDraft ? 'sometimes' : 'required',
                 'integer',
                 'exists:t_Criterias,Id',
             ],
             'sections.*.criteria.*.included' => ['nullable', 'boolean'],
             'sections.*.criteria.*.weight' => [
-                function ($attribute, $value, $fail) {
+                function ($attribute, $value, $fail) use ($isDraft) {
+                    if ($isDraft) return; // skip criteria score enforcement for drafts
+
                     $sections = $this->input('sections', []);
                     preg_match('/sections\.(\d+)\.criteria\.(\d+)\.weight/', $attribute, $matches);
                     $sectionIndex = $matches[1] ?? null;
@@ -75,6 +82,10 @@ abstract class PrequalificationRoundRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {
+            if ($this->isDraftContext()) {
+                // Skip aggregate validations when saving as draft
+                return;
+            }
             $sections = collect($this->input('sections', []));
             $totalSectionWeight = 0;
 
@@ -103,5 +114,13 @@ abstract class PrequalificationRoundRequest extends FormRequest
     protected function isUpdate(): bool
     {
         return $this->method() === 'PUT';
+    }
+
+    private function isDraftContext(): bool
+    {
+        // If explicitly saving as draft via button or Status set to Draft
+        $status = $this->input('Status');
+        $savingAsDraft = filter_var($this->input('save_as_draft'), FILTER_VALIDATE_BOOLEAN) || $this->input('save_as_draft') === '1';
+        return $savingAsDraft || (is_string($status) && $status === PrequalificationRoundEnum::Draft->value);
     }
 }

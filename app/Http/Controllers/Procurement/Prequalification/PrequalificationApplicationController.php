@@ -85,7 +85,7 @@ class PrequalificationApplicationController extends Controller
         $pageSize = (int) $request->get('pageSize', 10);
         $sortBy = $request->get('sortBy', 'startDate');
         $sortOrder = $request->get('sortOrder', 'asc');
-        $status = $request->get('status', 'all');
+    $status = $request->get('status', 'open');
         $search = $request->get('q', '');
         
         // Validate and sanitize parameters
@@ -122,6 +122,8 @@ class PrequalificationApplicationController extends Controller
                 $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Open);
             } elseif ($status === 'closed') {
                 $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Closed);
+            } elseif ($status === 'draft' || $status === 'd') {
+                $query->where('t_PrequalificationRounds.Status', PrequalificationRoundEnum::Draft);
             }
         }
 

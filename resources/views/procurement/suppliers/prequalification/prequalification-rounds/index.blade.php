@@ -83,6 +83,13 @@
                                 <i class="bi bi-pencil"></i> Edit
                             </a>
 
+                            @if($Round->Status === \App\Enums\Procurement\PrequalificationRoundEnum::Draft)
+                            <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}#Status"
+                               class="btn btn-sm btn-secondary me-1" title="Publish (set status to Open)" data-bs-toggle="tooltip" data-ajax="1">
+                                <i class="bi bi-upload"></i> Publish
+                            </a>
+                            @endif
+
                             <form action="{{ route('prequalification.prequalification-rounds.destroy', $Round) }}"
                                 method="POST" class="d-inline-flex"
                                 onsubmit="return confirm('Are you sure you want to delete this round?');">
