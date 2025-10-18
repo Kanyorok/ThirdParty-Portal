@@ -82,4 +82,9 @@ class PrequalificationApplication extends Model
     {
         return $this->hasMany(ApplicationCategoryStatus::class, 'ApplicationId', 'ApplicationID');
     }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(PrequalificationApplicationDocument::class, 'ApplicationID', 'ApplicationID');
+    }
 }

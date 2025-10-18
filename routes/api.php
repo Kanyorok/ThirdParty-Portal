@@ -283,6 +283,10 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+            // Application documents
+            Route::get('applications/{roundId}/categories/{categoryId}/documents', [\App\Http\Controllers\API\Procurement\Prequalification\PreqApplicationDocumentApiController::class, 'index']);
+            Route::post('applications/{roundId}/categories/{categoryId}/documents', [\App\Http\Controllers\API\Procurement\Prequalification\PreqApplicationDocumentApiController::class, 'store']);
+            Route::delete('applications/{roundId}/categories/{categoryId}/documents/{id}', [\App\Http\Controllers\API\Procurement\Prequalification\PreqApplicationDocumentApiController::class, 'destroy']);
         });
 
         // Supplier RFQ endpoints (supplier portal)

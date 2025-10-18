@@ -22,6 +22,7 @@ use App\Http\Resources\Procurement\PrequalificationApplicationResource;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\ThirdPartyApprovalStatusEnum;
 use App\Models\Procurement\Prequalification\PrequalificationResult;
+use App\Models\Procurement\Prequalification\PrequalificationApplicationDocument;
 
 class PrequalificationApplicationController extends Controller
 {
@@ -114,7 +115,7 @@ class PrequalificationApplicationController extends Controller
 
             // Build the query (rounds only; applications fetched separately)
             $query = PrequalificationRound::query()
-                ->with(['sections.criteria', 'criteria.masterCriteria'])
+                ->with(['sections.masterSection', 'sections.criteria', 'criteria.masterCriteria'])
                 ->select('t_PrequalificationRounds.*');
 
         // Apply status filtering
@@ -391,11 +392,29 @@ class PrequalificationApplicationController extends Controller
                 return [
                     'id' => (int) $round->RoundID,
                     'title' => $round->Title,
+                    'description' => $round->Description,
                     'status' => is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status,
                     'startDate' => $round->StartDate ? $round->StartDate->format('Y-m-d') : null,
                     'endDate' => $round->EndDate ? $round->EndDate->format('Y-m-d') : null,
                     'maxVendors' => $round->MaxVendors,
                     'categories' => $cats,
+                    // Minimal section structure for UI
+                    'sections' => $round->sections?->map(function($s){
+                        return [
+                            'id' => $s->Id ?? $s->SectionID ?? null,
+                            'sectionId' => $s->SectionId ?? null,
+                            'name' => optional($s->masterSection)->SectionName ?? optional($s->masterSection)->Name,
+                            'weight' => $s->Weight ?? null,
+                            'criteria' => $s->criteria?->map(function($c){
+                                return [
+                                    'id' => $c->Id ?? $c->CriteriaID ?? null,
+                                    'criteriaId' => $c->CriteriaId ?? null,
+                                    'maxScore' => $c->MaxScore ?? null,
+                                    'included' => (bool) ($c->Included ?? true),
+                                ];
+                            })->values() ?? [],
+                        ];
+                    })->values() ?? [],
                     'canApply' => (bool) $canApply,
                     'isClosed' => (bool) $isClosed,
                     'isExpired' => (bool) $isExpired,
@@ -444,7 +463,7 @@ class PrequalificationApplicationController extends Controller
     public function apiShow(PrequalificationRound $round): JsonResponse
     {
         try {
-            $round->load(['sections.criteria.masterCriteria', 'applications']);
+            $round->load(['sections.masterSection', 'sections.criteria.masterCriteria', 'applications']);
             return (new PrequalificationRoundResource($round))->response();
         } catch (\Throwable $e) {
             Log::error('Prequalification apiShow failed', [
@@ -519,10 +538,11 @@ class PrequalificationApplicationController extends Controller
             return response()->json(['message' => $reason], $code);
         }
 
-        // create records — one row per category
+        // create records — one row per category and attach any uploaded docs to the created application
         DB::beginTransaction();
         try {
             $createdIds = [];
+            $categoryToApp = [];
             foreach ($categoryIds as $cid) {
                 $app = PrequalificationApplication::create([
                     'RoundID' => $roundId,
@@ -533,7 +553,23 @@ class PrequalificationApplicationController extends Controller
                     'CreatedBy' => $user->Id,
                 ]);
                 $createdIds[] = $app->ApplicationID;
+                $categoryToApp[$cid] = $app->ApplicationID;
             }
+
+            // Attach any uploaded documents for these categories (ApplicationID currently null)
+            foreach ($categoryToApp as $cid => $applicationId) {
+                PrequalificationApplicationDocument::query()
+                    ->where('SupplierID', $supplierId)
+                    ->where('RoundID', $roundId)
+                    ->where('CategoryID', $cid)
+                    ->whereNull('ApplicationID')
+                    ->update([
+                        'ApplicationID' => $applicationId,
+                        'ModifiedBy' => $user->Id,
+                        'ModifiedOn' => now(),
+                    ]);
+            }
+
             DB::commit();
 
             return response()->json([
