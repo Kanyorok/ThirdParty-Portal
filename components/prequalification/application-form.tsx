@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState, useCallback } from "react"
+import { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -33,9 +33,23 @@ type SupplierCategory = {
 
 type LoadingState = "idle" | "loading" | "success" | "error" | "submitting" | "warning";
 
+type RoundSection = {
+    id?: number | string | null;
+    sectionId?: number | null;
+    name?: string;
+    weight?: number | null;
+    criteria?: { id?: number | string | null; criteriaId?: number | null; maxScore?: number | null; included?: boolean }[];
+};
+
+type UploadStatus = 'pending' | 'uploading' | 'done' | 'error';
+type UploadItem = { id: string; file?: File | null; sectionId?: number | null; fileType?: string; categoryId: string; status: UploadStatus; error?: string; serverId?: number | null };
+type UnknownSection = Record<string, unknown>;
+type UnknownCriteria = Record<string, unknown>;
+
 const FormSchema = z.object({
     roundId: z.string().min(1, "Please select a round to continue"),
     categoryIds: z.array(z.string()).min(1, "Please select at least one category"),
+    descriptions: z.record(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -53,6 +67,31 @@ const RoundApiItemSchema = z.object({
     endDate: z.string().optional(),
     deadline: z.string().optional(),
     applicantCount: z.number().optional(),
+    // optional fields sometimes present from API
+    applicationId: z.union([z.string(), z.number()]).optional(),
+    hasApplied: z.boolean().optional(),
+    appliedCount: z.number().optional(),
+    description: z.string().optional(),
+    sections: z
+        .array(
+            z.object({
+                id: z.union([z.string(), z.number()]).nullable().optional(),
+                sectionId: z.number().nullable().optional(),
+                name: z.string().nullable().optional(),
+                weight: z.number().nullable().optional(),
+                criteria: z
+                    .array(
+                        z.object({
+                            id: z.union([z.string(), z.number()]).nullable().optional(),
+                            criteriaId: z.number().nullable().optional(),
+                            maxScore: z.number().nullable().optional(),
+                            included: z.boolean().optional(),
+                        })
+                    )
+                    .optional(),
+            })
+        )
+        .optional(),
 });
 
 const RoundsApiResponseSchema = z.object({
@@ -261,10 +300,14 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     const [roundError, setRoundError] = useState<string>("");
     const [categoryError, setCategoryError] = useState<string>("");
     const [formMessage, setFormMessage] = useState<{ type: "success" | "warning" | "error"; message: string } | null>(null);
+    const [roundDetail, setRoundDetail] = useState<{ description?: string; sections?: RoundSection[] }>({});
+    const [uploads, setUploads] = useState<UploadItem[]>([]);
+    const counterRef = useRef(0);
+    const [roundMetaById, setRoundMetaById] = useState<Record<string, { description?: string; sections?: RoundSection[] }>>({});
 
     const form = useForm<FormValues>({
         resolver: zodResolver(FormSchema),
-        defaultValues: { roundId: defaultRoundId ?? "", categoryIds: [] },
+    defaultValues: { roundId: defaultRoundId ?? "", categoryIds: [], descriptions: {} },
         mode: "onChange",
     });
 
@@ -279,7 +322,30 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             const roundsRes: unknown = await getRounds({}, accessToken);
             const parsed = RoundsApiResponseSchema.safeParse(roundsRes);
             const raw = parsed.success ? parsed.data.data ?? [] : Array.isArray(roundsRes) ? roundsRes : [];
-            const normalizedAll = (raw as z.infer<typeof RoundApiItemSchema>[]).map((r) => {
+            const meta: Record<string, { description?: string; sections?: RoundSection[] }> = {};
+            (raw as z.infer<typeof RoundApiItemSchema>[]).forEach((r) => {
+                const rid = (r.roundID ?? r.id ?? "").toString();
+                if (!rid) return;
+                const normSections: RoundSection[] | undefined = Array.isArray(r.sections)
+                    ? (r.sections as UnknownSection[]).map((s) => {
+                        const sid = (s['sectionId'] ?? s['id'] ?? s['sectionID'] ?? s['SectionID'] ?? null) as number | string | null;
+                        const sname = (s['name'] ?? s['sectionName'] ?? s['SectionName'] ?? s['title']) as string | undefined;
+                        const sweight = (s['weight'] ?? s['sectionWeight'] ?? s['Weight'] ?? null) as number | null;
+                        const critArr = Array.isArray(s['criteria']) ? (s['criteria'] as UnknownCriteria[]) : undefined;
+                        const crit = critArr
+                            ? critArr.map((c) => ({
+                                id: (c['id'] ?? c['criteriaId'] ?? c['criteriaID'] ?? c['CriteriaID'] ?? null) as number | string | null,
+                                criteriaId: (c['criteriaId'] ?? c['id'] ?? c['criteriaID'] ?? c['CriteriaID'] ?? null) as number | null,
+                                maxScore: (c['maxScore'] ?? c['weight'] ?? c['Weight'] ?? c['score'] ?? null) as number | null,
+                                included: (c['included'] ?? c['Included'] ?? true) as boolean,
+                              }))
+                            : undefined;
+                        return { id: sid, sectionId: typeof sid === 'number' ? sid : Number(sid) || null, name: sname, weight: sweight, criteria: crit } as RoundSection;
+                    })
+                    : undefined;
+                meta[rid] = { description: r.description, sections: normSections };
+            });
+        const normalizedAll = (raw as z.infer<typeof RoundApiItemSchema>[]).map((r) => {
                 const statusCode = typeof r.status === "string" ? r.status : (r.status as { value?: string })?.value;
                 const deadline = r.deadline || r.endDate || r.startDate;
                 return {
@@ -287,20 +353,27 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     name: r.title ?? r.name ?? "Untitled Round",
                     status: (statusCode || "O") as string,
                     deadline,
-                    applicantCount: r.applicantCount,
-                    hasApplied: Boolean((r as any).hasApplied || (r as any).appliedCount > 0 || (r as any).applicationId),
-                    applicationId: (r as { applicationId?: unknown }).applicationId ? String((r as { applicationId?: unknown }).applicationId) : undefined,
+            applicantCount: r.applicantCount,
+            hasApplied: Boolean(r.hasApplied || (r.appliedCount ?? 0) > 0 || r.applicationId),
+            applicationId: r.applicationId !== undefined && r.applicationId !== null ? String(r.applicationId) : undefined,
                 };
             }).filter(r => r.id);
             const filtered = defaultRoundId
                 ? normalizedAll.filter(r => r.id === defaultRoundId)
                 : normalizedAll;
             setRounds(filtered);
+            setRoundMetaById(meta);
             if (defaultRoundId && filtered.length === 0) {
                 setRoundError("Selected round not found or is unavailable.");
                 setRoundsLoadingState("error");
             } else {
                 setRoundsLoadingState("success");
+            }
+            if (defaultRoundId) {
+                const arr = raw as z.infer<typeof RoundApiItemSchema>[];
+                const match = arr.find((x) => String(x.id ?? x.roundID) === String(defaultRoundId)) || arr[0];
+                const rid = match ? String(xId(match)) : "";
+                setRoundDetail(meta[rid] || { description: match?.description, sections: undefined });
             }
         } catch (error: unknown) {
             const errorMessage = (error as Error)?.message || "Failed to load prequalification rounds. Please try again.";
@@ -358,8 +431,67 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     }, [selectedRoundId, fetchCategories, form]);
 
     useEffect(() => {
+        if (selectedRoundId && roundMetaById[selectedRoundId]) {
+            setRoundDetail(roundMetaById[selectedRoundId]);
+        }
+    }, [selectedRoundId, roundMetaById]);
+
+    // helper for id extraction across variants
+    function xId(r: z.infer<typeof RoundApiItemSchema>): string {
+        const val = (r.roundID ?? r.id);
+        return typeof val === 'number' ? String(val) : (val ?? '').toString();
+    }
+
+    // Fallback: if sections are missing from list response, fetch per-round detail
+    const fetchRoundDetail = useCallback(async (rid: string) => {
+        if (!accessToken || !rid) return;
+        try {
+            // Use frontend proxy route for proper session auth and CORS
+            const res = await fetch(`/api/prequalification/rounds/${encodeURIComponent(rid)}`, { cache: 'no-store' });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) return;
+            const item = (json?.data ?? json) as Record<string, unknown>;
+            const sectionsRaw = (item['sections'] as UnknownSection[] | undefined) || [];
+            const description = (item['description'] as string | undefined) || roundMetaById[rid]?.description;
+            const normSections: RoundSection[] | undefined = Array.isArray(sectionsRaw)
+                ? sectionsRaw.map((s) => {
+                    const sid = (s['sectionId'] ?? s['id'] ?? s['sectionID'] ?? s['SectionID'] ?? null) as number | string | null;
+                    const sname = (s['name'] ?? s['sectionName'] ?? s['SectionName'] ?? s['title']) as string | undefined;
+                    const sweight = (s['weight'] ?? s['sectionWeight'] ?? s['Weight'] ?? null) as number | null;
+                    const critArr = Array.isArray(s['criteria']) ? (s['criteria'] as UnknownCriteria[]) : undefined;
+                    const crit = critArr
+                        ? critArr.map((c) => ({
+                            id: (c['id'] ?? c['criteriaId'] ?? c['criteriaID'] ?? c['CriteriaID'] ?? null) as number | string | null,
+                            criteriaId: (c['criteriaId'] ?? c['id'] ?? c['criteriaID'] ?? c['CriteriaID'] ?? null) as number | null,
+                            maxScore: (c['maxScore'] ?? c['weight'] ?? c['Weight'] ?? c['score'] ?? null) as number | null,
+                            included: (c['included'] ?? c['Included'] ?? true) as boolean,
+                        }))
+                        : undefined;
+                    return { id: sid, sectionId: typeof sid === 'number' ? sid : Number(sid) || null, name: sname, weight: sweight, criteria: crit } as RoundSection;
+                })
+                : undefined;
+            setRoundMetaById((prev) => ({ ...prev, [rid]: { description, sections: normSections } }));
+            setRoundDetail({ description, sections: normSections });
+        } catch {
+            // no-op
+        }
+    }, [accessToken, roundMetaById]);
+
+    useEffect(() => {
+        if (!selectedRoundId) return;
+        const meta = roundMetaById[selectedRoundId];
+        const missing = !meta || !meta.sections || meta.sections.length === 0;
+        if (missing) void fetchRoundDetail(selectedRoundId);
+    }, [selectedRoundId, roundMetaById, fetchRoundDetail]);
+
+    useEffect(() => {
         if (defaultRoundId) form.setValue("roundId", defaultRoundId);
     }, [defaultRoundId, form]);
+
+    // Fallback effective round id (must be declared before any usage below)
+    const effectiveRoundId = useMemo(() => (
+        (selectedRoundId && String(selectedRoundId)) || (defaultRoundId && String(defaultRoundId)) || ""
+    ), [selectedRoundId, defaultRoundId]);
 
     const handleToggleCategory = useCallback(
         (categoryId: string) => {
@@ -371,6 +503,31 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
         [form]
     );
 
+    // upload helper removed — immediate upload performed inline in file input handler
+
+    const uploadFile = useCallback(async (u: UploadItem) => {
+        const rid = effectiveRoundId;
+        if (!rid || !u.file) return;
+        try {
+            const fd = new FormData();
+            fd.append('file', u.file as Blob);
+            const sectionId = u.sectionId ?? (roundMetaById[String(rid)]?.sections?.[0]?.sectionId ?? null);
+            if (!sectionId) {
+                throw new Error('Please select a document type (section) for each file.');
+            }
+            fd.append('section_id', String(sectionId));
+            if (u.fileType) fd.append('file_type', u.fileType);
+            fd.append('description', (form.getValues('descriptions') as Record<string,string> | undefined)?.[u.categoryId] || '');
+            const url = `/api/procurement/prequalification/applications/${encodeURIComponent(String(rid))}/categories/${encodeURIComponent(String(u.categoryId))}/documents`;
+            const res = await fetch(url, { method: 'POST', body: fd, cache: 'no-store' });
+            if (!res.ok) throw new Error(await res.text());
+            setUploads((list) => list.map((x) => x.id === u.id ? { ...x, status: 'done' } : x));
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            setUploads((list) => list.map((x) => x.id === u.id ? { ...x, status: 'error', error: message } : x));
+        }
+    }, [effectiveRoundId, form, roundMetaById]);
+
     const onSubmit = useCallback(
         async (values: FormValues) => {
             if (!accessToken) {
@@ -379,10 +536,24 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             }
             setFormLoadingState("submitting");
             setFormMessage(null); // Reset any previous form messages
-            const roundId = parseInt(values.roundId, 10);
+            const ridStr = values.roundId || effectiveRoundId;
+            const roundId = parseInt(ridStr, 10);
+            if (!roundId || Number.isNaN(roundId)) {
+                setFormLoadingState("error");
+                setFormMessage({ type: "error", message: "Please select a round." });
+                return;
+            }
             const categoryIds = values.categoryIds.map((id) => parseInt(id, 10));
             try {
                 const resp = await submitApplicationSafe(roundId, categoryIds, accessToken);
+                // After submit, upload any staged files for the selected categories
+                if (resp.status === 201) {
+                    const staged = uploads.filter(u => (u.status === 'pending' || u.status === 'error') && categoryIds.includes(parseInt(u.categoryId, 10)));
+                    for (const u of staged) {
+                        setUploads((list) => list.map((x) => x.id === u.id ? { ...x, status: 'uploading' } : x));
+                        await uploadFile(u);
+                    }
+                }
                 if (resp.status === 201) {
                     setFormMessage({ type: "success", message: "" });
                     setFormLoadingState("success");
@@ -424,7 +595,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                 setFormMessage({ type: "error", message: (err as Error)?.message || "Please check your connection and try again." });
             }
         },
-        [accessToken, onSuccess]
+    [accessToken, onSuccess, uploads, uploadFile, effectiveRoundId]
     );
 
     const handleClose = useCallback(() => {
@@ -437,8 +608,22 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     const trigger = useMemo(() => <SheetTrigger asChild>{children}</SheetTrigger>, [children]);
 
     const roundValidationState = form.formState.errors.roundId ? "invalid" : "valid";
-    const categoriesValid = selectedCategoryIds.length > 0;
-    const isFormValid = form.formState.isValid && categoriesValid;
+    const currentRound = useMemo(() => rounds.find(r => r.id === selectedRoundId) || (defaultRoundId ? rounds[0] : undefined), [rounds, selectedRoundId, defaultRoundId]);
+    const descriptionsMap = form.watch("descriptions") as Record<string, string> | undefined;
+    // round/category validity handled via submitEnabled below
+
+    // Effective round id and submit gate
+
+    const submitEnabled = useMemo(() => {
+        const hasRound = Boolean(effectiveRoundId || form.getValues("roundId"));
+        const hasCategories = Array.isArray(selectedCategoryIds) && selectedCategoryIds.length > 0;
+        return Boolean(
+            hasRound &&
+            hasCategories &&
+            formLoadingState !== "submitting" &&
+            !currentRound?.hasApplied
+        );
+    }, [effectiveRoundId, selectedCategoryIds, formLoadingState, currentRound, form]);
 
     const renderFormState = () => {
         switch (formLoadingState) {
@@ -517,6 +702,30 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                             </div>
                                             <StatusBadge status={rounds[0].status} />
                                         </div>
+                                        {roundDetail.description && (
+                                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 whitespace-pre-wrap">
+                                                {roundDetail.description}
+                                            </div>
+                                        )}
+                                        {Array.isArray(roundDetail.sections) && roundDetail.sections.length > 0 && (
+                                            <div className="mt-3 space-y-2">
+                                                <h4 className="text-sm font-semibold">Sections & Criteria</h4>
+                                                <ul className="text-sm list-disc pl-5 space-y-1">
+                                                    {roundDetail.sections.map((s, si) => (
+                                                        <li key={String(s.id ?? s.sectionId ?? si)}>
+                                                            <span className="font-medium">{s.name}</span>
+                                                            {Array.isArray(s.criteria) && s.criteria.length > 0 && (
+                                                                <ul className="list-disc pl-5 mt-1">
+                                                                    {s.criteria.map((c, ci) => (
+                                                                        <li key={String(c.id ?? c.criteriaId ?? ci)}>Max: {c.maxScore ?? '-'} {c.included === false ? '(excluded)' : ''}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                         {rounds[0].hasApplied && (
                                             <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium" role="note">
                                                 Already applied{rounds[0].applicationId ? ` • Ref ${rounds[0].applicationId}` : ''}
@@ -541,6 +750,22 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                             </div>
                             {selectedRoundId && (
                                 <div className="space-y-4 pt-6 transition-all duration-300 ease-in-out animate-in slide-in-from-bottom-4">
+                                    {currentRound && (
+                                        <div className="p-4 rounded-lg border bg-gray-50 dark:bg-gray-900/30 dark:border-gray-700">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-blue-500" />
+                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{currentRound.name}</span>
+                                                </div>
+                                                <StatusBadge status={currentRound.status} />
+                                            </div>
+                                            {roundDetail.description && (
+                                                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 whitespace-pre-wrap">
+                                                    {roundDetail.description}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className="flex items-center justify-between">
                                         <Label htmlFor="categories" id="categories-label" className="text-base font-semibold flex items-center gap-2">
                                             <Users className="w-4 h-4" />
@@ -551,10 +776,89 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                     {categoriesLoadingState === "loading" && <LoadingSkeleton />}
                                     {categoriesLoadingState === "error" && <ErrorState error={categoryError} onRetry={fetchCategories} />}
                                     {categoriesLoadingState === "success" && categories.length > 0 && (
-                                        rounds[0]?.hasApplied ? (
+                                        currentRound?.hasApplied ? (
                                             <WarningState message="You have already applied to this round. Categories are locked." />
                                         ) : (
-                                            <CategorySelector categories={categories} selectedIds={selectedCategoryIds} onToggle={handleToggleCategory} error={form.formState.errors.categoryIds?.message} />
+                                            <div className="space-y-6">
+                                                <CategorySelector categories={categories} selectedIds={selectedCategoryIds} onToggle={handleToggleCategory} error={form.formState.errors.categoryIds?.message} />
+                                                {selectedCategoryIds.length > 0 && (
+                                                    <div className="space-y-4">
+                                                        <h4 className="text-sm font-semibold">Supporting Documents</h4>
+                                                        {selectedCategoryIds.map((cid) => (
+                                                            <div key={cid} className="rounded-md border p-3 space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="font-medium text-sm">{categories.find(c => c.id === cid)?.name || 'Category'} — Optional Description</div>
+                                                                </div>
+                                                                <textarea
+                                                                    className="w-full text-sm rounded-md border p-2"
+                                                                    placeholder="Describe your capability or any notes (optional)"
+                                                                    value={(descriptionsMap?.[cid] ?? '')}
+                                                                    onChange={(e) => {
+                                                                        const next = { ...(descriptionsMap || {}) , [cid]: e.target.value };
+                                                                        form.setValue('descriptions', next, { shouldDirty: true, shouldValidate: false });
+                                                                    }}
+                                                                />
+                                                                <div className="grid gap-2">
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                                                                        <label className="text-xs text-gray-600">Upload file</label>
+                                                                        <input className="sm:col-span-2 h-9 rounded border px-2 text-sm" type="file" id={`fileinput-${cid}`} onChange={async (e) => {
+                                                                            const inputEl = e.currentTarget as HTMLInputElement | null;
+                                                                            const f = inputEl?.files?.[0]
+                                                                            if (!f) return
+                                                                            const sectionId = undefined; // will be set in per-file editor below
+                                                                            const fileType = undefined;
+                                                                            // Stage local upload entry (do not upload now)
+                                                                            const uuid = typeof window !== 'undefined' && typeof window.crypto?.randomUUID === 'function'
+                                                                                ? window.crypto.randomUUID()
+                                                                                : `u-${Date.now()}-${(counterRef.current += 1)}`;
+                                                                            const item: UploadItem = { id: uuid, file: f, categoryId: cid, sectionId: sectionId ?? null, fileType: fileType || undefined, status: 'pending' };
+                                                                            setUploads((u) => [...u, item]);
+                                                                            if (inputEl) inputEl.value = '';
+                                                                        }} />
+                                                                    </div>
+                                                                            {uploads.filter(u => u.categoryId === cid).length > 0 && (
+                                                                        <div className="space-y-2 text-xs">
+                                                                            {uploads.filter(u => u.categoryId === cid).map((u) => (
+                                                                                <div key={u.id} className="flex flex-col gap-2 border rounded p-2">
+                                                                                    <div className="flex items-center justify-between">
+                                                                                        <span className="truncate font-medium">{u.file ? u.file.name : 'staged'}</span>
+                                                                                        <span className={u.status === 'done' ? 'text-emerald-600' : u.status === 'error' ? 'text-red-600' : u.status === 'uploading' ? 'text-blue-600' : 'text-gray-500'}>
+                                                                                            {u.status}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
+                                                                                        <label className="text-[11px] text-gray-600">Document type</label>
+                                                                                        <select
+                                                                                            className="sm:col-span-2 h-8 rounded border px-2"
+                                                                                            value={u.sectionId ?? ''}
+                                                                                            onChange={(ev) => {
+                                                                                                const val = ev.target.value ? Number(ev.target.value) : null;
+                                                                                                setUploads((list) => list.map((x) => x.id === u.id ? { ...x, sectionId: val } : x));
+                                                                                            }}
+                                                                                        >
+                                                                                            <option value="">Select section</option>
+                                                                                            {roundDetail.sections?.map((s, si) => (
+                                                                                                <option key={String(s.id ?? s.sectionId ?? si)} value={String(s.sectionId || s.id || '')}>{s.name}</option>
+                                                                                            ))}
+                                                                                        </select>
+                                                                                        <label className="text-[11px] text-gray-600">File type</label>
+                                                                                        <input
+                                                                                            className="sm:col-span-2 h-8 rounded border px-2"
+                                                                                            value={u.fileType || ''}
+                                                                                            onChange={(ev) => setUploads((list) => list.map((x) => x.id === u.id ? { ...x, fileType: ev.target.value || undefined } : x))}
+                                                                                            placeholder="e.g., Company Profile, License"
+                                                                                        />
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         )
                                     )}
                                     {categoriesLoadingState === "success" && categories.length === 0 && (
@@ -571,16 +875,9 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                             <Button type="button" variant="outline" onClick={handleClose} disabled={formLoadingState === "submitting"} className="flex-1 sm:flex-none transition-all duration-200 hover:scale-105 focus:scale-105">
                                 Cancel
                             </Button>
-                            {!rounds[0]?.hasApplied && <Button
+                            {!currentRound?.hasApplied && <Button
                                 type="submit"
-                                disabled={
-                                    formLoadingState === "submitting" ||
-                                    roundsLoadingState === "loading" ||
-                                    roundsLoadingState === "error" ||
-                                    categoriesLoadingState === "loading" ||
-                                    categoriesLoadingState === "error" ||
-                                    !isFormValid
-                                }
+                                disabled={!submitEnabled}
                                 className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 focus:scale-105"
                             >
                                 {formLoadingState === "submitting" ? (
