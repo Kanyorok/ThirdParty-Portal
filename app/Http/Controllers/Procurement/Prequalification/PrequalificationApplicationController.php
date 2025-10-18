@@ -15,6 +15,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
 use App\Enums\Procurement\PrequalificationApplicationEnum;
 use App\Http\Resources\Procurement\PrequalificationRoundResource;
 use App\Http\Resources\Procurement\PrequalificationApplicationResource;
@@ -145,23 +146,91 @@ class PrequalificationApplicationController extends Controller
             // Apply pagination
             $availableRounds = $query->paginate($pageSize, ['*'], 'page', $page);
 
-            // Find allowed categories per round via pivot table
+            // Build categories per round from the supplier's assigned classifications (t_ThirdParty_SupplierCategory)
             $roundIds = $availableRounds->pluck('RoundID')->filter()->values();
             $categoriesByRound = collect();
             if ($roundIds->isNotEmpty()) {
-                $rows = DB::table('t_PrequalificationRoundSupplierCategory as prc')
-                    ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'prc.SupplierCategoryID')
-                    ->whereIn('prc.RoundID', $roundIds)
-                    ->whereNull('sc.DeletedOn')
-                    ->where(function ($q) { $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive'); })
-                    ->select('prc.RoundID', 'sc.SupplierCategoryID', 'sc.CategoryName', 'sc.Description')
-                    ->orderBy('sc.CategoryName')
-                    ->get();
-                // Deduplicate categories per round by SupplierCategoryID
-                $rows = $rows->unique(function ($row) {
-                    return $row->RoundID . ':' . $row->SupplierCategoryID;
-                })->values();
-                $categoriesByRound = $rows->groupBy('RoundID');
+                $supplierCats = collect();
+                if ($supplierId) {
+                    $supplierCats = DB::table('t_ThirdParty_SupplierCategory as tpsc')
+                        ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'tpsc.supplier_category_id')
+                        ->where('tpsc.third_party_id', $supplierId)
+                        ->whereNull('sc.DeletedOn')
+                        ->where(function ($q) { $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive'); })
+                        ->select('sc.SupplierCategoryID', 'sc.CategoryName', 'sc.Description')
+                        ->orderBy('sc.CategoryName')
+                        ->get()
+                        ->unique('SupplierCategoryID')
+                        ->values();
+                }
+
+                // Attempt to scope by round item categories if a mapping table exists
+                $roundItemCategoryMap = collect();
+                if (Schema::hasTable('t_PrequalificationRoundItemCategory')
+                    && Schema::hasColumn('t_PrequalificationRoundItemCategory', 'RoundID')
+                    && Schema::hasColumn('t_PrequalificationRoundItemCategory', 'ItemCategoryID')) {
+                    $roundItemCategoryMap = DB::table('t_PrequalificationRoundItemCategory')
+                        ->whereIn('RoundID', $roundIds)
+                        ->whereNull('DeletedOn')
+                        ->get(['RoundID', 'ItemCategoryID'])
+                        ->groupBy('RoundID')
+                        ->map(fn($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
+                } elseif (Schema::hasTable('t_PrequalificationRoundItemCategories')
+                    && Schema::hasColumn('t_PrequalificationRoundItemCategories', 'RoundID')
+                    && Schema::hasColumn('t_PrequalificationRoundItemCategories', 'ItemCategoryID')) {
+                    $roundItemCategoryMap = DB::table('t_PrequalificationRoundItemCategories')
+                        ->whereIn('RoundID', $roundIds)
+                        ->whereNull('DeletedOn')
+                        ->get(['RoundID', 'ItemCategoryID'])
+                        ->groupBy('RoundID')
+                        ->map(fn($rows) => $rows->pluck('ItemCategoryID')->filter()->unique()->values());
+                }
+
+                $categoriesByRound = $roundIds->mapWithKeys(function ($rid) use ($supplierCats, $roundItemCategoryMap) {
+                    // Helper to fetch all active categories when we have nothing supplier-specific
+                    $getAllActiveCats = function () {
+                        return DB::table('t_SupplierCategories as sc')
+                            ->whereNull('sc.DeletedOn')
+                            ->where(function ($q) { $q->where('sc.IsActive', 1)->orWhereNull('sc.IsActive'); })
+                            ->select('sc.SupplierCategoryID', 'sc.CategoryName', 'sc.Description')
+                            ->orderBy('sc.CategoryName')
+                            ->get();
+                    };
+
+                    // If no mapping exists at all, use supplier categories if present; otherwise fall back to all active
+                    if ($roundItemCategoryMap->isEmpty()) {
+                        return [$rid => $supplierCats->isNotEmpty() ? $supplierCats : $getAllActiveCats()];
+                    }
+                    $itemIds = $roundItemCategoryMap->get($rid, collect());
+                    if (!$itemIds instanceof \Illuminate\Support\Collection) {
+                        $itemIds = collect($itemIds);
+                    }
+                    if ($itemIds->isEmpty()) {
+                        // No items mapped for this round — use supplier categories if available; else all active categories
+                        return [$rid => $supplierCats->isNotEmpty() ? $supplierCats : $getAllActiveCats()];
+                    }
+                    // Find supplier categories that map to any of the round item categories
+                    $allowedCatIds = DB::table('t_SupplierCategory_ItemCategory as scic')
+                        ->whereIn('scic.ItemCategoryID', $itemIds->all())
+                        ->whereNull('scic.DeletedOn')
+                        ->pluck('scic.SupplierCategoryID')
+                        ->unique()
+                        ->values();
+
+                    // If no intersection, gracefully fall back to supplier categories or all active categories
+                    if ($allowedCatIds->isEmpty()) {
+                        if ($supplierCats->isNotEmpty()) {
+                            return [$rid => $supplierCats];
+                        }
+                        return [$rid => $getAllActiveCats()];
+                    }
+
+                    $filtered = $supplierCats->filter(function ($row) use ($allowedCatIds) {
+                        return $allowedCatIds->contains($row->SupplierCategoryID);
+                    })->values();
+
+                    return [$rid => $filtered];
+                });
             }
 
             // Fetch applications for current supplier across these rounds
@@ -265,8 +334,8 @@ class PrequalificationApplicationController extends Controller
                     return $out;
                 })->values();
 
-                // Compute round-level eligibility helpers
-                $now = now();
+                // Compute round-level eligibility helpers (day-level; today is applicable)
+                $now = now()->startOfDay();
                 $windowOpen = (!$round->StartDate || $round->StartDate <= $now) && (!$round->EndDate || $round->EndDate >= $now);
                 $statusValue = is_object($round->Status) && property_exists($round->Status, 'value') ? $round->Status->value : (string) $round->Status;
                 $statusOpen = strtolower((string) $statusValue) === 'open' || (defined('App\\Enums\\Procurement\\PrequalificationRoundEnum::Open') && (string) $statusValue === (string) \App\Enums\Procurement\PrequalificationRoundEnum::Open->value);
@@ -284,8 +353,9 @@ class PrequalificationApplicationController extends Controller
 
                 // Mark as duplicate/not applicable when another round covers this window and was created earlier
                 $primaryCovering = \App\Models\Procurement\Prequalification\PrequalificationRound::query()
-                    ->where('StartDate', '<=', $round->StartDate)
-                    ->where('EndDate', '>=', $round->EndDate)
+                    ->where('StartDate', '=', $round->StartDate)
+                    ->where('EndDate', '=', $round->EndDate)
+                    ->where('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Open)
                     ->where(\App\Models\Procurement\Prequalification\PrequalificationRound::getPrimaryKey(), '!=', $roundId)
                     ->orderBy('CreatedOn', 'asc')
                     ->first(['RoundID', 'Title', 'CreatedOn', 'StartDate', 'EndDate']);
@@ -311,6 +381,13 @@ class PrequalificationApplicationController extends Controller
                     && !$isFutureWindow
                     && !$duplicateWithinRange;
 
+                // Not Applicable per business rules only:
+                // - expired
+                // - strictly future (today is applicable)
+                // - no classifications
+                // - already applied to all classifications
+                $notApplicable = (bool) ($isExpired || $isFutureWindow || !$hasCategories || !$hasUnapplied);
+
                 return [
                     'id' => (int) $round->RoundID,
                     'title' => $round->Title,
@@ -333,6 +410,10 @@ class PrequalificationApplicationController extends Controller
                     'duplicateWithinRange' => (bool) $duplicateWithinRange,
                     'primaryWindowRoundId' => $primaryWindowRoundId,
                     'primaryWindowRoundTitle' => $primaryWindowRoundTitle,
+                    // Applicability helpers for frontend
+                    'hasClassifications' => (bool) $hasCategories,
+                    'hasRemainingClassifications' => (bool) $hasUnapplied,
+                    'notApplicable' => (bool) $notApplicable,
                 ];
             })->values();
 
