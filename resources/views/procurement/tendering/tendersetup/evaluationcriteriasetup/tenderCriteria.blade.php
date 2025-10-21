@@ -5,6 +5,17 @@
     <div class="container mt-4">
         <h4 class="mb-3">📑 {{$tender->TenderNo}} Criteria Form</h4>
 
+        @if(isset($filteredSections) && $filteredSections->isNotEmpty())
+            <div class="alert alert-warning">
+                <strong>Note:</strong> The following sections are not available for configuration because they are inactive or missing: 
+                <ul class="mb-0">
+                    @foreach($filteredSections as $fs)
+                        <li>{{ $fs }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{route('tender-criteria.store')}}" method="POST" enctype="multipart/form-data"
               id="sectionCriteriaForm">
             @csrf

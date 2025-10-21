@@ -457,6 +457,22 @@ class PrequalificationEvaluationController extends Controller
             ->with(['masterSection', 'criteria.masterCriteria'])
             ->get();
 
+        // Ensure only valid, included criteria with a master record are presented
+        $sections->each(function ($section) {
+            if (!($section->criteria instanceof \Illuminate\Support\Collection)) {
+                $section->setRelation('criteria', collect($section->criteria ?? []));
+            }
+            $cleaned = $section->criteria
+                ->filter(function ($c) {
+                    // Included flag (default true if null) and must resolve to a masterCriteria
+                    $included = is_null($c->Included) ? true : (bool) $c->Included;
+                    return $included && $c->masterCriteria;
+                })
+                ->unique('CriteriaId')
+                ->values();
+            $section->setRelation('criteria', $cleaned);
+        });
+
     $existingEvaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
             ->where('EvaluatorID', $evaluatorId)
             ->get()

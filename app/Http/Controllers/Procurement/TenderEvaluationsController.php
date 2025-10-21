@@ -205,15 +205,36 @@ class TenderEvaluationsController extends Controller
             ->groupBy('SectionID')
             ->map(fn($rows) => $rows->pluck('CriteriaID')->toArray());
 
-        // Get sections associated with the tender along with their criteria
-        $tenderSections = TenderSection::where('TenderID', $tender->Id)
-            ->with('sections') // We’ll handle criteria manually
+        // Get sections associated with the tender
+        $allTenderSections = TenderSection::where('TenderID', $tender->Id)
+            ->with('sections')
             ->get();
 
+        // Only include active tender sections that still have a valid Section row
+        $tenderSections = $allTenderSections
+            ->filter(function($ts){
+                return ($ts->IsActive ?? true) && $ts->sections; // active and has linked Section
+            })
+            ->values();
+
+        // Identify filtered-out sections (inactive or missing base Section)
+        $filteredSections = $allTenderSections
+            ->reject(function($ts){
+                return ($ts->IsActive ?? true) && $ts->sections;
+            })
+            ->map(function($ts){
+                $name = $ts->sections?->SectionName;
+                return $name ?: ('Section #'.$ts->SectionID);
+            })
+            ->values();
+
         foreach ($tenderSections as $section) {
+            if (!$section->sections) { continue; }
             $sectionId = $section->sections->Id;
             $criteriaList = Criteria::where('SectionID', $sectionId)->get();
-            $selectedForSection = $existingBySection[$sectionId] ?? [];
+            $selectedForSection = ($existingBySection instanceof \Illuminate\Support\Collection)
+                ? ($existingBySection->get($sectionId, []))
+                : ($existingBySection[$sectionId] ?? []);
             foreach ($criteriaList as $criteria) {
                 $criteria->isChecked = in_array($criteria->Id, $selectedForSection);
             }
@@ -223,7 +244,8 @@ class TenderEvaluationsController extends Controller
         return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderCriteria', compact(
             'TenderId',
             'tender',
-            'tenderSections'
+            'tenderSections',
+            'filteredSections'
         ));
     }
 

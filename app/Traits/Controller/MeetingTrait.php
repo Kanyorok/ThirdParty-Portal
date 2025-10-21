@@ -31,16 +31,21 @@ trait MeetingTrait
      */
     public function meetings(Builder|BelongsToMany|\Illuminate\Database\Eloquent\Builder $query): JsonResponse
     {
-        return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
+                $tz = config('app.timezone');
+                return Datatables::of($query->lock('WITH(NOLOCK)')->select('*'))->addIndexColumn()
             ->editColumn('StartOn', function (Meeting $meeting) {
-                return $meeting->StartOn?->format('F d, Y h:i A');
+                                $tz = config('app.timezone');
+                                return $meeting->StartOn?->format('F d, Y h:i A') . " ({$tz})";
             })->editColumn('EndOn', function (Meeting $meeting) {
-                return $meeting->EndOn?->format('F d, Y h:i A');
+                                $tz = config('app.timezone');
+                                return $meeting->EndOn?->format('F d, Y h:i A') . " ({$tz})";
             })->editColumn('Title', function (Meeting $meeting) {
-                return '<details><summary>' . $meeting->Title . '</summary>
-                  <p><b>Location: ' . $meeting->Location . '</b></p>
-                  <p><b>Durarion: ' . $meeting->EndOn->diffForHumans($meeting->StartOn, CarbonInterface::DIFF_ABSOLUTE, parts: 2, short: true) . '</b></p>
-                </details>';
+                                $tz = config('app.timezone');
+                                return '<details><summary>' . $meeting->Title . '</summary>
+                                    <p><b>Location: ' . $meeting->Location . '</b></p>
+                                    <p><b>Duration: ' . $meeting->EndOn->diffForHumans($meeting->StartOn, CarbonInterface::DIFF_ABSOLUTE, parts: 2, short: true) . '</b></p>
+                                    <p><small class="text-muted">Timezone: ' . e($tz) . '</small></p>
+                                </details>';
             })->editColumn('StatusID', function (Meeting $meeting) {
                 return $meeting->StatusID->name;
             })->setRowClass(function (Meeting $meeting) {
