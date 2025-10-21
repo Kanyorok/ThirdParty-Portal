@@ -35,10 +35,14 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <input id="password" type="password"
-                               class="form-control @error('password') is-invalid @enderror"
-                               name="password" required autocomplete="current-password" placeholder="Password">
-
+                        <div class="input-group">
+                            <input id="password" type="password"
+                                   class="form-control @error('password') is-invalid @enderror"
+                                   name="password" required autocomplete="current-password" placeholder="Password">
+                            <button type="button" id="togglePassword" class="btn btn-outline-secondary" aria-label="Show password">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
                     {{--<div class="d-flex mt-1 justify-content-between align-items-center">
                         <div class="form-check">
@@ -56,6 +60,35 @@
                 </form>
             </div>
         </div>
+@endsection
+
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const pwd = document.getElementById('password');
+            const btn = document.getElementById('togglePassword');
+            if (!pwd || !btn) return;
+
+            btn.addEventListener('click', function () {
+                const icon = this.querySelector('i');
+                if (pwd.type === 'password') {
+                    pwd.type = 'text';
+                    this.setAttribute('aria-label', 'Hide password');
+                    if (icon) {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    }
+                } else {
+                    pwd.type = 'password';
+                    this.setAttribute('aria-label', 'Show password');
+                    if (icon) {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                }
+            });
+        });
+    </script>
 @endsection
 
 

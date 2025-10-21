@@ -457,7 +457,7 @@ class PrequalificationEvaluationController extends Controller
             ->with(['masterSection', 'criteria.masterCriteria'])
             ->get();
 
-        $existingEvaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
+    $existingEvaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
             ->where('EvaluatorID', $evaluatorId)
             ->get()
             ->keyBy('CriteriaID');
@@ -473,7 +473,17 @@ class PrequalificationEvaluationController extends Controller
             ->where('SupplierCategoryID', $application->CategoryID)
             ->exists();
 
-        return view('procurement.suppliers.prequalification.prequalification-evaluation.evaluate', compact('application', 'sections', 'existingEvaluations', 'isReadonly', 'isPrequalified', 'result'));
+        // Load supporting documents uploaded by the supplier for this application
+        // These are linked via t_SupplierPreqApplicationDocuments.ApplicationID
+        $documents = $application->documents()
+            ->with(['dmsDocument.current'])
+            ->orderByDesc('CreatedOn')
+            ->get();
+
+        return view(
+            'procurement.suppliers.prequalification.prequalification-evaluation.evaluate',
+            compact('application', 'sections', 'existingEvaluations', 'isReadonly', 'isPrequalified', 'result', 'documents')
+        );
     }
 
     public function submitEvaluation(Request $request, $applicationId): RedirectResponse

@@ -20,13 +20,63 @@ use Illuminate\Validation\ValidationException;
 
 class InvoiceEntryV2Controller extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = FinanceInvoiceEntry::with(['thirdParty'])
-            ->orderBy('CreatedOn', 'desc')
-            ->paginate(15);
+        // Build query with filters
+        $query = FinanceInvoiceEntry::with(['thirdParty', 'currency']);
 
-        return view('finance.accountspayable.invoiceentry.index', compact('invoices'));
+        // Apply filters if provided
+        if ($request->filled('vendor_name')) {
+            $query->whereHas('thirdParty', function($q) use ($request) {
+                $q->where('ThirdPartyName', 'like', '%' . $request->vendor_name . '%')
+                  ->orWhere('TradingName', 'like', '%' . $request->vendor_name . '%');
+            });
+        }
+
+        if ($request->filled('invoice_number')) {
+            $query->where('InvoiceNumber', 'like', '%' . $request->invoice_number . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('InvoiceDate', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('InvoiceDate', '<=', $request->date_to);
+        }
+
+        if ($request->filled('amount_min')) {
+            $query->where('InvoiceAmount', '>=', $request->amount_min);
+        }
+
+        if ($request->filled('amount_max')) {
+            $query->where('InvoiceAmount', '<=', $request->amount_max);
+        }
+
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+
+        // Apply sorting
+        $sortField = $request->sort_by ?? 'CreatedOn';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        // Paginate results
+        $perPage = $request->per_page ?? 15;
+        $invoices = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options for dropdowns
+        $approvalStatuses = FinanceInvoiceEntry::distinct()
+            ->pluck('ApprovalStatus')
+            ->filter()
+            ->unique()
+            ->values();
+
+        return view('finance.accountspayable.invoiceentry.index', compact(
+            'invoices',
+            'approvalStatuses'
+        ));
     }
 
     public function create()

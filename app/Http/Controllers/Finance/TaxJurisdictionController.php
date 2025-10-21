@@ -6,6 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Core\Currency;
 use App\Models\Finance\TaxJurisdiction;
+use App\Models\Core\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,10 +26,11 @@ class TaxJurisdictionController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceTaxSettingCreate, TaxJurisdiction::class);
-        // Fetch currencies for the dropdown
+        // Fetch currencies and countries for the dropdowns
         $currencies = Currency::all();
+        $countries = Country::active()->ordered()->get();
 
-        return view('finance.taxmanagement.taxjurisdictions.create', compact('currencies'));
+        return view('finance.taxmanagement.taxjurisdictions.create', compact('currencies','countries'));
     }
 
     public function store(Request $request)
@@ -38,6 +40,7 @@ class TaxJurisdictionController extends Controller
         $validated = $request->validate([
             'JurisdictionName' => 'required|string|unique:t_FinanceTaxJurisdiction,JurisdictionName',
             'Currency' => 'required|exists:t_Currencies,Id',
+            'CountryID' => 'required|exists:t_Countries,Id',
             'TaxAuthority' => 'required|string|max:255',
         ]);
         DB::beginTransaction();
@@ -45,6 +48,7 @@ class TaxJurisdictionController extends Controller
             $taxJurisdiction = TaxJurisdiction::create([
                 'JurisdictionName' => $validated['JurisdictionName'],
                 'Currency'=> $validated['Currency'],
+                'CountryID' => $validated['CountryID'] ?? null,
                 'TaxAuthority' => $validated['TaxAuthority'],
                 'CreatedBy' => Auth::Id(),
                 'ModifiedBy' => Auth::Id(),
@@ -73,8 +77,9 @@ class TaxJurisdictionController extends Controller
         // Fetch the tax jurisdiction for editing
         $taxJurisdiction = TaxJurisdiction::findOrFail($id);
         $currencies = Currency::all();
+        $countries = Country::active()->ordered()->get();
 
-        return view('finance.taxmanagement.taxjurisdictions.edit', compact('taxJurisdiction', 'currencies'));
+        return view('finance.taxmanagement.taxjurisdictions.edit', compact('taxJurisdiction', 'currencies','countries'));
     }
 
     public function update(Request $request, $id)
@@ -84,6 +89,7 @@ class TaxJurisdictionController extends Controller
         $validated = $request->validate([
             'JurisdictionName' => 'required|string|unique:t_FinanceTaxJurisdiction,JurisdictionName,' . $id,
             'Currency' => 'required|exists:t_Currencies,Id',
+            'CountryID' => 'required|exists:t_Countries,Id',
             'TaxAuthority' => 'required|string|max:255',
         ]);
         DB::beginTransaction();
@@ -92,6 +98,7 @@ class TaxJurisdictionController extends Controller
             $taxJurisdiction->update([
                 'JurisdictionName' => $validated['JurisdictionName'],
                 'Currency'=> $validated['Currency'],
+                'CountryID' => $validated['CountryID'] ?? null,
                 'TaxAuthority' => $validated['TaxAuthority'],
                 'Status' => $request->has('Status') ? true : false,
                 'ModifiedBy' => Auth::Id(),
@@ -145,4 +152,3 @@ class TaxJurisdictionController extends Controller
         }
     }
 }
-

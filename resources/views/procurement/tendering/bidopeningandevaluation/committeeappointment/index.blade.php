@@ -10,7 +10,7 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped table-bordered align-middle">
+            <table class="table table-striped table-bordered align-middle">
             <thead class="table-light">
             <tr>
                 <th>#</th>
@@ -25,7 +25,7 @@
             <tbody>
             @forelse ($committees as $index => $item)
                 <tr>
-                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $committees->firstItem() + $index }}</td>
                     <td class="text-uppercase">{{ $item['type'] }}</td>
                     <td>{{ $item['ref'] }}</td>
                     <td>
@@ -50,6 +50,18 @@
             @endforelse
             </tbody>
         </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="small text-muted">
+            @if($committees->total() > 0)
+                Showing {{ $committees->firstItem() }} to {{ $committees->lastItem() }} of {{ $committees->total() }} entries
+            @else
+                No entries
+            @endif
+        </div>
+        <div>
+            {{ $committees->withQueryString()->links() }}
+        </div>
     </div>
 </div>
 
