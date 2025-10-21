@@ -11,7 +11,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/common/sheet"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
-import { getRounds, getSupplierCategories, submitApplicationSafe } from "@/lib/api-base"
+import { getRounds, getSupplierCategories, submitApplicationSafe, getBaseUrl } from "@/lib/api-base"
 import { cn } from "@/lib/utils"
 
 // Local round shape used inside the form (separate from global Round but can overlap)
@@ -45,6 +45,29 @@ type UploadStatus = 'pending' | 'uploading' | 'done' | 'error';
 type UploadItem = { id: string; file?: File | null; sectionId?: number | null; fileType?: string; categoryId: string; status: UploadStatus; error?: string; serverId?: number | null };
 type UnknownSection = Record<string, unknown>;
 type UnknownCriteria = Record<string, unknown>;
+// --- Helpers to normalize sections from varying backend shapes
+const firstOf = <T = unknown>(o: unknown, keys: string[]): T | undefined => {
+    if (!o || typeof o !== 'object') return undefined;
+    const obj = o as Record<string, unknown>;
+    for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null) return obj[k] as T;
+    }
+    return undefined;
+};
+
+type SectionOption = { id: string; name: string; weight?: number };
+
+const normalizeSections = (src: unknown): SectionOption[] => {
+    const arr = (firstOf<unknown[]>(src, ['sections', 'Sections', 'availableSections', 'AvailableSections']) || []) as unknown[];
+    const items: SectionOption[] = (Array.isArray(arr) ? arr : []).map((s) => {
+        const id = firstOf<unknown>(s, ['sectionId', 'SectionID', 'SectionId', 'id', 'Id']);
+        const nm = firstOf<string>(s, ['name', 'sectionName', 'SectionName', 'title', 'Title']) || (id != null ? `Section ${id}` : 'Section');
+        const wt = firstOf<number>(s, ['weight', 'Weight', 'maxScore', 'MaxScore']);
+        return { id: String(id ?? ''), name: nm, weight: typeof wt === 'number' ? wt : undefined };
+    }).filter(x => x.id);
+    const seen = new Set<string>();
+    return items.filter(i => (seen.has(i.id) ? false : (seen.add(i.id), true)));
+};
 
 const FormSchema = z.object({
     roundId: z.string().min(1, "Please select a round to continue"),
@@ -326,8 +349,10 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
             (raw as z.infer<typeof RoundApiItemSchema>[]).forEach((r) => {
                 const rid = (r.roundID ?? r.id ?? "").toString();
                 if (!rid) return;
-                const normSections: RoundSection[] | undefined = Array.isArray(r.sections)
-                    ? (r.sections as UnknownSection[]).map((s) => {
+                // Accept both `sections` and `Sections` from API resources
+                const sectionsRaw = (r as unknown as Record<string, unknown>)['sections'] ?? (r as unknown as Record<string, unknown>)['Sections'];
+                const normSections: RoundSection[] | undefined = Array.isArray(sectionsRaw)
+                    ? (sectionsRaw as UnknownSection[]).map((s) => {
                         const sid = (s['sectionId'] ?? s['id'] ?? s['sectionID'] ?? s['SectionID'] ?? null) as number | string | null;
                         const sname = (s['name'] ?? s['sectionName'] ?? s['SectionName'] ?? s['title']) as string | undefined;
                         const sweight = (s['weight'] ?? s['sectionWeight'] ?? s['Weight'] ?? null) as number | null;
@@ -340,7 +365,8 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                 included: (c['included'] ?? c['Included'] ?? true) as boolean,
                               }))
                             : undefined;
-                        return { id: sid, sectionId: typeof sid === 'number' ? sid : Number(sid) || null, name: sname, weight: sweight, criteria: crit } as RoundSection;
+                        const nm = sname || (sid != null ? `Section ${sid}` : undefined);
+                        return { id: sid, sectionId: typeof sid === 'number' ? sid : Number(sid) || null, name: nm, weight: sweight, criteria: crit } as RoundSection;
                     })
                     : undefined;
                 meta[rid] = { description: r.description, sections: normSections };
@@ -354,7 +380,7 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                     status: (statusCode || "O") as string,
                     deadline,
             applicantCount: r.applicantCount,
-            hasApplied: Boolean(r.hasApplied || (r.appliedCount ?? 0) > 0 || r.applicationId),
+            hasApplied: Boolean(r.hasApplied || r.applicationId),
             applicationId: r.applicationId !== undefined && r.applicationId !== null ? String(r.applicationId) : undefined,
                 };
             }).filter(r => r.id);
@@ -447,11 +473,29 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
         if (!accessToken || !rid) return;
         try {
             // Use frontend proxy route for proper session auth and CORS
-            const res = await fetch(`/api/prequalification/rounds/${encodeURIComponent(rid)}`, { cache: 'no-store' });
-            const json = await res.json().catch(() => ({}));
-            if (!res.ok) return;
-            const item = (json?.data ?? json) as Record<string, unknown>;
-            const sectionsRaw = (item['sections'] as UnknownSection[] | undefined) || [];
+            let res = await fetch(`/api/prequalification/rounds/${encodeURIComponent(rid)}`, { cache: 'no-store' });
+            let jsonRaw: unknown = await res.json().catch(() => ({} as unknown));
+            if (!res.ok || !jsonRaw) {
+                // Fallback: call Laravel API directly with bearer token
+                const base = getBaseUrl();
+                const url = `${base}/api/procurement/prequalification/rounds/${encodeURIComponent(rid)}`;
+                res = await fetch(url, {
+                    headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
+                    cache: 'no-store',
+                });
+                jsonRaw = await res.json().catch(() => ({} as unknown));
+                if (!res.ok) return;
+            }
+            const json = jsonRaw as unknown;
+            const unwrap = (j: unknown): Record<string, unknown> => {
+                if (j && typeof j === 'object' && 'data' in (j as Record<string, unknown>)) {
+                    const maybe = (j as Record<string, unknown>)['data'];
+                    if (maybe && typeof maybe === 'object') return maybe as Record<string, unknown>;
+                }
+                return (j && typeof j === 'object') ? (j as Record<string, unknown>) : {};
+            };
+            const item = unwrap(json);
+            const sectionsRaw = (item['sections'] as UnknownSection[] | undefined) || (item['Sections'] as UnknownSection[] | undefined) || [];
             const description = (item['description'] as string | undefined) || roundMetaById[rid]?.description;
             const normSections: RoundSection[] | undefined = Array.isArray(sectionsRaw)
                 ? sectionsRaw.map((s) => {
@@ -467,7 +511,8 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                             included: (c['included'] ?? c['Included'] ?? true) as boolean,
                         }))
                         : undefined;
-                    return { id: sid, sectionId: typeof sid === 'number' ? sid : Number(sid) || null, name: sname, weight: sweight, criteria: crit } as RoundSection;
+                    const nm = sname || (sid != null ? `Section ${sid}` : undefined);
+                    return { id: sid, sectionId: typeof sid === 'number' ? sid : Number(sid) || null, name: nm, weight: sweight, criteria: crit } as RoundSection;
                 })
                 : undefined;
             setRoundMetaById((prev) => ({ ...prev, [rid]: { description, sections: normSections } }));
@@ -613,6 +658,22 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
     // round/category validity handled via submitEnabled below
 
     // Effective round id and submit gate
+
+    // Compute section options from detail or meta cache, and auto-refetch if empty
+    const sectionOptions = useMemo<SectionOption[]>(() => {
+        const fromDetail = normalizeSections(roundDetail);
+        if (fromDetail.length) return fromDetail;
+        const rid = effectiveRoundId ? String(effectiveRoundId) : '';
+        const meta = rid ? (roundMetaById?.[rid] ?? {}) : {};
+        return normalizeSections(meta);
+    }, [roundDetail, roundMetaById, effectiveRoundId]);
+
+    useEffect(() => {
+        if (!effectiveRoundId) return;
+        if ((sectionOptions?.length ?? 0) > 0) return;
+        // Silent re-fetch to populate sections if missing
+        void fetchRoundDetail(String(effectiveRoundId));
+    }, [effectiveRoundId, sectionOptions?.length, fetchRoundDetail]);
 
     const submitEnabled = useMemo(() => {
         const hasRound = Boolean(effectiveRoundId || form.getValues("roundId"));
@@ -837,9 +898,13 @@ export default function ApplicationForm({ children, open = false, onOpenChange, 
                                                                                             }}
                                                                                         >
                                                                                             <option value="">Select section</option>
-                                                                                            {roundDetail.sections?.map((s, si) => (
-                                                                                                <option key={String(s.id ?? s.sectionId ?? si)} value={String(s.sectionId || s.id || '')}>{s.name}</option>
-                                                                                            ))}
+                                                                                            {sectionOptions.length === 0 ? (
+                                                                                                <option value="" disabled>Loading sections…</option>
+                                                                                            ) : (
+                                                                                                sectionOptions.map((s, si) => (
+                                                                                                    <option key={s.id || String(si)} value={s.id}>{s.name}{typeof s.weight === 'number' ? ` (${s.weight}%)` : ''}</option>
+                                                                                                ))
+                                                                                            )}
                                                                                         </select>
                                                                                         <label className="text-[11px] text-gray-600">File type</label>
                                                                                         <input
