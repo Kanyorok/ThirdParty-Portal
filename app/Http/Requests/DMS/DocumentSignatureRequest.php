@@ -53,7 +53,7 @@ class DocumentSignatureRequest extends FormRequest
 
     public function getContentPosition(): ImageGravityEnum
     {
-        $ContentPosition = $this->enum('Visibility', ImageGravityEnum::class);
+        $ContentPosition = $this->enum('ContentPosition', ImageGravityEnum::class);
         if ($ContentPosition instanceof ImageGravityEnum) {
             return $ContentPosition;
         }

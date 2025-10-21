@@ -2,43 +2,74 @@
 
 namespace App\Services\DMS\Verification;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\VisibilityEnum;
+use App\Enums\DMS\ImageGravityEnum;
+use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\DMS\DMSSignature;
+use App\Models\DMS\Document;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
-class SignatureService
+class SignatureService extends SignService
 {
     public function __construct(public DMSSignature $signature)
     {
     }
 
-    public static function create(string $name)
+    /**
+     * @throws ErroredException
+     */
+    public static function create(
+        User         $actor, string $name, VisibilityEnum $visibility, int $Width, int $Height, int $HorizontalStart, int $VerticalStart, int $Opacity = 100,
+        string       $Content = '#userid# #date#', string $ContentColour = "#000000", int $ContentSize = 10, ImageGravityEnum $ContentPosition = ImageGravityEnum::Center,
+        string       $ContentBorderColour = "#000000", int $ContentBorderWeight = 1,
+        UploadedFile $file = null, string $description = null): SignatureService
     {
-        /* "Name" => "Approval Green Image"
-   "Visibility" => "pub"
-   "Opacity" => "90"
-   "Horizontal" => "10"
-   "Vertical" => "10"
-   "Width" => "300"
-   "Height" => "500"
-   "Content" => "#userid# #datetime#"
-   "ContentPosition" => "ss"
-   "ContentColour" => "#ff6347"
-   "ContentSize" => "28"
-   "ContentBorderColour" => "#1b1b1b"
-   "ContentBorderWeight" => "1"
-   "Description" => null
-   "file" => Illuminate\Http\UploadedFile {#5424*/
-
         $signature = new DMSSignature();
         $signature->fill([
             "SignatureId" => self::_id(),
-            //"Name" => , todo continue from here
-            "Description", "Visibility", "ImageId", "SignatureHorizontalStart", "SignatureVerticalStart", "SignatureOpacity",
-            "SignatureWidth", "SignatureHeight", "Content", "ContentColour", "ContentSize", "ContentPosition", "ContentBorderColour", "ContentBorderWeight",
-            'CreatedBy', 'ModifiedBy',
+            "Name" => $name,
+            "Description" => $description,
+            "Visibility" => $visibility->value,
+            "ImageId" => null,
+            "SignatureHorizontalStart" => $HorizontalStart,
+            "SignatureVerticalStart" => $VerticalStart,
+            "SignatureOpacity" => $Opacity,
+            "SignatureWidth" => $Width,
+            "SignatureHeight" => $Height,
+            "Content" => $Content,
+            "ContentColour" => $ContentColour,
+            "ContentSize" => $ContentSize,
+            "ContentPosition" => $ContentPosition,
+            "ContentBorderColour" => $ContentBorderColour,
+            "ContentBorderWeight" => $ContentBorderWeight,
+            'CreatedBy' => $actor->Id,
+            'ModifiedBy' => $actor->Id,
         ])->save();
 
+        activity()->causedBy($actor)->performedOn($signature)->event('create')->log('Created a signature : ' . $signature->Name);
+
+        if ($file instanceof UploadedFile) {
+            return (new self($signature))->setImage($file, $actor, false);
+        }
+
         return new self($signature);
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function setImage(UploadedFile $file, User $actor, bool $log = true): static
+    {
+        $this->signature->update([
+            'ImageId' => $this->signature->newDocument(ModulesEnum::DMS, $file, [], $actor)->Id
+        ]);
+        if ($log) {
+            activity()->causedBy($actor)->performedOn($this->signature)->event('Image')->log('Signature Image updated : ' . $this->signature->Name);
+        }
+        return $this;
     }
 
     protected static function _id(): string
@@ -51,4 +82,16 @@ class SignatureService
 
         return $slug;
     }
+
+
+    /**
+     * @throws ErroredException
+     */
+    public function sign(Document $document, User $actor): bool
+    {
+        //todo convert to a job add a hold for conversion //check in after conversion
+        $this->_signDocument($this->signature, $document, $actor);
+        return true;
+    }
+
 }

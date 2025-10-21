@@ -5,8 +5,10 @@ namespace App\Http\Controllers\DMS\Verification;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DMS\DocumentSignatureRequest;
 use App\Models\DMS\DMSSignature;
+use App\Services\DMS\Verification\SignatureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Yajra\DataTables\DataTables;
@@ -50,24 +52,22 @@ class SignatureController extends Controller
      */
     public function store(DocumentSignatureRequest $request)
     {
-        dd($request->all());
-        /**
-         * "Name" => "Approval Green Image"
-         * "Visibility" => "pub"
-         * "Opacity" => "90"
-         * "Horizontal" => "10"
-         * "Vertical" => "10"
-         * "Width" => "300"
-         * "Height" => "500"
-         * "Content" => "#userid# #datetime#"
-         * "ContentPosition" => "ss"
-         * "ContentColour" => "#ff6347"
-         * "ContentSize" => "28"
-         * "ContentBorderColour" => "#1b1b1b"
-         * "ContentBorderWeight" => "1"
-         * "Description" => null
-         * "file" => Illuminate\Http\UploadedFile {#5424
-         */
+        $visibility = $request->getVisibility();
+        $contentPosition = $request->getContentPosition();
+        try {
+            return \DB::transaction(function () use ($request, $visibility, $contentPosition) {
+                SignatureService::create($request->user(), $request->string('Name')->trim()->toString(), $visibility, $request->integer('Width', 100), $request->integer('Height', 200),
+                    $request->integer('Horizontal', 10), $request->integer('Vertical', 10), $request->integer('Opacity', 100), $request->str('Content')->trim()->toString(),
+                    $request->string('ContentColour'), $request->integer('ContentSize', 10), $contentPosition, $request->string('ContentBorderColour'), $request->integer('ContentBorderWeight', 1)
+                    , $request->file('file'), $request->string('Description', null)->trim()->toString()
+                );
+
+                return $this->succeeded('signature created successfully');
+            });
+        } catch (\Throwable $e) {
+            Log::error('creating signature failed : ' . $e);
+        }
+        return $this->errored('an unexpected error occurred, try again later');
     }
 
     /**
@@ -75,7 +75,7 @@ class SignatureController extends Controller
      */
     public function show(DMSSignature $dMSSignature)
     {
-        //
+        dd($dMSSignature);
     }
 
     /**

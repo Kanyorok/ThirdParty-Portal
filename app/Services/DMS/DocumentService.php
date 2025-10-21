@@ -222,13 +222,6 @@ class DocumentService extends PermissionsService
      */
     protected function _newVersion(DisksEnum $disk, string $path, string $name, int $sizeInBytes, User $actor, Collection $properties = null, string $checksum = null): static
     {
-        // Read the encrypted content from the file system to store in Blob
-        /* $encryptedContent = '';
-         try {
-             $encryptedContent = Storage::disk($disk->value)->get($path);
-         } catch (\Exception $e) {
-             Log::error("Failed to read encrypted content from path: {$path}", ['error' => $e->getMessage()]);
-         }*/
 
         $this->document->versions()->create([
             "Name" => $name,
@@ -352,6 +345,28 @@ class DocumentService extends PermissionsService
         throw new ErroredException('checking in document failed');
     }
 
+    /**
+     * Used for conversions and signing
+     * @throws ErroredException
+     */
+    public function newVersionFile(string $filePath, User $actor): static
+    {
+        if (!file_exists($filePath)) {
+            throw new ErroredException('File does not exist. !');
+        }
+
+        $extension = ExtensionsEnum::fromMimeType(mime_content_type($filePath));
+        $disk = self::getDisk();
+        $checksum1 = hash_file(self::CHECKSUM, $filePath);
+        $path = self::_saveFile($disk, file_get_contents($filePath));
+        $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
+        $size = (int)filesize($filePath);
+        $name = "Signed " . pathinfo($this->document->Name, PATHINFO_FILENAME) . '.' . $extension->value;
+        unlink($filePath);
+        return $this->_newVersion($disk, $path, $name, $size, $actor, checksum: base64_encode($checksum1 . '|' . $checksum2));
+
+    }
+
     public function validateToken(User $user, string $token): bool
     {
         if ((string)Cache::get($user->Id . '-download-' . $this->document->Id) !== $token) {
@@ -426,6 +441,19 @@ class DocumentService extends PermissionsService
         }
         $content = (new EncryptionService())->decrypt(Storage::disk($currentVersion->Disk->value)->get($currentVersion->Path));
         return ($base64) ? base64_encode($content) : $content;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function getTempPath(): ?string
+    {
+        $name = Uuid::uuid4()->toString() . '.' . $this->document->ext()->value;
+        if (Storage::disk('temp')->put($name, $this->getFileContent(false))) {
+            return Storage::disk('temp')->path($name);
+        }
+
+        return null;
     }
 
     public function html(): string

@@ -3,6 +3,7 @@
 namespace App\Models\DMS;
 
 use App\Enums\Core\VisibilityEnum;
+use App\Enums\DMS\ImageGravityEnum;
 use App\Traits\Model\DocumentsTrait;
 use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
@@ -29,6 +30,14 @@ class DMSSignature extends Model
 
     protected $casts = [
         'Visibility' => VisibilityEnum::class,
+        'ContentPosition' => ImageGravityEnum::class,
+        "SignatureWidth" => 'integer',
+        "SignatureHeight" => 'integer',
+        "SignatureHorizontalStart" => 'integer',
+        "SignatureVerticalStart" => 'integer',
+        "SignatureOpacity" => 'integer',
+        "ContentSize" => 'integer',
+        "ContentBorderWeight" => 'integer',
     ];
 
     public static function getPrimaryKey(): string
@@ -38,7 +47,7 @@ class DMSSignature extends Model
 
     public function getRouteKeyName(): string
     {
-        return 'TagSignatureId';
+        return 'SignatureId';
     }
 
     public function image(): BelongsTo
