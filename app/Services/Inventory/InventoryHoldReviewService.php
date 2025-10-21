@@ -105,10 +105,11 @@ class InventoryHoldReviewService
                 throw new Exception("Original transfer not found for Receipt ID {$receipt->Id}");
             }
 
-            $fromBranch = $hold->BranchID;          // current branch (sending back)
-            $toBranch   = $transfer->FromBranch;    // original sender (receiving back)
+            $fromBranch = $hold->BranchID;          
+            $toBranch   = $transfer->FromBranch;
 
             // Create Return Transfer
+
             $newTransfer = TransactionTransfer::create([
                 'TransferDate'    => now(),
                 'TransferredBy'   => Auth::id(),
@@ -137,7 +138,7 @@ class InventoryHoldReviewService
                 $transferItem = TransactionTransferItem::create([
                     'TransferId'     => $newTransfer->Id,
                     'Item'           => $item->Item,
-                    'ApprovedQty'    => $hold->Quantity, // only damaged qty
+                    'ApprovedQty'    => $hold->Quantity, 
                     'DispatchedQty'  => $hold->Quantity,
                     'UnitCost'       => $item->UnitCost ?? 0,
                     'UOM'            => $item->UOM,
@@ -270,7 +271,7 @@ class InventoryHoldReviewService
     $newBalance = max(0, $lastBalance - $qtyOut);
 
     $transaction = StockTransaction::create([
-        'SKUID'           => $skuId, // unique per transaction
+        'SKUID'           => $skuId, 
         'TransactionType' => $transactionType,
         'ReferenceID'     => $referenceId,
         'ItemID'          => $itemId,
