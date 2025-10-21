@@ -217,6 +217,7 @@ class PaymentVoucherController extends Controller
         $paymentTypes=CodeDetail::where('CodeID', 'PaymentType')->get();
         $paymentFrequencies=CodeDetail::where('CodeID', 'PaymentFrequency')->get();
 
+
         return view('finance.accountspayable.paymentvoucher.edit', compact(
             'voucher',
             'invoices',

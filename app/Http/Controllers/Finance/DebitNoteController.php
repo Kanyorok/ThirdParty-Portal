@@ -167,7 +167,7 @@ class DebitNoteController extends Controller
         $this->authorize(PermissionEnum::DebitNoteUpdate, FinanceCDNotes::class);
 
         $validated = $request->validate([
-            'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
+//            'InvoiceRefNo' => 'required|exists:t_FinanceInvoices,Id',
             'NoteDate'     => 'required|date',
             'NoteAmount'   => 'required|numeric|min:0.00',
             'Description'  => 'nullable|string',
@@ -177,7 +177,7 @@ class DebitNoteController extends Controller
         DB::beginTransaction();
         try {
             $note=FinanceCDNotes::where('Id',$id)->update([
-                'InvoiceRefNo'=> $validated['InvoiceRefNo'],
+//                'InvoiceRefNo'=> $validated['InvoiceRefNo'],
                 'NoteDate'    => $validated['NoteDate'],
                 'NoteAmount'  => $validated['NoteAmount'],
                 'Description' => $validated['Description'],

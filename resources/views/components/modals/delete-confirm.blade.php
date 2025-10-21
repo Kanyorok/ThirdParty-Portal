@@ -17,7 +17,7 @@
                     @csrf
                     @method('DELETE')
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    
+
                     <button type="submit" class="btn btn-danger"
                         onclick="handleDelete(this)">
                         Yes, Delete
@@ -72,11 +72,12 @@
 
                         if (response.success) {
                             // Show success message
-                            showToast('success', response.message || 'Item deleted successfully');
+                            showToast('success', response.message || 'Item deleted successfully. Refreshing page...');
                             // Redirect to index page after short delay
                             setTimeout(() => {
-                                window.location.href = '{{ route("glpostingmap.index") }}';
-                            }, 1500);
+                                window.location.reload();
+                                {{--window.location.href = '{{ route("glpostingmap.index") }}';--}}
+                            }, 100);
                         } else {
                             // Show error message
                             showToast('error', response.message || 'Failed to delete item');
@@ -87,10 +88,11 @@
                         // If response is not JSON, treat as success and redirect
                         const modal = bootstrap.Modal.getInstance(document.getElementById('customDeleteConfirmModal'));
                         modal.hide();
-                        showToast('success', 'Item deleted successfully');
+                        showToast('success', 'Item deleted successfully. Refreshing page...');
                         setTimeout(() => {
-                            window.location.href = '{{ route("glpostingmap.index") }}';
-                        }, 1500);
+                            window.location.reload();
+                            {{--window.location.href = '{{ route("glpostingmap.index") }}';--}}
+                        }, 100);
                     }
                 } else {
                     // Handle error response

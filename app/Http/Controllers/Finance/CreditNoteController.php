@@ -307,7 +307,7 @@ class CreditNoteController extends Controller
             ->withProperties(['action' => 'delete'])
             ->log('Deleted Note: '.$note->CDNumber);
 
-        return redirect()->route('creditnote.index')->with('success', 'Credit/Debit Note deleted successfully.');
+        return back()->with('success', 'Credit/Debit Note deleted successfully.');
     }
 
     public function update(Request $request, $id)
@@ -317,16 +317,16 @@ class CreditNoteController extends Controller
         $note = FinanceCDNotes::findOrFail($id);
 
         $validated = $request->validate([
-            'InvoiceRefNo'=> 'required|exists:t_FinanceInvoiceEntry,Id',
+//            'InvoiceRefNo'=> 'required',
             'NoteDate'=> 'required|date',
             'NoteAmount'=> 'required|numeric|min:0.00',
-            'Description'=> 'required|string',
+            'Description'=> 'string',
         ]);
 
         DB::beginTransaction();
         try {
             $note->update([
-                'InvoiceRefNo' => $validated['InvoiceRefNo'],
+//                'InvoiceRefNo' => $validated['InvoiceRefNo'],
                 'NoteDate' => $validated['NoteDate'],
                 'NoteAmount' => $validated['NoteAmount'],
                 'Description' => $validated['Description'],
@@ -340,7 +340,7 @@ class CreditNoteController extends Controller
                 ->log('Updated Note: '.$note->CDNumber);
 
             DB::commit();
-            return redirect()->route('creditnote.index')->with('success', 'Credit/Debit Note updated successfully.');
+            return back()->with('success', 'Note updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());

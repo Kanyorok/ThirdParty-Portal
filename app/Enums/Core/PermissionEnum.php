@@ -5,12 +5,12 @@ namespace App\Enums\Core;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
- 
+
 enum PermissionEnum: string
 {
     use UsefulEnumTrait;
 
-        //calls 
+        //calls
     case CallRead = 'call-read';
     case CallWrite = 'call-create';
     case CallUpdate = 'call-update';
@@ -662,14 +662,14 @@ enum PermissionEnum: string
     case FinanceCreditManagementDelete='financeCreditManagement-delete';
 
     //Posting
-    case FinanceJournalPosting='financeJournal-posting';
-    case FinanceAPInvoicePosting='financeAPInvoice-posting';
-    case FinanceARInvoicePosting='financeARInvoice-posting';// AR Account Receivables
-    case FinanceCreditNotePosting='financeCreditNote-posting';
-    case FinanceDebitNotePosting='financeDebitNote-posting';
-    case FinanceVoucherPosting='financeVoucher-posting';
-    case FinancePaymentProcessingPosting='financePaymentProcessing-posting';
-    case FinanceReceiptPosting='financeReceipt-posting';
+    case FinanceJournalPosting='financeJournal-financeJournal';
+    case FinanceAPInvoicePosting='financeAPInvoice-financeAPInvoice';
+    case FinanceARInvoicePosting='financeARInvoice-financeARInvoice';// AR Account Receivables
+    case FinanceCreditNotePosting='financeCreditNote-financeCreditNote';
+    case FinanceDebitNotePosting='financeDebitNote-financeDebitNote';
+    case FinanceVoucherPosting='financeVoucher-financeVoucher';
+    case FinancePaymentProcessingPosting='financePaymentProcessing-financePaymentProcessing';
+    case FinanceReceiptPosting='financeReceipt-financeReceipt';
 
 
         /*
