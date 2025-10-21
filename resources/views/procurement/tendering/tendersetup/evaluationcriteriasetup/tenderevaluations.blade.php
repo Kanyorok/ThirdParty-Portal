@@ -129,13 +129,23 @@
                             <tbody>
                             @foreach ($sections as $item)
                                 <tr>
-                                    <td><input type="checkbox" name="sections[]" value="{{$item->id}}"></td>
+                                    <!-- Use the correct Section Id and key weights by SectionID so backend can map them -->
+                                    <td><input type="checkbox" name="sections[]" value="{{$item->Id}}"></td>
                                     @error('sections')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
                                     <td>{{$item->SectionName}}</td>
-                                    <td><input type="number" class="form-control weight-input" name="weights[]"
-                                               value="0.00" step="1"></td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            class="form-control weight-input"
+                                            name="weights[{{$item->Id}}]"
+                                            value="0.00"
+                                            step="0.01"
+                                            min="0"
+                                            max="100"
+                                        >
+                                    </td>
                                     @error('weights')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
@@ -145,7 +155,10 @@
                             <tfoot>
                             <tr>
                                 <td colspan="2" class="text-end fw-bold">Total</td>
-                                <td><strong id="totalWeight">0.00</strong>%</td>
+                                <td>
+                                    <strong id="totalWeight">0.00</strong>%
+                                    <span id="totalBadge" class="badge bg-secondary ms-2">Needs 100%</span>
+                                </td>
                             </tr>
                             </tfoot>
                         </table>
@@ -174,6 +187,7 @@
 
             const form = modal.querySelector('form');
             const totalWeightDisplay = document.getElementById('totalWeight');
+            const totalBadge = document.getElementById('totalBadge');
             const submitBtn = document.getElementById('saveCriteriaBtn');
 
             function updateTotal() {
@@ -186,13 +200,23 @@
 
                     if (checkbox.checked) {
                         weightInput.disabled = false;
-                        total += parseFloat(weightInput.value) || 0;
+                        const v = parseFloat(weightInput.value);
+                        if (!isNaN(v)) total += v;
                     } else {
+                        // Disable and clear to avoid posting stray weights for unselected sections
                         weightInput.disabled = true;
                     }
                 });
 
                 totalWeightDisplay.textContent = total.toFixed(2);
+
+                const ok = Math.abs(total - 100) < 0.005; // allow tiny FP tolerance
+                // Badge and button state
+                if (totalBadge) {
+                    totalBadge.textContent = ok ? 'OK' : 'Needs 100%';
+                    totalBadge.className = 'badge ms-2 ' + (ok ? 'bg-success' : (total > 100 ? 'bg-danger' : 'bg-warning'));
+                }
+                if (submitBtn) submitBtn.disabled = !ok;
                 return total;
             }
 

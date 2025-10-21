@@ -246,7 +246,8 @@
   const suppliersList   = document.getElementById('suppliersList');
 
   // ---- Data injected from Blade
-  const suppliers = @json($suppliers);
+  // Prequalified suppliers injected from backend; default to [] if unavailable
+  const suppliers = @json($suppliers ?? []);
   const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
   const planItemsByPlan = @json($procurementPlansOutput ?? []);
 
@@ -402,20 +403,36 @@
 
   function populateSuppliers(categoryId = null) {
     suppliersList.innerHTML = '';
-    let filtered = suppliers || [];
-    if (categoryId) {
-      const catNum = Number(categoryId);
-      filtered = filtered.filter(s =>
-        Array.isArray(s.ItemCategoryIds) && s.ItemCategoryIds.map(Number).includes(catNum)
-      );
-    }
-    if (!filtered.length) {
+
+    // Require a category for restricted tenders to narrow the list meaningfully
+    if (!categoryId) {
       const opt = document.createElement('option');
       opt.disabled = true;
-      opt.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
+      opt.textContent = 'Select an Item Category to see eligible suppliers';
       suppliersList.appendChild(opt);
       return;
     }
+
+    const catNum = Number(categoryId);
+    // Filter to prequalified suppliers whose mapped ItemCategoryIds include the selected category
+    const filtered = (suppliers || [])
+      .filter(s => Array.isArray(s.ItemCategoryIds))
+      .filter(s => s.ItemCategoryIds.map(Number).includes(catNum))
+      // sort by display name for nicer UX
+      .sort((a, b) => {
+        const an = (a.ThirdPartyName || a.SupplierName || '').toLowerCase();
+        const bn = (b.ThirdPartyName || b.SupplierName || '').toLowerCase();
+        return an.localeCompare(bn);
+      });
+
+    if (!filtered.length) {
+      const opt = document.createElement('option');
+      opt.disabled = true;
+      opt.textContent = 'No prequalified suppliers match this category';
+      suppliersList.appendChild(opt);
+      return;
+    }
+
     filtered.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.Id;
