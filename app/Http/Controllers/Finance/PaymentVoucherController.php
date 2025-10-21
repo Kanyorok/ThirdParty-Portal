@@ -17,15 +17,43 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentVoucherController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
 
-
-         $vouchers = FinanceVoucher::with('invoice:Id,InvoiceNumber')
+        $query = FinanceVoucher::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
-                            'ApprovalStatus','PaymentType', 'Description')
-            ->get();
+                            'ApprovalStatus','PaymentType', 'Description');
+
+        if ($request->filled('voucher_no')) {
+            $query->where('VoucherNo', 'like', '%'.$request->voucher_no.'%');
+        }
+        if ($request->filled('invoice_number')) {
+            $invNum = $request->invoice_number;
+            $query->whereHas('invoice', function($q) use ($invNum){
+                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            });
+        }
+        if ($request->filled('payment_method')) {
+            $query->where('PaymentMethod', $request->payment_method);
+        }
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+        if ($request->filled('payment_type')) {
+            $query->where('PaymentType', $request->payment_type);
+        }
+        if ($request->filled('amount_min')) {
+            $query->where('TotalAmount', '>=', (float)$request->amount_min);
+        }
+
+        $sortField = $request->sort_by ?? 'Id';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 10);
+        $vouchers = $query->paginate($perPage)->withQueryString();
+
         return view('finance.accountspayable.paymentvoucher.index', compact('vouchers'));
     }
 

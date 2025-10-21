@@ -21,6 +21,7 @@ class TaxJurisdiction extends Model
     protected $fillable = [
         'JurisdictionName',
         'Currency',
+        'CountryID',
         'TaxAuthority',
         'Status',
         'CreatedBy',
@@ -35,5 +36,10 @@ class TaxJurisdiction extends Model
     public function currency()
     {
         return $this->belongsTo(Currency::class, 'Currency', 'Id');
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(\App\Models\Core\Country::class, 'CountryID', 'Id');
     }
 }

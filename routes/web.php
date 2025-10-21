@@ -12,13 +12,18 @@ Route::middleware(['web','auth'])->group(function(){
 require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function () {
+    // Customizable dashboard APIs
+    Route::prefix('dashboard')->group(function() {
+        Route::get('widgets', 'Dashboard\\UserDashboardController@widgets')->name('user-dashboard.widgets');
+        Route::post('widgets', 'Dashboard\\UserDashboardController@saveLayout')->name('user-dashboard.widgets.save');
+    });
     require __DIR__ . '/crm.php';
-    
+
     // Procurement routes with prefix
     Route::prefix('procurement')->group(function () {
         require __DIR__ . '/procurement.php';
     });
-    
+
     require __DIR__ . '/inventory.php';
     require __DIR__ . '/property.php';
     require __DIR__ . '/finance.php';
@@ -70,8 +75,24 @@ Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function (
 
         Route::namespace('Users')->group(function () {
             Route::post('user_roles/branch', 'UserRoleController@storeBranch')->name('user_roles.store_branch');
-            Route::delete('settings/users/branch-role/{modelRole}', 'UserRoleController@destroy')
+            // Delete a branch role assignment (under the settings prefix)
+            Route::delete('users/branch-role/{modelRole}', 'UserRoleController@destroy')
+                ->whereNumber('modelRole')
                 ->name('user_roles.delete_branch');
+            // Fallback endpoints to operate on ModelRole records identified by composite keys
+            // Accept PATCH/DELETE as well so method-overridden forms target these endpoints instead of the {modelRole} parameter route
+            Route::post('users/branch-role/delete-by-keys', 'UserRoleController@destroyByKeys')
+                ->name('user_roles.delete_branch_by_keys');
+            Route::delete('users/branch-role/delete-by-keys', 'UserRoleController@destroyByKeys');
+
+            Route::post('users/branch-role/update-by-keys', 'UserRoleController@updateByKeys')
+                ->name('user_roles.update_branch_by_keys');
+            Route::patch('users/branch-role/update-by-keys', 'UserRoleController@updateByKeys');
+
+            // Update an existing branch role assignment (route-model binding)
+            Route::patch('users/branch-role/{modelRole}', 'UserRoleController@update')
+                ->whereNumber('modelRole')
+                ->name('user_roles.update_branch');
             Route::prefix('users/{user}')->group(function () {
                 Route::resource('user_roles', 'UserRoleController')->only(['index', 'store']);
                 Route::get('activities', 'UserActivitiesController')->name('user.activities');

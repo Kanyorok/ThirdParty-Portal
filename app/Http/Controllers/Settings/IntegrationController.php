@@ -85,7 +85,7 @@ class IntegrationController extends Controller
         }
 
         if ($Integration->value === IntegrationsEnum::ReportService->value) {
-            return $this->_reportServiceConfiguration($request->validated('SSRS_Host'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
+            return $this->_reportServiceConfiguration($request->getSSRS_Host(), $request->validated('SSRS_Path'), $request->validated('SSRS_Username'), $request->validated('SSRS_Password'), $request->user());
         }
 
         if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value], true)) {
@@ -136,8 +136,6 @@ class IntegrationController extends Controller
                     'Configuration' => $data,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Set Updated Integration Config for: ' . $Integration->description());
@@ -218,8 +216,6 @@ class IntegrationController extends Controller
                     'Configuration' => $data,
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated a new channels api key.');
@@ -271,7 +267,7 @@ class IntegrationController extends Controller
         }
 
         return $this->_saveData(IntegrationsEnum::Twitter, [
-            'account_id' => $userResponse->data->id,
+            'account_id' => $userResponse?->data->id,
             'username' => $userResponse->data->username,
             'name' => $userResponse->data->name,
             'access_token' => $accessToken,
@@ -308,8 +304,6 @@ class IntegrationController extends Controller
                     'Configuration' => ['Key' => md5($key)],
                     'CreatedBy' => $actor->Id,
                     'ModifiedBy' => $actor->Id,
-                    'CreatedOn' => now(),
-                    'UpdatedOn' => now(),
                 ]);
 
                 activity()->causedBy($actor)->performedOn($crmIntegration->refresh())->event('updated')->log('Generated ' . $Integration->description() . ' api key.');
@@ -322,9 +316,9 @@ class IntegrationController extends Controller
         return $this->succeeded('key generated.', data: ['token' => $key]);
     }
 
-    private function _reportServiceConfiguration(string $Host, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
+    private function _reportServiceConfiguration(string $Host, string $Path, string $Username, #[SensitiveParameter] string $password, User $actor): JsonResponse
     {
-        $DisplayName = SSRSService::testConfig($Host, $Username, $password);
+        $DisplayName = SSRSService::testConfig($Host, $Path, $Username, $password);
         if (is_null($DisplayName)) {
             throw ValidationException::withMessages([
                 'password' => ['invalid credentials']
@@ -333,6 +327,7 @@ class IntegrationController extends Controller
         return $this->_saveData(IntegrationsEnum::ReportService, [
             'host' => $Host,
             'username' => $Username,
+            'path' => $Path,
             'name' => $DisplayName,
             'password' => Crypt::encryptString($password),
         ], $actor);

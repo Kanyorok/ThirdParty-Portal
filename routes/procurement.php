@@ -253,8 +253,17 @@ Route::namespace('Procurement')->group(function () {
     Route::get('goods-receipt/dashboard', [EnhancedGoodsReceiptController::class, 'dashboard'])->name('goods-receipt.dashboard');
 
     //Tenders
+    Route::get('initiatetender/allowed-categories', [TenderController::class, 'allowedCategories'])
+        ->name('initiatetender.allowedCategories');
+
     Route::resource('initiatetender', TenderController::class);
+
+    // Tender Categories CRUD
     Route::resource('tendercategory', TenderCategoryController::class);
+    
+    // Map Tender Category to Item Types
+    Route::get('tendercategory/{id}/itemtypes', [TenderCategoryController::class, 'itemTypes'])->name('tendercategory.itemtypes');
+    Route::post('tendercategory/{id}/itemtypes', [TenderCategoryController::class, 'updateItemTypes'])->name('tendercategory.itemtypes.update');
     Route::resource('tendertype', TenderTypeController::class);
     //Route for tender approval and Reject
     Route::post('/tenderapproval', [TenderController::class, 'approveTender'])->name('tender.approve');
@@ -568,6 +577,7 @@ Route::get('/awards/unified/{id}', [AwardsController::class, 'showUnifiedAward']
 Route::post('/awards/switch-type', [AwardsController::class, 'switchType'])->name('awards.switch-type');
 Route::post('/awards/{award}/approve', [AwardsController::class, 'approve'])->name('awards.approve');
 Route::post('/awards/{award}/reject', [AwardsController::class, 'reject'])->name('awards.reject');
+Route::post('/awards/{award}/cancel', [AwardsController::class, 'cancel'])->name('awards.cancel');
 
 // Award creation from consolidated scores
 Route::get('awards/create-from-consolidation/{tenderId}', [AwardsController::class, 'createFromConsolidation'])->name('awards.create-from-consolidation');

@@ -140,7 +140,7 @@ class InventoryHoldReviewController extends Controller
 
         match ($action) {
             'dispose' => $this->service->dispose($targetId, $extras),
-            'return' => $this->service->returnToSender($targetId),
+            'return' => $this->service->returnToSender($targetId, $extras),
             default => throw new Exception('Unknown action')
         };
 

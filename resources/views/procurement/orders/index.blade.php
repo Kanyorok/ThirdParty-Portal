@@ -10,6 +10,25 @@
 @endsection
 @section('content')
 
+  @php
+    $isPaginator = isset($details) && method_exists($details, 'links');
+    if ($isPaginator) {
+      $detailsSorted = $details; // already paginated and ordered server-side
+    } else {
+      $detailsCollection = isset($details) ? collect($details) : collect();
+      if ($detailsCollection->isNotEmpty()) {
+        $first = $detailsCollection->first();
+        if (is_array($first) ? array_key_exists('CreatedOn', $first) : isset($first->CreatedOn)) {
+          $detailsSorted = $detailsCollection->sortByDesc(fn($d) => is_array($d) ? ($d['CreatedOn'] ?? null) : ($d->CreatedOn ?? null))->values();
+        } else {
+          $detailsSorted = $detailsCollection->sortByDesc(fn($d) => is_array($d) ? ($d['Id'] ?? null) : ($d->Id ?? null))->values();
+        }
+      } else {
+        $detailsSorted = $detailsCollection;
+      }
+    }
+  @endphp
+
   <div class="row mb-3">
     <div class="col-12 d-flex justify-content-end">
       <a href="{{ route('purchaseOrder.create') }}" class="btn btn-primary">
@@ -38,9 +57,9 @@
               </tr>
             </thead>
             <tbody>
-              @forelse($details as $item)
+              @forelse($detailsSorted as $item)
                 <tr>
-                  <td>{{ $loop->iteration }}</td>
+                  <td>{{ $isPaginator ? ($details->firstItem() + $loop->index) : $loop->iteration }}</td>
                   <td>{{ $item->OrderNo }}</td>
                   <td>{{ \Carbon\Carbon::parse($item->OrderDate)->format('d/m/Y') }}</td>
                   <td>{{ $item->ExtOrdNum }}</td>
@@ -61,6 +80,16 @@
               @endforelse
             </tbody>
           </table>
+          @if($isPaginator)
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <div>
+                Showing {{ $details->firstItem() ?? 0 }} to {{ $details->lastItem() ?? 0 }} of {{ $details->total() }} results
+              </div>
+              <div>
+                {{ $details->withQueryString()->links('pagination::bootstrap-5') }}
+              </div>
+            </div>
+          @endif
         </div>
       </div>
     </div>

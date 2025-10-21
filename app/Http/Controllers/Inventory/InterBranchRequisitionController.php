@@ -17,7 +17,6 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-// Import DB facade
 
 class InterBranchRequisitionController extends Controller
 {
@@ -33,12 +32,18 @@ class InterBranchRequisitionController extends Controller
         $this->authorize('viewAny', InterBranchRequisition::class);
 
         $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = Branch::findOrFail($branchId);
+        
+        $isHeadOffice = $currentBranch->IsHQ;
 
-        $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items'])
-            ->where(function ($q) use ($branchId) {
+        $query = InterBranchRequisition::with(['fromBranch', 'toBranch', 'items']);
+
+        if (!$isHeadOffice) {
+            $query->where(function ($q) use ($branchId) {
                 $q->where('FromBranch', $branchId)
                 ->orWhere('ToBranch', $branchId);
             });
+        }
 
         if ($request->filled('status')) {
             $enum = InterBranchRequisitionEnum::tryFrom($request->status);
@@ -48,24 +53,40 @@ class InterBranchRequisitionController extends Controller
 
         $groupedRequisitions = $query->latest()->get();
 
-        return view('inventory.interbranchrequisition.index', compact('groupedRequisitions'));
+        return view('inventory.interbranchrequisition.index', compact('groupedRequisitions', 'isHeadOffice'));
     }
 
 
-    public function create()
-        {
-            $this->authorize('create', InterBranchRequisition::class);
+  public function create()
+    {
+        $this->authorize('create', InterBranchRequisition::class);
 
-            $branchId = auth()->user()->employee?->BranchId;
+        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = Branch::findOrFail($branchId);
+        
+        // Use IsHQ column to determine head office status
+        $isHeadOffice = $currentBranch->IsHQ;
 
-            $fromBranch = Branch::findOrFail($branchId);
-            $branches   = Branch::where('Id', '!=', $branchId)->get(); 
-
-            $uoms = UnitOfMeasure::all();
-
-            return view('inventory.interbranchrequisition.create', compact('fromBranch', 'branches', 'uoms'));
+        if ($isHeadOffice) {
+            // Head Office: Fixed as From Branch, can send to any other branch
+            $fromBranch = $currentBranch;
+            $branches = Branch::where('Id', '!=', $branchId)->get();
+        } else {
+            // Non-Head Office: Can request from any branch except own, fixed as To Branch
+            $fromBranch = null; // Will be selected by user
+            $branches = Branch::where('Id', '!=', $branchId)->get();
         }
 
+        $uoms = UnitOfMeasure::all();
+
+        return view('inventory.interbranchrequisition.create', compact(
+            'fromBranch', 
+            'branches', 
+            'uoms', 
+            'isHeadOffice', 
+            'currentBranch'
+        ));
+    }
 
     public function store(InterBranchRequisitionRequest $request)
     {
