@@ -5,8 +5,8 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">Contributors — {{ $medical_fund->FundName }}</h4>
         <div class="d-flex gap-2">
-            <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back to Fund</a>
-            <a href="{{ route('bancassurance.medicalfunds.contributors.create', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-primary">New Contributor</a>
+            <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-outline-secondary">Back to Fund</a>
+            <a href="{{ route('bancassurance.medicalfunds.contributors.create', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-primary">New Contributor</a>
         </div>
     </div>
 
@@ -30,7 +30,7 @@
                 </div>
                 <div class="col-md-3 d-flex align-items-end gap-2">
                     <button class="btn btn-primary">Apply</button>
-                    <a href="{{ route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Reset</a>
+                    <a href="{{ route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>
         </div>
@@ -56,18 +56,27 @@
                         <tbody>
                         @foreach($contributors as $i => $c)
                             <tr>
-                                <td>{{ $contributors->firstItem() + $i }}</td>
-                                <td class="fw-semibold">{{ $c->FullName }}</td>
+                                <td>{{ $loop->iteration }}</td>
+                                <td class="fw-semibold">{{ $c->thirdParty->ThirdPartyName ?? '-'}}</td>
                                 <td>{{ $c->ContributorNo ?? '—' }}</td>
-                                <td>{{ $c->Email ?? '—' }}</td>
-                                <td>{{ $c->Phone ?? '—' }}</td>
-                                <td><span class="badge bg-{{ $c->Status==='Active'?'success':($c->Status==='Suspended'?'warning text-dark':'secondary') }}">{{ $c->Status }}</span></td>
-                                <td>{{ optional($c->EffectiveFrom)->format('Y-m-d') }} @if($c->EffectiveTo) — {{ $c->EffectiveTo->format('Y-m-d') }} @endif</td>
+                                <td>{{ $c->thirdParty->Email ?? '—' }}</td>
+                                <td>{{ $c->thirdParty->Phone ?? '—' }}</td>
+                                <td><span class="badge bg-{{ $c->status->Description==='Active'?'success':($c->status->Description==='Suspended'?'warning text-dark':'secondary') }}">{{ $c->status->Description }}</span></td>
+                                <td>
+                                    @if(!empty($c->EffectiveFrom))
+                                        {{ \Illuminate\Support\Carbon::parse($c->EffectiveFrom)->format('d/m/Y') }}
+                                    @else
+                                        —
+                                    @endif
+                                    @if(!empty($c->EffectiveTo))
+                                        — {{ \Illuminate\Support\Carbon::parse($c->EffectiveTo)->format('d/m/Y') }}
+                                    @endif
+                                </td>
                                 <td class="text-end">
                                     <div class="btn-group">
-                                        <a href="{{ route('bancassurance.contributors.show', $c->ID) }}" class="btn btn-sm btn-outline-info">Open</a>
-                                        <a href="{{ route('bancassurance.contributors.edit', $c->ID) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                        <form action="{{ route('bancassurance.contributors.destroy', $c->ID) }}" method="POST" onsubmit="return confirm('Archive this contributor?');">
+                                        <a href="{{ route('bancassurance.contributors.show', $c->Id) }}" class="btn btn-sm btn-outline-info">Open</a>
+                                        <a href="{{ route('bancassurance.contributors.edit', $c->Id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <form action="{{ route('bancassurance.contributors.destroy', $c->Id) }}" method="POST" onsubmit="return confirm('Archive this contributor?');">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-sm btn-outline-danger">Archive</button>
                                         </form>

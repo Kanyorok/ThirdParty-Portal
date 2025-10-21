@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h4>Edit Contribution — {{ $medical_fund->FundName }}</h4>
+    <h4>Edit Contribution — {{ $medical_fund->FundName ?? '-'}}</h4>
 
     @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
     @if($errors->any())
@@ -13,7 +13,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('bancassurance.contributions.update',$contribution->ID) }}" method="POST">
+            <form action="{{ route('bancassurance.contributions.update',$contribution->Id) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -26,7 +26,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Contributor ID</label>
-                        <input type="number" name="ContributorID" class="form-control" value="{{ old('ContributorID',$contribution->ContributorID) }}">
+                        <input type="number" name="ContributorId" class="form-control" value="{{ old('ContributorId',$contribution->ContributorId) }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Amount *</label>
@@ -39,7 +39,7 @@
                 </div>
                 <div class="mt-3 d-flex gap-2">
                     <button class="btn btn-primary">Update</button>
-                    <a href="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back</a>
+                    <a href="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-outline-secondary">Back</a>
                 </div>
             </form>
         </div>

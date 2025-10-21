@@ -1,9 +1,10 @@
 @extends('layouts.app')
 
+@section('title', 'Medical Funds')
+
 @section('content')
 <div class="container">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-        <h4 class="mb-0">Medical Funds</h4>
         <div class="d-flex gap-2">
             <a href="{{ route('bancassurance.medicalfunds.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-1"></i> New Fund
@@ -11,7 +12,9 @@
         </div>
     </div>
 
-    @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
+    @if(session('success')) 
+        <div class="alert alert-success">{{ session('success') }}</div> 
+    @endif
 
     <!-- FILTER BAR -->
     <div class="card mb-3">
@@ -21,19 +24,27 @@
                     <label class="form-label">Search</label>
                     <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Fund or Provider">
                 </div>
+
                 <div class="col-md-2">
                     <label class="form-label">Provider</label>
                     <select name="provider_id" class="form-select">
                         <option value="">All</option>
                         @foreach($providers as $p)
-                            <option value="{{ $p->ID }}" @selected(request('provider_id')==$p->ID)>{{ $p->Name }}</option>
+                            <option value="{{ $p->Id }}" @selected(request('provider_id')==$p->Id)>{{ $p->Name ?? '-'}}</option>
                         @endforeach
                     </select>
                 </div>
+
                 <div class="col-md-2">
                     <label class="form-label">Coverage Type</label>
-                    <input type="text" name="coverage_type" value="{{ request('coverage_type') }}" class="form-control" placeholder="Inpatient / Outpatient">
+                    <select name="coverage_type" class="form-select">
+                        <option value="">All</option>
+                        @foreach ($coverages as $ct)
+                            <option value="{{ $ct->ID }}" @selected(request('coverage_type')==$ct->ID)>{{ $ct->Description ?? '-'}}</option>
+                        @endforeach
+                    </select>
                 </div>
+
                 <div class="col-md-2">
                     <label class="form-label">Active</label>
                     <select name="active" class="form-select">
@@ -42,6 +53,7 @@
                         <option value="0" @selected(request('active')==='0')>Inactive</option>
                     </select>
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">Coverage Limit (Min — Max)</label>
                     <div class="input-group">
@@ -55,6 +67,7 @@
                     <label class="form-label">Created From</label>
                     <input type="date" name="from" value="{{ request('from') }}" class="form-control">
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label">Created To</label>
                     <input type="date" name="to" value="{{ request('to') }}" class="form-control">
@@ -96,38 +109,21 @@
 
     <!-- QUICK STATS -->
     <div class="row g-3 mb-3">
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Total Funds</div>
-                    <div class="fs-5 fw-semibold">{{ number_format($totals['count'] ?? 0) }}</div>
+        @foreach ([
+            ['label' => 'Total Funds', 'value' => number_format($totals['count'] ?? 0)],
+            ['label' => 'Active Funds', 'value' => number_format($totals['active'] ?? 0)],
+            ['label' => 'Sum Coverage Limits', 'value' => number_format((float)($totals['coverage_sum'] ?? 0),2)],
+            ['label' => 'Avg Coverage Limit', 'value' => number_format((float)($totals['avg_cov_limit'] ?? 0),2)]
+        ] as $stat)
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-muted small">{{ $stat['label'] }}</div>
+                        <div class="fs-5 fw-semibold">{{ $stat['value'] }}</div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Active Funds</div>
-                    <div class="fs-5 fw-semibold">{{ number_format($totals['active'] ?? 0) }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Sum Coverage Limits</div>
-                    <div class="fs-5 fw-semibold">{{ number_format((float)($totals['coverage_sum'] ?? 0),2) }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Avg Coverage Limit</div>
-                    <div class="fs-5 fw-semibold">{{ number_format((float)($totals['avg_cov_limit'] ?? 0),2) }}</div>
-                </div>
-            </div>
-        </div>
+        @endforeach
     </div>
 
     <!-- TABLE -->
@@ -143,7 +139,7 @@
                                 <th>Provider</th>
                                 <th>Coverage</th>
                                 <th class="text-end">Limit</th>
-                                <th>Active</th>
+                                <th class="text-center">Active</th>
                                 <th>Created</th>
                                 <th class="text-end">Actions</th>
                             </tr>
@@ -152,25 +148,31 @@
                         @foreach($funds as $i => $f)
                             <tr>
                                 <td>{{ $funds->firstItem() + $i }}</td>
-                                <td class="fw-semibold">{{ $f->FundName }}</td>
+                                <td class="fw-semibold">{{ $f->FundName ?? '-' }}</td>
                                 <td>{{ optional($f->provider)->Name ?? '—' }}</td>
-                                <td>{{ $f->CoverageType ?? '—' }}</td>
+                                <td>{{ $f->coverages->Description ?? '—' }}</td>
                                 <td class="text-end">{{ number_format((float)($f->CoverageLimit ?? 0),2) }}</td>
-                                <td>
-                                    {!! $f->IsActive
-                                        ? '<span class="badge bg-success">Yes</span>'
-                                        : '<span class="badge bg-secondary">No</span>' !!}
+                                <td class="text-center">
+                                    @if($f->IsActive)
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">
+                                            <i class="fas fa-check-circle me-1"></i> Active
+                                        </span>
+                                    @else
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">
+                                            <i class="fas fa-times-circle me-1"></i> Inactive
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>{{ optional($f->CreatedOn)->format('Y-m-d') }}</td>
                                 <td class="text-end">
                                     <div class="btn-group">
-                                        <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $f->ID]) }}"
+                                        <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $f->Id]) }}"
                                            class="btn btn-sm btn-outline-info">Open</a>
 
-                                        <a href="{{ route('bancassurance.medicalfunds.edit', ['medical_fund' => $f->ID]) }}"
+                                        <a href="{{ route('bancassurance.medicalfunds.edit', ['medical_fund' => $f->Id]) }}"
                                            class="btn btn-sm btn-outline-primary">Edit</a>
 
-                                        <form action="{{ route('bancassurance.medicalfunds.destroy', ['medical_fund' => $f->ID]) }}"
+                                        <form action="{{ route('bancassurance.medicalfunds.destroy', ['medical_fund' => $f->Id]) }}"
                                               method="POST"
                                               onsubmit="return confirm('Archive this fund?');">
                                             @csrf

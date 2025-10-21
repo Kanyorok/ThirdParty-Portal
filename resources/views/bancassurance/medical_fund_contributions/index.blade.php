@@ -10,21 +10,21 @@
 
       @if(isset($contributor) && $contributor)
         <span class="badge bg-info text-dark align-self-center">
-          Filtered: {{ $contributor->FullName }}
+          Filtered: {{ $contributor->thirdParty->ThirdPartyName ?? '—'   }}
         </span>
         <a class="btn btn-primary"
-           href="{{ route('bancassurance.medicalfunds.contributions.create', ['medical_fund' => $medical_fund->ID]) }}?contributor={{ $contributor->ID }}">
+           href="{{ route('bancassurance.medicalfunds.contributions.create', ['medical_fund' => $medical_fund->Id]) }}?contributor={{ $contributor->Id }}">
           New Contribution
         </a>
       @else
         <a class="btn btn-primary"
-           href="{{ route('bancassurance.medicalfunds.contributions.create', ['medical_fund' => $medical_fund->ID]) }}">
+           href="{{ route('bancassurance.medicalfunds.contributions.create', ['medical_fund' => $medical_fund->Id]) }}">
           New Contribution
         </a>
       @endif
 
       <a class="btn btn-outline-secondary"
-         href="{{ route('bancassurance.medicalfunds.show',['medical_fund' => $medical_fund->ID]) }}">
+         href="{{ route('bancassurance.medicalfunds.show',['medical_fund' => $medical_fund->Id]) }}">
         Back to Fund
       </a>
     </div>
@@ -35,7 +35,7 @@
   {{-- Filters --}}
   <div class="card mb-3">
     <div class="card-body">
-      <form method="GET" action="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->ID]) }}" class="row g-2">
+      <form method="GET" action="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->Id]) }}" class="row g-2">
         <div class="col-md-3">
           <label class="form-label">From</label>
           <input type="date" name="date_from" class="form-control"
@@ -54,8 +54,8 @@
               <option value="">-- all contributors --</option>
               @isset($contributors)
                 @foreach($contributors as $ctr)
-                  <option value="{{ $ctr->ID }}" @selected((string)request('contributor')===(string)$ctr->ID)>
-                    {{ $ctr->FullName }}
+                  <option value="{{ $ctr->Id }}" @selected((string)request('contributor')===(string)$ctr->Id)>
+                    {{ $ctr->thirdParty->ThirdPartyName ?? '—' }}
                   </option>
                 @endforeach
               @endisset
@@ -64,13 +64,13 @@
           </div>
         @else
           {{-- keep contributor id in the query silently to preserve state --}}
-          <input type="hidden" name="contributor" value="{{ $contributor->ID }}">
+          <input type="hidden" name="contributor" value="{{ $contributor->Id }}">
         @endif
 
         <div class="col-md-2 d-flex align-items-end gap-2">
           <button class="btn btn-primary">Apply</button>
           <a class="btn btn-outline-secondary"
-             href="{{ route('bancassurance.medicalfunds.contributions.index', $medical_fund->ID) }}">
+             href="{{ route('bancassurance.medicalfunds.contributions.index', $medical_fund->Id) }}">
             Reset
           </a>
         </div>
@@ -110,23 +110,20 @@
             <tbody>
               @foreach($contributions as $i => $c)
                 <tr>
-                  <td>{{ $contributions->firstItem() + $i }}</td>
-                  <td>{{ optional($c->ContributionDate)->format('Y-m-d') }}</td>
-                  <td>
-                    {{-- Optional: show name if relation exists; fallback to ID --}}
-                    {{ optional($c->contributor)->FullName ?? $c->ContributorID ?? '—' }}
-                  </td>
-                  <td>{{ $c->ContributorType ?? '—' }}</td>
+                  <td>{{ $loop->iteration}}</td>
+                  <td>{{ $c->ContributionDate ? \Carbon\Carbon::parse($c->ContributionDate)->format('d/m/Y') : '-' }}</td>
+                  <td>{{ $c->thirdParty->ThirdPartyName ?? '—' }}</td>
+                  <td>{{ $c->type->Description ?? '—' }}</td>
                   <td class="text-end">{{ number_format((float)$c->Amount,2) }}</td>
                   <td>{{ $c->Notes ?? '—' }}</td>
                   <td class="text-end">
                     @php $qs = request()->getQueryString(); @endphp
                     <div class="btn-group">
                       <a class="btn btn-sm btn-outline-primary"
-                         href="{{ route('bancassurance.contributions.edit', $c->ID) }}{{ $qs ? ('?'.$qs) : '' }}">
+                         href="{{ route('bancassurance.contributions.edit', $c->Id) }}{{ $qs ? ('?'.$qs) : '' }}">
                         Edit
                       </a>
-                      <form action="{{ route('bancassurance.contributions.destroy', $c->ID) }}"
+                      <form action="{{ route('bancassurance.contributions.destroy', $c->Id) }}"
                             method="POST"
                             onsubmit="return confirm('Delete this contribution?');">
                         @csrf
