@@ -22,8 +22,7 @@ class ItemCategories extends Model
 
     public static function getPrimaryKey(): string
     {
-        // return 'ItemCategoriesId'; 
-        return 'Id';
+        return 'ItemCategoriesId';
     }
 
     protected $fillable = [
@@ -86,6 +85,16 @@ class ItemCategories extends Model
     public function children()
     {
         return $this->hasMany(self::class, 'ParentId');
+    }
+
+    public function inUse(): bool
+    {
+        return $this->children()->exists() || $this->items()->exists();
+    }
+
+    public function hasItems(): bool
+    {
+        return $this->items()->exists();
     }
 
 

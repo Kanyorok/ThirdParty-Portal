@@ -82,6 +82,9 @@
                 <div class="row">
                     @foreach($sections as $tenderSection)
                         @php $section = $tenderSection->sections; @endphp
+                        @if(!$section)
+                            @continue
+                        @endif
                         <div class="col-md-6 mb-3">
                             <div class="card border">
                                 <div class="card-body">

@@ -23,12 +23,6 @@ class TransactionReceiptService
     return DB::transaction(function () use ($validatedData, $items) {
         $transfer = \App\Models\Inventory\TransactionTransfer::findOrFail($validatedData['TransferID']);
 
-        if (Auth::user()->BranchID !== $transfer->ToBranch) {
-            throw ValidationException::withMessages([
-                'TransferID' => 'You are not authorized to receive this transfer. Only the To Branch can submit the receipt.',
-            ]);
-        }
-
         $receipt = TransactionReceipt::create([
             'TransferId' => $validatedData['TransferID'],
             'ReceivedBy' => $validatedData['ReceivedBy'],
@@ -236,7 +230,7 @@ class TransactionReceiptService
                     'Reason' => $status,
                     'Source' => $transferSource,
                     'SourceID' => $receipt->Id,
-                    'Status' => Transfers::InTransit->value,
+                    'Status' => Transfers::AwaitingReview->value,
                     'Remarks' => $itemData['remarks'] ?? null,
                     'CreatedBy' => Auth::id(),
                     'CreatedOn' => now(),

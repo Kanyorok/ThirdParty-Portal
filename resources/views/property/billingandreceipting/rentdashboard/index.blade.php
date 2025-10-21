@@ -58,7 +58,7 @@
                 <option value="">All Tenants</option>
                 @foreach($tenants as $tenant)
                     <option value="{{ $tenant->Id }}" {{ request('tenant_id') == $tenant->id ? 'selected' : '' }}>
-                        {{ $tenant->thirdParty->TradingName }}
+                        {{ $tenant->thirdParty->ThirdPartyName }}
                     </option>
                 @endforeach
             </select>
@@ -93,7 +93,7 @@
             <tbody> 
                 @foreach($invoices as $invoice)
                 @php
-                    $tenant = $invoice->lease->tenant->thirdParty->TradingName  ?? 'N/A';
+                    $tenant = $invoice->lease->tenant->thirdParty->ThirdPartyName  ?? 'N/A';
                     $property = $invoice->lease->property->PropertyName ?? 'N/A';
                     $unit = $invoice->lease->unit->UnitCode ?? 'N/A';
                     $due = $invoice->RentAmount + $invoice->ServicesCharge + $invoice->ParkingFee + $invoice->OtherCharges;
@@ -181,7 +181,7 @@
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Amount (KES)'
+                        text: 'Amount'
                     }
                 },
                 x: {

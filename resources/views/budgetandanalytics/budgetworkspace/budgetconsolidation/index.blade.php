@@ -23,6 +23,12 @@
                 <a href="{{ route('budgetconsolidation.export', ['format' => 'pdf']) }}" class="btn btn-outline-danger btn-sm">
                     <i class="fas fa-file-pdf me-1"></i> PDF
                 </a> --}}
+                <button type="button" class="btn btn-outline-success btn-sm" id="exportExcelTop">
+                    <i class="fas fa-file-excel me-1"></i> Excel
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" id="exportPdfTop">
+                    <i class="fas fa-file-pdf me-1"></i> PDF
+                </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="btnExpandAll">
                     <i class="fas fa-plus-square me-1"></i> Expand All
                 </button>
@@ -136,9 +142,9 @@
                                                 @endforeach
 
                                                 <td class="text-end bg-success-subtle fw-semibold">{{ number_format($total, 2) }}</td>
-                                                <td class="text-end bg-info-subtle">{{ number_format($actual, 2) }}</td>
+                                                <td class="text-end bg-info-subtle">{{ number_format($entry['actual'], 2) }}</td>
                                                 <td class="text-center bg-danger-subtle">
-                                                    <span class="badge {{ $deltaClass }}">{{ number_format($percentChange, 2) }}%</span>
+                                                    <span class="badge {{ $deltaClass }}">{{ number_format((($entry['actual']/$total)*100), 2) }}%</span>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -169,6 +175,16 @@
 
                 @php $grandTotal += $categoryTotal; @endphp
             @endforeach
+        </div>
+
+        {{-- Bottom actions: Export --}}
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-outline-success btn-sm" id="exportExcelBottom">
+                <i class="fas fa-file-excel me-1"></i> Excel
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm" id="exportPdfBottom">
+                <i class="fas fa-file-pdf me-1"></i> PDF
+            </button>
         </div>
 
         {{-- Grand Total --}}
@@ -257,6 +273,71 @@
                 collapseEl?.addEventListener('hide.bs.collapse', () => btn.querySelector('.collapse-text').textContent = 'Expand');
                 collapseEl?.addEventListener('show.bs.collapse', () => btn.querySelector('.collapse-text').textContent = 'Collapse');
             });
+            // Export helpers: serialize visible table into rows for server-side generation
+            function buildExportRows() {
+                const rows = [];
+                const monthHeaders = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                document.querySelectorAll('#consolidationAccordion .card').forEach(card => {
+                    const category = card.querySelector('.card-header div')?.textContent?.trim() || '';
+                    card.querySelectorAll('.consol-scroll').forEach(section => {
+                        const subType = section.previousElementSibling?.querySelector('.badge')?.textContent?.trim() || '';
+                        section.querySelectorAll('tbody tr').forEach(tr => {
+                            const tds = tr.querySelectorAll('td');
+                            if (!tds.length) return;
+                            const isSubtotal = tr.classList.contains('table-secondary');
+                            if (isSubtotal) return; // skip subtotal rows; can include if needed
+                            const row = {
+                                category: category,
+                                subType: subType,
+                                budgetLineName: tds[0]?.textContent?.trim() || '',
+                                rate: tds[1]?.textContent?.trim() || '',
+                                months: {},
+                                total: tds[tds.length - 3]?.textContent?.trim() || '',
+                                actuals: tds[tds.length - 2]?.textContent?.trim() || '',
+                                change: tds[tds.length - 1]?.textContent?.trim() || ''
+                            };
+                            // months occupy from col index 2 up to length-4
+                            for (let i = 0; i < 12; i++) {
+                                const idx = 2 + i;
+                                row.months[i+1] = tds[idx]?.textContent?.trim() || '';
+                            }
+                            rows.push(row);
+                        });
+                    });
+                });
+                return rows;
+            }
+
+            function postTo(url, data) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = url;
+                const token = document.createElement('input');
+                token.type = 'hidden'; token.name = '_token'; token.value = '{{ csrf_token() }}';
+                form.appendChild(token);
+                const bname = document.createElement('input');
+                bname.type = 'hidden'; bname.name = 'budgetName'; bname.value = @json($budgetName ?? 'Budget');
+                form.appendChild(bname);
+                const payload = document.createElement('input');
+                payload.type = 'hidden'; payload.name = 'rows'; payload.value = JSON.stringify(data);
+                form.appendChild(payload);
+                document.body.appendChild(form);
+                form.submit();
+            }
+
+            function bindExport(btnId, route) {
+                const el = document.getElementById(btnId);
+                if (!el) return;
+                el.addEventListener('click', () => {
+                    const rows = buildExportRows();
+                    postTo(route, rows);
+                });
+            }
+
+            bindExport('exportExcelTop', '{{ route('budgetconsolidation.export.excel') }}');
+            bindExport('exportPdfTop', '{{ route('budgetconsolidation.export.pdf') }}');
+            bindExport('exportExcelBottom', '{{ route('budgetconsolidation.export.excel') }}');
+            bindExport('exportPdfBottom', '{{ route('budgetconsolidation.export.pdf') }}');
         });
     </script>
 @endsection

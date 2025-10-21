@@ -4,6 +4,11 @@
 @endsection
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+    <style>
+        .select2-search__field {
+            height: 35px !important;
+        }
+    </style>
 @endsection
 @section('content')
     <div class="row">
@@ -190,12 +195,43 @@
                 FilterButton.prop('disable', false).removeClass('disabled').prop('type', 'submit').html('View Report');
             });
             $('.select-option').select2({
-                width: '100%'
+                width: '100%',
+                placeholder: 'Press CTRL+A for select or unselect all options'
             });
+
+            $('.select-option[multiple]').siblings('.select2-container').append('<span class="select-all"></span>');
+
+            $(document).on('click', '.select-all', function (e) {
+                selectAllSelect2($(this).siblings('.selection').find('.select2-search__field'));
+            });
+
+            $(document).on("keyup", ".select2-search__field", function (e) {
+                var eventObj = window.event ? event : e;
+                if (eventObj.keyCode === 65 && eventObj.ctrlKey)
+                    selectAllSelect2($(this));
+            });
+
+
             @endif
         });
 
+        function selectAllSelect2(that) {
+            var selectAll = true;
+            var existUnselected = false;
+            var item = $(that.parents("span[class*='select2-container']").siblings('select[multiple]'));
 
+            item.find("option").each(function (k, v) {
+                if (!$(v).prop('selected')) {
+                    existUnselected = true;
+                    return false;
+                }
+            });
+
+            selectAll = existUnselected ? selectAll : !selectAll;
+
+            item.find("option").prop('selected', selectAll);
+            item.trigger('change');
+        }
         async function getReport(params) {
             ReportContent.html(' <div class="my-4 text-center"><i class="fas fa-spinner fa-spin fa-5x"></i><h3>Please wait</h3></div>');
             await $.get(getDocumentUrl(), params, function (data) {

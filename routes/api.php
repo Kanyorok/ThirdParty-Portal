@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
 use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
@@ -18,7 +19,10 @@ use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressCo
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\TenderInvitationController;
+use App\Http\Controllers\API\DMS\DocumentApiController;
+use App\Http\Controllers\Procurement\TenderDocumentController;
 use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyDocumentsController;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -79,9 +83,9 @@ Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $reques
             return response()->json([
                 'debug' => 'No supplier found',
                 'third_party_id' => $thirdPartyId,
-                'third_parties_count' => \App\Models\ThirdParies\ThirdParty::count(),
-                'suppliers_count' => \App\Models\ThirdParies\Supplier::count(),
-                'sample_third_party' => \App\Models\ThirdParies\ThirdParty::first()
+                'third_parties_count' => DB::table('t_ThirdParties')->count(),
+                'suppliers_count' => DB::table('t_Suppliers')->count(),
+                'sample_third_party' => DB::table('t_ThirdParties')->first()
             ]);
         }
 
@@ -116,10 +120,17 @@ Route::get('/debug/tender-invitations', function(Illuminate\Http\Request $reques
 });
 
 
-// TEMPORARY: Test APIs without auth for debugging
+// Tenders API (public index to allow portal to call with third_party_id)
 Route::apiResource('tenders', TenderApiController::class);
 Route::get('/tender-invitations', [TenderInvitationController::class, 'index']);
 Route::put('/tender-invitations/{id}', [TenderInvitationController::class, 'update']);
+
+// DMS: Documents visible to authenticated user
+Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->group(function () {
+    Route::get('/dms/documents', [DocumentApiController::class, 'index']);
+});
+
+// Keep DMS central; tender documents are managed via DMS and relations
 
 // Tender Clarification APIs
 Route::post('/tender-clarifications', [TenderClarificationApiController::class, 'submitClarification']);
@@ -177,6 +188,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
         Route::get('{third_party}', [ThirdPartyController::class, 'show']);
         Route::put('{third_party}', [ThirdPartyController::class, 'update']);
         Route::delete('{third_party}', [ThirdPartyController::class, 'destroy']);
+    // Upload supporting documents for a third party
+    Route::post('{third_party}/documents', [ThirdPartyDocumentsController::class, 'store']);
         // Route::get('suppliers', [ThirdPartyController::class, 'getSuppliers']);
         // Route::patch('{third_party}/approve', [ThirdPartyController::class, 'approve']);
         // Route::patch('{third_party}/reject', [ThirdPartyController::class, 'reject']);
@@ -270,6 +283,10 @@ Route::prefix('procurement')->name('api.procurement.')
             Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
             Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
             Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
+            // Application documents
+            Route::get('applications/{roundId}/categories/{categoryId}/documents', [\App\Http\Controllers\API\Procurement\Prequalification\PreqApplicationDocumentApiController::class, 'index']);
+            Route::post('applications/{roundId}/categories/{categoryId}/documents', [\App\Http\Controllers\API\Procurement\Prequalification\PreqApplicationDocumentApiController::class, 'store']);
+            Route::delete('applications/{roundId}/categories/{categoryId}/documents/{id}', [\App\Http\Controllers\API\Procurement\Prequalification\PreqApplicationDocumentApiController::class, 'destroy']);
         });
 
         // Supplier RFQ endpoints (supplier portal)

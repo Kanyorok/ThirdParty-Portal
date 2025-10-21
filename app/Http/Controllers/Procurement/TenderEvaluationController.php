@@ -41,6 +41,11 @@ class TenderEvaluationController extends Controller
                 ->with('error', 'You are not authorized to evaluate this tender.');
         }
 
+        // Filter out inactive or orphaned tender sections before readiness check
+        $tender->setRelation('tenderSections', $tender->tenderSections->filter(function($ts){
+            return ($ts->IsActive ?? true) && $ts->sections; // ensure active and has linked Section
+        })->values());
+
         // Check if tender has valid section configuration
         $readiness = $tender->getEvaluationReadiness();
         if (!$readiness['ready']) {
@@ -67,6 +72,24 @@ class TenderEvaluationController extends Controller
             ->keyBy(function ($evaluation) {
                 return $evaluation->SectionID . '_' . $evaluation->CriteriaID;
             });
+
+        // Only allow criteria that were explicitly selected for this tender
+        $selectedBySection = \App\Models\Procurement\TenderCriteria::where('TenderID', $tender->Id)
+            ->where('IsActive', true)
+            ->get(['SectionID','CriteriaID'])
+            ->groupBy('SectionID')
+            ->map(fn($rows) => $rows->pluck('CriteriaID')->values());
+
+        // Filter each section's criteria collection in-place to only selected criteria
+        $tender->setRelation('tenderSections', $tender->tenderSections->map(function ($ts) use ($selectedBySection) {
+            $section = $ts->sections;
+            $allowed = collect($selectedBySection->get($section->Id, collect()))->map(fn($v) => (int)$v)->all();
+            if ($section && $section->relationLoaded('criteria')) {
+                $filtered = $section->criteria->whereIn('Id', $allowed)->values();
+                $section->setRelation('criteria', $filtered);
+            }
+            return $ts;
+        }));
 
         // Get all committee members for this tender (for progress tracking)
         $allMembers = TenderCommitteeMember::where('TenderID', $tender->Id)
@@ -128,16 +151,15 @@ class TenderEvaluationController extends Controller
 
         try {
             // Validate that all required sections/criteria are scored
-            $tenderSections = TenderSection::with('sections.criteria')
-                ->where('TenderID', $tender->Id)
-                ->get();
+            $tenderSections = TenderSection::where('TenderID', $tender->Id)->get();
 
-            $requiredScores = [];
-            foreach ($tenderSections as $tenderSection) {
-                foreach ($tenderSection->sections->criteria as $criteria) {
-                    $requiredScores[] = $tenderSection->SectionID . '_' . $criteria->Id;
-                }
-            }
+            // Only require the criteria selected for this tender (t_TenderCriteria)
+            $selectedCriteriaRows = \App\Models\Procurement\TenderCriteria::where('TenderID', $tender->Id)
+                ->where('IsActive', true)
+                ->get(['SectionID','CriteriaID']);
+            $requiredScores = $selectedCriteriaRows->map(function ($row) {
+                return $row->SectionID . '_' . $row->CriteriaID;
+            })->all();
 
             $submittedScores = collect($validated['scores'])
                 ->mapWithKeys(function ($score) {
@@ -313,11 +335,10 @@ class TenderEvaluationController extends Controller
      */
     private function getEvaluationProgress($tenderId, $memberId)
     {
-        $totalCriteria = DB::table('t_TenderSection as ts')
-            ->join('t_Criterias as c', 'c.SectionID', '=', 'ts.SectionID')
-            ->where('ts.TenderID', $tenderId)
-            ->where('ts.IsActive', true)
-            ->where('c.IsActive', true)
+        // Count only criteria explicitly selected for this tender
+        $totalCriteria = DB::table('t_TenderCriteria as tc')
+            ->where('tc.TenderID', $tenderId)
+            ->where('tc.IsActive', true)
             ->count();
 
         $completedCriteria = TenderCommitteeEvaluation::where('TenderID', $tenderId)

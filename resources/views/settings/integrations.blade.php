@@ -61,7 +61,7 @@
                                             @endif
                                             <input type="hidden" name="Integration" value="{{ $integration->value }}"
                                                    class="d-none" style="display: none;">
-                                            <div class="mb-3 col-12">
+                                            <div class="mb-3 col-sm-6 col-12">
                                                 <label class="form-label" for="SSRS_Host">Host <span
                                                         class="text-danger">*</span></label>
                                                 <input type="text" class="form-control config-srs-form"
@@ -70,6 +70,17 @@
                                                        value="{{ $srsConfig?->host }}"
                                                        name="SSRS_Host">
                                                 <span id="SSRS_Host_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="SSRS_Path">Path<span
+                                                        class="text-danger">*</span> </label>
+                                                <input type="text" class="form-control config-srs-form"
+                                                       id="SSRS_Path" disabled
+                                                       placeholder="Reports" required autocomplete="off"
+                                                       value="{{ $srsConfig?->path ?? "Reports" }}"
+                                                       name="SSRS_Path">
+                                                <span id="SSRS_Path_error" class="invalid-feedback d-none error"
                                                       role="alert"></span>
                                             </div>
                                             <div class="mb-3 col-sm-6 col-12">

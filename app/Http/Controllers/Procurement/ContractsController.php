@@ -17,7 +17,7 @@ class ContractsController extends Controller
      */
     public function index(Request $request)
     {
-        $query = TenderAward::with(['tender', 'winningSupplier'])
+        $query = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->where('AwardStatus', 'Approved');
 
         // Apply filters
@@ -136,7 +136,7 @@ class ContractsController extends Controller
      */
     public function show($id)
     {
-        $contract = TenderAward::with(['tender', 'winningSupplier'])
+        $contract = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->findOrFail($id);
             
         return view('procurement.contracts.contractcreation.show', compact('contract'));
@@ -188,7 +188,7 @@ class ContractsController extends Controller
      */
     public function approvalQueue()
     {
-        $contracts = TenderAward::with(['tender', 'winningSupplier'])
+        $contracts = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->whereIn('ContractStatus', ['Draft Created', 'Under Review'])
             ->orderBy('CreatedOn', 'desc')
             ->paginate(15);
@@ -217,6 +217,37 @@ class ContractsController extends Controller
 
         return redirect()->route('contracts.approvalQueue')
             ->with('success', 'Contract approved successfully.');
+    }
+
+    /**
+     * Reject contract
+     */
+    public function rejectContract(Request $request, $id)
+    {
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        $award = TenderAward::findOrFail($id);
+        
+        // Set contract back to draft with rejection remarks
+        $award->update([
+            'ContractStatus' => 'Draft Created', // Return to draft for revision
+            'ContractApprovalRemarks' => 'REJECTED: ' . $request->rejection_reason,
+            'ContractApprovedBy' => null,
+            'ContractApprovedOn' => null,
+            'ModifiedBy' => Auth::id(),
+        ]);
+
+        // Log the rejection
+        \Log::info('Contract rejected', [
+            'award_id' => $id,
+            'rejection_reason' => $request->rejection_reason,
+            'rejected_by' => Auth::id()
+        ]);
+
+        return redirect()->route('contracts.approvalQueue')
+            ->with('warning', 'Contract rejected and returned to draft status for revision.');
     }
 
     /**
@@ -273,5 +304,202 @@ class ContractsController extends Controller
 
         return redirect()->route('contracts.create', ['award_id' => $awardId])
             ->with('success', 'Ready to create contract for approved tender award.');
+    }
+
+    /**
+     * Submit contract for review
+     */
+    public function submitForReview(Request $request, $id)
+    {
+        $request->validate([
+            'review_notes' => 'nullable|string|max:500',
+        ]);
+
+        $award = TenderAward::findOrFail($id);
+        
+        if ($award->ContractStatus !== 'Draft Created') {
+            return redirect()->back()
+                ->with('error', 'Only draft contracts can be submitted for review.');
+        }
+
+        $award->update([
+            'ContractStatus' => 'Under Review',
+            'ContractApprovalRemarks' => $request->review_notes,
+            'ModifiedBy' => Auth::id(),
+        ]);
+
+        return redirect()->route('contracts.show', $id)
+            ->with('success', 'Contract submitted for review successfully.');
+    }
+
+    /**
+     * Upload contract document
+     */
+    public function uploadDocument(Request $request, $id)
+    {
+        try {
+            // Validate the request
+            $request->validate([
+                'contract_document' => 'required|file|mimes:pdf,doc,docx|max:10240', // 10MB max
+            ]);
+
+            $award = TenderAward::findOrFail($id);
+
+            if ($request->hasFile('contract_document')) {
+                $file = $request->file('contract_document');
+                
+                // Check if file is valid
+                if (!$file->isValid()) {
+                    throw new \Exception('Invalid file uploaded: ' . $file->getErrorMessage());
+                }
+                
+                $originalName = $file->getClientOriginalName();
+                $fileName = time() . '_' . $originalName;
+                
+                // Store the file
+                $filePath = $file->storeAs('contracts/documents', $fileName, 'public');
+                
+                if (!$filePath) {
+                    throw new \Exception('Failed to store file on disk');
+                }
+
+                // Handle existing documents - create a new structure to avoid JSON conflicts
+                $existingConditions = $award->SpecialConditions;
+                $documents = [];
+                
+                // Try to parse existing data as JSON (documents array)
+                if (!empty($existingConditions)) {
+                    $parsed = json_decode($existingConditions, true);
+                    if (is_array($parsed)) {
+                        $documents = $parsed;
+                    } else {
+                        // If it's not JSON, create new array and preserve original text in a special entry
+                        $documents = [
+                            [
+                                'type' => 'Original Special Conditions',
+                                'content' => $existingConditions,
+                                'created_at' => now()->toISOString()
+                            ]
+                        ];
+                    }
+                }
+                
+                $newDoc = [
+                    'type' => 'Contract Document',
+                    'original_name' => $originalName,
+                    'file_path' => $filePath,
+                    'upload_date' => now()->toISOString(),
+                    'uploaded_by' => Auth::id(),
+                    'file_size' => $file->getSize()
+                ];
+                
+                $documents[] = $newDoc;
+                
+                // Update the award
+                $award->update([
+                    'SpecialConditions' => json_encode($documents),
+                    'ModifiedBy' => Auth::id(),
+                ]);
+                
+                // Log successful upload
+                \Log::info('Contract document uploaded successfully', [
+                    'award_id' => $id,
+                    'file_name' => $originalName,
+                    'file_path' => $filePath,
+                    'user_id' => Auth::id()
+                ]);
+                
+                // Return JSON response for AJAX
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Document uploaded successfully.',
+                        'document' => $newDoc
+                    ]);
+                }
+                
+                return redirect()->route('contracts.show', $id)
+                    ->with('success', 'Document uploaded successfully.');
+            }
+
+            throw new \Exception('No file was uploaded');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::warning('Contract document upload validation failed', [
+                'award_id' => $id,
+                'errors' => $e->errors(),
+                'user_id' => Auth::id()
+            ]);
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed: ' . implode(', ', $e->validator->errors()->all())
+                ], 422);
+            }
+            
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+                
+        } catch (\Exception $e) {
+            \Log::error('Contract document upload failed', [
+                'award_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Upload failed: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Failed to upload document: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Add contract addendum
+     */
+    public function addAddendum(Request $request, $id)
+    {
+        $request->validate([
+            'addendum_title' => 'required|string|max:255',
+            'addendum_description' => 'required|string',
+            'effective_date' => 'required|date',
+            'addendum_document' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+        ]);
+
+        $award = TenderAward::findOrFail($id);
+
+        // Handle document upload if provided
+        $documentPath = null;
+        if ($request->hasFile('addendum_document')) {
+            $file = $request->file('addendum_document');
+            $fileName = time() . '_addendum_' . $file->getClientOriginalName();
+            $documentPath = $file->storeAs('contracts/addenda', $fileName, 'public');
+        }
+
+        // For now, store addendum info in the contract approval remarks
+        // In a full implementation, you'd want a separate addenda table
+        $existingRemarks = $award->ContractApprovalRemarks ?? '';
+        $newAddendum = "\n\n--- ADDENDUM (" . $request->effective_date . ") ---\n";
+        $newAddendum .= "Title: " . $request->addendum_title . "\n";
+        $newAddendum .= "Description: " . $request->addendum_description . "\n";
+        if ($documentPath) {
+            $newAddendum .= "Document: " . $documentPath . "\n";
+        }
+
+        $award->update([
+            'ContractApprovalRemarks' => $existingRemarks . $newAddendum,
+            'ModifiedBy' => Auth::id(),
+        ]);
+
+        return redirect()->route('contracts.show', $id)
+            ->with('success', 'Addendum added successfully.');
     }
 }

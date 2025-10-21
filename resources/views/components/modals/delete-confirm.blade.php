@@ -17,7 +17,6 @@
                     @csrf
                     @method('DELETE')
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-
                     <button type="submit" class="btn btn-danger"
                         onclick="handleDelete(this)">
                         Yes, Delete

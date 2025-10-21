@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\BusinessTypeEnum;
+use App\Traits\Model\DocumentsTrait;
 
 class ThirdParties extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, DocumentsTrait;
 
     const CREATED_AT        = 'CreatedOn';
     const UPDATED_AT        = 'ModifiedOn';
@@ -21,6 +22,11 @@ class ThirdParties extends Model
 
     protected $table = 't_ThirdParties';
     protected $primaryKey = 'Id';
+
+    public static function getPrimaryKey(): string
+    {
+        return 'ThirdPartyId';
+    }
 
     protected $fillable = [
         'ThirdPartyName',
@@ -149,5 +155,25 @@ class ThirdParties extends Model
     public function receipts()
     {
         return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
+    }
+
+    /**
+     * Legacy category mappings (t_ThirdPartiesCategories -> CodeDetail) used by prequalification screen.
+     */
+    public function legacyCategories()
+    {
+        return $this->hasMany(\App\Models\ThirdParty\ThirdPartyCategory::class, 'ThirdPartyId', 'Id')
+            ->whereNull('DeletedOn')
+            ->with('category');
+    }
+
+    /**
+     * Prequalification applications submitted by this supplier.
+     */
+    public function prequalificationApplications()
+    {
+        return $this->hasMany(\App\Models\Procurement\Prequalification\PrequalificationApplication::class, 'SupplierID', 'Id')
+            ->whereNull('DeletedOn')
+            ->with('category');
     }
 }

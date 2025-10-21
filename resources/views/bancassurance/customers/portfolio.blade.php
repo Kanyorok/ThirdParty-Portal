@@ -31,19 +31,19 @@
     <!-- Customer Info -->
     <div class="card shadow-sm mb-4 border-0 rounded-3">
         <div class="card-body">
-            <h5 class="card-title mb-3">{{ $customer->FullName ?? 'N/A' }}</h5>
+            <h5 class="card-title mb-3">{{ $customer->thirdParty->ThirdPartyName ?? 'N/A' }}</h5>
             <div class="row customer-info">
                 <div class="col-md-4">
                     <dt>National ID</dt>
-                    <dd>{{ $customer->NationalID ?? 'N/A' }}</dd>
+                    <dd>{{ $customer->thirdParty->NationalID ?? 'N/A' }}</dd>
                 </div>
                 <div class="col-md-4">
                     <dt>Phone</dt>
-                    <dd>{{ $customer->PhoneNumber ?? 'N/A' }}</dd>
+                    <dd>{{ $customer->thirdParty->Phone ?? 'N/A' }}</dd>
                 </div>
                 <div class="col-md-4">
                     <dt>Email</dt>
-                    <dd>{{ $customer->Email ?? 'N/A' }}</dd>
+                    <dd>{{ $customer->thirdParty->Email ?? 'N/A' }}</dd>
                 </div>
             </div>
         </div>

@@ -99,6 +99,9 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetscenerios', BudgetSceneriosController::class);
     Route::resource('budgetformula', BudgetFormulaController::class);
     Route::resource('budgetconsolidation', BudgetConsolidationController::class);
+// Export routes (no CDN libs; server-side using local packages)
+Route::post('budgetconsolidation/export/excel', [BudgetConsolidationController::class, 'exportExcel'])->name('budgetconsolidation.export.excel');
+Route::post('budgetconsolidation/export/pdf', [BudgetConsolidationController::class, 'exportPdf'])->name('budgetconsolidation.export.pdf');
     Route::resource('budgetvsactualdashboard', BudgetvsActualDashboardController::class);
     Route::resource('budgetvarianceanalysis', BudgetVarianceAnalysisController::class);
     Route::resource('kpiscorecards', BudgetKPIscorecardsController::class);
@@ -190,6 +193,7 @@ Route::prefix('budgetandanalytics/reallocation')
         Route::get('/create', [BudgetReallocationController::class, 'create'])->name('create');
         Route::post('/store', [BudgetReallocationController::class, 'store'])->name('store');
         Route::get('/allocate', [BudgetReallocationController::class, 'allocate'])->name('allocate');
+        Route::get('/{id}', [BudgetReallocationController::class, 'show'])->name('show');
 
         // Optional future routes
         Route::get('/{id}/review', [BudgetReallocationController::class, 'review'])->name('review');

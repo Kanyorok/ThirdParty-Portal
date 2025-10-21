@@ -5,6 +5,17 @@
     <div class="container mt-4">
         <h4 class="mb-3">📑 {{$tender->TenderNo}} Criteria Form</h4>
 
+        @if(isset($filteredSections) && $filteredSections->isNotEmpty())
+            <div class="alert alert-warning">
+                <strong>Note:</strong> The following sections are not available for configuration because the base Section record is missing: 
+                <ul class="mb-0">
+                    @foreach($filteredSections as $fs)
+                        <li>{{ $fs }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <form action="{{route('tender-criteria.store')}}" method="POST" enctype="multipart/form-data"
               id="sectionCriteriaForm">
             @csrf
@@ -13,28 +24,24 @@
             <input type="hidden" name="TenderId" value="{{ $TenderId }}">
 
             <table class="table">
-                @foreach ($tenderSections as $section)
+        @foreach ($tenderSections as $section)
                     <tr class="table-secondary section-row">
-                        <td class="fw-bold" colspan="2">{{ $section->sections->SectionName }}</td>
+            <td class="fw-bold" colspan="2">{{ $section->sections->SectionName ?? ('Section #'.$section->SectionID) }}</td>
                         <td>
                             <input type="number"
                                    class="form-control"
-                                   name="weights[{{ $section->sections->id }}]"
+                   name="weights[{{ $section->sections->Id ?? $section->SectionID }}]"
                                    value="{{ number_format($section->Weight, 2) }}"
                                    step="0.01" min="0" max="100" required>
-
-                            <!-- Hidden field to actually submit the value -->
-                            <input type="hidden" name="weights[{{ $section->sections->id }}]"
-                                   value="{{ number_format($section->Weight, 2) }}">
                         </td>
                     </tr>
 
-                    @foreach ($section->criteria as $criteria)
+            @foreach ($section->criteria as $criteria)
                         <tr class="criteria-row">
                             <td>
                                 <input type="checkbox"
-                                       name="criterias[{{ $section->sections->id }}][]"
-                                       value="{{ $criteria->id }}"
+                       name="criterias[{{ $section->sections->Id ?? $section->SectionID }}][]"
+                                       value="{{ $criteria->Id }}"
                                     {{ $criteria->isChecked ? 'checked' : '' }}>
                             </td>
                             <td colspan="2">{{ $criteria->CriteriaName }}</td>
@@ -50,7 +57,7 @@
         </form>
     </div>
 
-    <!-- Inline JavaScript to enforce 100% weight -->
+    <!-- Inline JavaScript to enforce 100% weight (do not disable inputs) -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('sectionCriteriaForm');
@@ -59,31 +66,22 @@
 
             function updateTotal() {
                 let total = 0;
-                const rows = form.querySelectorAll('tbody tr');
-
-                rows.forEach(row => {
-                    const checkbox = row.querySelector('input[type="checkbox"]');
-                    const weightInput = row.querySelector('input[type="number"]');
-
-                    if (checkbox && checkbox.checked && weightInput) {
-                        weightInput.disabled = false;
-                        total += parseFloat(weightInput.value) || 0;
-                    } else if (weightInput) {
-                        weightInput.disabled = true;
-                    }
+                const weightInputs = form.querySelectorAll('tr.section-row input[type="number"]');
+                weightInputs.forEach(input => {
+                    total += parseFloat(input.value) || 0;
                 });
-
-                totalWeightDisplay.textContent = total.toFixed(2);
+                if (totalWeightDisplay) {
+                    totalWeightDisplay.textContent = total.toFixed(2);
+                }
                 return total;
             }
 
             // Attach listeners
-            form.querySelectorAll('tbody tr').forEach(row => {
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                const weightInput = row.querySelector('input[type="number"]');
-
-                if (checkbox) checkbox.addEventListener('change', updateTotal);
-                if (weightInput) weightInput.addEventListener('input', updateTotal);
+            form.querySelectorAll('tr.section-row input[type="number"]').forEach(input => {
+                input.addEventListener('input', updateTotal);
+            });
+            form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', updateTotal);
             });
 
             // Validate on submit

@@ -39,7 +39,7 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $invoice->InvoiceNumber ?? '-' }}</td>
-                                <td>{{ $invoice->lease->tenant->thirdParty->TradingName ?? '-' }}</td>
+                                <td>{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                                 <td>{{ $invoice->lease->LeaseNumber ?? '-' }}</td>
                                 <td>
                                     {{ $invoice->BillingMonth ? \Carbon\Carbon::parse($invoice->BillingMonth)->format('m/Y') : '-' }}

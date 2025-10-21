@@ -21,7 +21,6 @@
                     <th>Provider</th>
                     <th>Product</th>
                     <th>Rider Name</th>
-                    <th>Description</th>
                     <th>Additional Premium</th>
                     <th>Optional?</th>
                     <th>Status</th>
@@ -35,7 +34,6 @@
                     <td>{{ $rider->provider->Name ?? '-'}}</td>
                     <td>{{ $rider->product->Name ?? '-'}}</td>
                     <td>{{ $rider->RiderName ?? '-'}}</td>
-                    <td>{{ $rider->Description ?? '-' }}</td>
                     <td>{{ number_format($rider->AdditionalPremium, 2) }}</td>
                     <td>
                         <span class="badge bg-{{ $rider->IsOptional ? 'info' : 'secondary' }}">
