@@ -19,7 +19,7 @@ class MedicalFundBeneficiaryController extends Controller
     // Nested index: /bancassurance/medical-funds/{medical_fund}/beneficiaries
     public function index(MedicalFund $medical_fund)
     {
-        $beneficiaries = $medical_fund->beneficiaries()->orderBy('ID','desc')->paginate(20);
+        $beneficiaries = $medical_fund->beneficiaries()->orderBy('Id','desc')->paginate(20);
         return view('bancassurance.medical_fund_beneficiaries.index', compact('medical_fund','beneficiaries'));
     }
 
@@ -31,7 +31,7 @@ public function create(MedicalFund $medical_fund)
     try {
         if (DB::getSchemaBuilder()->hasTable('t_BeneficiaryRelationships')) {
             $relationships = DB::table('t_BeneficiaryRelationships')
-                ->where('IsActive',1)->orderBy('Name')->get(['Code','Name']);
+                ->where('IsActive',true)->orderBy('Name')->get(['Code','Name']);
         }
     } catch (\Throwable $e) { /* ignore */ }
 
@@ -57,7 +57,7 @@ public function create(MedicalFund $medical_fund)
             'FullName'     => ['required','string','max:255'],
             'Relationship' => ['nullable','string','max:50'],
             'DateOfBirth'  => ['nullable','date'],
-            'NationalID'   => ['nullable','string','max:50'],
+            'NationalId'   => ['nullable','string','max:50'],
             'Contact'      => ['nullable','string','max:50'],
             'IsActive'     => ['nullable','boolean'],
         ]);
@@ -66,7 +66,7 @@ public function create(MedicalFund $medical_fund)
         MedicalFundBeneficiary::create($data);
 
         return redirect()
-            ->route('bancassurance.medicalfunds.beneficiaries.index', $medical_fund->ID)
+            ->route('bancassurance.medicalfunds.beneficiaries.index', $medical_fund->Id)
             ->with('success','Beneficiary added.');
     }
 
@@ -83,7 +83,7 @@ public function create(MedicalFund $medical_fund)
             'FullName'     => ['required','string','max:255'],
             'Relationship' => ['nullable','string','max:50'],
             'DateOfBirth'  => ['nullable','date'],
-            'NationalID'   => ['nullable','string','max:50'],
+            'NationalId'   => ['nullable','string','max:50'],
             'Contact'      => ['nullable','string','max:50'],
             'IsActive'     => ['nullable','boolean'],
         ]);
@@ -91,13 +91,13 @@ public function create(MedicalFund $medical_fund)
         $beneficiary->update($data);
 
         return redirect()
-            ->route('bancassurance.medicalfunds.beneficiaries.index', $beneficiary->FundID)
+            ->route('bancassurance.medicalfunds.beneficiaries.index', $beneficiary->FundId)
             ->with('success','Beneficiary updated.');
     }
 
     public function destroy(MedicalFundBeneficiary $beneficiary)
     {
-        $fundId = $beneficiary->FundID;
+        $fundId = $beneficiary->FundId;
         $beneficiary->delete();
 
         return redirect()

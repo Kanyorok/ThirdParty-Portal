@@ -2,16 +2,17 @@
 
 namespace App\Models\Insurance;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 class MedicalFundContribution extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, UserActorTrait;
 
     protected $table = 't_MedicalFundContributions';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'Id';
 
     public $timestamps = true;
     const CREATED_AT = 'CreatedOn';
@@ -19,24 +20,15 @@ class MedicalFundContribution extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FundID','ContributorType','ContributorID','Amount','ContributionDate','Notes',
+        'FundId','ContributorType','ContributorId','Amount','ContributionDate','Notes',
         'CreatedBy','ModifiedBy','DeletedBy'
     ];
 
-    protected $casts = [
-        'Amount'          => 'decimal:2',
-        'ContributionDate'=> 'date',
-        'CreatedOn'       => 'datetime',
-        'ModifiedOn'      => 'datetime',
-        'DeletedOn'       => 'datetime',
-    ];
-
-    protected static function booted()
+    public static function getPrimaryKey(): string
     {
-        static::creating(function ($m) { $m->CreatedBy = Auth::id(); $m->ModifiedBy = Auth::id(); });
-        static::updating(function ($m) { $m->ModifiedBy = Auth::id(); });
-        static::deleting(function ($m) { $m->DeletedBy = Auth::id(); $m->save(); });
+        return 'MedicalFundContributionId';
     }
+
 
     public function fund()
     {

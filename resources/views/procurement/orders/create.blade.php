@@ -174,8 +174,8 @@
                 </div>
             </div>
 
-            <!-- Primary Driver (Supplier for RFQ/Tender/Contract, Procurement Plan for Direct) & Address -->
-            <div class="row mb-4">
+            <!-- Supplier & Details -->
+            <div class="row mb-4 supplier-row">
                 <div class="col-md-6">
                     <!-- Host for supplier driver (non-direct) and plan driver (direct) -->
                     <div id="supplierDriverHost"></div>
@@ -853,6 +853,85 @@
             });
         });
 
+        // === Direct mode wiring ===
+        function setDirectMode(enabled){
+            const $direct = $('.direct-only');
+            const $supplierRow = $('.supplier-row');
+            if(enabled){
+                $direct.removeClass('d-none');
+                // hide the main supplier field per requirement
+                $supplierRow.addClass('d-none');
+                // load root categories and merge with direct-plan categories
+                const $sel = $('#itemCategory');
+                $sel.empty().append(`<option value="">-- None --</option>`);
+                Promise.all([
+                    fetch(`{{ url('procurement/purchaseOrder/root-categories') }}`).then(r=>r.json()).catch(()=>({data:[]})),
+                    fetch(`{{ url('procurement/purchaseOrder/direct-plan-categories') }}`).then(r=>r.json()).catch(()=>({data:[]})),
+                ]).then(([root, direct])=>{
+                    const seen = new Set();
+                    [...(root.data||[]), ...(direct.data||[])].forEach(row=>{
+                        if(!row || !row.Id || seen.has(row.Id)) return;
+                        seen.add(row.Id);
+                        $sel.append(`<option value="${row.Id}">${row.Name}</option>`);
+                    });
+                });
+            }else{
+                $direct.addClass('d-none');
+                $supplierRow.removeClass('d-none');
+            }
+        }
+
+        function refreshSourceUI(){
+            const src = $('input[name="SourceType"]:checked').val();
+            setDirectMode(src === 'DIRECT');
+        }
+        $(document).on('change','input[name="SourceType"]', refreshSourceUI);
+        // initial
+        refreshSourceUI();
+
+        // Category change => load prequalified suppliers and items
+        $('#itemCategory').on('change', function(){
+            const catId = $(this).val() ? parseInt($(this).val(),10) : 0;
+            const $preq = $('#preqSupplierHelper');
+            $preq.empty().append('<option value="">-- None --</option>');
+            if(catId>0){
+                fetch(`{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${catId}`)
+                    .then(r=>r.json()).then(({data})=>{
+                        (data||[]).forEach(row=>{
+                            $preq.append(`<option value="${row.ThirdPartyId || ''}" data-address="${row.Address||''}">${row.SupplierName||('Supplier #'+(row.SupplierId||''))}</option>`)
+                        });
+                    }).catch(()=>{});
+                fetch(`{{ url('procurement/purchaseOrder/items-by-category') }}/${catId}`)
+                    .then(r=>r.json()).then(({items})=>{
+                        const options = (items||[]).map(it=>`<option value="${it.itemCode}">${it.itemName}</option>`).join('');
+                        const $first = $('#item-rows tr').first();
+                        $first.find('select.itemCode').empty().append(`<option disabled selected>Select Item Code</option>`).append(options);
+                    }).then(()=>{
+                        // Merge in direct plan items
+                        return fetch(`{{ url('procurement/purchaseOrder/direct-plan-items') }}/${catId}`)
+                            .then(r=>r.json()).then(({items})=>{
+                                const $first = $('#item-rows tr').first();
+                                const $sel = $first.find('select.itemCode');
+                                const existingVals = new Set($sel.find('option').map(function(){return this.value;}).get());
+                                (items||[]).forEach(it=>{
+                                    const val = String(it.itemCode||'');
+                                    if(val && !existingVals.has(val)){
+                                        $sel.append(`<option value="${val}">${it.itemName}</option>`);
+                                    }
+                                });
+                            });
+                    }).catch(()=>{});
+            }
+        });
+
+        // Mirror helper address to address field
+        $('#preqSupplierHelper').on('change', function(){
+            const addr = $(this).find('option:selected').data('address') || '';
+            $('input[name="address"]').val(addr);
+        });
+
+        // Remove row handler and totals calculation kept from your current dev form
+        </script>
         // Add Item Button Handler
         $(document).on('click', '#add-row', function() {
             const $tbody = $('#item-rows');

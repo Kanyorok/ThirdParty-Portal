@@ -11,29 +11,29 @@
 
     <div class="card">
       <div class="card-body">
-        <form action="{{ route('bancassurance.contributors.update', $contributor->ID) }}" method="POST" id="contributorEditForm">
+  <form action="{{ route('bancassurance.contributors.update', $contributor->Id) }}" method="POST" id="contributorEditForm">
           @csrf @method('PUT')
 
           <div class="row g-3">
 
             <div class="col-md-4">
               <label class="form-label">Contributor No</label>
-              <input type="text" name="ContributorNo" class="form-control" value="{{ old('ContributorNo',$contributor->ContributorNo) }}">
+              <input type="text" name="ContributorNo" class="form-control" value="{{ old('ContributorNo',$contributor->ContributorNo) }}" readonly>
             </div>
 
             <div class="col-md-8">
               <label class="form-label">Full Name *</label>
-              <input type="text" name="FullName" class="form-control" value="{{ old('FullName',$contributor->FullName) }}" required>
+              <input type="text" name="ThirdPartyId" class="form-control" value="{{ old('FullName',$contributor->thirdParty->ThirdPartyName) }}" readonly>
             </div>
 
             <div class="col-md-4">
               <label class="form-label">Email</label>
-              <input type="email" name="Email" class="form-control" value="{{ old('Email',$contributor->Email) }}">
+              <input type="email" name="Email" class="form-control" value="{{ old('Email',$contributor->thirdParty->Email) }}" readonly>
             </div>
 
             <div class="col-md-4">
               <label class="form-label">Phone</label>
-              <input type="text" name="Phone" class="form-control" value="{{ old('Phone',$contributor->Phone) }}">
+              <input type="text" name="Phone" class="form-control" value="{{ old('Phone',$contributor->thirdParty->Phone) }}" readonly>
             </div>
 
             <div class="col-md-2">
@@ -48,9 +48,10 @@
 
             <div class="col-md-3">
               <label class="form-label">Status</label>
-              <select name="Status" class="form-select">
-                @foreach(['Active','Suspended','Closed'] as $st)
-                  <option value="{{ $st }}" @selected(old('Status',$contributor->Status)===$st)>{{ $st }}</option>
+              <select name="Status" class="form-select" required>
+                <option value="">-- Select Status --</option>
+                @foreach($statuses as $status)
+                  <option value="{{ $status->ID }}" @selected((string) old('Status', (string)$contributor->Status) === (string) $status->ID)>{{ $status->Description }}</option>
                 @endforeach
               </select>
             </div>
@@ -75,12 +76,11 @@
                       <input
                         class="form-check-input pkg-box"
                         type="checkbox"
-                        name="package_ids[]"
                         value="{{ $pkg->ID }}"
                         id="pkg{{ $pkg->ID }}"
                         data-price="{{ (float)$pkg->Premium }}"
                         {{ $checked ? 'checked' : '' }}
-                        {{ $pkg->IsCompulsory ? 'disabled' : '' }}
+                        disabled
                       >
                       <label class="form-check-label" for="pkg{{ $pkg->ID }}">
                         <span class="fw-semibold">{{ $pkg->Name }}</span>
@@ -94,8 +94,8 @@
                       </label>
                     </div>
 
-                    @if($pkg->IsCompulsory)
-                      <!-- ensure disabled checkbox value still posts -->
+                    @if($checked)
+                      {{-- Preserve selected packages so update doesn't detach them --}}
                       <input type="hidden" name="package_ids[]" value="{{ $pkg->ID }}">
                     @endif
                   </div>
@@ -113,7 +113,7 @@
 
           <div class="mt-3 d-flex gap-2">
             <button class="btn btn-primary">Update</button>
-            <a href="{{ route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back</a>
+            <a href="{{ route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-outline-secondary">Back</a>
           </div>
 
         </form>

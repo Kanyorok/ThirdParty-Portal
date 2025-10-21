@@ -9,10 +9,10 @@
             <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
         </div>
     @endif
-
+        
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('bancassurance.medicalfunds.contributions.store', ['medical_fund' => $medical_fund->ID]) }}" method="POST">
+            <form action="{{ route('bancassurance.medicalfunds.contributions.store', ['medical_fund' => $medical_fund->Id]) }}" method="POST">
                 @csrf
                     <div class="row g-3">
                     <div class="col-md-3">
@@ -22,19 +22,19 @@
 
                     {{-- If preselected contributor (coming from Contributor Show), show as locked --}}
                     @if(isset($contributor) && $contributor)
-                        <input type="hidden" name="ContributorID" value="{{ $contributor->ID }}">
+                        <input type="hidden" name="ContributorId" value="{{ $contributor->Id }}">
                         <div class="col-md-6">
                         <label class="form-label">Contributor</label>
-                        <input type="text" class="form-control" value="{{ $contributor->FullName }}" disabled>
+                        <input type="text" class="form-control" value="{{ $contributor->thirdParty->ThirdPartyName }}" disabled>
                         <div class="form-text">Locked to this contributor.</div>
                         </div>
                     @else
                         <div class="col-md-6">
                         <label class="form-label">Contributor *</label>
-                        <select name="ContributorID" class="form-select" required>
+                        <select name="ContributorId" class="form-select" required>
                             <option value="">-- select contributor --</option>
                             @foreach($contributors as $c)
-                            <option value="{{ $c->ID }}" @selected(old('ContributorID')==$c->ID)>{{ $c->FullName }}</option>
+                            <option value="{{ $c->ID }}" @selected(old('ContributorId')==$c->ID)>{{ $c->thirdParty->ThirdParyName }}</option>
                             @endforeach
                         </select>
                         </div>
@@ -53,7 +53,7 @@
 
                 <div class="mt-3 d-flex gap-2">
                     <button class="btn btn-primary">Save</button>
-                    <a href="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ route('bancassurance.medicalfunds.contributions.index', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>

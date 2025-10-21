@@ -10,7 +10,7 @@
   @endif
 
   <div class="card"><div class="card-body">
-    <form action="{{ route('bancassurance.packages.update', $package->ID) }}" method="POST" id="pkgEditForm">
+    <form action="{{ route('bancassurance.packages.update', $package->Id) }}" method="POST" id="pkgEditForm">
       @csrf @method('PUT')
 
       <div class="row g-3">
@@ -69,12 +69,12 @@
                 <div class="col-6">
                   <label class="form-label small mb-0">Annual Limit</label>
                   <input type="number" step="0.01" class="form-control form-control-sm"
-                         name="coverage[AnnualLimit][{{ $cov->ID }}]" value="{{ $ann }}">
+                         name="coverage[AnnualLimit][{{ $cov->Id }}]" value="{{ $ann }}">
                 </div>
                 <div class="col-6">
                   <label class="form-label small mb-0">Per-Visit Limit</label>
                   <input type="number" step="0.01" class="form-control form-control-sm"
-                         name="coverage[PerVisitLimit][{{ $cov->ID }}]" value="{{ $pv }}">
+                         name="coverage[PerVisitLimit][{{ $cov->Id }}]" value="{{ $pv }}">
                 </div>
                 <div class="col-6 mt-2">
                   <label class="form-label small mb-0">Waiting (days)</label>
@@ -99,7 +99,7 @@
 
       <div class="mt-3 d-flex gap-2">
         <button class="btn btn-primary">Update</button>
-        <a href="{{ route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Back</a>
+        <a href="{{ route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-outline-secondary">Back</a>
       </div>
     </form>
   </div></div>

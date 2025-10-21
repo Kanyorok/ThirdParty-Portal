@@ -1,15 +1,17 @@
 @extends('layouts.app')
 
+@section('title', 'View Medical Funds Packages')
+
 @section('content')
 <div class="container">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Package: {{ $package->Name }}</h4>
     <div class="d-flex gap-2">
       @if($package->fund)
-        <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $package->FundID]) }}" class="btn btn-outline-secondary">Back to Fund</a>
+        <a href="{{ route('bancassurance.medicalfunds.show', ['medical_fund' => $package->FundId]) }}" class="btn btn-outline-secondary">Back to Fund</a>
       @endif
-      <a href="{{ route('bancassurance.packages.edit', $package->ID) }}" class="btn btn-primary">Edit Package</a>
-      <a href="{{ route('bancassurance.packages.show', $package->ID) }}" class="btn btn-sm btn-outline-secondary">View</a>
+      <a href="{{ route('bancassurance.packages.edit', $package->Id) }}" class="btn btn-primary">Edit Package</a>
+      <a href="{{ route('bancassurance.packages.show', $package->Id) }}" class="btn btn-sm btn-outline-secondary">View</a>
     </div>
   </div>
 
