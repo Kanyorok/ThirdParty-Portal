@@ -7,12 +7,17 @@ export type Round = {
     maxVendors: number | string
     // Backend-derived flags for action logic
     supplierEligible?: boolean
+    canApply?: boolean
+    isClosed?: boolean
+    isExpired?: boolean
+    windowOpen?: boolean
     isFutureWindow?: boolean
     duplicateWithinRange?: boolean
     primaryWindowRoundId?: number | null
     primaryWindowRoundTitle?: string | null
     // Category-based application tracking
     categories?: RoundCategory[];
+    hasApplied?: boolean;
     // Summary of applications across categories
     applicationSummary?: {
         total_categories: number;
