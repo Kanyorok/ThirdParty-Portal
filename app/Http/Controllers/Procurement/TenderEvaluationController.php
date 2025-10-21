@@ -41,6 +41,11 @@ class TenderEvaluationController extends Controller
                 ->with('error', 'You are not authorized to evaluate this tender.');
         }
 
+        // Filter out inactive or orphaned tender sections before readiness check
+        $tender->setRelation('tenderSections', $tender->tenderSections->filter(function($ts){
+            return ($ts->IsActive ?? true) && $ts->sections; // ensure active and has linked Section
+        })->values());
+
         // Check if tender has valid section configuration
         $readiness = $tender->getEvaluationReadiness();
         if (!$readiness['ready']) {
