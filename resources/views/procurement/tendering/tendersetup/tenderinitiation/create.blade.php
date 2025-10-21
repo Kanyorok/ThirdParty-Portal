@@ -246,8 +246,100 @@
   const suppliersList   = document.getElementById('suppliersList');
 
   // ---- Data injected from Blade
-  const suppliers = @json($suppliers);
+  // Prequalified suppliers injected from backend; default to [] if unavailable
+  const suppliers = @json($suppliers ?? []);
   const allItemsWithCategoryIds = @json($allItemsWithCategoryIds);
+  const planItemsByPlan = @json($procurementPlansOutput ?? []);
+
+  // ---- Plan -> Plan Item population
+  function loadPlanItemsForPlan() {
+    const planSel = document.getElementById('selectedProcurementPlan');
+    const itemSel = document.getElementById('planItemSelect');
+    if (!planSel || !itemSel) return;
+
+    const planId = planSel.value;
+    itemSel.innerHTML = '<option selected disabled>-- Select Item (Tender-method, not already used) --</option>';
+
+    const items = (planItemsByPlan && planItemsByPlan[planId]) ? planItemsByPlan[planId] : [];
+    items.forEach(it => {
+      // expected shape: { id: planId, planLineItemId, itemId, name, plannedQty, needId }
+      const opt = document.createElement('option');
+      opt.value = String(it.planLineItemId);
+      opt.textContent = `${it.name}${it.needId ? ' - ' + it.needId : ''} (Planned: ${it.plannedQty})`;
+      opt.dataset.planId = planId;
+      opt.dataset.planLineItemId = it.planLineItemId;
+      opt.dataset.itemId = it.itemId;
+      opt.dataset.plannedQty = it.plannedQty;
+      opt.dataset.needId = it.needId || '';
+      itemSel.appendChild(opt);
+    });
+  }
+
+  function addPlanItemToGrid() {
+    const planSel = document.getElementById('selectedProcurementPlan');
+    const itemSel = document.getElementById('planItemSelect');
+    const tbody   = document.querySelector('#planItemsGrid tbody[name="plan_items"]');
+
+    if (!planSel || !itemSel || !tbody) return;
+
+    const opt = itemSel.options[itemSel.selectedIndex];
+    if (!opt || !opt.dataset.planLineItemId) {
+      alert('Please select a plan item first.');
+      return;
+    }
+
+    const planId = opt.dataset.planId;
+    const pli    = opt.dataset.planLineItemId;
+    const itemId = opt.dataset.itemId;
+    const needId = opt.dataset.needId || '—';
+    const plannedQty = Number(opt.dataset.plannedQty || 0);
+    const label = opt.textContent || 'Item';
+
+    // Avoid duplicates
+    const compositeKey = `plan-${planId}-${pli}`;
+    if (tbody.querySelector(`tr[data-key="${compositeKey}"]`)) {
+      alert('This plan item is already added.');
+      return;
+    }
+
+    const row = document.createElement('tr');
+    row.dataset.key = compositeKey;
+    row.innerHTML = `
+      <td>${label}</td>
+      <td>${needId}</td>
+      <td>${plannedQty}</td>
+      <td>
+        <input type="number" class="form-control form-control-sm" min="1" step="1"
+               name="plan_items[${compositeKey}][qty]" value="${Math.max(1, plannedQty)}" required>
+      </td>
+      <td>
+        <input type="file" class="form-control form-control-sm" name="plan_items[${compositeKey}][specs]">
+      </td>
+      <td>
+        <input type="text" class="form-control form-control-sm" name="plan_items[${compositeKey}][pr_ref]" placeholder="Optional">
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
+      </td>
+      <input type="hidden" name="plan_items[${compositeKey}][item_id]" value="${itemId}">
+      <input type="hidden" name="plan_items[${compositeKey}][plan_line_item_id]" value="${pli}">
+      <input type="hidden" name="plan_items[${compositeKey}][plan_id]" value="${planId}">
+    `;
+
+    tbody.appendChild(row);
+  }
+
+  // Remove row handler for plan grid
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.classList.contains('remove-row')) {
+      const tr = e.target.closest('tr');
+      if (tr) tr.remove();
+    }
+  });
+
+  // Expose functions to be callable from inline handlers
+  window.loadPlanItemsForPlan = loadPlanItemsForPlan;
+  window.addPlanItemToGrid = addPlanItemToGrid;
 
   // ---- Helpers
   async function refreshItemCategories() {
@@ -311,20 +403,36 @@
 
   function populateSuppliers(categoryId = null) {
     suppliersList.innerHTML = '';
-    let filtered = suppliers || [];
-    if (categoryId) {
-      const catNum = Number(categoryId);
-      filtered = filtered.filter(s =>
-        Array.isArray(s.ItemCategoryIds) && s.ItemCategoryIds.map(Number).includes(catNum)
-      );
-    }
-    if (!filtered.length) {
+
+    // Require a category for restricted tenders to narrow the list meaningfully
+    if (!categoryId) {
       const opt = document.createElement('option');
       opt.disabled = true;
-      opt.textContent = categoryId ? 'No suppliers available for this category' : 'No suppliers available';
+      opt.textContent = 'Select an Item Category to see eligible suppliers';
       suppliersList.appendChild(opt);
       return;
     }
+
+    const catNum = Number(categoryId);
+    // Filter to prequalified suppliers whose mapped ItemCategoryIds include the selected category
+    const filtered = (suppliers || [])
+      .filter(s => Array.isArray(s.ItemCategoryIds))
+      .filter(s => s.ItemCategoryIds.map(Number).includes(catNum))
+      // sort by display name for nicer UX
+      .sort((a, b) => {
+        const an = (a.ThirdPartyName || a.SupplierName || '').toLowerCase();
+        const bn = (b.ThirdPartyName || b.SupplierName || '').toLowerCase();
+        return an.localeCompare(bn);
+      });
+
+    if (!filtered.length) {
+      const opt = document.createElement('option');
+      opt.disabled = true;
+      opt.textContent = 'No prequalified suppliers match this category';
+      suppliersList.appendChild(opt);
+      return;
+    }
+
     filtered.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.Id;
