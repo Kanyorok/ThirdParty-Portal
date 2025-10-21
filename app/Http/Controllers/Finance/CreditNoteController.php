@@ -18,7 +18,7 @@ class CreditNoteController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteView, FinanceCDNotes::class);
 
         $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->get();
 
@@ -65,7 +65,7 @@ class CreditNoteController extends Controller
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
         $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->where('ApprovalStatus','posted')
             ->get();
@@ -75,7 +75,7 @@ class CreditNoteController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
         $validated = $request->validate([
             'InvoiceRefNo'=> 'required|exists:t_FinanceInvoiceEntry,Id',
@@ -126,6 +126,7 @@ class CreditNoteController extends Controller
 
     public function show(int $id)
     {
+        $this->authorize(PermissionEnum::CreditNoteView, FinanceCDNotes::class);
         $note = FinanceCDNotes::with([
             'invoice',
             'invoice.thirdParty',
@@ -288,7 +289,7 @@ class CreditNoteController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteDelete, FinanceCDNotes::class);
 
         $note = FinanceCDNotes::findOrFail($id);
 
@@ -306,26 +307,26 @@ class CreditNoteController extends Controller
             ->withProperties(['action' => 'delete'])
             ->log('Deleted Note: '.$note->CDNumber);
 
-        return redirect()->route('creditnote.index')->with('success', 'Credit/Debit Note deleted successfully.');
+        return back()->with('success', 'Credit/Debit Note deleted successfully.');
     }
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteUpdate, FinanceCDNotes::class);
 
         $note = FinanceCDNotes::findOrFail($id);
 
         $validated = $request->validate([
-            'InvoiceRefNo'=> 'required|exists:t_FinanceInvoiceEntry,Id',
+//            'InvoiceRefNo'=> 'required',
             'NoteDate'=> 'required|date',
             'NoteAmount'=> 'required|numeric|min:0.00',
-            'Description'=> 'required|string',
+            'Description'=> 'string',
         ]);
 
         DB::beginTransaction();
         try {
             $note->update([
-                'InvoiceRefNo' => $validated['InvoiceRefNo'],
+//                'InvoiceRefNo' => $validated['InvoiceRefNo'],
                 'NoteDate' => $validated['NoteDate'],
                 'NoteAmount' => $validated['NoteAmount'],
                 'Description' => $validated['Description'],
@@ -339,7 +340,7 @@ class CreditNoteController extends Controller
                 ->log('Updated Note: '.$note->CDNumber);
 
             DB::commit();
-            return redirect()->route('creditnote.index')->with('success', 'Credit/Debit Note updated successfully.');
+            return back()->with('success', 'Note updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());

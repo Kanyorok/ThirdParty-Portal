@@ -19,7 +19,7 @@ class PaymentVoucherController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherView, FinanceVoucher::class);
 
         $query = FinanceVoucher::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
@@ -59,7 +59,7 @@ class PaymentVoucherController extends Controller
 
     public function create(){
 
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherCreate, FinanceVoucher::class);
 
         $year = now()->year;
         $lastId = FinanceVoucher::max('Id') + 1;
@@ -103,7 +103,7 @@ class PaymentVoucherController extends Controller
     }
 
     public function store(Request $request){
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherCreate, FinanceVoucher::class);
 
         $validated = $request->validate([
             'VoucherNo'=> 'required|string',
@@ -181,7 +181,7 @@ class PaymentVoucherController extends Controller
 
     public function edit($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherUpdate, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::findOrFail($id);
 
@@ -217,6 +217,7 @@ class PaymentVoucherController extends Controller
         $paymentTypes=CodeDetail::where('CodeID', 'PaymentType')->get();
         $paymentFrequencies=CodeDetail::where('CodeID', 'PaymentFrequency')->get();
 
+
         return view('finance.accountspayable.paymentvoucher.edit', compact(
             'voucher',
             'invoices',
@@ -229,7 +230,7 @@ class PaymentVoucherController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherUpdate, FinanceVoucher::class);
 
         $validated = $request->validate([
             'VoucherNo'=> 'required|string',
@@ -302,7 +303,7 @@ class PaymentVoucherController extends Controller
 
     public function show($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherView, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::with([
             'invoice.thirdParty:Id,TradingName,ThirdPartyName,Email,Phone,PhysicalAddress',
@@ -321,6 +322,7 @@ class PaymentVoucherController extends Controller
 
     public function approve(Request $request, $id)
     {
+        // $this->authorize(PermissionEnum::PaymentVoucherApprove, FinanceVoucher::class);
         $voucher = FinanceVoucher::findOrFail($id);
         $voucher->ApprovalStatus = 'posted';
         // Optionally log reason: $request->input('reason')
@@ -344,7 +346,7 @@ class PaymentVoucherController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherDelete, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::findOrFail($id);
         if ($voucher->ApprovalStatus !== 'draft') {

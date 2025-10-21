@@ -3,7 +3,7 @@
 @endphp
 
 @extends('layouts.app')
-@section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View'))
+{{-- @section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View')) --}}
 
 @section('content')
     <style>
@@ -596,7 +596,7 @@
             html, body { font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
             /* Hide UI/controls */
-            .navbar, .btn, .modal, .lifecycle, .attachments-section { display: none !important; }
+            .navbar, .btn, .modal, .lifecycle, .attachments-section, .breadcrumb { display: none !important; }
 
             /* Flatten cards */
             .card, .shadow, .shadow-sm, .shadow-lg { box-shadow: none !important; border: 1px solid #e9ecef !important; }

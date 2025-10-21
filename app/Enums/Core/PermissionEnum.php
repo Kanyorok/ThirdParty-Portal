@@ -5,7 +5,7 @@ namespace App\Enums\Core;
 use App\Traits\UsefulEnumTrait;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
- 
+
 enum PermissionEnum: string
 {
     use UsefulEnumTrait;
@@ -613,6 +613,12 @@ enum PermissionEnum: string
     case FinanceGeneralLedgerUpdate = 'financeGeneralLedger-update';
     case FinanceGeneralLedgerDelete = 'financeGeneralLedger-delete';
 
+        //GL Mapping
+    case FinanceGLMappingView = 'financeGLMapping-view';
+    case FinanceGLMappingCreate = 'financeGLMapping-create';
+    case FinanceGLMappingUpdate = 'financeGLMapping-update';
+    case FinanceGLMappingDelete = 'financeGLMapping-delete';
+
         //Accounts Payable
     case FinanceAccountsPayableView = 'financeAccountsPayable-view';
     case FinanceAccountsPayableCreate = 'financeAccountsPayable-create';
@@ -624,6 +630,36 @@ enum PermissionEnum: string
     case FinanceAccountsReceivableCreate = 'financeAccountsReceivable-create';
     case FinanceAccountsReceivableUpdate = 'financeAccountsReceivable-update';
     case FinanceAccountsReceivableDelete = 'financeAccountsReceivable-delete';
+
+        //Credit Note
+    case CreditNoteView = 'creditNote-view';
+    case CreditNoteCreate = 'creditNote-create';
+    case CreditNoteUpdate = 'creditNote-update';
+    case CreditNoteDelete = 'creditNote-delete';
+
+        //Payment Voucher
+    case PaymentVoucherView = 'paymentVoucher-view';
+    case PaymentVoucherCreate = 'paymentVoucher-create';
+    case PaymentVoucherUpdate = 'paymentVoucher-update';
+    case PaymentVoucherDelete = 'paymentVoucher-delete';
+
+        //Payment Processing
+    case PaymentProcessingView = 'paymentProcessing-view';
+    case PaymentProcessingCreate = 'paymentProcessing-create';
+    case PaymentProcessingUpdate = 'paymentProcessing-update';
+    case PaymentProcessingDelete = 'paymentProcessing-delete';
+
+        //Receivables - Receipt Posting
+    case ReceiptPostingView = 'receiptPosting-view';
+    case ReceiptPostingCreate = 'receiptPosting-create';
+    case ReceiptPostingUpdate = 'receiptPosting-update';
+    case ReceiptPostingDelete = 'receiptPosting-delete';
+
+        //Receivables - Debit Note
+    case DebitNoteView = 'debitNote-view';
+    case DebitNoteCreate = 'debitNote-create';
+    case DebitNoteUpdate = 'debitNote-update';
+    case DebitNoteDelete = 'debitNote-delete';
 
         //Tax Setting
     case FinanceTaxSettingView = 'financeTaxSetting-view';
@@ -638,14 +674,14 @@ enum PermissionEnum: string
     case FinanceCreditManagementDelete='financeCreditManagement-delete';
 
     //Posting
-    case FinanceJournalPosting='financeJournal-posting';
-    case FinanceAPInvoicePosting='financeAPInvoice-posting';
-    case FinanceARInvoicePosting='financeARInvoice-posting';// AR Account Receivables
-    case FinanceCreditNotePosting='financeCreditNote-posting';
-    case FinanceDebitNotePosting='financeDebitNote-posting';
-    case FinanceVoucherPosting='financeVoucher-posting';
-    case FinancePaymentProcessingPosting='financePaymentProcessing-posting';
-    case FinanceReceiptPosting='financeReceipt-posting';
+    case FinanceJournalPosting='financeJournal-financeJournal';
+    case FinanceAPInvoicePosting='financeAPInvoice-financeAPInvoice';
+    case FinanceARInvoicePosting='financeARInvoice-financeARInvoice';// AR Account Receivables
+    case FinanceCreditNotePosting='financeCreditNote-financeCreditNote';
+    case FinanceDebitNotePosting='financeDebitNote-financeDebitNote';
+    case FinanceVoucherPosting='financeVoucher-financeVoucher';
+    case FinancePaymentProcessingPosting='financePaymentProcessing-financePaymentProcessing';
+    case FinanceReceiptPosting='financeReceipt-financeReceipt';
 
 
         /*
@@ -854,8 +890,14 @@ enum PermissionEnum: string
             ///////////////////////  Finance  /////////////////////////////////////
             [self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete],
             [self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete],
+            [self::FinanceGLMappingView, self::FinanceGLMappingCreate, self::FinanceGLMappingUpdate, self::FinanceGLMappingDelete],
             [self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete],
             [self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete],
+            [self::CreditNoteView, self::CreditNoteCreate, self::CreditNoteUpdate, self::CreditNoteDelete],
+            [self::PaymentVoucherView, self::PaymentVoucherCreate, self::PaymentVoucherUpdate, self::PaymentVoucherDelete],
+            [self::PaymentProcessingView, self::PaymentProcessingCreate, self::PaymentProcessingUpdate, self::PaymentProcessingDelete],
+            [self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete],
+            [self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete],
             [self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete],
             [self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete],
             [self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting],
@@ -1116,8 +1158,14 @@ enum PermissionEnum: string
             ////////////////////   Finance   ////////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete,
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete,
+            self::FinanceGLMappingView, self::FinanceGLMappingCreate, self::FinanceGLMappingUpdate, self::FinanceGLMappingDelete,
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete,
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete,
+            self::CreditNoteView, self::CreditNoteCreate, self::CreditNoteUpdate, self::CreditNoteDelete,
+            self::PaymentVoucherView, self::PaymentVoucherCreate, self::PaymentVoucherUpdate, self::PaymentVoucherDelete,
+            self::PaymentProcessingView, self::PaymentProcessingCreate, self::PaymentProcessingUpdate, self::PaymentProcessingDelete,
+            self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete,
+            self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete,
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete,
             self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete,
             self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting,
@@ -1276,8 +1324,14 @@ enum PermissionEnum: string
             ///////////////////////  Finance   /////////////////////////
             self::FinanceCOAView, self::FinanceCOACreate, self::FinanceCOAUpdate, self::FinanceCOADelete => 'Chart of Accounts',
             self::FinanceGeneralLedgerView, self::FinanceGeneralLedgerCreate, self::FinanceGeneralLedgerUpdate, self::FinanceGeneralLedgerDelete => 'General Ledger',
+            self::FinanceGLMappingView, self::FinanceGLMappingCreate, self::FinanceGLMappingUpdate, self::FinanceGLMappingDelete => 'GL Mapping',
             self::FinanceAccountsPayableView, self::FinanceAccountsPayableCreate, self::FinanceAccountsPayableUpdate, self::FinanceAccountsPayableDelete => 'Accounts Payable',
             self::FinanceAccountsReceivableView, self::FinanceAccountsReceivableCreate, self::FinanceAccountsReceivableUpdate, self::FinanceAccountsReceivableDelete => 'Accounts Receivable',
+            self::CreditNoteView, self::CreditNoteCreate, self::CreditNoteUpdate, self::CreditNoteDelete => 'Credit Note',
+            self::PaymentVoucherView, self::PaymentVoucherCreate, self::PaymentVoucherUpdate, self::PaymentVoucherDelete => 'Payment Voucher',
+            self::PaymentProcessingView, self::PaymentProcessingCreate, self::PaymentProcessingUpdate, self::PaymentProcessingDelete => 'Payment Processing',
+            self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete => 'Receipt Posting',
+            self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete => 'Debit Note',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
             self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete=> 'Credit Management',
             self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting=> 'Transaction Postings',
