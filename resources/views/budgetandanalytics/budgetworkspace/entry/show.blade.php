@@ -28,7 +28,7 @@
         <div class="row mb-3">
             <div class="col-md-12">
                 <label for="scenario" class="form-label">Budget Name: </label>
-                <b>{{$budget->budget->Name}}</b>
+                <b>{{$budget->Name}}</b>
             </div>
 
             {{-- <div class="col-md-6">
@@ -119,7 +119,7 @@
                             </td>
 
                             <td>
-                                @if($budget->budget->Status==='approved')
+                                @if($budget->Status==='approved')
                                     <span class="badge rounded-pill bg-success text-white text-decoration-none">
                                         Approved Budget
                                     </span>

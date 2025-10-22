@@ -28,7 +28,6 @@ class StockAdjustmentService
             $adjustment = StockAdjustment::create([
                 'AdjustmentDate' => $validated['AdjustmentDate'],
                 'Branch' => $validated['Branch'],
-                'Reason' => $validated['Reason'],
                 'AdjustedBy' => $validated['AdjustedBy'],
                 'Status' => Transfers::Pending->value,
                 'CreatedBy' => auth()->id(),
@@ -47,6 +46,7 @@ class StockAdjustmentService
                     'Item' => $item['Item'],
                     'UOM' => $item['UOM'],
                     'UnitCost' => $item['UnitCost'] ?? null,
+                    'Reason' => $item['Reason'],
                     'AdjustmentQty' => $item['AdjustmentQty'],
                     'Remarks' => $item['Remarks'] ?? null,
                     'CreatedBy' => auth()->id(),
@@ -91,7 +91,6 @@ class StockAdjustmentService
         DB::transaction(function () use ($adjustment, $validated) {
             $adjustment->fill([
                 'AdjustmentDate' => $validated['AdjustmentDate'],
-                'Reason' => $validated['Reason'],
                 'Branch' => $validated['Branch'],
                 'Status' => Transfers::Pending->value,
                 'AdjustedBy' => $validated['AdjustedBy'],
@@ -114,6 +113,7 @@ class StockAdjustmentService
 
                 if ($item) {
                     $item->update([
+                        'Reason' => $itemData['Reason'],
                         'AdjustmentQty' => $itemData['AdjustmentQty'],
                         'Remarks' => $itemData['Remarks'] ?? null,
                         'ModifiedBy' => auth()->id(),
@@ -123,6 +123,7 @@ class StockAdjustmentService
                     StockAdjustmentItem::create([
                         'AdjustmentId' => $adjustment->Id,
                         'Item' => $itemData['Item'],
+                        'Reason' => $itemData['Reason'],
                         'AdjustmentQty' => $itemData['AdjustmentQty'],
                         'Remarks' => $itemData['Remarks'] ?? null,
                         'CreatedBy' => auth()->id(),
@@ -161,7 +162,7 @@ class StockAdjustmentService
                 'ItemID' => $item->Item,
                 'BranchID' => $adjustment->Branch,
                 'Quantity' => abs($item->AdjustmentQty),
-                'Reason' => $adjustment->Reason,
+                'Reason' => $item->Reason,
                 'Source' => $sourceCodeId,
                 'SourceID' => $adjustment->Id,
                 'Status' => Transfers::UnderReview->value,

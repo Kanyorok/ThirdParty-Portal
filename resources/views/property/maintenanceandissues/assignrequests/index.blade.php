@@ -22,7 +22,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
-                            <th>Request Number</th>
+                            <th>Req Number</th>
                             <th>Assignment Type</th>
                             <th>Expected Start</th>
                             <th>Expected Completion</th>
@@ -39,7 +39,36 @@
                                 <td>{{ $assignment->assignmentType->Description ?? 'N/A' }}</td>
                                 <td>{{ Carbon::parse($assignment->ExpectedStartDate)->format('d/m/Y') }}</td>
                                 <td>{{ Carbon::parse($assignment->ExpectedCompletion)->format('d/m/Y') }}</td>
-                                <td>{{ $assignment->priorityLevel->Description ?? 'N/A' }}</td>
+                                <td>
+                                    @if ($assignment->priorityLevel)
+                                        @php
+                                            $priority = $assignment->priorityLevel->Value; // C, H, M, L
+                                        @endphp
+
+                                        @switch($priority)
+                                            @case('C')
+                                                <span class="badge bg-danger">Critical</span>
+                                                @break
+
+                                            @case('H')
+                                                <span class="badge bg-warning text-dark">High</span>
+                                                @break
+
+                                            @case('M')
+                                                <span class="badge bg-info text-dark">Medium</span>
+                                                @break
+
+                                            @case('L')
+                                                <span class="badge bg-success">Low</span>
+                                                @break
+
+                                            @default
+                                                <span class="badge bg-secondary">{{ $assignment->priorityLevel->Description }}</span>
+                                        @endswitch
+                                    @else
+                                        <span class="badge bg-secondary">N/A</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="badge bg-{{ $assignment->Status->badgeColor() }}">
                                         {{ $assignment->Status->label() }}
@@ -55,10 +84,10 @@
                                            class="btn btn-sm btn-info text-white">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
-                                        <a href="{{ route('workcompletion.create') }}" 
+                                        {{-- <a href="{{ route('workcompletion.create') }}" 
                                            class="btn btn-sm btn-success">
                                             <i class="bi bi-check-circle"></i> Complete
-                                        </a>
+                                        </a> --}}
 
                                         @if($assignment->taskcompletion()->exists())
                                             <button class="btn btn-sm btn-secondary" disabled>

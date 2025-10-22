@@ -7,6 +7,7 @@ use App\Http\Requests\Inventory\StoreRequest;
 use App\Services\Inventory\StoreService;
 use App\Models\Inventory\Store;
 use App\Models\Core\Branch;
+use Illuminate\Support\Facades\Auth;
 
 class StoreController extends Controller
 {
@@ -19,15 +20,23 @@ class StoreController extends Controller
 
     public function index()
     {
-        $stores = Store::all();
+        $branchId = auth()->user()->employee?->BranchId;
+        $stores = Store::where('BranchID', $branchId)->get();
         return view('inventory.stores.index', compact('stores'));
     }
 
     public function create()
     {
         $this->authorize('create', Store::class);
-        $branches = Branch::all();
-        return view('inventory.stores.create', compact('branches'));
+
+        $branchId = auth()->user()->employee?->BranchId;
+        $branch = Branch::find($branchId);
+        
+        $mainStoreExists = Store::where('BranchID', $branchId)
+            ->where('IsMainStore', true)
+            ->exists();
+
+        return view('inventory.stores.create', compact('branch', 'mainStoreExists'));
     }
 
     public function store(StoreRequest $request)
@@ -52,8 +61,16 @@ class StoreController extends Controller
     {
         $store = Store::findOrFail($Id);
         $this->authorize('update', $store);
-        $branches = Branch::all();
-        return view('inventory.stores.edit', compact('store', 'branches'));
+        
+        $branchId = auth()->user()->employee?->BranchId;
+        $branch = Branch::find($branchId); // Changed from $branches to $branch
+        
+        $mainStoreExists = Store::where('BranchID', $branchId)
+            ->where('IsMainStore', true)
+            ->where('Id', '!=', $Id)
+            ->exists();
+
+        return view('inventory.stores.edit', compact('store', 'branch', 'mainStoreExists')); // Changed to 'branch'
     }
 
     public function update(StoreRequest $request, $Id)
@@ -73,6 +90,17 @@ class StoreController extends Controller
     {
         $store = Store::findOrFail($Id);
         $this->authorize('destroy', $store);
+
+        // Prevent deletion of main store if it's the only one
+        if ($store->IsMainStore) {
+            $otherStoresCount = Store::where('BranchID', $store->BranchID)
+                ->where('Id', '!=', $Id)
+                ->count();
+                
+            if ($otherStoresCount === 0) {
+                return redirect()->back()->with('error', 'Cannot delete the main store as it is the only store for this branch.');
+            }
+        }
 
         try {
             $this->service->delete($store);

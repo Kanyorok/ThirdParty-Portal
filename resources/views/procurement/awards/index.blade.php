@@ -84,16 +84,45 @@
                                 <td>{{ $row['award_date'] ?? '--' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
-                                        @if($row['type'] === 'tender')
-                                            <a href="{{ route('awards.tender', $row['id']) }}"
+                                        @if($row['type'] === 'tender' && !empty($row['tender_id']))
+                                            <a href="{{ route('awards.tender', $row['tender_id']) }}"
+                                               class="btn btn-sm btn-outline-info" title="View Award Details">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        @elseif($row['type'] === 'rfq' && !empty($row['rfq_id']))
+                                            <a href="{{ route('awards.rfq', $row['rfq_id']) }}"
                                                class="btn btn-sm btn-outline-info" title="View Award Details">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
                                         @else
-                                            <a href="{{ route('awards.rfq', $row['id']) }}"
-                                               class="btn btn-sm btn-outline-info" title="View Award Details">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
+                                            <span class="btn btn-sm btn-outline-secondary disabled" title="Missing reference id">View</span>
+                                        @endif
+                                        
+                                        @if($row['status'] === 'Pending')
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                    onclick="approveAward({{ $row['award_id'] ?? $row['id'] }})" title="Approve Award">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    onclick="rejectAward({{ $row['award_id'] ?? $row['id'] }})" title="Reject Award">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        @elseif($row['status'] === 'Approved')
+                                            @php
+                                                $award = \App\Models\Procurement\TenderAward::find($row['award_id'] ?? $row['id']);
+                                                $hasContract = $award && $award->hasContract();
+                                            @endphp
+                                            @if($hasContract)
+                                                <a href="{{ route('contracts.show', $row['award_id'] ?? $row['id']) }}"
+                                                   class="btn btn-sm btn-info" title="View Contract">
+                                                    <i class="fas fa-eye"></i> View Contract
+                                                </a>
+                                            @else
+                                                <a href="{{ route('contracts.createFromAward', $row['award_id'] ?? $row['id']) }}"
+                                                   class="btn btn-sm btn-primary" title="Create Contract">
+                                                    <i class="fas fa-file-contract"></i> Create Contract
+                                                </a>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>
@@ -179,4 +208,3 @@
     </script>
 
 @endsection
-

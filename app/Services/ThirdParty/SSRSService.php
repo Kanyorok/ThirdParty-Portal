@@ -50,7 +50,7 @@ class SSRSService
             throw new ErroredException('invalid report service configuration');
         }
 
-        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host')) {
+        if (!property_exists($ssrsConfig, 'password') || !property_exists($ssrsConfig, 'username') || !property_exists($ssrsConfig, 'host') || !property_exists($ssrsConfig, 'path')) {
             throw new ErroredException('invalid report service configuration');
         }
 
@@ -59,11 +59,12 @@ class SSRSService
         } catch (DecryptException) {
             throw new ErroredException('invalid report service configuration');
         }
+        $path = strtolower($ssrsConfig->path);
         $username = $ssrsConfig->username;
         $this->_username = $username;
         $this->_password = (string)$password;
         $this->serverURL = $ssrsConfig->host;
-        $this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/reports/api/v2.0/";
+        $this->_serverAPIUrl = Str::rtrim($this->serverURL, '/') . "/{$path}/api/v2.0/";
 
         $this->_query = Http::withCookies(request()->cookie(), parse_url($this->serverURL, PHP_URL_HOST))
             ->withHeaders(request()->header())->retry(3, 100)->timeout(60 * 10)
@@ -124,11 +125,12 @@ class SSRSService
         return $this->_query;
     }
 
-    public static function testConfig(string $Host, string $username, #[SensitiveParameter] string $password): ?string
+    public static function testConfig(string $Host, string $Path, string $username, #[SensitiveParameter] string $password): ?string
     {
         try {
             $query = Http::withBasicAuth($username, $password)->withOptions(['auth' => [$username, $password, 'ntlm']])
-                ->get(Str::of($Host)->trim()->rtrim('/') . "/reports/api/v2.0/ME");
+                ->get(Str::of($Host)->trim()->rtrim('/') . "/{$Path}/api/v2.0/ME");
+            //->get(Str::of($Host)->trim()->rtrim('/') . "/reports/api/v2.0/ME");
         } catch (ConnectionException|Exception) {
             return null;
         }

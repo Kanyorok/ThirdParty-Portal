@@ -8,7 +8,7 @@
 
     <div class="card mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Edit Category Details</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Edit Category Detail</h6>
         </div>
         <div class="card-body">
             <form action="{{ route('proc.supplier-cat.update', ['supplier_cat' => $category]) }}" method="POST">
@@ -24,7 +24,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="Description" class="form-label">Description</label>
+                    <label for="Description" class="form-label">Descriptions</label>
                     <textarea name="Description" id="Description" rows="4" class="form-control @error('Description') is-invalid @enderror">{{ old('Description', $category->Description) }}</textarea>
                     @error('Description')
                     <div class="invalid-feedback">{{ $message }}</div>

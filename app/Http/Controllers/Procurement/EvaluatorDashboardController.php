@@ -8,6 +8,7 @@ use App\Models\Procurement\TenderSupplier;
 use App\Models\Procurement\BidSubmission;
 use App\Models\Procurement\Tender;
 use App\Models\Procurement\TenderSection;
+use App\Models\Procurement\TenderCommittee;
 use App\Enums\Core\PermissionEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +26,11 @@ class EvaluatorDashboardController extends Controller
         // Get current user ID for committee membership check (committees store User ID, not Employee ID)
         $currentUserId = Auth::id();
 
-        // Get tenders where user is a committee member and has accepted (support dual mapping)
+    // Determine if global setup is missing: committees or criteria
+    $needsCommitteeSetup = !TenderCommittee::where('IsActive', 1)->exists();
+    $needsCriteriaSetup = !TenderSection::where('IsActive', 1)->exists();
+
+    // Get tenders where user is a committee member and has accepted (support dual mapping)
         $tenderIds = TenderCommitteeMember::where(function ($q) use ($currentUserId) {
                 $q->where('UserID', $currentUserId)
                   ->orWhereHas('userByEmployee', function ($uq) use ($currentUserId) {
@@ -40,7 +45,9 @@ class EvaluatorDashboardController extends Controller
             return view('procurement.tendering.bidopeningandevaluation.evaluationdashboard.index', [
                 'evaluationData' => collect(),
                 'userRole' => 'No committee assignments',
-                'message' => 'You are not assigned to any evaluation committees or have not accepted any appointments.'
+                'message' => 'You are not assigned to any evaluation committees or have not accepted any appointments.',
+                'needsCommitteeSetup' => $needsCommitteeSetup,
+                'needsCriteriaSetup' => $needsCriteriaSetup
             ]);
         }
 
@@ -59,7 +66,7 @@ class EvaluatorDashboardController extends Controller
             // Check if tender has evaluation sections configured
             $sectionsConfigured = $tender->tenderSections->isNotEmpty();
             $weightValidation = $sectionsConfigured ? TenderSection::validateWeightsForTender($tender->Id) : null;
-            
+
             // Get user's role in this tender committee
             $userRole = TenderCommitteeMember::where('TenderID', $tender->Id)
                 ->where('UserID', $currentUserId)
@@ -74,7 +81,7 @@ class EvaluatorDashboardController extends Controller
 
             foreach ($responsiveBids as $bid) {
                 $evaluationStatus = $bid->getEvaluationStatus();
-                
+
                 $evaluationData->push([
                     'tender_id' => $tender->Id,
                     'tender_no' => $tender->TenderNo,
@@ -98,7 +105,7 @@ class EvaluatorDashboardController extends Controller
                     'total_score' => $bid->TotalScore,
                     'evaluation_status' => $evaluationStatus,
                     'evaluation_notes' => $bid->EvaluationNotes,
-                    'can_evaluate' => $sectionsConfigured && 
+                    'can_evaluate' => $sectionsConfigured &&
                                     ($weightValidation ? $weightValidation['is_valid'] : false) &&
                                     $evaluationStatus['status'] !== 'non-responsive'
                 ]);
@@ -109,7 +116,9 @@ class EvaluatorDashboardController extends Controller
             'evaluationData' => $evaluationData,
             'userRole' => 'Committee Member',
             'tenderCount' => $tenders->count(),
-            'bidsCount' => $evaluationData->count()
+            'bidsCount' => $evaluationData->count(),
+            'needsCommitteeSetup' => $needsCommitteeSetup,
+            'needsCriteriaSetup' => $needsCriteriaSetup
         ]);
     }
 
@@ -149,6 +158,11 @@ class EvaluatorDashboardController extends Controller
 
         $tender = Tender::with(['tenderSections.sections.criteria', 'submissions'])
             ->findOrFail($tenderId);
+
+        // Filter out inactive or orphaned tender sections (missing related Section)
+        $tender->setRelation('tenderSections', $tender->tenderSections->filter(function($ts){
+            return ($ts->IsActive ?? true) && $ts->sections; // relation name 'sections'
+        })->values());
 
         // Get evaluation readiness
         $readiness = $tender->getEvaluationReadiness();

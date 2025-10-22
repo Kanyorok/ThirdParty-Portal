@@ -28,8 +28,7 @@ class FleetVehicleInspection extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'InspectionID','ParentInspectionID','InspectionTypeID','VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil', 'Fuel',
-        'Speedometer', 'Coolant', 'Reflector', 'FireExtinguisher' ,'FirstAidKit','SpareTyre', 'Spanner', 'Jack' ,'4XFloorMats' ,
+        'InspectionID','ParentInspectionID','InspectionTypeID','VehicleID', 'FuelType', 'DriverID', 'InspectionDate', 'Mileage', 'EngineOil', 'Fuel', 'Coolant', 'Reflector', 'FireExtinguisher' ,'FirstAidKit','SpareTyre', 'Spanner', 'Jack' ,'4XFloorMats' ,
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
