@@ -6,53 +6,73 @@ use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Core\CodeDetail;
 use App\Models\DMS\Image;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
 class ItemMasterListService
 {
-    public function create(array $data, ?UploadedFile $imageFile = null, ?UploadedFile $documentFile = null): ItemMasterList
+    /**
+     * Create a new Item Master entry with proper handling for category, image, and document.
+     */
+    public function create(array $data, ?UploadedFile $imageFile = null, ?UploadedFile $document = null): ItemMasterList
     {
-        return \DB::transaction(function () use ($data, $imageFile, $documentFile) {
-            $item = new ItemMasterList();
-
-            $item->fill($data);
+        return DB::transaction(function () use ($data, $imageFile, $document) {
+            $item = new ItemMasterList($data);
             $item->CreatedBy = Auth::id();
-            $item->CreatedOn = Carbon::now();
+            $item->CreatedOn = now();
             $item->ModifiedBy = Auth::id();
-            $item->ModifiedOn = Carbon::now();
+            $item->ModifiedOn = now();
 
-            // Image upload
+            // Handle category hierarchy
+            $item->Category = $data['SubCategory'] ?? $data['Category'] ?? null;
+
+            // Handle image upload (as base64 in t_DMS_Images)
             if ($imageFile) {
                 $image = $this->storeImage($imageFile);
                 $item->ImageId = $image->ImageID;
             }
 
-            // Document upload
-            if ($documentFile) {
-                $item->DocumentUpload = $documentFile->store('items/documents', 'public');
+            // Save first to generate the ID before using it for document & code
+            $item->save();
+
+            // Assign or auto-generate item code
+            if (!empty($data['ItemCode'])) {
+                $item->ItemCode = $data['ItemCode'];
+            } else {
+                $item->ItemCode = 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT);
             }
 
-            // Category or subcategory logic
-            $item->Category = $data['SubCategory'] ?? $data['Category'];
-
-            // Ensure item is inactive if category is inactive
+            // Apply Inactive status if parent category is inactive
             $category = ItemCategories::find($item->Category);
             $inactiveId = CodeDetail::where('CodeID', 'ItemStatus')
                 ->where('Description', 'Inactive')
                 ->value('Id');
 
-            if ($category && $category->status->Description === 'Inactive') {
+            if ($category && $category->status?->Description === 'Inactive') {
                 $item->Status = $inactiveId;
             }
 
             $item->save();
 
-            // Generate ItemCode and update
-            $item->ItemCode = 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT);
-            $item->save();
+            // Handle document using DMS attachment system (same pattern as FleetDriverService)
+            if ($document) {
+                // Remove old documents if any
+                foreach ($item->documents as $doc) {
+                    $doc->delete();
+                }
+
+                // Attach new document with permission control
+                $item->newDocument(
+                    ModulesEnum::Inventory,
+                    $document,
+                    [PermissionEnum::MasterListView->value],
+                    Auth::user()
+                );
+            }
 
             activity()
                 ->causedBy(Auth::user())
@@ -64,75 +84,24 @@ class ItemMasterListService
         });
     }
 
-    public function update(ItemMasterList $item, array $data, ?UploadedFile $imageFile = null, ?UploadedFile $documentFile = null, bool $removeImage = false): ItemMasterList
-    {
-        return \DB::transaction(function () use ($item, $data, $imageFile, $documentFile, $removeImage) {
-            $item->fill($data);
-            $item->ModifiedBy = Auth::id();
-            $item->ModifiedOn = Carbon::now();
-
-            $item->Category = $data['SubCategory'] ?? $data['Category'];
-
-            // Ensure item is inactive if new category is inactive
-            $category = ItemCategories::find($item->Category);
-            $inactiveId = CodeDetail::where('CodeID', 'ItemStatus')
-                ->where('Description', 'Inactive')
-                ->value('Id');
-
-            if ($category && $category->status->Description === 'Inactive') {
-                $item->Status = $inactiveId;
-            }
-
-            // Remove existing image
-            if ($removeImage && $item->ImageId) {
-                Image::destroy($item->ImageId);
-                $item->ImageId = null;
-            }
-
-            // Replace image
-            if ($imageFile) {
-                if ($item->ImageId) {
-                    Image::destroy($item->ImageId);
-                }
-                $image = $this->storeImage($imageFile);
-                $item->ImageId = $image->ImageID;
-            }
-
-            // Replace document
-            if ($documentFile) {
-                if ($item->DocumentUpload) {
-                    Storage::disk('public')->delete($item->DocumentUpload);
-                }
-                $item->DocumentUpload = $documentFile->store('items/documents', 'public');
-            }
-
-            $item->save();
-
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($item)
-                ->event('updated')
-                ->log('Item updated');
-
-            return $item;
-        });
-    }
-
+    /**
+     * Soft delete an item and remove its related media.
+     */
     public function delete(ItemMasterList $item): void
     {
-        \DB::transaction(function () use ($item) {
+        DB::transaction(function () use ($item) {
             $item->DeletedBy = Auth::id();
             $item->DeletedOn = Carbon::now();
             $item->save();
 
-            // Remove document file if exists
-            if ($item->DocumentUpload) {
-                Storage::disk('public')->delete($item->DocumentUpload);
-            }
-
-            // Remove image if exists
+            // Delete linked image (if any)
             if ($item->ImageId) {
                 Image::destroy($item->ImageId);
+            }
+
+            // Delete attached documents via DMS
+            foreach ($item->documents as $doc) {
+                $doc->delete();
             }
 
             $item->delete();
@@ -145,9 +114,13 @@ class ItemMasterListService
         });
     }
 
+    /**
+     * Store an uploaded image in base64 format to DMS.
+     */
     protected function storeImage(UploadedFile $file): Image
     {
         $imageContent = base64_encode(file_get_contents($file->getRealPath()));
+
         return Image::create([
             'Name' => $file->getClientOriginalName(),
             'Image' => $imageContent,

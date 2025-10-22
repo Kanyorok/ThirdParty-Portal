@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Inventory;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\Inventory\ItemMasterList;
 
 class ItemMasterListRequest extends FormRequest
 {
@@ -13,43 +13,60 @@ class ItemMasterListRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules()
     {
-        return [
-            'BarCode' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('t_Items', 'BarCode')->ignore($this->route('id')),
-            ],
-            'ItemName' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('t_Items', 'ItemName')->ignore($this->route('id')),
-            ],
+        $itemId = $this->route('id') ?? $this->route('Id'); // Support both cases
+        $isUpdate = $itemId !== null;
+
+        $rules = [
             'ItemType' => 'required|exists:t_ItemTypes,Id',
             'Category' => 'required|exists:t_ItemCategories,Id',
             'SubCategory' => 'nullable|exists:t_ItemCategories,Id',
             'UOM' => 'required|exists:t_UOM,Id',
             'InventoryType' => 'required|exists:t_InventoryTypes,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
+            'Document' => 'nullable|file|max:2048',
             'ItemDescription' => 'nullable|string',
             'Status' => 'nullable|exists:t_CodeDetails,ID',
             'ItemPrice' => 'nullable|string',
-            'remove_image' => 'nullable|in:1',
+            'remove_image' => 'nullable|boolean',
+
         ];
+
+        // ✅ Apply unique rule only for creation
+        if (!$isUpdate) {
+            $rules['BarCode'] = 'required|string|max:255|unique:t_Items,BarCode';
+            $rules['ItemName'] = 'required|string|max:255|unique:t_Items,ItemName';
+        } else {
+            // ✅ For updates — allow same value but check if changed
+            $item = ItemMasterList::find($itemId);
+
+            $rules['BarCode'] = [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_Items', 'BarCode')->ignore($itemId),
+            ];
+
+            $rules['ItemName'] = [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('t_Items', 'ItemName')->ignore($itemId),
+            ];
+
+            // Optional optimization — skip DB query if same value
+            if ($item && $this->input('BarCode') === $item->BarCode) {
+                unset($rules['BarCode']);
+            }
+            if ($item && $this->input('ItemName') === $item->ItemName) {
+                unset($rules['ItemName']);
+            }
+        }
+
+        return $rules;
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     */
     public function messages(): array
     {
         return [
