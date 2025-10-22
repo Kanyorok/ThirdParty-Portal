@@ -8,10 +8,14 @@ use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
 use App\Models\DMS\DMSSignature;
 use App\Models\DMS\Document;
+use App\Models\DMS\DocumentSignature;
 use App\Services\DMS\DocumentService;
 use App\Services\DMS\FileConversionService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Storage;
+use Throwable;
 
 abstract class SignService
 {
@@ -36,16 +40,16 @@ abstract class SignService
      */
     final protected function _signDocument(DMSSignature $signature, Document $document, User $actor, int $SignPages = 1): DocumentService
     {
-
         $this->setTempDocument($document);
         $this->_setProperties($signature, $actor);
         $pages = $this->getPagesCount();
-        if ($pages < 1) {
+        if ($pages < 0) {
             throw new ErroredException('Failed to sign document, Could not find any pages.');
         }
 
-        if ($pages === $SignPages) {
+        if ($pages === $SignPages || $SignPages === 0) {
             $this->signAll = true;
+            $SignPages = $pages;
         } else {
             $this->signAll = false;
             $SignPages = (abs($SignPages) > $pages) ? $pages : (int)abs($SignPages);
@@ -67,7 +71,32 @@ abstract class SignService
         unlink($stampSign);
         unlink($this->tempDocument);
 
-        return (new DocumentService($document))->newVersionFile($path, $actor);
+        try {
+            return DB::transaction(function () use ($SignPages, $signature, $document, $path, $actor) {
+                DocumentSignature::create([
+                    'DocumentId' => $document->Id,
+                    'SignatureId' => $signature->Id,
+                    'CreatedBy' => $actor->Id,
+                    'ModifiedBy' => $actor->Id,
+                    "Extra" => [
+                        'pages' => $SignPages,
+                        'dimensions' => [
+                            'width' => $this->sign_width,
+                            'height' => $this->sign_height,
+                        ],
+                        'position' => [
+                            'x' => $this->sign_start_h,
+                            'y' => $this->sign_start_v,
+                        ]
+                    ],
+                    "Content" => $this->content,
+                ]);
+                return (new DocumentService($document))->newVersionFile($path, $actor);
+            });
+        } catch (Throwable $e) {
+            Log::error('Error signing document: ' . $e);
+        }
+        throw new ErroredException('Signing document failed: DB');
     }
 
     /**

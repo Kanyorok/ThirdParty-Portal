@@ -6,6 +6,7 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\VisibilityEnum;
 use App\Enums\DMS\ImageGravityEnum;
 use App\Exceptions\ErroredException;
+use App\Jobs\SignDocumentJob;
 use App\Models\Auth\User;
 use App\Models\DMS\DMSSignature;
 use App\Models\DMS\Document;
@@ -83,15 +84,16 @@ class SignatureService extends SignService
         return $slug;
     }
 
-
     /**
      * @throws ErroredException
      */
-    public function sign(Document $document, User $actor): bool
+    public function sign(Document $document, User $actor, int $SignPages = 1, bool $queue = true): void
     {
-        //todo convert to a job add a hold for conversion //check in after conversion
-        $this->_signDocument($this->signature, $document, $actor);
-        return true;
+        if ($queue) {
+            SignDocumentJob::dispatch($document, $this->signature, $actor, $SignPages);
+            return;
+        }
+        $this->_signDocument($this->signature, $document, $actor, $SignPages);
     }
 
 }

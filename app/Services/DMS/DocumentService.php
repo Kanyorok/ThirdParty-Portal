@@ -16,6 +16,7 @@ use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use App\Models\Core\CategoryMaster;
 use App\Models\Core\SpecialPermission;
+use App\Models\DMS\DMSSignature;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentCheckOut;
 use App\Models\DMS\DocumentRelation;
@@ -23,6 +24,7 @@ use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Repository;
 use App\Services\Core\PermissionsService;
 use App\Services\DMS\Files\FileProperties;
+use App\Services\DMS\Verification\SignatureService;
 use Cache;
 use DateTime;
 use Exception;
@@ -69,13 +71,25 @@ class DocumentService extends PermissionsService
         $service = self::createUpload(RepositoryService::module($module), $file, $actor, false)
             ->addPermission($actor, RoleEnum::Admin, SystemHelper::user(), false)->attach($Related, $RelatedId, $actor);
 
-        if (empty($permissions)) {
+        //  if (empty($permissions)) {
             if (is_string($permissions)) {
                 $permissions = explode(',', $permissions);
             }
             self::userPermissions($service->document, $permissions, RoleEnum::Read, $actor);
-        }
+        // }
         return $service;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function sign(DMSSignature $signature, User $actor, int $Pages): static
+    {
+        if (!$this->type->canSign()) {
+            throw new ErroredException('Document cannot be signed');
+        }
+        (new SignatureService($signature))->sign($this->document, $actor, $Pages);
+        return $this;
     }
 
     /**
