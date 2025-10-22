@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('ValidationTypeId', 200)->unique();
             $table->string('Name');
             $table->longText('Notes')->nullable();
+            $table->json('Extra')->nullable();
             $table->char('Visibility', 3)->default(VisibilityEnum::Private->value);
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
@@ -34,6 +35,7 @@ return new class extends Migration {
             $table->foreignId('DocumentId')->nullable()->constrained('t_Documents', 'Id');
             $table->foreignId('ApprovedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('ApprovedOn')->nullable();
+            $table->json('Extra')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

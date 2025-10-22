@@ -110,7 +110,7 @@ class SignatureService extends SignService
         return $this;
     }
 
-    protected static function _id(): string
+    private static function _id(): string
     {
         $number = DMSSignature::query()->withTrashed()->count();
         do {

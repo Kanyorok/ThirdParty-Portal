@@ -9,6 +9,7 @@
 @endsection
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="#">DMS</a></li>
+    <li class="breadcrumb-item"><a href="#">Settings</a></li>
     <li class="breadcrumb-item"><a href="{{ route('document-signature.index') }}">Signatures</a></li>
 @endsection
 @section('content')

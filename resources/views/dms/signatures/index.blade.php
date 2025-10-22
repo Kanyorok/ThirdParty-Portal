@@ -11,6 +11,7 @@
 @endsection
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="#">DMS</a></li>
+    <li class="breadcrumb-item"><a href="#">Settings</a></li>
 @endsection
 @section('content')
     <div class="row">
@@ -18,7 +19,7 @@
             <div class="card mb-3">
                 <div class="card-header">
                     <div class="card-actions float-end">
-                        <button class="btn btn-primary ms-2 click-summary-data" type="button"
+                        <button class="btn btn-primary ms-2 click-summary-data btn-sm" type="button"
                                 data-click_url="{{ route('document-signature.create') }}"
                                 data-summary_title='<i class="fas fa-signature"></i> create a signature'>
                             <i class="fas fa-signature"></i> Add a signature

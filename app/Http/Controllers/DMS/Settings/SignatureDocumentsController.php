@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\DMS\Verification;
+namespace App\Http\Controllers\DMS\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\DMS\DMSSignature;
