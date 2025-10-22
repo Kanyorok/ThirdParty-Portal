@@ -1106,8 +1106,8 @@
                             <div class="row mb-3">
                                 <div class="col-md-3"><strong>Discount:</strong> ${formatCurrency(order.OrdDiscAmnt || 0, order.Currency)}</div>
                                 <div class="col-md-3"><strong>Tax:</strong> ${formatCurrency(order.OrdTotTax || 0, order.Currency)}</div>
-                                <div class="col-md-3"><strong>Exclusive:</strong> ${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</div>
-                                <div class="col-md-3"><strong>Inclusive:</strong> ${formatCurrency(order.OrdTotIncl || order.TotalAmount || 0, order.Currency)}</div>
+                                <div class="col-md-3"><strong>Before Tax:</strong> ${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</div>
+                                <div class="col-md-3"><strong>After Tax:</strong> ${formatCurrency(order.OrdTotIncl || order.TotalAmount || 0, order.Currency)}</div>
                             </div>
                         </div>
                     </div>`;

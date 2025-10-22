@@ -20,7 +20,7 @@ class GLMappingController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::FinanceGLMappingView, FinanceGLMapping::class);
-        $mappings = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName', 'creditAccount:Id,GLName')
+        $mappings = FinanceGLMapping::with('modules:ModuleID,Name','transactions:Id,Name', 'debitAccount:Id,GLName,GLCode', 'creditAccount:Id,GLName,GLCode')
             ->orderBy('Id','desc')->get();
 
         $glaccounts = FinanceGLAccounts::select('Id','GLName')->get();
@@ -48,17 +48,17 @@ class GLMappingController extends Controller
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::FinanceGLMappingCreate, FinanceGLMapping::class);
-        
+
         // Check if the required tables exist and have data
         try {
             $moduleCount = DB::table('t_Modules')->count();
             $transactionTypeCount = DB::table('t_FinanceTransactionTypes')->count();
             $glAccountCount = DB::table('t_FinanceGLAccounts')->count();
-          
+
         } catch (\Exception $e) {
             Log::error('Database table check failed:', ['error' => $e->getMessage()]);
         }
-        
+
         try {
             $validated = $request->validate([
                 'ModuleID' => 'required|string|exists:t_Modules,ModuleID',
@@ -72,7 +72,7 @@ class GLMappingController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => $request->all()
             ]);
-            
+
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -80,7 +80,7 @@ class GLMappingController extends Controller
                     'errors' => $e->errors()
                 ], 422);
             }
-            
+
             throw $e;
         }
 
