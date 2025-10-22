@@ -6,7 +6,7 @@
 <div class="container my-3">
     <div class="card shadow-sm rounded-3" style="margin: 0.5rem;">
         <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 text-info"><i class="fas fa-edit me-1"></i> Edit Payment Voucher</h5>
+            <h5 class="mb-0 text-info"><i class="fas fa-edit me-1"></i></h5>
             <a href="{{ route('paymentvoucher.index') }}" class="btn btn-outline-secondary btn-sm p-2">
                 <i class="fas fa-arrow-left me-1"></i> Back
             </a>
@@ -32,8 +32,8 @@
                 </div>
             @endif
 
-            <form id="paymentVoucherForm" 
-                    action="{{ route('paymentvoucher.update', $voucher->Id) }}" 
+            <form id="paymentVoucherForm"
+                    action="{{ route('paymentvoucher.update', $voucher->Id) }}"
                     method="POST">
                 @csrf
                 @method('PUT')
@@ -43,7 +43,7 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <label class="form-label" for="InvoiceNo">Invoice Ref <span class="text-danger">*</span></label>
-                        <select name="InvoiceNo" id="InvoiceNo" 
+                        <select name="InvoiceNo" id="InvoiceNo"
                                 class="form-select @error('InvoiceNo') is-invalid @enderror" required>
                             <option value="">-- Select Invoice --</option>
                             @foreach($invoices as $invoice)
@@ -59,11 +59,11 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="PaymentMethod">Payment Method <span class="text-danger">*</span></label>
-                        <select class="form-select @error('PaymentMethod') is-invalid @enderror" 
+                        <select class="form-select @error('PaymentMethod') is-invalid @enderror"
                                 name="PaymentMethod" id="PaymentMethod" required>
                             <option value="" disabled>-- Select Payment Method --</option>
                             @foreach($paymentMethods as $paymentMethod)
-                                <option value="{{ $paymentMethod->Description }}" 
+                                <option value="{{ $paymentMethod->Description }}"
                                     @selected(old('PaymentMethod', $voucher->PaymentMethod) == $paymentMethod->Description)>
                                     {{ $paymentMethod->Description }}
                                 </option>
@@ -73,11 +73,11 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="paymentType">Payment Type <span class="text-danger">*</span></label>
-                        <select class="form-select @error('PaymentType') is-invalid @enderror" 
+                        <select class="form-select @error('PaymentType') is-invalid @enderror"
                                 name="PaymentType" id="paymentType" required>
                             <option value="" disabled>-- Select Payment Type --</option>
                             @foreach($paymentTypes as $paymentType)
-                                <option value="{{ $paymentType->Description }}" 
+                                <option value="{{ $paymentType->Description }}"
                                     @selected(old('PaymentType', $voucher->PaymentType) == $paymentType->Description)>
                                     {{ $paymentType->Description }}
                                 </option>
@@ -96,7 +96,7 @@
                                 name="TotAmnt"
                                 step="0.01"
                                 min="0"
-                                value="{{ old('TotAmnt', $voucher->TotAmnt) }}"
+                                value="{{ old('TotalAmount', $voucher->TotalAmount) }}"
                                 placeholder="Enter amount">
                         @error('TotAmnt') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -124,7 +124,7 @@
                         <select class="form-select" name="Frequency" id="Frequency">
                             <option value="" disabled>-- Select Frequency --</option>
                             @foreach($paymentFrequencies as $paymentFrequency)
-                                <option value="{{ $paymentFrequency->Description }}" 
+                                <option value="{{ $paymentFrequency->Description }}"
                                     @selected(old('Frequency', $voucher->Frequency) == $paymentFrequency->Description)>
                                     {{ $paymentFrequency->Description }}
                                 </option>

@@ -133,7 +133,7 @@ class FinanceCreditManagement extends Model
             $score += 10;
         }
         
-        // Credit age risk (0-20 points)
+        // Credit age risk (0-20 points) if age is more than 90 dayss then dont deduct anything so the score remains as it was at the top.
         $daysSinceCreated = $this->CreatedOn ? now()->diffInDays($this->CreatedOn) : 0;
         if ($daysSinceCreated < 30) {
             $score += 20; // New customer = higher risk

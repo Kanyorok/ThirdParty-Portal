@@ -84,6 +84,16 @@
 
                 <!-- Approval Actions -->
                 @if($requisitionInfo->Status == 'pending' || $requisitionInfo->Status == 'Pending')
+                    @php
+                        $validTypes = ['ALL','ANY','MAJ','AMT'];
+                        $approvalTypeValid = isset($approvalType) && in_array(strtoupper($approvalType), $validTypes);
+                    @endphp
+                    @unless($approvalTypeValid)
+                        <div class="alert alert-warning d-flex align-items-center" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Approval type is not configured for Purchase Requisitions. Please contact the administrator.
+                        </div>
+                    @endunless
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <form action="{{ route('requisition.approve', $requisitionInfo->Id) }}" method="POST"
@@ -97,7 +107,7 @@
                                        value="{{ $requisitionInfo->ExpectedPrice ?? 'N/A' }}">
                                 <input type="hidden" name="order_id" value="{{$requisitionInfo->Id}}">
                                 <input type="hidden" name="action" value="approve">
-                                <button type="submit" class="btn btn-success btn-lg">
+                                <button type="submit" class="btn btn-success btn-lg" {{ $approvalTypeValid ? '' : 'disabled' }}>
                                     <i class="fas fa-check"></i> Approve
                                 </button>
                             </form>
