@@ -100,7 +100,7 @@ class GoodsReceiptController extends Controller
                 'POID'             => $request->POID,
                 'SupplierId'       => $request->SupplierID,
                 'ItemNo'           => $item['ItemNo'],
-                'StoreID'          => $item['StoreID'] ?? 'STORE-001',
+                'StoreID'          => $item['StoreID'] ?? '2',
                 'TransferTo'       => $item['TransferTo'] ?? null,
                 'TransferStatus'   => $item['TransferTo'] ?? null,
                 'POQTY'            => $item['POQTY'] ?? 0,
