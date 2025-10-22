@@ -18,9 +18,8 @@ use App\Http\Controllers\Insurance\InsuranceProviderProductController;
 use App\Http\Controllers\Insurance\PolicyController;
 use App\Http\Controllers\Insurance\PremiumController;
 use App\Http\Controllers\Insurance\PricingRuleController;
-use App\Http\Controllers\Insurance\ProductLifecycleController;
-use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\ReportsController;
+use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\UnderwritingController;
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
@@ -228,8 +227,8 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
     });
 
     Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->group(function () {
-        Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');
-        Route::post('toggle/{id}', [ProductLifecycleController::class, 'toggleStatus'])->name('toggle');
+        /* Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');
+         Route::post('toggle/{id}', [ProductLifecycleController::class, 'toggleStatus'])->name('toggle');*/
     });
 
     Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {

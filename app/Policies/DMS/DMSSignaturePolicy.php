@@ -1,26 +1,26 @@
 <?php
 
-namespace App\Policies;
+namespace App\Policies\DMS;
 
 use App\Models\Auth\User;
-use App\Models\DMS\DocumentSignature;
+use App\Models\DMS\DMSSignature;
 
-class DocumentSignaturePolicy
+class DMSSignaturePolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, DocumentSignature $documentSignature): bool
+    public function view(User $user, DMSSignature $dMSSignature): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -28,29 +28,29 @@ class DocumentSignaturePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, DocumentSignature $documentSignature): bool
+    public function update(User $user, DMSSignature $dMSSignature): bool
     {
-        return false;
+        return true;
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, DocumentSignature $documentSignature): bool
+    public function delete(User $user, DMSSignature $dMSSignature): bool
     {
-        return false;
+        return true;
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, DocumentSignature $documentSignature): bool
+    public function restore(User $user, DMSSignature $dMSSignature): bool
     {
         return false;
     }
@@ -58,7 +58,7 @@ class DocumentSignaturePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, DocumentSignature $documentSignature): bool
+    public function forceDelete(User $user, DMSSignature $dMSSignature): bool
     {
         return false;
     }

@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Procurement\ApprovalSetupController;
 use App\Http\Controllers\Procurement\AwardsController;
 use App\Http\Controllers\Procurement\BidEvaluationController;
@@ -19,6 +18,7 @@ use App\Http\Controllers\Procurement\EvaluationCriteriaController;
 use App\Http\Controllers\Procurement\EvaluatorDashboardController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;
 use App\Http\Controllers\Procurement\InspectionController;
+use App\Http\Controllers\Procurement\LPOOriginationController;
 use App\Http\Controllers\Procurement\MapToBudgetController;
 use App\Http\Controllers\Procurement\ModeTimelineController;
 use App\Http\Controllers\Procurement\PlanApprovalInboxController;
@@ -27,11 +27,11 @@ use App\Http\Controllers\Procurement\PlanExectionDashboardController;
 use App\Http\Controllers\Procurement\PlanFromNeedsController;
 use App\Http\Controllers\Procurement\PlanManualInputController;
 use App\Http\Controllers\Procurement\PlanvsActualController;
-use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationCriteriaSetupController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvalAprovalController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
 use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
+use App\Http\Controllers\Procurement\PrequalificationApplicationsController;
 use App\Http\Controllers\Procurement\PrequalificationPeriodController;
 use App\Http\Controllers\Procurement\PrequalifiedSuppliersController;
 use App\Http\Controllers\Procurement\ProcurementApprovalController;
@@ -44,7 +44,6 @@ use App\Http\Controllers\Procurement\ProcurementSchedulePlanController;
 use App\Http\Controllers\Procurement\ProcurementSetMethodController;
 use App\Http\Controllers\Procurement\ProcurementSubmitPlanController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
-use App\Http\Controllers\Procurement\LPOOriginationController;
 use App\Http\Controllers\Procurement\ReportsController;
 use App\Http\Controllers\Procurement\RequisitionItemsController;
 use App\Http\Controllers\Procurement\RequisitionsController;
@@ -55,12 +54,13 @@ use App\Http\Controllers\Procurement\RFQEvaluationController;
 use App\Http\Controllers\Procurement\RFQLinesController;
 use App\Http\Controllers\Procurement\RFQResponseController;
 use App\Http\Controllers\Procurement\RFQSectionController;
+use App\Http\Controllers\Procurement\RFQSettingController;
+use App\Http\Controllers\Procurement\RFQSettingCriteriaController;
+use App\Http\Controllers\Procurement\RFQSettingSectionController;
 use App\Http\Controllers\Procurement\SasraAuditorController;
 use App\Http\Controllers\Procurement\SectionController;
-use App\Http\Controllers\Procurement\RFQSettingController;
 use App\Http\Controllers\Procurement\SubmitForApprovalController;
 use App\Http\Controllers\Procurement\SupplierController;
-// use App\Http\Controllers\Procurement\SupplierListingController;
 use App\Http\Controllers\Procurement\TenderAcceptController;
 use App\Http\Controllers\Procurement\TenderAssignRoleController;
 use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
@@ -76,6 +76,9 @@ use App\Http\Controllers\Procurement\TenderResponseController;
 use App\Http\Controllers\Procurement\TenderSubmissionController;
 use App\Http\Controllers\Procurement\TenderTypeController;
 use App\Http\Controllers\Procurement\TimelineController;
+use Illuminate\Support\Facades\Route;
+
+// use App\Http\Controllers\Procurement\SupplierListingController;
 
 
 Route::namespace('Procurement')->group(function () {
@@ -125,12 +128,12 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
     Route::get('/purchase-order/direct-plans', [PurchaseOrderController::class, 'getDirectPlans'])->name('purchase-order.direct-plans');
     Route::get('/purchase-order/direct-plan-items/{planId}', [PurchaseOrderController::class, 'getDirectPlanItems'])->name('purchase-order.direct-plan-items');
-    
+
     // NEW: Unified PO Origination AJAX endpoints
     Route::get('purchaseOrder/award-details/{id}', [PurchaseOrderController::class, 'getAwardDetails'])->name('purchaseOrder.awardDetails');
     Route::get('purchaseOrder/contract-details/{id}', [PurchaseOrderController::class, 'getContractDetails'])->name('purchaseOrder.contractDetails');
     Route::get('purchaseOrder/plan-item-details/{id}', [PurchaseOrderController::class, 'getPlanItemDetails'])->name('purchaseOrder.planItemDetails');
-    
+
     // Enhanced Direct Procurement AJAX endpoints
     Route::get('purchaseOrder/plan/{planId}/categories', [PurchaseOrderController::class, 'getPlanItemCategories'])->name('purchaseOrder.planCategories');
     Route::get('purchaseOrder/category/{categoryId}/suppliers', [PurchaseOrderController::class, 'getPrequalifiedSuppliers'])->name('purchaseOrder.prequalifiedSuppliers');
@@ -140,19 +143,19 @@ Route::namespace('Procurement')->group(function () {
     Route::prefix('lpo')->name('lpo.')->group(function () {
         // LPO Origination Dashboard
         Route::get('origination', [LPOOriginationController::class, 'index'])->name('origination.index');
-        
+
         // Contract-Based LPO Origination
         Route::get('origination/contract-based', [LPOOriginationController::class, 'showContractBasedOptions'])->name('origination.contract-based');
         Route::get('create/contract/{contractId}', [LPOOriginationController::class, 'createFromContract'])->name('create.contract');
-        
-        // Award-Based LPO Origination  
+
+        // Award-Based LPO Origination
         Route::get('origination/award-based', [LPOOriginationController::class, 'showAwardBasedOptions'])->name('origination.award-based');
         Route::get('create/award/{awardId}', [LPOOriginationController::class, 'createFromAward'])->name('create.award');
-        
+
         // Direct Procurement LPO Origination
         Route::get('origination/direct-procurement', [LPOOriginationController::class, 'showDirectProcurementOptions'])->name('origination.direct-procurement');
         Route::get('create/direct-procurement/{planId}', [LPOOriginationController::class, 'createFromDirectProcurement'])->name('create.direct-procurement');
-        
+
         // LPO Creation Processing Routes
         Route::post('store/contract', [LPOOriginationController::class, 'storeContractBasedLPO'])->name('store.contract');
         Route::post('store/award', [LPOOriginationController::class, 'storeAwardBasedLPO'])->name('store.award');
@@ -402,7 +405,7 @@ Route::namespace('Procurement')->group(function () {
     Route::post('/bid-responsiveness/bulk-check', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'bulkCheck'])->name('bid-responsiveness.bulk-check');
     Route::get('/bid-responsiveness/criteria', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'getCriteria'])->name('bid-responsiveness.criteria');
     Route::get('/bid-responsiveness/{tenderRef}/report', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'exportReport'])->name('bid-responsiveness.report');
-    
+
     // Drill-down functionality for bid details and documents
     Route::get('/bid-responsiveness/{bidId}/details', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'showBidDetails'])->name('bid-responsiveness.bid-details');
     Route::get('/bid-responsiveness/{bidId}/document/{documentId}', [\App\Http\Controllers\Procurement\BidResponsivenessController::class, 'viewDocument'])->name('bid-responsiveness.view-document');
@@ -515,10 +518,10 @@ Route::prefix('prequalification')->name('prequalification.')->group(function () 
     // Prequalification Rounds (ModuleID 303210)
     Route::get('rounds', [PrequalificationApplicationController::class, 'apiIndex'])->name('rounds.index');
     Route::get('rounds/{round}', [PrequalificationApplicationController::class, 'apiShow'])->name('rounds.show');
-    
+
     // Supplier Applications (ModuleID 303230)
     Route::post('applications', [PrequalificationApplicationController::class, 'store'])->name('applications.store');
-    
+
     // Evaluation & Approval (ModuleID 303240) - handled by existing preqevaluation routes below
 });
 

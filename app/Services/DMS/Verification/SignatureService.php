@@ -59,6 +59,43 @@ class SignatureService extends SignService
         return new self($signature);
     }
 
+    public function update(
+        User   $actor, string $name, VisibilityEnum $visibility, int $Width, int $Height, int $HorizontalStart, int $VerticalStart, int $Opacity = 100,
+        string $Content = '#userid# #date#', string $ContentColour = "#000000", int $ContentSize = 10, ImageGravityEnum $ContentPosition = ImageGravityEnum::Center,
+        string $ContentBorderColour = "#000000", int $ContentBorderWeight = 1,
+        string $description = null): static
+    {
+        $this->signature->fill([
+            "Name" => $name,
+            "Description" => $description,
+            "Visibility" => $visibility->value,
+            "SignatureHorizontalStart" => $HorizontalStart,
+            "SignatureVerticalStart" => $VerticalStart,
+            "SignatureOpacity" => $Opacity,
+            "SignatureWidth" => $Width,
+            "SignatureHeight" => $Height,
+            "Content" => $Content,
+            "ContentColour" => $ContentColour,
+            "ContentSize" => $ContentSize,
+            "ContentPosition" => $ContentPosition,
+            "ContentBorderColour" => $ContentBorderColour,
+            "ContentBorderWeight" => $ContentBorderWeight,
+            'ModifiedBy' => $actor->Id,
+        ])->save();
+
+        activity()->causedBy($actor)->performedOn($this->signature)->event('update')->log('Updated signature : ' . $this->signature->Name);
+        return $this;
+    }
+
+    public function trash(User $actor): bool
+    {
+        activity()->causedBy($actor)->performedOn($this->signature)->event('deleted')->log('Updated signature : ' . $this->signature->Name);
+        return $this->signature->forceFill([
+            'DeletedBy' => $actor->Id,
+            'DeletedOn' => now(),
+        ])->save();
+    }
+
     /**
      * @throws ErroredException
      */

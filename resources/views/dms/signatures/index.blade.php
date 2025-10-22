@@ -23,7 +23,6 @@
                                 data-summary_title='<i class="fas fa-signature"></i> create a signature'>
                             <i class="fas fa-signature"></i> Add a signature
                         </button>
-
                     </div>
                     {{--     <h5 class="card-title mb-0">@yield('title')</h5>--}}
                 </div>

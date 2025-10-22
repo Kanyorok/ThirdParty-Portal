@@ -9,6 +9,7 @@ use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DMSSignature extends Model
@@ -55,7 +56,7 @@ class DMSSignature extends Model
         return $this->belongsTo(Document::class, 'ImageId', 'Id');
     }
 
-    public function documents(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function documents(): BelongsToMany
     {
         return $this->belongsToMany(Document::class, 't_DocumentSignatures', 'SignatureId', 'DocumentId', $this->primaryKey, 'Id');
     }

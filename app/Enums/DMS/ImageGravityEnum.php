@@ -32,4 +32,19 @@ enum ImageGravityEnum: string
             self::SouthEast => 'Bottom-right corner',
         };
     }
+
+    public function class(): string
+    {
+        return match ($this) {
+            self::NorthWest => 'text-start mb-4',
+            self::North => 'text-center mb-4',
+            self::NorthEast => 'text-end mb-4',
+            self::West => 'text-start my-2',
+            self::Center => 'text-center m-2',
+            self::East => 'text-end my-2',
+            self::SouthWest => 'text-start mt-4',
+            self::South => 'text-center mt-4',
+            self::SouthEast => 'text-end mt-4',
+        };
+    }
 }
