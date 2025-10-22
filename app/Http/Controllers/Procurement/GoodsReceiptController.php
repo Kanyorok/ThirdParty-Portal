@@ -116,7 +116,7 @@ class GoodsReceiptController extends Controller
                 ->first();
 
             if ($existingStock) {
-                $existingStock->CurrentQty += $grn->ReceivedQTY;
+                $existingStock->CurrentQty = bcadd($grn->ReceivedQTY, $existingStock->CurrentQty, 0);
                 $existingStock->LastReceived = now();
                 $existingStock->ModifiedBy = Auth::id();
                 $existingStock->save();
