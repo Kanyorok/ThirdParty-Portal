@@ -12,7 +12,7 @@ use PhpImap\Exceptions\ConnectionException;
 use PhpImap\Exceptions\InvalidParameterException;
 use Symfony\Component\HttpFoundation\Response;
 
-class DocuwareAuthMiddleware
+class DMSAuthMiddleware
 {
     /**
      * Handle an incoming request.

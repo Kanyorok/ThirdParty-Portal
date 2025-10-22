@@ -56,8 +56,15 @@ use App\Models\DMS\DMSSignature;
 use App\Models\DMS\DMSTags;
 use App\Models\DMS\Document;
 use App\Models\DMS\DocumentAttribute;
+use App\Models\DMS\DocumentCheckOut;
+use App\Models\DMS\DocumentLegalHold;
 use App\Models\DMS\DocumentRelation;
+use App\Models\DMS\DocumentSignature;
+use App\Models\DMS\DocumentTaggingRules;
 use App\Models\DMS\DocumentTags;
+use App\Models\DMS\DocumentValidation;
+use App\Models\DMS\DocumentValidationAttribute;
+use App\Models\DMS\DocumentValidationType;
 use App\Models\DMS\DocumentVersion;
 use App\Models\DMS\Image;
 use App\Models\DMS\LegalHold;
@@ -386,10 +393,18 @@ class AppServiceProvider extends ServiceProvider
             DMSSignature::getPrimaryKey() => DMSSignature::class,
             Document::getPrimaryKey() => Document::class,
             DocumentAttribute::getPrimaryKey() => DocumentAttribute::class,
+            DocumentCheckOut::getPrimaryKey() => DocumentCheckOut::class,
+            DocumentLegalHold::getPrimaryKey() => DocumentLegalHold::class,
             DocumentRelation::getPrimaryKey() => DocumentRelation::class,
+            DocumentSignature::getPrimaryKey() => DocumentSignature::class,
+            DocumentTaggingRules::getPrimaryKey() => DocumentTaggingRules::class,
             DocumentTags::getPrimaryKey() => DocumentTags::class,
+            DocumentValidation::getPrimaryKey() => DocumentValidation::class,
+            DocumentValidationAttribute::getPrimaryKey() => DocumentValidationAttribute::class,
+            DocumentValidationType::getPrimaryKey() => DocumentValidationType::class,
             DocumentVersion::getPrimaryKey() => DocumentVersion::class,
             Image::getPrimaryKey() => Image::class,
+            LegalHold::getPrimaryKey() => LegalHold::class,
             Repository::getPrimaryKey() => Repository::class,
 
             //Third Parties
@@ -439,7 +454,6 @@ class AppServiceProvider extends ServiceProvider
 
             //Fleet Management
 
-
             FinanceJournalEntry::getPrimaryKey() => FinanceJournalEntry::class,
             FinanceJournalLines::getPrimaryKey() => FinanceJournalLines::class,
             RecurrentJournal::getPrimaryKey() => RecurrentJournal::class,
@@ -449,7 +463,6 @@ class AppServiceProvider extends ServiceProvider
             FinanceTransactionTypes::getPrimaryKey() => FinanceTransactionTypes::class,
             FinanceModuleTransactions::getPrimaryKey() => FinanceModuleTransactions::class,
             FinanceGLMapping::getPrimaryKey() => FinanceGLMapping::class,
-
             FinanceInvoice::getPrimaryKey() => FinanceInvoice::class,
             FinanceInvoiceLine::getPrimaryKey() => FinanceInvoiceLine::class,
             FinanceCreditManagement::getPrimaryKey() => FinanceCreditManagement::class,

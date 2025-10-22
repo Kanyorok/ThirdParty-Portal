@@ -27,9 +27,7 @@ class DocumentValidationController extends Controller
      */
     public function index(Request $request)
     {
-
         if ($request->ajax()) {
-
             $query = DocumentValidation::query()->where(function ($query) {
                 $query->whereNull('ApprovedBy')
                     ->orWhereNull('DocumentId');

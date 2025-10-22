@@ -2,8 +2,9 @@
 
 namespace App\Models\DMS;
 
-use App\Enums\DMS\DocumentValidationTypeEnum;
+use App\Enums\Core\VisibilityEnum;
 use App\Models\Auth\User;
+use App\Traits\Model\SpecialPermissionTrait;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,22 +13,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentValidation extends Model
 {
-    use SoftDeletes, UserActorTrait;
+    use SoftDeletes, UserActorTrait, SpecialPermissionTrait;
 
     const string CREATED_AT = 'CreatedOn';
     const string UPDATED_AT = 'ModifiedOn';
     const string DELETED_AT = 'DeletedOn';
 
-    protected $table = 't_DocumentValidation';
+    protected $table = 't_DocumentValidations';
     protected $primaryKey = 'Id';
 
     protected $fillable = [
-        "Name", "ValidationId", "Type", "DocumentId", "ApprovedBy", "ApprovedOn",
+        "Name", "ValidationId", "Visibility", "ValidationTypeId", "DocumentId", "ApprovedBy", "ApprovedOn",
         'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
     protected $casts = [
-        'Type' => DocumentValidationTypeEnum::class,
+        // 'Type' => DocumentValidationTypeEnum::class,
+        'Visibility' => VisibilityEnum::class,
         'ApprovedOn' => 'datetime',
     ];
 
@@ -41,6 +43,10 @@ class DocumentValidation extends Model
         return 'ValidationId';
     }
 
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(DocumentValidationType::class, 'ValidationTypeId', 'Id')->withTrashed();
+    }
 
     public function document(): BelongsTo
     {
@@ -49,7 +55,7 @@ class DocumentValidation extends Model
 
     public function properties(): HasMany
     {
-        return $this->hasMany(DocumentValidationAttributes::class, 'DocumentValidationId');
+        return $this->hasMany(DocumentValidationAttribute::class, 'DocumentValidationId');
     }
 
     public function approver(): BelongsTo

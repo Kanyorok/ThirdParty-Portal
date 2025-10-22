@@ -1,27 +1,25 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
-use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
-use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationEvaluationController;
-use App\Http\Controllers\Procurement\SupplierCategoryController;
-use App\Http\Controllers\Procurement\SupplierCategoryApiController;
-use App\Http\Controllers\Procurement\SupplierController;
+use App\Http\Controllers\API\DMS\DocumentApiController;
 use App\Http\Controllers\API\Enums\ThirdPartyTypesEnumController;
-use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
 use App\Http\Controllers\API\Procurement\SupplierRFQController;
+use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartiesBankDetailsController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyAuthController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyCategoryController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyController;
+use App\Http\Controllers\API\ThirdParty\ThirdPartyUserProfileController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationApplicationController;
+use App\Http\Controllers\Procurement\Prequalification\PrequalificationProgressController;
+use App\Http\Controllers\Procurement\SupplierCategoryApiController;
+use App\Http\Controllers\Procurement\SupplierCategoryController;
+use App\Http\Controllers\Procurement\SupplierController;
 use App\Http\Controllers\Procurement\TenderApiController;
 use App\Http\Controllers\Procurement\TenderInvitationController;
-use App\Http\Controllers\API\DMS\DocumentApiController;
-use App\Http\Controllers\Procurement\TenderDocumentController;
-use App\Http\Controllers\API\Procurement\TenderClarificationApiController;
+use App\Http\Controllers\Settings\Codes\ApiCurrencyController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 // Token validation (Sanctum) for frontend session checks
 Route::post('auth/validate-token', function (Request $request) {
@@ -231,31 +229,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\VerifiedUser::class])->g
 });
 
 Route::prefix('v1')->group(function () {
-    Route::prefix('website')->middleware(\App\Http\Middleware\WebsiteAuthMiddleware::class)->group(function () {
-        Route::post('reviews', \App\Http\Controllers\API\Website\ReviewsController::class);
-        Route::get('survey', [\App\Http\Controllers\API\Website\SurveyController::class, 'index']);
-        Route::post('survey', [\App\Http\Controllers\API\Website\SurveyController::class, 'store']);
-    });
 
-    Route::prefix('channels')->middleware(\App\Http\Middleware\ChannelAuthMiddleware::class)->group(function () {
-        Route::post('reviews', \App\Http\Controllers\API\Channel\ReviewsController::class);
-        Route::get('survey', [\App\Http\Controllers\API\Channel\SurveyController::class, 'index']);
-        Route::post('survey', [\App\Http\Controllers\API\Channel\SurveyController::class, 'store']);
-        Route::get('codes', \App\Http\Controllers\API\Channel\CodesController::class);
-        Route::post('lead/company', [\App\Http\Controllers\API\Channel\LeadController::class, 'company']);
-        Route::post('lead/individual', [\App\Http\Controllers\API\Channel\LeadController::class, 'individual']);
-        Route::get('clients/{client}/tickets', [\App\Http\Controllers\API\Channel\TicketController::class, 'index']);
-        Route::post('clients/{client}/tickets', [\App\Http\Controllers\API\Channel\TicketController::class, 'store']);
-    });
+    require __DIR__ . '/integrations/crm.php';
 
-    Route::prefix('pbx')->middleware([\App\Http\Middleware\CheckTokenAndAddToHeaderMiddleware::class, \App\Http\Middleware\PBXAuthMiddleware::class])->group(function () {
-        Route::get('contacts', [\App\Http\Controllers\API\PBX\ContactController::class, 'index']);
-        Route::post('contacts/create', [\App\Http\Controllers\API\PBX\ContactController::class, 'store']);
-        Route::post('calls', [\App\Http\Controllers\API\PBX\CallController::class, 'store']);
-        Route::post('calls/missed', [\App\Http\Controllers\API\PBX\CallController::class, 'missed']);
-        Route::post('calls/create', [\App\Http\Controllers\API\PBX\CallController::class, 'outgoing']);
-        Route::post('calls/non-answer', [\App\Http\Controllers\API\PBX\CallController::class, 'noAnswer']);
-    });
+    require __DIR__ . '/integrations/dms.php';
 
     Route::prefix('inventory')->group(function () {
         Route::get('item-categories', [\App\Http\Controllers\API\ItemCategories\ItemCategoriesController::class, 'index']);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Core\VisibilityEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,11 +11,26 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('t_DocumentValidation', static function (Blueprint $table) {
+        Schema::create('t_DocumentValidationTypes', static function (Blueprint $table) {
             $table->id('Id');
-            $table->string('ValidationId', 200);
+            $table->string('ValidationTypeId', 200)->unique();
             $table->string('Name');
-            $table->char('Type', 5);
+            $table->longText('Notes')->nullable();
+            $table->char('Visibility', 3)->default(VisibilityEnum::Private->value);
+            $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('CreatedOn');
+            $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
+            $table->dateTime('ModifiedOn');
+            $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
+            $table->softDeletes('DeletedOn');
+        });
+
+        Schema::create('t_DocumentValidations', static function (Blueprint $table) {
+            $table->id('Id');
+            $table->string('ValidationId', 200)->unique();
+            $table->string('Name');
+            $table->char('Visibility', 3)->default(VisibilityEnum::Private->value);
+            $table->foreignId('ValidationTypeId')->nullable()->constrained('t_DocumentValidationTypes', 'Id');
             $table->foreignId('DocumentId')->nullable()->constrained('t_Documents', 'Id');
             $table->foreignId('ApprovedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('ApprovedOn')->nullable();
@@ -31,7 +47,7 @@ return new class extends Migration {
             $table->string('Name');
             $table->text('Value');
             $table->char('DataType', 2);
-            $table->foreignId('DocumentValidationId')->constrained('t_DocumentValidation', 'Id');
+            $table->foreignId('DocumentValidationId')->constrained('t_DocumentValidations', 'Id');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
@@ -47,6 +63,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::dropIfExists('t_DocumentValidationAttributes');
-        Schema::dropIfExists('t_DocumentValidation');
+        Schema::dropIfExists('t_DocumentValidations');
+        Schema::dropIfExists('t_DocumentValidationTypes');
     }
 };

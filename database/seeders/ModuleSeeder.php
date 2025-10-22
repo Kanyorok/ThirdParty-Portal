@@ -22,12 +22,12 @@ class ModuleSeeder extends Seeder
         }
 
         $this->_seed($this->_thirdParty($fresh));
-        $this->_seed($this->_crm($fresh));
+        $this->_seed($this->_crm());
         $this->_seed($this->_procurement($fresh));
         $this->_seed($this->_inventory($fresh));
         $this->_seed($this->_propertyManagement($fresh));
         $this->_seed($this->_fleetManagement($fresh));
-        $this->_seed($this->_documentManagement($fresh));
+        $this->_seed($this->_documentManagement());
         $this->_seed($this->_legal($fresh));
         $this->_seed($this->_insurance($fresh));
         $this->_seed($this->_hrm($fresh));
@@ -47,16 +47,14 @@ class ModuleSeeder extends Seeder
         return $values;
     }
 
-    protected function _crm(bool $fresh): Collection
+    protected function _crm(): Collection
     {
-        $values = collect([
+        return collect([
             ['ModuleID' => 200000, 'Name' => ModulesEnum::CRM->description(), 'Icon' => '<i data-feather="share-2"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
             ['ModuleID' => 200100, 'Name' => 'Third Parties', 'Icon' => '<i data-feather="users"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 200000],
-
             ['ModuleID' => 200110, 'Name' => 'Clients', 'Icon' => null, 'Description' => '', 'Route' => 'clients.index', 'ParentID' => 200100],
             ['ModuleID' => 200120, 'Name' => 'Leads', 'Icon' => null, 'Description' => '', 'Route' => 'leads.index', 'ParentID' => 200100],
             ['ModuleID' => 200130, 'Name' => 'Board', 'Icon' => null, 'Description' => '', 'Route' => 'board.index', 'ParentID' => 200100],
-
             ['ModuleID' => 201000, 'Name' => 'Mailbox', 'Icon' => '<i class="fas fa-envelope"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'email-conversations.index'],
 
             ['ModuleID' => 202000, 'Name' => 'Marketing Planner', 'Icon' => '<i class=" fa-solid fa-seedling"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'marketing-planner.index'],
@@ -79,8 +77,6 @@ class ModuleSeeder extends Seeder
 
             ['ModuleID' => 299000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'ParentID' => 200000, 'Route' => 'crm-reports.index'],
         ]);
-
-        return $values;
     }
 
     protected function _procurement(bool $fresh): Collection
@@ -402,22 +398,20 @@ class ModuleSeeder extends Seeder
         return $values;
     }
 
-    protected function _documentManagement(bool $fresh): Collection
+    protected function _documentManagement(): Collection
     {
-        $values = collect([
+        return collect([
             ['ModuleID' => 700000, 'Name' => ModulesEnum::DMS->description(), 'Icon' => '<i data-feather="file-text"></i>', 'Description' => '', 'ParentID' => null, 'Route' => null],
             ['ModuleID' => 701000, 'Name' => 'Recent Documents', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.recent'],
             ['ModuleID' => 702000, 'Name' => 'Repository', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'repo.index'],
             ['ModuleID' => 703000, 'Name' => 'Tags', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'file-tags.index'],
             ['ModuleID' => 704000, 'Name' => 'Bulk Upload', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'files.upload'],
             ['ModuleID' => 705000, 'Name' => 'Legal Hold', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'legal-hold.index'],
-            //Document Validations Here
+            ['ModuleID' => 706000, 'Name' => 'Document Validation', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms.validation.index'],
             ['ModuleID' => 707000, 'Name' => 'Signatures', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'document-signature.index'],
 
             ['ModuleID' => 799000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 700000, 'Route' => 'dms-reports.index'],
         ]);
-
-        return $values;
     }
 
     protected function _legal(bool $fresh): Collection

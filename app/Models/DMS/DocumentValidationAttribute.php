@@ -8,7 +8,7 @@ use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DocumentValidationAttributes extends Model
+class DocumentValidationAttribute extends Model
 {
     use SoftDeletes, UserActorTrait;
 
