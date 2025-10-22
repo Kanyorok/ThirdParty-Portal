@@ -33,13 +33,13 @@
                 <td>{{ number_format($payment->Amount, 2) }}</td>
                 <td>
           <a href="{{ route('bancassurance.premiums.show', $payment->Id) }}" class="btn btn-sm btn-info">View</a>
-                    <a href="{{ route('bancassurance.premiums.printReceipt', $payment->Id) }}" class="btn btn-sm btn-secondary">Print Receipt</a>
-                    <a href="{{ route('bancassurance.premiums.edit', $payment->Id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{{ route('bancassurance.premiums.printReceipt', $payment->Id) }}"  target="_blank" class="btn btn-sm btn-secondary">Print Receipt</a>
+                    {{-- <a href="{{ route('bancassurance.premiums.edit', $payment->Id) }}" class="btn btn-sm btn-warning">Edit</a> --}}
                     <form action="{{ route('bancassurance.premiums.destroy', $payment->Id) }}" method="POST" class="d-inline">
                       @csrf
                       @method('DELETE')
                       <button type="submit" class="btn btn-sm btn-danger"
-                          onclick="return confirm('Are you sure you want to delete this payment?');">Delete
+                          onclick="return confirm('Are you sure you want to delete this payment?');">Return
                   </button>
               </form>
             </td>

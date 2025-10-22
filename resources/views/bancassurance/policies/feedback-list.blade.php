@@ -26,21 +26,18 @@
             @forelse($proposals as $item)
             <tr>
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $item->PolicyNumber }}</td>
-                <td>{{ $item->customer->FullName }}</td>
-                <td>{{ $item->product->Name }}</td>
-                <td>{{ $item->insurer->Name }}</td>
-                <td>{{ $item->Status->label() }}</td>
-                <td>{{ \Carbon\Carbon::parse($item->CreatedAt)->format('d/m/Y') }}</td>
+                <td>{{ $item->PolicyNumber ?? '-'}}</td>
+                <td>{{ $item->customer->thirdParty->ThirdPartyName ?? '-'}}</td>
+                <td>{{ $item->product->Name ?? '-'}}</td>
+                <td>{{ $item->insurer->Name ?? '-'}}</td>
+                <td>{{ $item->Status->label() ?? '-'}}</td>
+                <td>{{ \Carbon\Carbon::parse($item->CreatedAt)->format('d/m/Y') ?? '-'}}</td>
                 <td>
                     <a href="{{ route('bancassurance.policies.feedbackForm', $item->Id) }}"
                         class="btn btn-sm btn-primary">Feedback</a>
                 </td>
             </tr>
             @empty
-                <tr>
-                    <td colspan="8" class="text-center text-muted">No proposals awaiting feedback.</td>
-                </tr>
             @endforelse
         </tbody>
     </table>

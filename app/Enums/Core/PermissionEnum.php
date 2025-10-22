@@ -499,6 +499,12 @@ enum PermissionEnum: string
     case MedicalFundContributionUpdate = 'medicalfundcontribution-update'; 
     case MedicalFundContributionDelete = 'medicalfundcontribution-delete';
 
+    // Medical Fund Beneficiary
+    case MedicalFundBeneficiaryView = 'medicalfundbeneficiary-view';
+    case MedicalFundBeneficiaryCreate = 'medicalfundbeneficiary-create';
+    case MedicalFundBeneficiaryUpdate = 'medicalfundbeneficiary-update';
+    case MedicalFundBeneficiaryDelete = 'medicalfundbeneficiary-delete';
+
 
         // Insurance Provider
     case InsuranceProviderView = 'insuranceprovider-view';
@@ -974,6 +980,7 @@ enum PermissionEnum: string
             [self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete],
             [self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete],
             [self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete],
+            [self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete],
             [self::BancassurancePaymentView, self::BancassurancePaymentCreate, self::BancassurancePaymentDelete, self::BancassurancePaymentUpdate],
             [self::InsuranceProviderView, self::InsuranceProviderCreate, self::InsuranceProviderUpdate, self::InsuranceProviderDelete],
             [self::InsuranceProductView, self::InsuranceProductCreate, self::InsuranceProductUpdate, self::InsuranceProductDelete],
@@ -1135,6 +1142,7 @@ enum PermissionEnum: string
             self::BancassuranceClaimView, self::BancassuranceClaimUpdate, self::BancassuranceClaimCreate, self::BancassuranceClaimDelete,
             self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete,
             self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete,
+            self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete,
             self::BancassurancePaymentView, self::BancassurancePaymentCreate, self::BancassurancePaymentDelete, self::BancassurancePaymentUpdate,
             self::InsuranceClaimClosureView, self::InsuranceClaimClosureCreate, self::InsuranceClaimClosureUpdate, self::InsuranceClaimClosureDelete,
             self::CommissionRuleView, self::CommissionRuleCreate, self::CommissionRuleUpdate, self::CommissionRuleDelete
@@ -1314,6 +1322,7 @@ enum PermissionEnum: string
             self::BancassurancePaymentView, self::BancassurancePaymentCreate, self::BancassurancePaymentDelete, self::BancassurancePaymentUpdate => 'Insurance Payment',
             self::MedicalFundView, self::MedicalFundCreate, self::MedicalFundUpdate, self::MedicalFundDelete => 'Medical Fund',
             self::MedicalFundContributionView, self::MedicalFundContributionCreate, self::MedicalFundContributionUpdate, self::MedicalFundContributionDelete => 'Medical Fund Contribution',
+            self::MedicalFundBeneficiaryView, self::MedicalFundBeneficiaryCreate, self::MedicalFundBeneficiaryUpdate, self::MedicalFundBeneficiaryDelete => 'Medical Fund Beneficiary',
             self::InsuranceProviderView, self::InsuranceProviderCreate, self::InsuranceProviderUpdate, self::InsuranceProviderDelete => 'Insurance Provider',
             self::InsuranceProductView, self::InsuranceProductCreate, self::InsuranceProductUpdate, self::InsuranceProductDelete => 'Insurance Product',
             self::InsuranceProductRiderView, self::InsuranceProductRiderCreate, self::InsuranceProductRiderUpdate, self::InsuranceProductRiderDelete => 'Insurance Product Rider',

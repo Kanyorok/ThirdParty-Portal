@@ -216,7 +216,7 @@ Public function destroy($Id)
 
     if ($referral->customerreferral()->exists()) {
         return redirect()->back()
-        ->withErrors(['error' => 'This Property Block is in use and cannot be deleted.']);
+        ->withErrors(['error' => 'This referral is in use and cannot be deleted.']);
     }  
     $referral->DeletedBy = Auth()->Id();
     $referral->save();

@@ -17,13 +17,11 @@ class MedicalFundBeneficiaryController extends Controller
     }
 
     // Nested index: /bancassurance/medical-funds/{medical_fund}/beneficiaries
-    public function index(MedicalFund $medical_fund)
-    {
-        $beneficiaries = $medical_fund->beneficiaries()->orderBy('Id','desc')->paginate(20);
-        return view('bancassurance.medical_fund_beneficiaries.index', compact('medical_fund','beneficiaries'));
-    }
-
-
+public function index(MedicalFund $medical_fund)
+{
+    $beneficiaries = $medical_fund->beneficiaries()->orderBy('Id','desc')->paginate(20);
+    return view('bancassurance.medical_fund_beneficiaries.index', compact('medical_fund','beneficiaries'));
+}
 
 public function create(MedicalFund $medical_fund)
 {
