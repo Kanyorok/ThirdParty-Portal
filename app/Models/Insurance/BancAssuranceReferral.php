@@ -70,6 +70,6 @@ class BancAssuranceReferral extends Model
     }
     public function customerreferral()
     {
-        return $this->hasOne(BancassuranceCustomer::class, 'Id', 'ReferralID');
+        return $this->hasOne(BancassuranceCustomer::class, 'ReferralID', 'Id');
     }
 }
