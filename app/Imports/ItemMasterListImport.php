@@ -7,116 +7,171 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\ItemType;
+use App\Models\Core\CodeDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ItemMasterListImport implements ToModel, WithHeadingRow
 {
+    private $processed = 0;
+    private $created = 0;
+    private $updated = 0;
+    private $skipped = 0;
+
     public function model(array $row)
     {
+        DB::beginTransaction();
         try {
-            // ✅ Normalize and trim all inputs
+            $this->processed++;
+            
             $row = array_map(fn($v) => is_string($v) ? trim($v) : $v, $row);
 
-            // ✅ Support both lowercase & uppercase Excel headings
-            $itemCode       = $row['itemcode'] ?? $row['ItemCode'] ?? null;
-            $barCode        = $row['barcode'] ?? $row['BarCode'] ?? null;
-            $itemName       = $row['itemname'] ?? $row['ItemName'] ?? null;
-            $itemTypeName   = $row['itemtype'] ?? $row['ItemType'] ?? null;
-            $uomCode        = $row['uom'] ?? $row['UOM'] ?? null;
-            $inventoryType  = $row['inventorytype'] ?? $row['InventoryType'] ?? null;
-            $categoryName   = $row['category'] ?? $row['Category'] ?? null;
-            $parentCategory = $row['parentcategory'] ?? $row['ParentCategory'] ?? null;
+            $itemCode = $row['itemcode'] ?? $row['ItemCode'] ?? null;
+            $itemName = $row['itemname'] ?? $row['ItemName'] ?? null;
 
-            if (empty($itemName)) {
-                Log::warning("❌ Skipped row: missing ItemName", $row);
+            if (empty($itemCode) || empty($itemName)) {
+                $this->skipped++;
+                Log::warning("❌ Skipped row: missing ItemCode or ItemName", $row);
+                DB::rollBack();
                 return null;
             }
 
-            // ✅ Resolve related lookups
-            $itemTypeModel = ItemType::where('TypeName', $itemTypeName)->first();
-            $uomModel = UnitOfMeasure::where('Code', $uomCode)->first();
-            $inventoryTypeModel = InventoryType::where('Type', $inventoryType)->first();
+            // Lookup foreign keys
+            $itemType = ItemType::where('TypeName', $row['itemtype'] ?? '')->first();
+            $uom = UnitOfMeasure::where('Code', $row['uom'] ?? '')->first();
+            $inventoryType = InventoryType::where('Type', $row['inventorytype'] ?? '')->first();
+            
+            // Handle category hierarchy - look for both category and parent category
+            $categoryName = $row['category'] ?? null;
+            $parentCategoryName = $row['parentcategory'] ?? null;
+            
+            $category = $this->findCategory($categoryName, $parentCategoryName);
 
-            // Handle Category or Subcategory
-            $categoryModel = null;
-            if ($categoryName) {
-                $query = ItemCategories::where('Name', $categoryName);
-                if ($parentCategory) {
-                    $parent = ItemCategories::where('Name', $parentCategory)->first();
-                    if ($parent) {
-                        $query->where('ParentId', $parent->Id);
-                    }
-                }
-                $categoryModel = $query->first();
-            }
-
-            // ✅ Check if item already exists
-            $existingItem = ItemMasterList::query()
-                ->when($itemCode, fn($q) => $q->where('ItemCode', $itemCode))
-                ->when(!$itemCode, fn($q) => $q->where('ItemName', $itemName))
-                ->first();
-
-            // ✅ Prepare data
-            $data = [
-                'BarCode'        => $barCode,
-                'ItemName'       => $itemName,
-                'ItemType'       => $itemTypeModel?->Id,
-                'UOM'            => $uomModel?->Id,
-                'InventoryType'  => $inventoryTypeModel?->Id,
-                'Category'       => $categoryModel?->Id,
-                'ModifiedBy'     => Auth::id(),
-                'ModifiedOn'     => now(),
-            ];
+            // Check if item already exists
+            $existingItem = ItemMasterList::where('ItemCode', $itemCode)->first();
 
             if ($existingItem) {
-                // ✅ Update existing item only if changed
+                // Update existing item
+                $updateData = [
+                    'BarCode'        => $row['barcode'] ?? $existingItem->BarCode,
+                    'ItemName'       => $itemName,
+                    'ItemType'       => $itemType?->Id ?? $existingItem->ItemType,
+                    'UOM'            => $uom?->Id ?? $existingItem->UOM,
+                    'InventoryType'  => $inventoryType?->Id ?? $existingItem->InventoryType,
+                    'Category'       => $category?->Id ?? $existingItem->Category,
+                    'ModifiedBy'     => Auth::id(),
+                    'ModifiedOn'     => now(),
+                ];
+
                 $hasChanges = false;
-                foreach ($data as $key => $value) {
-                    if (($existingItem->$key ?? null) != ($value ?? null)) {
+                foreach ($updateData as $key => $value) {
+                    if ($existingItem->$key != $value) {
                         $hasChanges = true;
                         break;
                     }
                 }
 
                 if ($hasChanges) {
-                    $existingItem->update($data);
-                    Log::info("🔁 Updated existing item: {$existingItem->ItemCode}");
+                    $existingItem->update($updateData);
+                    Log::info("🔁 Updated existing item: {$itemCode}");
+                    $this->updated++;
                 } else {
-                    Log::info("⏭ Skipped identical item: {$existingItem->ItemCode}");
+                    Log::info("⏭ Skipped identical item: {$itemCode}");
+                    $this->skipped++;
                 }
 
-                return null; // skip creating duplicate
+                DB::commit();
+                return null;
             }
 
-            // ✅ Create a new item if none exists
-            return new ItemMasterList([
-                'ItemCode'       => $itemCode ?: $this->generateItemCode(),
-                'BarCode'        => $barCode,
+            // Create new item - handle ItemCode generation properly
+            $newItemData = [
+                'ItemCode'       => $itemCode, 
+                'BarCode'        => $row['barcode'] ?? null,
                 'ItemName'       => $itemName,
-                'ItemType'       => $itemTypeModel?->Id,
-                'UOM'            => $uomModel?->Id,
-                'InventoryType'  => $inventoryTypeModel?->Id,
-                'Category'       => $categoryModel?->Id,
+                'ItemType'       => $itemType?->Id,
+                'UOM'            => $uom?->Id,
+                'InventoryType'  => $inventoryType?->Id,
+                'Category'       => $category?->Id,
+                'Status'         => $this->getDefaultStatus(),
                 'CreatedBy'      => Auth::id(),
                 'ModifiedBy'     => Auth::id(),
                 'CreatedOn'      => now(),
                 'ModifiedOn'     => now(),
-            ]);
+            ];
+
+            Log::info("🎯 Creating new item", $newItemData);
+
+            // Create the item
+            $newItem = new ItemMasterList($newItemData);
+            $newItem->save();
+
+            if (empty($itemCode)) {
+                $newItem->ItemCode = 'ITM-' . str_pad($newItem->Id, 5, '0', STR_PAD_LEFT);
+                $newItem->save();
+            }
+
+            $this->created++;
+            DB::commit();
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($newItem)
+                ->event('imported')
+                ->log('Item imported via Excel');
+
+            return $newItem;
+
         } catch (\Throwable $e) {
-            Log::error("❌ Import failed: " . $e->getMessage(), ['row' => $row]);
+            DB::rollBack();
+            $this->skipped++;
+            Log::error("❌ Import failed for row {$this->processed}: " . $e->getMessage(), [
+                'row' => $row,
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }
 
     /**
-     * ✅ Generate a unique ItemCode when missing.
+     * Find category considering hierarchy
      */
-    protected function generateItemCode(): string
+    private function findCategory(?string $categoryName, ?string $parentCategoryName = null)
     {
-        $nextId = (ItemMasterList::max('Id') ?? 0) + 1;
-        return 'ITM-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
+        if (empty($categoryName)) {
+            return null;
+        }
+
+        $query = ItemCategories::where('Name', $categoryName);
+
+        if (!empty($parentCategoryName)) {
+            // Look for subcategory with specified parent
+            $query->whereHas('parent', function($q) use ($parentCategoryName) {
+                $q->where('Name', $parentCategoryName);
+            });
+        } else {
+            // Look for main category (no parent)
+            $query->whereNull('ParentId');
+        }
+
+        return $query->first();
     }
+
+    /**
+     * Get default active status
+     */
+    private function getDefaultStatus()
+    {
+        return CodeDetail::where('CodeID', 'ItemStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+    }
+
+    public function getProcessedCount(): int { return $this->processed; }
+    public function getCreatedCount(): int { return $this->skipped; }
+    public function getUpdatedCount(): int { return $this->updated; }
+    public function getSkippedCount(): int { return $this->skipped; }
 }

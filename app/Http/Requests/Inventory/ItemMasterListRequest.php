@@ -25,7 +25,7 @@ class ItemMasterListRequest extends FormRequest
             'UOM' => 'required|exists:t_UOM,Id',
             'InventoryType' => 'required|exists:t_InventoryTypes,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
+            'Document' => 'nullable|file|max:2048',
             'ItemDescription' => 'nullable|string',
             'Status' => 'nullable|exists:t_CodeDetails,ID',
             'ItemPrice' => 'nullable|string',

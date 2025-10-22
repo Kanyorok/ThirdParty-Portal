@@ -122,18 +122,28 @@
             </div>
         </div>
 
-        {{-- Row 4 --}}
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label for="DocumentUpload" class="form-label">Attached Document</label>
-                @if($item->DocumentUpload)
-                    <div class="mb-2">
-                        <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing Document</a>
-                    </div>
-                @endif
-                <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx">
-            </div>
+        {{-- Document Upload --}}
+        <div class="mb-3 mt-3">
+            <label class="form-label">Supporting Documents</label>
+
+            {{-- Existing documents --}}
+            <div class="card-footer bg-light">
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+
+            {{-- Existing documents --}}
+             @forelse($item->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
+            
+            {{-- Upload new documents --}}
+            <input type="file" name="Document[]" class="form-control" multiple>
+            <small class="text-muted
+">You can upload multiple documents. Attach datasheets, images, or related files.</small>
+
         </div>
+
 
         {{-- Full-width --}}
         <div class="mb-3">
@@ -178,4 +188,8 @@
         });
     });
 </script>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection
