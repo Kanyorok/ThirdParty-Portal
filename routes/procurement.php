@@ -67,6 +67,7 @@ use App\Http\Controllers\Procurement\TenderAssignRoleController;
 use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
 use App\Http\Controllers\Procurement\TenderCategoryController;
 use App\Http\Controllers\Procurement\TenderclarificationController;
+use App\Http\Controllers\Procurement\RFQClarificationController;
 use App\Http\Controllers\Procurement\TenderCommitteeController;
 use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\TenderDecryptController;
@@ -222,6 +223,11 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqresponses/{id}/edit', [RFQResponseController::class, 'edit'])->name('rfqresponses.edit');
     Route::put('/rfqresponses/{id}', [RFQResponseController::class, 'update'])->name('rfqresponses.update');
     Route::delete('/rfqresponses/{id}', [RFQResponseController::class, 'destroy'])->name('rfqresponses.destroy');
+    // RFQ Clarifications (procurement-side)
+    Route::get('/rfq-clarifications', [RFQClarificationController::class, 'page'])->name('rfqclarifications.index');
+    Route::get('/rfq-clarifications/list', [RFQClarificationController::class, 'listAll']);
+    Route::get('/rfq/{rfq}/clarifications', [RFQClarificationController::class, 'index']);
+    Route::post('/rfq-clarifications/respond', [RFQClarificationController::class, 'respond'])->name('rfqclarifications.respond');
     Route::get('/rfq-responses/{rfqId}', [RFQEvaluationController::class, 'getRFQResponses'])->name('rfq.responses');
     Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
     Route::get('/rfqresponses/find-existing', [RFQResponseController::class, 'findExisting']);
