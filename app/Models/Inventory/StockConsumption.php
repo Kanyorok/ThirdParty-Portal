@@ -57,7 +57,7 @@ class StockConsumption extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'Id'; // Fixed this - should return 'Id' not 'stockconsumptionId'
+        return 'ConsId'; 
     }
     
     public function creator()

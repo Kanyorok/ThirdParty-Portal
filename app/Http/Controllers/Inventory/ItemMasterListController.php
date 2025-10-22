@@ -14,6 +14,11 @@ use App\Models\Core\CodeDetail;
 use App\Services\Inventory\ItemMasterListService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+use App\Imports\ItemMasterListImport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ItemMasterListExport;
+
+
 
 class ItemMasterListController extends Controller
 {
@@ -131,6 +136,29 @@ class ItemMasterListController extends Controller
             'inventoryTypes' => InventoryType::all(),
         ]);
     }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv', 
+        ]);
+
+        try {
+            Excel::import(new ItemMasterListImport, $request->file('file'));
+            return back()->with('success', 'Items imported successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+
+
+
+    public function export()
+    {
+        return Excel::download(new ItemMasterListExport, 'ItemMasterList.xlsx');
+    }
+
+
 
     public function store(ItemMasterListRequest $request)
     {

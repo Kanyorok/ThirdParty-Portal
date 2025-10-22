@@ -30,15 +30,12 @@ class ItemMasterListService
                 $item->ImageId = $image->ImageID;
             }
 
-            // Document upload
             if ($documentFile) {
                 $item->DocumentUpload = $documentFile->store('items/documents', 'public');
             }
 
-            // Category or subcategory logic
             $item->Category = $data['SubCategory'] ?? $data['Category'];
 
-            // Ensure item is inactive if category is inactive
             $category = ItemCategories::find($item->Category);
             $inactiveId = CodeDetail::where('CodeID', 'ItemStatus')
                 ->where('Description', 'Inactive')
@@ -50,7 +47,6 @@ class ItemMasterListService
 
             $item->save();
 
-            // Generate ItemCode and update
             $item->ItemCode = 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT);
             $item->save();
 
