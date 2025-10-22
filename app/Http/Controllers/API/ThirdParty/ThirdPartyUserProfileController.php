@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\ThirdParty;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ThirdPartyAuth\UpdateThirdPartyUserProfileRequest as ThirdPartyAuthUpdateThirdPartyUserProfileRequest;
 use App\Http\Resources\ThirdParty\ThirdPartyUserResource;
+use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +24,8 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function show(): JsonResponse
     {
-        $user = Auth::guard('sanctum')->user();
+    /** @var ThirdPartyUser $user */
+    $user = Auth::guard('sanctum')->user();
         $user->load('thirdParty.categories');
 
         return response()->json([
@@ -39,7 +41,8 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function update(ThirdPartyAuthUpdateThirdPartyUserProfileRequest $request): JsonResponse
     {
-        $user = Auth::guard('sanctum')->user();
+    /** @var ThirdPartyUser $user */
+    $user = Auth::guard('sanctum')->user();
         $thirdParty = $user->thirdParty;
 
         if (!$thirdParty) {
@@ -101,7 +104,8 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function partialUpdate(Request $request): JsonResponse
     {
-        $user = Auth::guard('sanctum')->user();
+    /** @var ThirdPartyUser $user */
+    $user = Auth::guard('sanctum')->user();
         $thirdParty = $user->thirdParty;
 
         if (!$thirdParty) {
@@ -112,7 +116,8 @@ class ThirdPartyUserProfileController extends Controller
             $rules = [
                 'firstName' => ['sometimes', 'string', 'max:50', 'regex:/^[a-zA-Z\s\'-]+$/'],
                 'lastName' => ['sometimes', 'string', 'max:50', 'regex:/^[a-zA-Z\s\'-]+$/'],
-                'phone' => ['sometimes', 'string', 'min:10', 'max:15', 'regex:/^\+?[\d\s\-\(\)]+$/'],
+                // E.164 phone format
+                'phone' => ['sometimes', 'string', 'min:8', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
                 'email' => ['sometimes', 'string', 'email', 'max:254', 'unique:t_ThirdPartyUsers,email,' . $user->id . ',id'],
                 'gender' => ['sometimes', 'nullable', 'string', 'max:20'],
                 'imageId' => ['sometimes', 'nullable', 'integer'],
@@ -205,7 +210,8 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function changePassword(Request $request): JsonResponse
     {
-        $user = Auth::guard('sanctum')->user();
+    /** @var ThirdPartyUser $user */
+    $user = Auth::guard('sanctum')->user();
 
         try {
             $request->validate([
@@ -245,7 +251,8 @@ class ThirdPartyUserProfileController extends Controller
      */
     public function destroy(Request $request): JsonResponse
     {
-        $user = Auth::guard('sanctum')->user();
+    /** @var ThirdPartyUser $user */
+    $user = Auth::guard('sanctum')->user();
 
         try {
             DB::transaction(function () use ($user, $request) {

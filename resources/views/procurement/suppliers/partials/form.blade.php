@@ -71,8 +71,9 @@
     {{-- Phone --}}
     <div class="col-md-6">
         <label for="Phone" class="form-label">Phone</label>
-        <input type="text" name="Phone" id="Phone" class="form-control"
-            value="{{ old('Phone', optional($supplier)->Phone) }}">
+        <input type="tel" name="Phone" id="Phone" class="form-control" pattern="^\+[1-9]\d{7,14}$" inputmode="tel"
+            placeholder="e.g., +12025550123" value="{{ old('Phone', optional($supplier)->Phone) }}">
+        <div class="form-text">Use international format (E.164), starting with + and country code.</div>
     </div>
 
     {{-- Website --}}

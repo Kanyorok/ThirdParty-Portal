@@ -30,7 +30,8 @@ class EmployeePersonalRequest extends FormRequest
             'FirstName' => ['required', 'string', 'max:255'],
             'MiddleName' => ['nullable', 'string', 'max:255'],
             'LastName' => ['required', 'string', 'max:255'],
-            'Phone' => ['required', 'string', 'max:20'],
+            // E.164 phone format
+            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'Email' => ['required', 'email:rfc,dns', 'max:250'],
             'DateOfBirth' => ['required'],
             'Gender' => ['required', Rule::enum(GenderEnum::class)],

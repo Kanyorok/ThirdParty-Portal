@@ -404,7 +404,7 @@
     });
   }
 
-  function populateSuppliers(categoryId = null) {
+  async function populateSuppliers(categoryId = null) {
     suppliersList.innerHTML = '';
 
     // Require a category for restricted tenders to narrow the list meaningfully
@@ -417,39 +417,51 @@
       return;
     }
 
-    const catNum = Number(categoryId);
-    if (DEBUG) console.debug('populateSuppliers: categoryId', catNum, 'total suppliers', (suppliers || []).length);
-    // Filter to prequalified suppliers whose mapped ItemCategoryIds include the selected category
-    const filtered = (suppliers || [])
-      .filter(s => Array.isArray(s.ItemCategoryIds))
-      .filter(s => s.ItemCategoryIds.map(Number).includes(catNum))
-      // sort by display name for nicer UX
-      .sort((a, b) => {
-        const an = (a.ThirdPartyName || a.SupplierName || '').toLowerCase();
-        const bn = (b.ThirdPartyName || b.SupplierName || '').toLowerCase();
-        return an.localeCompare(bn);
-      });
+    try {
+      const url = `{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${encodeURIComponent(categoryId)}`;
+      const res = await fetch(url, { credentials: 'same-origin' });
+      if (!res.ok) {
+        if (DEBUG) console.warn('prequalified-suppliers HTTP error', res.status, res.statusText);
+        const opt = document.createElement('option');
+        opt.disabled = true;
+        opt.textContent = 'Failed to load suppliers';
+        suppliersList.appendChild(opt);
+        if (supplierMatchCount) supplierMatchCount.textContent = '';
+        return;
+      }
+      const { success, data } = await res.json();
+      const rows = Array.isArray(data) ? data : [];
 
-    if (DEBUG) {
-      const sample = filtered.slice(0, 3).map(s => ({ id: s.Id, name: s.ThirdPartyName || s.SupplierName, cats: (s.ItemCategoryIds || []).slice(0, 8) }));
-      console.debug('populateSuppliers: filtered count', filtered.length, 'sample', sample);
-    }
-    if (supplierMatchCount) supplierMatchCount.textContent = `Matching suppliers: ${filtered.length}`;
+      if (supplierMatchCount) supplierMatchCount.textContent = `Matching suppliers: ${rows.length}`;
+      if (!rows.length) {
+        const opt = document.createElement('option');
+        opt.disabled = true;
+        opt.textContent = 'No prequalified suppliers match this category';
+        suppliersList.appendChild(opt);
+        return;
+      }
 
-    if (!filtered.length) {
+      rows
+        .map(r => ({
+          value: r.SupplierId || r.ThirdPartyId || '',
+          label: r.SupplierName || `Supplier #${r.SupplierId || r.ThirdPartyId || ''}`
+        }))
+        .filter(r => String(r.value).length > 0)
+        .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
+        .forEach(({ value, label }) => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = label;
+          suppliersList.appendChild(opt);
+        });
+    } catch (e) {
+      if (DEBUG) console.warn('prequalified-suppliers fetch failed', e);
       const opt = document.createElement('option');
       opt.disabled = true;
-      opt.textContent = 'No prequalified suppliers match this category';
+      opt.textContent = 'Failed to load suppliers';
       suppliersList.appendChild(opt);
-      return;
+      if (supplierMatchCount) supplierMatchCount.textContent = '';
     }
-
-    filtered.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.Id;
-      opt.textContent = s.ThirdPartyName || s.SupplierName || `Supplier #${s.Id}`;
-      suppliersList.appendChild(opt);
-    });
   }
 
   // ---- Events

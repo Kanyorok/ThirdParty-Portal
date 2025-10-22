@@ -68,8 +68,10 @@
                             </div>
                             <div class="mb-3 col-md-6 col-12">
                                 <label class="form-label" for="Phone">Phone <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="Phone" name="Phone" required
-                                       placeholder="Phone">
+                                <input type="tel" class="form-control" id="Phone" name="Phone" required
+                                       inputmode="tel" autocomplete="tel" pattern="^\+[1-9]\d{7,14}$"
+                                       placeholder="e.g., +12025550123" aria-describedby="Phone_help">
+                                <small id="Phone_help" class="form-text text-muted">Use international format (E.164), e.g., +12025550123</small>
                                 <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
                             <div class="mb-3 col-md-6 col-12">
