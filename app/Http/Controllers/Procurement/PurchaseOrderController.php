@@ -61,7 +61,7 @@ class PurchaseOrderController extends Controller
         try {
             $plans = ConsolidatedProcurementPlan::query()
                 ->where('Status', 'Approved')
-                ->whereHas('planLineItems', function ($query) {
+                ->whereHas('lineItems', function ($query) {
                     $query->where('ExecutionStatus', 'Pending')
                         ->whereHas('procurementMode', function ($sub) {
                             $sub->where('Description', 'LIKE', '%Direct%');
@@ -69,14 +69,14 @@ class PurchaseOrderController extends Controller
                 })
                 ->orderByDesc('ApprovedOn')
                 ->limit(100)
-                ->get()
-                ->map(function ($p) {
+        ->get()
+        ->map(function ($p) {
                     return [
                         'PlanID' => $p->PlanID ?? $p->Id ?? null,
                         'Title' => $p->Title ?? $p->Name ?? ('Plan #' . ($p->PlanID ?? $p->Id)),
                         'FiscalYear' => $p->FiscalYear ?? null,
                         'ApprovedOn' => $p->ApprovedOn,
-                        'PendingItems' => $p->planLineItems->where('ExecutionStatus', 'Pending')->count(),
+            'PendingItems' => ($p->lineItems ? $p->lineItems->where('ExecutionStatus', 'Pending')->count() : 0),
                     ];
                 });
 
@@ -99,7 +99,7 @@ class PurchaseOrderController extends Controller
     public function getDirectPlanItems($planId): JsonResponse
     {
         try {
-            $plan = ConsolidatedProcurementPlan::with(['planLineItems' => function($q){
+            $plan = ConsolidatedProcurementPlan::with(['lineItems' => function($q){
                 $q->where('ExecutionStatus', 'Pending')
                   ->whereHas('procurementMode', function($sub){
                       $sub->where('Description', 'LIKE', '%Direct%');
@@ -113,7 +113,7 @@ class PurchaseOrderController extends Controller
                 return response()->json(['success'=>false,'message'=>'Plan not found'],404);
             }
 
-            $items = $plan->planLineItems->map(function($li){
+            $items = $plan->lineItems->map(function($li){
                 $item = $li->item; // may be null
                 return [
                     'itemCode' => $item->Id ?? null,
