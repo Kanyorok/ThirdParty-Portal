@@ -475,17 +475,18 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 905200, 'Name' => 'Claims Assessment', 'Icon' => null, 'Description' => 'Assess and decide on initiated claims', 'Route' => 'bancassurance.claims.assessment_list', 'ParentID' => 905000],
             ['ModuleID' => 905400, 'Name' => 'Claim Payments', 'Icon' => null, 'Description' => 'View and track settled claim payments', 'Route' => 'bancassurance.claims.payments.index', 'ParentID' => 905000],
             ['ModuleID' => 905500, 'Name' => 'Closed Claims', 'Icon' => null, 'Description' => 'View Closed Claims', 'Route' => 'bancassurance.claims.closed', 'ParentID' => 905000],
-            ['ModuleID' => 906000, 'Name' => 'Commissions', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
-            ['ModuleID' => 906100, 'Name' => 'Commission Rules', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'commissions.rules.index', 'ParentID' => 906000],
-            ['ModuleID' => 906200, 'Name' => 'Commission Earned', 'Icon' => null, 'Description' => 'View commissions earned', 'Route' => 'bancassurance.commissions.earned.index', 'ParentID' => 906000],
-            ['ModuleID' => 906300, 'Name' => 'Commission PaidOut', 'Icon' => null, 'Description' => 'View commissions Paid', 'Route' => 'bancassurance.commissions.payouts.index', 'ParentID' => 906000],
-            ['ModuleID' => 907000, 'Name' => 'Providers & Products', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
-            ['ModuleID' => 907100, 'Name' => 'Insurance Providers', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.insurers.index', 'ParentID' => 907000],
-            ['ModuleID' => 907200, 'Name' => 'Insurance Products', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.products.index', 'ParentID' => 907000],
-            ['ModuleID' => 907400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 907000],
-            ['ModuleID' => 907500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 907000],
-            ['ModuleID' => 908000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
-            ['ModuleID' => 909000, 'Name' => 'Medical Fund', 'Icon' => null, 'Description' => '', 'Route' => 'bancassurance.medicalfunds.index', 'ParentID' => 900000],
+            ['ModuleID' => 906000, 'Name' => 'Medical Funds Management', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 906100, 'Name' => 'Medical Fund', 'Icon' => null, 'Description' => 'View Medical Fund', 'Route' => 'bancassurance.medicalfunds.index', 'ParentID' => 906000],
+            ['ModuleID' => 907000, 'Name' => 'Commissions', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 907100, 'Name' => 'Commission Rules', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'commissions.rules.index', 'ParentID' => 907000],
+            ['ModuleID' => 907200, 'Name' => 'Commission Earned', 'Icon' => null, 'Description' => 'View commissions earned', 'Route' => 'bancassurance.commissions.earned.index', 'ParentID' => 907000],
+            ['ModuleID' => 907300, 'Name' => 'Commission PaidOut', 'Icon' => null, 'Description' => 'View commissions Paid', 'Route' => 'bancassurance.commissions.payouts.index', 'ParentID' => 907000],
+            ['ModuleID' => 908000, 'Name' => 'Providers & Products', 'Icon' => null, 'Description' => '', 'Route' => null, 'ParentID' => 900000],
+            ['ModuleID' => 908100, 'Name' => 'Insurance Providers', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.insurers.index', 'ParentID' => 908000],
+            ['ModuleID' => 908200, 'Name' => 'Insurance Products', 'Icon' => null, 'Description' => 'View commissions', 'Route' => 'bancassurance.products.index', 'ParentID' => 908000],
+            ['ModuleID' => 908400, 'Name' => 'Riders & Add-ons', 'Icon' => null, 'Description' => 'Riders and Addons', 'Route' => 'bancassurance.riders.index', 'ParentID' => 908000],
+            ['ModuleID' => 908500, 'Name' => 'Pricing Rules', 'Icon' => null, 'Description' => 'Define and manage premium pricing rules for mapped provider products', 'Route' => 'bancassurance.pricing.index', 'ParentID' => 908000],
+            ['ModuleID' => 909000, 'Name' => 'Settings & Access', 'Icon' => null, 'Description' => 'Bancassurance Settings', 'Route' => 'bancassurance.settings.index', 'ParentID' => 900000],
             ['ModuleID' => 999000, 'Name' => 'Reports', 'Icon' => '<i class="fas fa-file-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 900000],
         ]);
 
@@ -552,15 +553,29 @@ class ModuleSeeder extends Seeder
 //            ['ModuleID' => 1102600, 'Name' => 'Customer Statement', 'Icon' => null, 'Description' => '', 'Route' => 'customerstatement.index', 'ParentID' => 1102000],
 
 
-
+            // Bank Management Routes
             ['ModuleID' => 1103000, 'Name' => 'Bank Management', 'Icon' => '<i class="fas fa-building-columns"></i>', 'Description' => 'Manage banks, branches, accounts & cash', 'Route' => null, 'ParentID' => 1100000],
-            ['ModuleID' => 1103100, 'Name' => 'Bank Registry', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => 'finance.bank.index', 'ParentID' => 1103000],
-            ['ModuleID' => 1103200, 'Name' => 'Bank Accounts', 'Icon' => '<i class="fas fa-piggy-bank"></i>', 'Description' => 'Manage organization bank accounts', 'Route' => 'finance.bankaccountsetup.index', 'ParentID' => 1103000],
-//            ['ModuleID' => 1103300, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103000],
-//            ['ModuleID' => 1103400, 'Name' => 'Bank Transfers', 'Icon' => '<i class="fas fa-right-left"></i>', 'Description' => '', 'Route' => 'finance.banktransfers.index', 'ParentID' => 1103000],
-//            ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103000],
-//            ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103000],
 
+            ['ModuleID' => 1103050, 'Name' => 'Bank', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+            ['ModuleID' => 1103100, 'Name' => 'Bank Registry', 'Icon' => '<i class="fas fa-university"></i>', 'Description' => '', 'Route' => 'finance.bank.index', 'ParentID' => 1103050],
+            ['ModuleID' => 1103200, 'Name' => 'Bank Accounts', 'Icon' => '<i class="fas fa-piggy-bank"></i>', 'Description' => 'Manage organization bank accounts', 'Route' => 'finance.bankaccountsetup.index', 'ParentID' => 1103050],
+            // ['ModuleID' => 1103300, 'Name' => 'Cashbook', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => 'Receipts & Payments register', 'Route' => 'cashbook.index', 'ParentID' => 1103050],
+            // ['ModuleID' => 1103400, 'Name' => 'Bank Transfers', 'Icon' => '<i class="fas fa-right-left"></i>', 'Description' => '', 'Route' => 'finance.banktransfers.index', 'ParentID' => 1103050],
+            // ['ModuleID' => 1103500, 'Name' => 'Bank Transactions', 'Icon' => '<i class="fas fa-receipt"></i>', 'Description' => '', 'Route' => 'finance.banktransactions.index', 'ParentID' => 1103050],
+           
+
+            // ['ModuleID' => 1103600, 'Name' => 'Manage Cheques', 'Icon' => '<i class="fas fa-money-check-alt"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+            // ['ModuleID' => 1103605, 'Name' => 'Cheques', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.cheques.index', 'ParentID' => 1103600],
+            // ['ModuleID' => 1103610, 'Name' => 'Cheque Books', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.chequebooks.index', 'ParentID' => 1103600],
+
+
+            // ['ModuleID' => 1103700, 'Name' => 'Manage PettyCash', 'Icon' => '<i class="fas fa-wallet"></i>', 'Description' => '', 'Route' => null, 'ParentID' => 1103000],
+            // ['ModuleID' => 1103705, 'Name' => 'Petty Cash', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.index', 'ParentID' => 1103700],
+            // ['ModuleID' => 1103710, 'Name' => 'Petty Cash Floats', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettyfloats.index', 'ParentID' => 1103700],
+            // ['ModuleID' => 1103715, 'Name' => 'New Disbursement', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.disbursement.create', 'ParentID' => 1103700],
+            // ['ModuleID' => 1103720, 'Name' => 'New Replenishment', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.replenishment.create', 'ParentID' => 1103700],
+            // ['ModuleID' => 1103725, 'Name' => 'Refund to Bank', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.refund.create', 'ParentID' => 1103700],
+            // ['ModuleID' => 1103730, 'Name' => 'Replenishment Wizard', 'Icon' =>null, 'Description' => '', 'Route' => 'finance.pettycash.wizard', 'ParentID' => 1103700],
 
 
 

@@ -16,7 +16,7 @@ class ContributorBeneficiaryController extends Controller
     public function __construct(){ $this->middleware(['auth']); }
 
 // App\Http\Controllers\Bancassurance\ContributorBeneficiaryController.php
-public function store(Request $request, \App\Models\Insurance\MedicalFundContributor $contributor)
+public function store(Request $request, MedicalFundContributor $contributor)
 {
     $data = $request->validate([
         'FullName'     => ['required','string','max:255'],
@@ -27,17 +27,17 @@ public function store(Request $request, \App\Models\Insurance\MedicalFundContrib
         'IsActive'     => ['nullable','boolean'],
     ]);
 
-    $data['ContributorID'] = $contributor->ID;
+    $data['ContributorId'] = $contributor->ID;
 
     // keep FundID if column exists
-    if (Schema::hasColumn('t_MedicalFundBeneficiaries', 'FundID')) {
-        $data['FundID'] = $contributor->FundID;
+    if (Schema::hasColumn('t_MedicalFundBeneficiaries', 'FundId')) {
+        $data['FundId'] = $contributor->FundId;
     }
 
-    \App\Models\Insurance\MedicalFundBeneficiary::create($data);
+    MedicalFundBeneficiary::create($data);
 
     return redirect()
-        ->route('bancassurance.contributors.show', $contributor->ID)
+        ->route('bancassurance.contributors.show', $contributor->Id)
         ->with('success','Beneficiary added.');
 }
 }

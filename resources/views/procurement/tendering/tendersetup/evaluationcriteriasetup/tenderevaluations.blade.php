@@ -60,7 +60,21 @@
                                 - {{ $item['Title'] }}
                             @endif
                         </td>
-                        <td>{{$item['sectionsNumber']}}</td>
+                        <td>
+                            @php $names = $item['sectionNames'] ?? []; @endphp
+                            @if(($item['sectionsNumber'] ?? 0) > 0)
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#sectionsModal"
+                                        data-tenderref="{{ $item['TenderNo'] }}"
+                                        data-sections='@json($names)'>
+                                    {{ $item['sectionsNumber'] }}
+                                </button>
+                            @else
+                                <span class="text-muted">0</span>
+                            @endif
+                        </td>
                         <td>
                             <a href="{{route('tender-criteria',$item['id'])}}"
                                class="btn btn-sm">{{$item['criteriaNumber']}} <i class="fa fa-eye"
@@ -84,6 +98,24 @@
             {{-- Pagination links --}}
             <div class="d-flex justify-content-center mt-3">
                 {{ $paginator->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sections Modal -->
+    <div class="modal fade" id="sectionsModal" tabindex="-1" aria-labelledby="sectionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sectionsModalLabel">Tender Sections</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="sectionsList" class="list-group list-group-flush"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -182,6 +214,37 @@
     <!-- Inline JavaScript to enforce 100% weight -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Sections modal population
+            const sectionsModal = document.getElementById('sectionsModal');
+            if (sectionsModal) {
+                sectionsModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const tenderRef = button?.getAttribute('data-tenderref') || '';
+                    const namesJson = button?.getAttribute('data-sections') || '[]';
+                    let names = [];
+                    try { names = JSON.parse(namesJson); } catch (_) { names = []; }
+
+                    const list = sectionsModal.querySelector('#sectionsList');
+                    list.innerHTML = '';
+                    if (Array.isArray(names) && names.length) {
+                        names.forEach(n => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item';
+                            li.textContent = n;
+                            list.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item text-muted';
+                        li.textContent = 'No sections found.';
+                        list.appendChild(li);
+                    }
+
+                    const title = sectionsModal.querySelector('#sectionsModalLabel');
+                    if (title) title.textContent = `Tender Sections${tenderRef ? ' — ' + tenderRef : ''}`;
+                });
+            }
+
             const modal = document.getElementById('addSection1Modal');
             if (!modal) return;
 

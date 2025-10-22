@@ -26,7 +26,7 @@ class BancassurancePremiumPaymentsService
         string              $Amount,
         CodeDetail          $PaymentMode,
         string              $ReferenceNumber,
-        string              $Notes,
+        ?string              $Notes = null,
         User                $user
     ): self
     {
@@ -39,7 +39,7 @@ class BancassurancePremiumPaymentsService
             'Amount' => $Amount,
             'PaymentMode' => $PaymentMode->ID,
             'ReferenceNumber' => $ReferenceNumber,
-            'Notes' => $Notes,
+            'Notes' => $Notes ?? null,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
 

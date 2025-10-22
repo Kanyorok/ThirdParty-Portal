@@ -25,6 +25,7 @@ class ReceiptsPostingController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize(PermissionEnum::ReceiptPostingView, FinanceReceipt::class);
         $query = FinanceReceipt::with(['customer', 'allocations']);
 
         if ($request->filled('receipt_number')) {
@@ -58,6 +59,7 @@ class ReceiptsPostingController extends Controller
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::ReceiptPostingCreate, FinanceReceipt::class);
         $paymentMethods = CodeDetail::where('CodeID', 'PaymentMethod')
             ->orderBy('Description')
             ->get(['ID','Value','Description']);
@@ -65,6 +67,7 @@ class ReceiptsPostingController extends Controller
     }
 
     public function show($id){
+        $this->authorize(PermissionEnum::ReceiptPostingView, FinanceReceipt::class);
         $receipt = FinanceReceipt::with(['customer', 'allocations.invoice', 'documents'])
             ->findOrFail($id);
 
@@ -214,6 +217,7 @@ class ReceiptsPostingController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::ReceiptPostingCreate, FinanceReceipt::class);
         $validated = $request->validate([
             'CustomerId' => 'required|numeric',
             'AmountReceived' => 'required|numeric|min:0.01',

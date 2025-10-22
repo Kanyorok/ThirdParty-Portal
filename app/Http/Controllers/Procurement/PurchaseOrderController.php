@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon\Carbon;
 use App\Models\Core\CodeDetail;
+use App\Enums\ProcurementPlanStatusEnum;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 
 class PurchaseOrderController extends Controller
@@ -43,12 +44,20 @@ class PurchaseOrderController extends Controller
             'getSuppliers',
             'getSupplierDetails',
             'prequalifiedSuppliersByCategory',
+            'getPrequalifiedSuppliers',
             'getRFQItems',
             'getAwardedRFQs',
             'getAwardedTenders',
             'getTenderItems',
             'getContractItems',
             'getDirectPlans',
+            'getDirectPlanItems',
+            'getPlanItemCategories',
+            'getPlanItemsByCategory',
+            'getRootItemCategories',
+            'getItemsByCategoryWithDescendants',
+            'getDirectPlanCategories',
+            'getDirectPlanItemsByCategory',
         ]);
 //        $this->authorizeResource(Order::class);
     }
@@ -60,23 +69,36 @@ class PurchaseOrderController extends Controller
     {
         try {
             $plans = ConsolidatedProcurementPlan::query()
-                ->where('Status', 'Approved')
-                ->whereHas('planLineItems', function ($query) {
+                ->where('Status', ProcurementPlanStatusEnum::Approved)
+                ->with(['lineItems.procurementMode'])
+                ->whereHas('lineItems', function ($query) {
                     $query->where('ExecutionStatus', 'Pending')
                         ->whereHas('procurementMode', function ($sub) {
                             $sub->where('Description', 'LIKE', '%Direct%');
                         });
                 })
-                ->orderByDesc('ApprovedOn')
+                // Some environments don't have an ApprovedOn column on t_ConsolidatedProcurementPlan.
+                // Order by best-available timestamp: SubmittedDate, then CreatedOn, then ModifiedOn.
+                ->orderByDesc(DB::raw("COALESCE(SubmittedDate, CreatedOn, ModifiedOn)"))
                 ->limit(100)
-                ->get()
-                ->map(function ($p) {
+        ->get()
+        ->map(function ($p) {
                     return [
                         'PlanID' => $p->PlanID ?? $p->Id ?? null,
                         'Title' => $p->Title ?? $p->Name ?? ('Plan #' . ($p->PlanID ?? $p->Id)),
                         'FiscalYear' => $p->FiscalYear ?? null,
                         'ApprovedOn' => $p->ApprovedOn,
-                        'PendingItems' => $p->planLineItems->where('ExecutionStatus', 'Pending')->count(),
+            'PendingItems' => ($p->lineItems
+                ? $p->lineItems
+                    ->where('ExecutionStatus', 'Pending')
+                    ->filter(function($li){
+                        // Count only items whose procurement method is Direct
+                        $mode = $li->procurementMode; // App\Models\Core\CodeDetail
+                        $desc = is_object($mode) ? ($mode->Description ?? '') : '';
+                        return stripos((string)$desc, 'direct') !== false;
+                    })
+                    ->count()
+                : 0),
                     ];
                 });
 
@@ -99,41 +121,29 @@ class PurchaseOrderController extends Controller
     public function getDirectPlanItems($planId): JsonResponse
     {
         try {
-            $plan = ConsolidatedProcurementPlan::with(['planLineItems' => function($q){
-                $q->where('ExecutionStatus', 'Pending')
-                  ->whereHas('procurementMode', function($sub){
-                      $sub->where('Description', 'LIKE', '%Direct%');
-                  })
-                  ->with(['item']);
-            }])->where(function($q) use ($planId){
-                $q->where('PlanID', $planId)->orWhere('Id', $planId);
-            })->first();
+            $pid = (int) $planId;
+            // Use SQL joins to avoid Eloquent relationship issues
+            $rows = DB::table('t_PlanLineItem as li')
+                ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                ->where('li.ExecutionStatus', 'Pending')
+                ->where(function($q){ $q->where('cd.Description', 'LIKE', '%Direct%'); })
+                ->select([
+                    DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                    DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
+                    DB::raw('COALESCE(it.ItemDescription, li.Description, "") as description'),
+                    DB::raw('COALESCE(li.MergedQty, li.Quantity, 0) as quantity'),
+                    DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
+                ])
+                ->orderBy('itemName')
+                ->get();
 
-            if(!$plan){
-                return response()->json(['success'=>false,'message'=>'Plan not found'],404);
-            }
-
-            $items = $plan->planLineItems->map(function($li){
-                $item = $li->item; // may be null
-                return [
-                    'itemCode' => $item->Id ?? null,
-                    'itemName' => $item->ItemName ?? $li->Description ?? ('Item #'.$li->Id),
-                    'description' => $item->ItemDescription ?? $li->Description ?? '',
-                    'quantity' => $li->MergedQty ?? $li->Quantity ?? 0,
-                    'unitPrice' => $li->EstimatedUnitCost ?? 0,
-                ];
-            })->values();
-
-            return response()->json([
-                'success'=>true,
-                'data'=>$items,
-            ]);
+            return response()->json(['success' => true, 'data' => $rows]);
         } catch (\Throwable $e) {
-            Log::error('Failed to fetch direct plan items', ['planId'=>$planId,'error'=>$e->getMessage()]);
-            return response()->json([
-                'success'=>false,
-                'message'=>'Failed to fetch plan items.'
-            ],500);
+            Log::error('Failed to fetch direct plan items', ['planId' => $planId, 'error' => $e->getMessage()]);
+            // Always return JSON to avoid fetch JSON parse errors on the frontend
+            return response()->json(['success' => false, 'data' => [], 'message' => 'Failed to fetch plan items'], 200);
         }
     }
 
@@ -1062,5 +1072,366 @@ public function getRFQItems($rfqId)
         }
     }
 
+    /**
+     * Root item categories for building the Direct procurement category tree.
+     */
+    public function getRootItemCategories(): JsonResponse
+    {
+        try {
+            $catTable = 't_ItemCategories';
+            $idCol = collect(['Id', 'ID', 'CategoryID'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Id';
+            $nameCol = collect(['Name', 'CategoryName'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Name';
+            $parentCol = collect(['ParentId', 'ParentID', 'Parent'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'ParentId';
 
+            $rows = DB::table($catTable)
+                ->where(function($q) use ($parentCol) {
+                    $q->whereNull($parentCol)
+                      ->orWhere($parentCol, 0);
+                })
+                ->orderBy($nameCol)
+                ->get([$idCol . ' as Id', $nameCol . ' as Name']);
+
+            return response()->json(['success' => true, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch root item categories', ['error' => $e->getMessage()]);
+            return response()->json(['success' => true, 'data' => []]);
+        }
+    }
+
+    /**
+     * Return items by category, including descendant categories.
+     */
+    public function getItemsByCategoryWithDescendants($categoryId): JsonResponse
+    {
+        try {
+            $catTable = 't_ItemCategories';
+            $catIdCol = collect(['Id', 'ID', 'CategoryID'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Id';
+            $parentCol = collect(['ParentId', 'ParentID', 'Parent'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'ParentId';
+
+            $allCats = DB::table($catTable)->get([$catIdCol . ' as Id', $parentCol . ' as ParentId']);
+            $target = (int) $categoryId;
+            $ids = collect([$target]);
+            // BFS to gather descendants
+            $queue = [$target];
+            while ($queue) {
+                $current = array_shift($queue);
+                $children = $allCats->where('ParentId', $current)->pluck('Id')->all();
+                foreach ($children as $cid) {
+                    if (!$ids->contains($cid)) {
+                        $ids->push($cid);
+                        $queue[] = $cid;
+                    }
+                }
+            }
+
+            $items = DB::table('t_Items as i')
+                ->leftJoin('t_ItemTypes as it', 'i.ItemType', '=', 'it.Id')
+                ->leftJoin('t_ItemCategories as ic', 'i.Category', '=', 'ic.Id')
+                ->whereIn('i.Category', $ids->all())
+                ->whereNull('i.DeletedBy')
+                ->select(
+                    DB::raw('COALESCE(i.Id, 0) as itemCode'),
+                    DB::raw('COALESCE(i.ItemName, \'\') as itemName'),
+                    DB::raw('COALESCE(i.ItemDescription, \'\') as description'),
+                    DB::raw('COALESCE(i.ItemPrice, 0) as unitPrice'),
+                    DB::raw('COALESCE(it.TypeName, \'\') as itemType'),
+                    DB::raw('COALESCE(ic.Name, \'\') as categoryName')
+                )
+                ->orderBy('i.ItemName')
+                ->get();
+
+            return response()->json(['success' => true, 'items' => $items]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch items by category', ['categoryId' => $categoryId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => true, 'items' => []]);
+        }
+    }
+
+    /**
+     * Prequalified suppliers for a given item category (considering descendant categories).
+     */
+    public function prequalifiedSuppliersByCategory($categoryId): JsonResponse
+    {
+        try {
+            // Resolve item category descendants
+            $catTable = 't_ItemCategories';
+            $catIdCol = collect(['Id', 'ID', 'CategoryID'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Id';
+            $parentCol = collect(['ParentId', 'ParentID', 'Parent'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'ParentId';
+            $allCats = DB::table($catTable)->get([$catIdCol . ' as Id', $parentCol . ' as ParentId']);
+            $target = (int) $categoryId;
+            $catIds = collect([$target]);
+            $queue = [$target];
+            while ($queue) {
+                $current = array_shift($queue);
+                $children = $allCats->where('ParentId', $current)->pluck('Id')->all();
+                foreach ($children as $cid) {
+                    if (!$catIds->contains($cid)) {
+                        $catIds->push($cid);
+                        $queue[] = $cid;
+                    }
+                }
+            }
+
+            // Resolve SC-IC junction columns
+            $scicTable = 't_SupplierCategory_ItemCategory';
+            $scicSupCol = collect(['SupplierCategoryID', 'SupplierCategoryId', 'supplier_category_id'])->first(fn($c) => Schema::hasColumn($scicTable, $c)) ?? 'SupplierCategoryID';
+            $scicItemCol = collect(['ItemCategoryID', 'ItemCategoryId', 'item_category_id'])->first(fn($c) => Schema::hasColumn($scicTable, $c)) ?? 'ItemCategoryID';
+
+            $supplierCategoryIds = DB::table($scicTable)
+                ->whereIn($scicItemCol, $catIds->all())
+                ->pluck($scicSupCol)
+                ->unique()
+                ->filter()
+                ->values();
+
+            // Map supplier categories to third parties via either pivot or direct supplier table
+            $tpsc = 't_ThirdParty_SupplierCategory';
+            $hasPivot = Schema::hasTable($tpsc) && (Schema::hasColumn($tpsc, 'ThirdPartyID') || Schema::hasColumn($tpsc, 'third_party_id'));
+
+            $thirdPartyIds = collect();
+            if ($hasPivot) {
+                $tpscThirdCol = Schema::hasColumn($tpsc, 'ThirdPartyID') ? 'ThirdPartyID' : (Schema::hasColumn($tpsc, 'third_party_id') ? 'third_party_id' : 'ThirdPartyID');
+                $tpscSupCol = Schema::hasColumn($tpsc, 'SupplierCategoryID') ? 'SupplierCategoryID' : (Schema::hasColumn($tpsc, 'supplier_category_id') ? 'supplier_category_id' : 'SupplierCategoryID');
+                $thirdPartyIds = DB::table($tpsc)
+                    ->whereIn($tpscSupCol, $supplierCategoryIds)
+                    ->pluck($tpscThirdCol)
+                    ->unique()
+                    ->filter()
+                    ->values();
+            } else {
+                // Fallback through t_Suppliers
+                if (Schema::hasTable('t_Suppliers')) {
+                    $supCatCol = Schema::hasColumn('t_Suppliers', 'SupplierCategoryID') ? 'SupplierCategoryID' : (Schema::hasColumn('t_Suppliers', 'CategoryId') ? 'CategoryId' : 'SupplierCategoryID');
+                    $thirdPartyIds = DB::table('t_Suppliers')
+                        ->whereIn($supCatCol, $supplierCategoryIds)
+                        ->pluck('ThirdPartyID')
+                        ->unique()
+                        ->filter()
+                        ->values();
+                }
+            }
+
+            $suppliers = collect();
+            if ($thirdPartyIds->isNotEmpty() && Schema::hasTable('t_ThirdParties')) {
+                // Try to also resolve legacy SupplierId for posting convenience
+                $suppliers = DB::table('t_ThirdParties as tp')
+                    ->leftJoin('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
+                    ->whereIn('tp.Id', $thirdPartyIds->all())
+                    ->select([
+                        DB::raw('tp.Id as ThirdPartyId'),
+                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
+                        DB::raw('COALESCE(s.Id, 0) as SupplierId'),
+                    ])
+                    ->orderBy('tp.TradingName')
+                    ->get();
+            }
+
+            return response()->json(['success' => true, 'data' => $suppliers]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch prequalified suppliers by category', ['categoryId' => $categoryId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => true, 'data' => []]);
+        }
+    }
+
+    /**
+     * Categories present in pending Direct plan items.
+     */
+    public function getDirectPlanCategories(): JsonResponse
+    {
+        try {
+            $rows = DB::table('t_PlanLineItem as li')
+                ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                ->where('li.ExecutionStatus', 'Pending')
+                ->where(function($q){
+                    // Be permissive on Description matching to handle different capitalizations/localizations
+                    $q->where('cd.Description', 'LIKE', '%Direct%');
+                })
+                ->groupBy('ic.Id', 'ic.Name')
+                ->orderBy('ic.Name')
+                ->select([
+                    DB::raw('ic.Id as Id'),
+                    DB::raw("COALESCE(ic.Name, 'Uncategorized') as Name")
+                ])
+                ->get();
+
+            return response()->json(['success' => true, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch direct plan categories', ['error' => $e->getMessage()]);
+            return response()->json(['success' => true, 'data' => []]);
+        }
+    }
+
+    /**
+     * Direct plan items by item category (optional). Aggregated across all plans with pending Direct items.
+     */
+    public function getDirectPlanItemsByCategory($categoryId = null): JsonResponse
+    {
+        try {
+            $query = DB::table('t_PlanLineItem as li')
+                ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                ->where('li.ExecutionStatus', 'Pending')
+                ->where(function($q){
+                    $q->where('cd.Description', 'LIKE', '%Direct%');
+                });
+
+            if (!empty($categoryId)) {
+                $query->where('ic.Id', (int) $categoryId);
+            }
+
+            $items = $query->select([
+                    DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                    DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
+                    DB::raw('COALESCE(it.ItemDescription, li.Description, \'\') as description'),
+                    DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
+                ])
+                ->orderBy('itemName')
+                ->get();
+
+            return response()->json(['success' => true, 'data' => $items]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch direct plan items by category', ['categoryId' => $categoryId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => true, 'data' => []]);
+        }
+    }
+
+    /**
+     * Get categories available within a specific plan's pending Direct procurement items.
+     */
+    public function getPlanItemCategories($planId): JsonResponse
+    {
+        try {
+            $pid = (int) $planId;
+            $liTable = 't_PlanLineItem';
+            $liCatCols = collect(['ItemCategory', 'ItemCategoryID', 'Category', 'CategoryId', 'CategoryID'])
+                ->filter(fn($c) => Schema::hasColumn($liTable, $c))
+                ->values();
+
+            $base = DB::table('t_PlanLineItem as li')
+                ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                ->where(function ($q) use ($pid) {
+                    $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
+                })
+                ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'");
+
+            // Prefer grouping by item categories when available, fallback to line item category refs
+            if ($liCatCols->isEmpty()) {
+                $rows = $base->whereNotNull('ic.Id')
+                    ->groupBy('ic.Id', 'ic.Name')
+                    ->orderBy('ic.Name')
+                    ->select([
+                        DB::raw('ic.Id as Id'),
+                        DB::raw("COALESCE(ic.Name, 'Uncategorized') as Name")
+                    ])->get();
+            } else {
+                // Build union: item categories + line item categories that might not resolve to ic
+                $queryA = DB::table('t_PlanLineItem as li')
+                    ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                    ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                    ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                    ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                    ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                    ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
+                    ->whereNotNull('ic.Id')
+                    ->select([
+                        DB::raw('ic.Id as Id'),
+                        DB::raw("COALESCE(ic.Name, 'Uncategorized') as Name")
+                    ]);
+
+                $liCatCol = $liCatCols->first();
+                $queryB = DB::table('t_PlanLineItem as li')
+                    ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                    ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                    ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                    ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                    ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                    ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
+                    ->whereNull('ic.Id')
+                    ->whereNotNull("li.$liCatCol")
+                    ->select([
+                        DB::raw("CAST(li.$liCatCol as int) as Id"),
+                        DB::raw("'Uncategorized' as Name")
+                    ]);
+
+                $rows = $queryA->union($queryB)->get()
+                    ->unique('Id')
+                    ->filter(fn($r) => !empty($r->Id))
+                    ->values()
+                    ->sortBy('Name')
+                    ->values();
+            }
+
+            return response()->json(['success' => true, 'data' => $rows]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch plan item categories', ['planId' => $planId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => true, 'data' => []]);
+        }
+    }
+
+    /**
+     * Get a plan's pending Direct procurement items filtered by category.
+     */
+    public function getPlanItemsByCategory($planId, $categoryId): JsonResponse
+    {
+        try {
+            $pid = (int) $planId;
+            $cid = (int) $categoryId;
+
+            // Detect possible line item category columns
+            $liTable = 't_PlanLineItem';
+            $liCatCols = collect(['ItemCategory', 'ItemCategoryID', 'Category', 'CategoryId', 'CategoryID'])
+                ->filter(fn($c) => Schema::hasColumn($liTable, $c))
+                ->values();
+
+            $itemsQ = DB::table('t_PlanLineItem as li')
+                ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                ->where(function ($q) use ($pid) {
+                    $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
+                })
+                // Case-insensitive Pending
+                ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                // Case-insensitive Direct
+                ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'");
+
+            // Apply category filter by item category OR line item category columns
+            $itemsQ->where(function ($q) use ($cid, $liCatCols) {
+                $q->where('ic.Id', $cid);
+                foreach ($liCatCols as $col) {
+                    $q->orWhere("li.$col", $cid);
+                }
+            });
+
+            $items = $itemsQ->select([
+                    DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                    DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
+                    DB::raw('COALESCE(it.ItemDescription, li.Description, "") as description'),
+                    DB::raw('COALESCE(li.MergedQty, li.Quantity, 0) as quantity'),
+                    DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
+                ])
+                ->orderBy('itemName')
+                ->get();
+
+            return response()->json(['success' => true, 'data' => $items]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch plan items by category', ['planId' => $planId, 'categoryId' => $categoryId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => true, 'data' => []]);
+        }
+    }
+
+    /**
+     * Wrapper: prequalified suppliers for a category (plan-agnostic).
+     */
+    public function getPrequalifiedSuppliers($categoryId): JsonResponse
+    {
+        return $this->prequalifiedSuppliersByCategory($categoryId);
+    }
 }

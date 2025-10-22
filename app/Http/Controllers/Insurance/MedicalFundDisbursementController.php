@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use App\Models\Insurance\MedicalFund;
+use App\Models\Insurance\MedicalFundContributor;
 use App\Models\Insurance\MedicalFundDisbursement;
 use App\Models\Insurance\MedicalFundBeneficiary;
 use Illuminate\Http\Request;
@@ -17,14 +18,14 @@ class MedicalFundDisbursementController extends Controller
     }
 
     // /bancassurance/medical-funds/{medical_fund}/disbursements
-    public function index(\App\Models\Insurance\MedicalFund $medical_fund, \Illuminate\Http\Request $request)
+    public function index(MedicalFund $medical_fund, Request $request)
     {
-        $q = \App\Models\Insurance\MedicalFundDisbursement::where('FundID',$medical_fund->ID);
+        $q = MedicalFundDisbursement::where('FundId',$medical_fund->Id);
 
         $contributor = null;
         if ($cid = (int)$request->query('contributor')) {
-            $q->where('ContributorID', $cid);
-            $contributor = \App\Models\Insurance\MedicalFundContributor::where('FundID',$medical_fund->ID)->find($cid);
+            $q->where('ContributorId', $cid);
+            $contributor = MedicalFundContributor::where('FundId',$medical_fund->Id)->find($cid);
         }
 
         $total = (float)$q->clone()->sum('Amount');
@@ -33,7 +34,7 @@ class MedicalFundDisbursementController extends Controller
         return view('bancassurance.medical_fund_disbursements.index', compact('medical_fund','disbursements','total','contributor'));
     }
 
-public function create(\App\Models\Insurance\MedicalFund $medical_fund, \Illuminate\Http\Request $request)
+public function create(MedicalFund $medical_fund, Request $request)
 {
     // always initialize the vars you compact()
     $contributor   = null;
@@ -42,14 +43,13 @@ public function create(\App\Models\Insurance\MedicalFund $medical_fund, \Illumin
     $coverages     = collect();
 
     if ($cid = (int)$request->query('contributor')) {
-        $contributor = \App\Models\Insurance\MedicalFundContributor::where('FundID', $medical_fund->ID)->find($cid);
+        $contributor = MedicalFundContributor::where('FundId', $medical_fund->Id)->find($cid);
 
         if ($contributor) {
             // active beneficiaries for this contributor
             $beneficiaries = $contributor->beneficiaries()
-                ->where('IsActive', 1)
-                ->orderBy('FullName')
-                ->get(['ID','FullName']);
+                ->where('IsActive', true)
+                ->get();
 
             // coverages available via the contributor's subscribed packages
             // (unique by Coverage ID)
@@ -57,14 +57,13 @@ public function create(\App\Models\Insurance\MedicalFund $medical_fund, \Illumin
                 ->with('coverages')
                 ->get()
                 ->flatMap->coverages
-                ->unique('ID')
+                ->unique('Id')
                 ->values();
         }
     } else {
         // fund-wide: provide a contributor dropdown
-        $contributors = \App\Models\Insurance\MedicalFundContributor::where('FundID', $medical_fund->ID)
-            ->orderBy('FullName')
-            ->get(['ID','FullName']);
+        $contributors = MedicalFundContributor::where('FundId', $medical_fund->Id)
+            ->get();
     }
 
     return view(
@@ -73,47 +72,47 @@ public function create(\App\Models\Insurance\MedicalFund $medical_fund, \Illumin
     );
 }
 
-public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illuminate\Http\Request $request)
+public function store(MedicalFund $medical_fund, Request $request)
 {
     $data = $request->validate([
         'DisbursementDate' => ['required','date'],
         'Amount'           => ['required','numeric','min:0.01'],
-        'ContributorID'    => ['required','integer'],
-        'BeneficiaryID'    => ['required','integer'],
-        'CoverageID'       => ['required','integer'],
+        'ContributorId'    => ['required','integer'],
+        'BeneficiaryId'    => ['required','integer'],
+        'CoverageId'       => ['required','integer'],
         'Purpose'          => ['nullable','string','max:500'],
     ]);
 
     // Ensure contributor belongs to this fund
-    $contributor = \App\Models\Insurance\MedicalFundContributor::where('FundID', $medical_fund->ID)
-        ->findOrFail($data['ContributorID']);
+    $contributor = MedicalFundContributor::where('FundId', $medical_fund->Id)
+        ->findOrFail($data['ContributorId']);
 
     // Ensure beneficiary belongs to contributor
-    \App\Models\Insurance\MedicalFundBeneficiary::where('ContributorID', $contributor->ID)
-        ->findOrFail($data['BeneficiaryID']);
+    MedicalFundBeneficiary::where('ContributorId', $contributor->Id)
+        ->findOrFail($data['BeneficiaryId']);
 
     // Figure out which package (of this contributor) contains the chosen coverage
     $contributor->load(['packages.coverages']);
     $package = $contributor->packages
         ->first(function($p) use ($data) {
-            return $p->coverages->firstWhere('ID', (int)$data['CoverageID']);
+            return $p->coverages->firstWhere('Id', (int)$data['CoverageId']);
         });
 
-    $data['PackageID'] = $package?->ID;        // may be null if not found
-    $data['FundID']    = $medical_fund->ID;
+    $data['PackageId'] = $package?->Id;        // may be null if not found
+    $data['FundId']    = $medical_fund->Id;
 
-    \App\Models\Insurance\MedicalFundDisbursement::create($data);
+    MedicalFundDisbursement::create($data);
 
     return redirect()
-        ->route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->ID])
+        ->route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->Id])
         ->with('success','Disbursement recorded.')
-        ->with('filter_contributor', $contributor->ID);
+        ->with('filter_contributor', $contributor->Id);
 }
 
     public function edit(MedicalFundDisbursement $disbursement)
     {
         $medical_fund = $disbursement->fund;
-        $beneficiaries = $medical_fund->beneficiaries()->where('IsActive',1)->orderBy('FullName')->get(['ID','FullName']);
+        $beneficiaries = $medical_fund->beneficiaries()->where('IsActive',true)->get();
 
         return view('bancassurance.medical_fund_disbursements.edit', compact('disbursement','medical_fund','beneficiaries'));
     }
@@ -121,7 +120,7 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
     public function update(Request $request, MedicalFundDisbursement $disbursement)
     {
         $data = $request->validate([
-            'BeneficiaryID'     => ['required','integer'],
+            'BeneficiaryId'     => ['required','integer'],
             'DisbursementDate'  => ['required','date'],
             'Amount'            => ['required','numeric','min:0.01'],
             'Purpose'           => ['nullable','string','max:500'],
@@ -130,13 +129,13 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
         $disbursement->update($data);
 
         return redirect()
-            ->route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $disbursement->FundID])
+            ->route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $disbursement->FundId])
             ->with('success','Disbursement updated.');
     }
 
     public function destroy(MedicalFundDisbursement $disbursement)
     {
-        $fundId = $disbursement->FundID;
+        $fundId = $disbursement->FundId;
         $disbursement->delete();
 
         return redirect()
@@ -144,7 +143,7 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
             ->with('success','Disbursement deleted.');
     }
 
-    public function remainingLimit(\Illuminate\Http\Request $request, \App\Models\Insurance\MedicalFundContributor $contributor)
+    public function remainingLimit(Request $request, MedicalFundContributor $contributor)
 {
     $coverageId   = (int)$request->query('coverage_id');
     $beneficiaryId= $request->query('beneficiary_id') ? (int)$request->query('beneficiary_id') : null;
@@ -154,7 +153,7 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
     $contributor->load(['packages.coverages']);
 
     // Find coverage config from any active package
-    $allowed = $contributor->packages->flatMap(fn($p)=> $p->coverages)->keyBy('ID');
+    $allowed = $contributor->packages->flatMap(fn($p)=> $p->coverages)->keyBy('Id');
     if (!$allowed->has($coverageId)) {
         return response()->json([
             'ok'=>false, 'message'=>'Coverage not available for this contributor.'
@@ -166,7 +165,7 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
 
     // find the specific contributor-package that contains this coverage
     $pkgWithCoverage = $contributor->packages->first(function($p) use ($coverageId){
-        return $p->coverages->firstWhere('ID', $coverageId);
+        return $p->coverages->firstWhere('Id', $coverageId);
     });
     $subscribedOn = optional($pkgWithCoverage?->pivot)->SubscribedOn ?? $contributor->CreatedOn;
 
@@ -184,13 +183,13 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
     $yearStart = $onDate->copy()->startOfYear();
     $yearEnd   = $onDate->copy()->endOfYear();
 
-    $q = \App\Models\Insurance\MedicalFundDisbursement::query()
-        ->where('ContributorID', $contributor->ID)
-        ->where('CoverageID', $coverageId)
+    $q = MedicalFundDisbursement::query()
+        ->where('ContributorId', $contributor->ID)
+        ->where('CoverageId', $coverageId)
         ->whereBetween('DisbursementDate', [$yearStart, $yearEnd]);
 
     if (($pivot->Scope ?? 'PerBeneficiary') === 'PerBeneficiary' && $beneficiaryId) {
-        $q->where('BeneficiaryID', $beneficiaryId);
+        $q->where('BeneficiaryId', $beneficiaryId);
     }
 
     $used = (float)$q->sum('Amount');
@@ -210,26 +209,25 @@ public function store(\App\Models\Insurance\MedicalFund $medical_fund, \Illumina
     ]);
 }
 
-public function options(\App\Models\Insurance\MedicalFund $medical_fund, \App\Models\Insurance\MedicalFundContributor $contributor)
+public function options(MedicalFund $medical_fund, MedicalFundContributor $contributor)
 {
     // Ensure contributor belongs to this fund
     abort_unless((int)$contributor->FundID === (int)$medical_fund->ID, 404);
 
     // Beneficiaries
     $beneficiaries = $contributor->beneficiaries()
-        ->where('IsActive', 1)
-        ->orderBy('FullName')
-        ->get(['ID','FullName']);
+        ->where('IsActive', true)
+        ->get();
 
     // Coverages via packages
     $contributor->load(['packages.coverages']);
     $coverages = $contributor->packages
         ->flatMap->coverages
-        ->unique('ID')
+        ->unique('Id')
         ->values()
         ->map(function($cov){
             return [
-                'ID'   => $cov->ID,
+                'Id'   => $cov->Id,
                 'Name' => $cov->Name,
                 'AnnualLimit'       => $cov->pivot->AnnualLimit,
                 'PerVisitLimit'     => $cov->pivot->PerVisitLimit,

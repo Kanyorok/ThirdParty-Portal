@@ -1,8 +1,8 @@
 @extends('layouts.app')
+@section('title', 'Create Medical Funds')
 
 @section('content')
 <div class="container">
-    <h4>Create Medical Fund</h4>
 
     @if($errors->any())
         <div class="alert alert-danger">
@@ -27,30 +27,39 @@
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Fund Name *</label>
+                        <label class="form-label">Fund Name <span class="text-danger">*</span></label>
                         <input type="text" name="FundName" class="form-control" value="{{ old('FundName') }}" required>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Provider *</label>
-                        <select name="ProviderID" class="form-select" required>
+                        <label class="form-label">Provider <span class="text-danger">*</span></label>
+                        <select name="ProviderId" class="form-select" required>
                             <option value="">-- select provider --</option>
                             @foreach($providers as $p)
-                                <option value="{{ $p->ID }}" @selected(old('ProviderID')==$p->ID)>{{ $p->Name }}</option>
+                                <option value="{{ $p->Id }}" @selected(old('ProviderId')==$p->Id)>{{ $p->Name }}</option>
                             @endforeach
                         </select>
-                        <div class="form-text">Manage providers in <code>t_InsuranceProviders</code>.</div>
+                        <div class="form-text">Manage providers in <code>Insurance Providers</code>.</div>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Coverage Type (label)</label>
-                        <input type="text" name="CoverageType" class="form-control" value="{{ old('CoverageType') }}" placeholder="Inpatient / Outpatient / Mixed">
-                        <div class="form-text">Optional label. Actual benefits come from Packages.</div>
+                        <label class="form-label fw-semibold">Coverage Type<span class="text-danger">*</span></label>
+                        <select name="CoverageType" class="form-select rounded-3" required>
+                            <option value="">-- Select Coverage Type --</option>
+                            @foreach ($coverageTypes as $ct)
+                                <option value="{{ $ct->ID }}" @selected(old('CoverageType')==$ct->ID)>
+                                    {{ $ct->Description }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Coverage Limit (label)</label>
-                        <input type="number" step="0.01" name="CoverageLimit" class="form-control" value="{{ old('CoverageLimit') }}">
+                        <label class="form-label fw-semibold">Coverage Limit<span class="text-danger">*</span></label>
+                        <input type="number" name="CoverageLimit" step="0.01" min="0"
+                               value="{{ old('CoverageLimit') }}" 
+                               class="form-control rounded-3 text-end" placeholder="e.g. 10000.00" 
+                               onblur="fixDecimal(this)">
                         <div class="form-text">Optional headline limit for display. Package rules still apply.</div>
                     </div>
 
@@ -84,4 +93,13 @@
         </div>
     </div>
 </div>
+
+<script>
+function fixDecimal(input) {
+    let val = parseFloat(input.value);
+    if (!isNaN(val)) {
+        input.value = val.toFixed(2);
+    }
+}
+</script>
 @endsection

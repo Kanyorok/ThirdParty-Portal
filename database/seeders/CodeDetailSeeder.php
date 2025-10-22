@@ -385,6 +385,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimStatus','Description' => 'Rejected', 'Value' => 'R'],
             ['CodeID' => 'ClaimStatus','Description' => 'Paid', 'Value' => 'P'],
 
+            //MedicalContributorStatus
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Active', 'Value' => 'A'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Inactive', 'Value' => 'I'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Suspended', 'Value' => 'S'],
+
             // PolicyTypeId
             ['CodeID' => 'PolicyTypeId', 'Description' => 'Life Insurance', 'Value' => 'L'],
             ['CodeID' => 'PolicyTypeId', 'Description' => 'Motor Insurance', 'Value' => 'B'],

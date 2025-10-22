@@ -10,23 +10,23 @@
 
   <div class="card">
     <div class="card-body">
-      <form action="{{ route('bancassurance.medicalfunds.disbursements.store', ['medical_fund' => $medical_fund->ID]) }}" method="POST" id="disbForm">
+      <form action="{{ route('bancassurance.medicalfunds.disbursements.store', ['medical_fund' => $medical_fund->Id]) }}" method="POST" id="disbForm">
         @csrf
 
         <div class="row g-3">
           {{-- Contributor --}}
           <div class="col-md-6">
             @if(isset($contributor) && $contributor)
-              <input type="hidden" name="ContributorID" id="ContributorID" value="{{ $contributor->ID }}">
+              <input type="hidden" name="ContributorId" id="ContributorID" value="{{ $contributor->Id }}">
               <label class="form-label">Contributor</label>
-              <input type="text" class="form-control" value="{{ $contributor->FullName }}" disabled>
+              <input type="text" class="form-control" value="{{ $contributor->thirdParty->ThirdPartyId }}" disabled>
               <div class="form-text">Locked to this contributor.</div>
             @else
               <label class="form-label">Contributor *</label>
-              <select name="ContributorID" id="ContributorID" class="form-select" required>
+              <select name="ContributorId" id="ContributorID" class="form-select" required>
                 <option value="">-- select contributor --</option>
                 @foreach($contributors as $c)
-                  <option value="{{ $c->ID }}">{{ $c->FullName }}</option>
+                  <option value="{{ $c->Id }}">{{ $c->thirdParty->ThirdPartyId }}</option>
                 @endforeach
               </select>
             @endif
@@ -35,7 +35,7 @@
           {{-- Beneficiary --}}
           <div class="col-md-6">
             <label class="form-label">Beneficiary *</label>
-            <select name="BeneficiaryID" id="BeneficiaryID" class="form-select" required>
+            <select name="BeneficiaryId" id="BeneficiaryID" class="form-select" required>
               <option value="">-- select beneficiary --</option>
               @if(isset($beneficiaries) && $beneficiaries->count())
                 @foreach($beneficiaries as $b)
@@ -48,7 +48,7 @@
           {{-- Coverage --}}
           <div class="col-md-6">
             <label class="form-label">Coverage *</label>
-            <select name="CoverageID" id="CoverageID" class="form-select" required>
+            <select name="CoverageId" id="CoverageID" class="form-select" required>
               <option value="">-- select coverage --</option>
               @if(isset($coverages) && $coverages->count())
                 @foreach($coverages as $cov)
@@ -112,7 +112,7 @@
 
         <div class="mt-3 d-flex gap-2">
           <button class="btn btn-primary">Save</button>
-          <a href="{{ route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->ID]) }}" class="btn btn-outline-secondary">Cancel</a>
+          <a href="{{ route('bancassurance.medicalfunds.disbursements.index', ['medical_fund' => $medical_fund->Id]) }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
       </form>
     </div>
@@ -126,9 +126,9 @@
   function getEl(id){ return document.getElementById(id); }
   function getVal(id){ const el = getEl(id); return el ? el.value : ''; }
 
-  const $contrib = getEl('ContributorID');
-  const $benef   = getEl('BeneficiaryID');
-  const $cov     = getEl('CoverageID');
+  const $contrib = getEl('ContributorId');
+  const $benef   = getEl('BeneficiaryId');
+  const $cov     = getEl('CoverageId');
   const $amt     = getEl('Amount');
   const $date    = getEl('DisbursementDate');
 
@@ -155,7 +155,7 @@
     $benef.innerHTML = '<option value="">Loading beneficiaries...</option>';
     $cov.innerHTML   = '<option value="">Loading coverages...</option>';
 
-    const url = `{{ route('bancassurance.medicalfunds.contributors.options', ['medical_fund' => $medical_fund->ID, 'contributor' => ':cid']) }}`
+    const url = `{{ route('bancassurance.medicalfunds.contributors.options', ['medical_fund' => $medical_fund->Id, 'contributor' => ':cid']) }}`
                   .replace(':cid', cid);
     try{
       const res = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } });
@@ -219,9 +219,9 @@
   }
 
   async function refreshLimits(){
-    const cid = getVal('ContributorID');
-    const bid = getVal('BeneficiaryID');
-    const cov = getVal('CoverageID');
+    const cid = getVal('ContributorId');
+    const bid = getVal('BeneficiaryId');
+    const cov = getVal('CoverageId');
     const dt  = getVal('DisbursementDate');
 
     if(!cid || !cov){ setDisplay(); return; }
@@ -275,7 +275,7 @@
   // Initial boot:
   // If contributor is pre-locked (hidden input), we must load options via AJAX now.
   @if(isset($contributor) && $contributor)
-    loadOptionsForContributor('{{ $contributor->ID }}');
+    loadOptionsForContributor('{{ $contributor->Id }}');
   @endif
 })();
 </script>

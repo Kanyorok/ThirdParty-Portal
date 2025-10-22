@@ -218,7 +218,7 @@
                             <!-- Reference Invoice -->
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Reference Invoice</label>
-                                <select name="InvoiceRefNo" class="form-select" required>
+                                <select name="InvoiceRefNo" class="form-select" disabled required>
                                     <option value="{{old('InvoiceRefNo', $item->InvoiceRefNo)}}" disabled selected>--Select Invoice--</option>
                                     @foreach($invoices as $invoice)
                                         <option value="{{ $invoice->Id }}" {{ $invoice->Id == $item->InvoiceRefNo ? 'selected' : '' }}>{{ $invoice->InvoiceTitle }} ({{ $invoice->InvoiceNumber }})

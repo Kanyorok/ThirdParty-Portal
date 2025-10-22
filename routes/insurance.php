@@ -25,7 +25,6 @@ use App\Http\Controllers\Insurance\MedicalFundContributionController;
 use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
 use App\Http\Controllers\Insurance\UnderwritingController;
 use App\Http\Controllers\Insurance\MedicalFundBeneficiaryController;
-
 use App\Http\Controllers\Insurance\MedicalFundContributorController;
 use App\Http\Controllers\Insurance\ContributorBeneficiaryController; // new, see quick store below
 use App\Http\Controllers\Insurance\MedicalFundPackageController;
@@ -238,27 +237,27 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('/{ProductId}', [PricingRuleController::class, 'getProductByProvider'])->name('getProductByProvider');
     });
 
-    Route::prefix('medical')->as('bancassurance.')->group(function () {
+    // Route::prefix('medical')->as('bancassurance.')->group(function () {
  
-        // Medical Funds (no hyphen → clean names)
-        Route::resource('medicalfunds', MedicalFundController::class)
-            ->parameters(['medicalfunds' => 'medicalfund']);
+    //     // Medical Funds (no hyphen → clean names)
+    //     Route::resource('medicalfunds', MedicalFundController::class)
+    //         ->parameters(['medicalfunds' => 'medicalfund']);
  
-        // Nested: Beneficiaries
-        Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
-            ->shallow()
-            ->parameters(['medicalfunds' => 'medical_fund','beneficiaries' => 'beneficiary']);
+    //     // Nested: Beneficiaries
+    //     Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
+    //         ->shallow()
+    //         ->parameters(['medicalfunds' => 'medical_fund','beneficiaries' => 'beneficiary']);
  
-        // Nested: Contributions
-        Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
-            ->shallow()
-            ->parameters(['medicalfunds' => 'medical_fund','contributions' => 'contribution']);
+    //     // Nested: Contributions
+    //     Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
+    //         ->shallow()
+    //         ->parameters(['medicalfunds' => 'medical_fund','contributions' => 'contribution']);
  
-        // Nested: Disbursements
-        Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
-            ->shallow()
-            ->parameters(['medicalfunds' => 'medical_fund','disbursements' => 'disbursement']);
-    });
+    //     // Nested: Disbursements
+    //     Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
+    //         ->shallow()
+    //         ->parameters(['medicalfunds' => 'medical_fund','disbursements' => 'disbursement']);
+    // });
 
     Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');

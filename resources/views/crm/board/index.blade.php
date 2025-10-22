@@ -55,7 +55,7 @@
                                     </button>
                                 @endcan
                             </div>
-                            <h5 class="card-title mb-0">Scheduled Meetings</h5>
+                <h5 class="card-title mb-0">Scheduled Meetings <small class="text-muted">(Timezone: {{ $timezone ?? config('app.timezone') }})</small></h5>
                         </div>
                         <div class="card-body">
                             <table id="meetingTable"
@@ -64,8 +64,8 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Title</th>
-                                    <th>Start</th>
-                                    <th>End</th>
+                    <th>Start <small class="text-muted">({{ $timezone ?? config('app.timezone') }})</small></th>
+                    <th>End <small class="text-muted">({{ $timezone ?? config('app.timezone') }})</small></th>
                                     <th>Status</th>
                                 </tr>
                                 </thead>
@@ -100,7 +100,7 @@
                                                     replaced with committee name while sending.
                                                 </li>
                                                 <li class="loanee-group-item">You can use <code> #date</code> to be
-                                                    replaced by {{ now()->format('M d, Y') }}while sending.
+                                                    replaced by {{ now()->format('M d, Y') }} ({{ $timezone ?? config('app.timezone') }}) while sending.
                                                 </li>
                                             </ul>
                                         </div>
@@ -233,7 +233,7 @@
                                        role="alert"></p>
                                 </div>
                                 <div class="col-md-6 col-12 mb-3">
-                                    <label class="form-label" for="BoardMeetingStart">Start <span
+                                    <label class="form-label" for="BoardMeetingStart">Start <small class="text-muted">({{ $timezone ?? config('app.timezone') }})</small> <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control flatpickr-datetime" id="BoardMeetingStart"
                                            name="BoardMeetingStart" placeholder="Select start..">
@@ -241,7 +241,7 @@
                                        role="alert"></p>
                                 </div>
                                 <div class="col-md-6 col-12 mb-3">
-                                    <label class="form-label" for="BoardMeetingEnd">End <span
+                                    <label class="form-label" for="BoardMeetingEnd">End <small class="text-muted">({{ $timezone ?? config('app.timezone') }})</small> <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control flatpickr-datetime " id="BoardMeetingEnd"
                                            name="BoardMeetingEnd" placeholder="Select end..">

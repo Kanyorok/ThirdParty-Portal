@@ -37,11 +37,23 @@ class TenderEvaluationsController extends Controller
 
         $data = [];
         foreach ($tenderswithsections as $key => $value) {
+            // Collect valid section names linked to this tender
+            $tenderSectionRows = TenderSection::where('TenderID', $value->Id)
+                ->with('sections')
+                ->get();
+            $sectionNames = $tenderSectionRows
+                ->map(fn($ts) => $ts->sections?->SectionName)
+                ->filter()
+                ->values()
+                ->all();
+
             $data[] = [
                 'id' => $value->Id,
                 'TenderNo' => $value->TenderNo,
                 'Title' => $value->Title,
-                'sectionsNumber' => TenderSection::where('TenderID', $value->Id)->count(),
+                // Show only sections that still have a valid base Section row
+                'sectionsNumber' => count($sectionNames),
+                'sectionNames' => $sectionNames,
                 'criteriaNumber' => TenderCriteria::where('TenderID', $value->Id)
                     ->where('IsActive', true)
                     ->count(),
@@ -205,15 +217,35 @@ class TenderEvaluationsController extends Controller
             ->groupBy('SectionID')
             ->map(fn($rows) => $rows->pluck('CriteriaID')->toArray());
 
-        // Get sections associated with the tender along with their criteria
-        $tenderSections = TenderSection::where('TenderID', $tender->Id)
-            ->with('sections') // We’ll handle criteria manually
+        // Get sections associated with the tender
+        $allTenderSections = TenderSection::where('TenderID', $tender->Id)
+            ->with('sections')
             ->get();
 
+        // Include any tender section that has a valid Section row (even if IsActive is false)
+        $tenderSections = $allTenderSections
+            ->filter(function($ts){
+                return (bool) $ts->sections; // has linked Section
+            })
+            ->values();
+
+        // Only warn about sections truly missing their base Section definition
+        $filteredSections = $allTenderSections
+            ->reject(function($ts){
+                return (bool) $ts->sections;
+            })
+            ->map(function($ts){
+                $name = $ts->sections?->SectionName;
+                return $name ?: ('Section #'.$ts->SectionID);
+            })
+            ->values();
+
         foreach ($tenderSections as $section) {
-            $sectionId = $section->sections->Id;
+            $sectionId = $section->sections?->Id ?? $section->SectionID;
             $criteriaList = Criteria::where('SectionID', $sectionId)->get();
-            $selectedForSection = $existingBySection[$sectionId] ?? [];
+            $selectedForSection = ($existingBySection instanceof \Illuminate\Support\Collection)
+                ? ($existingBySection->get($sectionId, []))
+                : ($existingBySection[$sectionId] ?? []);
             foreach ($criteriaList as $criteria) {
                 $criteria->isChecked = in_array($criteria->Id, $selectedForSection);
             }
@@ -223,7 +255,8 @@ class TenderEvaluationsController extends Controller
         return view('procurement.tendering.tendersetup.evaluationcriteriasetup.tenderCriteria', compact(
             'TenderId',
             'tender',
-            'tenderSections'
+            'tenderSections',
+            'filteredSections'
         ));
     }
 

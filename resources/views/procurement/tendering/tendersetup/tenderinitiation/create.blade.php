@@ -226,6 +226,7 @@
             <select class="form-select" id="suppliersList" name="suppliers[]" multiple>
                 <!-- Filled dynamically -->
             </select>
+            <small id="supplierMatchCount" class="text-muted d-block mt-1"></small>
                     </div>
 
         <!-- Buttons -->
@@ -244,6 +245,8 @@
   const restricted      = document.getElementById('restrictedTender');
   const suppliersSection= document.getElementById('restrictedSuppliersSection');
   const suppliersList   = document.getElementById('suppliersList');
+  const supplierMatchCount = document.getElementById('supplierMatchCount');
+  const DEBUG = Boolean(@json(config('app.debug')));
 
   // ---- Data injected from Blade
   // Prequalified suppliers injected from backend; default to [] if unavailable
@@ -410,10 +413,12 @@
       opt.disabled = true;
       opt.textContent = 'Select an Item Category to see eligible suppliers';
       suppliersList.appendChild(opt);
+      if (supplierMatchCount) supplierMatchCount.textContent = '';
       return;
     }
 
     const catNum = Number(categoryId);
+    if (DEBUG) console.debug('populateSuppliers: categoryId', catNum, 'total suppliers', (suppliers || []).length);
     // Filter to prequalified suppliers whose mapped ItemCategoryIds include the selected category
     const filtered = (suppliers || [])
       .filter(s => Array.isArray(s.ItemCategoryIds))
@@ -424,6 +429,12 @@
         const bn = (b.ThirdPartyName || b.SupplierName || '').toLowerCase();
         return an.localeCompare(bn);
       });
+
+    if (DEBUG) {
+      const sample = filtered.slice(0, 3).map(s => ({ id: s.Id, name: s.ThirdPartyName || s.SupplierName, cats: (s.ItemCategoryIds || []).slice(0, 8) }));
+      console.debug('populateSuppliers: filtered count', filtered.length, 'sample', sample);
+    }
+    if (supplierMatchCount) supplierMatchCount.textContent = `Matching suppliers: ${filtered.length}`;
 
     if (!filtered.length) {
       const opt = document.createElement('option');
