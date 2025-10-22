@@ -340,12 +340,20 @@ class TransactionService
 
         DB::transaction(function () use ($lines, $batch, &$ids) {
             foreach ($lines as $line) {
+                // Ensure Amount sign convention: DR -> negative, CR -> positive
+                $isDebit = array_key_exists('IsDebit', $line)
+                    ? (bool)$line['IsDebit']
+                    : (($line['DRCR'] ?? null) === 'DR');
+                $amt = abs((float)($line['Amount'] ?? 0));
+                $storageLine = $line;
+                $storageLine['Amount'] = $isDebit ? -$amt : $amt;
+
                 // 1) insert one line, get its ID
-                $trxId = DB::table($this->txTable)->insertGetId($line);
+                $trxId = DB::table($this->txTable)->insertGetId($storageLine);
                 $ids[] = $trxId;
 
-                // 2) update balances for that line
-                $this->updateBalanceForLine($trxId, $line);
+                // 2) update balances for that line (use abs amount internally)
+                $this->updateBalanceForLine($trxId, $storageLine);
             }
 
             // 3) audit
@@ -456,8 +464,8 @@ class TransactionService
                 'BranchID'     => $l['BranchID'] ?? null,
                 'DepartmentID' => $l['DepartmentID'] ?? null,
                 'IsDebit'      => $isDebit,
-                'Amount'       => $amount,
-                'Debit'        => $debit,
+                'Amount' => $isDebit ? $amount * -1 : $amount,
+                'Debit' => $debit * -1,
                 'Credit'       => $credit,
                 'Narration'    => $l['Narration'] ?? null,
             ];
@@ -481,7 +489,7 @@ class TransactionService
                 'Reference'      => $header['ReferenceNumber'] ?? null, // if your table has a Reference column
                 'BatchNumber'    => $header['BatchNumber'] ?? null,     // add column if you want linkage
                 'IdempotencyKey' => $jKey ?? null,                      // add column if you decide to store it
-                'TotalDebit'     => $totalDebit ?? null,                // optional summary cols if present
+                'TotalDebit' => $totalDebit * -1 ?? null,                // optional summary cols if present
                 'TotalCredit'    => $totalCredit ?? null,
                 'CurrencyID'     => $header['CurrencyID'] ?? null,
                 'ApprovalStatus'=>'posted',
@@ -516,8 +524,8 @@ class TransactionService
                     'BranchID'       => $ln['BranchID'],
                     'DepartmentID'   => $ln['DepartmentID'],
                     'IsDebit'        => $ln['IsDebit'],
-                    'Amount'         => $ln['Amount'],
-                    'Debit'          => $ln['Debit'],
+                    'Amount' => $ln['IsDebit'] ? $ln['Amount'] * -1 : $ln['Amount'],
+                    'Debit' => $ln['Debit'] * -1,
                     'Credit'         => $ln['Credit'],
                     'Narration'      => $ln['Narration'],
                     'SystemDescription'      => $ln['Narration'],
@@ -547,12 +555,12 @@ class TransactionService
     {
         $glAccountId = (int)$trx['GLAccountID'];
         $branchId    = $trx['BranchID'] ?? null;
-        $amount      = (float)$trx['Amount'];
+        $amount = abs((float)$trx['Amount']);
         $drcr        = strtoupper($trx['DRCR'] ?? 'DR');     // DR or CR
         $rate        = (float)($trx['ExchangeRate'] ?? 1);
         $currencyId  = $trx['CurrencyID'] ?? null;
 
-        // Sign: DR = -, CR = +
+        // Sign: DR = -, CR = + (always start from absolute amount)
         $signed       = $drcr === 'DR' ? -$amount : $amount;
 
         // Base/ledger currency deltas (t_FinanceGLBranch stores all three)

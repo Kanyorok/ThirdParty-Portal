@@ -102,7 +102,9 @@
 
             <div class="d-flex justify-content-start">
                 <a href="{{ route('transactionsreceipts.index') }}" class="btn btn-outline-secondary">Back</a>
-                <button type="submit" class="btn btn-primary">Update Receipt</button>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Receipt
+                </button>
             </div>
         </form>
     </div>

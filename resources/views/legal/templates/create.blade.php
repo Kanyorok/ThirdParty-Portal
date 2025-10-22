@@ -71,7 +71,8 @@
                             <input type="hidden" name="AttachedClauseIDs" id="AttachedClauseIDs" value="[]">
 
                             <div class="d-flex justify-content-end gap-2">
-                                <button type="submit" class="btn btn-success" onclick="if(this.form.checkValidity()){this.disabled = true; this.innerText = 'Saving...'; this.form.submit();}">
+                                <button type="submit" class="btn btn-success"
+                                        onclick="if(this.form.checkValidity()){this.disabled = true; this.innerText = 'Saving...'; this.form.submit();}">
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Save Template
                                 </button>
                             </div>

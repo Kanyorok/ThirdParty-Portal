@@ -33,7 +33,7 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $journalEntry->RefNo ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($journalEntry->JournalDate)->format('Y-m-d') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($journalEntry->JournalDate)->format('d/m/Y') }}</td>
                                 <td>{{ $journalEntry->Description ?? '-' }}</td>
                                 <td>
                                     {{ number_format($journalEntry->journalLines->sum(function($line) {
@@ -62,16 +62,26 @@
                                     <a href="{{ route('journalentry.show', $journalEntry->Id) }}" class="btn btn-sm btn-outline-info me-1" title="View Journal Entry">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('journalentry.edit', $journalEntry->Id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                    @php $isPosted = strtolower($journalEntry->ApprovalStatus ?? '') === 'posted'; @endphp
+                                    <a href="{{ $isPosted ? '#' : route('journalentry.edit', $journalEntry->Id) }}"
+                                       class="btn btn-sm btn-outline-primary me-1 {{ $isPosted ? 'disabled' : '' }}"
+                                       title="Edit" aria-disabled="{{ $isPosted ? 'true' : 'false' }}"
+                                       style="{{ $isPosted ? 'pointer-events:none; opacity:.65;' : '' }}">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('journalentry.destroy',  $journalEntry->Id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this journal entry?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isPosted ? 'disabled' : '' }}"
+                                            title="Delete"
+                                            {{ $isPosted ? 'disabled' : '' }}
+                                            @if(!$isPosted)
+                                                data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{ $journalEntry->RefNo ?? ('#'.$journalEntry->Id) }}"
+                                            data-route="{{ route('journalentry.destroy', $journalEntry->Id) }}"
+                                        @endif
+                                    >
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -95,6 +105,8 @@
             </div>
         </div>
     </div>
+
+    @include('components.modals.delete-confirm')
 @endsection
 
 @section('styles')

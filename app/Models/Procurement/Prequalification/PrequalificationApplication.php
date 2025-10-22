@@ -25,6 +25,7 @@ class PrequalificationApplication extends Model
     protected $fillable = [
         'SupplierID',
         'RoundID',
+        'CategoryID',
         'SubmittedOn',
         'Status',
         'CreatedBy',
@@ -55,13 +56,30 @@ class PrequalificationApplication extends Model
         return $this->hasMany(PrequalificationEvaluation::class, 'ApplicationID', 'ApplicationID');
     }
 
-    public function categories(): BelongsToMany
+    public function category()
     {
-        return $this->belongsToMany(
-            SupplierCategory::class,
-            't_PrequalificationApplicationCategories',
-            'ApplicationID',
-            'CategoryID'
-        )->withTimestamps();
+        return $this->belongsTo(SupplierCategory::class, 'CategoryID', 'SupplierCategoryID');
+    }
+
+    /**
+     * One-to-one prequalification result.
+     */
+    public function result()
+    {
+        return $this->hasOne(PrequalificationResult::class, 'ApplicationID', 'ApplicationID');
+    }
+
+    /**
+     * Virtual attribute to mirror legacy usage of applicationNo in blades.
+     * Returns the primary key (ApplicationID) unless a dedicated column is added later.
+     */
+    public function getApplicationNoAttribute(): string
+    {
+        return (string)($this->attributes['ApplicationID'] ?? '');
+    }
+
+    public function categoryStatuses()
+    {
+        return $this->hasMany(ApplicationCategoryStatus::class, 'ApplicationId', 'ApplicationID');
     }
 }

@@ -6,19 +6,19 @@
 @endsection
 
 @section('content')
- @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -41,44 +41,48 @@
                 <th>Issued On</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach($consumptions as $consumption)
-            <tr>
-                <td>{{ $loop->iteration }}</td>
-                <td>{{ $consumption->ConsumptionNo }}</td>
-                <td>{{ optional($consumption->item)->ItemName }}</td>
-                <td>{{ $consumption->Quantity }}</td>
-                <td>{{ optional($consumption->uom)->Name }}</td>
-                <td>{{ optional($consumption->branch)->Name }}</td>
-                <td>{{ $consumption->issued_to_name }}</td>
-                <td>{{ optional($consumption->issuedBy)->Name }}</td>
-                <td>{{ \Carbon\Carbon::parse($consumption->IssuedOn)->format('m/d/Y') }}</td>
-                 <td>{{ $consumption->Actions }}
-                                <a href="{{ route('stockconsumption.show', $consumption->Id) }}"
-                                   class="btn btn-secondary btn-sm">View</a>
-                                <a href="{{ route('stockconsumption.edit', $consumption->Id) }}" class="btn btn-warning btn-sm">Edit</a>
-                                <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $consumption->Id }}')">Delete</a>
-                                <form id="delete-form-{{ $consumption->Id }}"
-                                      action="{{ route('stockconsumption.destroy', $consumption->Id) }}" method="POST"
-                                      style="display:none;">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $consumption->ConsumptionNo }}</td>
+                    <td>
+                        {{-- Try different approaches --}}
+                        {{ $consumption->item_name ?? 'N/A' }} {{-- Using the accessor --}}
 
-                                <script>
-                                    function confirmDelete(Id) {
-                                        if (confirm('⚠️ Are you sure you want to delete this store?')) {
-                                            document.getElementById('delete-form-' + Id).submit();
-                                        }
-                                    }
-                                </script>
-                        </tr>
+                        {{-- OR --}}
+                        {{-- {{ $consumption->stockItem?->ItemName ?? $consumption->item?->item?->ItemName ?? 'N/A' }} --}}
+
+                        {{-- OR --}}
+                        {{-- {{ $consumption->masterItem?->ItemName ?? 'N/A' }} --}}
+                    </td>
+                    <td>{{ $consumption->Quantity }}</td>
+                    <td>{{ optional($consumption->uom)->Name }}</td>
+                    <td>{{ optional($consumption->branch)->Name }}</td>
+                    <td>{{ $consumption->issued_to_name }}</td>
+                    <td>{{ optional($consumption->issuedBy)->Name }}</td>
+                    <td>{{ \Carbon\Carbon::parse($consumption->IssuedOn)->format('m/d/Y') }}</td>
+                    <td>
+                        <a href="{{ route('stockconsumption.show', $consumption->Id) }}"
+                           class="btn btn-secondary btn-sm">View</a>
+                        <a href="{{ route('stockconsumption.edit', $consumption->Id) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $consumption->Id }}')">Delete</a>
+                        <form id="delete-form-{{ $consumption->Id }}"
+                              action="{{ route('stockconsumption.destroy', $consumption->Id) }}" method="POST"
+                              style="display:none;">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    </td>
+                </tr>
             @endforeach
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>
-   @section('scripts')
+
+    @section('scripts')
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
         <script>
@@ -95,7 +99,12 @@
                 });
                 @endif
             });
+
+            function confirmDelete(Id) {
+                if (confirm('⚠️ Are you sure you want to delete this stock consumption?')) {
+                    document.getElementById('delete-form-' + Id).submit();
+                }
+            }
         </script>
     @endsection
-
 @endsection

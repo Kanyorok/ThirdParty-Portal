@@ -2,105 +2,109 @@
 @section('title', 'Bid Scoring Consolidation')
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-4">📊 Bid Scoring Consolidation – TND/PROC/2025/001</h4>
-
-    <!-- Tender Info Summary -->
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <strong>Item:</strong> Supply of ICT Equipment
-        </div>
-        <div class="col-md-6">
-            <strong>Evaluators:</strong> 3 Committee Members
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Tender {{ $tender->TenderNo ?? 'N/A' }} - Consolidated Scores</h4>
+        <div class="d-flex gap-2">
+            <a href="{{ route('bidscores.index') }}" class="btn btn-secondary">Back</a>
         </div>
     </div>
 
-    <!-- Consolidated Scoring Table -->
-    <div class="table-responsive mb-4">
+    <div class="row mb-3">
+        <div class="col-md-6"><strong>Item:</strong> {{ $tender->Title ?? 'N/A' }}</div>
+        <div class="col-md-6"><strong>Evaluators:</strong> {{ $evaluatorCount }} Committee Members</div>
+    </div>
+
+    <div class="table-responsive mb-3">
         <table class="table table-bordered align-middle">
-            <thead class="table-light text-center align-middle">
+            <thead class="table-light">
                 <tr>
-                    <th rowspan="2">#</th>
-                    <th rowspan="2">Bidder</th>
-                    <th colspan="3">Technical (60%)</th>
-                    <th colspan="2">Financial (40%)</th>
-                    <th rowspan="2">Total Weighted Score (%)</th>
-                    <th rowspan="2">Rank</th>
-                    <th rowspan="2">Recommendation</th>
-                </tr>
-                <tr>
-                    <th>Compliance</th>
-                    <th>Delivery</th>
-                    <th>Experience</th>
-                    <th>Warranty</th>
-                    <th>Financial</th>
+                    <th>#</th>
+                    <th>Supplier</th>
+                    @foreach ($evaluators as $ev)
+                        <th>{{ $ev['name'] }}</th>
+                    @endforeach
+                    <th>Average (out of 100)</th>
+                    <th>Rank</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-            <!-- Bidder 1 -->
+            @forelse ($supplierSummaries as $i => $row)
                 <tr>
-                    <td>1</td>
-                    <td>Tech Supplies Ltd</td>
-                    @foreach ([9.0, 8.5, 8.0, 7.0, 8.5] as $score)
-                        <td>
-                            <div class="d-flex flex-column text-center">
-                                <small>{{ number_format($score, 1) }}/10</small>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-info" style="width: {{ $score * 10 }}%;"></div>
-                                </div>
-                            </div>
-                        </td>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $row['supplier_name'] }}</td>
+                    @foreach ($evaluators as $ev)
+                        <td>{{ number_format($row['evaluator_scores'][$ev['id']] ?? 0, 2) }}</td>
                     @endforeach
-                    <td><strong>85%</strong></td>
-                    <td>1</td>
-                    <td><span class="badge bg-success">Recommended</span></td>
+                    <td><strong>{{ number_format($row['average'], 2) }}</strong></td>
+                    <td>{{ $row['rank'] }}</td>
+                        <td>
+                            <form method="POST" action="{{ route('procawards.store') }}" class="d-inline">
+                                @csrf
+                                <input type="hidden" name="tender_id" value="{{ $tender->Id }}">
+                                <input type="hidden" name="winning_supplier_id" value="{{ $row['supplier_id'] }}">
+                                <input type="hidden" name="award_justification"
+                                       value="Awarded based on highest consolidated average score">
+                                <input type="hidden" name="technical_score" value="{{ $row['average'] }}">
+                                <input type="hidden" name="total_score" value="{{ $row['average'] }}">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-trophy"></i> Award
+                                </button>
+                            </form>
+                        </td>
                 </tr>
-
-            <!-- Bidder 2 -->
+            @empty
                 <tr>
-                    <td>2</td>
-                    <td>Nova Systems</td>
-                    @foreach ([8.5, 7.5, 7.0, 6.5, 7.5] as $score)
-                        <td>
-                            <div class="d-flex flex-column text-center">
-                                <small>{{ number_format($score, 1) }}/10</small>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-info" style="width: {{ $score * 10 }}%;"></div>
-                                </div>
-                            </div>
-                        </td>
-                    @endforeach
-                    <td><strong>76%</strong></td>
-                    <td>2</td>
-                    <td><span class="badge bg-secondary">Backup</span></td>
+                    <td colspan="{{ 4 + count($evaluators) }}" class="text-center">No evaluation data found</td>
                 </tr>
-
-            <!-- Bidder 3 -->
-                <tr>
-                    <td>3</td>
-                    <td>EquiBuild Ltd</td>
-                    @foreach ([7.0, 6.0, 6.0, 5.0, 6.5] as $score)
-                        <td>
-                            <div class="d-flex flex-column text-center">
-                                <small>{{ number_format($score, 1) }}/10</small>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-info" style="width: {{ $score * 10 }}%;"></div>
-                                </div>
-                            </div>
-                        </td>
-                    @endforeach
-                    <td><strong>63%</strong></td>
-                    <td>3</td>
-                    <td><span class="badge bg-danger">Not Recommended</span></td>
-                </tr>
+            @endforelse
             </tbody>
         </table>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="d-flex gap-2 justify-content-end mb-5">
-        <button class="btn btn-outline-success">Forward for Award</button>
-        <button class="btn btn-outline-danger">Reject All Bids</button>
-        <button class="btn btn-outline-dark">Back</button>
+    <div class="d-flex justify-content-end">
+        <form method="POST" action="{{ route('bidscores.consolidate', ['tenderId' => $tender->Id]) }}">
+            @csrf
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check-double"></i> Consolidate Scores
+            </button>
+        </form>
     </div>
 </div>
+
+<script>
+    function forwardForAward() {
+        if (confirm('Forward this tender for award processing? This will redirect you to the award creation page where you can create the official award.')) {
+            const tenderId = {{ $tender->Id }};
+            window.location.href = '{{ route('awards.create-from-consolidation', ['tenderId' => ':tenderId']) }}'.replace(':tenderId', tenderId);
+        }
+    }
+
+    function rejectAllBids() {
+        if (confirm('Are you sure you want to reject all bids? This action cannot be undone.')) {
+            // Add your reject all bids logic here
+            alert('Feature coming soon: Reject all bids functionality');
+        }
+    }
+</script>
 @endsection
+
+@push('styles')
+    <style>
+        .table thead th {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge.fs-6 {
+            font-size: 1rem !important;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+@endpush

@@ -54,7 +54,8 @@ class PaymentVoucherController extends Controller
             $invoices[]=[
                 'Id'=>$value->Id,
                 'InvoiceNumber'=>$value->InvoiceNumber,
-                'SupplierID'=>$value->SupplierID,
+                // ThirdPartyID is stored in SupplierID field for AP module
+                'ThirdPartyID' => $value->SupplierID,
                 'CurrencyID'=>$value->CurrencyID,
                 'InvoiceAmount'=>$value->InvoiceAmount,
                 'CurrencyCode'=>$value->currency->Code,
@@ -177,7 +178,7 @@ class PaymentVoucherController extends Controller
             $invoices[]=[
                 'Id'=>$value->Id,
                 'InvoiceNumber'=>$value->InvoiceNumber,
-                'SupplierID'=>$value->SupplierID,
+                'ThirdPartyID' => $value->SupplierID,
                 'CurrencyID'=>$value->CurrencyID,
                 'InvoiceAmount'=>$value->InvoiceAmount,
                 'CurrencyCode'=>$value->currency->Code,
@@ -275,7 +276,10 @@ class PaymentVoucherController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
 
-        $voucher = FinanceVoucher::with('invoice.supplier')->findOrFail($id);
+        $voucher = FinanceVoucher::with([
+            'invoice.thirdParty:Id,TradingName,ThirdPartyName,Email,Phone,PhysicalAddress',
+            'invoice.currency:Id,Code'
+        ])->findOrFail($id);
         $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus','posted')->sum('TotalAmount');
         $statusClass = match($voucher->ApprovalStatus) {
             'posted' => 'bg-success',

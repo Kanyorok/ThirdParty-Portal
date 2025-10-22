@@ -6,6 +6,7 @@ use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Finance\FinanceJournalEntry;
 use App\Models\Finance\FinanceTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -90,17 +91,30 @@ class PostingController extends Controller
         $data = [];
 
         foreach ($journal->journalLines as $line) {
+            // Prefer Amount if present; otherwise derive from Debit/Credit
+            $derivedAmount = 0.0;
+            if (isset($line->Amount) && $line->Amount !== null) {
+                $derivedAmount = (float)$line->Amount;
+            } else {
+                $debit = (float)($line->Debit ?? 0);
+                $credit = (float)($line->Credit ?? 0);
+                $derivedAmount = $debit !== 0.0 ? $debit : $credit;
+            }
+
+            $rawAmount = abs((float)$derivedAmount);
+            $isDebit = isset($line->IsDebit) ? (bool)$line->IsDebit : ((float)($line->Debit ?? 0) > 0);
+            $amountToStore = $isDebit ? -$rawAmount : $rawAmount;
             $data[] = [
-                'TransactionDate' => $journal->Date,
+                'TransactionDate' => $journal->Date ? Carbon::parse($journal->Date) : Carbon::now(),
                 'ReferenceNumber' => $journal->RefNo,
                 'TransactionType' => 'Journal',
                 'ModuleID' => 1100000,
                 'SourceTable' => 't_FinanceJournalEntries',
                 'GLAccountID' => $line->GLAccountID,
-                'BranchID' => session('LoginBranchId', 1), // Fallback to 1 if unset
+                'BranchID' => $line->BranchID ?? session('LoginBranchId', 1), // Fallback to 1 if unset
                 'DepartmentID' => $line->DepartmentID,
-                'DRCR' => $line->IsDebit ? 'DR' : 'CR',
-                'Amount' => $line->Amount,
+                'DRCR' => $isDebit ? 'DR' : 'CR',
+                'Amount' => $amountToStore,
                 'CurrencyID' => 1,
                 'CurrencyCode' => 'KES',
                 'ExchangeRate' => 1,
@@ -131,8 +145,8 @@ class PostingController extends Controller
             '*.SourceTable' => 'nullable|string|max:255',
             '*.GLAccountID' => 'nullable|integer|exists:t_FinanceGLAccounts,Id',
             '*.BranchID' => 'required|integer|exists:t_Branches,Id',
-            '*.DepartmentID' => 'required|integer|exists:t_Departments,Id',
-            '*.Amount' => 'required|numeric|min:0',
+            '*.DepartmentID' => 'nullable|integer|exists:t_Departments,Id',
+            '*.Amount' => 'required|numeric',
 //            '*.CurrencyID' => 'required|integer|exists:t_Currencies,Id',
 //            '*.CurrencyCode' => 'required|string|max:3',
 //            '*.ExchangeRate' => 'required|numeric|min:0',
@@ -177,7 +191,6 @@ class PostingController extends Controller
 
             return back()->with('success', 'Transactions posted successfully.');
         } catch (\Throwable $th) {
-            return $th->getMessage();
             Log::error('Transaction Posting Failed: ' . $th->getMessage(), [
                 'data' => $data,
                 'trace' => $th->getTraceAsString(),

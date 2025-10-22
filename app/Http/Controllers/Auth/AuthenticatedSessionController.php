@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -41,6 +42,17 @@ class AuthenticatedSessionController extends Controller
         // Authenticate
         $request->authenticate();
         $user = $request->user();
+
+        // Prevent session fixation and rotate the session id
+        $request->session()->regenerate();
+        $currentSessionId = $request->session()->getId();
+        // Generate a session_token used for cross-instance single-session cache check
+        try {
+            $sessionToken = bin2hex(random_bytes(32));
+        } catch (\Throwable $e) {
+            $sessionToken = (string)Str::uuid();
+        }
+        $request->session()->put('session_token', $sessionToken);
 
         ModuleService::clearNavbarCache($user);
 
@@ -87,6 +99,41 @@ class AuthenticatedSessionController extends Controller
         ]);
 
         $user->setEffectiveRole($roleName); // Tell Spatie the effective role
+
+        // Record single-session metadata and attach user_id to current DB session row
+        try {
+            // bump session version and set current session id
+            $user->session_version = (int)$user->session_version + 1;
+            $user->current_session_id = $currentSessionId;
+            $user->last_login_at = now();
+            $user->save();
+
+            // Store session metadata
+            session([
+                'session_version' => $user->session_version,
+                'login_at' => now(),
+            ]);
+
+            // Cache single-session token so other instances are rejected immediately
+            \Illuminate\Support\Facades\Cache::put('user_session_token_' . $user->getAuthIdentifier(), $sessionToken, now()->addMinutes(((int)config('session.lifetime', 20)) + 5));
+
+            // Ensure DB session row carries user_id for cleanup logic
+            $connection = config('session.connection');
+            $table = config('session.table', 'sessions');
+            DB::connection($connection)
+                ->table($table)
+                ->where('id', '=', $currentSessionId)
+                ->update(['user_id' => $user->getAuthIdentifier()]);
+
+            // Belt & suspenders: remove any other sessions for this user
+            DB::connection($connection)
+                ->table($table)
+                ->where('user_id', '=', $user->getAuthIdentifier())
+                ->where('id', '!=', $currentSessionId)
+                ->delete();
+        } catch (\Throwable $e) {
+            // Non-blocking: continue login even if session audit fails
+        }
 
         return redirect()->intended('/');
     }

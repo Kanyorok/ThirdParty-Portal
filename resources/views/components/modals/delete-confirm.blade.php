@@ -17,7 +17,14 @@
                     @csrf
                     @method('DELETE')
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                    <button type="submit" class="btn btn-danger"
+                            onclick="if(this.form.checkValidity()){
+                                    this.disabled = true;
+                                    this.innerHTML = '<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Please Wait...';
+                                    this.form.submit();
+                                }">
+                        Yes, Delete
+                    </button>
                 </form>
             </div>
         </div>

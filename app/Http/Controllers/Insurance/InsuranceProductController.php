@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Insurance;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\ProviderAndProducts\InsuranceProductRequest;
+use App\Models\Core\CodeDetail;
 use App\Services\Insurance\ProviderAndProducts\InsuranceProductService;
-use Illuminate\Http\Request;
 use App\Models\Insurance\InsuranceProduct;
 use App\Models\Insurance\InsuranceProvider;
 use App\Enums\Core\PermissionEnum;
@@ -26,18 +26,17 @@ class InsuranceProductController extends Controller
     // Show create form
     public function create()
     {
-      //  $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
+        $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
+        $providers = InsuranceProvider::all()->where('IsActive', true);
+        $producttypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
 
-        $providers = InsuranceProvider::all();
-
-        $products = InsuranceProduct::all();
-        return view('bancassurance.products.create', compact('providers', 'products'));
+        return view('bancassurance.products.create', compact('providers', 'producttypes'));
     }
 
     // Store product
     public function store(InsuranceProductRequest $request)
     {
-       // $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
+        $this->authorize(PermissionEnum::InsuranceProductCreate, InsuranceProduct::class);
 
         $validated = $request->validated();
 
@@ -61,9 +60,10 @@ class InsuranceProductController extends Controller
         $this->authorize(PermissionEnum::InsuranceProductView, InsuranceProduct::class);
 
         $product = InsuranceProduct::findOrFail($Id);
+        $producttypes = CodeDetail::where('CodeID', 'PolicyTypeId')->get();
         $providers = InsuranceProvider::all();
 
-        return view('bancassurance.products.edit', compact('product', 'providers'));
+        return view('bancassurance.products.edit', compact('product', 'providers', 'producttypes'));
     }
 
     // Update product
@@ -107,6 +107,11 @@ class InsuranceProductController extends Controller
         $this->authorize(PermissionEnum::InsuranceProductDelete, InsuranceProduct::class);
         try {
             $product = InsuranceProduct::findOrFail($Id);
+
+            if ($product->policies()->exists()) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'This Product is in use and cannot be deleted.']);
+            }
             $product->delete();
 
             return redirect()->route('bancassurance.products.index')
@@ -119,40 +124,5 @@ class InsuranceProductController extends Controller
                 ->withInput();
         }
     }
-
-    // public function mapForm($id)
-    // {
-    //     $product = DB::table('t_InsuranceProducts')->find($id);
-
-    //     $providers = DB::table('t_InsuranceProviders')->pluck('Name', 'Id')->toArray();
-
-    //     $policyTypes = DB::table('t_CodeDetails')
-    //         ->where('CodeID', 'POLICY_TYPE')
-    //         ->pluck('Description', 'Id')
-    //         ->toArray();
-
-    //     return view('bancassurance.products.map', compact('product', 'providers', 'policyTypes'));
-    // }
-
-    // public function storeMap(Request $request, $id)
-    // {
-    //     $request->validate([
-    //         'InsuranceProviderID' => 'required|exists:t_InsuranceProviders,Id',
-    //         'PolicyTypeID' => 'nullable|exists:t_CodeDetails,Id',
-    //         'CustomName' => 'nullable|string|max:150',
-    //         'CommissionType' => 'required|in:Flat,Tiered',
-    //     ]);
-
-    //     DB::table('t_InsuranceProviderProducts')->insert([
-    //         'ProductID' => $id,
-    //         'InsuranceProviderID' => $request->InsuranceProviderID,
-    //         'PolicyTypeID' => $request->PolicyTypeID,
-    //         'CustomName' => $request->CustomName,
-    //         'CommissionType' => $request->CommissionType,
-    //         'CreatedAt' => now(),
-    //     ]);
-
-    //     return redirect()->route('bancassurance.products.index')->with('success', 'Product mapped to provider successfully.');
-    // }
 
 }

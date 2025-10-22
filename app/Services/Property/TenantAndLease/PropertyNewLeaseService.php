@@ -55,6 +55,13 @@ class PropertyNewLeaseService
         $leaseNumber = 'LEASE-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
 
 
+        $Unit = PropertyUnit::findOrFail($Unit->Id);
+        $Unit->update([
+            'IsRentable' => 0,
+            'CurrentStatus' => 0,
+        ]);
+
+
         $newlease = PropertyNewLease::create([
             'LeaseNumber' => $leaseNumber,
             'Tenant' => $Tenant->Id,

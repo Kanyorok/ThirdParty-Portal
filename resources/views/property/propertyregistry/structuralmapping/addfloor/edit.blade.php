@@ -1,91 +1,82 @@
 @extends('layouts.app')
-@section('title', 'Floors Per Block')
+@section('title', 'Edit Floor in Block')
+
 @section('content')
+    <div class="container mt-4" style="max-width: 850px;">
+
+        {{-- Validation Errors --}}
     @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
+            <div class="alert alert-danger shadow-sm">
+                <h6 class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Please fix the following issues:
+                </h6>
+                <ul class="mb-0 ps-3">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
+
     <form action="{{ route('addfloor.update', $floor->Id) }}" method="POST">
         @csrf
         @method('PUT')
-        <div class="card shadow">
-            <div class="card-header bg-light fw-bold">Floor Setup</div>
+
+        <div class="card shadow border-0 rounded-3">
+            <div class="card-header bg-light fw-bold">
+                <i class="bi bi-building"></i> Floor Details
+            </div>
+
             <div class="card-body">
                 <div class="row g-3 mb-3">
+                    {{-- Property (readonly) --}}
                     <div class="col-md-6">
-                        <label class="form-label">Select Property</label>
-                        <select name="PropertyID" id="property-select" class="form-select" required>
-                            <option value="">-- Select Property --</option>
-                            @foreach ($lineentries as $property)
-                                <option
-                                    value="{{ $property->Id }}" {{ old('PropertyID', $floor->PropertyID) == $property->Id ? 'selected' : '' }}>{{ $property->PropertyName }}</option>
-                            @endforeach
-                        </select>
+                        <label class="form-label fw-bold">Property</label>
+                        <input type="hidden" name="PropertyID" value="{{ $floor->PropertyID }}">
+                        <input type="text" class="form-control"
+                               value="{{ $floor->property->PropertyName ?? '' }}" readonly>
+                    </div>
+
+                    {{-- Block (readonly) --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Block</label>
+                        <input type="hidden" name="BlockID" value="{{ $floor->BlockID }}">
+                        <input type="text" class="form-control"
+                               value="{{ $floor->block->BlockName ?? '' }}" readonly>
                     </div>
                 </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Select Block</label>
-                        <select name="BlockID" id="block-select" class="form-select" required>
-                            <option value="">-- Select Block --</option>
-                            @foreach ($blocks as $block)
-                                <option
-                                    value="{{ $block->Id }}" {{ old('BlockID', $floor->BlockID) == $block->Id ? 'selected' : '' }}>{{ $block->BlockName }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="FloorLabel" class="form-label">Floor Name</label>
-                        <input type="text" name="FloorLabel" class="form-control"
-                               value="{{ old('FloorLabel', $floor->FloorLabel) }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="FloorNotes" class="form-label">Notes</label>
-                        <textarea name="FloorNotes" class="form-control"
-                                  rows="4">{{ old('FloorNotes', $floor->FloorNotes) }}</textarea>
-                    </div>
+
+                {{-- Floor Label --}}
+                <div class="mb-3">
+                    <label for="FloorLabel" class="form-label fw-bold">Floor Label <span
+                            class="text-danger">*</span></label>
+                    <input type="text" name="FloorLabel" id="FloorLabel"
+                           class="form-control @error('FloorLabel') is-invalid @enderror"
+                           value="{{ old('FloorLabel', $floor->FloorLabel) }}"
+                           placeholder="e.g. Ground Floor, 1st Floor" required>
+                    @error('FloorLabel')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Floor Notes --}}
+                <div class="mb-3">
+                    <label for="FloorNotes" class="form-label fw-bold">Notes</label>
+                    <textarea name="FloorNotes" id="FloorNotes" class="form-control" rows="3"
+                              placeholder="Optional floor notes">{{ old('FloorNotes', $floor->FloorNotes) }}</textarea>
+                </div>
+
+                {{-- Form Actions --}}
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">
+                        <i class="bi bi-check-circle"></i> Update Floor
+                    </button>
+                    <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
     </form>
     </div>
-                        <button type="submit" class="btn btn-success">Update Floor</button>
-                    <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
-    </div>
-    </div>
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const PropertySelect = document.getElementById('property-select');
-            const BlockSelect = document.getElementById('block-select');
-
-            PropertySelect.addEventListener('change', function () {
-                const PropertyId = this.value;
-
-                // Reset Block dropdown
-                BlockSelect.innerHTML = '<option value="">-- Select a Block --</option>';
-
-                if (PropertyId) {
-                    // Construct the URL from the named route
-                    const url = `{{ route('getblockbyproperty', ':Id') }}`.replace(':Id', PropertyId);
-
-                    fetch(url)
-                        .then(response => response.json())
-                        .then(blocks => {
-                            blocks.forEach(block => {
-                                const option = document.createElement('option');
-                                option.value = block.Id;
-                                option.textContent = block.BlockName;
-                                BlockSelect.appendChild(option);
-                            });
-                        })
-                        .catch(error => console.error('Error loading property blocks:', error));
-                }
-            });
-        });
-    </script>
-
 @endsection

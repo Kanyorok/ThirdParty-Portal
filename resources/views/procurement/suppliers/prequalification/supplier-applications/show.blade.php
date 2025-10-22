@@ -16,14 +16,6 @@
                 <i class="fa fa-clipboard-check me-1"></i> Evaluate
             </a>
 
-            {{-- Button to generate and view the results --}}
-            <form action="{{ route('prequalification.prequalification-evaluation.generate-results', $application->ApplicationID) }}" method="POST" class="d-inline me-2">
-                @csrf
-                <button type="submit" class="btn btn-success">
-                    <i class="fa fa-calculator me-1"></i> Generate & View Results
-                </button>
-            </form>
-
             {{-- Button to view already generated results --}}
             <a href="{{ route('prequalification.prequalification-evaluation.results', $application->ApplicationID) }}" class="btn btn-info me-2">
                 <i class="fa fa-chart-bar me-1"></i> View Results
@@ -91,10 +83,8 @@
                         <tr>
                             <td class="fw-semibold text-muted">Categories Applied</td>
                             <td>
-                                @if($application->categories->isNotEmpty())
-                                @foreach($application->categories as $category)
-                                <span class="badge bg-secondary me-1">{{ $category->CategoryName }}</span>
-                                @endforeach
+                                @if($application->category)
+                                    <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
                                 @else
                                 <span class="text-muted">N/A</span>
                                 @endif

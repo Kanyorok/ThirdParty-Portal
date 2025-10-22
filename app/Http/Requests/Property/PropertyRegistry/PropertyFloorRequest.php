@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Property\PropertyRegistry;
 
+use App\Models\PropertyManagement\PropertyFloor;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PropertyFloorRequest extends FormRequest
 {
@@ -25,7 +27,16 @@ class PropertyFloorRequest extends FormRequest
         return [
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
-            'FloorLabel' => 'required|string|max:50',
+            'FloorLabel' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique(PropertyFloor::class, 'FloorLabel')
+                    ->where(fn($query) => $query
+                        ->where('PropertyID', $this->PropertyID)
+                        ->where('BlockID', $this->BlockID)
+                    ),
+            ],
             'FloorNotes' => 'nullable|string|max:100',
         ];
     }

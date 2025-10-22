@@ -200,9 +200,9 @@ class SMSService
         }
 
         $this->sms->update([
-                            'Dated'  => now(),
-                            'Status' => EmailStatusEnum::Sent->value,
-                           ]);
+            'Dated' => now(),
+            'Status' => EmailStatusEnum::Sent->value,
+        ]);
 
         return $this->_UpdateParent(EmailStatusEnum::Sent);
     }

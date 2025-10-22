@@ -2,6 +2,7 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Core\Country;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -34,8 +35,14 @@ class InsuranceProvider extends Model
     {
         return 'InsuranceProvidersId';
     }
-        public function getProductByProvider()
+
+    public function getProductByProvider()
     {
         return $this->hasMany(InsuranceProduct::class, 'InsuranceproviderID', 'Id');
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class, 'Country', 'Id');
     }
 }

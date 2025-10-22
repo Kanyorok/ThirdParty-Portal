@@ -9,12 +9,14 @@ use App\Http\Requests\Insurance\BancassuranceClaimAssessmentRequest;
 use App\Http\Requests\Insurance\BancassuranceClaimRequest;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
+use App\Models\Insurance\BancassuranceClaimAssessment;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Services\Insurance\BancassuranceClaimAssessmentService;
 use App\Services\Insurance\BancassuranceClaimService;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ClaimController extends Controller
 {
@@ -33,7 +35,7 @@ public function store(BancassuranceClaimRequest $request)
     $this->authorize(PermissionEnum::BancassuranceClaimCreate, BancassuranceClaim::class);
     $validated = $request->validated();
     $PolicyId = BancassurancePolicy::findOrFail($validated['PolicyId']);
-    $Status = CodeDetail::findOrFail($validated['Status']);
+    $Status = CodeDetail::where('CodeID', 'ClaimStatus')->where('Value', 'I')->firstOrFail();
     $ClaimType = CodeDetail::findOrFail($validated['ClaimType']);
 
     $claim = BancassuranceClaimService::create(
@@ -90,4 +92,44 @@ public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $i
     }
 
 
+    public function assessmentlist()
+    {
+        $assessments = BancassuranceClaimAssessment::all();
+
+        return view('bancassurance.claims.assessment_list', compact('assessments'));
+    }
+
+    public function assessmentshow($id)
+    {
+        $assessment = BancassuranceClaimAssessment::findOrFail($id);
+        return view('bancassurance.claims.assessment_show', compact('assessment'));
+    }
+
+    public function assessmentedit($id)
+    {
+        $assessment = BancassuranceClaimAssessment::findOrFail($id);
+        $decisions = CodeDetail::where('CodeID', 'Decision')->get();
+        return view('bancassurance.claims.assessment_edit', compact('assessment', 'decisions'));
+    }
+
+    public function assessmentupdate(BancassuranceClaimAssessmentRequest $request, $id)
+    {
+
+        $validated = $request->validated();
+
+        $assessment = BancassuranceClaimAssessment::findOrFail($id);
+        $Decision = CodeDetail::findOrFail($validated['Decision']);
+
+        $assessment = BancassuranceClaimAssessmentService::update(
+            $assessment,
+            $validated['AssessmentComments'],
+            $validated['AssessmentAmount'],
+            $Decision,
+            $request->user(),
+        );
+
+
+        return redirect()->route('bancassurance.claims.index')
+            ->with('success', 'Claim assessment updated successfully.');
+    }
 }

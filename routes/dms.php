@@ -22,6 +22,7 @@ use App\Http\Controllers\DMS\SearchController;
 use App\Http\Controllers\DMS\Tags\DocumentTagController;
 use App\Http\Controllers\DMS\Tags\TagController;
 use App\Http\Controllers\DMS\Tags\TaggingRuleController;
+use App\Http\Controllers\DMS\Verification\SignatureController;
 use Illuminate\Support\Facades\Route;
 
 Route::namespace('DMS')->prefix('dms')->group(function () {
@@ -67,6 +68,9 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::resource('legal-hold/{d_m_s_legal_hold}/hold-files', DocumentLegalHoldController::class)->parameters(['hold-files' => 'document'])->except('edit');
     Route::post('legal-hold/{dMSLegalHold}/release', [LegalHoldController::class, 'release'])->name('legal-hold.release');
     Route::resource('legal-hold', LegalHoldController::class)->parameters(['legal-hold' => 'dMSLegalHold'])->except('edit');
+
+    Route::get('document-signature/{dMSSignature}/documents', \App\Http\Controllers\DMS\Verification\SignatureDocumentsController::class)->name('document-signature.documents');
+    Route::resource('document-signature', SignatureController::class)->parameters(['document-signature' => 'dMSSignature']);//->except('edit');
 
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('dms-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([

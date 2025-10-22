@@ -4,8 +4,10 @@ namespace App\Http\Requests\HRM;
 
 use App\Enums\Employee\GenderEnum;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -27,8 +29,11 @@ class AddEmployeeRequest extends FormRequest
             'FirstName' => ['required', 'string', 'max:250'],
             'MiddleName' => ['nullable', 'string', 'max:250'],
             'LastName' => ['required', 'string', 'max:250'],
-            'Phone' => ['required', 'string', /*'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'*/],
-            'Email' => ['required', 'email:rfc,dns', 'max:250'],
+            'Phone' => ['required', 'string', 'max:20', 'regex:/(^\+?254\d{9}$)|(^0\d{9}$)|(^\d{9}$)/'],
+            'Email' => ['required', Rule::email()
+                ->rfcCompliant(strict: false)
+                ->validateMxRecord()
+                ->preventSpoofing(), 'max:250'],
             'Department' => ['required'],
             'Branch' => ['required'],
             'Gender' => ['required', 'string'],
@@ -115,5 +120,53 @@ class AddEmployeeRequest extends FormRequest
             return $department;
         }
         throw ValidationException::withMessages(['Department' => 'invalid department']);
+    }
+
+    public function getPhoneNumber(): string
+    {
+        $input = (string)$this->validated('Phone');
+        $digits = preg_replace('/\D+/', '', $input);
+
+        // Normalize to E.164 (Kenya)
+        if (str_starts_with($digits, '254') && strlen($digits) === 12) {
+            $normalized = '+' . $digits; // 2547XXXXXXXX
+        } elseif (str_starts_with($digits, '0') && strlen($digits) === 10) {
+            $normalized = '+254' . substr($digits, 1); // 07XXXXXXXX
+        } elseif (strlen($digits) === 9 && str_starts_with($digits, '7')) {
+            $normalized = '+254' . $digits; // 7XXXXXXXX
+        } else {
+            throw ValidationException::withMessages(['Phone' => 'invalid Kenyan phone number']);
+        }
+
+        // Compare by canonical forms to avoid format duplicates
+        $suffix9 = substr(preg_replace('/\D+/', '', $normalized), -9); // 7XXXXXXXX
+        $variants = ['+254' . $suffix9, '0' . $suffix9, $suffix9];
+
+        $userDup = User::where(function ($q) use ($normalized, $variants, $suffix9) {
+            $q->where('Phone', $normalized)
+                ->orWhereIn('Phone', $variants)
+                ->orWhere('Phone', 'like', '%' . $suffix9);
+        })->exists();
+
+        $empDup = Employee::where(function ($q) use ($normalized, $variants, $suffix9) {
+            $q->where('Phone', $normalized)
+                ->orWhereIn('Phone', $variants)
+                ->orWhere('Phone', 'like', '%' . $suffix9);
+        })->exists();
+
+        if ($userDup || $empDup) {
+            throw ValidationException::withMessages(['Phone' => 'phone already exists']);
+        }
+        return $normalized;
+    }
+
+    public function getEmail(): string
+    {
+        $email = $this->validated('Email');
+        if (User::where('Email', $email)->exists() || Employee::where('Email', $email)->exists()) {
+            throw ValidationException::withMessages(['Email' => 'email already exists']);
+        }
+        return $email;
+
     }
 }

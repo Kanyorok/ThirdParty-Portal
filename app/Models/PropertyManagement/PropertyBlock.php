@@ -34,13 +34,9 @@ class PropertyBlock extends Model
     {
         return $this->belongsTo(PropertyRegistry::class,'PropertyID','Id');
     }
-    public function getFloorByBlock()
-    {
-        return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');
-    }
     public function floor()
     {
-        return $this->hasMany(PropertyFloor::class,'BlockID');
+        return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');
     }
 }
 

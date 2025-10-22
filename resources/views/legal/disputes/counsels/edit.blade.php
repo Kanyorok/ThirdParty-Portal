@@ -37,12 +37,14 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Law Firm</label>
-                    <input type="text" name="FirmName" value="{{ $counsel->FirmName }}" class="form-control shadow-sm" required>
+                    <input type="text" name="FirmName" value="{{ $counsel->FirmName }}" class="form-control shadow-sm"
+                           required>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Email</label>
-                    <input type="email" name="Email" value="{{ $counsel->Email }}" class="form-control shadow-sm" required>
+                    <input type="email" name="Email" value="{{ $counsel->Email }}" class="form-control shadow-sm"
+                           required>
                 </div>
 
                 <div class="col-md-6">

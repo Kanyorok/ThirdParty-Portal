@@ -70,9 +70,20 @@ class ItemMasterList extends Model
     ];
 
     // Relationships
+
+
+    public function inUse(): bool
+    {
+        return $this->stockItems()->exists()
+            || $this->transferItems()->exists()
+            || $this->receiptItems()->exists()
+            || $this->requisitionItems()->exists();
+    }
+
+
     public function category()
     {
-        return $this->belongsTo(ItemCategories::class, 'Category');
+        return $this->belongsTo(ItemCategories::class, 'Category', 'Id');
     }
 
     public function parentCategory()
@@ -99,7 +110,7 @@ class ItemMasterList extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
-    
+
 
     public function price()
     {
@@ -111,4 +122,27 @@ class ItemMasterList extends Model
     {
         return $this->belongsTo(InventoryType::class, 'InventoryType', 'Id');
     }
+
+    // App\Models\Inventory\ItemMasterList.php
+
+    public function stockItems()
+    {
+        return $this->hasMany(StockItem::class, 'ItemID', 'Id');
+    }
+
+    public function transferItems()
+    {
+        return $this->hasMany(TransactionTransferItem::class, 'Item', 'Id');
+    }
+
+    public function receiptItems()
+    {
+        return $this->hasMany(TransactionReceiptItem::class, 'Item', 'Id');
+    }
+
+    public function requisitionItems()
+    {
+        return $this->hasMany(InterBranchRequisitionItem::class, 'Item', 'Id');
+    }
+
 }

@@ -12,6 +12,7 @@ use App\Models\Procurement\ConsolidatedProcurementPlan;
 use App\Models\Procurement\PlanLineItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 
 class PlanManualInputController extends Controller
@@ -45,8 +46,15 @@ class PlanManualInputController extends Controller
         $selectedPlanId = $request->input('plan_id');
         $selectedPlanTitle = $request->input('title');
         $plans = ConsolidatedProcurementPlan::where('Status', ProcurementPlanStatusEnum::Draft)->get();
-        $items = ItemMasterList::with('category', 'uom', 'price')->get();
-        $budgetLines = BudgetMaster::all();
+        $items = ItemMasterList::with(['category', 'uom', 'price'])
+            ->whereNotNull('ItemPrice')
+            ->whereHas('price', function ($q) {
+                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            })
+            ->orderBy('ItemName')
+            ->get();
+        // Align with Approved Needs budget line source
+        $budgetLines = \App\Models\Budget\BudgetLine::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.create', compact('plans', 'items', 'budgetLines', 'selectedPlanId', 'selectedPlanTitle'));
     }
@@ -84,7 +92,9 @@ class PlanManualInputController extends Controller
         $planLineItem->ProcurementMethod = '';
         $planLineItem->SchedulePeriod = $validated['schedule_period'];
         $planLineItem->ExpectedDeliveryDate = $validated['expected_delivery_date'];
-        $planLineItem->BudgetLineID = (int)$validated['budget_line_id'];
+        $planLineItem->BudgetLineID = isset($validated['budget_line_id']) && $validated['budget_line_id'] !== null
+            ? (int)$validated['budget_line_id']
+            : null;
         $planLineItem->ExecutionStatus = 'Pending';
         $planLineItem->ChangeRemarks = $validated['notes'] ?? null;
         $planLineItem->BranchID = $user->employee->BranchId;
@@ -112,9 +122,16 @@ class PlanManualInputController extends Controller
         $lineItem = PlanLineItem::with(['item', 'item.category', 'item.uom'])->findOrFail($lineItemId);
         $this->authorize('edit', $lineItem);
         $plans = ConsolidatedProcurementPlan::all();
-        $items = ItemMasterList::all();
+        $items = ItemMasterList::with(['category', 'uom', 'price'])
+            ->whereNotNull('ItemPrice')
+            ->whereHas('price', function ($q) {
+                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+            })
+            ->orderBy('ItemName')
+            ->get();
         $categories = ItemCategories::all();
-        $budgetLines = BudgetMaster::all();
+        // Align with Approved Needs budget line source
+        $budgetLines = \App\Models\Budget\BudgetLine::all();
 
         return view('procurement.procurementplan.planconsolidation.manualentry.edit', compact('lineItem', 'plans', 'items', 'categories', 'budgetLines'));
     }
@@ -122,7 +139,7 @@ class PlanManualInputController extends Controller
     public function update(PlanManualInputRequest $request, $lineItemId)
     {
         $validated = $request->validated();
-        $user = auth()->user();
+        $user = Auth::user();
         $lineItem = PlanLineItem::findOrFail($lineItemId);
 
         $this->authorize('update', $lineItem);
@@ -163,7 +180,7 @@ class PlanManualInputController extends Controller
         }
 
         $lineItem->ModifiedOn = now();
-        $lineItem->ModifiedBy = auth()->id();
+        $lineItem->ModifiedBy = Auth::id();
 
         $lineItem->save();
 

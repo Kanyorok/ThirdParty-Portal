@@ -3,6 +3,32 @@
 @section('content')
 
     <div class="container mt-4">
+        <!-- Success/Error Messages -->
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>📑 Tender Section Settings</h4>
             <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addSection1Modal">
@@ -28,7 +54,12 @@
                 @foreach ($data as $item)
                     <tr>
                         <td>{{$loop->index+1}}</td>
-                        <td>{{$item['TenderNo']}}</td>
+                        <td>
+                            <strong>{{ $item['TenderNo'] }}</strong>
+                            @if(!empty($item['Title']))
+                                - {{ $item['Title'] }}
+                            @endif
+                        </td>
                         <td>{{$item['sectionsNumber']}}</td>
                         <td>
                             <a href="{{route('tender-criteria',$item['id'])}}"
@@ -94,13 +125,15 @@
                             <tbody>
                             @foreach ($sections as $item)
                                 <tr>
-                                    <td><input type="checkbox" name="sections[]" value="{{$item->id}}"></td>
+                                    <td><input type="checkbox" name="sections[]" value="{{$item->Id}}"
+                                               data-section-id="{{$item->Id}}"></td>
                                     @error('sections')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
                                     <td>{{$item->SectionName}}</td>
-                                    <td><input type="number" class="form-control weight-input" name="weights[]"
-                                               value="0.00" step="1"></td>
+                                    <td><input type="number" class="form-control weight-input"
+                                               name="weights[{{$item->Id}}]"
+                                               value="0.00" step="1" data-section-id="{{$item->Id}}"></td>
                                     @error('weights')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
@@ -150,10 +183,11 @@
                     const weightInput = row.querySelector('input[type="number"]');
 
                     if (checkbox.checked) {
-                        weightInput.disabled = false;
+                        weightInput.style.backgroundColor = '#fff';
                         total += parseFloat(weightInput.value) || 0;
                     } else {
-                        weightInput.disabled = true;
+                        weightInput.style.backgroundColor = '#f5f5f5';
+                        weightInput.value = '0.00';
                     }
                 });
 
@@ -166,8 +200,19 @@
                 const checkbox = row.querySelector('input[type="checkbox"]');
                 const weightInput = row.querySelector('input[type="number"]');
 
-                checkbox.addEventListener('change', updateTotal);
-                weightInput.addEventListener('input', updateTotal);
+                checkbox.addEventListener('change', function () {
+                    if (!this.checked) {
+                        weightInput.value = '0.00';
+                    }
+                    updateTotal();
+                });
+
+                weightInput.addEventListener('input', function () {
+                    const checkbox = row.querySelector('input[type="checkbox"]');
+                    if (checkbox.checked) {
+                        updateTotal();
+                    }
+                });
             });
 
             // Validate on submit
@@ -181,6 +226,18 @@
 
             // Initialize on load
             updateTotal();
+
+            // Close modal on successful submission (if page has success message)
+            @if(session('success'))
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            // Refresh the page after modal closes to show updated data
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+            @endif
         });
     </script>
 

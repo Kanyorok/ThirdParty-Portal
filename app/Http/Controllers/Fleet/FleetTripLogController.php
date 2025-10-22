@@ -5,15 +5,11 @@ namespace App\Http\Controllers\Fleet;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetTripLogRequest;
 use App\Models\Fleet\FleetTripLog;
-use App\Models\Fleet\FleetVehicle;
-use App\Models\Fleet\FleetRepairLog;
-use App\Models\Fleet\FleetMaintenanceSchedule;
-use App\Models\Fleet\FleetDriver;
 use App\Models\Core\CodeDetail;
-use Illuminate\Support\Facades\DB;
-use App\Models\Fleet\ContractedDriver;
 use App\Services\FleetManagement\FleetTripLogService;
-
+use Illuminate\Http\Request;
+use App\Models\CRM\MarketingPlanner;
+use App\Enums\Marketing\PlannerStatus;
 
 class FleetTripLogController extends Controller
 {
@@ -27,82 +23,138 @@ class FleetTripLogController extends Controller
     public function index()
     {
         $this->authorize('viewAny', FleetTripLog::class);
-        $tripLogs = FleetTripLog::with(['vehicle', 'driverType', 'driverPermanent', 'driverContracted'])
+
+        $tripLogs = FleetTripLog::with(['childTrips', 'parentLoadType', 'parentVehicleType', 'parentTripType'])
+            ->whereNull('ParentTripID')
             ->orderByDesc('CreatedOn')
             ->get();
 
         return view('fleet.trip_logs.index', compact('tripLogs'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize('create', FleetTripLog::class);
-        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
-            ->where('Description', 'Active')
-            ->value('Id');
 
-        $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
-        $drivers = FleetDriver::where('IsActive', 1)->get();
-        $driverTypes = CodeDetail::where('CodeID', 'DriverType')
-            ->orderBy('Value')
-            ->get();
-        $contractedDrivers = ContractedDriver::where('IsActive', 1)->get();
+        $parentTrip = null;
+        if ($request->has('parentTripId')) {
+            $parentTrip = FleetTripLog::findOrFail($request->parentTripId);
+        }
 
-        return view('fleet.trip_logs.create', compact('vehicles', 'drivers', 'contractedDrivers', 'driverTypes'));
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+        $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
+        $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
+
+        // Prevent undefined variable in the create view
+        $tripLog = null;
+
+        return view('fleet.trip_logs.create', compact(
+            'vehicleTypes', 'loadTypes', 'tripTypes', 'parentTrip', 'tripLog'
+        ));
     }
+
 
     public function store(FleetTripLogRequest $request)
     {
         $this->authorize('create', FleetTripLog::class);
-        $this->tripLogService->createTrip($request->validated());
+        $data = $request->validated();
 
-        return redirect()
-            ->route('fleet.trip_logs.index')
-            ->with('success', 'Trip logged successfully.');
+        if (empty($data['ParentTripID'])) {
+            $parentTrip = $this->tripLogService->createParentTrip($data);
+            return redirect()
+                ->route('fleet.trip_logs.create', ['parentTripId' => $parentTrip->Id])
+                ->with('success', 'Parent trip created successfully. You can now add child trips.');
+        } else {
+            $parentTrip = FleetTripLog::findOrFail($data['ParentTripID']);
+            $this->tripLogService->createChildTrips($parentTrip, $data['childTrips'] ?? []);
+            return redirect()
+                ->route('fleet.trip_logs.index')
+                ->with('success', 'Child trips added successfully.');
+        }
     }
 
-    public function show($id)
+    public function show($Id)
     {
-        $this->authorize('view', FleetTripLog::class);
-        $tripLogs = FleetTripLog::with(['vehicle', 'driverType', 'driverPermanent', 'driverContracted'])
-            ->findOrFail($id);
+        $tripLog = FleetTripLog::with(['parentTripType', 'parentVehicleType', 'parentLoadType', 'childTrips'])
+            ->findOrFail($Id);
 
-        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
-            ->where('Description', 'Active')
-            ->value('Id');
+        $parentTrip = $tripLog->ParentTripID
+            ? FleetTripLog::with(['parentTripType', 'parentVehicleType', 'parentLoadType', 'childTrips'])
+                ->findOrFail($tripLog->ParentTripID)
+            : $tripLog;
 
-        $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
-        $drivers = FleetDriver::where('IsActive', 1)->get();
-        $driverTypes = CodeDetail::where('CodeID', 'DriverType')
-            ->orderBy('Value')
-            ->get();
-        $contractedDrivers = ContractedDriver::where('IsActive', 1)->get();
-
-        return view('fleet.trip_logs.show', compact('vehicles', 'tripLogs', 'drivers', 'contractedDrivers', 'driverTypes'));
+        return view('fleet.trip_logs.show', [
+            'parentTrip' => $parentTrip,
+            'childTrips' => $parentTrip->childTrips,
+        ]);
     }
 
     public function edit($id)
     {
-        $this->authorize('edit', FleetTripLog::class);
-        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
-            ->where('Description', 'Active')
-            ->value('Id');
+        $this->authorize('update', FleetTripLog::class);
 
-        $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
-        $drivers = FleetDriver::where('IsActive', 1)->get();
-        $driverTypes = CodeDetail::where('CodeID', 'DriverType')
-            ->orderBy('Value')
-            ->get();
-        $contractedDrivers = ContractedDriver::where('IsActive', 1)->get();
-        return view('fleet.vehicles.edit', compact('vehicles', 'drivers', 'contractedDrivers', 'driverTypes'));
+        // Load parent + child trips
+        $tripLog = FleetTripLog::with([
+            'childTrips.parentTripType',
+            'childTrips.parentVehicleType',
+            'childTrips.parentLoadType',
+            'parentTripType',
+            'parentVehicleType',
+            'parentLoadType'
+        ])->findOrFail($id);
+
+        // Always resolve the parent trip (if this is a child, go to its parent)
+        $parentTrip = $tripLog->ParentTripID
+            ? FleetTripLog::with([
+                'childTrips.parentTripType',
+                'childTrips.parentVehicleType',
+                'childTrips.parentLoadType',
+                'parentTripType',
+                'parentVehicleType',
+                'parentLoadType'
+            ])->findOrFail($tripLog->ParentTripID)
+            : $tripLog;
+
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+        $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
+        $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
+
+        return view('fleet.trip_logs.edit', [
+            'parentTrip' => $parentTrip,
+            'childTrips' => $parentTrip->childTrips,
+            'vehicleTypes' => $vehicleTypes,
+            'loadTypes' => $loadTypes,
+            'tripTypes' => $tripTypes,
+        ]);
     }
 
-    public function update(FleetTripLogRequest $request, $id, FleetTripLogService $tripLogService)
+
+    public function update(FleetTripLogRequest $request, $id)
     {
         $this->authorize('update', FleetTripLog::class);
-        $tripLog = FleetTripLog::findOrFail($id);
+        $parentTrip = FleetTripLog::findOrFail($id);
+        $data = $request->validated();
+        $this->tripLogService->updateTrip($parentTrip, $data);
+        $parentAttributes = [
+            'TripType' => $parentTrip->TripType,
+            'TripCode' => $parentTrip->TripCode,
+            'VehicleType' => $parentTrip->VehicleType,
+            'LoadType' => $parentTrip->LoadType,
+        ];
 
-        $tripLogService->updateTrip($tripLog, $request->validated());
+        if (!empty($data['childTrips'])) {
+            foreach ($data['childTrips'] as $childId => $childData) {
+                if (is_numeric($childId)) {
+                    $child = FleetTripLog::find($childId);
+                    if ($child) {
+                        $child->update($childData);
+                    }
+                } else {
+                    $newChildData = array_merge($childData, $parentAttributes);
+                    $parentTrip->childTrips()->create($newChildData);
+                }
+            }
+        }
 
         return redirect()->route('fleet.trip_logs.index')
             ->with('success', 'Trip updated successfully.');
@@ -112,7 +164,7 @@ class FleetTripLogController extends Controller
     public function destroy($id)
     {
         $this->authorize('destroy', FleetTripLog::class);
-        $tripLogs = FleetTripLog::with(['vehicle', 'driverType', 'driverPermanent', 'driverContracted'])
+        $tripLogs = FleetTripLog::with(['childTrips', 'parentLoadType', 'parentVehicleType', 'parentTripType'])
             ->findOrFail($id);
 
         $this->tripLogService->deleteTrip($tripLogs);
@@ -120,85 +172,48 @@ class FleetTripLogController extends Controller
         return redirect()->route('fleet.trip_logs.index')->with('success', 'Trip deleted successfully.');
     }
 
-public function getAvailableVehicles()
-{
-    $startDate = request('start_date');
-    $endDate   = request('end_date');
+    public function getApprovedTransfers()
+    {
+        $transfers = \App\Models\Inventory\TransactionTransfer::with(['fromBranch', 'toBranch'])
+            ->where('Status', \App\Enums\Inventory\Transfers::InTransit)
+            ->get(['Id', 'TransferId', 'TransferDate', 'FromBranch', 'ToBranch']);
 
-    if (!$startDate || !$endDate) {
-        return response()->json([]);
+        return response()->json($transfers->map(function ($t) {
+            return [
+                'Id' => $t->Id,
+                'TransferId' => $t->TransferId,
+                'TransferDate' => $t->TransferDate,
+                'FromBranch' => $t->fromBranch?->Name,
+                'ToBranch' => $t->toBranch?->Name,
+            ];
+        }));
     }
 
-    $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
-        ->where('Description', 'Active')
-        ->value('Id');
+    public function getApprovedCampaigns()
+    {
+        $campaigns = MarketingPlanner::query()
+            ->where('Status', PlannerStatus::Active)
+            ->with('activities')
+            ->get(['Id', 'PlannerID', 'Name', 'Status', 'StartOn', 'EndOn']);
 
-    $vehicles = FleetVehicle::where('Status', $activeStatusId)
-        ->whereDoesntHave('tripLogs', function ($q) use ($startDate, $endDate) {
-            $q->where(function ($q2) use ($startDate, $endDate) {
-                // Exclude vehicles with any trip that overlaps the selected period
-                $q2->where(function ($query) use ($startDate, $endDate) {
-                    $query->where('TripStartDate', '<', $endDate)
-                          ->where('TripEndDate', '>', $startDate);
-                });
-            });
-        })
-        ->whereDoesntHave('maintenanceSchedules', function ($q) use ($startDate, $endDate) {
-            $q->where('Status', '!=', 0)
-              ->where('ScheduledDate', '<=', $endDate)
-              ->where('ScheduledDate', '>=', $startDate);
-        })
-        ->whereDoesntHave('repairLogs', function ($q) use ($startDate, $endDate) {
-            $q->where('RepairDate', '<=', $endDate)
-              ->where('RepairDate', '>=', $startDate);
-        })
-        ->get();
-
-    return response()->json($vehicles);
-}
-
-public function getAvailablePermanentDrivers()
-{
-    $startDate = request('start_date');
-    $endDate = request('end_date');
-
-    if (!$startDate || !$endDate) {
-        return response()->json([]);
+        return response()->json($campaigns->map(function ($t) {
+            return [
+                'Id' => $t->Id,
+                'PlannerID' => $t->PlannerID,
+                'Name' => $t->Name,
+                'StartOn' => optional($t->StartOn)->toDateString(),
+                'EndOn' => optional($t->EndOn)->toDateString(),
+                'Status' => $t->Status instanceof \BackedEnum ? $t->Status->name : $t->Status,
+                'Activities' => $t->activities->map(fn($a) => [
+                    'Id' => $a->Id,
+                    'Location' => $a->Location,
+                    'StartOn' => optional($a->StartOn)->toDateString(),
+                    'EndOn' => optional($a->EndOn)->toDateString(),
+                    'StartTime' => optional($a->StartTime)?->format('H:i') ?? '',
+                    'EndTime' => optional($a->EndTime)?->format('H:i') ?? '',
+                    'Notes' => $a->Notes,
+                ]),
+            ];
+        }));
     }
-
-    $availableDrivers = FleetDriver::where('IsActive', 1)
-        ->whereDoesntHave('tripLogs', function ($q) use ($startDate, $endDate) {
-            $q->where(function ($q2) use ($startDate, $endDate) {
-                $q2->where('TripStartDate', '<', $endDate)
-                   ->where('TripEndDate', '>', $startDate);
-            });
-        })
-        ->get();
-
-    return response()->json($availableDrivers);
-}
-
-
-public function getAvailableContractedDrivers()
-{
-    $startDate = request('start_date');
-    $endDate   = request('end_date');
-
-    if (!$startDate || !$endDate) {
-        return response()->json([]);
-    }
-
-    $availableDrivers = ContractedDriver::where('IsActive', 1)
-        ->whereDoesntHave('tripLogs', function ($q) use ($startDate, $endDate) {
-            $q->where(function ($q2) use ($startDate, $endDate) {
-                $q2->where('TripStartDate', '<', $endDate)
-                   ->where('TripEndDate', '>', $startDate);
-            });
-        })
-        ->get();
-
-    return response()->json($availableDrivers);
-}
-
-
 }

@@ -36,11 +36,13 @@ class BudgetProjectionsController extends Controller
             if (!$budget) continue;
             $data[] = [
                 'Name' => $budget->Name,
+                'ApprovalStatus' => $budget->Status,
                 'Products' => BudgetProjection::where('BudgetID', $budgetID)->count(),
                 'Accounts' => BudgetProjection::where('BudgetID', $budgetID)->sum('NumberOfAccounts'),
                 'Id' => $budget->Id,
             ];
         }
+
         return view('budgetandanalytics.budgetworkspace.entry.index', compact(
             'data'
         ));
@@ -50,7 +52,7 @@ class BudgetProjectionsController extends Controller
     // Show form for new entry
     public function create()
     {
-        $budgets = Budget::all();
+        $budgets = Budget::select('Id', 'Name')->where('Status', 'draft')->get();
         $currencies = Currency::all();
         $products = BudgetProduct::all();
         // $periods = BudgetPeriods::all();
@@ -65,7 +67,11 @@ class BudgetProjectionsController extends Controller
     public function getProductTypes($budgetLineId)
     {
         $productIDS = BudgetLineProductTypes::where('BudgetLineID', $budgetLineId)->pluck('ProductTypeID')->toArray();
-        $product = BudgetProduct::whereIn('Id', $productIDS)->get();
+        //Ensure that the prods being displ must have a Rate value entered.
+        $productsIdWithRate = BudgetDriverRates::pluck('ProductTypeID')->toArray();
+        $filteredProdID = array_intersect($productIDS, $productsIdWithRate);
+
+        $product = BudgetProduct::whereIn('Id', $filteredProdID)->get();
         //$budgetLine = BudgetLine::with('products')->findOrFail($budgetLineId);
         return response()->json($product);
     }
@@ -82,6 +88,10 @@ class BudgetProjectionsController extends Controller
             'Products.*.ProductID' => 'required|exists:t_BudgetProductTypes,Id',
             'Products.*.Volume' => 'required|integer|min:0',
             // 'Products.*.Value'     => 'required|numeric|min:0', (till  futher notice, we will use 1 as value)
+        ],
+            [
+                'Products.*.ProductID.required' => 'Please select a product',
+                'Products.*.Volume.required' => 'Please enter a volume',
         ]);
 
         DB::beginTransaction();
@@ -299,7 +309,8 @@ class BudgetProjectionsController extends Controller
 
         //return $products;
 
-        $budget = BudgetDriverProjections::findOrFail($id);
+        //$budget = BudgetDriverProjections::findOrFail($id);
+        $budget = Budget::findOrFail($id);
 
         $rate = BudgetProduct::with(['rate'])
             ->get();
@@ -330,7 +341,7 @@ class BudgetProjectionsController extends Controller
         $productTypeId = null;
         $product = BudgetProduct::find($projection->ProductID);
         if ($product) {
-            $productTypeId = $product->ProductTypeID ?? null;
+            $productTypeId = $product->Id ?? null;
         }
 
         return view('budgetandanalytics.budgetworkspace.entry.edit', compact(

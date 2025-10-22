@@ -21,10 +21,11 @@ BEGIN
     WHERE t.Id = @Item
 
     -- Insert new requisition
+    -- ExpectedPrice should store the PER-UNIT cost (from approved plan), not the extended total
     INSERT INTO t_RequisitionLines (RequisitionId, Item, Quantity, UrgencyID, CreatedBy, CreatedOn, ModifiedBy,
                                     ModifiedOn, Type, StatusID, Description, UOM, ExpectedPrice, PlanLineRef)
     VALUES (@RequisitionId, @Item, @Quantity, @Urgency, @User, getdate(), @User, getdate(), @Type, @StatusID,
-            @Description, @UOM, @ExpectedPrice * @Quantity, @LineItemID)
+            @Description, @UOM, @ExpectedPrice, @LineItemID)
 
 
     SET NOCOUNT OFF

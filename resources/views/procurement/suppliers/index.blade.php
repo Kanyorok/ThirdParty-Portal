@@ -42,13 +42,6 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <h3 class="fw-bold mb-1"><i class="bi bi-truck me-2"></i>Suppliers</h3>
-        <a href="{{ route('suppliers.create') }}" class="btn btn-primary shadow-sm d-flex align-items-center">
-            <i class="fa fa-plus-circle me-2"></i>New Supplier
-        </a>
-    </div>
-
     @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
@@ -64,9 +57,12 @@
                         <tr>
                             <th class="text-center">Index</th>
                             <th>Supplier</th>
-                            <th>Status</th>
+                            <th>Trading Name</th>
+                            <th>Approval Status</th>
+                            <th>Prequalified</th>
                             <th>Category</th>
-                            <th>Email</th>
+                            <th>Primary Contact</th>
+                            <th>Primary Email</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -92,41 +88,40 @@
                 ajax: {
                     url: '{{ route("suppliers.index") }}',
                 },
-                columns: [{
-                        data: 'Id',
-                        name: 'Id',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center'
-                    },
-                    {
-                        data: 'ThirdPartyName',
-                        name: 'ThirdPartyName'
-                    },
-                    {
-                        data: 'Prequalified',
-                        name: 'IsPrequalified',
-                        render: function(data) {
-                            if (data === 'Yes') return '<span class="status-pill approved">Approved</span>';
-                            if (data === 'No') return '<span class="status-pill rejected">Rejected</span>';
-                            return '<span class="status-pill pending">Pending</span>';
+                columns: [
+                    {data: 'Id', name: 'Id', orderable: false, searchable: false, className: 'text-center'},
+                    {data: 'ThirdPartyName', name: 'ThirdPartyName'},
+                    {data: 'TradingName', name: 'TradingName', render: d => d || 'N/A'},
+                    { // Approval Status
+                        data: 'ApprovalStatus',
+                        name: 'ApprovalStatus',
+                        render: function (data) {
+                            const label = data || 'Pending';
+                            let cls = 'pending';
+                            let icon = 'fas fa-clock';
+                            if (label === 'Approved') {
+                                cls = 'approved';
+                                icon = 'fas fa-check-circle';
+                            } else if (label === 'Rejected') {
+                                cls = 'rejected';
+                                icon = 'fas fa-times-circle';
+                            }
+                            return `<span class="status-pill ${cls}"><i class="${icon}"></i> ${label}</span>`;
                         }
                     },
-                    {
-                        data: 'category_names',
-                        name: 'category_names'
+                    { // Prequalified
+                        data: 'Prequalified',
+                        name: 'IsPrequalified',
+                        render: function (data) {
+                            if (data === 'Yes') return '<span class="status-pill approved">Yes</span>';
+                            if (data === 'No') return '<span class="status-pill rejected">No</span>';
+                            return '<span class="status-pill pending">N/A</span>';
+                        }
                     },
-                    {
-                        data: 'Email',
-                        name: 'Email'
-                    },
-                    {
-                        data: 'actions',
-                        name: 'actions',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center'
-                    }
+                    {data: 'category_names', name: 'category_names'},
+                    {data: 'PrimaryContact', name: 'PrimaryContact', render: d => d || 'N/A'},
+                    {data: 'PrimaryEmail', name: 'PrimaryEmail'},
+                    {data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center'}
                 ],
                 dom: 'lfrtip',
                 pageLength: 10,

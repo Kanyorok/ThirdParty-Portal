@@ -57,12 +57,14 @@ class EmployeeController extends Controller
         $branch = $request->getBranch();
         $department = $request->getDepartment();
         $actor = $request->user();
+        $phone = $request->getPhoneNumber();
+        $email = $request->getEmail();
 
         try {
-            return DB::transaction(function () use ($request, $image, $joinDate, $dob, $gender, $branch, $department, $actor) {
+            return DB::transaction(function () use ($request, $image, $joinDate, $dob, $gender, $branch, $department, $actor, $phone, $email) {
                 $employee = EmployeeService::create(department: $department, branch: $branch, actor: $actor, JobTitle: $request->string('JobTitle')->trim()->toString(),
-                    FirstName: $request->string('FirstName')->trim()->toString(), Surname: $request->string('LastName')->trim()->toString(), Email: $request->string('Email')->trim()->toString(),
-                    Phone: $request->string('Phone')->trim()->toString(), JoinDate: $joinDate, Gender: $gender, MiddleName: $request->string('MiddleName')->trim()->toString(),
+                    FirstName: $request->string('FirstName')->trim()->toString(), Surname: $request->string('LastName')->trim()->toString(), Email: $email,
+                    Phone: $phone, JoinDate: $joinDate, Gender: $gender, MiddleName: $request->string('MiddleName')->trim()->toString(),
                     Address: $request->string('Address')->trim()->toString(), DateOfBirth: $dob);
                 if ($image instanceof UploadedFile) {
                     $employee->setImage($image, $actor);

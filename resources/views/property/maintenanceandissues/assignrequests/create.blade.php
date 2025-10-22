@@ -14,7 +14,7 @@
                 <!-- Maintenance Request Dropdown -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Select Maintenance Request</label>
+                        <label class="form-label">Select Maintenance Request<span class="text-danger">*</span></label>
                         <select id="request-select" name="RequestNumber" class="form-select" required>
                             <option value="">-- Select Request --</option>
                             @foreach ($maintenancerequests as $maintenancerequest)
@@ -25,13 +25,13 @@
                                     data-floor="{{ $maintenancerequest->floor->FloorLabel ?? '-' }}"
                                     data-unit="{{ $maintenancerequest->unit->UnitCode ?? '-'}}"
                                     data-description="{{ $maintenancerequest->IssueDescription ?? '-'}}">
-                                    {{ $maintenancerequest->RequestNumber ?? '-'}} 
+                                    {{ $maintenancerequest->RequestNumber ?? '-'}}
                                 </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Assignment Date</label>
+                        <label class="form-label">Assignment Date<span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="AssignmentDate" value="{{ date('Y-m-d') }}" required>
                     </div>
                 </div>
@@ -41,7 +41,8 @@
                     <div class="col-md-3">
                         <label class="form-label">Property</label>
                         <input type="text" id="property-display" class="form-control" readonly>
-                        <input type="hidden" name="Property" id="property-id" value="{{ old('Property', $property->Id ?? '-') }}">
+                        <input type="hidden" name="Property" id="property-id"
+                               value="{{ old('Property', $property->Id ?? '-') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Block</label>
@@ -63,7 +64,7 @@
                 <!-- Assignment Type -->
                 <div class="row g-3 mb-3">
                   <div class="col-md-4">
-                      <label class="form-label">Assign To</label>
+                      <label class="form-label">Assign To<span class="text-danger">*</span></label>
                       <select class="form-select" name="AssignmentType" id="assignmentTypeSelect" required>
                           <option value="">--Select a technician--</option>
                           @foreach ($assignmentTypes as $assignmentType)
@@ -77,7 +78,8 @@
                       <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
                           <option value="">--Select a technician--</option>
                           @foreach ($employees as $employee)
-                              <option value="{{ $employee->Id }}">{{ $employee->JobTitle }}</option>
+                              <option value="{{ $employee->Id }}">{{ $employee->EmployeeID }}
+                                  -- {{ $employee->FirstName }},{{ $employee->LastName }}</option>
                           @endforeach
                       </select>
                   </div>
@@ -87,7 +89,7 @@
                       <select class="form-select" name="PrequalifiedVendor" id="vendorSelect">
                           <option value="">--Select a vendor--</option>
                           @foreach ($suppliers as $supplier)
-                              <option value="{{ $supplier->Id }}">{{ $supplier->SupplierName }}</option>
+                              <option value="{{ $supplier->Id }}">{{ $supplier->thirdParty->ThirdPartyName }}</option>
                           @endforeach
                       </select>
                   </div>
@@ -96,15 +98,15 @@
                 <!-- Scheduling -->
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label">Expected Start Date</label>
+                        <label class="form-label">Expected Start Date<span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="ExpectedStartDate" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Expected Completion</label>
+                        <label class="form-label">Expected Completion<span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="ExpectedCompletion" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Priority Level</label>
+                        <label class="form-label">Priority Level<span class="text-danger">*</span></label>
                         <select class="form-select" name="PriorityLevel" id="priorityLevelSelect" required>
                             <option value="">--Select Priority Level--</option>
                             @foreach ($priorityLevels as $priorityLevel)
@@ -115,13 +117,17 @@
 
                 <!-- Instructions -->
                 <div class="mb-3">
-                    <label class="form-label">Instructions / Notes</label>
-                    <textarea class="form-control" rows="2" name="InstructionNotes" placeholder="Describe what needs to be done..."></textarea>
+                    <label class="form-label">Instructions / Notes<span class="text-danger">*</span></label>
+                    <textarea class="form-control" rows="2" name="InstructionNotes"
+                              placeholder="Describe what needs to be done..." required></textarea>
                 </div>
 
                 <!-- Submit -->
                 <div class="text-end">
-                    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Assign Task</button>
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Assign
+                        Task
+                    </button>
                 </div>
             </div>
         </div>

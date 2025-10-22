@@ -1,7 +1,21 @@
+@php
+    use App\Services\DMS\DocumentService;
+@endphp
+
 @extends('layouts.app')
 @section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View'))
 
 @section('content')
+    <style>
+        /* Hide top navigation only on this page */
+        .navbar, nav.navbar, .pc-header, header.pc-header, .pc-h-item[data-pc-toggle="sidebar"], .mobile-menu {
+            display: none !important;
+        }
+
+        body {
+            padding-top: 0 !important;
+        }
+    </style>
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
@@ -46,9 +60,9 @@
                         <a href="{{ route('invoiceentry.index') }}" class="btn btn-outline-secondary">
                             <i data-feather="arrow-left"></i> Back
                         </a>
-                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>
-                            <i data-feather="file-text"></i> View PO Items
-                        </button>
+                        {{--                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>--}}
+                        {{--                            <i data-feather="file-text"></i> View PO Items--}}
+                        {{--                        </button>--}}
                         <button type="button" class="btn btn-success" onclick="window.print()">
                             <i data-feather="printer"></i> Print
                         </button>
@@ -75,7 +89,7 @@
                             </div>
                             <div class="mt-2 small">
                                 <div class="text-muted">GRN Reference</div>
-                                <div class="fw-medium">{{ $grnNo }}</div>
+                                <div class="fw-medium">{{ $grnNo ?? 'N/A' }}</div>
                             </div>
                             @if(!empty($invoice->Description))
                                 <div class="mt-3 small">
@@ -98,17 +112,45 @@
                                 <table class="table align-middle mb-0">
                                     <tbody>
                                     <tr>
-                                        <td class="text-muted">Invoice Amount</td>
+                                        <td class="text-muted">Invoice Amount (Inclusive)</td>
                                         <td class="text-end">
                                             <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td class="text-muted">PO Subtotal (Items)</td>
-                                        <td class="text-end">
-                                            <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
-                                        </td>
-                                    </tr>
+                                    @if(!empty($invoice->order))
+                                        @php
+                                            $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                                            $poTax = (float)($invoice->order->OrdTotTax ?? 0);
+                                            $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
+                                            $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                        @endphp
+                                        <tr>
+                                            <td class="text-muted">PO Discount</td>
+                                            <td class="text-end">
+                                                - {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Tax</td>
+                                            <td class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Exclusive</td>
+                                            <td class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Inclusive</td>
+                                            <td class="text-end">
+                                                <strong>{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</strong>
+                                            </td>
+                                        </tr>
+                                    @else
+                                        <tr>
+                                            <td class="text-muted">PO Subtotal (Items)</td>
+                                            <td class="text-end">
+                                                <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     @if(property_exists($invoice, 'TaxAmount') || isset($invoice->TaxAmount))
                                         <tr>
                                             <td class="text-muted">Tax Amount</td>
@@ -187,12 +229,35 @@
                                 @endif
                             </ul>
 
-                            @if(!empty($invoice->file_path))
-                                <a href="{{ \Storage::url($invoice->file_path) }}" target="_blank" class="btn btn-sm w-100 btn-outline-dark mt-2">
-                                    <i data-feather="paperclip"></i> View Attachment
-                                </a>
-                            @endif
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attachments Section -->
+            <div class="card mt-4 border-0 shadow-sm rounded-4 attachments-section">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h6 class="text-uppercase text-muted mb-0">
+                            <i data-feather="paperclip" class="me-2" width="16" height="16"></i>
+                            Attachments
+                        </h6>
+                    </div>
+                    <div class="mt-3" id="invoiceAttachments">
+                        @php
+                            $documents = $invoice->documents()
+                                ->get(['t_Documents.Id','t_Documents.DocumentId','MimeType','Name']);
+                        @endphp
+
+                        @forelse($documents as $document)
+                            @php
+                                // Avoid any morph relation lookups during render
+                                $document->setRelations([]);
+                            @endphp
+                            {!! (new DocumentService($document))->summaryList() !!}
+                        @empty
+                            <span class="text-muted">No attachments uploaded</span>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -237,12 +302,40 @@
                             @endforelse
                             </tbody>
                             @if(count($poItems) > 0)
-                                <tfoot class="table-light">
-                                <tr>
-                                    <th colspan="3" class="text-end">PO Subtotal</th>
-                                    <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
-                                </tr>
-                                </tfoot>
+                                @if(!empty($invoice->order))
+                                    @php
+                                        $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                                        $poTax = (float)($invoice->order->OrdTotTax ?? 0);
+                                        $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
+                                        $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                    @endphp
+                                    <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="3" class="text-end">Discount</th>
+                                        <th class="text-end">
+                                            - {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Tax</th>
+                                        <th class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Exclusive</th>
+                                        <th class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Inclusive</th>
+                                        <th class="text-end">{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</th>
+                                    </tr>
+                                    </tfoot>
+                                @else
+                                    <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="3" class="text-end">PO Subtotal</th>
+                                        <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
+                                    </tr>
+                                    </tfoot>
+                                @endif
                             @endif
                         </table>
                     </div>
@@ -263,9 +356,88 @@
         </div>
     </div>
 
+    <!-- Print-optimized layout (hidden on screen, visible on print) -->
+    <div id="printRootInvoice" class="print-only" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+            <div>
+                <div style="font-size:16px; font-weight:700;">Payables Invoice</div>
+                <div style="color:#666;">Invoice: {{ $invNo }}</div>
+                <div style="color:#666;">Date: {{ $invDate }}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:18px; font-weight:700;">{{ $currencySymbol }} {{ $amount }}</div>
+                <div style="color:#666;">PO: {{ $poNo }}</div>
+                <div style="color:#666;">GRN: {{ $grnNo ?? 'N/A' }}</div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-bottom:10px;">
+            <div style="flex:1; border:1px solid #e9ecef; padding:8px;">
+                <div style="font-weight:600; margin-bottom:4px;">Vendor / Supplier</div>
+                <div>{{ $vendorName }}</div>
+            </div>
+            <div style="flex:1; border:1px solid #e9ecef; padding:8px;">
+                <div style="font-weight:600; margin-bottom:4px;">References</div>
+                <div>PO: {{ $poNo }}</div>
+                <div>GRN: {{ $grnNo ?? 'N/A' }}</div>
+            </div>
+            <div style="flex:1; border:1px solid #e9ecef; padding:8px;">
+                <div style="font-weight:600; margin-bottom:4px;">Summary</div>
+                <div>Invoice Amount: {{ $currencySymbol }} {{ $amount }}</div>
+                <div>PO Subtotal: {{ $currencySymbol }} {{ number_format($poSub, 2) }}</div>
+            </div>
+        </div>
+
+        <div style="border:1px solid #e9ecef;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                <tr>
+                    <th style="text-align:left; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">
+                        Item
+                    </th>
+                    <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">
+                        Qty
+                    </th>
+                    <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">
+                        Unit Cost
+                    </th>
+                    <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">
+                        Line Total
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($poItems as $row)
+                    @php $lineTotal = ((float)($row->UnitPrice ?? $row->UnitCost ?? 0)) * ((float)($row->Quantity ?? 0)); @endphp
+                    <tr>
+                        <td style="padding:6px 8px; border-bottom:1px solid #f1f3f5;">
+                            <div style="font-weight:600;">{{ $row->ItemName }}</div>
+                            @if(!empty($row->Description))
+                                <div style="color:#666; font-size:12px;">{{ $row->Description }}</div>
+                            @endif
+                        </td>
+                        <td style="padding:6px 8px; text-align:right; border-bottom:1px solid #f1f3f5;">{{ number_format((float)($row->Quantity ?? 0), 2) }}</td>
+                        <td style="padding:6px 8px; text-align:right; border-bottom:1px solid #f1f3f5;">{{ $currencySymbol }} {{ number_format((float)($row->UnitPrice ?? $row->UnitCost ?? 0), 2) }}</td>
+                        <td style="padding:6px 8px; text-align:right; border-bottom:1px solid #f1f3f5;">{{ $currencySymbol }} {{ number_format($lineTotal, 2) }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+                <tfoot>
+                <tr>
+                    <th colspan="3" style="text-align:right; padding:6px 8px; border-top:1px solid #e9ecef;">PO
+                        Subtotal
+                    </th>
+                    <th style="text-align:right; padding:6px 8px; border-top:1px solid #e9ecef;">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
     @if($invoice->ApprovalStatus==='draft')
         <div class="mb-3">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#approveModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Approved')>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                    data-bs-target="#approveModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Approved')>
                 <i data-feather="thumbs-up"></i> Approve
             </button>
 
@@ -415,7 +587,7 @@
 
 @endsection
 
-@section('scripts')
+@push('scripts')
     <script>
         // Feather icons
         if (typeof feather !== 'undefined') { feather.replace(); }
@@ -434,14 +606,62 @@
 
         // Nice print styles (hide nav/buttons on print)
         const printCSS = `
+        /* Keep attachment chips nice on screen */
+        #invoiceAttachments .modal-preview-document{ display:inline-flex; align-items:center; gap:.375rem; padding:.25rem .6rem; font-size:.85rem; background:#f8f9fa; border:1px solid #dee2e6; border-radius:.375rem; text-decoration:none; color:#495057; margin:.125rem .25rem .125rem 0; }
+        #invoiceAttachments .modal-preview-document:hover{ filter:brightness(0.97); text-decoration:none; color:#495057; }
+
+        @page { size: A4 portrait; margin: 12mm; }
         @media print {
-            .navbar, .btn,.lifecycle, .modal { display: none !important; }
-            .card { box-shadow: none !important; border: none !important; }
-            a[href]:after { content: ""; }
+            /* Base */
+            html, body { font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+            /* Hide UI/controls */
+            .navbar, .btn, .modal, .lifecycle, .attachments-section { display: none !important; }
+
+            /* Flatten cards */
+            .card, .shadow, .shadow-sm, .shadow-lg { box-shadow: none !important; border: 1px solid #e9ecef !important; }
+            .rounded-top-4 { background: #ffffff !important; }
+
+            /* Compact spacing */
+            .p-4, .p-md-5 { padding: 12px !important; }
+            .mt-4, .mt-3 { margin-top: 10px !important; }
+            h1, h5 { margin: 0 0 6px 0 !important; }
+
+            /* Tables fit nicely */
+            .table-responsive { overflow: visible !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { padding: 6px 8px !important; }
+            thead th { background: #f8f9fa !important; }
+
+            /* Avoid breaking important blocks */
+            .card, .table-responsive, table { page-break-inside: avoid; }
+
+            /* Remove link hints */
+            a[href]:after { content: "" !important; }
         }
     `;
         const style = document.createElement('style');
         style.innerHTML = printCSS;
         document.head.appendChild(style);
+
+        // Toggle print-only vs screen
+        const printRoot = document.getElementById('printRootInvoice');
+        const screenRootCards = document.querySelectorAll('.card');
+
+        window.addEventListener('beforeprint', () => {
+            // Hide screen layout, show print layout
+            printRoot && (printRoot.style.display = 'block');
+            screenRootCards.forEach(c => c.classList.add('d-print-none'));
+        });
+
+        window.addEventListener('afterprint', () => {
+            // Restore screen layout
+            printRoot && (printRoot.style.display = 'none');
+            screenRootCards.forEach(c => c.classList.remove('d-print-none'));
+        });
     </script>
-@endsection
+@endpush
+
+@push('scripts')
+    @includeIf('snippets.actions.preview-files')
+@endpush

@@ -28,7 +28,7 @@
             <div class="col-md-6">
                 <label class="form-label">Tenant</label>
                 <input type="text" class="form-control" readonly
-                       value="{{ old('TenantName', $leaserenewal->lease->tenant->TenantName ?? '-') }}">
+                       value="{{ old('TenantName', $leaserenewal->lease->tenant->ThirdPartyName ?? '-') }}">
                 <input type="hidden" name="TenantId"
                        value="{{ old('TenantId', $leaserenewal->lease->tenant->Id ?? '-') }}">
             </div>
@@ -98,6 +98,8 @@
         </div>
 
         <a href="{{ route('renewlease.index') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Lease Renewal</button>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Lease Renewal
+        </button>
     </form>
 @endsection

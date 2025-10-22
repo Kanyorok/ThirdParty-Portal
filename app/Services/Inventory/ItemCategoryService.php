@@ -3,6 +3,7 @@
 namespace App\Services\Inventory;
 
 use App\Models\Inventory\ItemCategories;
+use App\Models\Core\CodeDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use Exception;
@@ -17,24 +18,23 @@ class ItemCategoryService
         do {
             try {
                 $category = DB::transaction(function () use (&$data) {
-    $isSubcategory = !empty($data['ParentId']);
-    $data['CategoryCode'] = $this->generateCategoryCode($isSubcategory);
-    $data['CreatedBy'] = auth()->id();
-    $data['ModifiedBy'] = auth()->id();
-    $data['CreatedOn'] = now();
-    $data['ModifiedOn'] = now();
+                    $isSubcategory = !empty($data['ParentId']);
+                    $data['CategoryCode'] = $this->generateCategoryCode($isSubcategory);
+                    $data['CreatedBy'] = auth()->id();
+                    $data['ModifiedBy'] = auth()->id();
+                    $data['CreatedOn'] = now();
+                    $data['ModifiedOn'] = now();
 
-    // If no status is selected, default to the first "Active" ID
-    if (empty($data['Status'])) {
-        $data['Status'] = CodeDetail::where('CodeID', 'CategoryStatus')
-            ->where('Description', 'Active')
-            ->value('ID');
-    }
+                    // Default to Active if no status provided
+                    if (empty($data['Status'])) {
+                        $data['Status'] = CodeDetail::where('CodeID', 'CategoryStatus')
+                            ->where('Description', 'Active')
+                            ->value('Id');
+                    }
 
-    return ItemCategories::create($data);
-}, 5);
+                    return ItemCategories::create($data);
+                }, 5);
 
-                // Activity log after successful creation
                 activity()
                     ->causedBy(auth()->user())
                     ->performedOn($category)
@@ -49,7 +49,7 @@ class ItemCategoryService
                     if ($attempt >= $maxRetries) {
                         throw new Exception('Unable to generate unique CategoryCode after multiple attempts.');
                     }
-                    usleep(100000); // wait before retrying
+                    usleep(100000);
                 } else {
                     throw $e;
                 }
@@ -74,7 +74,61 @@ class ItemCategoryService
 
     protected function isDuplicateCategoryCodeError(QueryException $e): bool
     {
-        return str_contains($e->getMessage(), 't_itemcategories_categorycode_unique');
+        return str_contains(strtolower($e->getMessage()), 't_itemcategories_categorycode_unique');
+    }
+
+    public function update(ItemCategories $category, array $data): ItemCategories
+    {
+        DB::transaction(function () use ($category, $data) {
+            $category->update($data);
+
+            if (isset($data['Status'])) {
+                $inactiveId = CodeDetail::where('CodeID', 'CategoryStatus')
+                    ->where('Description', 'Inactive')
+                    ->value('Id');
+
+                $activeId = CodeDetail::where('CodeID', 'CategoryStatus')
+                    ->where('Description', 'Active')
+                    ->value('Id');
+
+                if ($data['Status'] == $inactiveId || $data['Status'] == $activeId) {
+                    $this->cascadeStatus($category, $data['Status']);
+                }
+            }
+        });
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($category)
+            ->event('update')
+            ->log('Updated Item Category ' . $category->CategoryCode);
+
+        return $category;
+    }
+
+    protected function cascadeStatus(ItemCategories $category, int $statusId): void
+    {
+        $category->loadMissing(['children', 'items']);
+
+        // Cascade to child categories
+        foreach ($category->children ?? [] as $child) {
+            $child->update([
+                'Status' => $statusId,
+                'ModifiedBy' => auth()->id(),
+                'ModifiedOn' => now()
+            ]);
+
+            $this->cascadeStatus($child, $statusId);
+        }
+
+        // Cascade to items under this category
+        foreach ($category->items ?? [] as $item) {
+            $item->update([
+                'Status' => $statusId,
+                'ModifiedBy' => auth()->id(),
+                'ModifiedOn' => now()
+            ]);
+        }
     }
 
     public function destroy(ItemCategories $category): void
@@ -89,5 +143,4 @@ class ItemCategoryService
             ->event('delete')
             ->log('Deleted Item Category ' . $category->CategoryCode);
     }
-
 }

@@ -6,7 +6,7 @@
 @endif
 
 <div class="container mt-4">
-  <h4 class="fw-bold mb-3">Record Tenant Payment (Supports Partials)</h4>
+    <p><small>Note: partial payment is applicable</small></p>
 
   <form action="{{ route('rentreceipt.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
@@ -23,18 +23,14 @@
               @foreach ($invoices as $invoice)
                 <option value="{{ $invoice->Id }}"
                   data-invoicenumber="{{ $invoice->InvoiceNumber ?? 'N/A' }}"
-                  data-tenantid-name="{{ $invoice->lease->tenant->TenantName ?? 'N/A' }}"
+                        data-tenantid-name="{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
                   data-billingmonth-name="{{ $invoice->BillingMonth ?? 'N/A' }}"
-                  data-invoicedate-name="{{ $invoice->InvoiceDate ?? 'N/A' }}"
-                  data-invoicedate-id="{{ $invoice->InvoiceDate ?? 'N/A' }}"
-                  data-rentamount-name="{{ $invoice->RentAmount ?? '0' }}"
-                  data-rentamount-id="{{ $invoice->RentAmount ?? '0' }}"
-                  data-servicescharge-name="{{ $invoice->ServicesCharge ?? '0' }}"
-                  data-servicescharge-id="{{ $invoice->ServicesCharge ?? '0' }}"
-                  data-parkingfee-name="{{ $invoice->ParkingFee ?? '0' }}"
-                  data-parkingfee-id="{{ $invoice->ParkingFee ?? '0' }}"
-                  data-othercharges-name="{{ $invoice->OtherCharges ?? '0' }}"
-                  data-othercharges-id="{{ $invoice->OtherCharges ?? '0' }}">
+                        data-invoicedate-display="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '' }}"
+                        data-invoicedate-id="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : '' }}"
+                        data-rentamount="{{ $invoice->RentAmount ?? '0' }}"
+                        data-servicescharge="{{ $invoice->ServicesCharge ?? '0' }}"
+                        data-parkingfee="{{ $invoice->ParkingFee ?? '0' }}"
+                        data-othercharges="{{ $invoice->OtherCharges ?? '0' }}">
                   {{ $invoice->InvoiceNumber }}
                 </option>
               @endforeach
@@ -61,7 +57,7 @@
 
           <div class="col-md-6">
               <label class="form-label">Invoice Date<span class="text-danger">*</span></label>
-            <input type="date" id="invoicedate-display" class="form-control" readonly>
+              <input type="text" id="invoicedate-display" class="form-control" readonly>
             <input type="hidden" name="InvoiceDate" id="invoicedate-id">
           </div>
 
@@ -105,7 +101,8 @@
           </div>
           <div class="col-md-3">
               <label class="form-label">Payment Date<span class="text-danger">*</span></label>
-            <input type="date" class="form-control" name="PaymentDate" required>
+              <input type="date" class="form-control" name="PaymentDate" id="paymentdate" required
+                     value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
           </div>
         </div>
 
@@ -134,7 +131,10 @@
           <textarea class="form-control" name="Remarks" rows="2" placeholder="e.g. Paid KES 5,000 - next part due 10th"></textarea>
         </div>
 
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Record Payment</button>
+          <button type="submit" class="btn btn-success"
+                  onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+              Record Payment
+          </button>
 
       </div>
     </div>
@@ -166,17 +166,20 @@
     document.getElementById('tenantid-display').value = selected.getAttribute('data-tenantid-name');
     document.getElementById('billingmonth-display').value = selected.getAttribute('data-billingmonth-name');
     document.getElementById('billingmonth-id').value = selected.getAttribute('data-billingmonth-name');
-    document.getElementById('invoicedate-display').value = selected.getAttribute('data-invoicedate-name');
+
+      // Invoice date
+      document.getElementById('invoicedate-display').value = selected.getAttribute('data-invoicedate-display');
     document.getElementById('invoicedate-id').value = selected.getAttribute('data-invoicedate-id');
 
-    document.getElementById('rentamount-display').value = selected.getAttribute('data-rentamount-name');
-    document.getElementById('rentamount-id').value = selected.getAttribute('data-rentamount-id');
-    document.getElementById('servicescharge-display').value = selected.getAttribute('data-servicescharge-name');
-    document.getElementById('servicescharge-id').value = selected.getAttribute('data-servicescharge-id');
-    document.getElementById('parkingfee-display').value = selected.getAttribute('data-parkingfee-name');
-    document.getElementById('parkingfee-id').value = selected.getAttribute('data-parkingfee-id');
-    document.getElementById('othercharges-display').value = selected.getAttribute('data-othercharges-name');
-    document.getElementById('othercharges-id').value = selected.getAttribute('data-othercharges-id');
+      // Rent & charges
+      document.getElementById('rentamount-display').value = selected.getAttribute('data-rentamount');
+      document.getElementById('rentamount-id').value = selected.getAttribute('data-rentamount');
+      document.getElementById('servicescharge-display').value = selected.getAttribute('data-servicescharge');
+      document.getElementById('servicescharge-id').value = selected.getAttribute('data-servicescharge');
+      document.getElementById('parkingfee-display').value = selected.getAttribute('data-parkingfee');
+      document.getElementById('parkingfee-id').value = selected.getAttribute('data-parkingfee');
+      document.getElementById('othercharges-display').value = selected.getAttribute('data-othercharges');
+      document.getElementById('othercharges-id').value = selected.getAttribute('data-othercharges');
 
     const invoiceId = selected.value;
     if (invoiceId) {

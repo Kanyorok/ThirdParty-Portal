@@ -72,9 +72,9 @@ class ReversingJournalController extends Controller
                     'BranchID'       => $line->BranchID,
                     'DepartmentID'   => $line->DepartmentID,
                     'IsDebit'        => !$line->IsDebit, // Flip
-                    'Amount'         => $line->Amount,
-                    'Debit'          => $line->Credit,    // Flip
-                    'Credit'         => $line->Debit,     // Flip
+                    'Amount' => !$line->IsDebit ? $line->Amount * -1 : $line->Amount,
+                    'Debit' => $line->Credit * -1,    // Flip
+                    'Credit' => abs($line->Debit),     // Flip
                     'Narration'      => 'Reversal: ' . ($line->Narration ?? ''),
                     'CreatedBy'      => Auth::id(),
                     'ModifiedBy'     => Auth::id(),
@@ -103,4 +103,18 @@ class ReversingJournalController extends Controller
         return view('finance.generalledger.reversingjournal.show', compact('journalEntry','originalJournalRef'));;
     }
 
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::FinanceGeneralLedgerDelete, FinanceJournalEntry::class);
+
+        $entry = FinanceJournalEntry::findOrFail($id);
+        DB::transaction(function () use ($entry) {
+            // Delete related lines and reverse journal record
+            FinanceJournalLines::where('JournalEntryId', $entry->Id)->delete();
+            ReverseJournalEntry::where('JournalEntryId', $entry->Id)->delete();
+            $entry->delete();
+        });
+
+        return redirect()->route('reversingjournal.index')->with('success', 'Reversing journal deleted.');
+    }
 }

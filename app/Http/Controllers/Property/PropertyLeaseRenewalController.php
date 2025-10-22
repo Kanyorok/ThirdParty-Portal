@@ -27,7 +27,7 @@ class PropertyLeaseRenewalController extends Controller
 
     public function create()
     {
-       // $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
         $newleases = PropertyNewLease::with('tenant', 'property')
             ->where('isActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
@@ -49,13 +49,14 @@ class PropertyLeaseRenewalController extends Controller
 
     public function show($id)
     {
-       // $this->authorize(PermissionEnum::PropertyLeaseRenewalView, PropertyLeaseRenewal::class);
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalView, PropertyLeaseRenewal::class);
         $leaserenewal = PropertyLeaseRenewal::findOrFail($id);
         return view('property.tenantmanagement.leasemanagement.leaserenewal.show', compact('leaserenewal'));
     }
 
     public function store(PropertyLeaseRenewalRequest $request)
     {
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
         try {
             $validated = $request->validated();
             $leaseId = (int)$validated['LeaseId'];
@@ -86,7 +87,7 @@ class PropertyLeaseRenewalController extends Controller
     public function edit($Id)
     {
         //Check if user has permission to edit tender categories
-       // $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
         $leaserenewal = PropertyLeaseRenewal::where('isActive', true)->findOrFail($Id);
         $newleases = PropertyNewLease::with('tenant', 'property')->get();
         return view('property.tenantmanagement.leasemanagement.leaserenewal.edit', compact('leaserenewal', 'newleases'));
@@ -94,7 +95,7 @@ class PropertyLeaseRenewalController extends Controller
 
     public function update(PropertyLeaseRenewalRequest $request, $Id)
     {
-      //  $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalUpdate, PropertyLeaseRenewal::class);
 
         $validated = $request->validated();
 
@@ -135,7 +136,7 @@ class PropertyLeaseRenewalController extends Controller
     public function destroy($id)
     {
         // Check if user has permission to delete property lease renewals
-      //  $this->authorize(PermissionEnum::PropertyLeaseRenewalDelete, PropertyLeaseRenewal::class);
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalDelete, PropertyLeaseRenewal::class);
 
         try {
             $leaseRenewal = PropertyLeaseRenewal::findOrFail($id);

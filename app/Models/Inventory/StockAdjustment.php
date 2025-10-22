@@ -25,7 +25,6 @@ class StockAdjustment extends Model
         'AdjustmentId',
         'AdjustmentDate',
         'Branch',
-        'Reason',
         'AdjustedBy',
         'Status',
         'CreatedBy',
@@ -75,11 +74,6 @@ class StockAdjustment extends Model
     // {
     //     return 'Id';
     // }
-
-    public function reason()
-    {
-        return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
-    }
 
 
 }

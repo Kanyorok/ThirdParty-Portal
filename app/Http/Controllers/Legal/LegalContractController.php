@@ -4,67 +4,74 @@ namespace App\Http\Controllers\Legal;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-class LegalContractController extends Controller
-{
-    public function index()
-    {
-        return view('legal.contracts.index');
-    }
-}
-<?php
-
-namespace App\Http\Controllers\Legal;
-
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Legal\LegalDocument;
 use Illuminate\Support\Facades\Auth;
 
 class LegalContractController extends Controller
 {
     /**
-     * Display a listing of contracts only.
+     * Display a listing of legal contracts.
      */
     public function index()
     {
-        $contracts = LegalDocument::where('DocumentType', 'CONTRACT')
-            ->orderByDesc('CreatedOn')
-            ->get();
+        // Placeholder for contract management
+        $contracts = []; // TODO: Implement actual contract retrieval
 
-        return view('legal.maintenance.index', compact('contracts'));
+        return view('legal.contracts.index', compact('contracts'));
     }
 
     /**
-     * Show a single contract view (optional).
+     * Show the form for creating a new contract.
      */
-    public function show($id)
+    public function create()
     {
-        $contract = LegalDocument::findOrFail($id);
-        return view('legal.maintenance.show', compact('contract'));
+        return view('legal.contracts.create');
     }
 
-    public function review($id)
-{
-    $contract = LegalDocument::findOrFail($id);
-    return view('legal.maintenance.review', compact('contract'));
-}
+    /**
+     * Store a newly created contract in storage.
+     */
+    public function store(Request $request)
+    {
+        // Placeholder implementation
+        return redirect()->route('legal.contracts.index')
+            ->with('success', 'Contract created successfully');
+    }
 
-public function submitReview(Request $request, $id)
-{
-    $request->validate([
-        'ReviewStatus' => 'required|in:Draft,Reviewed,Approved,Rejected',
-        'Remarks' => 'nullable|string|max:1000',
-    ]);
+    /**
+     * Display the specified contract.
+     */
+    public function show(string $id)
+    {
+        // Placeholder implementation
+        return view('legal.contracts.show');
+    }
 
-    $contract = LegalDocument::findOrFail($id);
-    $contract->ReviewStatus = $request->ReviewStatus;
-    $contract->ReviewedBy = Auth::Id();
-    $contract->ReviewedOn = now();
-    $contract->Remarks = $request->Remarks;
-    $contract->save();
+    /**
+     * Show the form for editing the specified contract.
+     */
+    public function edit(string $id)
+    {
+        return view('legal.contracts.edit');
+    }
 
-    return redirect()->route('legal.maintenance.index')->with('success', 'Review submitted.');
-}
+    /**
+     * Update the specified contract in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        // Placeholder implementation
+        return redirect()->route('legal.contracts.index')
+            ->with('success', 'Contract updated successfully');
+    }
 
+    /**
+     * Remove the specified contract from storage.
+     */
+    public function destroy(string $id)
+    {
+        // Placeholder implementation
+        return redirect()->route('legal.contracts.index')
+            ->with('success', 'Contract deleted successfully');
+    }
 }

@@ -40,7 +40,7 @@
                     <th>#</th>
                     <th>Transfer ID</th>
                     <th>Date</th>
-                    <th>From Branch</th>
+                    {{-- <th>From Branch</th> --}}
                     <th>To Branch</th>
                     <th>Transferred By</th>
                     <th>Status</th>
@@ -61,7 +61,7 @@
                         <td>{{ $i + 1 }}</td>
                         <td>{{ $transfer->TransferID ?? '-' }}</td>
                         <td>{{ Carbon::parse($transfer->TransferDate)->format('d/m/Y') }}</td>
-                        <td>{{ optional($transfer->fromBranch)->Name ?? '-' }}</td>
+                        {{-- <td>{{ optional($transfer->fromBranch)->Name ?? '-' }}</td> --}}
                         <td>{{ optional($transfer->toBranch)->Name ?? '-' }}</td>
                         <td>{{$transfer->transferredBy->Name ?? 'N/A'}}</td>
                         <td>

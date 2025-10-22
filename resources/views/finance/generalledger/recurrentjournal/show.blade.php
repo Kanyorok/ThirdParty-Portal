@@ -13,7 +13,10 @@
                 </div>
 
                 <!-- Right side -->
-                <div class="text-end">
+                <div class="text-end d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Print
+                    </button>
                     Approval Status:
                     @if($journalEntry->ApprovalStatus == 'posted')
                         <span class="badge bg-success">Approved</span>
@@ -32,10 +35,16 @@
                         <h6>Recurring Schedule</h6>
                         @if ($journalEntry->recurringJournals->isNotEmpty())
                             @php $recurring = $journalEntry->recurringJournals->first(); @endphp
-                            <div class="small">Start: <strong>{{ $recurring->StartDate ? \Carbon\Carbon::parse($recurring->StartDate)->format('Y-m-d') : 'N/A' }}</strong></div>
-                            <div class="small">Next Run: <strong>{{ $recurring->NextRunDate ? \Carbon\Carbon::parse($recurring->NextRunDate)->format('Y-m-d') : 'N/A' }}</strong></div>
+                            <div class="small">Start:
+                                <strong>{{ $recurring->StartDate ? \Carbon\Carbon::parse($recurring->StartDate)->format('d/m/Y') : 'N/A' }}</strong>
+                            </div>
+                            <div class="small">Next Run:
+                                <strong>{{ $recurring->NextRunDate ? \Carbon\Carbon::parse($recurring->NextRunDate)->format('d/m/Y') : 'N/A' }}</strong>
+                            </div>
                             <div class="small">Frequency: <strong>{{ ucfirst( $frequencies[$recurring->Frequency ?? ''] ?? '-' ) }}</strong></div>
-                            <div class="small">End: <strong>{{ $recurring->CutOffDate ? \Carbon\Carbon::parse($recurring->CutOffDate)->format('Y-m-d') : ($journalEntry->Date ? \Carbon\Carbon::parse($journalEntry->Date)->format('Y-m-d') : 'N/A') }}</strong></div>
+                            <div class="small">End:
+                                <strong>{{ $recurring->CutOffDate ? \Carbon\Carbon::parse($recurring->CutOffDate)->format('d/m/Y') : ($journalEntry->Date ? \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') : 'N/A') }}</strong>
+                            </div>
                         @else
                             <div class="small text-muted"><i class="fas fa-info-circle me-1"></i>No recurring schedule defined.</div>
                         @endif

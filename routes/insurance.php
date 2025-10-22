@@ -18,9 +18,8 @@ use App\Http\Controllers\Insurance\InsuranceProviderProductController;
 use App\Http\Controllers\Insurance\PolicyController;
 use App\Http\Controllers\Insurance\PremiumController;
 use App\Http\Controllers\Insurance\PricingRuleController;
-use App\Http\Controllers\Insurance\ProductLifecycleController;
-use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\ReportsController;
+use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\UnderwritingController;
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
@@ -116,18 +115,22 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('/', [ClaimController::class, 'index'])->name('index');
         Route::get('create', [ClaimController::class, 'create'])->name('create');
         Route::post('store', [ClaimController::class, 'store'])->name('store');
-        Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
-        Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
+        Route::get('list', [ClaimController::class, 'assessmentlist'])->name('assessment_list');
+        Route::get('list/{id}', [ClaimController::class, 'assessmentshow'])->name('assessment_show');
+        Route::get('edit/{id}', [ClaimController::class, 'assessmentedit'])->name('assessment_edit');
+        Route::put('update/{id}', [ClaimController::class, 'assessmentupdate'])->name('assessment_update');
+        // Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
+        // Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
         Route::get('{id}/assess', [ClaimController::class, 'assessForm'])->name('assessForm');
         Route::post('{id}/assess/store', [ClaimController::class, 'storeAssessment'])->name('assess');
 
         // ✅ Fix these two lines:
-        Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
-        Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
-        Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
-        Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
-        Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
-    Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.claims.index');
+        // Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
+        // Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
+        // Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
+        // Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
+        // Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
+        // Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.claims.index');
         Route::get('{id}/close', [ClaimClosureController::class, 'closeForm'])->name('closeForm');
         Route::post('{id}/close', [ClaimClosureController::class, 'storeClosure'])->name('storeClosure');
         Route::get('closed', [ClaimClosureController::class, 'closedClaimsIndex'])->name('closed');
@@ -185,7 +188,6 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
 
 
     Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(function () {
-
         // Product Setup
         Route::get('/', [InsuranceProductController::class, 'index'])->name('index');
         Route::get('create', [InsuranceProductController::class, 'create'])->name('create');
@@ -193,8 +195,6 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('{Id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
         Route::put('{Id}/update', [InsuranceProductController::class, 'update'])->name('update');
         Route::delete('delete/{Id}', [InsuranceProductController::class, 'destroy'])->name('destroy');
-        // Route::get('{Id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
-        // Route::post('{Id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
 
 
     });
@@ -227,8 +227,8 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
     });
 
     Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->group(function () {
-        Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');
-        Route::post('toggle/{id}', [ProductLifecycleController::class, 'toggleStatus'])->name('toggle');
+        /* Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');
+         Route::post('toggle/{id}', [ProductLifecycleController::class, 'toggleStatus'])->name('toggle');*/
     });
 
     Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {

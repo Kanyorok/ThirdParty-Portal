@@ -19,7 +19,8 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tenant</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->tenant->TenantName ?? '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark"
+                           value="{{ $newlease->tenant->thirdParty->ThirdPartyName ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -44,12 +45,16 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Start Date</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d M Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark"
+                           value="{{ $newlease->StartDate ? Carbon::parse($newlease->StartDate)->format('d/m/Y') : '-' }}"
+                           readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">End Date</label>
-                    <input type="text" class="form-control bg-light text-dark" value="{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d M Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark"
+                           value="{{ $newlease->EndDate ? Carbon::parse($newlease->EndDate)->format('d/m/Y') : '-' }}"
+                           readonly>
                 </div>
 
                 <div class="col-md-6">
@@ -69,27 +74,27 @@
             <hr>
             <div class="row g-3 text-dark">
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Monthly Rent (KES)</label>
+                    <label class="form-label fw-semibold">Rent Amount</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->MonthlyRent, 2) }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Deposit (KES)</label>
+                    <label class="form-label fw-semibold">Deposit</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->Deposit, 2) }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Service Charge (KES)</label>
+                    <label class="form-label fw-semibold">Service Charge</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ServiceCharge, 2) }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Parking Fee (KES)</label>
+                    <label class="form-label fw-semibold">Parking Fee</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->ParkingFee, 2) }}" readonly>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Other Charges (KES)</label>
+                    <label class="form-label fw-semibold">Other Charges</label>
                     <input type="text" class="form-control bg-light text-dark" value="{{ number_format($newlease->OtherCharges, 2) }}" readonly>
                 </div>
             </div>
@@ -122,8 +127,8 @@
                 on <strong>{{ $newlease->ModifiedOn ? Carbon::parse($newlease->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
             </div>
             <div>
-                <a href="{{ route('addlease.index') }}" class="btn btn-sm btn-dark">Back</a>
                 <a href="{{ route('addlease.edit', $newlease->Id) }}" class="btn btn-sm btn-dark">Edit</a>
+                <a href="{{ route('addlease.index') }}" class="btn btn-sm btn-dark">Back</a>
             </div>
         </div>
     </div>

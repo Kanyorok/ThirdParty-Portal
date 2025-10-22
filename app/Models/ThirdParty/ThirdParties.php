@@ -7,8 +7,8 @@ use App\Enums\ThirdPartyStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\BusinessTypeEnum;
 
 class ThirdParties extends Model
@@ -30,12 +30,13 @@ class ThirdParties extends Model
         'TaxPIN',
         'VATNumber',
         'Country',
+        'CountryId',
         'PhysicalAddress',
         'Email',
         'Phone',
         'Website',
         'Status',
-        'ThirdPartyType',
+        // 'ThirdPartyType' legacy column deprecated (kept temporarily for backward compatibility)
         'IsPrequalified',
         'ApprovalStatus',
         'CreatedBy',
@@ -48,7 +49,6 @@ class ThirdParties extends Model
         'ModifiedOn' => 'datetime',
         'DeletedOn' => 'datetime',
         'CreatedBy' => 'integer',
-        'ThirdPartyType' => ThirdPartyTypeEnum::class,
         'BusinessType' => BusinessTypeEnum::class,
         'Status' => ThirdPartyStatusEnum::class,
         'ApprovalStatus' => ThirdPartyApprovalStatusEnum::class,
@@ -57,8 +57,13 @@ class ThirdParties extends Model
     protected static function booted()
     {
         static::saving(function ($model) {
-            if (!is_null($model->IsPrequalified) && $model->ThirdPartyType !== ThirdPartyTypeEnum::Supplier) {
-                throw new \LogicException("Only suppliers can be marked as prequalified.");
+            if (!is_null($model->IsPrequalified)) {
+                // Ensure at least one pivot type has supplier code pattern when marking prequalified
+                $model->loadMissing('types');
+                $isSupplier = $model->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'SU-'));
+                if (!$isSupplier) {
+                    throw new \LogicException("Only supplier third parties (with SU-* type) can be marked as prequalified.");
+                }
             }
         });
 
@@ -85,7 +90,7 @@ class ThirdParties extends Model
 
     public function scopeSuppliers($query)
     {
-        return $query->where('ThirdPartyType', ThirdPartyTypeEnum::Supplier);
+        return $query->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'));
     }
 
     public function getKRANoAttribute(): string
@@ -100,6 +105,49 @@ class ThirdParties extends Model
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(SupplierCategory::class, 't_ThirdParty_SupplierCategory', 'third_party_id', 'supplier_category_id');
+        // Pivot uses snake_case columns in this table: third_party_id, supplier_category_id
+        return $this->belongsToMany(
+            SupplierCategory::class,
+            't_ThirdParty_SupplierCategory',
+            'third_party_id',
+            'supplier_category_id'
+        );
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Core\Country::class, 'CountryId', 'Id');
+    }
+
+    // New pivot relationship to multiple types
+    public function types(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\ThirdParty\ThirdPartyType::class,
+            't_ThirdPartyType_ThirdParties',
+            'ThirdPartyId',
+            'TypeId'
+        );
+    }
+
+    // Finance relationships
+    public function wallet()
+    {
+        return $this->hasOne(\App\Models\Finance\CustomerWallet::class, 'CustomerID', 'Id');
+    }
+
+    public function creditProfiles()
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceCreditManagement::class, 'CustomerID', 'Id');
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceInvoice::class, 'CustomerID', 'Id');
+    }
+
+    public function receipts()
+    {
+        return $this->hasMany(\App\Models\Finance\FinanceReceipt::class, 'CustomerID', 'Id');
     }
 }

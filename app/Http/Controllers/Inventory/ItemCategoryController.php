@@ -31,18 +31,34 @@ class ItemCategoryController extends Controller
     public function create()
     {
         $this->authorize('create', ItemCategories::class);
-        $categories = ItemCategories::whereNull('ParentId')->get();
-        $status = CodeDetail::where('CodeID', 'CategoryStatus')
-            ->orderBy('Value')
+
+        $activeStatusId = CodeDetail::where('CodeID', 'CategoryStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+
+        $categories = ItemCategories::whereNull('ParentId')
+            ->where('Status', $activeStatusId)
             ->get();
-        return view('inventory.itemmaster.itemcategory.create', compact('categories', 'status'));
+
+        return view('inventory.itemmaster.itemcategory.create', compact('categories'));
     }
 
     public function store(StoreItemCategoryRequest $request)
     {
         $this->authorize('create', ItemCategories::class);
-        $this->service->create($request->validated());
-        return redirect()->route('itemcategory.index')->with('success', 'Category created successfully.');
+
+        // Force status to Active
+        $activeStatusId = CodeDetail::where('CodeID', 'CategoryStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+
+        $data = $request->validated();
+        $data['Status'] = $activeStatusId;
+
+        $this->service->create($data);
+
+        return redirect()->route('itemcategory.index')
+            ->with('success', 'Category created successfully.');
     }
 
     public function show($id)
@@ -67,9 +83,13 @@ class ItemCategoryController extends Controller
     {
         $category = ItemCategories::findOrFail($id);
         $this->authorize('update', $category);
-        $category->update($request->validated());
-        return redirect()->route('itemcategory.index')->with('success', 'Category updated successfully.');
+
+        $this->service->update($category, $request->validated());
+
+        return redirect()->route('itemcategory.index')
+            ->with('success', 'Category updated successfully.');
     }
+
 
 
     public function destroy($id)

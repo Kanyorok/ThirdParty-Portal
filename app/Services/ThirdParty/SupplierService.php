@@ -15,27 +15,33 @@ class SupplierService
     }
 
     public static function getSupplierDetails($SupplierId){
-        return DB::table(DB::raw('t_Suppliers WITH (NOLOCK)'))
+        return DB::table(DB::raw('t_Suppliers AS s WITH (NOLOCK)'))
+            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 's.ThirdPartyID')
             ->select(
-                't_Suppliers.SupplierName as Name',
-                't_Suppliers.ContactEmail as Email',
-                't_Suppliers.ContactPhone as Phone',
-                't_Suppliers.Address as Address',
-                't_Suppliers.CategoryId as CategoryId'
+                DB::raw('tp.TradingName as Name'),
+                DB::raw("COALESCE(tp.Email, '') as Email"),
+                DB::raw("COALESCE(tp.Phone, '') as Phone"),
+                DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
+                's.CategoryId as CategoryId'
             )
-            ->where('t_Suppliers.Id', $SupplierId)
+            ->where('s.Id', $SupplierId)
             ->first(); // Return a single object, not a collection
     }
     public static function getSuppliers(){
-        return DB::table(DB::raw('t_Suppliers WITH (NOLOCK)'))
+        return DB::table(DB::raw('t_Suppliers AS s WITH (NOLOCK)'))
+            ->join(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', 's.ThirdPartyID')
             ->select(
-                't_Suppliers.SupplierName as Name',
-                't_Suppliers.ContactEmail as Email',
-                't_Suppliers.ContactPhone as Phone',
-                't_Suppliers.Address as Address',
-                't_Suppliers.CategoryId as CategoryId',
-                't_Suppliers.Id'
-            )            ->get();
+                DB::raw('tp.TradingName as SupplierName'),
+                DB::raw("COALESCE(tp.Email, '') as Email"),
+                DB::raw("COALESCE(tp.Phone, '') as Phone"),
+                DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
+                's.CategoryId as CategoryId',
+                DB::raw('s.Id as SupplierId'),
+                DB::raw('s.ThirdPartyID as ThirdPartyId')
+            )
+            ->whereNull('s.DeletedOn')
+            ->orderBy('tp.TradingName', 'asc')
+            ->get();
     }
 
 }

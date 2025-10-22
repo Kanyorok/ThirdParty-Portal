@@ -6,6 +6,7 @@ use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\CategoryMaster;
+use App\Models\Core\Country;
 use App\Models\Core\Locality;
 use App\Models\PropertyManagement\PropertyRegistry;
 use App\Models\PropertyManagement\PropertyType;
@@ -28,9 +29,9 @@ class PropertyRegistryService
         CategoryMaster $Category,
         string         $Owner,
         Carbon         $AcquisitionDate,
-        string         $Country,
-        Locality       $TownCity,
-        string         $AreaLocality,
+        Country  $CountryId,
+        Locality $LocationId,
+        string   $Address,
         string         $PropertyDescription = null,
         User   $user,
         UploadedFile $document = null
@@ -43,10 +44,10 @@ class PropertyRegistryService
             'Category' => $Category->Id,
             'Owner' => $Owner,
             'AcquisitionDate' => $AcquisitionDate,
-            'Country' => $Country,
-            'TownCity' => $TownCity->ID,
-            'AreaLocality' => $AreaLocality,
-            'PropertyDescription' => $PropertyDescription,
+            'CountryId' => $CountryId->Id,
+            'LocationId' => $LocationId->ID,
+            'Address' => $Address,
+            'PropertyDescription' => $PropertyDescription ?? '',
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
@@ -71,11 +72,12 @@ public static function update(
     CategoryMaster   $Category,
     string           $Owner,
     Carbon           $AcquisitionDate,
-    string           $Country,
-    Locality         $TownCity,
-    string           $AreaLocality,
-    ?string          $PropertyDescription,
+    Country  $CountryId,
+    Locality $LocationId,
+    string   $Address,
+    ?string  $PropertyDescription = null,
     User             $user,
+    bool     $IsActive,
     UploadedFile     $document = null
 ): self {
     $property->update([
@@ -85,11 +87,12 @@ public static function update(
         'Category'            => $Category->Id,
         'Owner'               => $Owner,
         'AcquisitionDate'     => $AcquisitionDate,
-        'Country'             => $Country,
-        'TownCity'            => $TownCity->ID,
-        'AreaLocality'        => $AreaLocality,
-        'PropertyDescription' => $PropertyDescription,
+        'CountryId' => $CountryId->Id,
+        'LocationId' => $LocationId->ID,
+        'Address' => $Address,
+        'PropertyDescription' => $PropertyDescription ?? '',
         'ModifiedBy'          => $user->Id,
+        'IsActive' => $IsActive,
         'ModifiedOn'          => now(),
     ]);
 

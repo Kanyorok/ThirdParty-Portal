@@ -23,20 +23,30 @@ class FleetTripLogRequest extends FormRequest
     {
 
         return [
-            'VehicleID' => 'required|exists:t_FleetVehicles,Id',
-            'DriverType' => 'required|exists:t_CodeDetails,ID',
-            'DriverID' => 'required|integer',
+            'ParentTripID' => 'nullable|exists:t_TripLogs,Id',
+            'TripType' => 'required|string|exists:t_CodeDetails,ID',
+            'TripCode' => 'nullable|string|max:100',
+            'VehicleType' => 'required|integer|exists:t_CodeDetails,ID',
+            'LoadType' => 'nullable|integer|exists:t_CodeDetails,ID',
             'TripStartDate' => 'required|date',
             'StartTime' => 'nullable|date_format:H:i',
-            'TripEndDate' => 'required|date',
+            'TripEndDate' => 'nullable|date',
             'EndTime' => 'nullable|date_format:H:i|after_or_equal:StartTime',
             'StartLocation' => 'nullable|string|max:255',
             'EndLocation' => 'nullable|string|max:255',
             'DistanceCovered' => 'nullable|integer|min:0',
-            'Route' => 'nullable|integer|exists:t_TripLogs,Id',
+            'Route' => 'nullable|integer|exists:t_FleetRoutePlans,Id',
             'Purpose' => 'nullable|string|max:255',
             'Notes' => 'nullable|string',
+            'childTrips' => 'nullable|array',
+            'childTrips.*.TripStartDate' => 'required|date',
+            'childTrips.*.StartTime' => 'nullable|date_format:H:i',
+            'childTrips.*.TripEndDate' => 'required|date',
+            'childTrips.*.EndTime' => 'nullable|date_format:H:i|after_or_equal:childTrips.*.StartTime',
+            'childTrips.*.StartLocation' => 'nullable|string|max:255',
+            'childTrips.*.EndLocation' => 'nullable|string|max:255',
+            'childTrips.*.Purpose' => 'nullable|string|max:255',
+            'childTrips.*.Notes' => 'nullable|string',
         ];
-
     }
 }

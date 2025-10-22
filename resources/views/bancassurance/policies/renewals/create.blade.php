@@ -17,8 +17,9 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Current End Date</label>
-                            <input type="text" class="form-control" 
-                                   value="{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}" readonly>
+                            <input type="text" class="form-control"
+                                   value="{{ \Carbon\Carbon::parse($policy->PolicyEndDate)->format('d/m/Y') }}"
+                                   readonly>
                         </div>
                     </div>
 
@@ -29,7 +30,7 @@
                                    class="form-control @error('RenewalDate') is-invalid @enderror"
                                    value="{{ old('RenewalDate') }}" required>
                             @error('RenewalDate')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -39,7 +40,7 @@
                                    class="form-control @error('NewStartDate') is-invalid @enderror"
                                    value="{{ old('NewStartDate') }}" required>
                             @error('NewStartDate')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -51,19 +52,19 @@
                                    class="form-control @error('NewEndDate') is-invalid @enderror"
                                    value="{{ old('NewEndDate') }}" required>
                             @error('NewEndDate')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
                     <div class="col">
                         <label class="form-label">Notes / Comments</label>
-                            <textarea name="Notes" 
-                                      class="form-control @error('Notes') is-invalid @enderror"
-                                      rows="2" placeholder="Optional comments...">{{ old('Notes') }}</textarea>
-                            @error('Notes')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <textarea name="Notes"
+                                  class="form-control @error('Notes') is-invalid @enderror"
+                                  rows="2" placeholder="Optional comments...">{{ old('Notes') }}</textarea>
+                        @error('Notes')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
                     <div class="text-end">
                         <button type="submit" class="btn btn-success px-4">

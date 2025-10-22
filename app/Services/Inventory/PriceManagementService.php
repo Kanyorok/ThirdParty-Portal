@@ -19,7 +19,12 @@ class PriceManagementService
 
         $pricing->save();
 
+        if (!empty($data['PriceID'])) {
+            $pricing->PriceID = $data['PriceID'];
+        } else {
         $pricing->PriceID = 'PR-' . str_pad($pricing->Id, 5, '0', STR_PAD_LEFT);
+        }
+
         $pricing->save();
 
         if ($item = ItemMasterList::find($pricing->ItemID)) {

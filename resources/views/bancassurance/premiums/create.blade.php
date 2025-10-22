@@ -13,10 +13,12 @@
                 @foreach ($policies as $policy)
                     <option
                         value="{{ $policy->Id }}"
-                        data-paymentfrequency="{{ $policy->paymentfrequency->Description}}"
-                        data-customerid="{{ $policy->customer->FullName }}"
+                        data-paymentfrequency="{{ $policy->paymentfrequency->Description ?? '-'}}"
+                        data-customerid="{{ $policy->customer->thirdParty->ThirdPartyName ?? '-'}}"
                         data-balance="{{ isset($balances[$policy->Id]) ? $balances[$policy->Id] : 0 }}">
-                        {{ $policy->PolicyNumber }} (Pending: {{ isset($balances[$policy->Id]) ? number_format($balances[$policy->Id], 2) : '0.00' }})
+                        {{ $policy->PolicyNumber }}
+                        (Pending: {{ isset($balances[$policy->Id]) ? number_format($balances[$policy->Id], 2) : '0.00' }}
+                        )
                     </option>
                 @endforeach
             </select>
@@ -112,7 +114,7 @@
         document.getElementById('payment-date').addEventListener('change', autoCalculateNextPaymentDate);
 
         // Trigger change event on page load to show balance if a policy is preselected
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('request-select').dispatchEvent(new Event('change'));
         });
 

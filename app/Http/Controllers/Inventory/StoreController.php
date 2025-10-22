@@ -7,6 +7,8 @@ use App\Http\Requests\Inventory\StoreRequest;
 use App\Services\Inventory\StoreService;
 use App\Models\Inventory\Store;
 use App\Models\Core\Branch;
+use Illuminate\Support\Facades\Auth;
+
 
 class StoreController extends Controller
 {
@@ -19,16 +21,21 @@ class StoreController extends Controller
 
     public function index()
     {
-        $stores = Store::all();
+        $branchId = auth()->user()->employee?->BranchId;
+        $stores = Store::where('BranchID', $branchId)->get();
         return view('inventory.stores.index', compact('stores'));
     }
 
     public function create()
     {
         $this->authorize('create', Store::class);
-        $branches = Branch::all();
-        return view('inventory.stores.create', compact('branches'));
+
+        $branchId = auth()->user()->employee?->BranchId;
+        $branch = Branch::find($branchId);
+
+        return view('inventory.stores.create', compact('branch'));
     }
+
 
     public function store(StoreRequest $request)
     {

@@ -3,6 +3,8 @@
 namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\DMS\Image;
+
 use App\Models\Core\Branch;
 use App\Models\Fleet\FuelType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,8 +20,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Auth\User;
-use App\Models\Fleet\FleetMaintenanceSchedule; 
-use App\Models\Fleet\FleetRepairLog; 
+use App\Models\Fleet\FleetMaintenanceSchedule;
+use App\Models\Fleet\FleetRepairLog;
 
 
 
@@ -49,7 +51,11 @@ class FleetVehicle extends Model
         'OdometerReading',
         'Status',
         'AssignedBranch',
-        'IsActive',
+        'MaxPassengers',
+        'MaxLoad',
+        'VehicleStatus',
+        'Color',
+        'ImageId',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -62,6 +68,12 @@ class FleetVehicle extends Model
         return 'VehicleId';
     }
 
+    public function image()
+    {
+        return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
+    }
+
+
     public function vehicleType()
     {
         return $this->belongsTo(CodeDetail::class, 'VehicleType', 'ID');
@@ -69,9 +81,9 @@ class FleetVehicle extends Model
 
 
     public function tripLogs()
-{
-    return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
-}
+    {
+        return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
+    }
 
 
     public function maintenanceSchedules()
@@ -113,5 +125,10 @@ class FleetVehicle extends Model
     public function status()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
+    }
+
+    public function vehicleStatus()
+    {
+        return $this->belongsTo(CodeDetail::class, 'VehicleStatus', 'ID');
     }
 }

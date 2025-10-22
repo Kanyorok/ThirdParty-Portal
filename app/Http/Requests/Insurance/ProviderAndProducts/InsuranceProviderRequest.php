@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Insurance\ProviderAndProducts;
 
+use App\Models\Insurance\InsuranceProvider;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class InsuranceProviderRequest extends FormRequest
 {
@@ -22,7 +24,13 @@ class InsuranceProviderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'Name' => 'required|string|max:100',
+            'Name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique(InsuranceProvider::class, 'Name')
+                    ->where(fn($query) => $query->where('Country', $this->Country)),
+            ],
             'Country' => 'required|string|max:50',
             'ContactPerson' => 'required|string|max:100',
             'Email' => 'required|email|max:100',

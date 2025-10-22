@@ -3,6 +3,13 @@
 @section('content')
     <div class="container mt-4">
         <h4 class="mb-4">📄 Tender Item Details – {{$tender->TenderNo}}</h4>
+        <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
+            <i class="fa fa-info-circle me-2"></i>
+            <span
+                title="Open: all suppliers can bid. Restricted: only invited based on selected item category. Use 'Add to Grid' to add items.">
+                <strong>Guidance:</strong> Tender Initiation supports two types: Open (all suppliers can bid) and Restricted (only invited suppliers based on the selected item category). Add items to the tender by clicking Add to Grid.
+            </span>
+        </div>
 
 
         <!-- Tender Summary Info -->
@@ -91,9 +98,9 @@
                             @foreach ($suppliers as $item)
                                 <tr>
                                     <td>{{$loop->index+1}}</td>
-                                    <td>{{$item->supplier->SupplierName}}</td>
-                                    <td>{{$item->supplier->ContactEmail}}</td>
-                                    <td>{{$item->supplier->ContactPhone}}</td>
+                                    <td>{{$item->supplier->thirdParty->ThirdPartyName ?? 'N/A'}}</td>
+                                    <td>{{$item->supplier->thirdParty->Email ?? 'N/A'}}</td>
+                                    <td>{{$item->supplier->thirdParty->Phone ?? 'N/A'}}</td>
                                 </tr>
                             @endforeach
                             <!-- More suppliers -->

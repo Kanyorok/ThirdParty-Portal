@@ -6,6 +6,7 @@ use App\Models\Auth\User;
 use App\Models\Core\Currency;
 use App\Models\Core\Module;
 use App\Models\PropertyManagement\PropertyNewTenant;
+use App\Models\ThirdParty\ThirdParties;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -51,6 +52,12 @@ class FinanceInvoice extends Model
         'ApprovalStatus',
         'ApprovalReason',
 
+        // Credit application tracking
+        'UseCredit',
+        'CreditAppliedOn',
+        'CreditAppliedBy',
+        'CreditApplicationReason',
+
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
@@ -64,6 +71,8 @@ class FinanceInvoice extends Model
         'DueDate'     => 'date',
         'IsPaid'      => 'boolean',
         'IsGenerated' => 'boolean',
+        'UseCredit' => 'boolean',
+        'CreditAppliedOn' => 'datetime',
     ];
 
     /**
@@ -140,7 +149,7 @@ class FinanceInvoice extends Model
     }
 
     public function customer(){
-        return $this->belongsTo(PropertyNewTenant::class,'CustomerID','Id');
+        return $this->belongsTo(ThirdParties::class, 'CustomerID', 'Id');
     }
 
     public function source(){
@@ -157,6 +166,68 @@ class FinanceInvoice extends Model
 
     public function currency(){
         return $this->belongsTo(Currency::class,'CurrencyID','Id');
+    }
+
+    public function creditAppliedByUser()
+    {
+        return $this->belongsTo(User::class, 'CreditAppliedBy', 'Id');
+    }
+
+    /**
+     * Check if credit has been applied to this invoice
+     */
+    public function hasCreditApplied(): bool
+    {
+        return (bool)$this->UseCredit;
+    }
+
+    /**
+     * Get credit movement for this invoice
+     */
+    public function creditMovement()
+    {
+        return $this->hasOne(FinanceCreditMovement::class, 'ReferenceID', 'Id')
+            ->where('ReferenceType', 'invoice')
+            ->where('MovementType', 'invoice_usage');
+    }
+
+    /**
+     * Scope to filter invoices with credit applied
+     */
+    public function scopeWithCreditApplied($query)
+    {
+        return $query->where('UseCredit', true);
+    }
+
+    /**
+     * Scope to filter invoices without credit applied
+     */
+    public function scopeWithoutCreditApplied($query)
+    {
+        return $query->where('UseCredit', false);
+    }
+
+    /**
+     * Get receipt allocations for this invoice
+     */
+    public function receiptAllocations()
+    {
+        return $this->hasMany(FinanceReceiptAllocation::class, 'InvoiceID', 'Id');
+    }
+
+    /**
+     * Get receipts that have been applied to this invoice
+     */
+    public function receipts()
+    {
+        return $this->hasManyThrough(
+            FinanceReceipt::class,
+            FinanceReceiptAllocation::class,
+            'InvoiceID',
+            'Id',
+            'Id',
+            'ReceiptID'
+        );
     }
 
 }

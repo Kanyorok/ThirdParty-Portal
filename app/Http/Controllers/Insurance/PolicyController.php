@@ -32,14 +32,14 @@ public function index(Request $request)
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $statuses = InsurancePolicyStatus::cases();
+    //dd($request->customer);
 
-    $query = BancassurancePolicy::with(['customer', 'product', 'insurer'])
+    $query = BancassurancePolicy::with(['customer.thirdParty', 'product', 'insurer'])
         ->when($request->status, fn($q) => $q->where('Status', $request->status))
         ->when($request->from, fn($q) => $q->whereDate('PolicyStartDate', '>=', $request->from))
         ->when($request->to, fn($q) => $q->whereDate('PolicyEndDate', '<=', $request->to))
         ->when($request->customer, function ($q) use ($request) {
-            $q->whereHas('customer', fn($q2) =>
-                $q2->where('FullName', 'like', '%' . $request->customer . '%'));
+            $q->whereHas('customer.thirdParty', fn($q2) => $q2->where('ThirdPartyName', 'like', '%' . $request->customer . '%'));
         })
         ->orderByDesc('Id')
         ->get();
@@ -127,7 +127,7 @@ public function review($id)
     if (!$policy) {
         return redirect()->route('bancassurance.policies.index')->with('error', 'Policy not found.');
     }
-    
+
     return view('bancassurance.policies.review', compact('policy'));
 }
 
@@ -212,7 +212,7 @@ public function submitForUnderwriting(request $request, $id)
 
 
 // Show the feedback form
-public function feedbackForm($id) 
+public function feedbackForm($id)
 {
     $this->authorize(PermissionEnum::BancassurancePolicyView, BancassurancePolicy::class);
     $policy = BancassurancePolicy::with('customer')

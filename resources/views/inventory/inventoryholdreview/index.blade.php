@@ -1,7 +1,7 @@
 @php use App\Enums\Inventory\Transfers; @endphp
 @extends('layouts.app')
 
-@section('title', 'Inventory Review List')
+@section('title', 'Stock Review List')
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -18,7 +18,6 @@
 
 @section('content')
     <div class="container mt-4">
-        <h4 class="mb-3">Inventory Review List</h4>
 
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">

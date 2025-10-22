@@ -36,8 +36,9 @@
                     <th>Fuel</th>
                     <th>Branch</th>
                     <th>Status</th>
+                    <th>Vehicle Availability</th>
                     <th>Action</th>
-                   
+
                 </tr>
                 </thead>
                 <tbody>
@@ -50,15 +51,28 @@
                         <td>{{ $vehicle->vehicleType->Description }}</td>
                         <td>{{ $vehicle->fuelType->FuelName }}</td>
                         <td>{{ $vehicle->branch->Name ?? '-' }}</td>
-                        <td>{{ $vehicle->status->Description }}</td>
-                        
-                        {{-- <td>
-                            @if ($vehicle->IsActive)
-                                <span class="badge bg-success">Yes</span>
+                        <td>{{ $vehicle->status->Description ?? '-' }}</td>
+                        <td>
+                            @if($vehicle->vehicleStatus)
+                                @php
+                                    // Map status descriptions to badge colors
+                                    $statusColors = [
+                                        'Available'     => 'success',
+                                        'AssignedTrip'  => 'warning',
+                                        'OnTrip'        => 'info',
+                                    ];
+
+                                    $color = $statusColors[$vehicle->vehicleStatus->Description] ?? 'light';
+                                @endphp
+
+                                <span class="badge bg-{{ $color }}">
+                                {{ $vehicle->vehicleStatus->Description }}
+                            </span>
                             @else
-                                <span class="badge bg-danger">No</span>
+                                <span class="badge bg-light text-dark">-</span>
                             @endif
-                        </td> --}}
+                        </td>
+
 
                         <td>
                             <a href="{{ route('fleet.vehicles.show', $vehicle->Id) }}"

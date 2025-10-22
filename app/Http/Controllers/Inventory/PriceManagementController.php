@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
+use App\Exports\PriceManagementExport;
 use App\Http\Requests\Inventory\PriceManagementRequest;
 use App\Services\Inventory\PriceManagementService;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
-use App\Imports\PricingImport;
+use App\Imports\PriceManagementImport;
 use Maatwebsite\Excel\Facades\Excel;
+
 
 class PriceManagementController extends Controller
 {
@@ -61,14 +63,23 @@ class PriceManagementController extends Controller
 
     public function update(PriceManagementRequest $request, $id)
     {
-        $price = PriceManagement::findOrFail($id);
+        $oldPrice = PriceManagement::findOrFail($id);
         $this->authorize('update', PriceManagement::class);
 
-        // Pass only validated data — FormRequest already skips ItemID/UOM for update
-        $this->priceService->update($price, $request->validated());
+        $oldPrice->update([
+            'DeletedOn' => now(),
+            'DeletedBy' => auth()->id(),
+        ]);
+
+        $data = $request->validated();
+        $data['PriceID'] = $oldPrice->PriceID;
+        $data['ItemID'] = $oldPrice->ItemID;
+        $data['UOM'] = $oldPrice->UOM;
+
+        $this->priceService->create($data);
 
         return redirect()->route('pricemanagement.index')
-            ->with('success', 'Price updated!');
+            ->with('success', 'Price updated (new version created)!');
     }
 
     public function destroy($id)
@@ -81,6 +92,11 @@ class PriceManagementController extends Controller
             ->with('success', 'Price deleted.');
     }
 
+    public function downloadSampleTemplate()
+    {
+        return Excel::download(new PriceManagementExport, 'price_management_sample.xlsx');
+    }
+
     public function importPricing(PriceManagementRequest $request)
     {
         $this->authorize('update', PriceManagement::class);
@@ -89,7 +105,7 @@ class PriceManagementController extends Controller
             'file' => 'required|file|mimes:xlsx,csv'
         ]);
 
-        Excel::import(new PricingImport, $request->file('file'));
+        Excel::import(new PriceManagementImport, $request->file('file'));
 
         return back()->with('success', 'Pricing data imported successfully!');
     }

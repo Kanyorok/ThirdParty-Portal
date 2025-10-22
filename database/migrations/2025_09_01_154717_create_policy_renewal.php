@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('t_BancassurancePolicyRenewals', function (Blueprint $table) {
@@ -14,7 +13,7 @@ return new class extends Migration
             $table->date('RenewalDate');
             $table->date('NewStartDate');
             $table->date('NewEndDate');
-            $table->string('Status')->constrained('t_CodeDetails','ID'); // Requested, Approved, Completed, Rejected
+            $table->string('Status')->constrained('t_CodeDetails', 'ID'); // Requested, Approved, Completed, Rejected
             $table->string('Notes')->nullable();
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');

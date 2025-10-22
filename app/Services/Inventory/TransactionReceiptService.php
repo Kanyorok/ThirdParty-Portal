@@ -21,6 +21,8 @@ class TransactionReceiptService
     public function createReceipt($validatedData, $items)
     {
         return DB::transaction(function () use ($validatedData, $items) {
+            $transfer = \App\Models\Inventory\TransactionTransfer::findOrFail($validatedData['TransferID']);
+
             $receipt = TransactionReceipt::create([
                 'TransferId' => $validatedData['TransferID'],
                 'ReceivedBy' => $validatedData['ReceivedBy'],
@@ -33,7 +35,6 @@ class TransactionReceiptService
                 'ModifiedOn' => now(),
             ]);
 
-            $transfer = $receipt->transfer;
             if ($transfer && ($transfer->Status == Transfers::InTransit || $transfer->Status === Transfers::InTransit->value)) {
                 $transfer->Status = Transfers::Delivered;
                 $transfer->save();
@@ -67,6 +68,7 @@ class TransactionReceiptService
                     'ModifiedOn' => now(),
                 ]
             );
+
             $sourceCodeId = CodeDetail::where('CodeID', 'Source')
                 ->where('Description', 'Transaction Transfer')
                 ->value('ID');
@@ -85,7 +87,6 @@ class TransactionReceiptService
                     'DeletedOn' => now(),
                 ]);
 
-
             activity()
                 ->causedBy(auth()->user())
                 ->performedOn($receipt)
@@ -95,6 +96,7 @@ class TransactionReceiptService
             return $receipt;
         });
     }
+
 
     public function createReceiptItems($receipt, $items)
     {
@@ -145,7 +147,7 @@ class TransactionReceiptService
             $stock->ModifiedOn = now();
             $stock->save();
 
-            
+
          //Generate SKU ID
         $latestSKU = StockTransaction::where('SKUID', 'like', 'SKU%')
             ->orderByDesc('id')
@@ -172,7 +174,7 @@ class TransactionReceiptService
             ->value('BalanceQty');
 
         if ($lastToQty === null) {
-            $lastToQty = $stock->CurrentQty - $itemData['received_qty']; 
+            $lastToQty = $stock->CurrentQty - $itemData['received_qty'];
         }
 
         $newToQty = $lastToQty + $itemData['received_qty'];
@@ -219,7 +221,7 @@ class TransactionReceiptService
                     ->where('Description', 'Damaged in Transit')
                     ->value('ID');
 
-             
+
                 InventoryHold::create([
                     'ItemID' => $itemId,
                     'BranchID' => $toBranchId,

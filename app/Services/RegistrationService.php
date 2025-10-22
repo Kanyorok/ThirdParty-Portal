@@ -7,6 +7,7 @@ use App\Models\ThirdParty\ThirdPartyUser;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Auth\Events\Registered;
+use App\Models\Auth\User;
 
 class RegistrationService
 {
@@ -35,6 +36,10 @@ class RegistrationService
                 throw new \Exception('User is already associated with a third party.');
             }
 
+            // Resolve ERPSYS system user from t_Users
+            $systemUser = User::where('UserID', 'ERPSYS')->first();
+            $systemUserId = $systemUser?->Id;
+
             $thirdParty = ThirdParties::create([
                 'ThirdPartyName' => $thirdPartyData['ThirdPartyName'],
                 'TradingName' => $thirdPartyData['TradingName'] ?? null,
@@ -47,10 +52,20 @@ class RegistrationService
                 'Email' => $thirdPartyData['Email'],
                 'Phone' => $thirdPartyData['Phone'],
                 'Website' => $thirdPartyData['Website'] ?? null,
-                'ThirdPartyType' => $thirdPartyData['ThirdPartyType'],
-                'CreatedBy' => $user->Id,
-                'ModifiedBy' => $user->Id,
+                'CreatedBy' => $systemUserId,
+                'ModifiedBy' => $systemUserId,
             ]);
+
+            if (!empty($thirdPartyData['ThirdPartyType'])) {
+                DB::table('t_ThirdPartyType_ThirdParties')->insert([
+                    'TypeId' => $thirdPartyData['ThirdPartyType'],
+                    'ThirdPartyId' => $thirdParty->Id,
+                    'CreatedBy' => $systemUserId,
+                    'ModifiedBy' => $systemUserId,
+                    'CreatedOn' => now(),
+                    'ModifiedOn' => now(),
+                ]);
+            }
 
             $user->ThirdPartyId = $thirdParty->Id;
             $user->save();

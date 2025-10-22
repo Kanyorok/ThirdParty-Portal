@@ -33,7 +33,7 @@
                         @forelse($invoices as $item)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $item->suppliers->SupplierName ?? '-' }}</td>
+                                <td>{{ ($item->thirdParty->TradingName ?? optional($item->thirdParty)->ThirdPartyName) ?? '-' }}</td>
                                 <td>{{ $item->InvoiceNumber ?? '-' }}</td>
                                 <td>{{ $item->InvoiceDate ? \Carbon\Carbon::parse($item->InvoiceDate)->format('d-m-Y') : '-' }}</td>
                                 <td class="text-end">{{ $item->InvoiceAmount ? number_format($item->InvoiceAmount, 2) : '-' }}</td>
@@ -57,19 +57,19 @@
                                        title="View Invoice">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    @if(strtolower($item->ApprovalStatus) === 'draft')
-                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"
-                                        class="btn btn-sm btn-outline-primary me-1"
-                                        title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    @else
-                                        <a href="#"
-                                        class="btn btn-sm btn-outline-primary me-1 disabled"
-                                        title="Edit (disabled)">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    @endif
+                                    {{--                                    @if(strtolower($item->ApprovalStatus) === 'draft')--}}
+                                    {{--                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"--}}
+                                    {{--                                        class="btn btn-sm btn-outline-primary me-1"--}}
+                                    {{--                                        title="Edit">--}}
+                                    {{--                                            <i class="fas fa-edit"></i>--}}
+                                    {{--                                        </a>--}}
+                                    {{--                                    @else--}}
+                                    {{--                                        <a href="#"--}}
+                                    {{--                                        class="btn btn-sm btn-outline-primary me-1 disabled"--}}
+                                    {{--                                        title="Edit (disabled)">--}}
+                                    {{--                                            <i class="fas fa-edit"></i>--}}
+                                    {{--                                        </a>--}}
+                                    {{--                                    @endif--}}
 
                                     @if(strtolower($item->ApprovalStatus) === 'draft')
                                         <button type="button"
@@ -121,6 +121,12 @@
                         </tbody>
                     </table>
                 </div>
+                {{-- Add pagination if available --}}
+                @if(method_exists($invoices, 'links'))
+                    <div class="mt-3">
+                        {{ $invoices->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>

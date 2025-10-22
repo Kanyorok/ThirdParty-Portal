@@ -63,7 +63,7 @@ return [
 
         'temp' => [
             'driver' => 'local',
-            'root' => sys_get_temp_dir(),
+            'root' => storage_path('app/temp'), //sys_get_temp_dir(),
             'permissions' => [
                 'file' => [
                     'public' => 0664,

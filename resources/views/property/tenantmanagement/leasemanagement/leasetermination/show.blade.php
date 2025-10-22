@@ -15,19 +15,20 @@
             <div class="row g-3 text-dark">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Lease Number</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ $leasetermination->lease->LeaseNumber ?? '-' }}" readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Termination Date</label>
-                    <input type="text" class="form-control bg-light text-dark" 
-                        value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d M Y') : '-' }}" readonly>
+                    <input type="text" class="form-control bg-light text-dark"
+                           value="{{ $leasetermination->TerminationDate ? Carbon::parse($leasetermination->TerminationDate)->format('d/m/Y') : '-' }}"
+                           readonly>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Termination Reason</label>
-                    <input type="text" class="form-control bg-light text-dark" 
+                    <input type="text" class="form-control bg-light text-dark"
                         value="{{ $leasetermination->code->Description ?? '-' }}" readonly>
                 </div>
 

@@ -62,7 +62,7 @@
                        value="{{ old('CurrencyCode', $price->CurrencyCode) ?? 'KES' }}" required>
             </div>
 
-            <div class="row">
+            {{-- <div class="row">
                 <div class="col-md-6">
                     <label class="form-label">Effective From</label>
                     <input type="date" class="form-control" name="EffectiveFrom"
@@ -86,9 +86,11 @@
                 <label class="form-label">Source</label>
                 <input type="text" class="form-control" name="Source" value="{{ old('Source', $price->Source) }}"
                        placeholder="Optional">
-            </div>
+            </div> --}}
 
-            <button type="submit" class="btn btn-primary mt-3">Update Price</button>
+            <button type="submit" class="btn btn-success"
+                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Price
+            </button>
             <a href="{{ route('pricemanagement.index') }}" class="btn btn-secondary mt-3">Cancel</a>
         </form>
     </div>

@@ -17,7 +17,7 @@
                     @endphp
                     <p><strong>Budget:</strong> {{ $budgetName }}</p>
                     <p><strong>Total Allocations:</strong> {{ number_format($totalAllocation, 2) }}</p>
-                    <p><strong>Source:</strong> Manual Entry</p>
+                    {{--                    <p><strong>Source:</strong> Manual Entry</p>--}}
                 </div>
 
                 <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">

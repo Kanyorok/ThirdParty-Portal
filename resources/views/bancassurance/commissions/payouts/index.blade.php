@@ -7,6 +7,7 @@
 
 @section('content')
 <div class="container mt-4">
+    <p><small>The list below Consists of commission payouts made</small></p>
         <table class="table table-bordered" id="payout">
             <thead class="table-light">
                 <tr>
@@ -24,11 +25,11 @@
                     <tr>
                         <td>{{ $p->Id }}</td>
                         <td>{{ $p->policies->PolicyNumber ?? '-'}}</td>
-                        <td>{{ number_format($p->PaidAmount, 2) }}</td>
-                        <td>{{ $p->PayoutReference }}</td>
-                        <td>{{ \Carbon\Carbon::parse($p->PaymentDate)->format('d/m/Y') }}</td>
-                        <td>{{ $p->paymentmodes->Description }}</td>
-                        <td>{{ $p->Remarks }}</td>
+                        <td>{{ number_format($p->PaidAmount, 2) ?? '-'}}</td>
+                        <td>{{ $p->PayoutReference ?? '-'}}</td>
+                        <td>{{ \Carbon\Carbon::parse($p->PaymentDate)->format('d/m/Y') ?? '-'}}</td>
+                        <td>{{ $p->paymentmodes->Description ?? '-'}}</td>
+                        <td>{{ $p->Remarks ?? '-'}}</td>
                     </tr>
                 @endforeach
             </tbody>

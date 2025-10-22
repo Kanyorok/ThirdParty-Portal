@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -18,11 +17,11 @@ return new class extends Migration
 
             $table->foreign('Type')
                 ->references('Id')
-                    ->on('t_CategoryMaster');
+                ->on('t_CategoryMaster');
 
             $table->foreign('FinanceRole')
                 ->references('FinanceRoleID')
-                    ->on('t_FinanceRoles');
+                ->on('t_FinanceRoles');
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');

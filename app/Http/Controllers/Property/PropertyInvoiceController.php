@@ -20,12 +20,13 @@ class PropertyInvoiceController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
         $invoices = PropertyInvoice::all();
         return view('property.billingandreceipting.invoicing.index', compact('invoices'));
     }
 
     public function create(){
-       // $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+        $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
         $newleases = PropertyNewLease::where('IsActive', true)
             ->where('Status', '!=', PropertyNewLeaseEnum::Terminate)
             ->with('tenant')->get();
@@ -34,15 +35,15 @@ class PropertyInvoiceController extends Controller
 
     public function show($id)
     {
-       // $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
+        $this->authorize(PermissionEnum::PropertyInvoiceView, PropertyInvoice::class);
         $invoice = PropertyInvoice::find($id);
         return view('property.billingandreceipting.invoicing.show', compact('invoice'));
     }
 
     public function store(PropertyInvoiceRequest $request)
     {
-        //dd($request->all());
-       // $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
+
+        $this->authorize(PermissionEnum::PropertyInvoiceCreate, PropertyInvoice::class);
         $validated = $request->validated();
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
@@ -66,7 +67,7 @@ class PropertyInvoiceController extends Controller
 
     public function edit($id)
     {
-       // $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
+        $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
         $invoices = PropertyInvoice::findOrFail($id);
         $leases = PropertyInvoice::all();
 
@@ -75,7 +76,7 @@ class PropertyInvoiceController extends Controller
 
     public function update(PropertyInvoiceRequest $request, $id)
     {
-       // $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
+        $this->authorize(PermissionEnum::PropertyInvoiceUpdate, PropertyInvoice::class);
         $validated = $request->validated();
 
         $Lease = PropertyNewLease::findOrFail($validated['Lease']);
@@ -113,9 +114,16 @@ class PropertyInvoiceController extends Controller
 
     public function destroy($id)
     {
-       // $this->authorize(PermissionEnum::PropertyInvoiceDelete, PropertyInvoice::class);
+        $this->authorize(PermissionEnum::PropertyInvoiceDelete, PropertyInvoice::class);
         try {
+
             $invoice = PropertyInvoice::findOrFail($id);
+
+            if ($invoice->receipts()->exists()) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'This Invoice is in use and cannot be deleted.']);
+            }
+
             $invoice->delete();
 
             return redirect()->route('rentinvoice.index')

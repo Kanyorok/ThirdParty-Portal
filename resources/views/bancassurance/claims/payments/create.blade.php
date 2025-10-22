@@ -6,19 +6,18 @@
     <form action="{{ route('bancassurance.claims.payments.store') }}" method="POST">
         @csrf
 
-        
+
         <div class="mb-3">
             <label class="form-label">Select Claim  <span class="text-danger">*</span></label>
             <select name="ClaimId" id="ClaimId" class="form-select" required onchange="populateClaimDetails(this)">
                 <option value="">-- Choose Unpaid Claim --</option>
                 @foreach($unpaidClaims as $claim)
-                    <option 
-                        value="{{ $claim->Id }}"
-                        data-amount="{{ $claim->ClaimAmount }}"
-                        data-customer="{{ $claim->policy->customer->FullName }}"
-                        data-policy="{{ $claim->policy->PolicyNumber }}"
+                    <option
+                        value="{{ $claim->ClaimId ?? '-'}}"
+                        data-customer="{{ $claim->claim->policy->customer->FullName ?? '-'}}"
+                        data-policy="{{ $claim->claim->policy->PolicyNumber ?? '-'}}"
                     >
-                        {{ $claim->policy->PolicyNumber }}
+                        {{ $claim->claim->policy->PolicyNumber ?? '-'}}
                     </option>
                 @endforeach
             </select>
@@ -49,7 +48,7 @@
             <select name="PaymentMethod" class="form-select" required>
                 <option value="#">-- Select Payment --</option>
                 @foreach ($payments as $payment)
-                    <option value="{{ $payment->ID }}">{{ $payment->Description }}</option>
+                    <option value="{{ $payment->ID }}">{{ $payment->Description ?? '-'}}</option>
                 @endforeach
             </select>
         </div>
@@ -80,7 +79,6 @@
         const selected = select.options[select.selectedIndex];
         document.getElementById('CustomerName').value = selected.getAttribute('data-customer') || '';
         document.getElementById('PolicyNumber').value = selected.getAttribute('data-policy') || '';
-        document.getElementById('PaymentAmount').value = selected.getAttribute('data-amount') || '';
     }
 </script>
 @endsection

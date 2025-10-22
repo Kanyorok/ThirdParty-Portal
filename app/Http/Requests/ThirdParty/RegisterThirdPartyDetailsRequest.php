@@ -5,7 +5,6 @@ namespace App\Http\Requests\ThirdParty;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Enums\BusinessTypeEnum;
-use App\Enums\ThirdPartyTypeEnum;
 
 class RegisterThirdPartyDetailsRequest extends FormRequest
 {
@@ -29,7 +28,7 @@ class RegisterThirdPartyDetailsRequest extends FormRequest
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:t_ThirdParties,Email'],
             'Phone' => ['required', 'string', 'max:20'],
             'Website' => ['nullable', 'string', 'url', 'max:255'],
-            'ThirdPartyType' => ['required', 'string', Rule::in(array_column(ThirdPartyTypeEnum::cases(), 'value'))],
+            'ThirdPartyType' => ['required', 'integer', 'exists:t_ThirdPartyTypes,TypeId'],
         ];
     }
 

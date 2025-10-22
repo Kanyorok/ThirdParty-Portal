@@ -43,7 +43,7 @@
                     <option value="">-- Select Customer --</option>
                     @foreach($customers as $cust)
                         <option value="{{ $cust->Id }}" {{ old('CustomerID') == $cust->Id ? 'selected' : '' }}>
-                            {{ $cust->FullName }} ({{ $cust->NationalID }})
+                            {{ $cust->ThirdParty->ThirdPartyName }} -- ({{ $cust->NationalID }})
                         </option>
                     @endforeach
                 </select>
@@ -136,7 +136,9 @@
 
         {{-- Submit --}}
         <div class="text-end">
-            <button class="btn btn-success">Submit Proposal</button>
+            <button class="btn btn-success"
+                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Proposal
+            </button>
         </div>
     </form>
 </div>
@@ -234,11 +236,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Date validation with inline error display
     const form = document.querySelector('form[action*="bancassurance.policies.store"]');
     if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             // Clear previous errors
-            ['PolicyStartDate','PolicyEndDate','IssuedDate','ExpiryDate'].forEach(function(name) {
-                const input = document.querySelector('input[name="'+name+'"]');
-                const errorDiv = document.getElementById('error-'+name);
+            ['PolicyStartDate', 'PolicyEndDate', 'IssuedDate', 'ExpiryDate'].forEach(function (name) {
+                const input = document.querySelector('input[name="' + name + '"]');
+                const errorDiv = document.getElementById('error-' + name);
                 if (input) input.classList.remove('is-invalid');
                 if (errorDiv) errorDiv.textContent = '';
             });

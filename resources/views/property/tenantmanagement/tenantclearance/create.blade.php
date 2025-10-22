@@ -13,7 +13,7 @@
   @endif
   <div class="container mt-4">
 
-    <h4 class="fw-bold mb-3">Tenant Exit & Clearance Checklist</h4>
+      <h4 class="fw-bold mb-3">Clearance Checklist</h4>
 
     <form action="{{ route('tenantclearance.store') }}" method="POST" enctype="multipart/form-data">
       @csrf
@@ -27,7 +27,7 @@
                 <option>--Select the tenant</option>
                 @foreach ($newtenants as $newtenant)
                   <option value="{{ $newtenant->LeaseID }}">
-                    Name:{{ $newtenant->lease->tenant->TenantName }} &nbsp;&nbsp; LeaseNo:
+                      Name:{{ $newtenant->lease->tenant->thirdParty->TradingName }} &nbsp;&nbsp; LeaseNo:
                     {{ $newtenant->lease->LeaseNumber }}
                   </option>
                 @endforeach
