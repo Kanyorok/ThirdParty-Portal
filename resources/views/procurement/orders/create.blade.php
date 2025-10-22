@@ -193,27 +193,22 @@
                 </div>
             </div>
 
-            <!-- Original Supplier (will be dynamically moved when Direct mode) -->
-            <div id="supplierDriverContainer" class="d-none">
-                <label>Supplier <span class="text-danger">*</span></label>
-                <select class="form-control supplier @error('supplier') is-invalid @enderror" id="supplier" name="supplier">
-                    <option selected disabled>Select supplier</option>
-                </select>
-                <input type="hidden" id="supplierHidden" />
-                @error('supplier')
-                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
+            <!-- Visible supplier field removed; we'll use prequalified supplier (Direct) or hidden supplier input (other modes). -->
 
             <!-- Direct mode helpers (will receive supplier select when Direct) -->
-            <div class="row mb-3 direct-only d-none">
+        <div class="row mb-3 direct-only d-none">
                 <div class="col-md-6">
-                    <label>Item Category (optional)</label>
-                    <select id="itemCategory" class="form-control">
+            <label>Item Category <span class="text-danger">*</span></label>
+            <select id="itemCategory" class="form-control" required>
                         <option value="" selected>-- None --</option>
                     </select>
                 </div>
                 <div class="col-md-6" id="directSupplierHost">
+            <label>Prequalified Supplier <span class="text-danger">*</span></label>
+            <select id="preqSupplier" class="form-control" required>
+                        <option value="" selected>-- None --</option>
+                    </select>
+                    <small class="text-muted">Only suppliers prequalified for the selected category will appear.</small>
                     <!-- Supplier select will be appended here in Direct mode -->
                 </div>
             </div>
@@ -474,26 +469,17 @@
             updateTotals();
         });
 
-        // Source mode toggling
+    // Source mode toggling
         function applySourceMode() {
             const mode = $('input[name="SourceType"]:checked').val();
             const $planDriver = $('#planDriver');
-            const $supplierContainer = $('#supplierDriverContainer');
-            const $supplierHost = $('#supplierDriverHost');
-            const $directSupplierHost = $('#directSupplierHost');
             if (mode === 'RFQ') {
                 $('.source-rfq').removeClass('d-none');
                 $('.source-tender').addClass('d-none');
                 $('.source-contract').addClass('d-none');
-                $('#supplier').prop('disabled', true); // auto in RFQ
                 $('.direct-only').addClass('d-none');
                 // Show supplier driver
                 $planDriver.addClass('d-none');
-                if ($supplierContainer.parent().attr('id') !== 'supplierDriverHost') {
-                    $supplierContainer.appendTo($supplierHost).removeClass('d-none');
-                } else {
-                    $supplierContainer.removeClass('d-none');
-                }
                 // Live refresh of awarded RFQs from t_RFQAward
                 const $ref = $('#refNo');
                 $ref.empty().append('<option selected disabled>Loading awarded RFQs...</option>');
@@ -525,47 +511,29 @@
                 $('.source-rfq').addClass('d-none');
                 $('.source-tender').removeClass('d-none');
                 $('.source-contract').addClass('d-none');
-                $('#supplier').prop('disabled', true);
                 $('.direct-only').addClass('d-none');
                 $planDriver.addClass('d-none');
-                if ($supplierContainer.parent().attr('id') !== 'supplierDriverHost') {
-                    $supplierContainer.appendTo($supplierHost).removeClass('d-none');
-                } else {
-                    $supplierContainer.removeClass('d-none');
-                }
                 // Reset to all items for Tender mode
                 updateItemOptionsForContract(allItems);
             } else if (mode === 'CONTRACT') {
                 $('.source-rfq').addClass('d-none');
                 $('.source-tender').addClass('d-none');
                 $('.source-contract').removeClass('d-none');
-                $('#supplier').prop('disabled', true);
                 $('.direct-only').addClass('d-none');
                 $planDriver.addClass('d-none');
-                if ($supplierContainer.parent().attr('id') !== 'supplierDriverHost') {
-                    $supplierContainer.appendTo($supplierHost).removeClass('d-none');
-                } else {
-                    $supplierContainer.removeClass('d-none');
-                }
                 // Keep current available items (will be updated when contract is selected)
             } else {
                 $('.source-rfq').addClass('d-none');
                 $('.source-tender').addClass('d-none');
                 $('.source-contract').addClass('d-none');
-                $('#supplier').prop('disabled', false);
                 $('#SourceId').val('');
                 // Hide Item Category row until a plan is selected
                 $('.direct-only').addClass('d-none');
                 // Reset to all items for Direct mode
                 updateItemOptionsForContract(allItems);
                 populateItems([]);
-                // Show plan driver and move supplier to direct host
+                // Show plan driver
                 $planDriver.removeClass('d-none');
-                if ($supplierContainer.parent().attr('id') !== 'directSupplierHost') {
-                    $supplierContainer.appendTo($directSupplierHost).removeClass('d-none');
-                } else {
-                    $supplierContainer.removeClass('d-none');
-                }
                 // Load approved direct procurement plans
                 const $planSel = $('#directPlanSelect');
                 $planSel.prop('disabled', true).html('<option value="" selected>Loading plans...</option>');
@@ -589,7 +557,7 @@
         $(document).on('change', 'input[name="SourceType"]', applySourceMode);
         applySourceMode();
 
-        // RFQ selection: auto-fill supplier and items
+    // RFQ selection: auto-fill hidden supplier and items
         $(document).on('change', '#refNo', function () {
             const selectedRFQNo = $(this).val();
             const rfqOption = $(this).find('option:selected');
@@ -603,17 +571,12 @@
                 $('#SourceId').val('');
             }
 
-            const $supplier = $('#supplier');
-            $supplier.empty().append('<option selected disabled>Select supplier</option>');
-
             if (Number.isFinite(supplierLegacyId)) {
                 const awardResp = rfqResponses.find(r => (r.RFQNumber === selectedRFQNo) && (parseInt(r.SupplierId) === matchThirdPartyId));
                 const fallbackName = rfqOption.data('supplier-name') || '';
                 const fallbackAddress = rfqOption.data('address') || '';
                 const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : (fallbackName || `Supplier #${supplierLegacyId}`);
                 const address = awardResp ? (awardResp.Address || awardResp.TradingAddress || '') : fallbackAddress;
-                $supplier.append(`<option value="${supplierLegacyId}" selected data-address="${address}">${displayName}</option>`);
-                $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);
                 if ($("input[name='supplier']").length === 0) {
                     $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierLegacyId)}).appendTo('#purchaseOrdersForm');
@@ -634,29 +597,6 @@
                         .then(({items}) => { populateItems(items || []); updateTotals(); })
                         .catch(() => populateItems([]));
                 }
-            } else {
-                // No award: list suppliers from responses for this RFQ
-                const suppliers = rfqResponses.filter(r => r.RFQNumber === selectedRFQNo);
-                const seen = new Set();
-                suppliers.forEach(s => {
-                    const key = `${s.SupplierName || s.Name}-${s.SupplierId || s.Id}`;
-                    if (seen.has(key)) return;
-                    seen.add(key);
-                    const addr = s.Address || '';
-                    $supplier.append(`<option value="${s.SupplierId || s.Id}" data-address="${addr}">${s.SupplierName || s.Name}</option>`);
-                });
-                $supplier.prop('disabled', false);
-                $('input[name="address"]').val('');
-                // Populate items for first found supplier (optional)
-                if (!isNaN(rfqId) && suppliers.length > 0) {
-                    const thirdParty = parseInt(suppliers[0].SupplierId);
-                    if (Number.isFinite(thirdParty)) {
-                        fetch(`/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${thirdParty}`)
-                            .then(r => r.json())
-                            .then(({items}) => { populateItems(items || []); updateTotals(); })
-                            .catch(() => populateItems([]));
-                    }
-                }
             }
         });
 
@@ -674,12 +614,8 @@
                 $('#SourceId').val('');
             }
 
-            const $supplier = $('#supplier');
-            $supplier.empty().append('<option selected disabled>Select supplier</option>');
             if (!isNaN(supplierId)) {
                 const name = supplierName || `Supplier #${supplierId}`;
-                $supplier.append(`<option value="${supplierId}" selected data-address="${address}">${name}</option>`);
-                        $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);
                 if ($("input[name='supplier']").length === 0) {
                         $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
@@ -710,12 +646,8 @@
                 $('#SourceId').val('');
             }
 
-            const $supplier = $('#supplier');
-            $supplier.empty().append('<option selected disabled>Select supplier</option>');
             if (!isNaN(supplierId)) {
                 const name = supplierName || `Supplier #${supplierId}`;
-                $supplier.append(`<option value="${supplierId}" selected data-address="${address}">${name}</option>`);
-                $supplier.prop('disabled', true);
                 $('input[name="address"]').val(address);
                 if ($("input[name='supplier']").length === 0) {
                     $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
@@ -743,20 +675,16 @@
             }
         });
 
-        // Autopopulate address when supplier is selected
-        $(document).on('change', '#supplier', function () {
-            let address = $(this).find('option:selected').data('address') || '';
-            $('input[name="address"]').val(address);
-        });
+    // No supplier dropdown in UI; address is updated by specific handlers
 
         $(function () {
             $('form#purchaseOrdersForm').submit(function (e) {
                 e.preventDefault();
                 
-                // Ensure supplier value is set
-                const supVal = $('#supplier').val();
-                if (supVal && $("input[name='supplier']").length === 0) {
-                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supVal)}).appendTo('#purchaseOrdersForm');
+                // Ensure supplier value is set (Direct uses preqSupplier, others set hidden earlier)
+                const preqVal = $('#preqSupplier').val();
+                if (preqVal && $("input[name='supplier']").length === 0 && $('input[name="SourceType"]:checked').val() === 'DIRECT') {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(preqVal)}).appendTo('#purchaseOrdersForm');
                 }
                 
                 // Validate required fields before submission
@@ -773,9 +701,17 @@
                 }
                 
                 // Check supplier
-                if (!$('#supplier').val()) {
-                    errorMessages.push('Please select a supplier');
-                    isValid = false;
+                if (mode === 'DIRECT') {
+                    if (!$('#preqSupplier').val()) {
+                        errorMessages.push('Please select a prequalified supplier');
+                        isValid = false;
+                    }
+                } else {
+                    const hiddenSup = $("input[name='supplier']").val();
+                    if (!hiddenSup) {
+                        errorMessages.push('Supplier could not be determined from your selection');
+                        isValid = false;
+                    }
                 }
                 
                 // Check payment terms
@@ -862,45 +798,53 @@
         // initial
         refreshSourceUI();
 
-        // Category change => load prequalified suppliers and items
+        // Category change => load plan-scoped items and prequalified suppliers
         $('#itemCategory').on('change', function(){
             const catId = $(this).val() ? parseInt($(this).val(),10) : 0;
-            const $preq = $('#preqSupplierHelper');
-            $preq.empty().append('<option value="">-- None --</option>');
-            if(catId>0){
-                fetch(`{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${catId}`)
-                    .then(r=>r.json()).then(({data})=>{
-                        (data||[]).forEach(row=>{
-                            $preq.append(`<option value="${row.ThirdPartyId || ''}" data-address="${row.Address||''}">${row.SupplierName||('Supplier #'+(row.SupplierId||''))}</option>`)
-                        });
-                    }).catch(()=>{});
-                fetch(`{{ url('procurement/purchaseOrder/items-by-category') }}/${catId}`)
-                    .then(r=>r.json()).then(({items})=>{
-                        const options = (items||[]).map(it=>`<option value="${it.itemCode}">${it.itemName}</option>`).join('');
-                        const $first = $('#item-rows tr').first();
-                        $first.find('select.itemCode').empty().append(`<option disabled selected>Select Item Code</option>`).append(options);
-                    }).then(()=>{
-                        // Merge in direct plan items
-                        return fetch(`{{ url('procurement/purchaseOrder/direct-plan-items') }}/${catId}`)
-                            .then(r=>r.json()).then(({items})=>{
-                                const $first = $('#item-rows tr').first();
-                                const $sel = $first.find('select.itemCode');
-                                const existingVals = new Set($sel.find('option').map(function(){return this.value;}).get());
-                                (items||[]).forEach(it=>{
-                                    const val = String(it.itemCode||'');
-                                    if(val && !existingVals.has(val)){
-                                        $sel.append(`<option value="${val}">${it.itemName}</option>`);
-                                    }
-                                });
-                            });
-                    }).catch(()=>{});
+            const planId = $('#directPlanSelect').val() ? parseInt($('#directPlanSelect').val(),10) : 0;
+            if(!(catId>0) || !(planId>0)){
+                return;
             }
+            // 1) Populate prequalified supplier dropdown for this category
+            const $preqSupplier = $('#preqSupplier');
+            $preqSupplier.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
+            fetch(`{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${catId}`)
+                .then(r=>r.json()).then(({data})=>{
+                    (data||[]).forEach(row=>{
+                        const supplierId = row.SupplierId || row.SupplierID || '';
+                        const display = row.SupplierName || (supplierId ? `Supplier #${supplierId}` : `ThirdParty #${row.ThirdPartyId || ''}`);
+                        const address = row.Address || '';
+                        const value = String(supplierId).length ? supplierId : (row.ThirdPartyId || '');
+                        $preqSupplier.append(`<option value="${value}" data-supplier-id="${supplierId || ''}" data-address="${address}">${display}</option>`);
+                    });
+                    $preqSupplier.prop('disabled', false);
+                }).catch(()=>{});
+
+            // 2) Load plan items filtered by category and populate the grid
+            fetch(`{{ url('procurement/purchaseOrder/plan') }}/${planId}/category/${catId}/items`)
+                .then(r=>r.json())
+                .then((resp)=>{
+                    const items = resp?.data || resp?.items || [];
+                    populateItems(items);
+                    updateTotals();
+                })
+                .catch(()=>{});
         });
 
-        // Mirror helper address to address field
-        $('#preqSupplierHelper').on('change', function(){
-            const addr = $(this).find('option:selected').data('address') || '';
-            $('input[name="address"]').val(addr);
+    // Selecting a prequalified supplier should set the hidden supplier input and address
+        $(document).on('change', '#preqSupplier', function(){
+            const $opt = $(this).find('option:selected');
+            const supplierId = String($opt.data('supplier-id') || $(this).val() || '').trim();
+            const address = $opt.data('address') || '';
+            if (supplierId) {
+        // Update hidden supplier input
+                if ($("input[name='supplier']").length === 0) {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
+                } else {
+                    $("input[name='supplier']").val(String(supplierId));
+                }
+            }
+            $('input[name="address"]').val(address);
         });
 
     // Remove row handler and totals calculation kept from your current dev form
@@ -1010,6 +954,18 @@
                         updateTotals();
                         // Now reveal the Item Category and supplier helpers for further narrowing
                         $('.direct-only').removeClass('d-none');
+                        // Load categories tied to this plan
+                        const $cat = $('#itemCategory');
+                        $cat.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
+                        fetch(`{{ url('procurement/purchaseOrder/plan') }}/${val}/categories`)
+                            .then(r=>r.json())
+                            .then(({success, data})=>{
+                                (data||[]).forEach(row=>{
+                                    $cat.append(`<option value="${row.Id}">${row.Name}</option>`);
+                                });
+                                $cat.prop('disabled', false);
+                            })
+                            .catch(()=>{ $cat.prop('disabled', false); });
                     } else {
                         alert('No items found for selected plan.');
                     }
@@ -1021,6 +977,7 @@
             populateItems([]);
             // Hide again when plan cleared
             $('.direct-only').addClass('d-none');
+            $('#itemCategory').empty().append('<option value="" selected>-- None --</option>');
         }
     });
 
