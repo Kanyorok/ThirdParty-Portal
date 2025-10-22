@@ -25,7 +25,7 @@ class StoreSupplierRequest extends FormRequest
             'Country' => ['required', 'string', 'max:50'],
             'PhysicalAddress' => ['nullable', 'string', 'max:255'],
             'Email' => ['required', 'email', 'max:255', 'unique:t_ThirdParties,Email'],
-            'Phone' => ['nullable', 'string', 'max:20'],
+            'Phone' => ['nullable', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'Website' => ['nullable', 'url', 'max:255'],
             'IsPrequalified' => ['nullable', 'boolean'],
             'category_ids' => ['required', 'array', 'min:1'],

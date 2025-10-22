@@ -1159,18 +1159,35 @@ public function getRFQItems($rfqId)
             $parentCol = collect(['ParentId', 'ParentID', 'Parent'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'ParentId';
             $allCats = DB::table($catTable)->get([$catIdCol . ' as Id', $parentCol . ' as ParentId']);
             $target = (int) $categoryId;
-            $catIds = collect([$target]);
+            // Collect descendants of the selected category (including self)
+            $descIds = collect([$target]);
             $queue = [$target];
             while ($queue) {
                 $current = array_shift($queue);
                 $children = $allCats->where('ParentId', $current)->pluck('Id')->all();
                 foreach ($children as $cid) {
-                    if (!$catIds->contains($cid)) {
-                        $catIds->push($cid);
+                    if (!$descIds->contains($cid)) {
+                        $descIds->push($cid);
                         $queue[] = $cid;
                     }
                 }
             }
+            // Collect ancestors of the selected category up to root
+            $ancIds = collect([]);
+            $walker = $target;
+            $guard = 0;
+            while ($walker && $guard < 50) {
+                $guard++;
+                $parent = $allCats->firstWhere('Id', $walker)->ParentId ?? null;
+                if ($parent && !$ancIds->contains((int)$parent)) {
+                    $ancIds->push((int)$parent);
+                    $walker = (int)$parent;
+                } else {
+                    break;
+                }
+            }
+            // Relevant categories for supplier mapping: self + ancestors + descendants
+            $matchCatIds = $descIds->merge($ancIds)->unique()->values();
 
             // Resolve SC-IC junction columns
             $scicTable = 't_SupplierCategory_ItemCategory';
@@ -1178,7 +1195,7 @@ public function getRFQItems($rfqId)
             $scicItemCol = collect(['ItemCategoryID', 'ItemCategoryId', 'item_category_id'])->first(fn($c) => Schema::hasColumn($scicTable, $c)) ?? 'ItemCategoryID';
 
             $supplierCategoryIds = DB::table($scicTable)
-                ->whereIn($scicItemCol, $catIds->all())
+                ->whereIn($scicItemCol, $matchCatIds->all())
                 ->pluck($scicSupCol)
                 ->unique()
                 ->filter()
@@ -1198,34 +1215,63 @@ public function getRFQItems($rfqId)
                     ->unique()
                     ->filter()
                     ->values();
-            } else {
-                // Fallback through t_Suppliers
-                if (Schema::hasTable('t_Suppliers')) {
-                    $supCatCol = Schema::hasColumn('t_Suppliers', 'SupplierCategoryID') ? 'SupplierCategoryID' : (Schema::hasColumn('t_Suppliers', 'CategoryId') ? 'CategoryId' : 'SupplierCategoryID');
-                    $thirdPartyIds = DB::table('t_Suppliers')
-                        ->whereIn($supCatCol, $supplierCategoryIds)
-                        ->pluck('ThirdPartyID')
-                        ->unique()
-                        ->filter()
-                        ->values();
-                }
             }
 
-            $suppliers = collect();
-            if ($thirdPartyIds->isNotEmpty() && Schema::hasTable('t_ThirdParties')) {
-                // Try to also resolve legacy SupplierId for posting convenience
-                $suppliers = DB::table('t_ThirdParties as tp')
-                    ->leftJoin('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
+            // Build supplier list, resilient to different schemas
+            $rows = collect();
+            if (Schema::hasTable('t_Suppliers')) {
+                $supplierQuery = DB::table('t_Suppliers as s')
+                    ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID');
+
+                // Prefer filtering by third parties from pivot when available
+                if ($thirdPartyIds->isNotEmpty()) {
+                    $supplierQuery->whereIn('s.ThirdPartyID', $thirdPartyIds->all());
+                } else {
+                    // Otherwise, filter by supplier categories mapped to the selected category
+                    $supCatCol = Schema::hasColumn('t_Suppliers', 'SupplierCategoryID') ? 'SupplierCategoryID' : (Schema::hasColumn('t_Suppliers', 'CategoryId') ? 'CategoryId' : 'SupplierCategoryID');
+                    $supplierQuery->where(function ($q) use ($supCatCol, $supplierCategoryIds, $matchCatIds) {
+                        if ($supplierCategoryIds->isNotEmpty()) {
+                            $q->whereIn("s.$supCatCol", $supplierCategoryIds->all());
+                        }
+                        if (Schema::hasColumn('t_Suppliers', 'CategoryId')) {
+                            $q->orWhereIn('s.CategoryId', $matchCatIds->all());
+                        }
+                    });
+                }
+
+                // Active suppliers only when column exists
+                if (Schema::hasColumn('t_Suppliers', 'Active_Status')) {
+                    $supplierQuery->where('s.Active_Status', 1);
+                }
+
+                $rows = $supplierQuery->select([
+                        DB::raw('COALESCE(tp.Id, s.ThirdPartyID) as ThirdPartyId'),
+                        DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
+                        DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
+                        DB::raw('COALESCE(s.Id, 0) as SupplierId'),
+                    ])
+                    ->orderBy('SupplierName')
+                    ->get();
+            }
+
+            // Fallback: if still empty and we have third party IDs, return third parties directly
+            if ($rows->isEmpty() && $thirdPartyIds->isNotEmpty() && Schema::hasTable('t_ThirdParties')) {
+                $rows = DB::table('t_ThirdParties as tp')
                     ->whereIn('tp.Id', $thirdPartyIds->all())
                     ->select([
                         DB::raw('tp.Id as ThirdPartyId'),
                         DB::raw("COALESCE(tp.TradingName, '') as SupplierName"),
                         DB::raw("COALESCE(tp.PhysicalAddress, '') as Address"),
-                        DB::raw('COALESCE(s.Id, 0) as SupplierId'),
+                        DB::raw('CAST(0 as int) as SupplierId'),
                     ])
-                    ->orderBy('tp.TradingName')
+                    ->orderBy('SupplierName')
                     ->get();
             }
+
+            // Ensure unique by either SupplierId or ThirdPartyId
+            $suppliers = $rows->unique(function ($r) {
+                return ($r->SupplierId && (int)$r->SupplierId > 0) ? 'S:' . (int)$r->SupplierId : 'TP:' . (int)$r->ThirdPartyId;
+            })->values();
 
             return response()->json(['success' => true, 'data' => $suppliers]);
         } catch (\Throwable $e) {
@@ -1383,6 +1429,23 @@ public function getRFQItems($rfqId)
         try {
             $pid = (int) $planId;
             $cid = (int) $categoryId;
+            // Resolve descendant category IDs (include selected)
+            $catTable = 't_ItemCategories';
+            $catIdCol = collect(['Id', 'ID', 'CategoryID'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Id';
+            $parentCol = collect(['ParentId', 'ParentID', 'Parent'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'ParentId';
+            $allCats = DB::table($catTable)->get([$catIdCol . ' as Id', $parentCol . ' as ParentId']);
+            $descIds = collect([$cid]);
+            $queue = [$cid];
+            while ($queue) {
+                $current = array_shift($queue);
+                $children = $allCats->where('ParentId', $current)->pluck('Id')->all();
+                foreach ($children as $childId) {
+                    if (!$descIds->contains($childId)) {
+                        $descIds->push($childId);
+                        $queue[] = $childId;
+                    }
+                }
+            }
 
             // Detect possible line item category columns
             $liTable = 't_PlanLineItem';
@@ -1402,11 +1465,11 @@ public function getRFQItems($rfqId)
                 // Case-insensitive Direct
                 ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'");
 
-            // Apply category filter by item category OR line item category columns
-            $itemsQ->where(function ($q) use ($cid, $liCatCols) {
-                $q->where('ic.Id', $cid);
+            // Apply category filter by item category OR line item category columns (including descendants)
+            $itemsQ->where(function ($q) use ($descIds, $liCatCols) {
+                $q->whereIn('ic.Id', $descIds->all());
                 foreach ($liCatCols as $col) {
-                    $q->orWhere("li.$col", $cid);
+                    $q->orWhereIn("li.$col", $descIds->all());
                 }
             });
 

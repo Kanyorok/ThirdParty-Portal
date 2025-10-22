@@ -18,7 +18,8 @@
 
         <div class="mb-3">
             <label for="phone" class="form-label">Phone Number</label>
-            <input type="tel" class="form-control" id="phone" name="phone" placeholder="e.g., +254712345678">
+            <input type="tel" class="form-control" id="phone" name="phone" inputmode="tel" pattern="^\+[1-9]\d{7,14}$" placeholder="e.g., +12025550123" aria-describedby="vendor_phone_help">
+            <div class="form-text" id="vendor_phone_help">Use international format (E.164): +[country code][number], 8–15 digits.</div>
         </div>
 
         <div class="mb-3">

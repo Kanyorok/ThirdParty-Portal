@@ -85,8 +85,8 @@
 
                             <div class="mb-3 col-6">
                                 <label class="form-label" for="Phone">Phone</label>
-                                <input type="text" class="form-control" id="Phone" name="Phone" maxlength="40"
-                                       placeholder="Phone Number">
+                                <input type="tel" class="form-control" id="Phone" name="Phone" maxlength="20" pattern="^\+[1-9]\d{7,14}$" inputmode="tel"
+                                       placeholder="e.g., +12025550123">
                                 <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 
@@ -157,8 +157,8 @@
 
                             <div class="mb-3 col-6">
                                 <label class="form-label" for="e_Phone">Phone</label>
-                                <input type="text" class="form-control" id="e_Phone" name="Phone" maxlength="40"
-                                       placeholder="Phone Number">
+                                <input type="tel" class="form-control" id="e_Phone" name="Phone" maxlength="20" pattern="^\+[1-9]\d{7,14}$" inputmode="tel"
+                                       placeholder="e.g., +12025550123">
                                 <p id="e_Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
 

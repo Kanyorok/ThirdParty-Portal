@@ -27,7 +27,7 @@ class BancassuranceCustomersBeneficiariesRequest extends FormRequest
             'FullName' => 'required|string|max:255',
             'Relationship' => 'nullable|exists:t_CodeDetails,ID',
             'IDNumber' => 'nullable|string|max:50',
-            'Phone' => 'nullable|string|max:50',
+            'Phone' => ['nullable','string','max:20','regex:/^\+[1-9]\d{7,14}$/'],
             'Email' => 'nullable|email|max:100',
             'PercentageShare' => 'required|numeric|min:0|max:100',
             'IsPrimary' => 'nullable|boolean',

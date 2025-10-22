@@ -46,14 +46,14 @@
                                placeholder="example@lawfirm.com" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Phone</label>
-                        <input type="tel" name="Phone"
-                               value="{{ old('Phone') }}"
-                               class="form-control"
-                               placeholder="+254 700 000000"
-                               required
-                               pattern="^\+254\s?[17]\d{2}\s?\d{6}$"
-                               title="Enter a valid Kenyan phone number e.g. +254 712 345678">
+                   <label class="form-label">Phone</label>
+                   <input type="tel" name="Phone"
+                       value="{{ old('Phone') }}"
+                       class="form-control"
+                       placeholder="e.g., +12025550123"
+                       required
+                       pattern="^\+[1-9]\d{7,14}$"
+                       title="Use international format (E.164), e.g., +12025550123">
                     </div>
                 </div>
 

@@ -27,7 +27,7 @@ class DriverManagementRequest extends FormRequest
             'LicenseNumber' => 'required|string|max:50|',
             'LicenseExpiryDate' => 'required|date',
             'EmploymentStatus' => 'required|numeric|exists:t_CodeDetails,ID',
-            'Phone' => 'nullable|string|max:15',
+            'Phone' => ['nullable','string','max:20','regex:/^\+[1-9]\d{7,14}$/'],
             'Email' => 'nullable|string|max:255',
             'Remarks' => 'nullable|string|max:500',
 
