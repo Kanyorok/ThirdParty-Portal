@@ -34,8 +34,8 @@
           <td>{{ $loop->iteration }}</td>
           <td>{{ $map->modules->Name }}</td>
           <td>{{ $map->transactions->Name }}</td>
-          <td>{{ $map->debitAccount->GLName }}</td>
-          <td>{{ $map->creditAccount->GLName }}</td>
+          <td>{{$map->debitAccount?->GLCode}} <small>({{ $map->debitAccount->GLName }})</small></td>
+          <td>{{$map->creditAccount?->GLCode}} <small>({{ $map->creditAccount->GLName }})</small></td>
           <td class="text-center">
             <button type="button"
                     class="btn btn-sm btn-outline-primary me-1 edit-mapping-btn"
@@ -248,7 +248,7 @@
 <script>
 $(document).ready(function() {
     console.log('GL Mapping script loaded');
-    
+
     // Test if jQuery is working
     if (typeof $ !== 'undefined') {
         console.log('jQuery is loaded');
@@ -261,10 +261,10 @@ $(document).ready(function() {
         console.log('Create module changed');
         const selectedModule = $(this).val();
         const transactionSelect = $('#createTransactionType');
-        
+
         if (selectedModule) {
             transactionSelect.html('<option selected disabled value="">Loading...</option>');
-            
+
             $.ajax({
                 url: `/finance/finance/transactions/${selectedModule}`,
                 method: 'GET',
@@ -293,10 +293,10 @@ $(document).ready(function() {
         console.log('Edit module changed');
         const selectedModule = $(this).val();
         const transactionSelect = $('#editTransactionType');
-        
+
         if (selectedModule) {
             transactionSelect.html('<option selected disabled value="">Loading...</option>');
-            
+
             $.ajax({
                 url: `/finance/finance/transactions/${selectedModule}`,
                 method: 'GET',
@@ -348,7 +348,7 @@ $(document).ready(function() {
 
                 // Load transaction types for the selected module
                 $('#editModuleID').trigger('change');
-                
+
                 // Set the transaction type after loading
                 setTimeout(function() {
                     $('#editTransactionType').val(data.TransactionTypeID);
@@ -368,7 +368,7 @@ $(document).ready(function() {
     $(document).on('submit', '#createMappingForm', function(e) {
         e.preventDefault();
         console.log('Create form submitted');
-        
+
         const form = $(this);
         const submitBtn = form.find('button[type="submit"]');
         const originalText = submitBtn.html();
@@ -426,14 +426,14 @@ $(document).ready(function() {
                 console.error('Create error:', error);
                 console.error('XHR response:', xhr.responseText);
                 console.error('Status:', status);
-                
+
                 let errorMessage = 'Failed to create mapping. Please try again.';
-                
+
                 if (xhr.status === 422) {
                     try {
                         const response = JSON.parse(xhr.responseText);
                         console.error('Validation errors:', response.errors);
-                        
+
                         if (response.errors) {
                             const errorMessages = [];
                             for (const field in response.errors) {
@@ -445,7 +445,7 @@ $(document).ready(function() {
                         console.error('Error parsing validation response:', e);
                     }
                 }
-                
+
                 showToast('error', errorMessage);
                 submitBtn.prop('disabled', false);
                 submitBtn.html(originalText);
@@ -457,7 +457,7 @@ $(document).ready(function() {
     $(document).on('submit', '#editMappingForm', function(e) {
         e.preventDefault();
         console.log('Edit form submitted');
-        
+
         const form = $(this);
         const submitBtn = form.find('button[type="submit"]');
         const originalText = submitBtn.html();
