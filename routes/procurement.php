@@ -126,7 +126,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/purchase-order/payment-terms', [PurchaseOrderController::class, 'getPaymentTerms'])->name('purchase-order.payment-terms');
     Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
     Route::get('/purchase-order/direct-plans', [PurchaseOrderController::class, 'getDirectPlans'])->name('purchase-order.direct-plans');
-    Route::get('/purchase-order/direct-plan-items/{planId}', [PurchaseOrderController::class, 'getDirectPlanItems'])->name('purchase-order.direct-plan-items');
+    Route::get('/purchase-order/direct-plan-items/{planId}', [PurchaseOrderController::class, 'getDirectPlanItems'])->withoutMiddleware(['ajax'])->name('purchase-order.direct-plan-items');
     
     // NEW: Unified PO Origination AJAX endpoints
     Route::get('purchaseOrder/award-details/{id}', [PurchaseOrderController::class, 'getAwardDetails'])->name('purchaseOrder.awardDetails');
@@ -291,7 +291,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('purchaseOrder/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->withoutMiddleware(['ajax'])->name('purchaseOrder.prequalifiedSuppliers');
     Route::get('purchaseOrder/items-by-category/{categoryId}', [PurchaseOrderController::class, 'getItemsByCategoryWithDescendants'])->withoutMiddleware(['ajax'])->name('purchaseOrder.itemsByCategory');
     Route::get('purchaseOrder/direct-plan-categories', [PurchaseOrderController::class, 'getDirectPlanCategories'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanCategories');
-    Route::get('purchaseOrder/direct-plan-items/{categoryId?}', [PurchaseOrderController::class, 'getDirectPlanItems'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanItems');
+    Route::get('purchaseOrder/direct-plan-items/{categoryId?}', [PurchaseOrderController::class, 'getDirectPlanItemsByCategory'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanItems');
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::post('bidscores/{tenderId}/consolidate', [BidScoreConsolidationController::class, 'storeConsolidation'])
