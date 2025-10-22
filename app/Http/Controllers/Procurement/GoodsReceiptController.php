@@ -138,6 +138,8 @@ class GoodsReceiptController extends Controller
                     'Status'       => true,
                     'CreatedBy'    => Auth::id(),
                     'CreatedOn'    => now(),
+                    'ModifiedBy'   => Auth::id(),
+                    'ModifiedOn'   => now(),
                 ]);
 
                 Log::info("New StockItem created for ItemID {$grn->ItemNo}");
