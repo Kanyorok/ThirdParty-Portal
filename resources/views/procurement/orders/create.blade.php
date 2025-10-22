@@ -808,6 +808,10 @@
             // 1) Populate prequalified supplier dropdown for this category
             const $preqSupplier = $('#preqSupplier');
             $preqSupplier.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
+            // Clear hidden supplier and address until user selects one for this category
+            const $hiddenSup = $("input[name='supplier']");
+            if ($hiddenSup.length) { $hiddenSup.val(''); }
+            $('input[name="address"]').val('');
             fetch(`{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${catId}`)
                 .then(r=>r.json()).then(({data})=>{
                     (data||[]).forEach(row=>{
@@ -824,9 +828,13 @@
             fetch(`{{ url('procurement/purchaseOrder/plan') }}/${planId}/category/${catId}/items`)
                 .then(r=>r.json())
                 .then((resp)=>{
-                    const items = resp?.data || resp?.items || [];
-                    populateItems(items);
+                    const items = (resp && (resp.data || resp.items)) ? (resp.data || resp.items) : [];
+                    populateItems(Array.isArray(items) ? items : []);
                     updateTotals();
+                    if (!items || items.length === 0) {
+                        // Give a hint if category has no pending Direct items in this plan
+                        // alert('No items found for the selected category in this plan.'); // optional
+                    }
                 })
                 .catch(()=>{});
         });

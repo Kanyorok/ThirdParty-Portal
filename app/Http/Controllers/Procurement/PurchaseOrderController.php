@@ -1305,25 +1305,68 @@ public function getRFQItems($rfqId)
     public function getPlanItemCategories($planId): JsonResponse
     {
         try {
-            $rows = DB::table('t_PlanLineItem as li')
+            $pid = (int) $planId;
+            $liTable = 't_PlanLineItem';
+            $liCatCols = collect(['ItemCategory', 'ItemCategoryID', 'Category', 'CategoryId', 'CategoryID'])
+                ->filter(fn($c) => Schema::hasColumn($liTable, $c))
+                ->values();
+
+            $base = DB::table('t_PlanLineItem as li')
                 ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
                 ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
-                ->where(function ($q) use ($planId) {
-                    $q->where('li.PlanID', (int) $planId)->orWhere('li.PlanId', (int) $planId);
+                ->where(function ($q) use ($pid) {
+                    $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
                 })
-                ->where('li.ExecutionStatus', 'Pending')
-                ->where(function($q){
-                    $q->where('cd.Description', 'LIKE', '%Direct%');
-                })
-                ->whereNotNull('ic.Id')
-                ->groupBy('ic.Id', 'ic.Name')
-                ->orderBy('ic.Name')
-                ->select([
-                    DB::raw('ic.Id as Id'),
-                    DB::raw("COALESCE(ic.Name, 'Uncategorized') as Name")
-                ])
-                ->get();
+                ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'");
+
+            // Prefer grouping by item categories when available, fallback to line item category refs
+            if ($liCatCols->isEmpty()) {
+                $rows = $base->whereNotNull('ic.Id')
+                    ->groupBy('ic.Id', 'ic.Name')
+                    ->orderBy('ic.Name')
+                    ->select([
+                        DB::raw('ic.Id as Id'),
+                        DB::raw("COALESCE(ic.Name, 'Uncategorized') as Name")
+                    ])->get();
+            } else {
+                // Build union: item categories + line item categories that might not resolve to ic
+                $queryA = DB::table('t_PlanLineItem as li')
+                    ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                    ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                    ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                    ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                    ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                    ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
+                    ->whereNotNull('ic.Id')
+                    ->select([
+                        DB::raw('ic.Id as Id'),
+                        DB::raw("COALESCE(ic.Name, 'Uncategorized') as Name")
+                    ]);
+
+                $liCatCol = $liCatCols->first();
+                $queryB = DB::table('t_PlanLineItem as li')
+                    ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                    ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                    ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                    ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                    ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                    ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
+                    ->whereNull('ic.Id')
+                    ->whereNotNull("li.$liCatCol")
+                    ->select([
+                        DB::raw("CAST(li.$liCatCol as int) as Id"),
+                        DB::raw("'Uncategorized' as Name")
+                    ]);
+
+                $rows = $queryA->union($queryB)->get()
+                    ->unique('Id')
+                    ->filter(fn($r) => !empty($r->Id))
+                    ->values()
+                    ->sortBy('Name')
+                    ->values();
+            }
 
             return response()->json(['success' => true, 'data' => $rows]);
         } catch (\Throwable $e) {
@@ -1338,22 +1381,39 @@ public function getRFQItems($rfqId)
     public function getPlanItemsByCategory($planId, $categoryId): JsonResponse
     {
         try {
-            $items = DB::table('t_PlanLineItem as li')
+            $pid = (int) $planId;
+            $cid = (int) $categoryId;
+
+            // Detect possible line item category columns
+            $liTable = 't_PlanLineItem';
+            $liCatCols = collect(['ItemCategory', 'ItemCategoryID', 'Category', 'CategoryId', 'CategoryID'])
+                ->filter(fn($c) => Schema::hasColumn($liTable, $c))
+                ->values();
+
+            $itemsQ = DB::table('t_PlanLineItem as li')
                 ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
                 ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
-                ->where(function ($q) use ($planId) {
-                    $q->where('li.PlanID', (int) $planId)->orWhere('li.PlanId', (int) $planId);
+                ->where(function ($q) use ($pid) {
+                    $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
                 })
-                ->where('li.ExecutionStatus', 'Pending')
-                ->where(function($q){
-                    $q->where('cd.Description', 'LIKE', '%Direct%');
-                })
-                ->where('ic.Id', (int) $categoryId)
-                ->select([
+                // Case-insensitive Pending
+                ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                // Case-insensitive Direct
+                ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'");
+
+            // Apply category filter by item category OR line item category columns
+            $itemsQ->where(function ($q) use ($cid, $liCatCols) {
+                $q->where('ic.Id', $cid);
+                foreach ($liCatCols as $col) {
+                    $q->orWhere("li.$col", $cid);
+                }
+            });
+
+            $items = $itemsQ->select([
                     DB::raw('COALESCE(it.Id, 0) as itemCode'),
                     DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
-                    DB::raw('COALESCE(it.ItemDescription, li.Description, \'\') as description'),
+                    DB::raw('COALESCE(it.ItemDescription, li.Description, "") as description'),
                     DB::raw('COALESCE(li.MergedQty, li.Quantity, 0) as quantity'),
                     DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
                 ])
