@@ -455,12 +455,20 @@ const EditProfileModal: React.FC<{
 
                     <div className="space-y-2">
                         <Label htmlFor="gender">Gender</Label>
-                        <Input
-                            id="gender"
-                            value={formData.gender}
-                            onChange={e => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-                            disabled={isPending}
-                        />
+                        <div className="p-2 bg-muted rounded-lg border border-input">
+                            <select
+                                id="gender"
+                                value={formData.gender}
+                                onChange={e => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+                                disabled={isPending}
+                                className="w-full bg-transparent text-foreground font-semibold focus:outline-none p-2"
+                            >
+                                <option value="">-- Select gender --</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
