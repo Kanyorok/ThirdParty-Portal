@@ -93,6 +93,25 @@ class RepositoryService extends PermissionsService
         return ($this->repo->RepositoryId === self::ROOT);
     }
 
+    public function getPath(): string
+    {
+        if ($this->isRoot()) {
+            return '/';
+        }
+
+        try {
+            $path = collect(DB::select(
+                "SELECT RepositoryId, Name FROM f_parent_repositories(?) WHERE RepositoryId <> 'root' ORDER BY ParentId",
+                [$this->repo->Id]));
+
+            return '/' . $path->implode(function ($item) {
+                    return $item->Name;
+                }, '/');
+        } catch (Exception|Throwable $e) {
+            return '/??';
+        }
+    }
+
 
     /**
      * @throws ErroredException

@@ -55,13 +55,6 @@ class DMSTags extends Model
 
     public function scopeUser(Builder $q, User $user): Builder
     {
-        return $this->userCreator($q, $user);
-        /*  return $q->where(function (Builder $query) use ($user) {
-              $query->where($this->getTable() . '.Visibility', VisibilityEnum::Public->value)
-                  ->orWhere(function (Builder $query) use ($user) {
-                      $query->where($this->getTable() . '.Visibility', VisibilityEnum::Private->value)
-                          ->where($this->getTable() . '.CreatedBy', $user->Id);
-                  });
-          });*/
+        return $this->scopeUserCreator($q, $user);
     }
 }

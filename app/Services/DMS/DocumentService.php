@@ -29,7 +29,6 @@ use Cache;
 use DateTime;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -381,6 +380,30 @@ class DocumentService extends PermissionsService
 
     }
 
+    /**
+     * @throws ErroredException
+     */
+    public function newVersionUpload(UploadedFile $file, User $actor, string $Related, string|int $RelatedId): static
+    {
+        //check can change version.
+        if ($this->document->userRole($actor, [RoleEnum::Admin->value, RoleEnum::Write->value, RoleEnum::Share->value])->doesntExist()) {
+            throw new ErroredException('You do not have permission to change this document.');
+        }
+
+        if ($this->document->relations()->where('t_DocumentRelations.Related', $Related)->where('t_DocumentRelations.RelatedID', $RelatedId)->doesntExist()) {
+            throw new ErroredException('You do not have permission to change this document.');
+        }
+
+        //todo check if held or pending signing.
+        $extension = ExtensionsEnum::fromMimeType($file->getMimeType() ?? $file->getClientMimeType());
+        $disk = self::getDisk();
+        $checksum1 = hash_file(self::CHECKSUM, $file->getRealPath());
+        $path = self::_saveFile($disk, $file->getContent());
+        $checksum2 = hash_file(self::CHECKSUM, Storage::disk($disk->value)->path($path));
+
+        return $this->_newVersion($disk, $path, $file->getClientOriginalName(), $file->getSize(), $actor, properties: (new UploadFileProperties($file, $extension))->getProperties(), checksum: base64_encode($checksum1 . '|' . $checksum2));
+    }
+
     public function validateToken(User $user, string $token): bool
     {
         if ((string)Cache::get($user->Id . '-download-' . $this->document->Id) !== $token) {
@@ -429,7 +452,7 @@ class DocumentService extends PermissionsService
         }
 
         if ($this->type->value === ExtensionsEnum::Pdf->value) {
-            return '<iframe src="data:application/pdf;base64,' . $this->getFileContent() . '" ' . $attr . '></iframe>';
+            return '<iframe src="data:application/pdf;base64,' . $this->getFileContent() . '#toolbar=0&navpanes=0" ' . $attr . '></iframe>'; //todo fix for pdf
             //return '<embed width="100%" height="100%" "data:application/pdf;base64,'.$this->image->Image.' type="application/pdf" />';
         }
 
@@ -519,7 +542,7 @@ class DocumentService extends PermissionsService
             : '<i data-feather="globe" title="Public" class="text-primary icon-size"></i> ';
     }
 
-    public function tags(User $user): BelongsToMany
+    public function tags(User $user)
     {
         return $this->document->tags()->user($user);/*->where(function (Builder $query) use ($user) {
             $query->where('Visibility', VisibilityEnum::Public->value)

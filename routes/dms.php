@@ -29,6 +29,7 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::get('recent', DocumentRecentController::class)->name('repo.recent');
     Route::get('bulk-upload', DocumentUploadController::class)->name('files.upload');
     Route::prefix('document/{document}')->group(function () {
+        //mark for validation -> ()
         Route::get('activities', DocumentActivityController::class)->name('file.activities');
         Route::get('embed-preview', DocumentPreviewController::class)->name('file.embed-preview');
         Route::get('preview', [DocumentActionsController::class, 'preview'])->name('file.preview');
