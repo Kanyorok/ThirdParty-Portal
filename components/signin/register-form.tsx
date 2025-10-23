@@ -107,15 +107,66 @@ export function RegisterForm() {
             error={errors.phone?.message}
             id="phoneNumber"
           >
-            <Input
-              id="phoneNumber"
-              type="tel"
-              placeholder="+254712345678"
-              autoComplete="tel"
-              {...register("phone")}
-              aria-invalid={!!errors.phone}
-              className={resolveInputStyles("phone", !!errors.phone)}
-            />
+            {(() => {
+              const phoneReg = register("phone")
+
+              const handleBeforeInput = (e: any) => {
+                // Prevent typing any non-digit characters
+                const data = e?.data
+                if (data && /\D/.test(data)) {
+                  e.preventDefault()
+                }
+              }
+
+              const handlePaste = (e: any) => {
+                const pasted = e?.clipboardData?.getData?.("text") || (window as any).clipboardData?.getData?.("Text") || ""
+                if (!pasted) return
+                const cleaned = pasted.replace(/\D/g, "")
+                if (cleaned === pasted) return // no invalid chars
+                e.preventDefault()
+                const target = e.target as HTMLInputElement
+                const start = target.selectionStart ?? target.value.length
+                const end = target.selectionEnd ?? start
+                const newVal = target.value.slice(0, start) + cleaned + target.value.slice(end)
+                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+                if (nativeSetter) {
+                  nativeSetter.call(target, newVal)
+                } else {
+                  target.value = newVal
+                }
+                const ev = new Event("input", { bubbles: true })
+                target.dispatchEvent(ev)
+                // let react-hook-form know about the change
+                if (phoneReg.onChange) phoneReg.onChange({ target } as any)
+              }
+
+              const handleChange = (e: any) => {
+                const cleaned = (e.target.value || "").replace(/\D/g, "")
+                if (cleaned !== e.target.value) {
+                  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+                  if (nativeSetter) nativeSetter.call(e.target, cleaned)
+                  else e.target.value = cleaned
+                  const ev = new Event("input", { bubbles: true })
+                  e.target.dispatchEvent(ev)
+                }
+                if (phoneReg.onChange) phoneReg.onChange(e)
+              }
+
+              return (
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="254712345678"
+                  autoComplete="tel"
+                  {...phoneReg}
+                  aria-invalid={!!errors.phone}
+                  onBeforeInput={handleBeforeInput}
+                  onPaste={handlePaste}
+                  onChange={handleChange}
+                  className={resolveInputStyles("phone", !!errors.phone)}
+                />
+              )
+            })()}
           </FormField>
 
           <PasswordField
