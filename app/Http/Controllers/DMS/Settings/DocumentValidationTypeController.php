@@ -69,26 +69,49 @@ class DocumentValidationTypeController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(DocumentValidationType $documentValidationType)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, DocumentValidationType $documentValidationType)
+    public function update(Request $request, DocumentValidationType $documentValidationType): JsonResponse
     {
-        //
+        $validated = $request->validate([
+            "Name" => "required|string|max:255",
+            "Notes" => "nullable|string|max:5000",
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request, $documentValidationType, $validated) {
+                $documentValidationType->update([
+                    "Name" => $validated['Name'],
+                    "Notes" => $validated['Notes'],
+                    "ModifiedBy" => $request->user()->Id,
+                ]);
+                activity()->causedBy($request->user())->performedOn($documentValidationType)->event('update')->log('updated validation type ' . $documentValidationType->ValidationTypeId);
+
+                return $this->succeeded("validation type {$documentValidationType->ValidationTypeId} updated successfully", route: route('document-validation-type.show', [$documentValidationType->ValidationTypeId]));
+            });
+        } catch (Throwable $e) {
+            Log::error('updating (DMS) validation type failed : ' . $e);
+        }
+        return $this->errored('an unexpected error occurred, try again later');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(DocumentValidationType $documentValidationType)
+    public function destroy(Request $request, DocumentValidationType $documentValidationType): JsonResponse
     {
-        //
+        try {
+            return DB::transaction(function () use ($documentValidationType, $request) {
+                $documentValidationType->forceFill([
+                    'DeletedOn' => now(),
+                    'DeletedBy' => $request->user()->Id,
+                ])->save();
+                activity()->causedBy($request->user())->performedOn($documentValidationType)->event('delete')->log('deleted validation type ' . $documentValidationType->ValidationTypeId);
+                return $this->succeeded("validation type {$documentValidationType->ValidationTypeId} trashed successfully", route: route('document-validation-type.index'));
+            });
+        } catch (Throwable $e) {
+            Log::error('deleting (DMS) validation type failed : ' . $e);
+        }
+        return $this->errored('an unexpected error occurred, try again later');
     }
 }

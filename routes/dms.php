@@ -72,10 +72,8 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::get('document-signature/{dMSSignature}/documents', \App\Http\Controllers\DMS\Settings\SignatureDocumentsController::class)->name('document-signature.documents');
     Route::resource('document-signature', \App\Http\Controllers\DMS\Settings\SignatureController::class)->parameters(['document-signature' => 'dMSSignature']);//->except('edit');
 
-    /* Route::prefix('tickets/{ticket}')->group(function () {
-         Route::resource('ticket-comment', 'TicketCommentController')->only(['index', 'store', 'destroy']);*/
     Route::resource('document-validation-type/{documentValidationType}/doc-validation-type-approvers', \App\Http\Controllers\DMS\Settings\ValidationTypeApproverController::class)->only(['index', 'store', 'destroy']);
-    Route::resource('document-validation-type', \App\Http\Controllers\DMS\Settings\DocumentValidationTypeController::class)->parameters(['document-signature' => 'documentValidationType'])->except('create');
+    Route::resource('document-validation-type', \App\Http\Controllers\DMS\Settings\DocumentValidationTypeController::class)->parameters(['document-signature' => 'documentValidationType'])->except(['create', 'edit']);
 
     //reports
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('dms-reports.export');

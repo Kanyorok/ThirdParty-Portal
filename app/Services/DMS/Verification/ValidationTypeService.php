@@ -7,6 +7,7 @@ use App\Exceptions\ErroredException;
 use App\Helpers\SystemHelper;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
+use App\Models\Core\SpecialPermission;
 use App\Models\DMS\DocumentValidationType;
 use App\Services\Core\PermissionsService;
 use Illuminate\Support\Collection;
@@ -34,10 +35,13 @@ class ValidationTypeService extends PermissionsService
 
         activity()->causedBy($actor)->performedOn($type)->event('create')->log('Created Document Validation Type  ' . $type->ValidationTypeId);
 
-        $service = (new self($type))->addApprover($actor, SystemHelper::user(), false);
+        $service = (new self($type))->addApprover($actor, SystemHelper::user(), RoleEnum::Admin, false);
         if ($approvers) {
             foreach ($approvers as $approver) {
-                $service->addApprover($approver, $actor);
+                if ($approver instanceof User && $approver->Id === $actor->Id) {
+                    continue;
+                }
+                $service->addApprover($approver, $actor, RoleEnum::Write);
             }
         }
         return $service;
@@ -57,9 +61,22 @@ class ValidationTypeService extends PermissionsService
     /**
      * @throws ErroredException
      */
-    public function addApprover(User|Team $watcher, User $actor, bool $notify = true): static
+    public function addApprover(User|Team $approver, User $actor, RoleEnum $role, bool $notify = true): static
     {
-        $this->_addPermissions($this->type, $watcher, RoleEnum::Admin, $actor, $notify);
+        if (!in_array($role->value, [RoleEnum::Admin->value, RoleEnum::Write->value], true)) {
+            throw new ErroredException('Only Admin and Write (Approve) roles can be assigned as approvers');
+        }
+
+        $this->_addPermissions($this->type, $approver, RoleEnum::Admin, $actor, $notify);
+        return $this;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function removeApprover(SpecialPermission $permission, User $actor): static
+    {
+        $this->_trashPermissions($this->type, $permission, $actor);
         return $this;
     }
 }

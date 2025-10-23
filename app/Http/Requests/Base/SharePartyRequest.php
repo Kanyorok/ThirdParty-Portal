@@ -3,12 +3,11 @@
 namespace App\Http\Requests\Base;
 
 use App\Enums\Core\RoleEnum;
-use App\Exceptions\ErroredException;
+use App\Http\Requests\Core\ShareRequest;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -32,22 +31,7 @@ class SharePartyRequest extends FormRequest
      */
     public function getParty(): User|Team
     {
-        $party = $this->validated('share_party');
-        if (Str::startsWith($party, 't#')) {
-            $arr = explode('#', $party);
-            array_shift($arr);
-            $team = Team::query()->where('TeamID', implode('', $arr))->first();
-            if (($team instanceof Team) && $team->users()->count() > 0) {
-                return $team;
-            }
-            throw ValidationException::withMessages(['share_party' => 'invalid team or has no users']);
-        }
-
-        $user = User::query()->where('UserID', Str::upper($party))->first();
-        if ($user instanceof User) {
-            return $user;
-        }
-        throw ValidationException::withMessages(['share_party' => 'invalid user selected.']);
+        return (new ShareRequest())->getAssignee($this->str('share_party'), 'share_party');
     }
 
     /**
@@ -55,11 +39,6 @@ class SharePartyRequest extends FormRequest
      */
     public function getRole(): RoleEnum
     {
-        try {
-            $role = RoleEnum::fromValue($this->validated('share_role'));
-        } catch (ErroredException $e) {
-            throw ValidationException::withMessages(['share_role' => 'invalid role provided']);
-        }
-        return $role;
+        return (new ShareRequest())->getRole($this->str('share_role'), 'share_role');
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Core;
 
+use App\Enums\Core\RoleEnum;
+use App\Exceptions\ErroredException;
 use App\Models\Auth\Team;
 use App\Models\Auth\User;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -20,6 +22,7 @@ class ShareRequest extends FormRequest
     {
         return [
             'assignee' => ['required', 'array', 'min:1', 'max:20'],
+            'role' => ['required', 'string', 'max:20'],
         ];
     }
 
@@ -40,5 +43,15 @@ class ShareRequest extends FormRequest
             return $user;
         }
         throw ValidationException::withMessages([$field => 'invalid user selected.']);
+    }
+
+    public function getRole(string $role, string $field = 'role'): RoleEnum
+    {
+        try {
+            $roleEnum = RoleEnum::fromValue($role);
+        } catch (ErroredException $e) {
+            throw ValidationException::withMessages([$field => 'invalid role provided']);
+        }
+        return $roleEnum;
     }
 }
