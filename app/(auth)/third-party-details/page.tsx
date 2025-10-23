@@ -334,7 +334,7 @@ export default function RegisterThirdPartyDetails() {
         if (!userId) {
             handleError('User ID is missing. Please complete step 1 first.');
         }
-        
+
         // Fetch countries on component mount
         fetchCountries();
         // Try fetch my third party (if session is active)
@@ -556,8 +556,8 @@ export default function RegisterThirdPartyDetails() {
                                             {formFields.map((fieldConfig) => {
                                                 const isThirdPartyType = fieldConfig.name === 'ThirdPartyType';
                                                 const isCountry = fieldConfig.name === 'Country';
-                                                const dynamicOptions = isThirdPartyType 
-                                                    ? thirdPartyTypeOptions 
+                                                const dynamicOptions = isThirdPartyType
+                                                    ? thirdPartyTypeOptions
                                                     : isCountry
                                                     ? countries.map(country => ({ value: country.name, label: country.name }))
                                                     : fieldConfig.options;
@@ -634,11 +634,11 @@ export default function RegisterThirdPartyDetails() {
                                             <Button
                                                 type="submit"
                                                 disabled={loading || !!success || !isFormValid}
-                                                className="w-full h-12 sm:h-14 
-             bg-blue-500 hover:bg-blue-600 
-             disabled:bg-blue-200 text-white 
-             rounded-2xl font-medium text-sm sm:text-base 
-             transition-all duration-200 
+                                                className="w-full h-12 sm:h-14
+             bg-blue-500 hover:bg-blue-600
+             disabled:bg-blue-200 text-white
+             rounded-2xl font-medium text-sm sm:text-base
+             transition-all duration-200
              disabled:cursor-not-allowed"
                                             >
                                                 {loading ? (
