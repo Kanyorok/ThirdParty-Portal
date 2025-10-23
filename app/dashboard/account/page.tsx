@@ -179,7 +179,11 @@ const ProfileDetailsCard: React.FC<{
                         <div className="space-y-2">
                             <Label className="text-sm font-medium text-muted-foreground">Gender</Label>
                             <div className="p-3 bg-muted rounded-lg">
-                                <p className="font-semibold text-foreground">{profile.gender}</p>
+                                <p className="font-semibold text-foreground">{
+                                    profile.gender === 'm' ? 'Male' :
+                                    profile.gender === 'f' ? 'Female' :
+                                    profile.gender === 'o' ? 'Prefer not to say' : profile.gender
+                                }</p>
                             </div>
                         </div>
                     )}
@@ -361,11 +365,12 @@ const EditProfileModal: React.FC<{
         lastName: profile.lastName,
         email: profile.email,
         phone: profile.phone || '',
+        // store backend enum values directly: 'm' | 'f' | 'o'
         gender: profile.gender || ''
-    })
+    });
 
-    const [isPending, startTransition] = useTransition()
-
+    const [isPending, startTransition] = useTransition();
+    const [saving, setSaving] = useState(false);
     useEffect(() => {
         if (isOpen) {
             setFormData({
@@ -374,21 +379,25 @@ const EditProfileModal: React.FC<{
                 email: profile.email,
                 phone: profile.phone || '',
                 gender: profile.gender || ''
-            })
+            });
         }
-    }, [isOpen, profile])
+    }, [isOpen, profile]);
 
     const handleSave = useCallback(async () => {
+        startTransition(() => {});
+        setSaving(true);
         try {
-            startTransition(() => { })
-            const updatedProfile = await apiService.updateProfile(formData, accessToken)
-            await mutateProfile(updatedProfile, { revalidate: false })
-            toast.success('Profile updated successfully!')
-            onClose()
+            const updatedProfile = await apiService.updateProfile(formData, accessToken);
+            await mutateProfile(updatedProfile, { revalidate: false });
+            toast.success('Profile updated successfully!');
+            onClose();
         } catch (error: any) {
-            toast.error(error.message || 'Failed to update profile')
+            toast.error(error.message || 'Failed to update profile');
+        } finally {
+            // in case onClose didn't unmount immediately
+            setSaving(false);
         }
-    }, [formData, accessToken, mutateProfile, onClose])
+    }, [formData, accessToken, mutateProfile, onClose]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -410,7 +419,7 @@ const EditProfileModal: React.FC<{
                                 id="firstName"
                                 value={formData.firstName}
                                 onChange={e => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                                disabled={isPending}
+                                disabled={saving || isPending}
                             />
                         </div>
                         <div className="space-y-2">
@@ -419,7 +428,7 @@ const EditProfileModal: React.FC<{
                                 id="lastName"
                                 value={formData.lastName}
                                 onChange={e => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                                disabled={isPending}
+                                disabled={saving || isPending}
                             />
                         </div>
                     </div>
@@ -431,20 +440,20 @@ const EditProfileModal: React.FC<{
                             type="email"
                             value={formData.email}
                             onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                            disabled={isPending}
+                            disabled={saving || isPending}
                         />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="phone">Phone Number</Label>
                         <div className="p-2 bg-muted rounded-lg border border-input focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                            <PhoneInput
+                                <PhoneInput
                                 country={'us'}
                                 preferredCountries={['us', 'gb', 'ke', 'ng']}
                                 enableSearch
                                 value={formData.phone}
-                                onChange={phone => setFormData(prev => ({ ...prev, phone }))}
-                                disabled={isPending}
+                                    onChange={phone => setFormData(prev => ({ ...prev, phone }))}
+                                    disabled={saving || isPending}
                                 inputClass="!w-full !bg-transparent !border-none !text-foreground !font-semibold focus:outline-none"
                                 buttonClass="!bg-transparent !border-none"
                                 containerClass="!w-full"
@@ -460,25 +469,31 @@ const EditProfileModal: React.FC<{
                                 id="gender"
                                 value={formData.gender}
                                 onChange={e => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-                                disabled={isPending}
+                                disabled={saving || isPending}
                                 className="w-full bg-transparent text-foreground font-semibold focus:outline-none p-2"
                             >
                                 <option value="">-- Select gender --</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Prefer not to say">Prefer not to say</option>
+                                <option value="m">Male</option>
+                                <option value="f">Female</option>
+                                <option value="o">Prefer not to say</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6">
-                    <Button variant="outline" onClick={onClose} disabled={isPending}>
+                    <Button variant="outline" onClick={onClose} disabled={saving || isPending}>
                         Cancel
                     </Button>
-                    <Button onClick={handleSave} disabled={isPending} className="flex items-center gap-2">
-                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Changes
+                    <Button onClick={handleSave} disabled={saving || isPending} className="flex items-center gap-2">
+                        {saving ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>Save Changes</>
+                        )}
                     </Button>
                 </div>
             </DialogContent>
