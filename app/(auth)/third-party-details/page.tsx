@@ -39,8 +39,8 @@ const formSchema = z.object({
         .max(100, 'Company name must be less than 100 characters')
         .regex(/^[a-zA-Z0-9\s&.-]+$/, 'Company name contains invalid characters'),
     TradingName: z.string()
-        .max(100, 'Trading name must be less than 100 characters')
-        .optional(),
+        .min(2, 'Trading name must be at least 2 characters')
+        .max(100, 'Trading name must be less than 100 characters'),
     BusinessType: z.string().min(1, 'Please select a business type'),
     RegistrationNumber: z.string()
         .min(1, 'Registration number is required')
@@ -153,8 +153,8 @@ const formFields = [
     {
         name: 'TradingName' as const,
         label: 'Trading Name',
-        placeholder: 'Enter trading name (optional)',
-        required: false,
+        placeholder: 'Enter trading name',
+        required: true,
         icon: Building2,
         gridSpan: 'col-span-full sm:col-span-1',
     },
@@ -310,7 +310,7 @@ export default function RegisterThirdPartyDetails() {
         if (!userId) {
             handleError('User ID is missing. Please complete step 1 first.');
         }
-        
+
         // Fetch countries on component mount
         fetchCountries();
     }, [userId, handleError, fetchCountries]);
@@ -490,8 +490,8 @@ export default function RegisterThirdPartyDetails() {
                                             {formFields.map((fieldConfig) => {
                                                 const isThirdPartyType = fieldConfig.name === 'ThirdPartyType';
                                                 const isCountry = fieldConfig.name === 'Country';
-                                                const dynamicOptions = isThirdPartyType 
-                                                    ? thirdPartyTypeOptions 
+                                                const dynamicOptions = isThirdPartyType
+                                                    ? thirdPartyTypeOptions
                                                     : isCountry
                                                     ? countries.map(country => ({ value: country.name, label: country.name }))
                                                     : fieldConfig.options;
@@ -568,11 +568,11 @@ export default function RegisterThirdPartyDetails() {
                                             <Button
                                                 type="submit"
                                                 disabled={loading || !!success || !isFormValid}
-                                                className="w-full h-12 sm:h-14 
-             bg-blue-500 hover:bg-blue-600 
-             disabled:bg-blue-200 text-white 
-             rounded-2xl font-medium text-sm sm:text-base 
-             transition-all duration-200 
+                                                className="w-full h-12 sm:h-14
+             bg-blue-500 hover:bg-blue-600
+             disabled:bg-blue-200 text-white
+             rounded-2xl font-medium text-sm sm:text-base
+             transition-all duration-200
              disabled:cursor-not-allowed"
                                             >
                                                 {loading ? (
