@@ -68,6 +68,13 @@ use Illuminate\Support\Facades\Route;
 // Newly added
 
 Route::prefix('finance')->group(function () {
+
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'finance-reports.index',
+        'show' => 'finance-reports.show'
+    ]);
+
     Route::resource('journalbatch', JournalBatchController::class);
     Route::resource('ledgeraccounts', LedgerAccountsController::class);
     Route::resource('transactiontypes', TransactionTypesController::class);
