@@ -12,6 +12,11 @@ Route::middleware(['web','auth'])->group(function(){
 require __DIR__ . '/auth.php';
 
 Route::middleware(['auth'])->namespace('App\Http\Controllers')->group(function () {
+    // Customizable dashboard APIs
+    Route::prefix('dashboard')->group(function() {
+        Route::get('widgets', 'Dashboard\\UserDashboardController@widgets')->name('user-dashboard.widgets');
+        Route::post('widgets', 'Dashboard\\UserDashboardController@saveLayout')->name('user-dashboard.widgets.save');
+    });
     require __DIR__ . '/crm.php';
 
     // Procurement routes with prefix

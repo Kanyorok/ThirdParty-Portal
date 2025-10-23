@@ -203,30 +203,29 @@ class RFQResponseController extends Controller
 
         // Categories used in this RFQ (from its lines)
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
+        // Expand to include ancestors and all descendants
         $allCategoryIds = collect();
         foreach ($itemCategoryIds as $catId) {
-            $cat = \App\Models\Inventory\ItemCategories::find($catId);
-            if ($cat) {
-                $allCategoryIds->push($cat->Id);
-                // include ancestors so if classification includes a parent, subcategory items still qualify
-                $parent = $cat->parent;
-                while ($parent) {
-                    $allCategoryIds->push($parent->Id);
-                    $parent = $parent->parent;
-                }
+            $catId = (int)$catId;
+            if (!$catId) continue;
+            // climb ancestors
+            $current = $catId;
+            while ($current) {
+                $allCategoryIds->push($current);
+                $parent = DB::table('t_ItemCategories')->where('Id', $current)->value('ParentId');
+                if ($parent === null || (int)$parent === 0) break;
+                $current = (int)$parent;
             }
         }
-        // include descendants (BFS) so if a parent item category is mapped, its subcategories are covered
-        $queue = collect($itemCategoryIds);
+        // BFS descendants
+        $queue = collect($allCategoryIds->unique()->values());
         while ($queue->isNotEmpty()) {
-            $currentBatch = $queue->splice(0, 100)->all();
-            $children = DB::table('t_ItemCategories')
-                ->whereIn('ParentId', $currentBatch)
-                ->pluck('Id');
-            $newChildren = $children->diff($allCategoryIds);
-            if ($newChildren->isNotEmpty()) {
-                $allCategoryIds = $allCategoryIds->merge($newChildren);
-                $queue = $queue->merge($newChildren);
+            $batch = $queue->splice(0, 200)->all();
+            $children = DB::table('t_ItemCategories')->whereIn('ParentId', $batch)->pluck('Id');
+            $new = $children->diff($allCategoryIds);
+            if ($new->isNotEmpty()) {
+                $allCategoryIds = $allCategoryIds->merge($new);
+                $queue = $queue->merge($new);
             }
         }
         $allCategoryIds = $allCategoryIds->unique()->values();
@@ -240,8 +239,11 @@ class RFQResponseController extends Controller
             ->pluck('rs.ThirdPartyID');
 
         // Map through classification table to suppliers, join t_ThirdParties for display name
+        // Note: Some DBs store supplier-category relation via pivot t_ThirdParty_SupplierCategory.
+        // Join both direct CategoryId mapping and pivot-derived categories.
         $suppliers = DB::table('t_Suppliers as s')
             ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->leftJoin('t_ThirdParty_SupplierCategory as tpsc', 'tpsc.ThirdPartyID', '=', 'tp.Id')
             ->whereNull('s.DeletedOn')
             ->whereNull('tp.DeletedOn')
             ->where('s.Active_Status', 1)
@@ -253,7 +255,10 @@ class RFQResponseController extends Controller
                     ->whereNull('sc.DeletedOn')
                     ->whereNull('scic.DeletedOn')
                     ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                    ->whereColumn('sc.SupplierCategoryID', 's.CategoryId');
+                    ->where(function ($w) {
+                        $w->whereColumn('sc.SupplierCategoryID', 's.CategoryId')
+                          ->orWhereColumn('sc.SupplierCategoryID', 'tpsc.SupplierCategoryID');
+                    });
             })
             // De-duplicate by ThirdParty (one option per supplier); pick a stable SupplierId
             ->groupBy('tp.Id', 'tp.TradingName')

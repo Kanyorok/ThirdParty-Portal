@@ -67,6 +67,7 @@ use App\Http\Controllers\Procurement\TenderAssignRoleController;
 use App\Http\Controllers\Procurement\TenderBidResponsivenessController;
 use App\Http\Controllers\Procurement\TenderCategoryController;
 use App\Http\Controllers\Procurement\TenderclarificationController;
+use App\Http\Controllers\Procurement\RFQClarificationController;
 use App\Http\Controllers\Procurement\TenderCommitteeController;
 use App\Http\Controllers\Procurement\TenderController;
 use App\Http\Controllers\Procurement\TenderDecryptController;
@@ -125,7 +126,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/purchase-order/payment-terms', [PurchaseOrderController::class, 'getPaymentTerms'])->name('purchase-order.payment-terms');
     Route::get('/purchase-order/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->name('purchase-order.prequalified-suppliers');
     Route::get('/purchase-order/direct-plans', [PurchaseOrderController::class, 'getDirectPlans'])->name('purchase-order.direct-plans');
-    Route::get('/purchase-order/direct-plan-items/{planId}', [PurchaseOrderController::class, 'getDirectPlanItems'])->name('purchase-order.direct-plan-items');
+    Route::get('/purchase-order/direct-plan-items/{planId}', [PurchaseOrderController::class, 'getDirectPlanItems'])->withoutMiddleware(['ajax'])->name('purchase-order.direct-plan-items');
     
     // NEW: Unified PO Origination AJAX endpoints
     Route::get('purchaseOrder/award-details/{id}', [PurchaseOrderController::class, 'getAwardDetails'])->name('purchaseOrder.awardDetails');
@@ -222,6 +223,11 @@ Route::namespace('Procurement')->group(function () {
     Route::get('/rfqresponses/{id}/edit', [RFQResponseController::class, 'edit'])->name('rfqresponses.edit');
     Route::put('/rfqresponses/{id}', [RFQResponseController::class, 'update'])->name('rfqresponses.update');
     Route::delete('/rfqresponses/{id}', [RFQResponseController::class, 'destroy'])->name('rfqresponses.destroy');
+    // RFQ Clarifications (procurement-side)
+    Route::get('/rfq-clarifications', [RFQClarificationController::class, 'page'])->name('rfqclarifications.index');
+    Route::get('/rfq-clarifications/list', [RFQClarificationController::class, 'listAll']);
+    Route::get('/rfq/{rfq}/clarifications', [RFQClarificationController::class, 'index']);
+    Route::post('/rfq-clarifications/respond', [RFQClarificationController::class, 'respond'])->name('rfqclarifications.respond');
     Route::get('/rfq-responses/{rfqId}', [RFQEvaluationController::class, 'getRFQResponses'])->name('rfq.responses');
     Route::get('/rfqs/{rfqId}/requisition-items', [RFQResponseController::class, 'getRequisitionItems']);
     Route::get('/rfqresponses/find-existing', [RFQResponseController::class, 'findExisting']);
@@ -285,7 +291,7 @@ Route::namespace('Procurement')->group(function () {
     Route::get('purchaseOrder/prequalified-suppliers/{categoryId}', [PurchaseOrderController::class, 'prequalifiedSuppliersByCategory'])->withoutMiddleware(['ajax'])->name('purchaseOrder.prequalifiedSuppliers');
     Route::get('purchaseOrder/items-by-category/{categoryId}', [PurchaseOrderController::class, 'getItemsByCategoryWithDescendants'])->withoutMiddleware(['ajax'])->name('purchaseOrder.itemsByCategory');
     Route::get('purchaseOrder/direct-plan-categories', [PurchaseOrderController::class, 'getDirectPlanCategories'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanCategories');
-    Route::get('purchaseOrder/direct-plan-items/{categoryId?}', [PurchaseOrderController::class, 'getDirectPlanItems'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanItems');
+    Route::get('purchaseOrder/direct-plan-items/{categoryId?}', [PurchaseOrderController::class, 'getDirectPlanItemsByCategory'])->withoutMiddleware(['ajax'])->name('purchaseOrder.directPlanItems');
     Route::resource('evaluationdashboard', EvaluatorDashboardController::class);
     Route::resource('bidscores', BidScoreConsolidationController::class);
     Route::post('bidscores/{tenderId}/consolidate', [BidScoreConsolidationController::class, 'storeConsolidation'])

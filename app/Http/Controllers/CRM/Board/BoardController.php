@@ -36,7 +36,8 @@ class BoardController extends Controller
         if (!$request->ajax()) {
             return view('crm.board.index')
                 ->with('rooms', MeetingRoom::query()->get(['RoomID', 'Name', 'Capacity']))
-                ->with('committees', Committee::query()->get(['t_Committees.CommitteeID', 't_Committees.Name']));
+                ->with('committees', Committee::query()->get(['t_Committees.CommitteeID', 't_Committees.Name']))
+                ->with('timezone', config('app.timezone'));
         }
 
         $query = Board::query()->with('committees')->select('*');

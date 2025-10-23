@@ -194,7 +194,7 @@ class TenderController extends Controller
                     $planItemId = (int)end($split);
                     $itemId = $item['item_id'] ?? null;
                     if ($itemId && !$this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
-                        \Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
+                        Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
                         continue;
                     }
                     TenderItems::create([
@@ -220,7 +220,7 @@ class TenderController extends Controller
                         // continue;
                     } else {
                         if (!$this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
-                            \Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
+                            Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
                             continue;
                         }
                         TenderItems::create([
@@ -749,6 +749,15 @@ public function allowedCategories(Request $request)
         ->get();
 
     if ($rows->isNotEmpty()) {
+        try {
+            Log::info('allowedCategories primary', [
+                'tenderCategoryId' => $tenderCategoryId,
+                'count' => $rows->count(),
+                'ids' => $rows->pluck('Id')->take(20)->values(), // cap to 20 for log brevity
+            ]);
+        } catch (\Throwable $e) {
+            // no-op logging guard
+        }
         return response()->json(['ok' => true, 'categories' => $rows->values()]);
     }
 
@@ -788,6 +797,15 @@ public function allowedCategories(Request $request)
         ->orderBy('Id')
         ->get(['Id','Name']);
 
+    try {
+        Log::info('allowedCategories fallback', [
+            'tenderCategoryId' => $tenderCategoryId,
+            'count' => $roots->count(),
+            'ids' => $roots->pluck('Id')->take(20)->values(),
+        ]);
+    } catch (\Throwable $e) {
+        // no-op logging guard
+    }
     return response()->json(['ok' => true, 'categories' => $roots->values()]);
 }
 
@@ -844,26 +862,34 @@ public function allowedCategories(Request $request)
      */
     private function getPrequalifiedSuppliers()
     {
-        // Find active prequalification rounds (DB code 'O' for Open)
+        // Active rounds (Status 'O' for Open). If none, fall back to all active suppliers.
         $activeRounds = \App\Models\Procurement\Prequalification\PrequalificationRound::where('Status', 'O')
             ->where('StartDate', '<=', now())
             ->where('EndDate', '>=', now())
             ->pluck('RoundID');
 
-        if ($activeRounds->isEmpty()) {
-            return collect([]); // No active rounds, no suppliers available
+        // Base supplier query: active suppliers, proper supplier type, with needed relations
+        $supplierQuery = \App\Models\ThirdParies\Supplier::query()
+            ->where('Active_Status', 1)
+            ->whereHas('thirdParty.types', function ($q) {
+                $q->where('Code', 'like', 'SU-%');
+            })
+            ->with(['thirdParty', 'supplierCategory.itemCategories']);
+
+        if ($activeRounds->isNotEmpty()) {
+            // Prefer suppliers in active rounds; include rows with NULL RoundID just in case
+            $supplierQuery->where(function ($q) use ($activeRounds) {
+                $q->whereIn('RoundID', $activeRounds)->orWhereNull('RoundID');
+            });
         }
 
-        // FIXED: Query t_Suppliers directly instead of looking for approved applications
-        // and derive SupplierCategory mapping via pivot if SupplierCategoryID is null
-        $prequalifiedSuppliers = \App\Models\ThirdParies\Supplier::whereIn('RoundID', $activeRounds)
-            ->where('Active_Status', 1)
-            ->with(['thirdParty', 'supplierCategory.itemCategories'])
-            ->get();
+        $prequalifiedSuppliers = $supplierQuery->get();
+
+        Log::info('Suppliers fetch — activeRounds=' . $activeRounds->count() . ', suppliers=' . $prequalifiedSuppliers->count());
 
         $suppliers = collect();
         
-        foreach ($prequalifiedSuppliers as $supplier) {
+    foreach ($prequalifiedSuppliers as $supplier) {
             if (!$supplier->thirdParty) continue;
             
             $thirdParty = $supplier->thirdParty;
@@ -886,19 +912,17 @@ public function allowedCategories(Request $request)
             if (!empty($supplier->SupplierCategoryID)) {
                 $supplierCategoryIds->push($supplier->SupplierCategoryID);
             }
-            // Add any categories from pivot t_ThirdParty_SupplierCategory (in case SupplierCategoryID is NULL)
+            // Add any categories from pivot t_ThirdParty_SupplierCategory (resilient across DB schemas)
             try {
-                $pivotCats = DB::table('t_ThirdParty_SupplierCategory')
-                    ->where('third_party_id', $supplier->ThirdPartyID)
-                    ->pluck('SupplierCategoryID');
+                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty((int)$supplier->ThirdPartyID);
                 $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
             } catch (\Throwable $e) {
-                Log::warning('Failed reading t_ThirdParty_SupplierCategory', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
+                Log::warning('Failed resolving supplier categories', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
             }
 
             $supplierCategoryIds = $supplierCategoryIds->filter()->unique()->values();
 
-            // From all supplier categories, collect mapped item categories (including subcategories)
+        // From all supplier categories, collect mapped item categories (including all descendants)
             if ($supplierCategoryIds->isNotEmpty()) {
                 try {
                     $parentItemCats = DB::table('t_SupplierCategory_ItemCategory')
@@ -906,17 +930,22 @@ public function allowedCategories(Request $request)
                         ->whereNull('DeletedOn')
                         ->pluck('ItemCategoryID');
 
-                    foreach ($parentItemCats as $parentCatId) {
-                        $itemCategoryIds[] = (int) $parentCatId;
-                        // include subcategories
-                        $subcategories = \App\Models\Inventory\ItemCategories::where('ParentId', $parentCatId)->pluck('Id');
-                        foreach ($subcategories as $subcategoryId) {
-                            $itemCategoryIds[] = (int) $subcategoryId;
-                        }
-                    }
+            // Expand to all descendants so parent prequalification covers all subcategories
+            $expanded = $this->getAllDescendantCategoryIds($parentItemCats->all(), includeSelf: true);
+            foreach ($expanded as $cid) { $itemCategoryIds[] = (int)$cid; }
                 } catch (\Throwable $e) {
                     Log::warning('Failed reading category mappings', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
                 }
+            }
+
+            // Also include top-level ancestors for all collected categories so UI top-level filter matches
+            if (!empty($itemCategoryIds)) {
+                $topLevelSet = [];
+                foreach ($itemCategoryIds as $cid) {
+                    $top = $this->resolveTopLevelCategoryId((int)$cid);
+                    if ($top) { $topLevelSet[] = (int)$top; }
+                }
+                $itemCategoryIds = array_merge($itemCategoryIds, $topLevelSet);
             }
 
             $suppliers->push([
@@ -926,7 +955,7 @@ public function allowedCategories(Request $request)
                 'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
                 'CategoryId' => null, // No longer used - categories come from SupplierCategory mapping
                 'SupplierCategoryID' => $supplierCategoryIds->first(), // Prefer first mapped category if any
-                'ItemCategoryIds' => array_unique($itemCategoryIds), // All categories this supplier can serve
+                'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))), // All categories supplier can serve (incl. top-level)
                 'RoundID' => $supplier->RoundID,
                 'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
                 'ThirdPartyID' => $supplier->ThirdPartyID,
@@ -934,7 +963,21 @@ public function allowedCategories(Request $request)
         }
 
         // Remove duplicates based on supplier ID (a supplier might have multiple records)
-        return $suppliers->unique('Id')->values();
+        $result = $suppliers->unique('Id')->values();
+        Log::info('Suppliers prepared for UI: ' . $result->count());
+        try {
+            $sample = $result->take(3)->map(function ($s) {
+                return [
+                    'Id' => $s['Id'] ?? null,
+                    'Name' => $s['ThirdPartyName'] ?? $s['SupplierName'] ?? null,
+                    'ItemCategoryIds' => array_slice($s['ItemCategoryIds'] ?? [], 0, 12),
+                ];
+            });
+            Log::info('Suppliers sample (first 3)', ['sample' => $sample]);
+        } catch (\Throwable $e) {
+            // guard
+        }
+        return $result;
     }
 
     // Return allowed ItemType IDs for a tender category (FK Id)
@@ -947,7 +990,7 @@ public function allowedCategories(Request $request)
 
         if (empty($ids)) {
             $label = \App\Models\Procurement\TenderCategory::where('Id', $tenderCategoryId)->value('TenderCategory');
-            $types = \DB::table('t_ItemTypes')->pluck('Id', 'TypeName');
+            $types = DB::table('t_ItemTypes')->pluck('Id', 'TypeName');
             return match (strtoupper((string)$label)) {
                 'GOODS' => array_values(array_filter([
                     $types['Stock'] ?? null,
@@ -987,18 +1030,55 @@ public function allowedCategories(Request $request)
 
     private function resolveTopLevelCategoryId(?int $categoryId): ?int
     {
+        // Resolve root ancestor, treating ParentId NULL or 0 as root across environments
         if (!$categoryId) return null;
         $seen = [];
-        $current = $categoryId;
-        while ($current) {
-            if (in_array($current, $seen, true)) break; // safety loop break
+        $current = (int)$categoryId;
+        while (true) {
+            if ($current === 0) {
+                // hit a 0 parent marker; cannot go higher — best known is previous
+                return $seen ? (int)end($seen) : (int)$categoryId;
+            }
+            if (in_array($current, $seen, true)) {
+                // cycle protection
+                return (int)$current;
+            }
             $seen[] = $current;
             $row = ItemCategories::select('Id','ParentId')->find($current);
-            if (!$row) break;
-            if ($row->ParentId === null) return (int)$row->Id;
-            $current = (int)$row->ParentId;
+            if (!$row) {
+                // missing link; return last known good
+                return (int)($seen[count($seen)-1] ?? $categoryId);
+            }
+            $parent = $row->ParentId;
+            if ($parent === null || (int)$parent === 0) {
+                return (int)$row->Id;
+            }
+            $current = (int)$parent;
         }
-        return $categoryId; // fallback
+    }
+
+    /**
+     * Get all descendant category IDs (recursive) for one or more parent categories.
+     * Includes the provided category IDs in the returned set when $includeSelf is true.
+     */
+    private function getAllDescendantCategoryIds(array|int $categoryIds, bool $includeSelf = true): array
+    {
+        $start = array_values(array_unique(array_map('intval', is_array($categoryIds) ? $categoryIds : [$categoryIds])));
+        if (empty($start)) return [];
+
+        $all = $includeSelf ? $start : [];
+        $queue = collect($start);
+        while ($queue->isNotEmpty()) {
+            $batch = $queue->splice(0, 200)->all();
+            $children = DB::table('t_ItemCategories')->whereIn('ParentId', $batch)->pluck('Id');
+            $new = $children->diff($all);
+            if ($new->isNotEmpty()) {
+                $ids = $new->values()->all();
+                $all = array_values(array_unique(array_merge($all, $ids)));
+                $queue = $queue->merge($ids);
+            }
+        }
+        return $all;
     }
 
     /**

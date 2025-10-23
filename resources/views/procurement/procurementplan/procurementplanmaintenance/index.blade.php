@@ -2,6 +2,28 @@
 @section('title', '📂 Consolidated Procurement Plans')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        /* Compact fixed layout to fit at 100% zoom */
+        .procplan-table { table-layout: fixed; width: 100%; font-size: .9rem; }
+        .procplan-table th, .procplan-table td { padding: .4rem .5rem; vertical-align: middle; }
+        /* Column widths */
+        .col-idx{width:44px}
+        .col-ref{width:140px}
+        .col-title{width:260px}
+        .col-year{width:80px}
+        .col-items{width:80px}
+        .col-cost{width:160px}
+        .col-status{width:110px}
+        .col-created-by{width:160px}
+        .col-created-on{width:120px}
+        .col-actions{width:130px;text-align:center}
+        /* Truncation helpers */
+        .truncate{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+        /* Numeric alignment */
+        .text-num{text-align:right}
+        /* Prevent badge wrap */
+        .procplan-table .badge{white-space:nowrap}
+    </style>
 @endsection
 @section('content')
 
@@ -14,20 +36,20 @@
         </div>
 
         <!-- Table -->
-  <div class="table-responsive">
-      <table id="procplanmaintainTable" class="table table-bordered table-striped align-middle">
+    <div class="table-responsive">
+            <table id="procplanmaintainTable" class="table table-bordered table-striped table-sm align-middle procplan-table">
       <thead class="table-light">
         <tr>
-          <th>#</th>
-          <th>Plan Ref No</th>
-          <th>Title</th>
-          <th>Year</th>
-          <th>Items</th>
-            <th>Estimated Total Cost (KES)</th>
-          <th>Status</th>
-          <th>Created By</th>
-          <th>Created On</th>
-          <th>Actions</th>
+                    <th class="col-idx">#</th>
+                    <th class="col-ref">Plan Ref No</th>
+                    <th class="col-title">Title</th>
+                    <th class="col-year">Year</th>
+                    <th class="col-items text-num">Items</th>
+                    <th class="col-cost text-num">Est. Total (KES)</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-created-by">Created By</th>
+                    <th class="col-created-on">Created On</th>
+                    <th class="col-actions">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -37,36 +59,28 @@
               $estimatedCost = $plan->lineItems->sum(fn($item) => $item->MergedQty * $item->EstimatedUnitCost);
           @endphp
           <tr>
-            <td>{{ $key + 1 }}</td>
-            <td>{{ $plan->ReferenceNumber }}</td>
-            <td>{{ $plan->Title }}</td>
-            <td>{{ $plan->FiscalYear }}</td>
-            <td>{{ $itemsCount }}</td>
-            <td>{{ number_format($estimatedCost, 2) }}</td> <!-- Use $estimatedCost, not $plan->estimatedCost -->
-              <td><span class="badge bg-{{ $plan->Status->badgeColor() }}">{{ $plan->Status->label() }}</span></td>
-            <td>{{ $plan->createdBy->Name ?? 'N/A' }}</td>
-            <td>
+                        <td class="col-idx">{{ $key + 1 }}</td>
+                        <td class="col-ref"><span class="truncate" title="{{ $plan->ReferenceNumber }}">{{ $plan->ReferenceNumber }}</span></td>
+                        <td class="col-title"><span class="truncate" title="{{ $plan->Title }}">{{ $plan->Title }}</span></td>
+                        <td class="col-year">{{ $plan->FiscalYear }}</td>
+                        <td class="col-items text-num">{{ $itemsCount }}</td>
+                        <td class="col-cost text-num">{{ number_format($estimatedCost, 2) }}</td> <!-- Use $estimatedCost, not $plan->estimatedCost -->
+                            <td class="col-status"><span class="badge bg-{{ $plan->Status->badgeColor() }}">{{ $plan->Status->label() }}</span></td>
+                        <td class="col-created-by"><span class="truncate" title="{{ $plan->createdBy->Name ?? 'N/A' }}">{{ $plan->createdBy->Name ?? 'N/A' }}</span></td>
+                        <td class="col-created-on">
               @if($plan->CreatedDate)
                     {{ (new DateTime($plan->CreatedDate))->format('d/m/Y') }}
               @else
                 N/A
               @endif
             </td>
-              <td>
-                  <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}"
-                     class="btn btn-sm btn-outline-primary">
-                      @if($plan->Status->value === 'Dr')
-                          View to Add Items
-                      @elseif(in_array($plan->Status->value, ['Su', 'Ap']))
-                          View
-                      @else
-                          View
-                      @endif
-                  </a>
-                  @if($plan->Status->value === 'Dr' && $itemsCount > 0)
-                      <a href="{{ route('planning.editDraftItems', ['PlanID' => $plan->PlanID]) }}"
-                         class="btn btn-sm btn-outline-success">Edit</a>
-                  @endif
+                            <td class="col-actions text-center">
+                                    <a href="{{ route('procurementplanmaintain.show', $plan->PlanID) }}"
+                                         class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
+                                    @if($plan->Status->value === 'Dr' && $itemsCount > 0)
+                                            <a href="{{ route('planning.editDraftItems', ['PlanID' => $plan->PlanID]) }}"
+                                                 class="btn btn-sm btn-outline-success" title="Edit Items"><i class="fas fa-edit"></i></a>
+                                    @endif
             </td>
           </tr>
       @endforeach
@@ -85,9 +99,23 @@
                 ordering: true,
                 searching: true,
                 lengthChange: true,
+                autoWidth: false,
+                responsive: false,
                 language: {
                     emptyTable: ""
-                }
+                },
+                columnDefs: [
+                    { targets: [0], orderable: true, width: 44 },
+                    { targets: [1], width: 140 },
+                    { targets: [2], width: 260 },
+                    { targets: [3], width: 80 },
+                    { targets: [4], className: 'text-end', width: 80 },
+                    { targets: [5], className: 'text-end', width: 160 },
+                    { targets: [6], width: 110 },
+                    { targets: [7], width: 160 },
+                    { targets: [8], width: 120 },
+                    { targets: [9], orderable: false, width: 130 }
+                ]
             });
             @endif
         });

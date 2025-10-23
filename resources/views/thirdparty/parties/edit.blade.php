@@ -640,7 +640,9 @@
                                     id="Phone"
                                     name="Phone"
                                     value="{{ old('Phone', $party->Phone) }}"
-                                    aria-describedby="Phone-error">
+                                    pattern="^\+[1-9]\d{7,14}$" inputmode="tel" placeholder="e.g., +12025550123"
+                                    aria-describedby="Phone-error Phone_help">
+                                <div class="form-text" id="Phone_help">Use international format (E.164), starting with + and country code, 8–15 digits total.</div>
                                 @error('Phone')
                                 <div class="form-error" id="Phone-error">
                                     <i class="fas fa-exclamation-circle"></i>

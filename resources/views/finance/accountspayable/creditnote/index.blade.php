@@ -3,6 +3,17 @@
 
 @section('content')
     <div class="container mt-2">
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="card shadow-sm rounded-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2 px-3">
                 <h6 class="mb-0 text-info" id="noteTypeTitle">
@@ -205,9 +216,9 @@
                             <input type="hidden" name="NoteType" value="credit">
 
                             <!-- Reference Invoice -->
-                            <div class="col-md-12">
+                            <div class="col-md-12 mb-2">
                                 <label class="form-label">Reference Invoice</label>
-                                <select name="InvoiceRefNo" class="form-select" required>
+                                <select name="InvoiceRefNo" class="form-select" disabled required>
                                     <option value="{{old('InvoiceRefNo', $item->InvoiceRefNo)}}" disabled selected>--Select Invoice--</option>
                                     @foreach($invoices as $invoice)
                                         <option value="{{ $invoice->Id }}" {{ $invoice->Id == $item->InvoiceRefNo ? 'selected' : '' }}>
@@ -217,13 +228,13 @@
                                 </select>
                             </div>
                             <!-- Note Date -->
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-2">
                                 <label class="form-label">Note Date</label>
                                 <input type="date" name="NoteDate" class="form-control" value="{{old('NoteDate', \Carbon\Carbon::parse($item->NoteDate)->format('Y-m-d'))}}" required>
                             </div>
 
                             <!-- Amount -->
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-2">
                                 <label class="form-label">Amount (Ksh)</label>
                                 <input type="number" step="0.01" name="NoteAmount" min="0.00" class="form-control" value="{{old('NoteAmount', $item->NoteAmount)}}" required>
                             </div>
@@ -231,7 +242,7 @@
                             <!-- Description -->
                             <div class="col-md-12">
                                 <label class="form-label">Description</label>
-                                <textarea name="Description" rows="3" class="form-control" value="{{old('Description', $item->Description)}}" ></textarea>
+                                <textarea name="Description" rows="3" class="form-control" value="{{old('Description', $item->Description)}}" >{{old('Description', $item->Description)}}</textarea>
                             </div>
                         </div>
                     </div>

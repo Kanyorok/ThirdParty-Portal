@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers\Insurance;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Insurance\MedicalFundRequest;
+use App\Models\Core\CodeDetail;
 use App\Models\Insurance\MedicalFund;
 use App\Models\Insurance\InsuranceProvider;
+use App\Services\Insurance\MedicalFundService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MedicalFundController extends Controller
 {
@@ -20,7 +25,8 @@ class MedicalFundController extends Controller
 
     public function index(Request $request)
     {
-        $providers = InsuranceProvider::orderBy('Name')->get(['ID','Name']);
+
+        $providers = InsuranceProvider::orderBy('Name')->get(['Id','Name']);
 
         $q = MedicalFund::query()->with('provider');
 
@@ -34,7 +40,7 @@ class MedicalFundController extends Controller
 
         // FILTERS
         if ($pid = $request->get('provider_id')) {
-            $q->where('ProviderID', $pid);
+            $q->where('ProviderId', $pid);
         }
 
         if (($active = $request->get('active')) !== null && $active !== '') {
@@ -42,7 +48,7 @@ class MedicalFundController extends Controller
         }
 
         if ($cov = $request->get('coverage_type')) {
-            $q->where('CoverageType','like',"%{$cov}%");
+            $q->where('CoverageType',$cov);
         }
 
         if ($min = $request->get('min_limit')) {
@@ -83,84 +89,84 @@ class MedicalFundController extends Controller
             'avg_cov_limit'  => (clone $q)->avg('CoverageLimit'),
         ];
 
-        return view('bancassurance.medical_funds.index', compact('funds','providers','totals','sort'));
+        $coverages = CodeDetail::where('CodeID', 'CoverType')->get()->keyBy('ID');
+
+        return view('bancassurance.medical_funds.index', compact('funds','providers','totals','sort','coverages'));
     }
 
     public function create()
     {
-        $providers = InsuranceProvider::orderBy('Name')->get(['ID','Name']);
-        return view('bancassurance.medical_funds.create', compact('providers'));
+        $this->authorize(PermissionEnum::MedicalFundCreate, MedicalFund::class);
+        $providers = InsuranceProvider::query()->orderBy('Name')->get(['Id','Name']);
+        $coverageTypes = CodeDetail::where('CodeID', 'CoverType')->get();
+        return view('bancassurance.medical_funds.create', compact('providers','coverageTypes'));
     }
 
-    public function store(Request $request)
+    public function store(MedicalFundRequest $request)
     {
-        $data = $request->validate([
-            'FundName'       => ['required','string','max:255'],
-            'ProviderID'     => ['required','integer'],
-            'CoverageType'   => ['nullable','string','max:100'],
-            'CoverageLimit'  => ['nullable','numeric','min:0'],
-            'IsActive'       => ['nullable','boolean'],
-            'Description'    => ['nullable','string','max:1000'],
-        ]);
-        $data['IsActive'] = (int)($request->boolean('IsActive'));
+        $this->authorize(PermissionEnum::MedicalFundCreate, MedicalFund::class);
+        $validated = $request->validated();
 
-        $fund = MedicalFund::create($data);
+        $ProviderId = InsuranceProvider::findOrFail($validated['ProviderId']);
+        $CoverageType = CodeDetail::findOrFail($validated['CoverageType']);
 
-        return match ($request->input('next')) {
-            'packages' => redirect()
-                ->route('bancassurance.medicalfunds.packages.index', ['medical_fund' => $fund->ID])
-                ->with('success','Fund created. Now configure packages.'),
-            'contributors' => redirect()
-                ->route('bancassurance.medicalfunds.contributors.index', ['medical_fund' => $fund->ID])
-                ->with('success','Fund created. Now add contributors.'),
-            default => redirect()
-                ->route('bancassurance.medicalfunds.show', ['medical_fund' => $fund->ID])
-                ->with('success','Medical Fund created.'),
-        };
+        $fund = MedicalFundService::create(
+            $validated['FundName'],
+            $ProviderId,
+            $CoverageType,
+            $validated['CoverageLimit'],
+            $validated['Description'] ?? null,
+            $validated['IsActive'] ?? false,
+            Auth::user(),
+        );
+
+        return redirect()
+            ->route('bancassurance.medicalfunds.index')
+            ->with('success', 'Medical Fund created.');
     }
 
+    // Use camel-case variable name matching the blade (`$medical_fund`) to avoid undefined variable errors
     public function show(MedicalFund $medical_fund)
     {
-        // make sure we have provider, packages(+coverages), and contributors in one go
-        $medical_fund->load([
-            'provider',
-            'packages.coverages',
-            'contributors',
-        ]);
-
-        $totals = [
-            'contrib_sum' => (float) $medical_fund->contributions()->sum('Amount'),
-            'disb_sum'    => (float) $medical_fund->disbursements()->sum('Amount'),
-        ];
-
-        return view('bancassurance.medical_funds.show', compact('medical_fund','totals'));
+        $this->authorize(PermissionEnum::MedicalFundView, MedicalFund::class);
+        $medical_fund->load(['provider','beneficiaries','contributions','disbursements','packages.coverages','contributors']);
+        // Pass the variable as `medical_fund` so the blade can access `$medical_fund`
+        return view('bancassurance.medical_funds.show', compact('medical_fund'));
     }
 
     public function edit(MedicalFund $medical_fund)
     {
-        $providers = InsuranceProvider::orderBy('Name')->get(['ID','Name']);
-        return view('bancassurance.medical_funds.edit', compact('medical_fund','providers'));
+        $this->authorize(PermissionEnum::MedicalFundUpdate, MedicalFund::class);
+        $providers = InsuranceProvider::query()->orderBy('Name')->get(['Id','Name']);
+        $coverageTypes = CodeDetail::where('CodeID', 'CoverType')->get();
+        return view('bancassurance.medical_funds.edit', compact('medical_fund','providers','coverageTypes'));
     }
 
-    public function update(Request $request, MedicalFund $medical_fund)
+    public function update(MedicalFundRequest $request, MedicalFund $medical_fund)
     {
-        $data = $request->validate([
-            'FundName'      => ['required','string','max:255'],
-            'ProviderID'    => ['required','integer'],
-            'CoverageType'  => ['nullable','string','max:100'],
-            'CoverageLimit' => ['nullable','numeric'],
-            'Description'   => ['nullable','string'],
-            'IsActive'      => ['nullable','boolean'],
-        ]);
-        $data['IsActive'] = (int)($request->boolean('IsActive'));
+        $this->authorize(PermissionEnum::MedicalFundUpdate, MedicalFund::class);
+        $validated = $request->validated();
 
-        $medical_fund->update($data);
+        // Refresh model from DB to ensure fresh data
+        $medical_fund = MedicalFund::findOrFail($medical_fund->Id);
+        $ProviderId = InsuranceProvider::findOrFail($validated['ProviderId']);
+        $CoverageType = CodeDetail::findOrFail($validated['CoverageType']);
+
+        $fundupdate = MedicalFundService::update(
+            $medical_fund,
+            $validated['FundName'],
+            $ProviderId,
+            $CoverageType,
+            $validated['CoverageLimit'],
+            $validated['Description'] ?? null,
+            $validated['IsActive'] ?? false,
+            Auth::user(),
+        );
 
         return redirect()
-            ->route('bancassurance.medicalfunds.edit', ['medical_fund' => $medical_fund->ID])
+            ->route('bancassurance.medicalfunds.index', $medical_fund->Id)
             ->with('success', 'Medical Fund updated.');
     }
-
     public function destroy(MedicalFund $medical_fund)
     {
         $medical_fund->delete();

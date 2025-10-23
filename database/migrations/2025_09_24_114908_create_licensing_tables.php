@@ -73,11 +73,13 @@ return new class extends Migration
         Schema::dropIfExists('t_LicenseAudit');
         Schema::dropIfExists('t_Instance');
         Schema::dropIfExists('t_Licenses');
-        
+
         if (Schema::hasColumn('t_Modules', 'ModuleKey')) {
             Schema::table('t_Modules', function (Blueprint $table) {
-                $table->dropColumn('ModuleKey');
+                $table->dropIndex(['ModuleKey']); // Drop index first
+                $table->dropColumn('ModuleKey');  // Then drop the column
             });
         }
     }
+
 };

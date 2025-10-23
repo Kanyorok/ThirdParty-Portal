@@ -2,16 +2,17 @@
 
 namespace App\Models\Insurance;
 
+use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 class MedicalFundBeneficiary extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, UserActorTrait;
 
     protected $table = 't_MedicalFundBeneficiaries';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'Id';
 
     public $timestamps = true;
     const CREATED_AT = 'CreatedOn';
@@ -19,8 +20,8 @@ class MedicalFundBeneficiary extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FundID',
-        'ContributorID',   
+        'FundId',
+        'ContributorId',   
         'FullName',
         'Relationship',
         'DateOfBirth',
@@ -29,32 +30,19 @@ class MedicalFundBeneficiary extends Model
         'IsActive',
         'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn'
     ];
-    protected $casts = [
-        'IsActive'   => 'boolean',
-        'DateOfBirth'=> 'date',
-        'CreatedOn'  => 'datetime',
-        'ModifiedOn' => 'datetime',
-        'DeletedOn'  => 'datetime',
-    ];
 
-    protected static function booted()
+    public static function getPrimaryKey(): string
     {
-        static::creating(function ($m) {
-            $m->CreatedBy = Auth::id();
-            $m->ModifiedBy = Auth::id();
-            $m->IsActive = $m->IsActive ?? 1;
-        });
-        static::updating(function ($m) { $m->ModifiedBy = Auth::id(); });
-        static::deleting(function ($m) { $m->DeletedBy = Auth::id(); $m->save(); });
+        return 'MedicalFundBeneficiaryId';
     }
 
     public function fund()
     {
-        return $this->belongsTo(MedicalFund::class, 'FundID', 'ID');
+        return $this->belongsTo(MedicalFund::class, 'FundId', 'Id');
     }
 
     public function contributor()
     { 
-        return $this->belongsTo(MedicalFundContributor::class, 'ContributorID','ID'); 
+        return $this->belongsTo(MedicalFundContributor::class, 'ContributorId','Id'); 
     }
 }

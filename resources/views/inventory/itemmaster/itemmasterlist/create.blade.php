@@ -138,18 +138,12 @@
                             </div>
                         @enderror
                     </div>
-                    <div class="col-md-4">
-                        <label for="DocumentUpload" class="form-label">Upload Document (PDF, DOCX, XLSX, etc.)</label>
-                        <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control @error('DocumentUpload') is-invalid @enderror"
-                               accept=".pdf,.doc,.docx,.xls,.xlsx">
-                        @error('DocumentUpload')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                        @enderror
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Upload Supporting Document</label>
+                        <input type="file" name="Document" class="form-control">
+                        <small class="text-muted">Attach inspection sheet, photos, or related files</small>
                     </div>
                 </div>
-
                 {{-- Full-width Row --}}
                 <div class="mb-3">
                     <label for="ItemDescription" class="form-label">Item Description</label>

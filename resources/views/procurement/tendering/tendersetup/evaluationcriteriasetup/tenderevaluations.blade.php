@@ -60,7 +60,21 @@
                                 - {{ $item['Title'] }}
                             @endif
                         </td>
-                        <td>{{$item['sectionsNumber']}}</td>
+                        <td>
+                            @php $names = $item['sectionNames'] ?? []; @endphp
+                            @if(($item['sectionsNumber'] ?? 0) > 0)
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#sectionsModal"
+                                        data-tenderref="{{ $item['TenderNo'] }}"
+                                        data-sections='@json($names)'>
+                                    {{ $item['sectionsNumber'] }}
+                                </button>
+                            @else
+                                <span class="text-muted">0</span>
+                            @endif
+                        </td>
                         <td>
                             <a href="{{route('tender-criteria',$item['id'])}}"
                                class="btn btn-sm">{{$item['criteriaNumber']}} <i class="fa fa-eye"
@@ -84,6 +98,24 @@
             {{-- Pagination links --}}
             <div class="d-flex justify-content-center mt-3">
                 {{ $paginator->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sections Modal -->
+    <div class="modal fade" id="sectionsModal" tabindex="-1" aria-labelledby="sectionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sectionsModalLabel">Tender Sections</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="sectionsList" class="list-group list-group-flush"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -129,13 +161,23 @@
                             <tbody>
                             @foreach ($sections as $item)
                                 <tr>
-                                    <td><input type="checkbox" name="sections[]" value="{{$item->id}}"></td>
+                                    <!-- Use the correct Section Id and key weights by SectionID so backend can map them -->
+                                    <td><input type="checkbox" name="sections[]" value="{{$item->Id}}"></td>
                                     @error('sections')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
                                     <td>{{$item->SectionName}}</td>
-                                    <td><input type="number" class="form-control weight-input" name="weights[]"
-                                               value="0.00" step="1"></td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            class="form-control weight-input"
+                                            name="weights[{{$item->Id}}]"
+                                            value="0.00"
+                                            step="0.01"
+                                            min="0"
+                                            max="100"
+                                        >
+                                    </td>
                                     @error('weights')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
@@ -145,7 +187,10 @@
                             <tfoot>
                             <tr>
                                 <td colspan="2" class="text-end fw-bold">Total</td>
-                                <td><strong id="totalWeight">0.00</strong>%</td>
+                                <td>
+                                    <strong id="totalWeight">0.00</strong>%
+                                    <span id="totalBadge" class="badge bg-secondary ms-2">Needs 100%</span>
+                                </td>
                             </tr>
                             </tfoot>
                         </table>
@@ -169,11 +214,43 @@
     <!-- Inline JavaScript to enforce 100% weight -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Sections modal population
+            const sectionsModal = document.getElementById('sectionsModal');
+            if (sectionsModal) {
+                sectionsModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const tenderRef = button?.getAttribute('data-tenderref') || '';
+                    const namesJson = button?.getAttribute('data-sections') || '[]';
+                    let names = [];
+                    try { names = JSON.parse(namesJson); } catch (_) { names = []; }
+
+                    const list = sectionsModal.querySelector('#sectionsList');
+                    list.innerHTML = '';
+                    if (Array.isArray(names) && names.length) {
+                        names.forEach(n => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item';
+                            li.textContent = n;
+                            list.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item text-muted';
+                        li.textContent = 'No sections found.';
+                        list.appendChild(li);
+                    }
+
+                    const title = sectionsModal.querySelector('#sectionsModalLabel');
+                    if (title) title.textContent = `Tender Sections${tenderRef ? ' — ' + tenderRef : ''}`;
+                });
+            }
+
             const modal = document.getElementById('addSection1Modal');
             if (!modal) return;
 
             const form = modal.querySelector('form');
             const totalWeightDisplay = document.getElementById('totalWeight');
+            const totalBadge = document.getElementById('totalBadge');
             const submitBtn = document.getElementById('saveCriteriaBtn');
 
             function updateTotal() {
@@ -186,13 +263,23 @@
 
                     if (checkbox.checked) {
                         weightInput.disabled = false;
-                        total += parseFloat(weightInput.value) || 0;
+                        const v = parseFloat(weightInput.value);
+                        if (!isNaN(v)) total += v;
                     } else {
+                        // Disable and clear to avoid posting stray weights for unselected sections
                         weightInput.disabled = true;
                     }
                 });
 
                 totalWeightDisplay.textContent = total.toFixed(2);
+
+                const ok = Math.abs(total - 100) < 0.005; // allow tiny FP tolerance
+                // Badge and button state
+                if (totalBadge) {
+                    totalBadge.textContent = ok ? 'OK' : 'Needs 100%';
+                    totalBadge.className = 'badge ms-2 ' + (ok ? 'bg-success' : (total > 100 ? 'bg-danger' : 'bg-warning'));
+                }
+                if (submitBtn) submitBtn.disabled = !ok;
                 return total;
             }
 
