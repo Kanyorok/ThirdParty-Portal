@@ -253,16 +253,11 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Prepare payload for external API
+    // Prepare payload for external API (match backend field names)
     const updatePayload = {
-      InvitationID: invitationId,
-      ResponseStatus: responseStatus,
-      ResponseDate: new Date().toISOString(),
-      DeclineReason: declineReason || null,
-      ConfirmationAttachment: confirmationAttachment || null,
-      ModifiedBy: session.user.id,
-      ModifiedOn: new Date().toISOString(),
-    };
+      responseStatus,
+      declineReason: declineReason || null,
+    } as const;
 
     // Send to external API
     const apiUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_URL}/api/tender-invitations/${invitationId}`;

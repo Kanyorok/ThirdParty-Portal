@@ -19,6 +19,34 @@ type ApiRound = {
     applicationProgress?: { stage?: string; percent?: number; updatedOn?: string; label?: string };
 };
 
+type ApiCategory = {
+    id?: number | string;
+    category_id?: number;
+    categoryId?: number;
+    SupplierCategoryID?: number;
+    name?: string;
+    CategoryName?: string;
+    category_name?: string;
+    description?: string;
+    has_applied?: boolean;
+    hasApplied?: boolean;
+    application_id?: string | number;
+    applicationId?: string | number;
+    application_date?: string;
+    applicationDate?: string;
+    progress_percent?: number;
+    progressPercent?: number;
+    stage?: string;
+    stage_label?: string;
+    stageLabel?: string;
+    updated_on?: string;
+    updatedOn?: string;
+    decision_date?: string;
+    decisionDate?: string;
+    rejection_reason?: string;
+    rejectionReason?: string;
+};
+
 type ApiResponse = {
     data: ApiRound[];
     page: number;
@@ -137,7 +165,7 @@ async function getRounds(query: Record<string, string | undefined>): Promise<Api
         const endIndex = startIndex + pageSize;
         const paginatedRounds = rounds.slice(startIndex, endIndex);
 
-        // Return data in expected format
+    // Return data in expected format
         return {
             data: paginatedRounds,
             page,
@@ -202,24 +230,25 @@ export default async function RoundsView({
             const v = (rawStatus ?? r.status)
             status = v === 'O' || v === 'CL' ? v : (v === 'Open' ? 'O' : 'CL')
         }
-        // Map categories with their application status
-        const categories = (r as any).categories ? (r as any).categories.map((cat: any) => ({
-            category_id: cat.id || cat.category_id,
-            category_name: cat.name || cat.category_name,
+    // Map categories with their application status
+        const rawCats = (r as unknown as { categories?: ApiCategory[] }).categories || [];
+        const categories = rawCats.map((cat) => ({
+            category_id: Number(cat.category_id ?? cat.categoryId ?? cat.SupplierCategoryID ?? cat.id),
+            category_name: String(cat.category_name ?? cat.CategoryName ?? cat.name ?? ''),
             category_description: cat.description,
-            has_applied: Boolean(cat.has_applied || cat.hasApplied || cat.application_id || cat.applicationId),
-            application_id: (cat.application_id || cat.applicationId) ? String(cat.application_id || cat.applicationId) : undefined,
-            application_date: cat.application_date || cat.applicationDate,
-            status: cat.status || ((cat.has_applied || cat.hasApplied) ? 'SUBMITTED' : 'NOT_APPLIED'),
-            progress_percent: cat.progress_percent || cat.progressPercent || 0,
+            has_applied: Boolean(cat.has_applied ?? cat.hasApplied ?? cat.application_id ?? cat.applicationId),
+            application_id: (cat.application_id ?? cat.applicationId) ? String(cat.application_id ?? cat.applicationId) : undefined,
+            application_date: cat.application_date ?? cat.applicationDate,
+            status: (cat as any).status || ((cat.has_applied || cat.hasApplied) ? 'SUBMITTED' : 'NOT_APPLIED'),
+            progress_percent: Number(cat.progress_percent ?? cat.progressPercent ?? 0),
             stage: cat.stage,
-            stage_label: cat.stage_label || cat.stageLabel,
-            updated_on: cat.updated_on || cat.updatedOn,
-            decision_date: cat.decision_date || cat.decisionDate,
-            rejection_reason: cat.rejection_reason || cat.rejectionReason,
-        })) : [];
+            stage_label: cat.stage_label ?? cat.stageLabel,
+            updated_on: cat.updated_on ?? cat.updatedOn,
+            decision_date: cat.decision_date ?? cat.decisionDate,
+            rejection_reason: cat.rejection_reason ?? cat.rejectionReason,
+        }));
 
-        // Calculate summary from categories
+    // Calculate summary from categories
         const appliedCategories = categories.filter((cat: any) => cat.has_applied);
         const approvedCategories = categories.filter((cat: any) => cat.status === 'APPROVED');
         const rejectedCategories = categories.filter((cat: any) => cat.status === 'REJECTED');
@@ -234,7 +263,17 @@ export default async function RoundsView({
             startDate,
             endDate,
             maxVendors,
+            supplierEligible: (r as { supplierEligible?: boolean }).supplierEligible,
+            canApply: (r as { canApply?: boolean }).canApply,
+            isClosed: (r as { isClosed?: boolean }).isClosed,
+            isExpired: (r as { isExpired?: boolean }).isExpired,
+            windowOpen: (r as { windowOpen?: boolean }).windowOpen,
+            isFutureWindow: (r as { isFutureWindow?: boolean }).isFutureWindow,
+            duplicateWithinRange: (r as { duplicateWithinRange?: boolean }).duplicateWithinRange,
+            primaryWindowRoundId: (r as { primaryWindowRoundId?: number }).primaryWindowRoundId,
+            primaryWindowRoundTitle: (r as { primaryWindowRoundTitle?: string }).primaryWindowRoundTitle,
             categories,
+            hasApplied: appliedCategories.length > 0,
             applicationSummary: categories.length > 0 ? {
                 total_categories: categories.length,
                 applied_categories: appliedCategories.length,
@@ -242,7 +281,7 @@ export default async function RoundsView({
                 rejected_categories: rejectedCategories.length,
                 pending_categories: pendingCategories.length,
                 overall_progress: categories.length > 0 ? 
-                    Math.round(categories.reduce((sum: number, cat: any) => sum + cat.progress_percent, 0) / categories.length) : 0
+                    Math.round(categories.reduce((sum: number, cat) => sum + (Number(cat.progress_percent) || 0), 0) / categories.length) : 0
             } : undefined,
         };
     });

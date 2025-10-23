@@ -71,7 +71,8 @@ export default function RoundsTable({
                 label: "Round Status",
                 render: (r: Round) => {
                     const value = typeof r.status === 'object' ? r.status.value : r.status
-                    return <StatusBadge status={value === 'O' || value === 'CL' ? value as any : 'CL'} />
+                    const code: 'O' | 'CL' = value === 'O' ? 'O' : 'CL'
+                    return <StatusBadge status={code} />
                 },
             },
             {
@@ -94,34 +95,53 @@ export default function RoundsTable({
                     // Check if user has applied to any category in this round
                     const appliedCategories = r.categories?.filter(cat => cat.has_applied) || [];
                     const hasAnyApplication = appliedCategories.length > 0 || appliedRoundIds.has(r.id);
-                    const createdByOwner = (r as any).createdByOwner === true || (r as any).createdByOwner === 1;
-                    
+
+                    // New backend-aligned flags
+                    const supplierEligible = r.supplierEligible === false ? false : (r.supplierEligible ?? true);
+                    const isClosed = Boolean(r.isClosed);
+                    const isExpired = Boolean(r.isExpired);
+                    const windowOpen = r.windowOpen !== undefined ? Boolean(r.windowOpen) : true;
+                    const isFutureWindow = Boolean(r.isFutureWindow);
+                    const duplicateWithinRange = Boolean(r.duplicateWithinRange);
+                    const primaryWindowRoundTitle = r.primaryWindowRoundTitle as string | undefined;
+
                     // Check if there are any categories available to apply to
                     const availableCategories = r.categories?.filter(cat => !cat.has_applied) || [];
                     const canApplyToMore = availableCategories.length > 0;
-                    
-                    // Prefer backend decision if provided
-                    const backendCanApply = (r as any).canApply !== undefined ? Boolean((r as any).canApply) : undefined;
 
-                    // Additional frontend guardrails based on dates and overlaps (requested logic)
-                    const now = Date.now();
-                    const startMs = toTime(r.startDate) ?? 0;
-                    const endMs = toTime(r.endDate) ?? 0;
-                    const windowOpen = startMs <= now && now <= endMs;
+                    // Prefer backend decision if provided (now authoritative)
+                    const backendCanApply = r.canApply !== undefined ? Boolean(r.canApply) : undefined;
+                    const effectiveCanApply = backendCanApply !== undefined ? backendCanApply : true;
 
-                    // Disallow if start date not yet reached
-                    const blockedByNotStarted = startMs > now;
+                    // Supplier-based lock: Not Eligible
+                    if (!supplierEligible) {
+                        return (
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={'Supplier profile not approved or not a supplier'}>
+                                <Lock className="h-3 w-3 mr-1" />
+                                Not Eligible
+                            </span>
+                        )
+                    }
 
-                    // Disallow if there is another round overlapping the same date range
-                    // and backend didn't explicitly allow this round
-                    const hasOverlappingSibling = rounds.some(other => other.id !== r.id && rangesOverlap(r.startDate, r.endDate, other.startDate, other.endDate));
-                    const blockedByOverlap = hasOverlappingSibling && !hasAnyApplication;
+                    // Not Applicable cases: future window, duplicate window, owner-created
+                    if (isExpired || isClosed || !windowOpen || isFutureWindow || duplicateWithinRange || !effectiveCanApply) {
+                        return (
+                <div className="flex flex-col items-end gap-1">
+                                <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={
+                                    isExpired ? 'Round expired' : isClosed ? 'Applications are closed for this round' : !windowOpen ? 'Application window is not active' : isFutureWindow ? 'Round not started yet' : duplicateWithinRange ? 'Another round covers this window' : 'Not applicable'
+                                }>
+                                    <Lock className="h-3 w-3 mr-1" />
+                    {isExpired ? 'Expired' : isClosed ? 'Closed' : !windowOpen ? 'Window Closed' : 'Not Applicable'}
+                                </span>
+                                {duplicateWithinRange && primaryWindowRoundTitle ? (
+                                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" title={`Use this round: ${primaryWindowRoundTitle}`}>
+                                        Use this Round Name: {primaryWindowRoundTitle}
+                                    </span>
+                                ) : null}
+                            </div>
+                        )
+                    }
 
-                    // Effective flag: default allow, except when not started or overlap; if backend provided canApply, honor it
-                    const effectiveCanApply = backendCanApply !== undefined
-                        ? backendCanApply
-                        : (!blockedByNotStarted && !blockedByOverlap && windowOpen);
-                    
                     if (effectiveCanApply && hasAnyApplication && !canApplyToMore) {
                         return (
                             <span
@@ -154,14 +174,7 @@ export default function RoundsTable({
                         )
                     }
                     
-                    if (!effectiveCanApply || createdByOwner) {
-                        return (
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title={createdByOwner ? 'Owner created round' : 'Not eligible to apply'}>
-                                <Lock className="h-3 w-3 mr-1" />
-                                Not Eligible
-                            </span>
-                        )
-                    }
+                    // Otherwise allow new application
                     return (
                         <Button
                             type="button"
@@ -184,10 +197,10 @@ export default function RoundsTable({
                 },
             },
         ],
-        [openRoundId, appliedRoundIds]
+    [appliedRoundIds, accessToken]
     )
 
-    const visibleRounds = hideApplied ? rounds.filter(r => !(r.hasApplied || appliedRoundIds.has(r.id))) : rounds
+    const visibleRounds = hideApplied ? rounds.filter(r => !(Boolean(r.hasApplied) || appliedRoundIds.has(r.id))) : rounds
 
     return (
         <>

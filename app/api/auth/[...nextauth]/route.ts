@@ -230,7 +230,8 @@ export const authOptions: NextAuthOptions = {
         error: "/signin",
     },
     secret: NEXTAUTH_SECRET,
-    debug: process.env.NODE_ENV !== "production",
+    // Disable noisy NextAuth debug logs by default; enable only when needed via env
+    debug: process.env.NEXTAUTH_DEBUG === "1",
 }
 const handler = NextAuth(authOptions)
 export { handler as GET, handler as POST }
