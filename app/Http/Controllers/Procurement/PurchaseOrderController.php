@@ -132,7 +132,7 @@ class PurchaseOrderController extends Controller
                 ->select([
                     DB::raw('COALESCE(it.Id, 0) as itemCode'),
                     DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
-                    DB::raw('COALESCE(it.ItemDescription, li.Description, "") as description'),
+                    DB::raw("COALESCE(it.ItemDescription, li.Description, '') as description"),
                     DB::raw('COALESCE(li.MergedQty, li.Quantity, 0) as quantity'),
                     DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
                 ])
@@ -1356,6 +1356,9 @@ public function getRFQItems($rfqId)
             $liCatCols = collect(['ItemCategory', 'ItemCategoryID', 'Category', 'CategoryId', 'CategoryID'])
                 ->filter(fn($c) => Schema::hasColumn($liTable, $c))
                 ->values();
+            $liCatNameCols = collect(['ItemCategoryName', 'CategoryName', 'CategoryText'])
+                ->filter(fn($c) => Schema::hasColumn($liTable, $c))
+                ->values();
 
             $base = DB::table('t_PlanLineItem as li')
                 ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
@@ -1368,7 +1371,7 @@ public function getRFQItems($rfqId)
                 ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'");
 
             // Prefer grouping by item categories when available, fallback to line item category refs
-            if ($liCatCols->isEmpty()) {
+            if ($liCatCols->isEmpty() && $liCatNameCols->isEmpty()) {
                 $rows = $base->whereNotNull('ic.Id')
                     ->groupBy('ic.Id', 'ic.Name')
                     ->orderBy('ic.Name')
@@ -1391,22 +1394,53 @@ public function getRFQItems($rfqId)
                         DB::raw("COALESCE(ic.Name, 'Uncategorized') as Name")
                     ]);
 
-                $liCatCol = $liCatCols->first();
-                $queryB = DB::table('t_PlanLineItem as li')
-                    ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
-                    ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
-                    ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
-                    ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
-                    ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
-                    ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
-                    ->whereNull('ic.Id')
-                    ->whereNotNull("li.$liCatCol")
-                    ->select([
-                        DB::raw("CAST(li.$liCatCol as int) as Id"),
-                        DB::raw("'Uncategorized' as Name")
-                    ]);
+                $unions = [$queryA];
 
-                $rows = $queryA->union($queryB)->get()
+                // Numeric line-item category refs -> cast to int Ids (only when casting makes sense)
+                if ($liCatCols->isNotEmpty()) {
+                    foreach ($liCatCols as $liCatCol) {
+                        $qNum = DB::table('t_PlanLineItem as li')
+                            ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                            ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                            ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                            ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                            ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                            ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
+                            ->whereNull('ic.Id')
+                            ->whereNotNull("li.$liCatCol")
+                            ->select([
+                                DB::raw("TRY_CAST(li.$liCatCol as int) as Id"),
+                                DB::raw("'Uncategorized' as Name")
+                            ]);
+                        $unions[] = $qNum;
+                    }
+                }
+
+                // Name-based line-item category refs -> map to real category IDs via ic.Name
+                $nameCols = $liCatNameCols->isNotEmpty() ? $liCatNameCols : $liCatCols; // treat liCatCols as names too
+                foreach ($nameCols as $nmCol) {
+                    $qName = DB::table('t_PlanLineItem as li')
+                        ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
+                        ->leftJoin('t_ItemCategories as ic', function($join) use ($nmCol) {
+                            $join->on(DB::raw("LOWER(RTRIM(LTRIM(ic.Name)))"), '=', DB::raw("LOWER(RTRIM(LTRIM(li.$nmCol)))"));
+                        })
+                        ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                        ->where(function ($q) use ($pid) { $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid); })
+                        ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
+                        ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'")
+                        ->whereNotNull("li.$nmCol")
+                        ->whereNotNull('ic.Id')
+                        ->select([
+                            DB::raw('ic.Id as Id'),
+                            DB::raw("COALESCE(ic.Name, 'Uncategorized') as Name")
+                        ]);
+                    $unions[] = $qName;
+                }
+
+                // Union all and finalize
+                $rows = array_shift($unions);
+                foreach ($unions as $u) { $rows = $rows->union($u); }
+                $rows = $rows->get()
                     ->unique('Id')
                     ->filter(fn($r) => !empty($r->Id))
                     ->values()
@@ -1429,11 +1463,70 @@ public function getRFQItems($rfqId)
         try {
             $pid = (int) $planId;
             $cid = (int) $categoryId;
+            $driver = DB::connection()->getDriverName();
+            $castInt = function (string $expr) use ($driver) {
+                switch ($driver) {
+                    case 'sqlsrv':
+                        return "TRY_CAST($expr as int)";
+                    case 'mysql':
+                    case 'mariadb':
+                        // Avoid casting empty strings to 0; NULLIF handles ''
+                        return "CAST(NULLIF($expr,'') AS UNSIGNED)";
+                    case 'pgsql':
+                        // Strip non-digits before casting; returns NULL if empty
+                        return "NULLIF(REGEXP_REPLACE($expr, '[^0-9]', '', 'g'), '')::int";
+                    default:
+                        return "CAST($expr as int)";
+                }
+            };
+            // Helper to safely apply an IN(...) for computed string expressions by expanding into OR-equals with bindings
+            $applyStringIn = function ($q, string $expr, array $values) {
+                $vals = array_values(array_filter($values, fn($v) => $v !== null && $v !== ''));
+                if (empty($vals)) { return; }
+                $q->orWhere(function ($qq) use ($expr, $vals) {
+                    foreach ($vals as $v) {
+                        $qq->orWhereRaw("$expr = ?", [$v]);
+                    }
+                });
+            };
+            // Detect dynamic columns for descriptions/prices/quantities and code details description
+            $liTable = 't_PlanLineItem';
+            $cdTable = 't_CodeDetails';
+            // Only include descriptive text columns; exclude li.ItemName to avoid numeric codes appearing as itemName
+            $liDescCandidates = [
+                'Description',
+                'ItemDescription',
+                'ManualItemDescription',
+                'DescriptionOfRequirement',
+                'DescriptionText',
+                'Details',
+                'Narration',
+                'ReqDescription',
+                'Remarks'
+            ];
+            $liQtyCandidates = ['MergedQty', 'Quantity', 'Qty', 'PlannedQty', 'QtyToProcure'];
+            $liUnitCostCandidates = ['EstimatedUnitCost', 'EstUnitCost', 'EstimateUnitCost', 'UnitPrice', 'EstimatedCost', 'UnitCost'];
+            $cdDescCandidates = ['Description', 'Descriptions', 'Desc', 'Name', 'CodeDescription', 'DescriptionText'];
+
+            $liDescColsAvail = array_values(array_filter($liDescCandidates, fn($c) => Schema::hasColumn($liTable, $c)));
+            $liQtyColsAvail = array_values(array_filter($liQtyCandidates, fn($c) => Schema::hasColumn($liTable, $c)));
+            $liUnitCostColsAvail = array_values(array_filter($liUnitCostCandidates, fn($c) => Schema::hasColumn($liTable, $c)));
+            $cdDescCol = collect($cdDescCandidates)->first(fn($c) => Schema::hasColumn($cdTable, $c)) ?? 'Description';
+
+            // Build COALESCE expressions
+            $liDescExpr = !empty($liDescColsAvail)
+                ? ('COALESCE(' . implode(', ', array_map(fn($c) => "li.$c", $liDescColsAvail)) . ')')
+                : "''";
+            $liQtyExpr = 'COALESCE(' . (empty($liQtyColsAvail) ? '0' : implode(', ', array_map(fn($c) => "li.$c", $liQtyColsAvail))) . ', 0)';
+            $liUnitCostExpr = 'COALESCE(' . (empty($liUnitCostColsAvail) ? '0' : implode(', ', array_map(fn($c) => "li.$c", $liUnitCostColsAvail))) . ', 0)';
             // Resolve descendant category IDs (include selected)
             $catTable = 't_ItemCategories';
             $catIdCol = collect(['Id', 'ID', 'CategoryID'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Id';
+            $catNameCol = collect(['Name', 'CategoryName', 'Description'])
+                ->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Name';
             $parentCol = collect(['ParentId', 'ParentID', 'Parent'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'ParentId';
-            $allCats = DB::table($catTable)->get([$catIdCol . ' as Id', $parentCol . ' as ParentId']);
+            $allCats = DB::table($catTable)->get([$catIdCol . ' as Id', $parentCol . ' as ParentId', $catNameCol . ' as Name']);
+            $selCatName = optional($allCats->firstWhere('Id', $cid))->Name;
             $descIds = collect([$cid]);
             $queue = [$cid];
             while ($queue) {
@@ -1447,45 +1540,198 @@ public function getRFQItems($rfqId)
                 }
             }
 
+            // Also collect descendant category names (normalized) for string-based matching fallbacks
+            $descNamesLower = $allCats->whereIn('Id', $descIds->all())
+                ->pluck('Name')
+                ->filter()
+                ->map(function ($n) { return strtolower(trim((string)$n)); })
+                ->unique()
+                ->values()
+                ->all();
+
             // Detect possible line item category columns
             $liTable = 't_PlanLineItem';
             $liCatCols = collect(['ItemCategory', 'ItemCategoryID', 'Category', 'CategoryId', 'CategoryID'])
                 ->filter(fn($c) => Schema::hasColumn($liTable, $c))
                 ->values();
+            $liCatNameCols = collect(['ItemCategoryName', 'CategoryName', 'CategoryText'])
+                ->filter(fn($c) => Schema::hasColumn($liTable, $c))
+                ->values();
+
+            // Detect item->category reference column and category PK column for robust joins
+            $itemsTable = 't_Items';
+            $itemCatRef = collect(['Category', 'CategoryID', 'CategoryId', 'ItemCategory', 'ItemCategoryID'])
+                ->first(fn($c) => Schema::hasColumn($itemsTable, $c)) ?? 'Category';
+            $itemCatNameCols = collect(['CategoryName', 'ItemCategoryName', 'ItemCategory'])
+                ->filter(fn($c) => Schema::hasColumn($itemsTable, $c))
+                ->values();
+            // Reuse $catTable and $catIdCol from above
 
             $itemsQ = DB::table('t_PlanLineItem as li')
                 ->join('t_CodeDetails as cd', 'cd.ID', '=', 'li.ProcurementMethod')
                 ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
-                ->leftJoin('t_ItemCategories as ic', 'ic.Id', '=', 'it.Category')
+                ->leftJoin('t_ItemCategories as ic', function($join) use ($catIdCol, $itemCatRef) {
+                    $join->on(DB::raw("ic.$catIdCol"), '=', DB::raw("it.$itemCatRef"));
+                })
                 ->where(function ($q) use ($pid) {
                     $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
                 })
                 // Case-insensitive Pending
                 ->whereRaw("UPPER(RTRIM(LTRIM(ISNULL(li.ExecutionStatus,''))))='PENDING'")
                 // Case-insensitive Direct
-                ->whereRaw("LOWER(ISNULL(cd.Description,'')) like '%direct%'");
+                ->whereRaw("LOWER(ISNULL(cd.$cdDescCol,'')) like '%direct%'");
 
-            // Apply category filter by item category OR line item category columns (including descendants)
-            $itemsQ->where(function ($q) use ($descIds, $liCatCols) {
-                $q->whereIn('ic.Id', $descIds->all());
-                foreach ($liCatCols as $col) {
-                    $q->orWhereIn("li.$col", $descIds->all());
-                }
-            });
+                        // Apply category filter by:
+                        // - numeric category IDs on item or line-item (TRY_CAST)
+                        // - string-based category names on item/line-item/category (normalized lower trim) as fallback
+                                    $itemsQ->where(function ($q) use ($descIds, $liCatCols, $liCatNameCols, $catIdCol, $catNameCol, $itemCatRef, $itemCatNameCols, $descNamesLower, $castInt, $applyStringIn) {
+                                            $ids = $descIds->all();
+                                            $idStr = array_map('strval', $ids);
+                            // Numeric matches
+                                            $q->whereIn(DB::raw($castInt("it.$itemCatRef")), $ids)
+                                                ->orWhereIn(DB::raw($castInt("ic.$catIdCol")), $ids)
+                                                // Direct string equality fallback
+                                                ->orWhereIn("it.$itemCatRef", $idStr)
+                                                ->orWhereIn("ic.$catIdCol", $idStr);
+                            foreach ($liCatCols as $col) {
+                                                    $q->orWhereIn(DB::raw($castInt("li.$col")), $ids)
+                                                        ->orWhereIn("li.$col", $idStr);
+                            }
+                            // Name-based fallbacks
+                            if (!empty($descNamesLower)) {
+                                $applyStringIn($q, "LOWER(RTRIM(LTRIM(ic.$catNameCol)))", $descNamesLower);
+                                foreach ($liCatNameCols as $col) {
+                                    $applyStringIn($q, "LOWER(RTRIM(LTRIM(li.$col)))", $descNamesLower);
+                                }
+                                foreach ($itemCatNameCols as $col) {
+                                    $applyStringIn($q, "LOWER(RTRIM(LTRIM(it.$col)))", $descNamesLower);
+                                }
+                            }
+                        });
 
             $items = $itemsQ->select([
                     DB::raw('COALESCE(it.Id, 0) as itemCode'),
-                    DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
-                    DB::raw('COALESCE(it.ItemDescription, li.Description, "") as description'),
-                    DB::raw('COALESCE(li.MergedQty, li.Quantity, 0) as quantity'),
-                    DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
+                    DB::raw("COALESCE(NULLIF(RTRIM(LTRIM(it.ItemName)), ''), $liDescExpr) as itemName"),
+                    DB::raw("COALESCE(it.ItemDescription, " . $liDescExpr . ", '') as description"),
+                    DB::raw($liQtyExpr . ' as quantity'),
+                    DB::raw('COALESCE(it.ItemPrice, ' . $liUnitCostExpr . ', 0) as unitPrice'),
                 ])
                 ->orderBy('itemName')
                 ->get();
 
-            return response()->json(['success' => true, 'data' => $items]);
+            if ($items->isEmpty()) {
+                // Fallback: Populate from plan needs without strict Direct/Pending filters
+                $fallbackQ = DB::table('t_PlanLineItem as li')
+                    ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                    ->leftJoin('t_ItemCategories as ic', function($join) use ($catIdCol, $itemCatRef) {
+                        $join->on(DB::raw("ic.$catIdCol"), '=', DB::raw("it.$itemCatRef"));
+                    })
+                    ->where(function ($q) use ($pid) {
+                        $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
+                    });
+
+                                $fallbackQ->where(function ($q) use ($descIds, $liCatCols, $liCatNameCols, $catIdCol, $catNameCol, $itemCatRef, $itemCatNameCols, $descNamesLower, $castInt, $applyStringIn) {
+                                        $ids = $descIds->all();
+                                        $idStr = array_map('strval', $ids);
+                    // Numeric
+                                        $q->whereIn(DB::raw($castInt("it.$itemCatRef")), $ids)
+                                            ->orWhereIn(DB::raw($castInt("ic.$catIdCol")), $ids)
+                                            ->orWhereIn("it.$itemCatRef", $idStr)
+                                            ->orWhereIn("ic.$catIdCol", $idStr);
+                    foreach ($liCatCols as $col) {
+                                                $q->orWhereIn(DB::raw($castInt("li.$col")), $ids)
+                                                    ->orWhereIn("li.$col", $idStr);
+                    }
+                    // Names
+                    if (!empty($descNamesLower)) {
+                        $applyStringIn($q, "LOWER(RTRIM(LTRIM(ic.$catNameCol)))", $descNamesLower);
+                        foreach ($liCatNameCols as $col) {
+                            $applyStringIn($q, "LOWER(RTRIM(LTRIM(li.$col)))", $descNamesLower);
+                        }
+                        foreach ($itemCatNameCols as $col) {
+                            $applyStringIn($q, "LOWER(RTRIM(LTRIM(it.$col)))", $descNamesLower);
+                        }
+                    }
+                });
+
+                $items = $fallbackQ->select([
+                        DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                        DB::raw("COALESCE(NULLIF(RTRIM(LTRIM(it.ItemName)), ''), $liDescExpr) as itemName"),
+                        DB::raw("COALESCE(it.ItemDescription, " . $liDescExpr . ", '') as description"),
+                        DB::raw($liQtyExpr . ' as quantity'),
+                        DB::raw('COALESCE(it.ItemPrice, ' . $liUnitCostExpr . ', 0) as unitPrice'),
+                    ])
+                    ->orderBy('itemName')
+                    ->get();
+
+                Log::info('Fallback used for plan items by category', [
+                    'planId' => $pid,
+                    'categoryId' => $cid,
+                    'resultCount' => $items->count(),
+                ]);
+            }
+
+            $debug = [
+                'planId' => $pid,
+                'categoryId' => $cid,
+                'selectedCategoryName' => $selCatName,
+                'descendantIds' => $descIds->all(),
+                'descendantNames' => $descNamesLower,
+                'liCatCols' => $liCatCols->all(),
+                'liCatNameCols' => $liCatNameCols->all(),
+                'itemCatRef' => $itemCatRef,
+                'itemCatNameCols' => $itemCatNameCols->all(),
+                'driver' => $driver,
+            ];
+
+            if ($items->isEmpty()) {
+                Log::info('No plan items found for category filter', [
+                    'planId' => $pid,
+                    'categoryId' => $cid,
+                    'descIds' => $descIds->all(),
+                    'liCatCols' => $liCatCols->all(),
+            'liCatNameCols' => $liCatNameCols->all(),
+            'itemCatRef' => $itemCatRef,
+            'itemCatNameCols' => $itemCatNameCols->all(),
+            'descNamesLower' => $descNamesLower,
+                ]);
+
+                // Final fallback: return all plan needs (lines) regardless of category so user can proceed
+                $items = DB::table('t_PlanLineItem as li')
+                    ->leftJoin('t_Items as it', 'it.Id', '=', 'li.ItemID')
+                    ->where(function ($q) use ($pid) {
+                        $q->where('li.PlanID', $pid)->orWhere('li.PlanId', $pid);
+                    })
+                    ->select([
+                        DB::raw('COALESCE(it.Id, 0) as itemCode'),
+                        DB::raw('COALESCE(it.ItemName, li.Description) as itemName'),
+                        DB::raw('COALESCE(it.ItemDescription, li.Description, "") as description'),
+                        DB::raw('COALESCE(li.MergedQty, li.Quantity, 0) as quantity'),
+                        DB::raw('COALESCE(it.ItemPrice, li.EstimatedUnitCost, 0) as unitPrice'),
+                    ])
+                    ->orderBy('itemName')
+                    ->get();
+                Log::info('All-plan-needs fallback used', ['planId' => $pid, 'count' => $items->count()]);
+                $debug['fallbackAllPlanNeedsCount'] = $items->count();
+            }
+
+            $payload = ['success' => true, 'data' => $items];
+            if ((int) request('debug', 0) === 1) {
+                $payload['debug'] = $debug;
+            }
+            return response()->json($payload);
         } catch (\Throwable $e) {
             Log::error('Failed to fetch plan items by category', ['planId' => $planId, 'categoryId' => $categoryId, 'error' => $e->getMessage()]);
+            if ((int) request('debug', 0) === 1) {
+                return response()->json([
+                    'success' => false,
+                    'data' => [],
+                    'debug' => [
+                        'error' => $e->getMessage(),
+                        'trace' => app()->environment('local') ? $e->getTraceAsString() : null,
+                    ],
+                ], 200);
+            }
             return response()->json(['success' => true, 'data' => []]);
         }
     }

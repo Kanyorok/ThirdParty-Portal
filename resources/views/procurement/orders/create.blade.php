@@ -253,8 +253,8 @@
                     <thead class="table-light">
                     <tr>
                         <th style="width: 3%; min-width: 30px;">#</th>
-                        <th style="width: 15%; min-width: 150px;">Item Name <span class="text-danger">*</span></th>
-                        <th style="width: 20%; min-width: 200px;">Item Description</th>
+                        <th style="width: 15%; min-width: 150px;">Item Code <span class="text-danger">*</span></th>
+                        <th style="width: 20%; min-width: 200px;">Item Name</th>
                         <th style="width: 5%; min-width: 80px;">Quantity <span class="text-danger">*</span></th>
                         <th style="width: 10%; min-width: 100px;">Unit Price <span class="text-danger">*</span></th>
                         <th style="width: 5%; min-width: 80px;">Tax %</th>
