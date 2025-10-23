@@ -50,7 +50,8 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">Phone</label>
-        <input name="Phone" class="form-control" value="{{ old('Phone', $bank->Phone ?? '') }}" required>
+        <input name="Phone" class="form-control" value="{{ old('Phone', $bank->Phone ?? '') }}" required pattern="^\+[1-9]\d{7,14}$" inputmode="tel" placeholder="e.g., +12025550123">
+        <div class="form-text">Use international format (E.164), starting with + and country code.</div>
     </div>
 
     <div class="col-md-4">

@@ -18,9 +18,40 @@ class RFQController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $rfqs = RFQ::with(['category', 'suppliers', 'requisition'])->get();
+        // Build base query
+        $query = RFQ::with(['category', 'suppliers', 'requisition']);
+
+        // Apply filters from query string
+        if ($request->filled('status')) {
+            $query->where('Status', $request->query('status'));
+        }
+        if ($request->filled('created_by')) {
+            $query->where('CreatedBy', $request->query('created_by'));
+        }
+
+        // Sorting: allow a restricted set of columns to prevent SQL injection
+        $allowedSorts = [
+            'RFQNumber' => 'RFQNumber',
+            'Status' => 'Status',
+            'SubmissionDeadline' => 'SubmissionDeadline',
+            'CreatedOn' => 'CreatedOn',
+            'CreatedBy' => 'CreatedBy'
+        ];
+
+        $sortBy = $request->query('sort_by');
+        $sortDir = strtolower($request->query('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy && isset($allowedSorts[$sortBy])) {
+            $query->orderBy($allowedSorts[$sortBy], $sortDir);
+        } else {
+            // default ordering
+            $query->orderBy('Id', 'desc');
+        }
+
+        // paginate RFQs 10 per page, preserving query string
+        $rfqs = $query->paginate(10)->withQueryString();
 
         $requisitions = DB::table('t_Requisitions as r')
             ->join('t_CodeDetails as cd', 'r.StatusID', '=', 'cd.Id')
@@ -33,7 +64,21 @@ class RFQController extends Controller
             ->distinct()
             ->get();
 
-        return view('procurement.rfqs.index', compact('rfqs', 'requisitions'));
+        // Build CreatedBy map (Id -> Name) for users referenced by the RFQs on this page
+        $createdByIds = $rfqs->pluck('CreatedBy')->unique()->filter()->values()->all();
+        $createdByMap = [];
+        if (!empty($createdByIds)) {
+            $users = DB::table('t_Users')->whereIn('Id', $createdByIds)->select('Id', 'Name')->get();
+            foreach ($users as $u) {
+                $createdByMap[$u->Id] = $u->Name;
+            }
+        }
+
+        // For filter dropdowns: get distinct statuses and all users (small set assumed)
+        $statuses = DB::table('t_RFQ')->select('Status')->distinct()->pluck('Status')->filter()->values();
+        $allUsers = DB::table('t_Users')->select('Id', 'Name')->orderBy('Name')->get();
+
+        return view('procurement.rfqs.index', compact('rfqs', 'requisitions', 'createdByMap', 'statuses', 'allUsers'));
     }
 
     /**
@@ -148,13 +193,69 @@ class RFQController extends Controller
         $actor = Auth::user();
         if ($actor) {
             $subject = 'RFQ Approved: ' . $rfq->RFQNumber;
-            $body = '<p>Hello ' . e($actor->Name) . ',</p>' .
-                '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
-                '<p>Submission Deadline: <b>' . e(optional($rfq->SubmissionDeadline)->format('Y-m-d')) . '</b></p>' .
+            // Read SubmissionDeadline explicitly from the t_RFQ table to ensure we use the stored DB value
+            $rawSubmissionDeadline = DB::table('t_RFQ')->where('Id', $rfq->Id)->value('SubmissionDeadline');
+            $submissionDeadlineFormatted = 'N/A';
+            if ($rawSubmissionDeadline) {
+                try {
+                    $submissionDeadlineFormatted = \Carbon\Carbon::parse($rawSubmissionDeadline)->format('Y-m-d');
+                } catch (\Throwable $e) {
+                    // fallback to the raw value if parsing fails
+                    $submissionDeadlineFormatted = $rawSubmissionDeadline;
+                }
+            }
+
+            // We'll build a personalized body for each recipient inside the loop below
+            $bodyTemplate = '<p>The RFQ <b>' . e($rfq->RFQNumber) . '</b> has been approved.</p>' .
+                '<p>Submission Deadline: <b>' . e($submissionDeadlineFormatted) . '</b></p>' .
                 '<p>Selected suppliers have been notified.</p>';
 
-            (new UserService($actor))
-                ->sendEmail($subject, $body, $cc, true, EmailPriorityEnum::Important);
+            // Prepare list of unique supplier email addresses and mapping to names
+            $supplierList = [];
+            foreach ($cc as $entry) {
+                foreach ($entry as $name => $email) {
+                    $supplierList[] = ['name' => $name, 'email' => $email];
+                }
+            }
+
+            // Send one email per supplier so that each supplier sees themselves in To and the others in BCC
+            $uniqueEmails = array_values(array_unique(array_map(fn($s) => strtolower($s['email']), $supplierList)));
+            foreach ($uniqueEmails as $idx => $recipientEmail) {
+                // find display name
+                $recipientName = null;
+                foreach ($supplierList as $s) {
+                    if (strtolower($s['email']) === $recipientEmail) {
+                        $recipientName = $s['name'];
+                        break;
+                    }
+                }
+
+                // Build to array: only the current recipient
+                $to = [[$recipientName ?? $recipientEmail => $recipientEmail]];
+
+                // Build bcc array: all other supplier emails
+                $bcc = [];
+                foreach ($uniqueEmails as $otherEmail) {
+                    if ($otherEmail === $recipientEmail) continue;
+                    // Attempt to find name for the bcc entry
+                    $otherName = null;
+                    foreach ($supplierList as $s) {
+                        if (strtolower($s['email']) === $otherEmail) {
+                            $otherName = $s['name'];
+                            break;
+                        }
+                    }
+                    $bcc[] = [$otherName ?? $otherEmail => $otherEmail];
+                }
+
+                // Build personalized body so recipient sees their own name in the salutation
+                $salutationName = $recipientName ?? $recipientEmail;
+                $personalBody = '<p>Hello ' . e($salutationName) . ',</p>' . $bodyTemplate;
+
+                // Use CRMEmailService::createRaw to persist and send the email with explicit To/BCC
+                $service = \App\Services\CRMEmailService::createRaw($actor, $subject, $personalBody, $to, 'ThirdParty', '', [], $bcc, EmailPriorityEnum::Important);
+                $service->send(true);
+            }
         }
 
         return redirect()->back()->with('success', 'RFQ has been approved and emails sent to selected suppliers.');

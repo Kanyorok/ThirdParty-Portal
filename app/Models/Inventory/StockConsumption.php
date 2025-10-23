@@ -19,7 +19,7 @@ use App\Models\HRM\Employee;
 class StockConsumption extends Model
 {
     use UserActorTrait, SoftDeletes;
-
+    
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -27,7 +27,7 @@ class StockConsumption extends Model
     protected $table = 't_StockConsumptions';
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
-
+    
     protected $fillable = [
         'ConsumptionNo',
         'ItemID',
@@ -51,24 +51,15 @@ class StockConsumption extends Model
     // Add this accessor to get the item name
     public function getItemNameAttribute()
     {
-        // First try to get from stockItem (ItemMasterList)
-        if ($this->stockItem) {
-            return $this->stockItem->ItemName;
-        }
-
-        // If not found, try to get through the item (StockItem) -> item (ItemMasterList)
-        if ($this->item && $this->item->item) {
-            return $this->item->item->ItemName;
-        }
-
-        return 'N/A';
+        return $this->item?->ItemName ?? 'N/A';
     }
+
 
     public static function getPrimaryKey(): string
     {
-        return 'Id'; // Fixed this - should return 'Id' not 'stockconsumptionId'
+        return 'ConsId'; 
     }
-
+    
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
@@ -94,18 +85,18 @@ class StockConsumption extends Model
         return $this->belongsTo(Branch::class, 'BranchID', 'Id');
     }
 
-    // Relationship to StockItem (inventory stock)
-    public function item()
-    {
-        return $this->belongsTo(StockItem::class, 'ItemID', 'Id');
-    }
+    // Master item
+public function item()
+{
+    return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
+}
 
-    // Relationship to ItemMasterList (master items)
-    public function stockItem()
-    {
-        // If ItemID directly references ItemMasterList
-        return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
-    }
+// Optional: if you still want to know which stock item was used
+public function stockItem()
+{
+    return $this->belongsTo(StockItem::class, 'StockItemID', 'Id');
+}
+
 
     // Alternative: If you need to get ItemMasterList through StockItem
     public function masterItem()

@@ -16,21 +16,56 @@ use PhpOffice\PhpSpreadsheet\Calculation\Financial;
 
 class CreditNoteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteView, FinanceCDNotes::class);
 
-        $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')
-            ->get();
+        $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->get();
 
-        $notes = FinanceCDNotes::with('invoice:Id,InvoiceNumber')
+        $query = FinanceCDNotes::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'CDNumber', 'NoteType', 'InvoiceRefNo', 'NoteDate', 'NoteAmount', 'Description','ApprovalStatus')
-            ->where('NoteType', 'credit')->latest()->get();
-        return view('finance.accountspayable.creditnote.index', compact('notes','invoices'));
+            ->where('NoteType','credit');
+
+        if ($request->filled('cd_number')) {
+            $query->where('CDNumber', 'like', '%'.$request->cd_number.'%');
+        }
+
+        if ($request->filled('invoice_number')) {
+            $invNum = $request->invoice_number;
+            $query->whereHas('invoice', function($q) use ($invNum) {
+                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('NoteDate', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('NoteDate', '<=', $request->date_to);
+        }
+
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+
+        if ($request->filled('amount_min')) {
+            $query->where('NoteAmount', '>=', (float)$request->amount_min);
+        }
+
+        $sortField = $request->sort_by ?? 'NoteDate';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 10);
+        $notes = $query->paginate($perPage)->withQueryString();
+
+        $approvalStatuses = FinanceCDNotes::where('NoteType','credit')->distinct()->pluck('ApprovalStatus')->filter()->unique()->values();
+
+        return view('finance.accountspayable.creditnote.index', compact('notes','invoices','approvalStatuses'));
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
         $invoices = FinanceInvoiceEntry::select('Id','InvoiceNumber')->where('ApprovalStatus','posted')
             ->get();
@@ -40,7 +75,7 @@ class CreditNoteController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteCreate, FinanceCDNotes::class);
 
         $validated = $request->validate([
             'InvoiceRefNo'=> 'required|exists:t_FinanceInvoiceEntry,Id',
@@ -91,6 +126,7 @@ class CreditNoteController extends Controller
 
     public function show(int $id)
     {
+        $this->authorize(PermissionEnum::CreditNoteView, FinanceCDNotes::class);
         $note = FinanceCDNotes::with([
             'invoice',
             'invoice.thirdParty',
@@ -253,7 +289,7 @@ class CreditNoteController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteDelete, FinanceCDNotes::class);
 
         $note = FinanceCDNotes::findOrFail($id);
 
@@ -271,26 +307,26 @@ class CreditNoteController extends Controller
             ->withProperties(['action' => 'delete'])
             ->log('Deleted Note: '.$note->CDNumber);
 
-        return redirect()->route('creditnote.index')->with('success', 'Credit/Debit Note deleted successfully.');
+        return back()->with('success', 'Credit/Debit Note deleted successfully.');
     }
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceCDNotes::class);
+        $this->authorize(PermissionEnum::CreditNoteUpdate, FinanceCDNotes::class);
 
         $note = FinanceCDNotes::findOrFail($id);
 
         $validated = $request->validate([
-            'InvoiceRefNo'=> 'required|exists:t_FinanceInvoiceEntry,Id',
+//            'InvoiceRefNo'=> 'required',
             'NoteDate'=> 'required|date',
             'NoteAmount'=> 'required|numeric|min:0.00',
-            'Description'=> 'required|string',
+            'Description'=> 'string',
         ]);
 
         DB::beginTransaction();
         try {
             $note->update([
-                'InvoiceRefNo' => $validated['InvoiceRefNo'],
+//                'InvoiceRefNo' => $validated['InvoiceRefNo'],
                 'NoteDate' => $validated['NoteDate'],
                 'NoteAmount' => $validated['NoteAmount'],
                 'Description' => $validated['Description'],
@@ -304,7 +340,7 @@ class CreditNoteController extends Controller
                 ->log('Updated Note: '.$note->CDNumber);
 
             DB::commit();
-            return redirect()->route('creditnote.index')->with('success', 'Credit/Debit Note updated successfully.');
+            return back()->with('success', 'Note updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
             return back()->with('error', $th->getMessage());

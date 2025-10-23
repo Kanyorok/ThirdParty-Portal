@@ -30,6 +30,8 @@ class EnhancedGoodsReceiptController extends Controller
      */
     public function index(Request $request)
     {
+        // Quick config check for Service GL transaction code
+        $serviceGlConfigured = DB::table('t_FinanceTransactionTypes')->where('Code', 'GRN-SERVICE')->exists();
         $query = EnhancedGoodsReceipt::with([
             'receiver', 'supplier', 'item', 'order', 'qualityChecker', 'poster'
         ]);
@@ -68,7 +70,7 @@ class EnhancedGoodsReceiptController extends Controller
                 ->find($receipt->id);
         });
 
-        return view('procurement.goods-receipt.index', compact('goodsReceipts'));
+        return view('procurement.goods-receipt.index', compact('goodsReceipts', 'serviceGlConfigured'));
     }
 
     /**
@@ -138,7 +140,7 @@ class EnhancedGoodsReceiptController extends Controller
             ->filter(function ($order) {
                 return $order->remaining_lines->isNotEmpty();
             })
-            ->get()
+            ->values()
             ->map(function ($order) {
                 $order->remaining_lines = $order->orderLines->filter(function ($line) {
                     $receivedQty = EnhancedGoodsReceipt::where('POID', $order->Id)

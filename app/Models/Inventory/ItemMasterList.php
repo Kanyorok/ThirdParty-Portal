@@ -11,11 +11,12 @@ use App\Models\Inventory\InventoryType;
 use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\PriceManagement;
+use App\Traits\Model\DocumentsTrait;
 use App\Models\Core\CodeDetail;
 
 class ItemMasterList extends Model
 {
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -31,6 +32,7 @@ class ItemMasterList extends Model
     }
 
     protected $fillable = [
+        'ItemCode',
         'BarCode',
         'ItemName',
         'ItemType',
@@ -72,13 +74,13 @@ class ItemMasterList extends Model
     // Relationships
 
 
-    public function inUse(): bool
-    {
-        return $this->stockItems()->exists()
-            || $this->transferItems()->exists()
-            || $this->receiptItems()->exists()
-            || $this->requisitionItems()->exists();
-    }
+public function inUse(): bool
+{
+    return $this->stockItems()->exists()
+        || $this->transferItems()->exists()
+        || $this->receiptItems()->exists()
+        || $this->requisitionItems()->exists();
+}
 
 
     public function category()
@@ -110,20 +112,16 @@ class ItemMasterList extends Model
     {
         return $this->belongsTo(UnitOfMeasure::class, 'UOM', 'Id');
     }
-
-
+    
     public function price()
     {
         return $this->belongsTo(PriceManagement::class, 'ItemPrice', 'Id');
     }
 
-
     public function inventoryType()
     {
         return $this->belongsTo(InventoryType::class, 'InventoryType', 'Id');
     }
-
-    // App\Models\Inventory\ItemMasterList.php
 
     public function stockItems()
     {

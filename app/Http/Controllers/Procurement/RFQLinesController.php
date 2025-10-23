@@ -7,6 +7,8 @@ use App\Models\Procurement\RequisitionLine;
 use App\Models\Procurement\RFQLine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class RFQLinesController extends Controller
 {
@@ -89,12 +91,25 @@ class RFQLinesController extends Controller
         try {
             $itemCategoryId = $request->query('itemCategoryId') ?? $request->query('ItemCategoryId');
 
+            // Resolve column names for t_ItemCategories (id, name, parent)
+            $catTable = 't_ItemCategories';
+            $catIdCol = collect(['Id','ID','id'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Id';
+            $catNameCol = collect(['Name','CategoryName','name'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'Name';
+            $catParentCol = collect(['ParentId','ParentID','parent_id'])->first(fn($c) => Schema::hasColumn($catTable, $c)) ?? 'ParentId';
+
+            // Resolve column names for t_SupplierCategory_ItemCategory
+            $scicTable = 't_SupplierCategory_ItemCategory';
+            $scicItemCol = collect(['ItemCategoryID','ItemCategoryId','item_category_id'])
+                ->first(fn($c) => Schema::hasColumn($scicTable, $c)) ?? 'ItemCategoryID';
+            $scicSupCol  = collect(['SupplierCategoryID','SupplierCategoryId','supplier_category_id'])
+                ->first(fn($c) => Schema::hasColumn($scicTable, $c)) ?? 'SupplierCategoryID';
+
             // Base categories present on requisition lines (do not exclude those already tied to RFQ lines)
             $categories = DB::table('t_RequisitionLines as rl')
                 ->join('t_Items as i', 'rl.Item', '=', 'i.Id')
-                ->join('t_ItemCategories as c', 'i.Category', '=', 'c.Id')
+                ->join($catTable . ' as c', 'i.Category', '=', DB::raw("c.$catIdCol"))
                 ->where('rl.RequisitionID', $requisitionId)
-                ->select('c.Id', 'c.Name')
+                ->select(DB::raw("c.$catIdCol as Id"), DB::raw("c.$catNameCol as Name"))
                 ->distinct()
                 ->get();
 
@@ -113,22 +128,25 @@ class RFQLinesController extends Controller
             // Add base
             $allCategoryIds = $allCategoryIds->merge($baseIds);
 
-            // Add ancestors
+            // Add ancestors (treat NULL/0 as root terminators)
             foreach ($baseIds as $baseId) {
-                $parent = DB::table('t_ItemCategories')->where('Id', $baseId)->value('ParentId');
-                while ($parent) {
-                    $allCategoryIds->push($parent);
-                    $parent = DB::table('t_ItemCategories')->where('Id', $parent)->value('ParentId');
+                $baseId = (int)$baseId;
+                $parent = DB::table($catTable)->where($catIdCol, $baseId)->value($catParentCol);
+                while (!is_null($parent) && (int)$parent !== 0) {
+                    $pid = (int)$parent;
+                    $allCategoryIds->push($pid);
+                    $parent = DB::table($catTable)->where($catIdCol, $pid)->value($catParentCol);
                 }
             }
 
             // Add descendants (BFS traversal)
-            $queue = collect($baseIds);
+            $queue = collect($baseIds)->map(fn($v) => (int)$v);
             while ($queue->isNotEmpty()) {
                 $currentBatch = $queue->splice(0, 100)->all();
-                $children = DB::table('t_ItemCategories')
-                    ->whereIn('ParentId', $currentBatch)
-                    ->pluck('Id');
+                $children = DB::table($catTable)
+                    ->whereIn($catParentCol, $currentBatch)
+                    ->pluck($catIdCol)
+                    ->map(fn($v) => (int)$v);
                 $newChildren = $children->diff($allCategoryIds);
                 if ($newChildren->isNotEmpty()) {
                     $allCategoryIds = $allCategoryIds->merge($newChildren);
@@ -145,7 +163,7 @@ class RFQLinesController extends Controller
                 ->groupBy('tpu.ThirdPartyId');
 
             // Suppliers (ThirdParty details) whose classification encompasses any of the categories set
-            $suppliers = DB::table('t_Suppliers as s')
+            $supQuery = DB::table('t_Suppliers as s')
                 ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
                 ->leftJoinSub($thirdPartyUserEmailSub, 'tpu', function ($join) {
                     $join->on('tpu.ThirdPartyId', '=', 'tp.Id');
@@ -153,14 +171,43 @@ class RFQLinesController extends Controller
                 ->whereNull('s.DeletedOn')
                 ->whereNull('tp.DeletedOn')
                 ->where('s.Active_Status', 1)
-                ->whereExists(function ($q) use ($allCategoryIds) {
-                    $q->select(DB::raw(1))
-                        ->from('t_SupplierCategory_ItemCategory as scic')
-                        ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
-                        ->whereNull('sc.DeletedOn')
-                        ->whereNull('scic.DeletedOn')
-                        ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                        ->whereColumn('sc.SupplierCategoryID', 's.CategoryId');
+                ->where(function ($outer) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
+                    // Direct: supplier CategoryId mapped to item category
+                    $outer->whereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
+                        $q->select(DB::raw(1))
+                          ->from($scicTable . ' as scic')
+                          ->whereNull('scic.DeletedOn')
+                          ->whereIn("scic.$scicItemCol", $allCategoryIds)
+                          ->whereColumn("scic.$scicSupCol", 's.CategoryId');
+                    });
+
+                    // Pivot: through t_ThirdParty_SupplierCategory (PascalCase columns)
+                    if (Schema::hasTable('t_ThirdParty_SupplierCategory')
+                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'ThirdPartyID')
+                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'SupplierCategoryID')) {
+                        $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
+                            $q->select(DB::raw(1))
+                              ->from('t_ThirdParty_SupplierCategory as tpsc')
+                              ->join($scicTable . ' as scic', "scic.$scicSupCol", '=', 'tpsc.SupplierCategoryID')
+                              ->whereNull('scic.DeletedOn')
+                              ->whereIn("scic.$scicItemCol", $allCategoryIds)
+                              ->whereColumn('tpsc.ThirdPartyID', 'tp.Id');
+                        });
+                    }
+
+                    // Pivot: snake_case columns
+                    if (Schema::hasTable('t_ThirdParty_SupplierCategory')
+                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'third_party_id')
+                        && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'supplier_category_id')) {
+                        $outer->orWhereExists(function ($q) use ($allCategoryIds, $scicTable, $scicItemCol, $scicSupCol) {
+                            $q->select(DB::raw(1))
+                              ->from('t_ThirdParty_SupplierCategory as tpsc2')
+                              ->join($scicTable . ' as scic2', "scic2.$scicSupCol", '=', 'tpsc2.supplier_category_id')
+                              ->whereNull('scic2.DeletedOn')
+                              ->whereIn("scic2.$scicItemCol", $allCategoryIds)
+                              ->whereColumn('tpsc2.third_party_id', 'tp.Id');
+                        });
+                    }
                 })
                 ->select(
                     's.Id as SupplierId',
@@ -170,8 +217,21 @@ class RFQLinesController extends Controller
                     'tp.BusinessType',
                     DB::raw('COALESCE(tpu.Email, tp.Email) as Email')
                 )
-                ->distinct()
-                ->get();
+                ->distinct();
+
+            $suppliers = $supQuery->get();
+
+            // Optional diagnostic logging
+            try {
+                Log::info('RFQ requisition categories resolution', [
+                    'rfqRequisitionId' => $requisitionId,
+                    'cat_cols' => ['id' => $catIdCol, 'name' => $catNameCol, 'parent' => $catParentCol],
+                    'scic_cols' => ['item' => $scicItemCol, 'supplier' => $scicSupCol],
+                    'baseIds' => $baseIds,
+                    'allIds' => $allCategoryIds,
+                    'suppliers_count' => $suppliers->count(),
+                ]);
+            } catch (\Throwable $e) { /* no-op */ }
 
             return response()->json([
                 'categories' => $categories,

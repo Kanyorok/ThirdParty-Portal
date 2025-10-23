@@ -153,8 +153,8 @@
 
             const msgEl = ensurePriceErrorEl();
             if (!hasValidPrice) {
-                msgEl.textContent = 'This item has no estimated cost configured. Please contact procurement or select another item.';
-                submitBtn.disabled = true;
+                msgEl.textContent = 'No catalog price found. Please enter an estimated unit cost.';
+                submitBtn.disabled = false;
             } else {
                 msgEl.textContent = '';
                 submitBtn.disabled = false;

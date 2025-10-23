@@ -6,7 +6,10 @@
         <h3></h3>
 
         <div class="container mt-3">
-            <a href="{{ route('rfqresponses.create') }}" class="btn btn-primary mb-2">Create RFQ Response</a>
+            <div class="d-flex gap-2 mb-2">
+                <a href="{{ route('rfqresponses.create') }}" class="btn btn-primary">Create RFQ Response</a>
+                <a href="{{ route('rfqclarifications.index') }}" class="btn btn-secondary">Clarifications</a>
+            </div>
 
             <table class="table table-bordered">
                 <thead>
@@ -30,7 +33,7 @@
                         $daysRemaining = $today->diffInDays($deliveryDate, false);
                     @endphp
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $rfqResponses->firstItem() + $loop->index }}</td>
                         <td>{{ $response->RFQResponseNumber }}</td>
                         <td>{{ $response->RFQNumber }}</td>
                         <td>{{ $response->SupplierName }}</td>
@@ -66,6 +69,7 @@
                             <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
                                     data-bs-target="#editModal{{ $response->Id }}">Edit
                             </button>
+                            
                             <form action="{{ route('rfqresponses.destroy', $response->Id) }}" method="POST"
                                   class="d-inline" onsubmit="return confirm('Are you sure?')">
                                 @csrf
@@ -77,6 +81,19 @@
                 @endforeach
                 </tbody>
             </table>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="small text-muted">
+                    @if($rfqResponses->total() > 0)
+                        Showing {{ $rfqResponses->firstItem() }} to {{ $rfqResponses->lastItem() }} of {{ $rfqResponses->total() }} entries
+                    @else
+                        No entries
+                    @endif
+                </div>
+                <div>
+                    {{ $rfqResponses->withQueryString()->links() }}
+                </div>
+            </div>
 
             {{-- Modals --}}
             @foreach($rfqResponses as $response)
@@ -267,5 +284,8 @@
                 overallTotalField.value = sum.toFixed(2);
             }
         });
+
+    // Clarifications moved to full-screen page (top button links)
     </script>
+    
 @endsection

@@ -24,7 +24,7 @@ class BancassuranceClaimPaymentService
         Carbon $PaymentDate,
         float $PaymentAmount,
         string $PaymentReference,
-        string $Note,
+        ?string $Note = null,
         string $PaidBy,
         CodeDetail $PaymentMethod,
         User $user

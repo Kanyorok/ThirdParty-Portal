@@ -3,6 +3,17 @@
 
 @section('content')
     <div class="container mt-2">
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="card shadow-sm rounded-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2 px-3">
                 <h6 class="mb-0 text-info" id="noteTypeTitle">
@@ -14,7 +25,43 @@
             </div>
 
             <div class="card-body pt-3">
-                <p class="text-muted">Below is the list of all saved credit and debit notes with their details.</p>
+                <form action="{{ route('creditnote.index') }}" method="GET" id="filter-form" class="row g-2 align-items-end mb-3">
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">CD Number</label>
+                        <input type="text" class="form-control form-control-sm" name="cd_number" value="{{ request('cd_number') }}" placeholder="Search CD#">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Invoice #</label>
+                        <input type="text" class="form-control form-control-sm" name="invoice_number" value="{{ request('invoice_number') }}" placeholder="Invoice ref">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Date From</label>
+                        <input type="date" class="form-control form-control-sm" name="date_from" value="{{ request('date_from') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Date To</label>
+                        <input type="date" class="form-control form-control-sm" name="date_to" value="{{ request('date_to') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Min Amount</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm" name="amount_min" value="{{ request('amount_min') }}" placeholder="0.00">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Status</label>
+                        <select class="form-select form-select-sm" name="approval_status">
+                            <option value="all" {{ request('approval_status')=='all' ? 'selected' : '' }}>All</option>
+                            @isset($approvalStatuses)
+                                @foreach($approvalStatuses as $status)
+                                    <option value="{{ $status }}" {{ request('approval_status')==$status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex justify-content-end mt-2">
+                        <button type="submit" class="btn btn-sm btn-primary me-2"><i class="fas fa-filter me-1"></i> Filter</button>
+                        <a href="{{ route('creditnote.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                    </div>
+                </form>
 {{--                <div class="mb-3">--}}
 {{--                    <div class="btn-group" role="group">--}}
 {{--                        <button type="button" class="btn btn-outline-info btn-sm" onclick="filterNotes('All')">All</button>--}}
@@ -127,6 +174,16 @@
                         </tbody>
                     </table>
                 </div>
+                @if(method_exists($notes,'links'))
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted small">
+                            Showing {{ $notes->firstItem() ?? 0 }} to {{ $notes->lastItem() ?? 0 }} of {{ $notes->total() ?? $notes->count() }} entries
+                        </div>
+                        <div>
+                            {{ $notes->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -159,9 +216,9 @@
                             <input type="hidden" name="NoteType" value="credit">
 
                             <!-- Reference Invoice -->
-                            <div class="col-md-12">
+                            <div class="col-md-12 mb-2">
                                 <label class="form-label">Reference Invoice</label>
-                                <select name="InvoiceRefNo" class="form-select" required>
+                                <select name="InvoiceRefNo" class="form-select" disabled required>
                                     <option value="{{old('InvoiceRefNo', $item->InvoiceRefNo)}}" disabled selected>--Select Invoice--</option>
                                     @foreach($invoices as $invoice)
                                         <option value="{{ $invoice->Id }}" {{ $invoice->Id == $item->InvoiceRefNo ? 'selected' : '' }}>
@@ -171,13 +228,13 @@
                                 </select>
                             </div>
                             <!-- Note Date -->
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-2">
                                 <label class="form-label">Note Date</label>
                                 <input type="date" name="NoteDate" class="form-control" value="{{old('NoteDate', \Carbon\Carbon::parse($item->NoteDate)->format('Y-m-d'))}}" required>
                             </div>
 
                             <!-- Amount -->
-                            <div class="col-md-6">
+                            <div class="col-md-6 mb-2">
                                 <label class="form-label">Amount (Ksh)</label>
                                 <input type="number" step="0.01" name="NoteAmount" min="0.00" class="form-control" value="{{old('NoteAmount', $item->NoteAmount)}}" required>
                             </div>
@@ -185,7 +242,7 @@
                             <!-- Description -->
                             <div class="col-md-12">
                                 <label class="form-label">Description</label>
-                                <textarea name="Description" rows="3" class="form-control" value="{{old('Description', $item->Description)}}" ></textarea>
+                                <textarea name="Description" rows="3" class="form-control" value="{{old('Description', $item->Description)}}" >{{old('Description', $item->Description)}}</textarea>
                             </div>
                         </div>
                     </div>

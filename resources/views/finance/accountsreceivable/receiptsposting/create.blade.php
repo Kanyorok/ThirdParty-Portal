@@ -13,9 +13,7 @@
     @endif
 
     <div class="container my-3">
-        <div id="loadingOverlay"
-             class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-             style="background: rgba(255,255,255,0.8); z-index: 2000;">
+        <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.8); z-index: 2000;">
             <div class="text-center">
                 <div class="spinner-border text-info" role="status" style="width: 4rem; height: 4rem;"></div>
                 <div class="mt-2 text-muted">Searching…</div>
@@ -45,11 +43,8 @@
                     <div class="border rounded-3 p-3 mb-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-4">
-                                <label class="form-label small text-muted">Search Customer (Reg No./Tax
-                                    PIN/Email/Phone/Name)</label>
-                                <input type="text" class="form-control" id="searchIdNumber"
-                                       placeholder="e.g., REG123456 / P123456789 / email@domain.com / +2547... / Acme"
-                                       autocomplete="off">
+                                <label class="form-label small text-muted">Search Customer (Reg No./Tax PIN/Email/Phone/Name)</label>
+                                <input type="text" class="form-control" id="searchIdNumber" placeholder="e.g., REG123456 / P123456789 / email@domain.com / +1202555... / Acme" autocomplete="off">
                                 <div class="invalid-feedback">Please enter an ID number to search.</div>
                             </div>
                             <div class="col-md-3">
@@ -140,8 +135,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="useWallet"
-                                                   name="UseWallet">
+                                            <input class="form-check-input" type="checkbox" id="useWallet" name="UseWallet">
                                             <label class="form-check-label" for="useWallet">
                                                 Apply from wallet
                                             </label>
@@ -149,11 +143,8 @@
                                         <div id="walletAmountSection" class="d-none">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text">KSh</span>
-                                                <input type="number" step="0.01" class="form-control" id="walletAmount"
-                                                       placeholder="0.00">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm"
-                                                        id="btnMaxWallet">Max
-                                                </button>
+                                                <input type="number" step="0.01" class="form-control" id="walletAmount" placeholder="0.00">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnMaxWallet">Max</button>
                                             </div>
                                             <div class="form-text">Enter amount to apply from wallet</div>
                                         </div>
@@ -183,13 +174,12 @@
                                         <div class="col-md-4">
                                             <label for="paymentMethod" class="form-label">Payment Method</label>
                                             <select class="form-select" id="paymentMethod" name="PaymentMethod">
-                                                <option value="">-- select --</option>
-                                                @foreach(($paymentMethods ?? []) as $pm)
-                                                    <option
-                                                        value="{{ $pm->Value }}" {{ old('PaymentMethod')===$pm->Value ? 'selected' : '' }}>
-                                                        {{ $pm->Description }}
-                                                    </option>
-                                                @endforeach
+                                              <option value="">-- select --</option>
+                                              @foreach(($paymentMethods ?? []) as $pm)
+                                                <option value="{{ $pm->Value }}" {{ old('PaymentMethod')===$pm->Value ? 'selected' : '' }}>
+                                                  {{ $pm->Description }}
+                                                </option>
+                                              @endforeach
                                             </select>
                                         </div>
 
@@ -277,7 +267,7 @@
         const btnSearch = document.getElementById('btnSearchCustomer');
         const idInput   = document.getElementById('searchIdNumber');
         const spinner   = document.getElementById('searchSpinner');
-        const overlay = document.getElementById('loadingOverlay');
+        const overlay   = document.getElementById('loadingOverlay');
         const hint      = document.getElementById('searchHint');
 
         const custCard  = document.getElementById('customerCard');
@@ -307,8 +297,8 @@
 
         const customerIdHidden = document.getElementById('customerIdHidden');
         const submitBtn        = document.getElementById('submitBtn');
-        const walletSection = document.getElementById('walletSection');
-        const walletBalance = document.getElementById('walletBalance');
+        const walletSection    = document.getElementById('walletSection');
+        const walletBalance    = document.getElementById('walletBalance');
         const useWalletCheckbox = document.getElementById('useWallet');
         const walletAmountSection = document.getElementById('walletAmountSection');
         const walletAmountInput = document.getElementById('walletAmount');
@@ -443,7 +433,7 @@
             } catch (err){
                 if (err.message === 'NOT_FOUND'){
                     resetAll('Customer not found or no posted unpaid invoices.');
-                    flash('Customer not found or no posted unpaid invoices.', 'danger');
+                    flash('Customer not found or no posted unpaid invoices.','danger');
                 } else {
                     resetAll('Lookup failed. Please try again.');
                     flash('Lookup failed. Check your connection and try again.','danger');
@@ -479,7 +469,7 @@
             setHidden(custCard, false);
         }
 
-        function renderWallet() {
+        function renderWallet(){
             // Always show wallet section for all customers
             walletBalance.textContent = `KSh ${fmt(state.walletBalance || 0)}`;
             setHidden(walletSection, false);
@@ -541,16 +531,16 @@
             const cashAmount = Number(amountInput.value || 0);
             const walletAmount = useWalletCheckbox.checked ? Number(walletAmountInput.value || 0) : 0;
             const totalAvailable = cashAmount + walletAmount;
-
+            
             // Calculate what's already allocated to other selected invoices
             const otherAllocated = sum(state.invoices.filter(i => i.selected && i.id !== inv.id).map(i => i.allocate));
-
+            
             // Calculate remaining available for this invoice
             const remainingAvailable = Math.max(0, totalAvailable - otherAllocated);
-
+            
             // Allocate the minimum of what's needed and what's available
             const optimalAllocation = Math.min(inv.balance, remainingAvailable);
-
+            
             inv.allocate = optimalAllocation;
             if (allocInput) {
                 allocInput.value = optimalAllocation.toFixed(2);
@@ -568,9 +558,9 @@
             const allocInput = invoiceRows.querySelector(`.inv-alloc[data-id="${id}"]`);
             if (allocInput){
                 allocInput.disabled = !inv.selected;
-                if (!inv.selected) {
-                    inv.allocate = 0;
-                    allocInput.value = '0';
+                if (!inv.selected){ 
+                    inv.allocate = 0; 
+                    allocInput.value = '0'; 
                 } else {
                     // Auto-calculate optimal allocation when selected
                     smartAllocateInvoice(inv, allocInput);
@@ -633,7 +623,7 @@
         });
 
         /* ====================== WALLET HANDLERS ====================== */
-        useWalletCheckbox.addEventListener('change', function () {
+        useWalletCheckbox.addEventListener('change', function() {
             setHidden(walletAmountSection, !this.checked);
             if (this.checked) {
                 // Auto-suggest smart amount (what's needed vs what's available)
@@ -648,50 +638,50 @@
             recalcSummary();
         });
 
-        walletAmountInput.addEventListener('input', function () {
-            const maxWallet = Math.min(state.walletBalance,
+        walletAmountInput.addEventListener('input', function() {
+            const maxWallet = Math.min(state.walletBalance, 
                 sum(state.invoices.filter(i => i.selected).map(i => i.balance)));
             if (Number(this.value) > maxWallet) {
                 this.value = maxWallet.toFixed(2);
             }
-
+            
             // Re-calculate allocations for selected invoices with smart allocation
             state.invoices.filter(i => i.selected).forEach(inv => {
                 const allocInput = invoiceRows.querySelector(`.inv-alloc[data-id="${inv.id}"]`);
                 smartAllocateInvoice(inv, allocInput);
             });
-
+            
             recalcSummary();
         });
 
-        btnMaxWallet.addEventListener('click', function () {
+        btnMaxWallet.addEventListener('click', function() {
             const totalSelected = sum(state.invoices.filter(i => i.selected).map(i => i.balance));
             const maxUsable = Math.min(state.walletBalance, totalSelected);
             walletAmountInput.value = maxUsable.toFixed(2);
-
+            
             // Re-calculate allocations after setting max wallet amount
             state.invoices.filter(i => i.selected).forEach(inv => {
                 const allocInput = invoiceRows.querySelector(`.inv-alloc[data-id="${inv.id}"]`);
                 smartAllocateInvoice(inv, allocInput);
             });
-
+            
             recalcSummary();
         });
 
         /* ====================== PAYMENT + SUMMARY (digits only) ====================== */
-        amountInput.addEventListener('input', function () {
+        amountInput.addEventListener('input', function() {
             // Re-calculate allocations for selected invoices when cash amount changes
             state.invoices.filter(i => i.selected).forEach(inv => {
                 const allocInput = invoiceRows.querySelector(`.inv-alloc[data-id="${inv.id}"]`);
                 smartAllocateInvoice(inv, allocInput);
             });
-
+            
             recalcSummary();
         });
 
         function recalcSummary(){
             const outstanding = sum(state.invoices.map(i => i.balance));
-            let received = Number(amountInput.value || 0);
+            let received      = Number(amountInput.value || 0);
 
             // Add wallet amount if checkbox is checked and amount specified
             const walletAmount = useWalletCheckbox.checked ? Number(walletAmountInput.value || 0) : 0;
@@ -760,22 +750,22 @@
 
             // Add wallet usage hidden fields
             let walletHidden = document.getElementById('useWalletHidden');
-            if (!walletHidden) {
+            if (!walletHidden){
                 walletHidden = document.createElement('input');
                 walletHidden.type = 'hidden';
                 walletHidden.name = 'UseWallet';
-                walletHidden.id = 'useWalletHidden';
+                walletHidden.id   = 'useWalletHidden';
                 e.target.appendChild(walletHidden);
             }
             walletHidden.value = useWalletCheckbox.checked;
 
             // Add wallet amount hidden field
             let walletAmountHidden = document.getElementById('walletAmountHidden');
-            if (!walletAmountHidden) {
+            if (!walletAmountHidden){
                 walletAmountHidden = document.createElement('input');
                 walletAmountHidden.type = 'hidden';
                 walletAmountHidden.name = 'WalletAmount';
-                walletAmountHidden.id = 'walletAmountHidden';
+                walletAmountHidden.id   = 'walletAmountHidden';
                 e.target.appendChild(walletAmountHidden);
             }
             walletAmountHidden.value = useWalletCheckbox.checked ? (walletAmountInput.value || 0) : 0;
@@ -787,17 +777,17 @@
 
             if (totalReceived <= 0) {
                 e.preventDefault();
-                flash('Enter a valid Amount Received or use wallet balance.', 'danger');
+                flash('Enter a valid Amount Received or use wallet balance.','danger');
                 return;
             }
             if (applied > totalReceived) {
                 e.preventDefault();
-                flash('Allocated amount exceeds total available (cash + wallet).', 'danger');
+                flash('Allocated amount exceeds total available (cash + wallet).','danger');
                 return;
             }
             if (allocations.length === 0) {
                 e.preventDefault();
-                flash('Allocate at least one invoice to proceed.', 'danger');
+                flash('Allocate at least one invoice to proceed.','danger');
                 return;
             }
 

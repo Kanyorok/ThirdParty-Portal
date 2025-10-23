@@ -20,15 +20,15 @@ class TenderOpeningController extends Controller
     public function index()
     {
         // Get tenders ready for opening based on opening date
-        $tenders = Tender::whereHas('submissions', function ($query) {
-            $query->where('BidStatus', 'submitted');
-        })
+        $tenders = Tender::whereHas('submissions', function($query) {
+                $query->where('BidStatus', 'submitted');
+            })
             ->where('OpeningDate', '<=', now()) // Only tenders where opening date has passed
             ->where('SubmissionDeadline', '<=', now()) // Ensure submission deadline has also passed
             ->select('Id', 'TenderNo', 'Title', 'Status', 'OpeningDate', 'SubmissionDeadline')
             ->orderBy('OpeningDate', 'desc')
             ->get();
-
+        
         $data = false;
         return view('procurement.tendering.bidopeningandevaluation.opening.index', compact('tenders', 'data'));
     }
@@ -58,7 +58,7 @@ class TenderOpeningController extends Controller
         $tender = Tender::where('TenderNo', $id)
             ->select('Id', 'TenderNo', 'Title', 'Status', 'OpeningDate', 'SubmissionDeadline')
             ->firstOrFail();
-
+        
         // Check if tender is ready for opening
         if ($tender->OpeningDate > now()) {
             return redirect()->back()->with('error', 'Tender opening ceremony cannot start before the scheduled opening date: ' . $tender->OpeningDate->format('d/m/Y H:i'));
@@ -80,25 +80,25 @@ class TenderOpeningController extends Controller
             });
 
         // Get other tenders for dropdown
-        $tenders = Tender::whereHas('submissions', function ($query) {
-            $query->where('BidStatus', 'submitted');
-        })
+        $tenders = Tender::whereHas('submissions', function($query) {
+                $query->where('BidStatus', 'submitted');
+            })
             ->where('OpeningDate', '<=', now())
             ->where('SubmissionDeadline', '<=', now())
             ->select('Id', 'TenderNo', 'Title', 'Status', 'OpeningDate')
             ->orderBy('OpeningDate', 'desc')
             ->get();
-
+            
         // Determine ceremony status
         $ceremonyStatus = $this->getCeremonyStatus($submissions);
         $data = true;
-
-        return view('procurement.tendering.bidopeningandevaluation.opening.index',
+        
+        return view('procurement.tendering.bidopeningandevaluation.opening.index', 
             compact('tender', 'tenders', 'submissions', 'data', 'ceremonyStatus'));
     }
 
     /**
-     * Initialize PUBLIC/RECORDED bid opening ceremony
+     * Initialize PUBLIC/RECORDED bid opening ceremony 
      */
     public function startCeremony(Request $request)
     {
@@ -110,7 +110,7 @@ class TenderOpeningController extends Controller
         ]);
 
         $tender = Tender::where('TenderNo', $request->tender_ref)->firstOrFail();
-
+        
         // Validate ceremony can be started
         if ($tender->OpeningDate > now()) {
             return redirect()->back()->with('error', 'Cannot start ceremony before scheduled opening date.');
@@ -127,7 +127,7 @@ class TenderOpeningController extends Controller
 
         try {
             DB::beginTransaction();
-
+            
             // Initialize ceremony (but don't open bids yet - that will be done individually)
             $tender->update([
                 'OpeningDate' => now(), // Mark ceremony as started
@@ -151,7 +151,7 @@ class TenderOpeningController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success',
+            return redirect()->back()->with('success', 
                 "🎉 Opening ceremony initialized! You can now open individual bids one by one.");
 
         } catch (\Exception $e) {
@@ -173,7 +173,7 @@ class TenderOpeningController extends Controller
     {
         try {
             $submission = BidSubmission::with(['supplier.thirdParty', 'tender'])->findOrFail($submissionId);
-
+            
             // Validate ceremony is in progress
             if (!$submission->tender || !$submission->tender->OpeningDate || $submission->tender->OpeningDate > now()) {
                 return response()->json([
@@ -194,7 +194,7 @@ class TenderOpeningController extends Controller
 
             // READ OUT BID BASICS (Public/Recorded Opening)
             $bidDetails = $this->readOutBidBasics($submission);
-
+            
             // Get ceremony details from tender's activity log or session
             $ceremonyDetails = [
                 'ceremony_type' => 'public', // You might want to store this in tender or get from session
@@ -202,7 +202,7 @@ class TenderOpeningController extends Controller
                 'bid_security_present' => $bidDetails['has_bid_security'],
                 'received_on_time' => $bidDetails['received_on_time'] === 'YES'
             ];
-
+            
             // Mark bid as opened
             $submission->markAsOpened($request->user(), $ceremonyDetails);
 
@@ -264,6 +264,21 @@ class TenderOpeningController extends Controller
 
             $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
 
+            // Prepare DMS lookup for new-format docs that contain document_id
+            $docIds = collect($encryptedDocs)
+                ->map(fn($d) => $d['document_id'] ?? null)
+                ->filter()
+                ->values()
+                ->all();
+
+            $dmsDocs = [];
+            if (!empty($docIds)) {
+                $dmsDocs = \App\Models\DMS\Document::whereIn('DocumentId', $docIds)
+                    ->with('current')
+                    ->get()
+                    ->keyBy('DocumentId');
+            }
+
             $bidDetails = [
                 'submission_info' => [
                     'id' => $submission->Id,
@@ -292,11 +307,19 @@ class TenderOpeningController extends Controller
                     'ceremony_type' => ucfirst($submission->CeremonyType ?? 'Unknown'),
                     'read_out_summary' => $submission->ReadOutSummary
                 ],
-                'documents' => array_map(function ($doc) {
+                'documents' => array_map(function($doc) use ($dmsDocs) {
+                    $documentId = $doc['document_id'] ?? null;
+                    $linked = $documentId && isset($dmsDocs[$documentId]) ? $dmsDocs[$documentId] : null;
+                    $name = $linked?->Name
+                        ?? ($doc['original_name'] ?? ($doc['original_filename'] ?? 'Unknown'));
+                    $sizeBytes = $linked?->current?->Size ?? ($doc['file_size'] ?? null);
+                    $uploadedAtVal = $linked?->getAttribute('CreatedOn');
                     return [
-                        'filename' => $doc['original_filename'] ?? 'Unknown',
-                        'size' => $this->formatFileSize($doc['file_size'] ?? 0),
-                        'uploaded_at' => $doc['uploaded_at'] ?? null
+                        'filename' => $name,
+                        'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
+                        'uploaded_at' => ($uploadedAtVal instanceof \Carbon\Carbon)
+                            ? $uploadedAtVal->format('d/m/Y H:i:s')
+                            : ($uploadedAtVal ?: ($doc['uploaded_at'] ?? null))
                     ];
                 }, $encryptedDocs)
             ];
@@ -373,10 +396,10 @@ class TenderOpeningController extends Controller
         try {
             $tender = Tender::where('TenderNo', $tenderRef)->firstOrFail();
             $submissions = BidSubmission::where('TenderRef', $tenderRef)->get();
-
+            
             $openedCount = $submissions->whereNotNull('OpenedAt')->count();
             $totalCount = $submissions->count();
-
+            
             if ($openedCount < $totalCount) {
                 return response()->json([
                     'success' => false,
@@ -512,7 +535,7 @@ class TenderOpeningController extends Controller
     private function readOutBidBasics($bid): array
     {
         $encryptedDocs = json_decode($bid->EncryptedDocuments, true) ?? [];
-
+        
         $bidDetails = [
             'supplier_name' => $bid->SupplierName,
             'bid_amount' => $bid->BidAmount,
@@ -526,22 +549,22 @@ class TenderOpeningController extends Controller
             'received_on_time' => $bid->ReceivedAt <= $bid->BidOpeningDate ? 'YES' : 'NO',
             'submission_method' => $bid->SubmissionSource === 'portal' ? 'Online Portal' : 'Manual Submission'
         ];
-
+        
         // Create read-out summary for public announcement
         $readOutSummary = "Bidder: {$bidDetails['supplier_name']}, ";
-
+        
         // Only include price if allowed (you can make this configurable)
         if ($this->isPriceDisclosureAllowed($bid)) {
             $readOutSummary .= "Amount: {$bidDetails['currency']} " . number_format($bidDetails['bid_amount'], 2) . ", ";
         }
-
+        
         $readOutSummary .= "Documents: {$bidDetails['document_count']} files, ";
         $readOutSummary .= "Bid Security: " . ($bidDetails['has_bid_security'] ? 'Present' : 'Not Found') . ", ";
         $readOutSummary .= "Received: {$bidDetails['received_on_time']} (on time), ";
         $readOutSummary .= "Envelope: Sealed";
-
+        
         $bidDetails['read_out_summary'] = $readOutSummary;
-
+        
         return $bidDetails;
     }
 
@@ -552,8 +575,8 @@ class TenderOpeningController extends Controller
     {
         foreach ($encryptedDocs as $doc) {
             $filename = strtolower($doc['original_filename'] ?? '');
-            if (str_contains($filename, 'security') ||
-                str_contains($filename, 'bond') ||
+            if (str_contains($filename, 'security') || 
+                str_contains($filename, 'bond') || 
                 str_contains($filename, 'guarantee')) {
                 return true;
             }
@@ -580,9 +603,9 @@ class TenderOpeningController extends Controller
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
-
+        
         $bytes /= pow(1024, $pow);
-
+        
         return round($bytes, 2) . ' ' . $units[$pow];
     }
 

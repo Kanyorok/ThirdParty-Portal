@@ -47,4 +47,15 @@ class TenderCategory extends Model {
 
         return $prefix . str_pad($number, 3, '0', STR_PAD_LEFT);
     }
+
+    // Allowed item types for this tender category
+    public function itemTypes()
+    {
+        return $this->belongsToMany(
+            \App\Models\Inventory\ItemType::class,
+            't_TenderCategoryItemTypes',
+            'TenderCategoryId',
+            'ItemTypeId'
+        )->withPivot(['IsActive'])->wherePivot('IsActive', 1);
+    }
 }

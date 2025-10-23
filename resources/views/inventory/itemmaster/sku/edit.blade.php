@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Edit Inventory')
 @section('content')
-    @if($errors->any())
+ @if($errors->any())
         <div class="alert alert-danger">
             <ul>
                 @foreach($errors->all() as $error)
@@ -10,7 +10,7 @@
             </ul>
         </div>
     @endif
-    <body class="bg-light">
+<body class="bg-light">
     <div class="container mt-5">
         <div class="card shadow rounded-4">
             <div class="card-header text-dark rounded-top-4" style="background-color: #add8e6;">
@@ -24,8 +24,7 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label for="skuCode" class="form-label">SKU Code</label>
-                            <input type="text" name="SKUCode" class="form-control" id="skuCode"
-                                   value="{{ $item->SKUCode }}" readonly>
+                            <input type="text" name="SKUCode" class="form-control" id="skuCode" value="{{ $item->SKUCode }}" readonly>
                         </div>
                         <div class="col-md-4">
                             <label for="Category" class="form-label">Category</label>
@@ -58,14 +57,9 @@
                         <div class="col-md-4">
                             <label for="Branch" class="form-label">Branch</label>
                             <select name="Branch" id="Branch" class="form-select" required>
-                                <option value="">-- Select Branch --</option>
-                                @foreach($branches as $branch)
-                                    <option
-                                        value="{{ $branch->Id }}" {{ $item->Branch == $branch->Id ? 'selected' : '' }}>
-                                        {{ $branch->Name }}
-                                    </option>
-                                @endforeach
+                                <option value="{{ $branch->Id }}" selected>{{ $branch->Name }}</option>
                             </select>
+
                         </div>
                         <div class="col-md-4">
                             <label for="Store" class="form-label">Store</label>
@@ -79,53 +73,43 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label for="currentQty" class="form-label">Current Qty</label>
-                            <input type="number" name="CurrentQty" class="form-control" id="currentQty"
-                                   value="{{ $item->CurrentQty }}" required>
+                            <input type="number" name="CurrentQty" class="form-control" id="currentQty" value="{{ $item->CurrentQty }}" required>
                         </div>
                         <div class="col-md-4">
                             <label for="minStockLevel" class="form-label">Min Stock Level</label>
-                            <input type="number" name="Min" class="form-control" id="minStockLevel"
-                                   value="{{ $item->Min }}">
+                            <input type="number" name="Min" class="form-control" id="minStockLevel" value="{{ $item->Min }}">
                         </div>
                         <div class="col-md-4">
                             <label for="reorderQty" class="form-label">Reorder Qty</label>
-                            <input type="number" name="Reorder" class="form-control" id="reorderQty"
-                                   value="{{ $item->Reorder }}">
+                            <input type="number" name="Reorder" class="form-control" id="reorderQty" value="{{ $item->Reorder }}">
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="lastReceivedDate" class="form-label">Last Received Date</label><input
-                                type="date" name="LastReceived" id="lastReceivedDate"
-                                class="form-control @error('LastReceived') is-invalid @enderror"
-                                value="{{ old('LastReceived', $item->LastReceived) }}"
-                                max="{{ \Carbon\Carbon::today()->toDateString() }}" required>
+                            <label for="lastReceivedDate" class="form-label">Last Received Date</label><input type="date" name="LastReceived" id="lastReceivedDate" class="form-control @error('LastReceived') is-invalid @enderror" value="{{ old('LastReceived', $item->LastReceived) }}" max="{{ \Carbon\Carbon::today()->toDateString() }}" required>
 
-                            @error('LastReceived')
+                        @error('LastReceived')
                             <div class="invalid-feedback">
                                 {{ $message }}
                             </div>
-                            @enderror
-                        </div>
+                        @enderror
+                    </div>
 
-                        <div class="col-md-6">
-                            <div class="form-check mt-5">
-                                <input type="hidden" name="Status" value="0">
-                                <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status"
-                                    {{ $item->Status ? 'checked' : '' }}>
-                                <label class="form-check-label" for="Status">Is Active</label>
-                            </div>
+                   <div class="col-md-6">
+                        <div class="form-check mt-5">
+                            <input type="hidden" name="Status" value="0">
+                            <input class="form-check-input" type="checkbox" name="Status" value="1" id="Status" 
+                                {{ $item->Status ? 'checked' : '' }}>
+                            <label class="form-check-label" for="Status">Is Active</label>
                         </div>
+                    </div>
 
 
-                        <div class="d-flex justify-content-end mt-4">
-                            <button type="submit" class="btn btn-success"
-                                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-                                Update Item
-                            </button>
-                            <a href="{{ route('sku.index') }}" class="btn btn-danger px-4 ms-2">Cancel</a>
-                        </div>
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Update Item</button>
+                        <a href="{{ route('sku.index') }}" class="btn btn-danger px-4 ms-2">Cancel</a>
+                    </div>
                 </form>
             </div>
         </div>
@@ -234,5 +218,5 @@
             });
         });
     </script>
-    </body>
+</body>
 @endsection

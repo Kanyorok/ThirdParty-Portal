@@ -2,6 +2,8 @@
 
 @section('title', 'Edit Category')
 
+@section('content')
+
 @if ($errors->any())
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <ul class="mb-0">
@@ -13,7 +15,6 @@
     </div>
 @endif
 
-@section('content')
 <div class="container bg-white shadow-sm rounded p-4">
     <h4>Edit Category: {{ $category->Name }}</h4>
 

@@ -25,10 +25,14 @@
                     <tbody>
                         @forelse ($evaluations as $evaluation)
                         <tr>
-                            <td>{{ optional($evaluation->application)->applicationNo ?? 'N/A' }}</td>
-                            <td>{{ optional($evaluation->application->supplier)->ThirdPartyName ?? 'N/A' }}</td>
-                            <td>{{ optional($evaluation->application)->Status ?? 'N/A' }}</td>
-                            <td>{{ optional($evaluation->application)->SubmissionDate->format('Y-m-d') ?? 'N/A' }}</td>
+                            @php
+                                $app = $evaluation->application;
+                                $hasRound = (bool) optional($app)->round;
+                            @endphp
+                            <td>{{ optional($app)->applicationNo ?? 'N/A' }}</td>
+                            <td>{{ optional($app->supplier)->ThirdPartyName ?? 'N/A' }}</td>
+                            <td>{{ optional($app)->Status ?? 'N/A' }}</td>
+                            <td>{{ optional($app)->SubmissionDate?->format('Y-m-d') ?? 'N/A' }}</td>
                             <td>
                                 @if ($evaluation->application->result)
                                 {{ number_format($evaluation->application->result->TotalScore, 2) }}%
@@ -46,15 +50,23 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($evaluation->application->result)
-                                    <a href="{{ route('prequalification.prequalification-evaluation.results', $evaluation->ApplicationID) }}"
-                                       class="btn btn-sm btn-info text-white">
-                                    <i class="fas fa-eye me-1"></i> View Results
-                                </a>
+                                @if (!$hasRound)
+                                    {{-- Prevent actions that require a configured round to avoid 404 from controller --}}
+                                    @if (optional($app)->result)
+                                        {{-- Result exists but round not configured: no view button shown --}}
+                                    @else
+                                        <button class="btn btn-sm btn-secondary" disabled title="Prequalification round not configured for this application">
+                                            <i class="fas fa-edit me-1"></i> Evaluate
+                                        </button>
+                                    @endif
                                 @else
-                                <a href="{{ route('prequalification.prequalification-evaluation.show', $evaluation->ApplicationID) }}" class="btn btn-sm btn-warning text-dark">
-                                    <i class="fas fa-edit me-1"></i> Evaluate
-                                </a>
+                                    @if (optional($app)->result)
+                                        {{-- View button removed by request --}}
+                                    @else
+                                        <a href="{{ route('prequalification.prequalification-evaluation.show', $evaluation->ApplicationID) }}" class="btn btn-sm btn-warning text-dark">
+                                            <i class="fas fa-edit me-1"></i> Evaluate
+                                        </a>
+                                    @endif
                                 @endif
                             </td>
                         </tr>

@@ -11,9 +11,13 @@ class PrequalificationCriteriaResource extends JsonResource
     {
         return [
             'Id' => $this->Id,
-            'CriteriaID' => $this->CriteriaID,
+            'id' => $this->Id,
+            'CriteriaID' => $this->CriteriaID ?? $this->CriteriaId,
+            'criteriaId' => $this->CriteriaID ?? $this->CriteriaId,
             'Included' => $this->Included,
+            'included' => $this->Included,
             'MaxScore' => $this->MaxScore,
+            'maxScore' => $this->MaxScore,
         ];
     }
 }

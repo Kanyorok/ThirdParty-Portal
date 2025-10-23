@@ -457,7 +457,23 @@ class PrequalificationEvaluationController extends Controller
             ->with(['masterSection', 'criteria.masterCriteria'])
             ->get();
 
-        $existingEvaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
+        // Ensure only valid, included criteria with a master record are presented
+        $sections->each(function ($section) {
+            if (!($section->criteria instanceof \Illuminate\Support\Collection)) {
+                $section->setRelation('criteria', collect($section->criteria ?? []));
+            }
+            $cleaned = $section->criteria
+                ->filter(function ($c) {
+                    // Included flag (default true if null) and must resolve to a masterCriteria
+                    $included = is_null($c->Included) ? true : (bool) $c->Included;
+                    return $included && $c->masterCriteria;
+                })
+                ->unique('CriteriaId')
+                ->values();
+            $section->setRelation('criteria', $cleaned);
+        });
+
+    $existingEvaluations = PrequalificationEvaluation::where('ApplicationID', $applicationId)
             ->where('EvaluatorID', $evaluatorId)
             ->get()
             ->keyBy('CriteriaID');
@@ -473,7 +489,17 @@ class PrequalificationEvaluationController extends Controller
             ->where('SupplierCategoryID', $application->CategoryID)
             ->exists();
 
-        return view('procurement.suppliers.prequalification.prequalification-evaluation.evaluate', compact('application', 'sections', 'existingEvaluations', 'isReadonly', 'isPrequalified', 'result'));
+        // Load supporting documents uploaded by the supplier for this application
+        // These are linked via t_SupplierPreqApplicationDocuments.ApplicationID
+        $documents = $application->documents()
+            ->with(['dmsDocument.current'])
+            ->orderByDesc('CreatedOn')
+            ->get();
+
+        return view(
+            'procurement.suppliers.prequalification.prequalification-evaluation.evaluate',
+            compact('application', 'sections', 'existingEvaluations', 'isReadonly', 'isPrequalified', 'result', 'documents')
+        );
     }
 
     public function submitEvaluation(Request $request, $applicationId): RedirectResponse

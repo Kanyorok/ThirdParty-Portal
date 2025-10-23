@@ -3,18 +3,13 @@
 @endphp
 
 @extends('layouts.app')
-@section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View'))
+{{-- @section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View')) --}}
 
 @section('content')
     <style>
         /* Hide top navigation only on this page */
-        .navbar, nav.navbar, .pc-header, header.pc-header, .pc-h-item[data-pc-toggle="sidebar"], .mobile-menu {
-            display: none !important;
-        }
-
-        body {
-            padding-top: 0 !important;
-        }
+        .navbar, nav.navbar, .pc-header, header.pc-header, .pc-h-item[data-pc-toggle="sidebar"], .mobile-menu { display: none !important; }
+        body { padding-top: 0 !important; }
     </style>
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm" role="alert">
@@ -60,9 +55,9 @@
                         <a href="{{ route('invoiceentry.index') }}" class="btn btn-outline-secondary">
                             <i data-feather="arrow-left"></i> Back
                         </a>
-                        {{--                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>--}}
-                        {{--                            <i data-feather="file-text"></i> View PO Items--}}
-                        {{--                        </button>--}}
+{{--                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>--}}
+{{--                            <i data-feather="file-text"></i> View PO Items--}}
+{{--                        </button>--}}
                         <button type="button" class="btn btn-success" onclick="window.print()">
                             <i data-feather="printer"></i> Print
                         </button>
@@ -112,7 +107,7 @@
                                 <table class="table align-middle mb-0">
                                     <tbody>
                                     <tr>
-                                        <td class="text-muted">Invoice Amount (Inclusive)</td>
+                                        <td class="text-muted">Invoice Amount (After Tax)</td>
                                         <td class="text-end">
                                             <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
                                         </td>
@@ -126,22 +121,19 @@
                                         @endphp
                                         <tr>
                                             <td class="text-muted">PO Discount</td>
-                                            <td class="text-end">
-                                                - {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</td>
+                                            <td class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</td>
                                         </tr>
                                         <tr>
                                             <td class="text-muted">PO Tax</td>
                                             <td class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">PO Exclusive</td>
+                                            <td class="text-muted">PO Before Tax</td>
                                             <td class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">PO Inclusive</td>
-                                            <td class="text-end">
-                                                <strong>{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</strong>
-                                            </td>
+                                            <td class="text-muted">PO After Tax</td>
+                                            <td class="text-end"><strong>{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</strong></td>
                                         </tr>
                                     @else
                                         <tr>
@@ -310,30 +302,29 @@
                                         $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
                                     @endphp
                                     <tfoot class="table-light">
-                                    <tr>
-                                        <th colspan="3" class="text-end">Discount</th>
-                                        <th class="text-end">
-                                            - {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Tax</th>
-                                        <th class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Exclusive</th>
-                                        <th class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Inclusive</th>
-                                        <th class="text-end">{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</th>
-                                    </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Discount</th>
+                                            <th class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Tax</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Total Before Tax</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Total After Tax</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</th>
+                                        </tr>
                                     </tfoot>
                                 @else
                                     <tfoot class="table-light">
-                                    <tr>
-                                        <th colspan="3" class="text-end">PO Subtotal</th>
-                                        <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
-                                    </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">PO Subtotal</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
+                                        </tr>
                                     </tfoot>
                                 @endif
                             @endif
@@ -391,20 +382,12 @@
         <div style="border:1px solid #e9ecef;">
             <table style="width:100%; border-collapse:collapse;">
                 <thead>
-                <tr>
-                    <th style="text-align:left; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">
-                        Item
-                    </th>
-                    <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">
-                        Qty
-                    </th>
-                    <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">
-                        Unit Cost
-                    </th>
-                    <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">
-                        Line Total
-                    </th>
-                </tr>
+                    <tr>
+                        <th style="text-align:left; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Item</th>
+                        <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Qty</th>
+                        <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Unit Cost</th>
+                        <th style="text-align:right; padding:6px 8px; background:#f8f9fa; border-bottom:1px solid #e9ecef;">Line Total</th>
+                    </tr>
                 </thead>
                 <tbody>
                 @foreach($poItems as $row)
@@ -423,12 +406,10 @@
                 @endforeach
                 </tbody>
                 <tfoot>
-                <tr>
-                    <th colspan="3" style="text-align:right; padding:6px 8px; border-top:1px solid #e9ecef;">PO
-                        Subtotal
-                    </th>
-                    <th style="text-align:right; padding:6px 8px; border-top:1px solid #e9ecef;">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
-                </tr>
+                    <tr>
+                        <th colspan="3" style="text-align:right; padding:6px 8px; border-top:1px solid #e9ecef;">PO Subtotal</th>
+                        <th style="text-align:right; padding:6px 8px; border-top:1px solid #e9ecef;">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
+                    </tr>
                 </tfoot>
             </table>
         </div>
@@ -436,8 +417,7 @@
 
     @if($invoice->ApprovalStatus==='draft')
         <div class="mb-3">
-            <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                    data-bs-target="#approveModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Approved')>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal" @disabled(!empty($invoice->Status) && $invoice->Status === 'Approved')>
                 <i data-feather="thumbs-up"></i> Approve
             </button>
 
@@ -616,7 +596,7 @@
             html, body { font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
             /* Hide UI/controls */
-            .navbar, .btn, .modal, .lifecycle, .attachments-section { display: none !important; }
+            .navbar, .btn, .modal, .lifecycle, .attachments-section, .breadcrumb { display: none !important; }
 
             /* Flatten cards */
             .card, .shadow, .shadow-sm, .shadow-lg { box-shadow: none !important; border: 1px solid #e9ecef !important; }

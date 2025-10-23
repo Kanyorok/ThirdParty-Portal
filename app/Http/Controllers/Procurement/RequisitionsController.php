@@ -166,8 +166,12 @@ class RequisitionsController extends Controller
             $requisitionInfo = $this->service->getRelatedRequisition($id);
             $requisitionlineInfo = $this->requisitionItemService->getRequisitionRelatedItems($id);
             $approvalStatus = $this->getApprovalStatus('purchase_requisition', $id);
+            // Determine approval type configured for this document
+            $approvalType = \Illuminate\Support\Facades\DB::table('t_ApprovalGroups')
+                ->where('DocType', 'purchase_requisition')
+                ->value('ApprovalType');
 
-            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus'));
+            return view('procurement.requisitions.approval', compact('requisitionInfo', 'requisitionlineInfo', 'approvalStatus', 'approvalType'));
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $uid = null;
@@ -189,6 +193,18 @@ class RequisitionsController extends Controller
 
     public function approve(ApproveRequisitionRequest $requisitionRequest, $id)
     {
+        // Block APPROVE action if approval type is not configured for purchase requisitions
+        if (strtolower($requisitionRequest->input('action')) === 'approve') {
+            $approvalType = DB::table('t_ApprovalGroups')
+                ->where('DocType', 'purchase_requisition')
+                ->value('ApprovalType');
+
+            $validTypes = ['ALL', 'ANY', 'MAJ', 'AMT'];
+            if (!$approvalType || !in_array(strtoupper($approvalType), $validTypes, true)) {
+                return back()->with('error', 'Approval type is not set for Purchase Requisitions. Please contact the administrator.');
+            }
+        }
+
         // Allow rejection even if no lines; enforce line check only for approval action
         if ($requisitionRequest->input('action') === 'approve') {
             $hasLines = DB::table('t_RequisitionLines')->where('RequisitionId', $id)->exists();

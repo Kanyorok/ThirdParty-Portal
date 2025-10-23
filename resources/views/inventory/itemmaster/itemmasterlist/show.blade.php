@@ -64,12 +64,12 @@
             <p><strong>Item Description:</strong> {{ $item->ItemDescription ?? 'N/A' }}</p>
         </div>
         <div class="col-md-6">
-            <p><strong>Document:</strong></p>
-            @if($item->DocumentUpload)
-                <a href="{{ asset('storage/' . $item->DocumentUpload) }}" class="btn btn-link" target="_blank">📄 View Document</a>
-            @else
-                <p>No document uploaded</p>
-            @endif
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+            @forelse($item->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
         </div>
         <div class="col-md-6">
             <p class="card-text"><strong>Status:</strong> {{ $item->status->Description ?? 'N/A' }}</p>
@@ -90,4 +90,7 @@
     </div>
 </div>
 
+@endsection
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

@@ -36,13 +36,22 @@
 
                      <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
                     <a href="{{ route('bancassurance.customers.edit', $customer->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                    <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Are you sure you want to delete this Customer?');">Delete
-                        </button>
-                    </form>
+                            @if($customer->policies()->exists())
+                                <button class="btn btn-sm btn-secondary" disabled>
+                                    <i class="bi bi-lock"></i> In Use
+                                </button>
+                            @else
+                                <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" 
+                                        method="POST" 
+                                        onsubmit="return confirm('Are you sure you want to delete this customer?');"
+                                        class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            @endif
                 </td>
                 </tr>
             @empty

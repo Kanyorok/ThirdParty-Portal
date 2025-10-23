@@ -74,16 +74,19 @@ class SKUController extends Controller
         return view('inventory.itemmaster.sku.show', compact('item', 'categories'));
     }
 
-    public function edit($id)
+   public function edit($id)
     {
         $item = StockItem::with('item.category.parent')->findOrFail($id);
         $this->authorize('update', $item);
 
-        $branches = auth()->user()->employee?->BranchId;
+        $branchId = auth()->user()->employee?->BranchId;
+        $branch = Branch::find($branchId);
+
         $categories = ItemCategories::whereNull('ParentId')
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
-        $stores = Store::where('BranchID', $branches)->get();
+
+        $stores = Store::where('BranchID', $branchId)->get();
 
         $category = $item->item->category;
         $parentCategoryId = $category->parent ? $category->parent->Id : $category->Id;
@@ -93,8 +96,9 @@ class SKUController extends Controller
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
 
-        return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores', 'categories', 'items'));
+        return view('inventory.itemmaster.sku.edit', compact('item', 'branch', 'stores', 'categories', 'items'));
     }
+
 
     public function update(StockItemRequest $request, $id)
     {

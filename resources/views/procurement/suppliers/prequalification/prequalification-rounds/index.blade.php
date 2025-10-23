@@ -20,18 +20,26 @@
                 <i class="bi bi-list-ul me-2"></i>
                 Prequalification Rounds
             </h5>
-            <a href="{{ route('prequalification.prequalification-rounds.create') }}" class="btn btn-primary"
-               data-ajax="1">
+            <a href="{{ route('prequalification.prequalification-rounds.create') }}" class="btn btn-primary" data-ajax="1">
                 <i class="fa fa-plus-circle me-1"></i> Create a New Round
             </a>
         </div>
+        <div class="px-3 pt-2 d-flex justify-content-end align-items-center">
+            <form method="get" class="me-2">
+                <input type="hidden" name="include_deleted" value="{{ request()->query('include_deleted') ? 0 : 1 }}">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                    {{ request()->query('include_deleted') ? 'Hide archived' : 'Include archived' }}
+                </button>
+            </form>
+            @if(!empty($includeDeleted))
+                <span class="badge bg-secondary">Showing archived too</span>
+            @endif
+        </div>
 
         <div class="px-3 pt-3">
-            <div class="alert alert-info" role="alert"
-                 style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
+            <div class="alert alert-info" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
                 <i class="fa fa-info-circle me-2"></i>
-                <span
-                    title="Define round dates, vendor cap per category, sections weights = 100%, criteria scored out of 10.">
+                <span title="Define round dates, vendor cap per category, sections weights = 100%, criteria scored out of 10.">
                     <strong>Guidance:</strong> A prequalification round defines the start and end dates for supplier prequalification. You must set the maximum number of vendors allowed <em>(enforced per category within this round)</em>, assign weights to sections totaling exactly 100%, and note that each criterion is scored out of 10.
                 </span>
             </div>
@@ -39,8 +47,7 @@
 
         {{-- Table --}}
         <div class="table-responsive">
-            <table id="roundsTable" class="table table-striped table-hover mb-0 align-middle" data-datatable="auto"
-                   data-dt-opts='{"pageLength":10,"order":[[3,"desc"]],"responsive":true,"language":{"search":"_INPUT_","searchPlaceholder":"Search rounds..."}}'>
+            <table id="roundsTable" class="table table-striped table-hover mb-0 align-middle">
                 <thead class="table-light">
                     <tr>
                         <th style="width: 5%;">Round ID</th>
@@ -67,14 +74,27 @@
                         </td>
                         <td>
                             <a href="{{ route('prequalification.prequalification-rounds.show', $Round) }}"
-                               class="btn btn-sm btn-info text-white me-1" data-ajax="1">
+                                class="btn btn-sm btn-info text-white me-1" data-ajax="1">
                                 <i class="bi bi-eye"></i> View
                             </a>
 
                             <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}"
-                               class="btn btn-sm btn-warning me-1" data-ajax="1">
+                                class="btn btn-sm btn-warning me-1" data-ajax="1">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>
+
+                            @if($Round->Status === \App\Enums\Procurement\PrequalificationRoundEnum::Draft)
+                                @php $isExpired = $Round->EndDate && $Round->EndDate->isPast(); @endphp
+                                @if($Round->Status === \App\Enums\Procurement\PrequalificationRoundEnum::Draft && !$isExpired)
+                            <a href="{{ route('prequalification.prequalification-rounds.edit', $Round) }}#Status"
+                               class="btn btn-sm btn-secondary me-1" title="Publish (set status to Open)" data-bs-toggle="tooltip" data-ajax="1">
+                                <i class="bi bi-upload"></i> Publish
+                            </a>
+                            @endif
+                                @if($isExpired)
+                                <span class="badge bg-secondary me-1" title="This round has expired">Expired</span>
+                                @endif
+                            @endif
 
                             <form action="{{ route('prequalification.prequalification-rounds.destroy', $Round) }}"
                                 method="POST" class="d-inline-flex"
@@ -94,8 +114,7 @@
                                 <i class="bi bi-folder-x display-4 text-secondary"></i>
                             </div>
                             <p class="lead mb-3">No prequalification rounds found.</p>
-                            <a href="{{ route('prequalification.prequalification-rounds.create') }}"
-                               class="btn btn-primary" data-ajax="1">
+                            <a href="{{ route('prequalification.prequalification-rounds.create') }}" class="btn btn-primary" data-ajax="1">
                                 <i class="fa fa-plus-circle me-1"></i> Create a New Round
                             </a>
                         </td>
@@ -110,14 +129,29 @@
                 </tbody>
             </table>
         </div>
+        {{-- Pagination controls --}}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <div class="small text-muted">
+                @if(isset($prequalificationRounds) && $prequalificationRounds->total() > 0)
+                    Showing {{ $prequalificationRounds->firstItem() }} to {{ $prequalificationRounds->lastItem() }} of {{ $prequalificationRounds->total() }} entries
+                @else
+                    No entries
+                @endif
+            </div>
+            <div>
+                @if(isset($prequalificationRounds))
+                    {{ $prequalificationRounds->withQueryString()->links() }}
+                @endif
+            </div>
+        </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('partial:loaded', function () {
-        $('[data-bs-toggle="tooltip"]').tooltip();
-    });
+document.addEventListener('partial:loaded', function(){
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
 </script>
 @endpush

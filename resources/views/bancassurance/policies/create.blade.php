@@ -1,146 +1,149 @@
 @extends('layouts.app')
-@section('title', 'Create Policy Proposal')
+@section('title', 'New Policy Proposal')
 
 @section('content')
 <div class="container mt-4">
-    <h4 class="mb-3">New Policy Proposal</h4>
-
-    {{-- Success Message --}}
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-        <form method="POST" action="{{ route('bancassurance.policies.store') }}">
-            @csrf
-
-            {{-- Referral Dropdown --}}
-            <div class="mb-3">
-                <label class="form-label">Referral (optional)</label>
-                <select name="ReferralID" class="form-select">
-                    <option value="">-- None --</option>
-                    @foreach($referrals as $ref)
-                        <option value="{{ $ref->Id }}" {{ old('ReferralID') == $ref->Id ? 'selected' : '' }}>
-                            Referral #{{ $ref->ClientIDNumber }} – {{ $ref->ClientName ?? 'Customer' }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-        {{-- Referral Alert (if present) --}}
-        @if(isset($referral))
-            <div class="alert alert-info">
-                <strong>Referral Linked:</strong>
-                Based on Referral #{{ $referral->Id }} by Staff ID: {{ $referral->ReferredBy }}
-            </div>
-            <input type="hidden" name="ReferralID" value="{{ $referral->Id }}">
-        @endif
-
-        {{-- Customer & Product --}}
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label class="form-label">Customer <span class="text-danger">*</span></label>
-                <select name="CustomerID" id="customer-select" class="form-select" required>
-                    <option value="">-- Select Customer --</option>
-                    @foreach($customers as $cust)
-                        <option value="{{ $cust->Id }}" {{ old('CustomerID') == $cust->Id ? 'selected' : '' }}>
-                            {{ $cust->ThirdParty->ThirdPartyName }} -- ({{ $cust->NationalID }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label">Preferred Insurer <span class="text-danger">*</span></label>
-                <select name="InsurerID" id="insurer-select" class="form-select" required>
-                    <option value="">-- Optional --</option>
-                    @foreach($insurers as $ins)
-                        <option value="{{ $ins->Id }}">{{ $ins->Name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label">Product <span class="text-danger">*</span></label>
-                <select id="product-select" name="ProductID" class="form-select" required>
-                    <option value="">-- Select Product --</option>
-                </select>
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label">Rider AddOns </label>
-                <select id="rideraddon-select" name="RiderAddOn" class="form-select">
-                    <option value="">-- Select Rider AddOns --</option>
-                </select>
-            </div>
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4 py-2">
+            <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i> Policy Proposal</h5>
         </div>
 
-        {{-- Financials & Frequency --}}
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label class="form-label">Sum Assured <span class="text-danger">*</span></label>
-                <input type="number" name="SumAssured" class="form-control" value="{{ old('SumAssured') }}" required>
-            </div>
+        <div class="card-body p-3">
+            @if(session('success'))
+                <div class="alert alert-success py-2 px-3 mb-3 rounded-pill">
+                    <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+                </div>
+            @endif
 
-            <div class="col-md-4">
-                <label class="form-label">Premium Amount <span class="text-danger">*</span></label>
-                <input type="number" name="PremiumAmount" class="form-control" value="{{ old('PremiumAmount') }}" required>
-            </div>
+            <form method="POST" action="{{ route('bancassurance.policies.store') }}">
+                @csrf
 
-            <div class="col-md-4">
-                <label class="form-label">Payment Frequency <span class="text-danger">*</span></label>
-                <select name="PaymentFrequency" class="form-select" required>
-                    <option value="">-- Select --</option>
-                    @foreach($paymentfrequencys as $freq)
-                        <option value="{{ $freq->ID }}">
-                            {{ $freq->Description }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+                <div class="mb-3">
+                    <label class="form-label">Referral</label>
+                    <select name="ReferralID" class="form-select form-select-sm rounded-pill">
+                        <option value="">-- None --</option>
+                        @foreach($referrals as $ref)
+                            <option value="{{ $ref->Id }}" {{ old('ReferralID') == $ref->Id ? 'selected' : '' }}>
+                                #{{ $ref->ClientIDNumber }} – {{ $ref->ClientName ?? 'Customer' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                @if(isset($referral))
+                    <div class="alert alert-info small py-2 px-3 mb-3 rounded-pill">
+                        Linked to Referral #{{ $referral->Id }} by Staff {{ $referral->ReferredBy }}
+                    </div>
+                    <input type="hidden" name="ReferralID" value="{{ $referral->Id }}">
+                @endif
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select name="CustomerID" id="customer-select" class="form-select form-select-sm rounded-pill" required>
+                            <option value="">-- Select --</option>
+                            @foreach($customers as $cust)
+                                <option value="{{ $cust->Id }}" {{ old('CustomerID') == $cust->Id ? 'selected' : '' }}>
+                                    {{ $cust->ThirdParty->ThirdPartyName ?? '-'}} ({{ $cust->NationalID ?? '-'}})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Insurer</label>
+                        <select name="InsurerID" id="insurer-select" class="form-select form-select-sm rounded-pill">
+                            <option value="">-- Select --</option>
+                            @foreach($insurers as $ins)
+                                <option value="{{ $ins->Id }}">{{ $ins->Name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Product <span class="text-danger">*</span></label>
+                        <select id="product-select" name="ProductID" class="form-select form-select-sm rounded-pill" required>
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Rider Add-On</label>
+                    <select id="rideraddon-select" name="RiderAddOn" class="form-select form-select-sm rounded-pill">
+                        <option value="">-- Select --</option>
+                    </select>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Sum Assured *</label>
+                        <input type="number" step="0.01" name="SumAssured"
+                            class="form-control form-control-sm rounded-pill"
+                            value="{{ old('SumAssured') !== null ? number_format((float) old('SumAssured'), 2, '.', '') : '' }}"
+                            required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Premium *</label>
+                        <input type="number" step="0.01" name="PremiumAmount"
+                            class="form-control form-control-sm rounded-pill"
+                            value="{{ old('PremiumAmount') !== null ? number_format((float) old('PremiumAmount'), 2, '.', '') : '' }}"
+                            required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Frequency *</label>
+                        <select name="PaymentFrequency" class="form-select form-select-sm rounded-pill" required>
+                            <option value="">-- Select --</option>
+                            @foreach($paymentfrequencys as $freq)
+                                <option value="{{ $freq->ID }}" {{ old('PaymentFrequency') == $freq->ID ? 'selected' : '' }}>
+                                    {{ $freq->Description }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Start Date *</label>
+                        <input type="date" name="PolicyStartDate" class="form-control form-control-sm rounded-pill"
+                            value="{{ old('PolicyStartDate') }}" required>
+                        <div class="invalid-feedback" id="error-PolicyStartDate"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">End Date *</label>
+                        <input type="date" name="PolicyEndDate" class="form-control form-control-sm rounded-pill"
+                            value="{{ old('PolicyEndDate') }}" required>
+                        <div class="invalid-feedback" id="error-PolicyEndDate"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Issued *</label>
+                        <input type="date" name="IssuedDate" class="form-control form-control-sm rounded-pill"
+                            value="{{ old('IssuedDate') }}" required>
+                        <div class="invalid-feedback" id="error-IssuedDate"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Expiry *</label>
+                        <input type="date" name="ExpiryDate" class="form-control form-control-sm rounded-pill"
+                            value="{{ old('ExpiryDate') }}" required>
+                        <div class="invalid-feedback" id="error-ExpiryDate"></div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-success btn-sm rounded-pill px-4"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+                        <i class="bi bi-send-check me-1"></i> Submit
+                    </button>
+                </div>
+            </form>
         </div>
-
-        {{-- Dates --}}
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label class="form-label">Policy Start Date <span class="text-danger">*</span></label>
-                <input type="date" name="PolicyStartDate" class="form-control" value="{{ old('PolicyStartDate') }}" required>
-                <div class="invalid-feedback" id="error-PolicyStartDate"></div>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Policy End Date <span class="text-danger">*</span></label>
-                <input type="date" name="PolicyEndDate" class="form-control" value="{{ old('PolicyEndDate') }}" required>
-                <div class="invalid-feedback" id="error-PolicyEndDate"></div>
-            </div>
-        </div>
-
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label class="form-label">
-                    Issued Date <span class="text-danger">*</span>
-                </label>
-                <input type="date" name="IssuedDate" class="form-control" value="{{ old('IssuedDate') }}" required>
-                <div class="invalid-feedback" id="error-IssuedDate"></div>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">
-                    Expiry Date <span class="text-danger">*</span>
-                </label>
-                <input type="date" name="ExpiryDate" class="form-control" value="{{ old('ExpiryDate') }}" required>
-                <div class="invalid-feedback" id="error-ExpiryDate"></div>
-            </div>
-        </div>
-
-        {{-- Submit --}}
-        <div class="text-end">
-            <button class="btn btn-success"
-                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Proposal
-            </button>
-        </div>
-    </form>
+    </div>
 </div>
 
 @push('scripts')
@@ -150,132 +153,88 @@ document.addEventListener('DOMContentLoaded', function () {
     const productSelect = document.getElementById('product-select');
     const customerSelect = document.getElementById('customer-select');
     const referralSelect = document.querySelector('select[name="ReferralID"]');
+    const riderSelect = document.getElementById('rideraddon-select');
+
     const productsRoute = @json(route('bancassurance.referrals.referrals.products', ['insurerId' => 'INSURER_ID']));
     const referralDefaultsRoute = @json(route('bancassurance.customers.referral-defaults', ['customerId' => 'CUSTOMER_ID']));
     const riderAddOnsRoute = @json(route('bancassurance.policies.policy.rideraddons', ['productId' => 'PRODUCT_ID']));
 
-    // Store intended product to select after loading
+    document.querySelectorAll('input[type="number"][step="0.01"]').forEach(el => {
+        el.addEventListener('blur', function () {
+            if (this.value) this.value = parseFloat(this.value).toFixed(2);
+        });
+    });
+
     let intendedProductId = null;
 
     customerSelect.addEventListener('change', function () {
-        const customerId = this.value;
-        if (!customerId) return;
-        const url = referralDefaultsRoute.replace('CUSTOMER_ID', customerId);
-        fetch(url)
-            .then(response => response.json())
+        const id = this.value;
+        if (!id) return;
+        fetch(referralDefaultsRoute.replace('CUSTOMER_ID', id))
+            .then(r => r.json())
             .then(data => {
-                // Set referral
-                if (data.referral && referralSelect) {
-                    referralSelect.value = data.referral.Id;
-                } else if (referralSelect) {
-                    referralSelect.value = '';
-                }
-                // Always set insurer and trigger change
-                if (insurerSelect) {
-                    insurerSelect.value = data.preferredInsurer || '';
-                    intendedProductId = data.product || null;
-                    insurerSelect.dispatchEvent(new Event('change'));
-                } else {
+                referralSelect.value = data.referral?.Id || '';
+                insurerSelect.value = data.preferredInsurer || '';
+                intendedProductId = data.product || null;
+                insurerSelect.dispatchEvent(new Event('change'));
+            });
+    });
+
+    insurerSelect.addEventListener('change', function () {
+        const id = this.value;
+        productSelect.innerHTML = '<option>Loading...</option>';
+        riderSelect.innerHTML = '<option>-- Select --</option>';
+        if (!id) return productSelect.innerHTML = '<option>-- Select --</option>';
+        fetch(productsRoute.replace('INSURER_ID', id))
+            .then(r => r.json())
+            .then(data => {
+                let opts = '<option value="">-- Select --</option>';
+                data.forEach(p => opts += `<option value="${p.Id}">${p.Name}</option>`);
+                productSelect.innerHTML = opts;
+                if (intendedProductId) {
+                    productSelect.value = intendedProductId;
+                    productSelect.dispatchEvent(new Event('change'));
                     intendedProductId = null;
                 }
             });
     });
 
-    insurerSelect.addEventListener('change', function () {
-        const insurerId = this.value;
-        productSelect.innerHTML = '<option value="">Loading...</option>';
-        // Clear Rider AddOns
-        document.getElementById('rideraddon-select').innerHTML = '<option value="">-- Select Rider AddOns --</option>';
-
-        if (insurerId) {
-            const url = productsRoute.replace('INSURER_ID', insurerId);
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    let options = '<option value="">-- Select Product --</option>';
-                    data.forEach(product => {
-                        options += `<option value="${product.Id}">${product.Name}</option>`;
-                    });
-                    productSelect.innerHTML = options;
-                    // If we have an intended product to select, do it now
-                    if (intendedProductId) {
-                        productSelect.value = intendedProductId;
-                        productSelect.dispatchEvent(new Event('change'));
-                        intendedProductId = null;
-                    }
-                });
-        } else {
-            productSelect.innerHTML = '<option value="">-- Select Product --</option>';
-        }
-    });
-
-    // Rider AddOns: Load and sort when product changes
     productSelect.addEventListener('change', function () {
-        const productId = this.value;
-        const riderAddOnSelect = document.getElementById('rideraddon-select');
-        riderAddOnSelect.innerHTML = '<option value="">Loading...</option>';
-        if (productId) {
-            const url = riderAddOnsRoute.replace('PRODUCT_ID', productId);
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    // Sort alphabetically by RiderName
-                    data.sort((a, b) => a.RiderName.localeCompare(b.RiderName));
-                    let options = '<option value="">-- Select Rider AddOns --</option>';
-                    data.forEach(rider => {
-                        options += `<option value="${rider.Id}">${rider.RiderName}</option>`;
-                    });
-                    riderAddOnSelect.innerHTML = options;
-                });
-        } else {
-            riderAddOnSelect.innerHTML = '<option value="">-- Select Rider AddOns --</option>';
-        }
+        const id = this.value;
+        riderSelect.innerHTML = '<option>Loading...</option>';
+        if (!id) return riderSelect.innerHTML = '<option>-- Select --</option>';
+        fetch(riderAddOnsRoute.replace('PRODUCT_ID', id))
+            .then(r => r.json())
+            .then(data => {
+                data.sort((a, b) => a.RiderName.localeCompare(b.RiderName));
+                let opts = '<option value="">-- Select --</option>';
+                data.forEach(r => opts += `<option value="${r.Id}">${r.RiderName}</option>`);
+                riderSelect.innerHTML = opts;
+            });
     });
 
+    const form = document.querySelector('form');
+    form.addEventListener('submit', e => {
+        let hasErr = false;
+        const start = form.PolicyStartDate, end = form.PolicyEndDate, issued = form.IssuedDate, expiry = form.ExpiryDate;
 
-    // Date validation with inline error display
-    const form = document.querySelector('form[action*="bancassurance.policies.store"]');
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            // Clear previous errors
-            ['PolicyStartDate', 'PolicyEndDate', 'IssuedDate', 'ExpiryDate'].forEach(function (name) {
-                const input = document.querySelector('input[name="' + name + '"]');
-                const errorDiv = document.getElementById('error-' + name);
-                if (input) input.classList.remove('is-invalid');
-                if (errorDiv) errorDiv.textContent = '';
-            });
-
-            const start = document.querySelector('input[name="PolicyStartDate"]');
-            const end = document.querySelector('input[name="PolicyEndDate"]');
-            const issued = document.querySelector('input[name="IssuedDate"]');
-            const expiry = document.querySelector('input[name="ExpiryDate"]');
-
-            let hasError = false;
-            const startVal = start.value;
-            const endVal = end.value;
-            const issuedVal = issued.value;
-            const expiryVal = expiry.value;
-
-            if (startVal && endVal && endVal <= startVal) {
-                hasError = true;
-                end.classList.add('is-invalid');
-                document.getElementById('error-PolicyEndDate').textContent = 'The policy end date field must be a date after policy start date.';
-            }
-            if (issuedVal && startVal && issuedVal > startVal) {
-                hasError = true;
-                issued.classList.add('is-invalid');
-                document.getElementById('error-IssuedDate').textContent = 'The issued date field must be a date before or equal to policy start date.';
-            }
-            if (expiryVal && endVal && expiryVal < endVal) {
-                hasError = true;
-                expiry.classList.add('is-invalid');
-                document.getElementById('error-ExpiryDate').textContent = 'The expiry date field must be a date after or equal to policy end date.';
-            }
-            if (hasError) {
-                e.preventDefault();
-            }
-        });
-    }
+        if (end.value && start.value && end.value <= start.value) {
+            end.classList.add('is-invalid');
+            document.getElementById('error-PolicyEndDate').textContent = 'End must be after Start.';
+            hasErr = true;
+        }
+        if (issued.value && start.value && issued.value > start.value) {
+            issued.classList.add('is-invalid');
+            document.getElementById('error-IssuedDate').textContent = 'Issued must be before Start.';
+            hasErr = true;
+        }
+        if (expiry.value && end.value && expiry.value < end.value) {
+            expiry.classList.add('is-invalid');
+            document.getElementById('error-ExpiryDate').textContent = 'Expiry must be after End.';
+            hasErr = true;
+        }
+        if (hasErr) e.preventDefault();
+    });
 
     @if(old('InsurerID'))
         insurerSelect.value = "{{ old('InsurerID') }}";

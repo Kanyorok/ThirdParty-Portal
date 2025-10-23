@@ -68,6 +68,13 @@ use Illuminate\Support\Facades\Route;
 // Newly added
 
 Route::prefix('finance')->group(function () {
+
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'finance-reports.index',
+        'show' => 'finance-reports.show'
+    ]);
+
     Route::resource('journalbatch', JournalBatchController::class);
     Route::resource('ledgeraccounts', LedgerAccountsController::class);
     Route::resource('transactiontypes', TransactionTypesController::class);
@@ -184,6 +191,7 @@ Route::prefix('finance')->group(function () {
     Route::resource('reconupload', ReconUploadController::class);
     Route::resource('recurrentjournal', RecurrentJournalController::class);
     Route::resource('reversingjournal', ReversingJournalController::class);
+    Route::get('/reversingjournal/preview/{id}', [\App\Http\Controllers\Finance\ReversingJournalController::class, 'preview'])->name('reversingjournal.preview');
     Route::resource('salaryjournaltemplate', SalaryJournalTemplateController::class);
     Route::resource('taxefilling', TaxEfillingController::class);
     Route::resource('taxglmapping', TaxGLMappingController::class);

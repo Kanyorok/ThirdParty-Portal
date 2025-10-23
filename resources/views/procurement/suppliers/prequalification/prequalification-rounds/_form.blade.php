@@ -154,8 +154,7 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                                     <label for="criteria_included_{{ $criteria->Id }}">{{ $criteria->CriteriaName }}</label>
                                 </div>
                                 <!-- Fixed per-criterion max score set by system: always 10 -->
-                                <input type="hidden" name="sections[{{ $index }}][criteria][{{ $c_index }}][weight]"
-                                       value="10">
+                                <input type="hidden" name="sections[{{ $index }}][criteria][{{ $c_index }}][weight]" value="10">
                                 <div class="text-muted small mt-1">Score for this criterion is fixed at 10.</div>
                             </div>
                         </div>
@@ -179,14 +178,16 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
     </div>
 
     @if(!$readOnly)
-    <div class="mt-4">
-        <button type="submit" class="btn btn-primary">
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary" id="publishBtn">
             @if($isEdit)
             <i class="fas fa-save me-1"></i> Update Round
             @else
             <i class="fas fa-plus-circle me-1"></i> Create Round
             @endif
         </button>
+        <button type="button" class="btn btn-outline-secondary" id="saveDraftBtn">Save as Draft</button>
+        <input type="hidden" name="save_as_draft" id="save_as_draft" value="0">
     </div>
     @endif
 </form>
@@ -198,7 +199,9 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
         const accordionItems = document.querySelectorAll('.accordion-item');
         const totalSectionWeightProgress = document.getElementById('totalWeightProgress');
         const sectionWeightWarning = document.getElementById('weightWarning');
-        const submitBtn = document.querySelector('button[type="submit"]');
+    const submitBtn = document.getElementById('publishBtn');
+    const saveDraftBtn = document.getElementById('saveDraftBtn');
+    const saveAsDraftInput = document.getElementById('save_as_draft');
 
         function updateTotalWeights() {
             let totalSectionWeight = 0;
@@ -239,9 +242,8 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                 }
             }
 
-            if (submitBtn) {
-                submitBtn.disabled = !isSectionWeightValid;
-            }
+            // Only block publish button; draft can always be saved
+            if (submitBtn) submitBtn.disabled = !isSectionWeightValid;
         }
 
         document.querySelectorAll('input[id^="section_included_"]').forEach(checkbox => {
@@ -282,6 +284,17 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
         });
 
         // No criteria score inputs: score is fixed at 10 by the system.
+
+        if (saveDraftBtn && saveAsDraftInput) {
+            saveDraftBtn.addEventListener('click', function() {
+                saveAsDraftInput.value = '1';
+                // Ensure Status is set to Draft
+                const statusSelect = document.getElementById('Status');
+                if (statusSelect) statusSelect.value = 'D';
+                // Submit form
+                this.closest('form').submit();
+            });
+        }
 
         updateTotalWeights();
     });

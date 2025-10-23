@@ -18,24 +18,24 @@ class BidResponsivenessController extends Controller
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-
+        
         // Get tenders that have opened bids ready for responsiveness check
-        $tenders = Tender::whereHas('submissions', function ($query) {
-            $query->whereNotNull('OpenedAt') // Only opened bids
-            ->whereIn('BidStatus', ['submitted', 'responsive', 'non-responsive']);
-        })
+        $tenders = Tender::whereHas('submissions', function($query) {
+                $query->whereNotNull('OpenedAt') // Only opened bids
+                      ->whereIn('BidStatus', ['submitted', 'responsive', 'non-responsive']);
+            })
             ->select('Id', 'TenderNo', 'Title', 'SubmissionDeadline', 'OpeningDate')
             ->orderBy('OpeningDate', 'desc')
             ->get();
-
+        
         $selectedTender = null;
         $submissions = collect();
-
+        
         if ($request->has('tender') && !empty($request->tender)) {
             $selectedTender = Tender::where('TenderNo', $request->tender)
                 ->select('Id', 'TenderNo', 'Title', 'SubmissionDeadline', 'OpeningDate')
                 ->first();
-
+                
             if ($selectedTender) {
                 $submissions = BidSubmission::forTender($selectedTender->TenderNo)
                     ->with(['supplier.thirdParty', 'openedByUser', 'responsivenessCheckedByUser'])
@@ -45,8 +45,8 @@ class BidResponsivenessController extends Controller
                     ->get();
             }
         }
-
-        return view('procurement.tendering.bidopeningandevaluation.responsivenesscheck.index',
+        
+        return view('procurement.tendering.bidopeningandevaluation.responsivenesscheck.index', 
             compact('tenders', 'selectedTender', 'submissions'));
     }
 
@@ -56,11 +56,11 @@ class BidResponsivenessController extends Controller
     public function showBidDetails($bidId)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-
+        
         $submission = BidSubmission::with([
-            'supplier.thirdParty',
-            'tender',
-            'openedByUser',
+            'supplier.thirdParty', 
+            'tender', 
+            'openedByUser', 
             'responsivenessCheckedByUser'
         ])->findOrFail($bidId);
 
@@ -71,14 +71,42 @@ class BidResponsivenessController extends Controller
             ], 403);
         }
 
-        // Get document details
+        // Get document details (support both legacy and DMS-backed formats)
         $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
-        $documents = array_map(function ($doc) {
+
+        // Collect DMS document IDs when present and fetch in one query
+        $docIds = collect($encryptedDocs)
+            ->map(fn($d) => $d['document_id'] ?? null)
+            ->filter()
+            ->values()
+            ->all();
+
+        $dmsDocs = [];
+        if (!empty($docIds)) {
+            $dmsDocs = \App\Models\DMS\Document::whereIn('DocumentId', $docIds)
+                ->with('current')
+                ->get()
+                ->keyBy('DocumentId');
+        }
+
+        $documents = array_map(function($doc) use ($dmsDocs) {
+            $documentId = $doc['document_id'] ?? null;
+            $linked = $documentId && isset($dmsDocs[$documentId]) ? $dmsDocs[$documentId] : null;
+
+            $name = $linked?->Name
+                ?? ($doc['original_name'] ?? ($doc['original_filename'] ?? 'Unknown'));
+
+            $sizeBytes = $linked?->current?->Size ?? ($doc['file_size'] ?? null);
+            $uploadedAtVal = $linked?->getAttribute('CreatedOn');
+            $uploadedAt = $uploadedAtVal instanceof \Carbon\Carbon
+                ? $uploadedAtVal->format('d/m/Y H:i:s')
+                : ($uploadedAtVal ?: ($doc['uploaded_at'] ?? null));
+
             return [
-                'id' => $doc['id'] ?? 'unknown',
-                'filename' => $doc['original_filename'] ?? 'Unknown',
-                'size' => $this->formatFileSize($doc['file_size'] ?? 0),
-                'uploaded_at' => $doc['uploaded_at'] ?? null,
+                'id' => $documentId ?? ($doc['id'] ?? 'unknown'),
+                'filename' => $name,
+                'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
+                'uploaded_at' => $uploadedAt,
                 'can_view' => true
             ];
         }, $encryptedDocs);
@@ -130,7 +158,7 @@ class BidResponsivenessController extends Controller
     public function viewDocument($bidId, $documentId)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-
+        
         $submission = BidSubmission::findOrFail($bidId);
 
         if (!$submission->canAccessDocuments()) {
@@ -171,14 +199,14 @@ class BidResponsivenessController extends Controller
     public function checkResponsiveness(Request $request, $bidId)
     {
         $this->authorize(PermissionEnum::BidSubmissionWrite);
-
+        
         $request->validate([
             'is_responsive' => 'required|boolean',
             'remarks' => 'required_if:is_responsive,false|nullable|string|max:1000',
         ]);
-
+        
         $bid = BidSubmission::findOrFail($bidId);
-
+        
         // Ensure bid is opened and eligible for responsiveness check
         if (!$bid->isOpened()) {
             return response()->json([
@@ -186,12 +214,12 @@ class BidResponsivenessController extends Controller
                 'message' => 'Bid must be opened before responsiveness check.'
             ], 400);
         }
-
+        
         DB::beginTransaction();
-
+        
         try {
             $isResponsive = $request->boolean('is_responsive');
-
+            
             if ($isResponsive) {
                 $bid->markAsResponsive($request->remarks);
                 $message = "Bid marked as RESPONSIVE for {$bid->SupplierName}";
@@ -199,7 +227,7 @@ class BidResponsivenessController extends Controller
                 $bid->markAsNonResponsive($request->remarks);
                 $message = "Bid marked as NON-RESPONSIVE for {$bid->SupplierName}";
             }
-
+            
             // Log the activity
             activity()
                 ->performedOn($bid)
@@ -210,9 +238,9 @@ class BidResponsivenessController extends Controller
                     'remarks' => $request->remarks
                 ])
                 ->log("Responsiveness check: {$message}");
-
+            
             DB::commit();
-
+            
             return response()->json([
                 'success' => true,
                 'message' => $message,
@@ -223,7 +251,7 @@ class BidResponsivenessController extends Controller
                     'checked_at' => $bid->ResponsivenessCheckedAt?->format('d/m/Y H:i:s')
                 ]
             ]);
-
+            
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -239,7 +267,7 @@ class BidResponsivenessController extends Controller
     public function detailedResponsivenessCheck(Request $request, $bidId)
     {
         $this->authorize(PermissionEnum::BidSubmissionWrite);
-
+        
         $request->validate([
             'submitted_timely' => 'required|boolean',
             'has_mandatory_documents' => 'required|boolean',
@@ -287,8 +315,8 @@ class BidResponsivenessController extends Controller
 
             DB::commit();
 
-            $message = $bid->IsResponsive
-                ? "Bid marked as RESPONSIVE for {$bid->SupplierName}"
+            $message = $bid->IsResponsive 
+                ? "Bid marked as RESPONSIVE for {$bid->SupplierName}" 
                 : "Bid marked as NON-RESPONSIVE for {$bid->SupplierName}";
 
             return response()->json([
@@ -315,7 +343,7 @@ class BidResponsivenessController extends Controller
     public function bulkCheck(Request $request)
     {
         $this->authorize(PermissionEnum::BidSubmissionWrite);
-
+        
         $request->validate([
             'tender_ref' => 'required|exists:t_Tenders,TenderNo',
             'bid_checks' => 'required|array|min:1',
@@ -323,16 +351,16 @@ class BidResponsivenessController extends Controller
             'bid_checks.*.is_responsive' => 'required|boolean',
             'bid_checks.*.remarks' => 'nullable|string|max:1000',
         ]);
-
+        
         DB::beginTransaction();
-
+        
         try {
             $responsiveCount = 0;
             $nonResponsiveCount = 0;
-
+            
             foreach ($request->bid_checks as $check) {
                 $bid = BidSubmission::findOrFail($check['bid_id']);
-
+                
                 if ($check['is_responsive']) {
                     $bid->markAsResponsive($check['remarks'] ?? null);
                     $responsiveCount++;
@@ -340,7 +368,7 @@ class BidResponsivenessController extends Controller
                     $bid->markAsNonResponsive($check['remarks'] ?? 'Failed responsiveness criteria');
                     $nonResponsiveCount++;
                 }
-
+                
                 activity()
                     ->performedOn($bid)
                     ->causedBy(Auth::user())
@@ -351,12 +379,12 @@ class BidResponsivenessController extends Controller
                     ])
                     ->log("Bulk responsiveness check for {$bid->SupplierName}");
             }
-
+            
             DB::commit();
-
+            
             $message = "Bulk responsiveness check completed: {$responsiveCount} responsive, {$nonResponsiveCount} non-responsive";
             return redirect()->back()->with('success', $message);
-
+            
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to perform bulk check: ' . $e->getMessage());
@@ -369,7 +397,7 @@ class BidResponsivenessController extends Controller
     public function getCriteria(Request $request)
     {
         $tenderType = $request->get('tender_type', 'default');
-
+        
         // Define responsiveness criteria based on tender type
         $criteria = [
             'goods' => [
@@ -383,7 +411,7 @@ class BidResponsivenessController extends Controller
             ],
             'services' => [
                 'Technical proposal completeness',
-                'Methodology and approach clarity',
+                'Methodology and approach clarity', 
                 'Key personnel qualifications',
                 'Company experience and references',
                 'Valid professional licenses',
@@ -392,7 +420,7 @@ class BidResponsivenessController extends Controller
             ],
             'works' => [
                 'Technical specifications compliance',
-                'Construction methodology',
+                'Construction methodology', 
                 'Project timeline feasibility',
                 'Equipment and machinery availability',
                 'Key personnel qualifications',
@@ -409,7 +437,7 @@ class BidResponsivenessController extends Controller
                 'Legal requirements satisfied'
             ]
         ];
-
+        
         return response()->json([
             'criteria' => $criteria[$tenderType] ?? $criteria['default'],
             'tender_type' => $tenderType
@@ -422,13 +450,13 @@ class BidResponsivenessController extends Controller
     public function exportReport(Request $request, $tenderRef)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-
+        
         $tender = Tender::where('TenderNo', $tenderRef)->firstOrFail();
         $submissions = BidSubmission::forTender($tenderRef)
             ->with(['supplier.thirdParty'])
             ->whereIn('BidStatus', ['responsive', 'non-responsive'])
             ->get();
-
+        
         $reportData = [
             'tender' => $tender,
             'submissions' => $submissions,
@@ -437,7 +465,7 @@ class BidResponsivenessController extends Controller
             'generated_at' => now(),
             'generated_by' => Auth::user()->name
         ];
-
+        
         // Return JSON for now - can be enhanced to Excel/PDF export
         return response()->json($reportData);
     }
@@ -448,10 +476,10 @@ class BidResponsivenessController extends Controller
     private function formatFileSize($bytes)
     {
         if ($bytes == 0) return '0 B';
-
+        
         $units = ['B', 'KB', 'MB', 'GB'];
         $pow = floor(log($bytes, 1024));
-
+        
         return round($bytes / (1024 ** $pow), 2) . ' ' . $units[$pow];
     }
 }

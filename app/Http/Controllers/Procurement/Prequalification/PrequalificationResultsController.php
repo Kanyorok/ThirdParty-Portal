@@ -9,6 +9,7 @@ use App\Models\Procurement\Prequalification\PrequalificationResult;
 use App\Services\Procurement\SupplierPrequalificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class PrequalificationResultsController extends Controller
@@ -24,6 +25,13 @@ class PrequalificationResultsController extends Controller
         $sectionsOut = [];
         $grandTotal = 0.0;
         $round = $application->round;
+
+        // If round is missing, return empty sections — caller should handle showing a friendly message.
+        if (!$round) {
+            Log::warning('Prequalification application missing round (buildWeightedResults)', ['ApplicationID' => $application->ApplicationID ?? null]);
+            return ['sections' => [], 'grandTotal' => 0.0];
+        }
+
         $preqSections = $round->prequalificationSections()
             ->with(['masterSection', 'criteria'])
             ->get()
@@ -139,6 +147,11 @@ class PrequalificationResultsController extends Controller
 
         if ($evaluations->isEmpty()) {
             return view('procurement.suppliers.prequalification.prequalification-evaluation.no_results', compact('application'));
+        }
+
+        // If the application has no configured round, show friendly guidance
+        if (!$application->round) {
+            return view('procurement.suppliers.prequalification.prequalification-evaluation.no_round_configured', compact('application'));
         }
 
         // Always (re)calculate & persist on viewing to keep data fresh

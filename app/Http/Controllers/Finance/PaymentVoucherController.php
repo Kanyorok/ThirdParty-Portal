@@ -17,21 +17,49 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentVoucherController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherView, FinanceVoucher::class);
 
-
-         $vouchers = FinanceVoucher::with('invoice:Id,InvoiceNumber')
+        $query = FinanceVoucher::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
-                            'ApprovalStatus','PaymentType', 'Description')
-            ->get();
+                            'ApprovalStatus','PaymentType', 'Description');
+
+        if ($request->filled('voucher_no')) {
+            $query->where('VoucherNo', 'like', '%'.$request->voucher_no.'%');
+        }
+        if ($request->filled('invoice_number')) {
+            $invNum = $request->invoice_number;
+            $query->whereHas('invoice', function($q) use ($invNum){
+                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            });
+        }
+        if ($request->filled('payment_method')) {
+            $query->where('PaymentMethod', $request->payment_method);
+        }
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+        if ($request->filled('payment_type')) {
+            $query->where('PaymentType', $request->payment_type);
+        }
+        if ($request->filled('amount_min')) {
+            $query->where('TotalAmount', '>=', (float)$request->amount_min);
+        }
+
+        $sortField = $request->sort_by ?? 'Id';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 10);
+        $vouchers = $query->paginate($perPage)->withQueryString();
+
         return view('finance.accountspayable.paymentvoucher.index', compact('vouchers'));
     }
 
     public function create(){
 
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherCreate, FinanceVoucher::class);
 
         $year = now()->year;
         $lastId = FinanceVoucher::max('Id') + 1;
@@ -75,10 +103,10 @@ class PaymentVoucherController extends Controller
     }
 
     public function store(Request $request){
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherCreate, FinanceVoucher::class);
 
         $validated = $request->validate([
-            'VoucherNo'=> 'required|string',
+            //'VoucherNo'=> 'required|string',
             'InvoiceNo' => 'required|exists:t_FinanceInvoiceEntry,Id',
             'TotAmnt'=>'required|numeric|min:0.00',
             'PaymentMethod'=>'required|string',
@@ -123,7 +151,7 @@ class PaymentVoucherController extends Controller
             }
 
             $voucher = FinanceVoucher::create([
-                'VoucherNo'=> $validated['VoucherNo'],
+//                'VoucherNo'=> $validated['VoucherNo'],
                 'InvoiceNo'=> $validated['InvoiceNo'],
                 'TotalAmount'=> $validated['TotAmnt'],
                 'PaymentMethod'=> $validated['PaymentMethod'],
@@ -147,13 +175,14 @@ class PaymentVoucherController extends Controller
         }catch (\Throwable $th) {
             DB::rollBack();
             Log::error($th->getMessage());
-            return back()->with('error', $th->getMessage());
+//            return back()->with('error', $th->getMessage());
+            return back()->with('error', 'Ooops! An error occurred, Please try again later.');
         }
     }
 
     public function edit($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherUpdate, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::findOrFail($id);
 
@@ -189,6 +218,7 @@ class PaymentVoucherController extends Controller
         $paymentTypes=CodeDetail::where('CodeID', 'PaymentType')->get();
         $paymentFrequencies=CodeDetail::where('CodeID', 'PaymentFrequency')->get();
 
+
         return view('finance.accountspayable.paymentvoucher.edit', compact(
             'voucher',
             'invoices',
@@ -201,7 +231,7 @@ class PaymentVoucherController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherUpdate, FinanceVoucher::class);
 
         $validated = $request->validate([
             'VoucherNo'=> 'required|string',
@@ -274,7 +304,7 @@ class PaymentVoucherController extends Controller
 
     public function show($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherView, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::with([
             'invoice.thirdParty:Id,TradingName,ThirdPartyName,Email,Phone,PhysicalAddress',
@@ -293,6 +323,7 @@ class PaymentVoucherController extends Controller
 
     public function approve(Request $request, $id)
     {
+        // $this->authorize(PermissionEnum::PaymentVoucherApprove, FinanceVoucher::class);
         $voucher = FinanceVoucher::findOrFail($id);
         $voucher->ApprovalStatus = 'posted';
         // Optionally log reason: $request->input('reason')
@@ -316,7 +347,7 @@ class PaymentVoucherController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentVoucherDelete, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::findOrFail($id);
         if ($voucher->ApprovalStatus !== 'draft') {

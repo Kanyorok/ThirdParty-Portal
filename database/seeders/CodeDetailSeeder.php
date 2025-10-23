@@ -238,6 +238,12 @@ class CodeDetailSeeder extends Seeder
             //['CodeID' => 'PaymentType', 'Description' => 'Scheduled', 'Value' => 'S'],
 
             // Termination Reason
+            // Tender Status codes
+            ['CodeID' => 'TenderStatus', 'Description' => 'Draft', 'Value' => 'dr'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Published', 'Value' => 'pb'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Closed', 'Value' => 'cl'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Opening In Progress', 'Value' => 'opening_in_progress'],
+            ['CodeID' => 'TenderStatus', 'Description' => 'Awarded', 'Value' => 'aw'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Relocation', 'Value' => 'R'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Non Payment', 'Value' => 'N'],
             ['CodeID' => 'TerminationReason', 'Description' => 'Other', 'Value' => 'O'],
@@ -363,12 +369,27 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'ClaimType','Description' => 'Medical', 'Value' => 'M'],
             ['CodeID' => 'ClaimType','Description' => 'Other', 'Value' => 'O'],
 
+            //Insurance Cover Type
+            ['CodeID' => 'CoverType','Description' => 'Comprehensive', 'Value' => 'C'],
+            ['CodeID' => 'CoverType','Description' => 'InPatient', 'Value' => 'I'],
+            ['CodeID' => 'CoverType','Description' => 'OutPatient', 'Value' => 'O'],
+
+            //Insurance Contributor Types
+            ['CodeID' => 'ContributorType','Description' => 'Employee', 'Value' => 'I'],
+            ['CodeID' => 'ContributorType','Description' => 'Employer', 'Value' => 'C'],
+
             //Insurance Claim Status
             ['CodeID' => 'ClaimStatus','Description' => 'Initiated', 'Value' => 'I'],
             ['CodeID' => 'ClaimStatus','Description' => 'Under Assessment', 'Value' => 'U'],
             ['CodeID' => 'ClaimStatus','Description' => 'Approved', 'Value' => 'A'],
             ['CodeID' => 'ClaimStatus','Description' => 'Rejected', 'Value' => 'R'],
             ['CodeID' => 'ClaimStatus','Description' => 'Paid', 'Value' => 'P'],
+
+            //MedicalContributorStatus
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Active', 'Value' => 'A'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Inactive', 'Value' => 'I'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'MedicalContributorStatus','Description' => 'Suspended', 'Value' => 'S'],
 
             // PolicyTypeId
             ['CodeID' => 'PolicyTypeId', 'Description' => 'Life Insurance', 'Value' => 'L'],

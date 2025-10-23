@@ -114,40 +114,44 @@
                 <input type="file" name="ImageUpload" class="form-control">
                 @if($item->image)
                     <div class="mt-2" id="current-image-section">
-                        <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image"
-                             style="max-width:200px;">
-                        <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image
-                        </button>
+                        <img src="data:{{ $item->image->MIMEType }};base64,{{ $item->image->Image }}" alt="Item Image" style="max-width:200px;">
+                        <button type="button" class="btn btn-danger btn-sm ms-2" id="remove-image-btn">Remove Image</button>
                     </div>
                     <input type="hidden" name="remove_image" id="remove-image" value="0">
                 @endif
             </div>
         </div>
 
-        {{-- Row 4 --}}
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label for="DocumentUpload" class="form-label">Attached Document</label>
-                @if($item->DocumentUpload)
-                    <div class="mb-2">
-                        <a href="{{ asset('storage/' . $item->DocumentUpload) }}" target="_blank">View Existing
-                            Document</a>
-                    </div>
-                @endif
-                <input type="file" name="DocumentUpload" id="DocumentUpload" class="form-control"
-                       accept=".pdf,.doc,.docx,.xls,.xlsx">
-            </div>
+        {{-- Document Upload --}}
+        <div class="mb-3 mt-3">
+            <label class="form-label">Supporting Documents</label>
+
+            {{-- Existing documents --}}
+            <div class="card-footer bg-light">
+            <h6 class="fw-bold mb-2">📄 Documents</h6>
+
+            {{-- Existing documents --}}
+             @forelse($item->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
+                {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
+            @empty
+                <p class="text-muted mb-0">No documents uploaded.</p>
+            @endforelse
+            
+            {{-- Upload new documents --}}
+            <input type="file" name="Document[]" class="form-control" multiple>
+            <small class="text-muted
+">You can upload multiple documents. Attach datasheets, images, or related files.</small>
+
         </div>
+
 
         {{-- Full-width --}}
         <div class="mb-3">
             <label for="ItemDescription" class="form-label">Item Description</label>
-            <textarea name="ItemDescription" class="form-control"
-                      rows="3">{{ old('ItemDescription', $item->ItemDescription) }}</textarea>
+            <textarea name="ItemDescription" class="form-control" rows="3">{{ old('ItemDescription', $item->ItemDescription) }}</textarea>
         </div>
 
-        <button type="submit" class="btn btn-success"
-                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
             Update Item
         </button>
     </form>
@@ -156,14 +160,14 @@
 @endsection
 
 @section('scripts')
-    <script>
-        $(document).ready(function () {
-            $('#remove-image-btn').on('click', function () {
-                $('#current-image-section').hide();
-                $('#remove-image').val('1');
-            });
+<script>
+    $(document).ready(function () {
+        $('#remove-image-btn').on('click', function () {
+            $('#current-image-section').hide();
+            $('#remove-image').val('1');
+        });
 
-            $('#category').change(function () {
+        $('#category').change(function () {
             let categoryId = $(this).val();
             $('#subcategory').html('<option value="">Loading...</option>');
 
@@ -184,4 +188,8 @@
         });
     });
 </script>
+@endsection
+
+@section('scripts')
+ @include('snippets.actions.preview-files')
 @endsection

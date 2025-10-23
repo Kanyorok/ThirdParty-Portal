@@ -19,7 +19,7 @@ class StockConsumptionService
     {
         return DB::transaction(function () use ($data) {
             $consumptionNo = $this->generateConsumptionNo();
-
+            
             // Get the stock item
             $stockItem = StockItem::where('Id', $data['ItemID'])
                 ->where('Store', $data['StoreID'] ?? null)
@@ -37,7 +37,7 @@ class StockConsumptionService
                 throw new \Exception("Master item reference not found for this stock item.");
             }
 
-            $qty = (float)$data['Quantity'];
+            $qty = (float) $data['Quantity'];
             if ($qty <= 0) {
                 throw new \Exception("Quantity must be greater than zero.");
             }
@@ -53,18 +53,18 @@ class StockConsumptionService
             // Create stock consumption record
             $stockConsumption = StockConsumption::create([
                 'ConsumptionNo' => $consumptionNo,
-                'ItemID' => $stockItem->Id, // Store StockItem ID
-                'StoreID' => $data['StoreID'] ?? null,
-                'BranchID' => $data['BranchID'],
-                'UOM' => $data['UOM'],
-                'Quantity' => $qty,
-                'IssuedToType' => $data['IssuedToType'],
-                'IssuedToID' => $data['IssuedToID'],
-                'IssuedBy' => $data['IssuedBy'],
-                'IssuedOn' => $data['IssuedOn'],
-                'Remarks' => $data['Remarks'] ?? null,
-                'CreatedBy' => Auth::id(),
-                'ModifiedBy' => Auth::id(),
+                'ItemID' => $stockItem->ItemID, 
+                'StoreID'       => $data['StoreID'] ?? null,
+                'BranchID'      => $data['BranchID'],
+                'UOM'           => $data['UOM'],
+                'Quantity'      => $qty,
+                'IssuedToType'  => $data['IssuedToType'],
+                'IssuedToID'    => $data['IssuedToID'],
+                'IssuedBy'      => $data['IssuedBy'],
+                'IssuedOn'      => $data['IssuedOn'],
+                'Remarks'       => $data['Remarks'] ?? null,
+                'CreatedBy'     => Auth::id(),
+                'ModifiedBy'    => Auth::id(),
             ]);
 
             // Generate SKU ID
@@ -73,7 +73,7 @@ class StockConsumptionService
                 ->value('SKUID');
 
             if ($latestSKU) {
-                $number = (int)preg_replace('/[^0-9]/', '', $latestSKU);
+                $number = (int) preg_replace('/[^0-9]/', '', $latestSKU);
                 $nextNumber = str_pad($number + 1, 3, '0', STR_PAD_LEFT);
             } else {
                 $nextNumber = '001';
@@ -88,22 +88,22 @@ class StockConsumptionService
 
             // Record stock transaction (OUT) - Use master item ID here
             StockTransaction::create([
-                'SKUID' => $skuId,
+                'SKUID'           => $skuId,
                 'TransactionType' => $transactionType,
-                'ReferenceID' => $stockConsumption->Id,
-                'ItemID' => $masterItemId, // Use the master item ID from t_Items
-                'StoreID' => $data['StoreID'],
-                'BranchID' => $data['BranchID'],
-                'UnitCost' => $stockItem->UnitCost ?? 0,
-                'UOMID' => $data['UOM'],
-                'QuantityIn' => 0,
-                'QuantityOut' => $data['Quantity'],
-                'BalanceQty' => $stockItem->CurrentQty,
-                'TotalCost' => ($stockItem->UnitCost ?? 0) * $data['Quantity'],
+                'ReferenceID'     => $stockConsumption->Id,
+                'ItemID'          => $masterItemId, // Use the master item ID from t_Items
+                'StoreID'         => $data['StoreID'],
+                'BranchID'        => $data['BranchID'],
+                'UnitCost'        => $stockItem->UnitCost ?? 0,
+                'UOMID'           => $data['UOM'],
+                'QuantityIn'      => 0,
+                'QuantityOut'     => $data['Quantity'],
+                'BalanceQty'      => $stockItem->CurrentQty,
+                'TotalCost'       => ($stockItem->UnitCost ?? 0) * $data['Quantity'],
                 'TransactionDate' => $data['IssuedOn'] ?? now(),
-                'Remarks' => 'Stock consumed (Ref: ' . $consumptionNo . ')',
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
+                'Remarks'         => 'Stock consumed (Ref: ' . $consumptionNo . ')',
+                'CreatedBy'       => Auth::id(),
+                'CreatedOn'       => now(),
             ]);
 
             activity()
@@ -180,17 +180,17 @@ class StockConsumptionService
 
             if ($transaction) {
                 $transaction->update([
-                    'ItemID' => $masterItemId, // Use master item ID
-                    'StoreID' => $data['StoreID'],
-                    'BranchID' => $data['BranchID'],
-                    'UOMID' => $data['UOM'],
-                    'QuantityOut' => $data['Quantity'],
-                    'BalanceQty' => $stockItem->CurrentQty,
-                    'TotalCost' => ($stockItem->UnitCost ?? 0) * $data['Quantity'],
+                    'ItemID'          => $masterItemId, // Use master item ID
+                    'StoreID'         => $data['StoreID'],
+                    'BranchID'        => $data['BranchID'],
+                    'UOMID'           => $data['UOM'],
+                    'QuantityOut'     => $data['Quantity'],
+                    'BalanceQty'      => $stockItem->CurrentQty,
+                    'TotalCost'       => ($stockItem->UnitCost ?? 0) * $data['Quantity'],
                     'TransactionDate' => $data['IssuedOn'] ?? now(),
-                    'Remarks' => 'Stock consumption updated (Ref: ' . $stockConsumption->ConsumptionNo . ')',
-                    'ModifiedBy' => Auth::id(),
-                    'ModifiedOn' => now(),
+                    'Remarks'         => 'Stock consumption updated (Ref: ' . $stockConsumption->ConsumptionNo . ')',
+                    'ModifiedBy'      => Auth::id(),
+                    'ModifiedOn'      => now(),
                 ]);
             } else {
                 // Create new transaction if not exists
@@ -199,32 +199,32 @@ class StockConsumptionService
                     ->value('SKUID');
 
                 $nextNumber = $latestSKU
-                    ? str_pad(((int)preg_replace('/[^0-9]/', '', $latestSKU)) + 1, 3, '0', STR_PAD_LEFT)
+                    ? str_pad(((int) preg_replace('/[^0-9]/', '', $latestSKU)) + 1, 3, '0', STR_PAD_LEFT)
                     : '001';
 
                 $skuId = 'SKU' . $nextNumber;
 
                 $transactionType = CodeDetail::where('CodeID', 'IssuedToType')
-                    ->whereIn('Description', ['Employee', 'Department'])
+                    ->whereIn('Description', ['Employee','Department'])
                     ->value('ID');
 
                 StockTransaction::create([
-                    'SKUID' => $skuId,
+                    'SKUID'           => $skuId,
                     'TransactionType' => $transactionType,
-                    'ReferenceID' => $stockConsumption->Id,
-                    'ItemID' => $masterItemId, // Use master item ID
-                    'StoreID' => $data['StoreID'],
-                    'BranchID' => $data['BranchID'],
-                    'UnitCost' => $stockItem->UnitCost ?? 0,
-                    'UOMID' => $data['UOM'],
-                    'QuantityIn' => 0,
-                    'QuantityOut' => $data['Quantity'],
-                    'BalanceQty' => $stockItem->CurrentQty,
-                    'TotalCost' => ($stockItem->UnitCost ?? 0) * $data['Quantity'],
-                    'TransactionDate' => $data['IssuedOn'] ?? now(),
-                    'Remarks' => 'Stock consumed (Ref: ' . $stockConsumption->ConsumptionNo . ')',
-                    'CreatedBy' => Auth::id(),
-                    'CreatedOn' => now(),
+                    'ReferenceID'     => $stockConsumption->Id,
+                    'ItemID'          => $masterItemId, // Use master item ID
+                    'StoreID'         => $data['StoreID'],
+                    'BranchID'        => $data['BranchID'],
+                    'UnitCost'        => $stockItem->UnitCost ?? 0,
+                    'UOMID'          => $data['UOM'],
+                    'QuantityIn'     => 0,
+                    'QuantityOut'    => $data['Quantity'],
+                    'BalanceQty'     => $stockItem->CurrentQty,
+                    'TotalCost'      => ($stockItem->UnitCost ?? 0) * $data['Quantity'],
+                    'TransactionDate'=> $data['IssuedOn'] ?? now(),
+                    'Remarks'        => 'Stock consumed (Ref: ' . $stockConsumption->ConsumptionNo . ')',
+                    'CreatedBy'      => Auth::id(),
+                    'CreatedOn'      => now(),
                 ]);
             }
 
@@ -242,7 +242,7 @@ class StockConsumptionService
     {
         return DB::transaction(function () use ($stockConsumption) {
             $stockConsumption->DeletedBy = Auth::id();
-            $stockConsumption->save();
+            $stockConsumption->save(); 
             $stockConsumption->delete();
 
             activity()
@@ -263,7 +263,7 @@ class StockConsumptionService
             ->first();
 
         if ($latest) {
-            $lastNumber = (int)substr($latest->ConsumptionNo, -4);
+            $lastNumber = (int) substr($latest->ConsumptionNo, -4);
             $nextNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         } else {
             $nextNumber = '0001';

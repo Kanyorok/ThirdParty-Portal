@@ -26,7 +26,7 @@ class RegisterThirdPartyDetailsRequest extends FormRequest
             'Country' => ['required', 'string', 'max:255'],
             'PhysicalAddress' => ['required', 'string', 'max:255'],
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:t_ThirdParties,Email'],
-            'Phone' => ['required', 'string', 'max:20'],
+            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'Website' => ['nullable', 'string', 'url', 'max:255'],
             'ThirdPartyType' => ['required', 'integer', 'exists:t_ThirdPartyTypes,TypeId'],
         ];

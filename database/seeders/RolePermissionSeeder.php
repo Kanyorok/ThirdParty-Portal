@@ -15,11 +15,11 @@ use Spatie\Permission\Models\Role;
 class RolePermissionSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeds. 
      */
     public function run(): void
     {
-        $actor = SystemHelper::user();
+    $actor = SystemHelper::user();
         $now   = now();
         $guard = Guard::getDefaultName(User::class);
 
@@ -96,7 +96,7 @@ class RolePermissionSeeder extends Seeder
             'ModifiedBy' => $actor->Id ?? 1,
         ];
 
-        foreach (array_chunk($permissionIds, 500) as $permChunk) {
+    foreach (array_chunk($permissionIds, 500) as $permChunk) {
             // syncWithoutDetaching keeps existing links and adds missing ones
             $attachPayload = [];
             foreach ($permChunk as $pid) {
@@ -109,19 +109,20 @@ class RolePermissionSeeder extends Seeder
         User::query()
             ->whereDoesntHave('roles')
             ->orderBy('Id')
-            ->chunkById(500, function ($users) use ($adminRole) {
+        ->chunkById(500, function ($users) use ($adminRole) {
                 $now = now();
                 $payload = [];
                 foreach ($users as $u) {
+                    // t_ModelRoles does not have CreatedBy/ModifiedBy; only use existing columns
                     $payload[$adminRole->id] = [
-                        'BranchId'   => $u->BranchId ?? 1,
-                        'CreatedBy'  => 1,
-                        'CreatedOn'  => $now,
-                        'ModifiedBy' => 1,
-                        'ModifiedOn' => $now,
+                        'BranchId'  => $u->BranchId ?? 1,
+                        'CreatedOn' => $now,
+                        'ModifiedOn'=> $now,
                     ];
                     // Attach per-user (keeps memory low and avoids giant param batches)
-                    $u->roles()->syncWithoutDetaching($payload);
+            // Ensure morph type uses our alias key 'UserID'
+            $u->setRelation('roles', null); // prevent cached relations side-effects
+            $u->roles()->syncWithoutDetaching($payload);
                 }
             });
     }

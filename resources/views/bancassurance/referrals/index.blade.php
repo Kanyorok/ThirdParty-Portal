@@ -56,30 +56,33 @@
                         <td>{{ $referral->assignedToUser->Name ?? '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($referral->ReferralDate)->format('d/m/Y') ?? '-' }}</td>
                         <td class="d-flex gap-1">
-                            <a href="{{ route('bancassurance.referrals.show', $referral->Id) }}"
+                            <a href="{{ route('bancassurance.referrals.show', $referral->Id) }}" 
                                class="btn btn-sm btn-info">
                                 <i class="bi bi-eye"></i> View
                             </a>
-                            <a href="{{ route('bancassurance.referrals.edit', $referral->Id) }}"
+                            <a href="{{ route('bancassurance.referrals.edit', $referral->Id) }}" 
                                class="btn btn-sm btn-warning">
                                 <i class="bi bi-pencil-square"></i> Edit
                             </a>
-                            <form action="{{ route('bancassurance.referrals.destroy', $referral->Id) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('Are you sure you want to delete this referral?')"
-                                  class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="bi bi-trash"></i> Delete
+                            @if($referral->customerreferral()->exists())
+                                <button class="btn btn-sm btn-secondary" disabled>
+                                    <i class="bi bi-lock"></i> In Use
                                 </button>
-                            </form>
+                            @else
+                                <form action="{{ route('bancassurance.referrals.destroy', $referral->Id) }}" 
+                                        method="POST" 
+                                        onsubmit="return confirm('Are you sure you want to delete this referral?');"
+                                        class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="8" class="text-center">No referrals found.</td>
-                    </tr>
                 @endforelse
             </tbody>
         </table>

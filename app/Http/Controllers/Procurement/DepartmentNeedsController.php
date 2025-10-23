@@ -24,11 +24,9 @@ class DepartmentNeedsController extends Controller
 
     public function create()
     {
+        // Relaxed filter: show all active items so users can key in estimated cost manually if price is missing
         $items = ItemMasterList::with(['category', 'uom', 'price'])
-            ->whereNotNull('ItemPrice')
-            ->whereHas('price', function ($q) {
-                $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
-            })
+            ->whereNull('DeletedOn')
             ->orderBy('ItemName')
             ->get();
         return view('procurement.procurementplan.departmentneeds.raiseneed.create', compact('items'));

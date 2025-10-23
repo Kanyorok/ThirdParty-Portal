@@ -161,11 +161,18 @@ class Tender extends Model
      */
     public function getEvaluationReadiness()
     {
-        if ($this->tenderSections->isEmpty()) {
+        // Use DB-backed checks to avoid false negatives from lazy or filtered relations
+        $activeSectionsCount = TenderSection::where('TenderID', $this->Id)
+            ->where('IsActive', true)
+            ->count();
+
+        if ($activeSectionsCount === 0) {
             return ['ready' => false, 'message' => 'No evaluation sections assigned'];
         }
 
-        $totalWeight = $this->tenderSections->where('IsActive', true)->sum('Weight');
+        $totalWeight = TenderSection::where('TenderID', $this->Id)
+            ->where('IsActive', true)
+            ->sum('Weight');
         if (abs($totalWeight - 100) > 0.01) {
             return ['ready' => false, 'message' => "Section weights sum to {$totalWeight}%, should be 100%"];
         }

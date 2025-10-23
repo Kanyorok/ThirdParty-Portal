@@ -2,47 +2,46 @@
 @section('title','New Invoice Entry')
 
 @push('head')
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @endpush
 
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
-    <style>
-        .select2-container {
-            width: 100% !important;
-        }
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
+<style>
+    .select2-container {
+        width: 100% !important;
+    }
+    .select2-dropdown {
+        z-index: 10000 !important;
+    }
 
-        .select2-dropdown {
-            z-index: 10000 !important;
-        }
+    /* Custom styling for PO select */
+    #poSelect {
+        padding: 8px 12px !important;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        font-size: 14px;
+    }
 
-        /* Custom styling for PO select */
-        #poSelect {
-            padding: 8px 12px !important;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-            font-size: 14px;
-        }
+    #poSelect:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
 
-        #poSelect:focus {
-            border-color: #86b7fe;
-            outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
+    /* Select2 styling to match */
+    .select2-container--default .select2-selection--single {
+        padding: 4px 12px !important;
+        height: auto !important;
+        border-radius: 6px !important;
+        border: 1px solid #dee2e6 !important;
+    }
 
-        /* Select2 styling to match */
-        .select2-container--default .select2-selection--single {
-            padding: 4px 12px !important;
-            height: auto !important;
-            border-radius: 6px !important;
-            border: 1px solid #dee2e6 !important;
-        }
-
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            padding-left: 0 !important;
-            line-height: 1.5 !important;
-        }
-    </style>
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        padding-left: 0 !important;
+        line-height: 1.5 !important;
+    }
+</style>
 @endsection
 
 @section('content')
@@ -66,9 +65,7 @@
     </script>
 
     <div class="container my-3">
-        <div id="loadingOverlay"
-             class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-             style="background: rgba(255,255,255,0.95); z-index: 9999; backdrop-filter: blur(2px);">
+        <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.95); z-index: 9999; backdrop-filter: blur(2px);">
             <div class="text-center">
                 <div class="spinner-border text-info" role="status" style="width: 4rem; height: 4rem;"></div>
                 <div class="mt-2 text-muted fw-bold" id="loadingMessage">Searching for supplier...</div>
@@ -98,49 +95,83 @@
                     <div class="border rounded-3 p-3 mb-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-7">
-                                <label class="form-label small text-muted">Search Supplier (Reg
-                                    No./Email/Phone/Name)</label>
+                                <label class="form-label text-muted">Search Supplier (Reg No./Email/Phone/Name)</label>
                                 <select id="supplierSelect" class="form-control" style="width: 100%;">
                                     <option value="">-- Search and select a supplier --</option>
                                 </select>
-                                <div class="form-text" id="supplierSelectHint">Type at least 2 characters to search
-                                </div>
+                                <div class="form-text" id="supplierSelectHint">Type at least 2 characters to search</div>
                             </div>
                             <div class="col-md-5 text-md-end">
-                                <span class="small text-muted">Use the dropdown to select a supplier</span>
+                                {{-- <span class="small text-muted">Search by registration number, email, phone, or name</span> --}}
                             </div>
                         </div>
 
                         <!-- Supplier summary (hidden until found) -->
-                        <div id="supplierCard" class="row g-3 mt-3 d-none">
-                            <div class="col-lg-8">
-                                <div class="card border-0 shadow-sm rounded-4">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <div class="text-uppercase text-muted small">Supplier</div>
-                                                <div class="h6 mb-0" id="suppName">—</div>
-                                                <div class="small text-muted" id="suppId">—</div>
-                                            </div>
-                                            <span class="badge bg-success" id="suppStatus">Active</span>
+                        <div id="supplierCard" class="mt-3 d-none">
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <div class="text-uppercase text-muted small">Supplier</div>
+                                            <div class="h5 mb-1" id="suppName">—</div>
+                                            <div class="small text-muted" id="suppId">—</div>
                                         </div>
-                                        <div class="row small mt-2">
-                                            <div class="col-md-4">Email: <span class="text-dark" id="suppEmail">—</span>
+                                        <span class="badge bg-success" id="suppStatus">Active</span>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="border-start border-primary border-3 ps-3">
+                                                <div class="text-uppercase text-muted small mb-1">Contact Information</div>
+                                                <div class="mb-2">
+                                                    <i class="fas fa-envelope text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppEmail">—</span>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <i class="fas fa-phone text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppPhone">—</span>
+                                                </div>
+                                                <div>
+                                                    <i class="fas fa-id-card text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppRegNo">—</span>
+                                                </div>
                                             </div>
-                                            <div class="col-md-4">Phone: <span class="text-dark" id="suppPhone">—</span>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="border-start border-info border-3 ps-3">
+                                                <div class="text-uppercase text-muted small mb-1">Business Details</div>
+                                                <div class="mb-2">
+                                                    <i class="fas fa-building text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppType">—</span>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppAddress">—</span>
+                                                </div>
+                                                <div>
+                                                    <i class="fas fa-check-circle text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppStatus">Active</span>
+                                                </div>
                                             </div>
-                                            <div class="col-md-4">Reg No: <span class="text-dark"
-                                                                                id="suppRegNo">—</span></div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div class="col-lg-4">
-                                <div class="alert alert-info mb-0">
-                                    <div class="fw-semibold">Next</div>
-                                    <div class="small">Select a Purchase Order and corresponding GRN to create the
-                                        invoice.
+                                    <div class="mt-3 pt-3 border-top">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Supplier loaded successfully. Ready to select Purchase Orders.
+                                            </small>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" id="refreshSupplier" title="Refresh supplier data">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSupplier" title="Clear supplier selection">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -155,14 +186,11 @@
 
                         <div class="row g-3">
                             <div class="col-md-8">
-                                <label class="form-label">Search and Select PO <span
-                                        class="text-danger">*</span></label>
+                                <label class="form-label">Search and Select PO <span class="text-danger">*</span></label>
                                 <select id="poSelect" class="form-control" style="width: 100%; padding: 8px 12px;">
                                     <option value="">-- Search and select a Purchase Order --</option>
                                 </select>
-                                <div class="form-text" id="poSelectHint">Start typing to search by PO number,
-                                    description, or amount
-                                </div>
+                                <div class="form-text" id="poSelectHint">Start typing to search by PO number, description, or amount</div>
                             </div>
                             <div class="col-md-4">
                                 <div class="border rounded p-3 bg-light h-100">
@@ -170,8 +198,7 @@
                                     <div class="small" id="poStats">
                                         <div>Total POs: <span id="totalPOs">0</span></div>
                                         <div>Date Range: <span id="dateRange">-</span></div>
-                                        <div>Total Value: <span id="totalValue">{{ $defaultCurrency->Symbol ?? 'KSh' }} 0.00</span>
-                                        </div>
+                                        <div>Total Value: <span id="totalValue">{{ $defaultCurrency->Symbol ?? 'KSh' }} 0.00</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -190,13 +217,12 @@
                                         </small>
                                     </div>
                                     <div class="col-md-4 text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-primary me-2"
-                                                id="viewSelectedPO">
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-2" id="viewSelectedPO">
                                             <i class="fas fa-eye me-1"></i> View PO
                                         </button>
-                                        {{--                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="changePO">--}}
-                                        {{--                                            <i class="fas fa-edit me-1"></i> Change--}}
-                                        {{--                                        </button>--}}
+{{--                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="changePO">--}}
+{{--                                            <i class="fas fa-edit me-1"></i> Change--}}
+{{--                                        </button>--}}
                                     </div>
                                 </div>
                             </div>
@@ -211,14 +237,14 @@
                         <div class="table-responsive">
                             <table class="table table-hover table-sm align-middle" id="grnsTable">
                                 <thead class="table-light">
-                                <tr>
-                                    <th class="text-center" style="width:40px">Select</th>
-                                    <th>GRN ID</th>
-                                    <th>Received Date</th>
-                                    <th class="text-end">Ordered Qty</th>
-                                    <th class="text-end">Received Qty</th>
-                                    <th class="text-center" style="width:80px">Action</th>
-                                </tr>
+                                    <tr>
+                                        <th class="text-center" style="width:40px">Select</th>
+                                        <th>GRN ID</th>
+                                        <th>Received Date</th>
+                                        <th class="text-end">Ordered Qty</th>
+                                        <th class="text-end">Received Qty</th>
+                                        <th class="text-center" style="width:80px">Action</th>
+                                    </tr>
                                 </thead>
                                 <tbody id="grnRows"></tbody>
                             </table>
@@ -235,8 +261,7 @@
                             <div class="col-md-4">
                                 <div class="card border-success">
                                     <div class="card-body p-3 text-center">
-                                        <i class="fas fa-shopping-cart text-success mb-2"
-                                           style="font-size: 1.5rem;"></i>
+                                        <i class="fas fa-shopping-cart text-success mb-2" style="font-size: 1.5rem;"></i>
                                         <div class="small text-success fw-bold">Purchase Order</div>
                                         <div class="text-success">✓ Selected</div>
                                     </div>
@@ -245,8 +270,7 @@
                             <div class="col-md-4">
                                 <div class="card" id="grnMatchingCard">
                                     <div class="card-body p-3 text-center">
-                                        <i class="fas fa-truck mb-2" style="font-size: 1.5rem;"
-                                           id="grnMatchingIcon"></i>
+                                        <i class="fas fa-truck mb-2" style="font-size: 1.5rem;" id="grnMatchingIcon"></i>
                                         <div class="small fw-bold" id="grnMatchingTitle">Goods Receipt</div>
                                         <div id="grnMatchingStatus">Pending</div>
                                     </div>
@@ -255,8 +279,7 @@
                             <div class="col-md-4">
                                 <div class="card" id="invoiceMatchingCard">
                                     <div class="card-body p-3 text-center">
-                                        <i class="fas fa-file-invoice mb-2" style="font-size: 1.5rem;"
-                                           id="invoiceMatchingIcon"></i>
+                                        <i class="fas fa-file-invoice mb-2" style="font-size: 1.5rem;" id="invoiceMatchingIcon"></i>
                                         <div class="small fw-bold" id="invoiceMatchingTitle">Invoice Amount</div>
                                         <div id="invoiceMatchingStatus">Pending</div>
                                     </div>
@@ -279,15 +302,12 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Supplier Invoice Number <span
-                                        class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="InvoiceNumber" name="InvoiceNumber"
-                                       required>
+                                <label class="form-label">Supplier Invoice Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="InvoiceNumber" name="InvoiceNumber" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="InvoiceDate" name="InvoiceDate"
-                                       value="{{ date('Y-m-d') }}" required>
+                                <input type="date" class="form-control" id="InvoiceDate" name="InvoiceDate" value="{{ date('Y-m-d') }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Due Date <span class="text-danger">*</span></label>
@@ -296,27 +316,22 @@
                             <div class="col-md-6">
                                 <label class="form-label">Amount <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text"
-                                          id="currencySymbol">{{ $defaultCurrency->Symbol ?? 'KSh' }}</span>
-                                    <input type="number" step="0.01" class="form-control" id="Amount" name="Amount"
-                                           required>
+                                    <span class="input-group-text" id="currencySymbol">{{ $defaultCurrency->Symbol ?? 'KSh' }}</span>
+                                    <input type="number" step="0.01" class="form-control" id="Amount" name="Amount" required>
                                 </div>
                                 <div class="form-text">
-                                    Expected amount: <strong id="expectedAmount">{{ $defaultCurrency->Symbol ?? 'KSh' }}
-                                        0.00</strong>
+                                    Expected amount: <strong id="expectedAmount">{{ $defaultCurrency->Symbol ?? 'KSh' }} 0.00</strong>
                                 </div>
                                 <div id="amountValidation" class="invalid-feedback d-none"></div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Attachment</label>
-                                <input type="file" class="form-control" name="attachment"
-                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                <input type="file" class="form-control" name="attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                                 <div class="form-text">PDF, DOC, DOCX, JPG, JPEG, PNG (max 10MB)</div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Description</label>
-                                <textarea class="form-control" name="Description" rows="3"
-                                          placeholder="Optional invoice description..."></textarea>
+                                <textarea class="form-control" name="Description" rows="3" placeholder="Optional invoice description..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -416,10 +431,7 @@
                     numericAmount = parseFloat(amount);
                 }
 
-                return `${symbol} ${numericAmount.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                })}`;
+                return `${symbol} ${numericAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             }
 
             function updateCurrencyDisplay(currency = null) {
@@ -504,16 +516,16 @@
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': csrfToken ? csrfToken.getAttribute('content') : ''
                                 },
-                                body: JSON.stringify({q: params.data.term})
+                                body: JSON.stringify({ q: params.data.term })
                             })
-                                .then(r => r.json())
-                                .then(success)
-                                .catch(failure);
+                            .then(r => r.json())
+                            .then(success)
+                            .catch(failure);
                         },
                         delay: 250,
                         processResults: function (data) {
                             const results = Array.isArray(data?.results) ? data.results : [];
-                            return {results, pagination: {more: false}};
+                            return { results, pagination: { more: false } };
                         }
                     },
                     templateResult: function (item) {
@@ -554,36 +566,36 @@
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken ? csrfToken.getAttribute('content') : ''
                     },
-                    body: JSON.stringify({supplier_id: supplierId})
+                    body: JSON.stringify({ supplier_id: supplierId })
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.error) {
-                            showNotification(data.error, 'error');
-                            resetSupplierView();
-                        } else {
-                            currentSupplier = data.supplier;
-                            currentOrders = data.orders;
-                            currentGRNs = data.grns;
-                            if (data.defaultCurrency) updateCurrencyDisplay(data.defaultCurrency);
-                            showNotification(`Loaded supplier: ${data.supplier.Name}`, 'success');
-                            displaySupplier();
-                            displayOrders();
-                        }
-                    })
-                    .catch(error => {
-                        showNotification(`Failed to load supplier: ${error.message}`, 'error');
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        showNotification(data.error, 'error');
                         resetSupplierView();
-                    })
-                    .finally(() => {
-                        isSearching = false;
-                        hideLoadingOverlay();
-                    });
+                    } else {
+                        currentSupplier = data.supplier;
+                        currentOrders = data.orders;
+                        currentGRNs = data.grns;
+                        if (data.defaultCurrency) updateCurrencyDisplay(data.defaultCurrency);
+                        showNotification(`Loaded supplier: ${data.supplier.Name || 'Supplier'}`, 'success');
+                        displaySupplier();
+                        displayOrders();
+                    }
+                })
+                .catch(error => {
+                    showNotification(`Failed to load supplier: ${error.message}`, 'error');
+                    resetSupplierView();
+                })
+                .finally(() => {
+                    isSearching = false;
+                    hideLoadingOverlay();
+                });
             }
 
             // Display supplier information
@@ -595,6 +607,8 @@
                 document.getElementById('suppEmail').textContent = currentSupplier.Email || '—';
                 document.getElementById('suppPhone').textContent = currentSupplier.Phone || '—';
                 document.getElementById('suppRegNo').textContent = currentSupplier.RegistrationNumber || '—';
+                document.getElementById('suppType').textContent = currentSupplier.BusinessType || 'Standard Supplier';
+                document.getElementById('suppAddress').textContent = currentSupplier.Address || 'Not provided';
                 document.getElementById('suppStatus').textContent = currentSupplier.IsActive ? 'Active' : 'Inactive';
                 document.getElementById('suppStatus').className = `badge ${currentSupplier.IsActive ? 'bg-success' : 'bg-danger'}`;
 
@@ -603,6 +617,33 @@
                 document.getElementById('SupplierID').value = currentSupplier.SupplierID;
 
                 supplierCard.classList.remove('d-none');
+
+                // Add event listeners for new buttons
+                addSupplierCardEventListeners();
+            }
+
+            // Add event listeners for supplier card buttons
+            function addSupplierCardEventListeners() {
+                const refreshBtn = document.getElementById('refreshSupplier');
+                const clearBtn = document.getElementById('clearSupplier');
+
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', function() {
+                        if (currentSupplier && currentSupplier.SupplierID) {
+                            showNotification('Refreshing supplier data...', 'info');
+                            loadSupplierById(currentSupplier.SupplierID);
+                        }
+                    });
+                }
+
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function() {
+                        if (confirm('Are you sure you want to clear the selected supplier? This will reset the form.')) {
+                            resetSupplierView();
+                            showNotification('Supplier cleared. Select a new supplier to continue.', 'info');
+                        }
+                    });
+                }
             }
 
             // Initialize Select2 for PO selection
@@ -643,13 +684,13 @@
                         allowClear: true,
                         width: '100%'
                     });
-                } catch (error) {
+                } catch(error) {
                     console.error('Error initializing Select2:', error);
                     return;
                 }
 
                 // Handle selection change
-                poSelect.on('select2:select', function (e) {
+                poSelect.on('select2:select', function(e) {
                     const selectedOption = e.params.data.element;
                     const orderData = JSON.parse(selectedOption.getAttribute('data-order'));
 
@@ -671,7 +712,7 @@
                 });
 
                 // Handle clear/deselection
-                poSelect.on('select2:clear', function (e) {
+                poSelect.on('select2:clear', function(e) {
                     selectedPO = null;
                     document.getElementById('POReference').value = '';
                     hideSelectedPOSummary();
@@ -679,7 +720,7 @@
                 });
 
                 // Fallback: regular change event for non-Select2 functionality
-                poSelect.on('change', function (e) {
+                poSelect.on('change', function(e) {
                     if (poSelect.hasClass('select2-hidden-accessible')) {
                         return; // Let Select2 handle it
                     }
@@ -864,7 +905,7 @@
 
                 // Add event listeners for GRN selection
                 document.querySelectorAll('input[name="selectedGRN"]').forEach(radio => {
-                    radio.addEventListener('change', function () {
+                    radio.addEventListener('change', function() {
                         if (this.checked) {
                             selectedGRN = relevantGRNs.find(grn => grn.GRNID === this.value);
                             document.getElementById('GRNReference').value = this.value;
@@ -875,7 +916,7 @@
 
                 // Add event listeners for View GRN buttons
                 document.querySelectorAll('.view-grn-btn').forEach(btn => {
-                    btn.addEventListener('click', function () {
+                    btn.addEventListener('click', function() {
                         const grn = JSON.parse(this.getAttribute('data-grn'));
                         showGRNModal(grn);
                     });
@@ -985,11 +1026,11 @@
                 if (!amountInput || !amountValidation || !submitBtn) return;
 
                 // Real-time validation
-                amountInput.addEventListener('input', function () {
+                amountInput.addEventListener('input', function() {
                     validateInvoiceAmount();
                 });
 
-                amountInput.addEventListener('blur', function () {
+                amountInput.addEventListener('blur', function() {
                     validateInvoiceAmount();
                 });
             }
@@ -1033,8 +1074,8 @@
 
                     // Check if all 3-way matching criteria are met
                     const isFullyMatched = selectedGRN &&
-                        selectedGRN.TotalOrderedQty === selectedGRN.TotalReceivedQty &&
-                        enteredAmount > 0;
+                                         selectedGRN.TotalOrderedQty === selectedGRN.TotalReceivedQty &&
+                                         enteredAmount > 0;
 
                     if (isFullyMatched) {
                         submitBtn.disabled = false;
@@ -1053,93 +1094,70 @@
                 setLoading('poDetailsContent', 'PO');
 
                 let poContent = `
-                    <div class="row mb-3">
-                        <div class="col-md-6"><strong>Order No:</strong> ${order.OrderNo}</div>
-                        <div class="col-md-6"><strong>Order Date:</strong> ${order.OrderDate}</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-12"><strong>Description:</strong> ${order.Description}</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-3"><strong>Discount:</strong> ${formatCurrency(order.OrdDiscAmnt || 0, order.Currency)}</div>
-                        <div class="col-md-3"><strong>Tax:</strong> ${formatCurrency(order.OrdTotTax || 0, order.Currency)}</div>
-                        <div class="col-md-3"><strong>Exclusive:</strong> ${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</div>
-                        <div class="col-md-3"><strong>Inclusive:</strong> ${formatCurrency(order.OrdTotIncl || order.TotalAmount || 0, order.Currency)}</div>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Purchase Order: ${order.OrderNo}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-sm-6"><strong>Order Date:</strong> ${order.OrderDate}</div>
+                                <div class="col-sm-6"><strong>Description:</strong> ${order.Description}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Discount:</strong> ${formatCurrency(order.OrdDiscAmnt || 0, order.Currency)}</div>
+                                <div class="col-md-3"><strong>Tax:</strong> ${formatCurrency(order.OrdTotTax || 0, order.Currency)}</div>
+                                <div class="col-md-3"><strong>Before Tax:</strong> ${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</div>
+                                <div class="col-md-3"><strong>After Tax:</strong> ${formatCurrency(order.OrdTotIncl || order.TotalAmount || 0, order.Currency)}</div>
+                            </div>
+                        </div>
                     </div>`;
 
                 if (order.OrderLines && order.OrderLines.length > 0) {
+                    let grandTotal = 0;
+
                     poContent += `
-                        <h6>Order Lines</h6>
                         <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
+                            <table class="table table-sm mb-0 po-table">
+                                <thead class="table-light">
                                     <tr>
-                                        <th>Item</th>
-                                        <th class="text-end">Quantity</th>
-                                        <th class="text-end">Unit Price</th>
-                                        <th class="text-end">Line Total</th>
+                                        <th>#</th>
+                                        <th class="col-item">Item</th>
+                                        <th class="col-qty text-end">Qty</th>
+                                        <th class="col-price text-end">Unit Price</th>
+                                        <th class="col-total text-end">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>`;
 
-                    let sumDisc = 0, sumTax = 0, sumExcl = 0, sumIncl = 0;
-                    order.OrderLines.forEach(line => {
+                    order.OrderLines.forEach((line, index) => {
+                        const quantity = parseFloat(line.Quantity || 0);
+                        const unitPrice = parseFloat(line.UnitPriceExcl || line.UnitPrice || 0);
+                        const taxRate = parseFloat(line.TaxRate || 0);
+                        const discount = parseFloat(line.Discount || 0);
+
+                        const lineExcl = quantity * unitPrice;
+                        const lineTax = (lineExcl - discount) * (taxRate / 100);
+                        const lineTotal = lineExcl + lineTax - discount;
+                        grandTotal += lineTotal;
+
                         poContent += `
                             <tr>
-                                <td>
-                                    <div>${line.ItemName}</div>
-                                    ${line.Description ? `<div class="text-muted small">${line.Description}</div>` : ''}
-                                </td>
-                                <td class="text-end">${(line.Quantity ?? 0).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        })}</td>
-                                <td class="text-end">${formatCurrency(line.UnitPriceExcl ?? line.UnitPrice ?? 0, order.Currency)}</td>
-                                <td class="text-end">
-                                    <div>${formatCurrency(line.LineExclusive ?? 0, order.Currency)}</div>
-                                    <div class="small text-muted">Disc: ${formatCurrency(line.Discount ?? 0, order.Currency)} • Tax: ${formatCurrency(line.TaxAmount ?? 0, order.Currency)}</div>
-                                    <div><strong>${formatCurrency(line.LineInclusive ?? line.LineTotal ?? 0, order.Currency)}</strong></div>
-                                </td>
+                                <td>${index + 1}</td>
+                                <td><strong>${line.ItemName || 'Unknown Item'}</strong></td>
+                                <td class="text-end">${quantity.toLocaleString()}</td>
+                                <td class="text-end">${formatCurrency(unitPrice, order.Currency)}</td>
+                                <td class="text-end fw-semibold">${formatCurrency(lineTotal, order.Currency)}</td>
                             </tr>`;
-                        sumDisc += parseFloat(line.Discount || 0);
-                        sumTax += parseFloat(line.TaxAmount || 0);
-                        sumExcl += parseFloat(line.LineExclusive || 0);
-                        sumIncl += parseFloat(line.LineInclusive || line.LineTotal || 0);
                     });
 
                     poContent += `
                                 </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Discount</th>
-                                        <th class="text-end">${formatCurrency(order.OrdDiscAmnt || 0, order.Currency)}</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Tax</th>
-                                        <th class="text-end">${formatCurrency(order.OrdTotTax || 0, order.Currency)}</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Exclusive</th>
-                                        <th class="text-end">${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Items Subtotal (Exclusive)</th>
-                                        <th class="text-end">${formatCurrency(sumExcl, order.Currency)}</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Items Discount (Total)</th>
-                                        <th class="text-end">- ${formatCurrency(sumDisc, order.Currency)}</th>
-                                    </tr>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Items Tax (Total)</th>
-                                        <th class="text-end">${formatCurrency(sumTax, order.Currency)}</th>
-                                    </tr>
-                                    <tr class="table-light">
-                                        <th colspan="3">Inclusive</th>
-                                        <th class="text-end">${formatCurrency(sumIncl, order.Currency)}</th>
-                                    </tr>
-                                </tfoot>
                             </table>
+                        </div>
+                        <div class="card mt-3">
+                            <div class="card-footer text-end">
+                                <h6 class="mb-0">Grand Total: <strong>${formatCurrency(grandTotal, order.Currency)}</strong></h6>
+                            </div>
                         </div>`;
                 }
 
@@ -1241,7 +1259,7 @@
             // PO related event listeners
             const viewSelectedPOBtn = document.getElementById('viewSelectedPO');
             if (viewSelectedPOBtn) {
-                viewSelectedPOBtn.addEventListener('click', function () {
+                viewSelectedPOBtn.addEventListener('click', function() {
                     if (selectedPO) {
                         const order = currentOrders.find(o => o.Id == selectedPO.Id);
                         if (order) {
@@ -1252,7 +1270,7 @@
             }
             const changePOBtn = document.getElementById('changePO');
             if (changePOBtn) {
-                changePOBtn.addEventListener('click', function () {
+                changePOBtn.addEventListener('click', function() {
                     hideSelectedPOSummary();
                     if (typeof window.$ !== 'undefined') {
                         window.$('#poSelect').val(null).trigger('change');
@@ -1279,7 +1297,7 @@
             // Prevent multiple submissions and validate 3-way match once
             let hasSubmitted = false;
             if (invoiceForm) {
-                invoiceForm.addEventListener('submit', function (e) {
+                invoiceForm.addEventListener('submit', function(e) {
                     // Validate 3-way matching first
                     const ok = typeof validate3WayMatching === 'function' ? validate3WayMatching() : true;
                     if (!ok) {
@@ -1363,7 +1381,7 @@
                 // Initialize and show toast
                 const toastElement = document.body.lastElementChild;
                 if (typeof window.bootstrap !== 'undefined') {
-                    const toast = new bootstrap.Toast(toastElement, {delay: 5000});
+                    const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
                     toast.show();
 
                     // Remove element after hiding
@@ -1381,7 +1399,7 @@
             }
 
             // Escape key to cancel loading
-            document.addEventListener('keydown', function (e) {
+            document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     const loadingOverlay = document.getElementById('loadingOverlay');
                     if (!loadingOverlay.classList.contains('d-none')) {
@@ -1400,7 +1418,7 @@
         }
 
         // Also try to initialize when window loads (backup)
-        window.addEventListener('load', function () {
+        window.addEventListener('load', function() {
             if (typeof initializeInvoiceEntry === 'function' && !window.__invoiceEntryInit) {
                 initializeInvoiceEntry();
             }
@@ -1409,10 +1427,10 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
-    <script>
-        // Debug: Check if jQuery is available after scripts load
-        console.log('Scripts section loaded. jQuery available:', typeof window.$ !== 'undefined');
-        console.log('Select2 available:', typeof window.$ !== 'undefined' && typeof window.$.fn.select2 !== 'undefined');
-    </script>
+<script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
+<script>
+    // Debug: Check if jQuery is available after scripts load
+    console.log('Scripts section loaded. jQuery available:', typeof window.$ !== 'undefined');
+    console.log('Select2 available:', typeof window.$ !== 'undefined' && typeof window.$.fn.select2 !== 'undefined');
+</script>
 @endsection

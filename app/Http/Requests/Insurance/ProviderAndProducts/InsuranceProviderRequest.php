@@ -34,7 +34,7 @@ class InsuranceProviderRequest extends FormRequest
             'Country' => 'required|string|max:50',
             'ContactPerson' => 'required|string|max:100',
             'Email' => 'required|email|max:100',
-            'Phone' => 'required|string|max:50',
+            'Phone' => ['required','string','max:20','regex:/^\+[1-9]\d{7,14}$/'],
             'IsActive' => 'nullable|boolean',
         ];
     }

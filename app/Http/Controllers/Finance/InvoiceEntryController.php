@@ -167,7 +167,14 @@ class InvoiceEntryController extends Controller
 
     public function getOrders($selectedVendor)
     {
-        $orders = Order::where('AccountID', $selectedVendor)->get();
+        // Get IDs of POs that are already referenced in invoices to avoid duplicates
+        $existingPOIds = FinanceInvoiceEntry::pluck('POReference')->toArray();
+
+        // Fetch orders for the selected vendor, excluding those already used in invoices
+        $orders = Order::where('AccountID', $selectedVendor)
+            ->whereNotIn('Id', $existingPOIds)
+            ->get();
+
         return response()->json($orders);
     }
 

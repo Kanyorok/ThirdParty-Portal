@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Procurement\Prequalification;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Procurement\Prequalification\PrequalificationRound;
 use App\Models\Procurement\Prequalification\PrequalificationSection;
 use App\Models\Procurement\Prequalification\PrequalificationCriteria;
@@ -18,10 +19,18 @@ use Illuminate\Validation\ValidationException;
 
 class PrequalificationRoundController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $prequalificationRounds = PrequalificationRound::withCount('applications')->latest()->paginate(10);
-        return view('procurement.suppliers.prequalification.prequalification-rounds.index', compact('prequalificationRounds'));
+        // Allow optionally including soft-deleted (archived) rounds via ?include_deleted=1
+        $includeDeleted = (bool) $request->query('include_deleted', false);
+
+        $query = PrequalificationRound::withCount('applications')->latest();
+        if ($includeDeleted) {
+            $query = $query->withTrashed();
+        }
+
+        $prequalificationRounds = $query->paginate(10);
+        return view('procurement.suppliers.prequalification.prequalification-rounds.index', compact('prequalificationRounds', 'includeDeleted'));
     }
 
     public function create(): View
@@ -80,13 +89,27 @@ class PrequalificationRoundController extends Controller
     {
         $validated = $request->validated();
         $isCreating = is_null($prequalificationRound);
+        $saveAsDraft = filter_var($request->input('save_as_draft'), FILTER_VALIDATE_BOOLEAN) || $request->input('save_as_draft') === '1';
+
+        // Prevent any modifications to expired rounds
+        if (!$isCreating) {
+            $now = now();
+            if ($prequalificationRound->EndDate && $prequalificationRound->EndDate < $now) {
+                return redirect()->route('prequalification.prequalification-rounds.index')
+                    ->with('error', 'This round has expired and can no longer be modified.');
+            }
+        }
 
         if ($isCreating) {
-            $validated['Status'] = $request->input('Status', \App\Enums\Procurement\PrequalificationRoundEnum::Draft);
+            $incomingStatus = $request->input('Status');
+            $validated['Status'] = $saveAsDraft
+                ? \App\Enums\Procurement\PrequalificationRoundEnum::Draft
+                : ($incomingStatus ?? \App\Enums\Procurement\PrequalificationRoundEnum::Draft);
             $validated['CreatedBy'] = Auth::id();
             $validated['CreatedOn'] = now();
         } else {
-            $validated['Status'] = $request->input('Status', $prequalificationRound->Status->value);
+            $incomingStatus = $request->input('Status', $prequalificationRound->Status->value);
+            $validated['Status'] = $saveAsDraft ? \App\Enums\Procurement\PrequalificationRoundEnum::Draft : $incomingStatus;
             $validated['ModifiedBy'] = Auth::id();
             $validated['ModifiedOn'] = now();
         }
@@ -104,7 +127,9 @@ class PrequalificationRoundController extends Controller
 
             DB::commit();
 
-            $message = $isCreating ? 'Prequalification round created successfully.' : 'Prequalification round updated successfully.';
+            $message = $saveAsDraft
+                ? ($isCreating ? 'Draft round saved.' : 'Draft changes saved.')
+                : ($isCreating ? 'Prequalification round created successfully.' : 'Prequalification round updated successfully.');
             return redirect()->route('prequalification.prequalification-rounds.index')->with('success', $message);
         } catch (ValidationException $e) {
             DB::rollBack();

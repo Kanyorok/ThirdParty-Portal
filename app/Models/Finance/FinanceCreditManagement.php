@@ -11,7 +11,7 @@ class FinanceCreditManagement extends Model
 {
     use SoftDeletes, UserActorTrait;
 
-
+    
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
@@ -29,21 +29,21 @@ class FinanceCreditManagement extends Model
             'Status',
             'ApprovalStatus',
             'ApprovalReason',
+            
+            // Risk assessment fields
+            'RiskScore',
+            'RiskLevel',
+            'ReviewCycleMonths',
+            'LastReviewDate',
+            'NextReviewDate',
+            'RiskNotes',
 
-        // Risk assessment fields
-        'RiskScore',
-        'RiskLevel',
-        'ReviewCycleMonths',
-        'LastReviewDate',
-        'NextReviewDate',
-        'RiskNotes',
-
-        'CreatedBy',
-        'CreatedOn',
+            'CreatedBy',
+            'CreatedOn',
             'ModifiedBy',
-        'ModifiedOn',
-        'DeletedBy',
-        'DeletedOn'
+            'ModifiedOn',
+            'DeletedBy',
+            'DeletedOn'
     ];
 
     /**
@@ -51,7 +51,7 @@ class FinanceCreditManagement extends Model
      */
     protected $guarded = [
         'used',
-        'utilization',
+        'utilization', 
         'available'
     ];
 
@@ -85,7 +85,7 @@ class FinanceCreditManagement extends Model
      */
     public function getRiskBadgeClassAttribute(): string
     {
-        return match (strtolower($this->RiskLevel ?? 'medium')) {
+        return match(strtolower($this->RiskLevel ?? 'medium')) {
             'low' => 'bg-success',
             'high' => 'bg-danger',
             'medium' => 'bg-warning text-dark',
@@ -121,7 +121,7 @@ class FinanceCreditManagement extends Model
     public function calculateRiskScore(float $utilizationPercentage): int
     {
         $score = 20; // Base score
-
+        
         // Utilization risk (0-40 points)
         if ($utilizationPercentage > 90) {
             $score += 40;
@@ -132,23 +132,23 @@ class FinanceCreditManagement extends Model
         } elseif ($utilizationPercentage > 25) {
             $score += 10;
         }
-
-        // Credit age risk (0-20 points)
+        
+        // Credit age risk (0-20 points) if age is more than 90 dayss then dont deduct anything so the score remains as it was at the top.
         $daysSinceCreated = $this->CreatedOn ? now()->diffInDays($this->CreatedOn) : 0;
         if ($daysSinceCreated < 30) {
             $score += 20; // New customer = higher risk
         } elseif ($daysSinceCreated < 90) {
             $score += 10;
         }
-
+        
         // Payment history risk (0-20 points) - placeholder for future implementation
         // This could check payment delays, defaults, etc.
-
+        
         // Review frequency risk (0-20 points)
         if ($this->isReviewDue()) {
             $score += 15; // Overdue review
         }
-
+        
         return min(100, max(0, $score));
     }
 
@@ -158,26 +158,26 @@ class FinanceCreditManagement extends Model
     public function updateRiskAssessment(float $utilizationPercentage): void
     {
         $newScore = $this->calculateRiskScore($utilizationPercentage);
-
+        
         // Determine risk level based on score
-        $riskLevel = match (true) {
+        $riskLevel = match(true) {
             $newScore >= 70 => 'High',
             $newScore >= 40 => 'Medium',
             default => 'Low'
         };
-
+        
         // Determine review cycle based on risk level
-        $reviewCycle = match ($riskLevel) {
+        $reviewCycle = match($riskLevel) {
             'High' => 3,    // 3 months
             'Medium' => 6,  // 6 months
             'Low' => 12,    // 12 months
         };
-
+        
         // Calculate next review date
-        $nextReviewDate = $this->LastReviewDate
+        $nextReviewDate = $this->LastReviewDate 
             ? $this->LastReviewDate->addMonths($reviewCycle)
             : now()->addMonths($reviewCycle);
-
+        
         $this->update([
             'RiskScore' => $newScore,
             'RiskLevel' => $riskLevel,
@@ -185,5 +185,5 @@ class FinanceCreditManagement extends Model
             'NextReviewDate' => $nextReviewDate,
         ]);
     }
-
+        
 }
