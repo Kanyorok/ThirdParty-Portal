@@ -1492,7 +1492,18 @@ public function getRFQItems($rfqId)
             // Detect dynamic columns for descriptions/prices/quantities and code details description
             $liTable = 't_PlanLineItem';
             $cdTable = 't_CodeDetails';
-            $liDescCandidates = ['Description', 'ItemDescription', 'DescriptionOfRequirement', 'DescriptionText', 'ItemName', 'Details', 'Narration', 'ReqDescription'];
+            // Only include descriptive text columns; exclude li.ItemName to avoid numeric codes appearing as itemName
+            $liDescCandidates = [
+                'Description',
+                'ItemDescription',
+                'ManualItemDescription',
+                'DescriptionOfRequirement',
+                'DescriptionText',
+                'Details',
+                'Narration',
+                'ReqDescription',
+                'Remarks'
+            ];
             $liQtyCandidates = ['MergedQty', 'Quantity', 'Qty', 'PlannedQty', 'QtyToProcure'];
             $liUnitCostCandidates = ['EstimatedUnitCost', 'EstUnitCost', 'EstimateUnitCost', 'UnitPrice', 'EstimatedCost', 'UnitCost'];
             $cdDescCandidates = ['Description', 'Descriptions', 'Desc', 'Name', 'CodeDescription', 'DescriptionText'];
@@ -1600,7 +1611,7 @@ public function getRFQItems($rfqId)
 
             $items = $itemsQ->select([
                     DB::raw('COALESCE(it.Id, 0) as itemCode'),
-                    DB::raw('COALESCE(it.ItemName, ' . $liDescExpr . ') as itemName'),
+                    DB::raw("COALESCE(NULLIF(RTRIM(LTRIM(it.ItemName)), ''), $liDescExpr) as itemName"),
                     DB::raw("COALESCE(it.ItemDescription, " . $liDescExpr . ", '') as description"),
                     DB::raw($liQtyExpr . ' as quantity'),
                     DB::raw('COALESCE(it.ItemPrice, ' . $liUnitCostExpr . ', 0) as unitPrice'),
@@ -1645,7 +1656,7 @@ public function getRFQItems($rfqId)
 
                 $items = $fallbackQ->select([
                         DB::raw('COALESCE(it.Id, 0) as itemCode'),
-                        DB::raw('COALESCE(it.ItemName, ' . $liDescExpr . ') as itemName'),
+                        DB::raw("COALESCE(NULLIF(RTRIM(LTRIM(it.ItemName)), ''), $liDescExpr) as itemName"),
                         DB::raw("COALESCE(it.ItemDescription, " . $liDescExpr . ", '') as description"),
                         DB::raw($liQtyExpr . ' as quantity'),
                         DB::raw('COALESCE(it.ItemPrice, ' . $liUnitCostExpr . ', 0) as unitPrice'),
