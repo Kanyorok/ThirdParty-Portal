@@ -38,7 +38,7 @@ class DepartmentNeed extends Model
 
     public static function getPrimaryKey(): string
     {
-        return 'DepartmentNeedID';
+        return 'Id';
     }
 
     public function item()

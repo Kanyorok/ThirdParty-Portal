@@ -11,13 +11,13 @@ class WorkflowStage extends Model
     use SoftDeletes;
 
     protected $table = 't_WorkFlowStages';
-
     protected $primaryKey = 'Id';
 
+
+    const CREATED_AT = 'CreatedOn';
+    const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
 
-  
-    public $timestamps = false; // because you're using custom timestamp columns
 
     protected $fillable = [
         'Order',
@@ -30,32 +30,37 @@ class WorkflowStage extends Model
         'Count',
         'StatusId',
         'CreatedBy',
-        'CreatedOn',
         'ModifiedBy',
-        'ModifiedOn',
         'DeletedBy',
-        'DeletedOn',
     ];
 
-    protected $dates = [
-        'CreatedOn',
-        'ModifiedOn',
-        'DeletedOn',
+    protected $casts = [
+        'Order' => 'integer',
+        'EscalationLimit' => 'integer',
+        'Count' => 'integer',
+        'CreatedOn' => 'datetime',
+        'ModifiedOn' => 'datetime',
+        'DeletedOn' => 'datetime',
     ];
 
-    // Example relationships (assuming you have models for these)
-    public function workflow()
-    {
-        return $this->belongsTo(Workflow::class, 'WorkFlowId');
-    }
-
+    // Fixed relationships
     public function type()
     {
-        return $this->belongsTo(WorkflowType::class, 'WorkFlowTypeId');
+        return $this->belongsTo(WorkflowType::class, 'WorkFlowTypeId', 'Id');
     }
 
     public function permission()
     {
-        return $this->belongsTo(Permission::class, 'PermissionId');
+        return $this->belongsTo(Permission::class, 'PermissionId', 'id');
     }
-}
+
+    public function status()
+    {
+        return $this->belongsTo(CodeDetail::class, 'StatusId', 'ID');
+    }
+  public function workflow()
+    {
+        return $this->belongsTo(\App\Models\Core\Approval\Workflow::class, 'WorkFlowId', 'Id');
+    }
+
+    }

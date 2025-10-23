@@ -39,12 +39,12 @@ class Workflow extends Model
 
     public function type()
     {
-        return $this->belongsTo(WorkflowType::class, 'WorkflowTypeId');
+        return $this->belongsTo(WorkflowType::class, 'Id');
     }
 
-    public function stages()
+    public function stage()
     {
-        return $this->hasMany(WorkflowStage::class, 'WorkFlowId');
+        return $this->belongsTo(WorkFlowStage::class, 'stage', 'order');
     }
     
 

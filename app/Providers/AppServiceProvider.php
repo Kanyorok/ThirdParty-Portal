@@ -314,6 +314,7 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
+            'DepartmentNeed' => DepartmentNeed::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,

@@ -19,7 +19,7 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
     {
         // On submit, DepartmentNeeds use Pending status code
         $status = self::codeDetail(DepartmentNeedsEnum::Pending, self::CODE_ID);
-        return $this->submittedAction($actor, $status, $need->getMorphClass(), $need->getKey(), $remarks);
+        return $this->submittedAction($actor, $status, $need,$need::getPrimaryKey() ,$need->getKey(), $remarks);
     }
 
     /**
@@ -28,7 +28,7 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
     public function approve(DepartmentNeed $need, User $actor, string $remarks = 'Approved', string $statusColumn = 'Status'): bool
     {
         $status = self::codeDetail(DepartmentNeedsEnum::Approved, self::CODE_ID);
-        return $this->approveAction($actor, $status, $need->getMorphClass(), $need->getKey(), $remarks, $statusColumn);
+        return $this->approveAction($actor, $status, $need->getTable(), $need->getKey(), $remarks, $statusColumn);
     }
 
     /**
@@ -37,6 +37,6 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
     public function reject(DepartmentNeed $need, User $actor, string $remarks = 'Rejected', string $statusColumn = 'Status'): bool
     {
         $status = self::codeDetail(DepartmentNeedsEnum::Rejected, self::CODE_ID);
-        return $this->rejectAction($actor, $status, $need->getMorphClass(), $need->getKey(), $remarks, $statusColumn);
+        return $this->rejectAction($actor, $status, $need->getTable(), $need->getKey(), $remarks, $statusColumn);
     }
 }
