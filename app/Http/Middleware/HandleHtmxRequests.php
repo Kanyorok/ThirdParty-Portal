@@ -11,7 +11,7 @@ class HandleHtmxRequests
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response) $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -21,10 +21,10 @@ class HandleHtmxRequests
         if ($request->header('HX-Request')) {
             // For HTMX requests, we want to return only the content section
             // This assumes the view extends a layout and has a @section('content')
-            
+
             if ($response->headers->get('Content-Type') === 'text/html; charset=UTF-8') {
                 $content = $response->getContent();
-                
+
                 // Extract only the content section if it's wrapped in a layout
                 // Look for the main content div
                 if (preg_match('/<div[^>]*id="page-content"[^>]*>(.*?)<\/div>/s', $content, $matches)) {

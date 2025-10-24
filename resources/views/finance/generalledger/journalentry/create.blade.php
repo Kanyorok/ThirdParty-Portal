@@ -5,34 +5,87 @@
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
         /* Select2 full-width */
-        .select2-container { width: 100% !important; }
+        .select2-container {
+            width: 100% !important;
+        }
 
         /* Table base */
-        .je-table { min-width: 1700px; border-collapse: separate; border-spacing: 0; }
-        .je-table th, .je-table td { vertical-align: middle; white-space: nowrap; }
+        .je-table {
+            min-width: 1700px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .je-table th, .je-table td {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
 
         /* Sticky headers + columns (disabled per request) */
-        .je-sticky { position: static; background: #fff; z-index: auto; }
-        .je-sticky-col { left: auto; }
-        .je-sticky-gl { left: auto; }
-        .je-table thead th.je-sticky { background: #f8f9fa; z-index: auto; }
+        .je-sticky {
+            position: static;
+            background: #fff;
+            z-index: auto;
+        }
+
+        .je-sticky-col {
+            left: auto;
+        }
+
+        .je-sticky-gl {
+            left: auto;
+        }
+
+        .je-table thead th.je-sticky {
+            background: #f8f9fa;
+            z-index: auto;
+        }
 
         /* Column widths */
-        .je-table th.col-gl, .je-table td.col-gl { min-width: 360px; }
-        .je-table th.col-branch, .je-table td.col-branch { min-width: 220px; }
-        .je-table th.col-dept, .je-table td.col-dept { min-width: 280px; }
-        .je-table th.col-drcr, .je-table td.col-drcr { min-width: 120px; text-align: center; }
-        .je-table th.col-amount, .je-table td.col-amount { min-width: 200px; text-align: right; }
-        .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; }
-        .je-table th.col-action, .je-table td.col-action { min-width: 120px; text-align: center; }
+        .je-table th.col-gl, .je-table td.col-gl {
+            min-width: 360px;
+        }
+
+        .je-table th.col-branch, .je-table td.col-branch {
+            min-width: 220px;
+        }
+
+        .je-table th.col-dept, .je-table td.col-dept {
+            min-width: 280px;
+        }
+
+        .je-table th.col-drcr, .je-table td.col-drcr {
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .je-table th.col-amount, .je-table td.col-amount {
+            min-width: 200px;
+            text-align: right;
+        }
+
+        .je-table th.col-narr, .je-table td.col-narr {
+            min-width: 420px;
+        }
+
+        .je-table th.col-action, .je-table td.col-action {
+            min-width: 120px;
+            text-align: center;
+        }
 
         /* Inputs and selects spacing */
         .je-table .form-select,
         .je-table .form-control,
-        .je-table textarea { padding: 0.45rem 0.65rem; font-size: 0.875rem; }
+        .je-table textarea {
+            padding: 0.45rem 0.65rem;
+            font-size: 0.875rem;
+        }
 
         /* Narration textarea height */
-        .narration-input { min-height: 60px; resize: vertical; }
+        .narration-input {
+            min-height: 60px;
+            resize: vertical;
+        }
 
         /* Totals section */
         .totals-box {
@@ -117,67 +170,70 @@
                     <div class="table-responsive mb-3">
                         <table class="table table-bordered align-middle table-sm je-table">
                             <thead class="table-light">
-                                <tr>
-                                    <th class="je-sticky je-sticky-col" style="width: 56px">#</th>
-                                    <th class="col-gl je-sticky je-sticky-gl">GL Account</th>
-                                    <th class="col-branch">Branch</th>
-                                    <th class="col-dept">Department</th>
-                                    <th class="col-drcr">DR / CR</th>
-                                    <th class="col-amount">Amount</th>
-                                    <th class="col-narr">Narration</th>
-                                    <th class="col-action">Action</th>
-                                </tr>
+                            <tr>
+                                <th class="je-sticky je-sticky-col" style="width: 56px">#</th>
+                                <th class="col-gl je-sticky je-sticky-gl">GL Account</th>
+                                <th class="col-branch">Branch</th>
+                                <th class="col-dept">Department</th>
+                                <th class="col-drcr">DR / CR</th>
+                                <th class="col-amount">Amount</th>
+                                <th class="col-narr">Narration</th>
+                                <th class="col-action">Action</th>
+                            </tr>
                             </thead>
                             <tbody id="journalBody">
-                                @for ($i = 0; $i < 2; $i++)
-                                    <tr>
-                                        <td class="line-number je-sticky je-sticky-col">{{ $i + 1 }}</td>
-                                        <td class="col-gl je-sticky je-sticky-gl">
-                                            <select name="GLAccount[]" class="form-select gl-account-select p-2" required>
-                                                <option value="" class="p-2" selected disabled>Select GL</option>
-                                                @foreach($gls as $gl)
-                                                    <option value="{{ $gl->Id }}"
-                                                            data-code="{{ $gl->GLCode }}"
-                                                            data-name="{{ $gl->GLName }}">
-                                                        {{ $gl->GLCode }} ({{ $gl->GLName }})
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                            @for ($i = 0; $i < 2; $i++)
+                                <tr>
+                                    <td class="line-number je-sticky je-sticky-col">{{ $i + 1 }}</td>
+                                    <td class="col-gl je-sticky je-sticky-gl">
+                                        <select name="GLAccount[]" class="form-select gl-account-select p-2" required>
+                                            <option value="" class="p-2" selected disabled>Select GL</option>
+                                            @foreach($gls as $gl)
+                                                <option value="{{ $gl->Id }}"
+                                                        data-code="{{ $gl->GLCode }}"
+                                                        data-name="{{ $gl->GLName }}">
+                                                    {{ $gl->GLCode }} ({{ $gl->GLName }})
+                                                </option>
+                                            @endforeach
+                                        </select>
 
-                                        </td>
-                                        <td class="col-branch">
-                                            <select name="Branch[]" class="form-select" required>
-                                                @foreach($branches as $branch)
-                                                    <option value="{{$branch->Id}}">{{$branch->Name}}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td class="col-dept">
-                                            <select name="Department[]" class="form-select" required>
-                                                @foreach($departments as $department)
-                                                    <option value="{{$department->Id}}">{{$department->Name}}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td class="col-drcr">
-                                            <select name="DRCR[]" class="form-select drcr-select" required>
-                                                <option value="DR">DR</option>
-                                                <option value="CR">CR</option>
-                                            </select>
-                                        </td>
-                                        <td class="col-amount">
-                                            <input type="number" name="Amount[]" class="form-control amount-input text-end" step="0.01" required>
-                                        </td>
-                                        <td class="col-narr">
-                                            <textarea name="Narration[]" class="form-control narration-input" placeholder="Narration"></textarea>
-                                        </td>
-                                        <td class="col-action">
-                                            <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endfor
+                                    </td>
+                                    <td class="col-branch">
+                                        <select name="Branch[]" class="form-select" required>
+                                            @foreach($branches as $branch)
+                                                <option value="{{$branch->Id}}">{{$branch->Name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td class="col-dept">
+                                        <select name="Department[]" class="form-select" required>
+                                            @foreach($departments as $department)
+                                                <option value="{{$department->Id}}">{{$department->Name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td class="col-drcr">
+                                        <select name="DRCR[]" class="form-select drcr-select" required>
+                                            <option value="DR">DR</option>
+                                            <option value="CR">CR</option>
+                                        </select>
+                                    </td>
+                                    <td class="col-amount">
+                                        <input type="number" name="Amount[]" class="form-control amount-input text-end"
+                                               step="0.01" required>
+                                    </td>
+                                    <td class="col-narr">
+                                        <textarea name="Narration[]" class="form-control narration-input"
+                                                  placeholder="Narration"></textarea>
+                                    </td>
+                                    <td class="col-action">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-line"
+                                                title="Remove">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endfor
                             </tbody>
                         </table>
                     </div>

@@ -11,17 +11,17 @@ class ComplianceFiling extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'TemplateID','SubmissionDate','FileName','MimeType','FilePath',
-        'Status','Notes','SubmittedBy','CreatedOn'
+        'TemplateID', 'SubmissionDate', 'FileName', 'MimeType', 'FilePath',
+        'Status', 'Notes', 'SubmittedBy', 'CreatedOn'
     ];
 
     public function template()
     {
-        return $this->belongsTo(ComplianceFilingTemplate::class,'TemplateID');
+        return $this->belongsTo(ComplianceFilingTemplate::class, 'TemplateID');
     }
 
     public function acknowledgments()
     {
-        return $this->hasMany(ComplianceFilingAcknowledgment::class,'FilingID');
+        return $this->hasMany(ComplianceFilingAcknowledgment::class, 'FilingID');
     }
 }

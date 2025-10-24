@@ -128,15 +128,15 @@ class BudgetPeriodController extends Controller
             if (!empty($selectedGls)) {
                 foreach ($selectedGls as $gl) {
                     BudgetGLsAttachments::create([
-                        'BudgetID'        => $budget->Id,
-                        'GLID'            => $gl['AccountID'] ?? null, // fallback if missing
-                        'AccountID'       => $gl['AccountID'] ?? null,
-                        'Description'     => $gl['Description'] ?? null,
+                        'BudgetID' => $budget->Id,
+                        'GLID' => $gl['AccountID'] ?? null, // fallback if missing
+                        'AccountID' => $gl['AccountID'] ?? null,
+                        'Description' => $gl['Description'] ?? null,
                         'GLAccountTypeID' => $gl['GLAccountTypeID'] ?? null,
-                        'CreatedBy'       => Auth::id(),
-                        'CreatedOn'       => now(),
-                        'ModifiedBy'      => Auth::id(),
-                        'ModifiedOn'      => now(),
+                        'CreatedBy' => Auth::id(),
+                        'CreatedOn' => now(),
+                        'ModifiedBy' => Auth::id(),
+                        'ModifiedOn' => now(),
                     ]);
                 }
             }

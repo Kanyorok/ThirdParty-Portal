@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @deprecated to be removed once moved to dms document.
+ */
 class Image extends Model
 {
     use SoftDeletes, UserActorTrait;

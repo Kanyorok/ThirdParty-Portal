@@ -41,7 +41,9 @@
         <div class="mb-3">
 
             <div class="d-flex justify-content-end mt-4">
-                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Category</button>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Category
+                </button>
                 <a href="{{ route('itemcategory.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </div>

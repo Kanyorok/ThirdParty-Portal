@@ -13,7 +13,6 @@ use App\Imports\PriceManagementImport;
 use Maatwebsite\Excel\Facades\Excel;
 
 
-
 class PriceManagementController extends Controller
 {
     protected $priceService;
@@ -73,9 +72,9 @@ class PriceManagementController extends Controller
         ]);
 
         $data = $request->validated();
-        $data['PriceID'] = $oldPrice->PriceID; 
-        $data['ItemID'] = $oldPrice->ItemID;   
-        $data['UOM']  = $oldPrice->UOM;   
+        $data['PriceID'] = $oldPrice->PriceID;
+        $data['ItemID'] = $oldPrice->ItemID;
+        $data['UOM'] = $oldPrice->UOM;
 
         $this->priceService->create($data);
 

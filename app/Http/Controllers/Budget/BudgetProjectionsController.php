@@ -36,7 +36,7 @@ class BudgetProjectionsController extends Controller
             if (!$budget) continue;
             $data[] = [
                 'Name' => $budget->Name,
-                'ApprovalStatus'=>$budget->Status,
+                'ApprovalStatus' => $budget->Status,
                 'Products' => BudgetProjection::where('BudgetID', $budgetID)->count(),
                 'Accounts' => BudgetProjection::where('BudgetID', $budgetID)->sum('NumberOfAccounts'),
                 'Id' => $budget->Id,
@@ -52,7 +52,7 @@ class BudgetProjectionsController extends Controller
     // Show form for new entry
     public function create()
     {
-        $budgets = Budget::select('Id', 'Name')->where('Status','draft')->get();
+        $budgets = Budget::select('Id', 'Name')->where('Status', 'draft')->get();
         $currencies = Currency::all();
         $products = BudgetProduct::all();
         // $periods = BudgetPeriods::all();
@@ -68,8 +68,8 @@ class BudgetProjectionsController extends Controller
     {
         $productIDS = BudgetLineProductTypes::where('BudgetLineID', $budgetLineId)->pluck('ProductTypeID')->toArray();
         //Ensure that the prods being displ must have a Rate value entered.
-        $productsIdWithRate=BudgetDriverRates::pluck('ProductTypeID')->toArray();
-        $filteredProdID=array_intersect($productIDS,$productsIdWithRate);
+        $productsIdWithRate = BudgetDriverRates::pluck('ProductTypeID')->toArray();
+        $filteredProdID = array_intersect($productIDS, $productsIdWithRate);
 
         $product = BudgetProduct::whereIn('Id', $filteredProdID)->get();
         //$budgetLine = BudgetLine::with('products')->findOrFail($budgetLineId);
@@ -89,9 +89,9 @@ class BudgetProjectionsController extends Controller
             'Products.*.Volume' => 'required|integer|min:0',
             // 'Products.*.Value'     => 'required|numeric|min:0', (till  futher notice, we will use 1 as value)
         ],
-        [
-            'Products.*.ProductID.required' => 'Please select a product',
-            'Products.*.Volume.required' => 'Please enter a volume',
+            [
+                'Products.*.ProductID.required' => 'Please select a product',
+                'Products.*.Volume.required' => 'Please enter a volume',
         ]);
 
         DB::beginTransaction();
@@ -310,7 +310,7 @@ class BudgetProjectionsController extends Controller
         //return $products;
 
         //$budget = BudgetDriverProjections::findOrFail($id);
-        $budget=Budget::findOrFail($id);
+        $budget = Budget::findOrFail($id);
 
         $rate = BudgetProduct::with(['rate'])
             ->get();

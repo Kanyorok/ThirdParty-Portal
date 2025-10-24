@@ -31,7 +31,7 @@ echo "   📁 Filename: {$fileName}\n";
 
 try {
     echo "   🔄 Calling DocumentService::createContent()...\n";
-    
+
     $result = DocumentService::createContent(
         repository: $repository,
         extension: ExtensionsEnum::Txt,
@@ -40,44 +40,44 @@ try {
         actor: $user,
         copyRepoPermissions: false
     );
-    
+
     echo "   ✅ DocumentService::createContent() SUCCESS!\n";
     echo "      - Document ID: {$result->document->DocumentId}\n";
-    
-    // Now test content retrieval 
+
+    // Now test content retrieval
     echo "\n3. TESTING CONTENT RETRIEVAL:\n";
     $retrievedContent = $result->document->current->getContent();
-    
+
     if ($retrievedContent === $testContent) {
         echo "   ✅ Content retrieval SUCCESS! Perfect match.\n";
     } else {
         echo "   ❌ Content mismatch!\n";
-        echo "      Expected: '{$testContent}'\n";  
+        echo "      Expected: '{$testContent}'\n";
         echo "      Retrieved: '{$retrievedContent}'\n";
     }
-    
+
 } catch (\Exception $e) {
     echo "   🚨 STORAGE EXCEPTION CAUGHT!\n";
     echo "   📍 Exception type: " . get_class($e) . "\n";
     echo "   💥 Error message: " . $e->getMessage() . "\n";
     echo "   📋 File: " . $e->getFile() . ":" . $e->getLine() . "\n";
-    
+
     // Get the full stack trace
     echo "\n   🔍 STACK TRACE (first 10 lines):\n";
     $traceLines = explode("\n", $e->getTraceAsString());
     foreach (array_slice($traceLines, 0, 10) as $i => $line) {
         echo "      {$i}: {$line}\n";
     }
-    
+
     // Check if this is related to our recent changes
     if (strpos($e->getMessage(), 'Blob') !== false) {
         echo "\n   🎯 BLOB-RELATED ERROR - May be from our recent fixes!\n";
     }
-    
+
     if (strpos($e->getMessage(), 'Storage') !== false || strpos($e->getMessage(), 'disk') !== false) {
-        echo "\n   🎯 STORAGE-RELATED ERROR - File system issue!\n";  
+        echo "\n   🎯 STORAGE-RELATED ERROR - File system issue!\n";
     }
-    
+
     if (strpos($e->getMessage(), 'encrypt') !== false || strpos($e->getMessage(), 'decrypt') !== false) {
         echo "\n   🎯 ENCRYPTION-RELATED ERROR - EncryptionService issue!\n";
     }
@@ -89,16 +89,16 @@ try {
     if (file_exists($logPath)) {
         $logContent = file_get_contents($logPath);
         $logLines = explode("\n", $logContent);
-        
+
         // Get last 20 lines that contain error/exception
-        $errorLines = array_filter($logLines, function($line) {
-            return stripos($line, 'error') !== false || 
-                   stripos($line, 'exception') !== false ||
-                   stripos($line, 'failed') !== false;
+        $errorLines = array_filter($logLines, function ($line) {
+            return stripos($line, 'error') !== false ||
+                stripos($line, 'exception') !== false ||
+                stripos($line, 'failed') !== false;
         });
-        
+
         $recentErrors = array_slice($errorLines, -10);
-        
+
         if (!empty($recentErrors)) {
             echo "   📋 Recent error log entries:\n";
             foreach ($recentErrors as $error) {
@@ -121,16 +121,16 @@ try {
     // Test basic storage operations
     $testPath = storage_path('app/test_simple_' . time() . '.txt');
     $simpleContent = "Simple file test";
-    
+
     $written = file_put_contents($testPath, $simpleContent);
     echo "   📝 Simple file write: " . ($written ? "SUCCESS ({$written} bytes)" : "FAILED") . "\n";
-    
+
     if ($written) {
         $read = file_get_contents($testPath);
         echo "   📖 Simple file read: " . ($read === $simpleContent ? "SUCCESS" : "FAILED") . "\n";
         unlink($testPath);
     }
-    
+
 } catch (\Exception $e) {
     echo "   ❌ Simple file operations failed: " . $e->getMessage() . "\n";
 }

@@ -57,7 +57,7 @@ class KenyaFirstSeeder extends Seeder
             $this->processCountry($kenyaData, $actor, $date, 0); // SortOrder = 0
 
             // Process other countries (first 49 to keep total at 50)
-            $otherCountries = array_filter($countries, function($country) {
+            $otherCountries = array_filter($countries, function ($country) {
                 return strtolower($country['name'] ?? '') !== 'kenya';
             });
 

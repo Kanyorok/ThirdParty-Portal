@@ -84,15 +84,15 @@ class CategoryMasterSeeder extends Seeder
         }
 
         // Optional duplicate cleanup: keep earliest per (Name,Type) if legacy duplicates exist
-        $duplicates = CategoryMaster::select('Name','Type')
-            ->groupBy('Name','Type')
+        $duplicates = CategoryMaster::select('Name', 'Type')
+            ->groupBy('Name', 'Type')
             ->havingRaw('COUNT(*) > 1')
             ->get();
         foreach ($duplicates as $dup) {
-            $toKeep = CategoryMaster::where('Name',$dup->Name)->where('Type',$dup->Type)
-                ->orderBy('CreatedOn','asc')->first();
-            CategoryMaster::where('Name',$dup->Name)->where('Type',$dup->Type)
-                ->where('Id','!=',$toKeep->Id ?? 0)->delete();
+            $toKeep = CategoryMaster::where('Name', $dup->Name)->where('Type', $dup->Type)
+                ->orderBy('CreatedOn', 'asc')->first();
+            CategoryMaster::where('Name', $dup->Name)->where('Type', $dup->Type)
+                ->where('Id', '!=', $toKeep->Id ?? 0)->delete();
         }
     }
 }

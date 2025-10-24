@@ -75,7 +75,7 @@ class JournalEntryController extends Controller
     public function create()
     {
         $this->authorize(PermissionEnum::FinanceGeneralLedgerCreate, FinanceJournalEntry::class);
-        $gls = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
+        $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
         $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
         return view('finance.generalledger.journalentry.create', compact('gls', 'branches', 'departments'));
@@ -141,8 +141,8 @@ class JournalEntryController extends Controller
                     'BranchID'       => $entry['branch_id'],
                     'DepartmentID'   => $entry['department_id'],
                     'IsDebit'        => $entry['is_debit'],
-                    'Amount'         => $entry['is_debit']?$entry['amount']*-1:$entry['amount'],
-                    'Debit'          => ($entry['debit']*-1) ?? 0,
+                    'Amount' => $entry['is_debit'] ? $entry['amount'] * -1 : $entry['amount'],
+                    'Debit' => ($entry['debit'] * -1) ?? 0,
                     'Credit'         => $entry['credit'] ?? 0,
                     'Narration'      => $entry['narration'] ?? null,
                     'CreatedBy' => Auth::id(),
@@ -186,11 +186,11 @@ class JournalEntryController extends Controller
         $this->authorize(PermissionEnum::FinanceGeneralLedgerUpdate, FinanceJournalEntry::class);
 
         $journalEntry = FinanceJournalEntry::with('journalLines')->findOrFail($id);
-        $gls         = FinanceGLAccounts::select('Id', 'GLName','GLCode')->get();
-        $branches    = Branch::select('Id', 'Name')->get();
+        $gls = FinanceGLAccounts::select('Id', 'GLName', 'GLCode')->get();
+        $branches = Branch::select('Id', 'Name')->get();
         $departments = Department::select('Id', 'Name')->get();
 
-        return view('finance.generalledger.journalentry.edit', compact('journalEntry','gls','branches','departments'));
+        return view('finance.generalledger.journalentry.edit', compact('journalEntry', 'gls', 'branches', 'departments'));
     }
 
     public function update(Request $request, $id)
@@ -202,36 +202,36 @@ class JournalEntryController extends Controller
         // Normalize incoming arrays to entries and include optional line_id for diffing
         $entries = [];
         foreach ($request->GLAccount as $index => $gl) {
-            $drcr   = $request->DRCR[$index] ?? null;
-            $amount = (float) ($request->Amount[$index] ?? 0);
+            $drcr = $request->DRCR[$index] ?? null;
+            $amount = (float)($request->Amount[$index] ?? 0);
             $entries[] = [
-                'line_id'       => $request->LineId[$index] ?? null,
-                'gl_id'         => $gl,
-                'branch_id'     => $request->Branch[$index] ?? null,
+                'line_id' => $request->LineId[$index] ?? null,
+                'gl_id' => $gl,
+                'branch_id' => $request->Branch[$index] ?? null,
                 'department_id' => $request->Department[$index] ?? null,
-                'debit'         => $drcr === 'DR' ? $amount : 0,
-                'credit'        => $drcr === 'CR' ? $amount : 0,
-                'is_debit'      => $drcr === 'DR',
-                'amount'        => $amount,
-                'narration'     => $request->Narration[$index] ?? null,
+                'debit' => $drcr === 'DR' ? $amount : 0,
+                'credit' => $drcr === 'CR' ? $amount : 0,
+                'is_debit' => $drcr === 'DR',
+                'amount' => $amount,
+                'narration' => $request->Narration[$index] ?? null,
             ];
         }
 
-         $request->merge(['entries' => $entries]);
+        $request->merge(['entries' => $entries]);
 
-          $validated = $request->validate([
-            'JournalDate'                 => 'required|date',
-            'Description'                 => 'nullable|string',
-            'entries'                     => 'required|array|min:2',
-            'entries.*.line_id'           => 'nullable|integer',
-            'entries.*.gl_id'             => 'required|exists:t_FinanceGLAccounts,Id',
-            'entries.*.branch_id'         => 'required|exists:t_Branches,Id',
-            'entries.*.department_id'     => 'required|exists:t_Departments,Id',
-            'entries.*.debit'             => 'required|numeric|min:0',
-            'entries.*.credit'            => 'required|numeric|min:0',
+        $validated = $request->validate([
+            'JournalDate' => 'required|date',
+            'Description' => 'nullable|string',
+            'entries' => 'required|array|min:2',
+            'entries.*.line_id' => 'nullable|integer',
+            'entries.*.gl_id' => 'required|exists:t_FinanceGLAccounts,Id',
+            'entries.*.branch_id' => 'required|exists:t_Branches,Id',
+            'entries.*.department_id' => 'required|exists:t_Departments,Id',
+            'entries.*.debit' => 'required|numeric|min:0',
+            'entries.*.credit' => 'required|numeric|min:0',
         ]);
 
-        $totalDebit  = collect($validated['entries'])->sum('debit');
+        $totalDebit = collect($validated['entries'])->sum('debit');
         $totalCredit = collect($validated['entries'])->sum('credit');
         if ($totalDebit != $totalCredit) {
             return back()->withErrors(['Amount mismatch' => 'Total Debit must equal Total Credit'])->withInput();
@@ -253,9 +253,9 @@ class JournalEntryController extends Controller
         DB::beginTransaction();
         try {
             // Update header
-            $journalEntry->Date        = $request->JournalDate;
+            $journalEntry->Date = $request->JournalDate;
             $journalEntry->Description = $request->Description;
-            $journalEntry->ModifiedBy  = Auth::id();
+            $journalEntry->ModifiedBy = Auth::id();
             $journalEntry->save();
 
             // Delete removed lines
@@ -269,15 +269,15 @@ class JournalEntryController extends Controller
             // Upsert incoming lines
             foreach ($entries as $entry) {
                 $payload = [
-                    'GLAccountID'  => $entry['gl_id'],
-                    'BranchID'     => $entry['branch_id'],
+                    'GLAccountID' => $entry['gl_id'],
+                    'BranchID' => $entry['branch_id'],
                     'DepartmentID' => $entry['department_id'],
-                    'IsDebit'      => (bool)$entry['is_debit'],
-                    'Amount'       => (bool)$entry['is_debit']?(float)$entry['amount']*-1: (float)$entry['amount'],
-                    'Debit'        => (float)($entry['debit']*-1 ?? 0),
-                    'Credit'       => (float)($entry['credit'] ?? 0),
-                    'Narration'    => $entry['narration'] ?? null,
-                    'ModifiedBy'   => Auth::id(),
+                    'IsDebit' => (bool)$entry['is_debit'],
+                    'Amount' => (bool)$entry['is_debit'] ? (float)$entry['amount'] * -1 : (float)$entry['amount'],
+                    'Debit' => (float)($entry['debit'] * -1 ?? 0),
+                    'Credit' => (float)($entry['credit'] ?? 0),
+                    'Narration' => $entry['narration'] ?? null,
+                    'ModifiedBy' => Auth::id(),
                 ];
 
                 if (!empty($entry['line_id'])) {
@@ -289,7 +289,7 @@ class JournalEntryController extends Controller
                     // Create new
                     FinanceJournalLines::create(array_merge($payload, [
                         'JournalEntryId' => $journalEntry->Id,
-                        'CreatedBy'      => Auth::id(),
+                        'CreatedBy' => Auth::id(),
                     ]));
                 }
             }
@@ -304,7 +304,7 @@ class JournalEntryController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th->getMessage();
-            Log::error('Failed to update Journal Entry '.$th->getMessage());
+            Log::error('Failed to update Journal Entry ' . $th->getMessage());
             return back()->with('error', 'Failed to update Journal Entry')->withInput();
         }
     }

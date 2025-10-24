@@ -84,11 +84,11 @@ class InvoiceGenerationController extends Controller
         $this->authorize(PermissionEnum::FinanceAccountsReceivableCreate, FinanceInvoice::class);
         // Get customers with their credit information
         $customers = DB::table('t_ThirdParties as tp')
-            ->leftJoin('t_FinanceCreditManagement as fcm', function($join) {
+            ->leftJoin('t_FinanceCreditManagement as fcm', function ($join) {
                 $join->on('tp.Id', '=', 'fcm.CustomerID')
-                     ->where('fcm.Status', '=', 'Approved')
-                     ->whereRaw('fcm.EffectiveFrom <= GETDATE()')
-                     ->whereRaw('fcm.ExpiryDate >= GETDATE()');
+                    ->where('fcm.Status', '=', 'Approved')
+                    ->whereRaw('fcm.EffectiveFrom <= GETDATE()')
+                    ->whereRaw('fcm.ExpiryDate >= GETDATE()');
             })
             ->select([
                 'tp.Id',
@@ -194,7 +194,7 @@ class InvoiceGenerationController extends Controller
             return redirect()
                 ->route('invoicegeneration.show', $invoice->Id)
                 ->with('success', "Invoice {$invoiceNumber} created successfully" .
-                       ($validated['use_credit'] ? ' using customer credit.' : '.'));
+                    ($validated['use_credit'] ? ' using customer credit.' : '.'));
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -224,7 +224,7 @@ class InvoiceGenerationController extends Controller
         $creditInfo = null;
         if ($invoice->CustomerID) {
             $creditSummary = $this->creditService->getCustomerCreditSummary($invoice->CustomerID);
-            
+
             if ($creditSummary['has_credit']) {
                 $creditInfo = [
                     'hasCredit' => true,
@@ -427,11 +427,11 @@ class InvoiceGenerationController extends Controller
         if ($invoice->SourceTable === 't_RentInvoice' && $invoice->customer) {
             $customerName = $invoice->customer->ThirdPartyName;
 
-            $creditByName = FinanceCreditManagement::whereHas('customer', function($query) use ($customerName) {
+            $creditByName = FinanceCreditManagement::whereHas('customer', function ($query) use ($customerName) {
                 $query->where('ThirdPartyName', 'like', "%{$customerName}%");
             })
-            ->whereRaw('LOWER(Status) = ?', ['approved'])
-            ->first();
+                ->whereRaw('LOWER(Status) = ?', ['approved'])
+                ->first();
 
             if ($creditByName) {
                 return $creditByName->CustomerID;
@@ -500,7 +500,7 @@ class InvoiceGenerationController extends Controller
 
         if ($lastInvoice) {
             // Extract the sequence number and increment
-            $lastNumber = (int) substr($lastInvoice->InvoiceNumber, -4);
+            $lastNumber = (int)substr($lastInvoice->InvoiceNumber, -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;

@@ -24,7 +24,8 @@
 
         <div class="card shadow-sm rounded-3 p-3">
             <p class="text-muted mb-3">
-                Create and manage budgets linked to defined budget periods for effective financial planning and tracking.
+                Create and manage budgets linked to defined budget periods for effective financial planning and
+                tracking.
             </p>
 
             @if ($budgets->count())
@@ -41,7 +42,7 @@
                             <th>Status</th>
                             <th>View GL</th>
                             <th>Approval</th>
-{{--                            <th>Notes</th>--}}
+                            {{--                            <th>Notes</th>--}}
                             <th>Actions</th>
                         </tr>
                         </thead>
@@ -82,7 +83,7 @@
 
                                 </td>
 
-{{--                                <td>{{ $budget->Notes ?? '-' }}</td>--}}
+                                {{--                                <td>{{ $budget->Notes ?? '-' }}</td>--}}
                                 <td>
                                     <div class="d-flex gap-2">
                                         <!-- Edit -->
@@ -228,7 +229,8 @@
 
     @foreach($budgets as $budget)
         <!-- Modal: Choose Approve or Reject -->
-        <div class="modal fade" id="decisionModal{{ $budget->Id }}" tabindex="-1" aria-labelledby="decisionLabel{{ $budget->Id }}" aria-hidden="true">
+        <div class="modal fade" id="decisionModal{{ $budget->Id }}" tabindex="-1"
+             aria-labelledby="decisionLabel{{ $budget->Id }}" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content rounded-3 shadow-sm">
                     <div class="modal-header">
@@ -256,7 +258,8 @@
 
 
         <!-- Modal: Approve with Reason -->
-        <div class="modal fade" id="approveModal{{ $budget->Id }}" tabindex="-1" aria-labelledby="approveLabel{{ $budget->Id }}" aria-hidden="true">
+        <div class="modal fade" id="approveModal{{ $budget->Id }}" tabindex="-1"
+             aria-labelledby="approveLabel{{ $budget->Id }}" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content rounded-3 shadow-sm">
                     <form method="POST" action="{{route('budgetapproval.approve')}}">
@@ -289,7 +292,8 @@
 
 
         <!-- Modal: Reject with Reason -->
-        <div class="modal fade" id="rejectModal{{ $budget->Id }}" tabindex="-1" aria-labelledby="rejectLabel{{ $budget->Id }}" aria-hidden="true">
+        <div class="modal fade" id="rejectModal{{ $budget->Id }}" tabindex="-1"
+             aria-labelledby="rejectLabel{{ $budget->Id }}" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content rounded-3 shadow-sm">
                     <form method="POST" action="{{route('budgetapproval.reject')}}">
@@ -322,14 +326,16 @@
 
         <!-- Modal: Run Limits Update-->
         <!-- Modal: Run Limits Update -->
-        <div class="modal fade" id="updateLimit{{ $budget->Id }}" tabindex="-1" aria-labelledby="decisionLabel{{ $budget->Id }}" aria-hidden="true">
+        <div class="modal fade" id="updateLimit{{ $budget->Id }}" tabindex="-1"
+             aria-labelledby="decisionLabel{{ $budget->Id }}" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content rounded-4 shadow-lg border-0">
                     <div class="modal-header bg-danger text-white">
                         <h5 class="modal-title fw-bold" id="decisionLabel{{ $budget->Id }}">
                             ⚠️ Run Ledger Limit Update
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body">
@@ -351,23 +357,23 @@
                             @method('POST')
                             <input type="hidden" name="BudgetID" value="{{$budget->Id}}">
 
-{{--                            <div class="mb-3">--}}
-{{--                                <label for="BudgetID" class="form-label fw-semibold">Select Budget</label>--}}
-{{--                                <select id="BudgetID" name="BudgetID" class="form-select shadow-sm" required>--}}
-{{--                                    <option value="">-- Choose Active Budget --</option>--}}
-{{--                                    @foreach($budgets as $budget)--}}
-{{--                                        <option value="{{ $budget->Id }}">--}}
-{{--                                            {{ $budget->Name }} (FY {{ $budget->FiscalYear }})--}}
-{{--                                        </option>--}}
-{{--                                    @endforeach--}}
-{{--                                </select>--}}
-{{--                            </div>--}}
+                            {{--                            <div class="mb-3">--}}
+                            {{--                                <label for="BudgetID" class="form-label fw-semibold">Select Budget</label>--}}
+                            {{--                                <select id="BudgetID" name="BudgetID" class="form-select shadow-sm" required>--}}
+                            {{--                                    <option value="">-- Choose Active Budget --</option>--}}
+                            {{--                                    @foreach($budgets as $budget)--}}
+                            {{--                                        <option value="{{ $budget->Id }}">--}}
+                            {{--                                            {{ $budget->Name }} (FY {{ $budget->FiscalYear }})--}}
+                            {{--                                        </option>--}}
+                            {{--                                    @endforeach--}}
+                            {{--                                </select>--}}
+                            {{--                            </div>--}}
 
                             <div class="d-flex justify-content-between">
                                 <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
                                     <i class="bi bi-x-circle me-2"></i>Cancel
                                 </button>
-                                <button type="submit" class="btn btn-danger px-4 fw-bold"                                onclick="if(this.form.checkValidity()){
+                                <button type="submit" class="btn btn-danger px-4 fw-bold" onclick="if(this.form.checkValidity()){
                                     this.disabled = true;
                                     this.innerHTML = '<i class=&quot;fas fa-spinner fa-spin me-1&quot;></i> Updating...';
                                     this.form.submit();
@@ -380,7 +386,6 @@
                 </div>
             </div>
         </div>
-
 
     @endforeach
 

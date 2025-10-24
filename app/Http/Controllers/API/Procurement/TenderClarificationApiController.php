@@ -54,14 +54,14 @@ class TenderClarificationApiController extends Controller
             // Get the first available user ID from the system
             $systemUser = DB::table('t_Users')->select('Id')->first();
             $systemUserId = $systemUser ? $systemUser->Id : 1; // Use first user or default to 1
-            
-            $sql = "INSERT INTO t_VendorClarifications (TenderID, VendorID, Question, QuestionDate, ISPUBLISHEDTOALL, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn) 
+
+            $sql = "INSERT INTO t_VendorClarifications (TenderID, VendorID, Question, QuestionDate, ISPUBLISHEDTOALL, CreatedBy, CreatedOn, ModifiedBy, ModifiedOn)
                     OUTPUT INSERTED.ClarificationID
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            
+
             $result = DB::select($sql, [
-                (int) $request->tenderId,
-                (int) $supplier->Id,
+                (int)$request->tenderId,
+                (int)$supplier->Id,
                 $request->question,
                 date('Y-m-d H:i:s'),
                 0,
@@ -70,9 +70,9 @@ class TenderClarificationApiController extends Controller
                 $systemUserId, // Use numeric user ID
                 date('Y-m-d H:i:s'),
             ]);
-            
+
             $clarificationId = $result[0]->ClarificationID ?? null;
-            
+
             if (!$clarificationId) {
                 throw new \Exception('Failed to create clarification record');
             }
@@ -125,7 +125,7 @@ class TenderClarificationApiController extends Controller
             }
 
             // Get supplier ID from third party ID
-            $supplier = Supplier::whereHas('thirdParty', function($query) use ($request) {
+            $supplier = Supplier::whereHas('thirdParty', function ($query) use ($request) {
                 $query->where('Id', $request->third_party_id);
             })->first();
 
@@ -138,17 +138,17 @@ class TenderClarificationApiController extends Controller
             // Get clarifications for this tender and supplier
             $clarifications = VendorClarifications::with(['tenderID', 'vendorID'])
                 ->where('TenderID', $request->tender_id)
-                ->where(function($query) use ($supplier) {
+                ->where(function ($query) use ($supplier) {
                     // Get clarifications from this supplier OR public clarifications
                     $query->where('VendorID', $supplier->Id)
-                          ->orWhere('ISPUBLISHEDTOALL', true);
+                        ->orWhere('ISPUBLISHEDTOALL', true);
                 })
                 ->whereNull('DeletedOn')
                 ->orderBy('QuestionDate', 'desc')
                 ->get();
 
             // Format the response
-            $formattedClarifications = $clarifications->map(function($clarification) use ($supplier) {
+            $formattedClarifications = $clarifications->map(function ($clarification) use ($supplier) {
                 return [
                     'clarificationId' => $clarification->ClarificationID,
                     'tenderId' => $clarification->TenderID,
@@ -156,7 +156,7 @@ class TenderClarificationApiController extends Controller
                     'questionDate' => $clarification->QuestionDate,
                     'answer' => $clarification->Answer,
                     'answerDate' => $clarification->AnswerDate,
-                    'isPublic' => (bool) $clarification->ISPUBLISHEDTOALL,
+                    'isPublic' => (bool)$clarification->ISPUBLISHEDTOALL,
                     'isOwnQuestion' => $clarification->VendorID == $supplier->Id,
                     'status' => $clarification->Answer ? 'answered' : 'pending',
                     'createdBy' => $clarification->CreatedBy,
@@ -191,8 +191,8 @@ class TenderClarificationApiController extends Controller
     public function getPendingClarifications(Request $request): JsonResponse
     {
         try {
-            $page = (int) $request->query('page', 1);
-            $limit = (int) $request->query('limit', 20);
+            $page = (int)$request->query('page', 1);
+            $limit = (int)$request->query('limit', 20);
             $tenderId = $request->query('tender_id');
 
             $query = VendorClarifications::with(['tenderID', 'vendorID'])
@@ -206,19 +206,19 @@ class TenderClarificationApiController extends Controller
 
             $total = $query->count();
             $offset = ($page - 1) * $limit;
-            
+
             $clarifications = $query->orderBy('QuestionDate', 'asc')
                 ->skip($offset)
                 ->take($limit)
                 ->get();
 
             // Format the response with additional supplier information
-            $formattedClarifications = $clarifications->map(function($clarification) {
+            $formattedClarifications = $clarifications->map(function ($clarification) {
                 // Get supplier name from third party relationship
                 $supplierName = 'Unknown Supplier';
                 if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-                    $supplierName = $clarification->vendorID->thirdParty->TradingName 
-                                 ?? $clarification->vendorID->thirdParty->ThirdPartyName;
+                    $supplierName = $clarification->vendorID->thirdParty->TradingName
+                        ?? $clarification->vendorID->thirdParty->ThirdPartyName;
                 }
 
                 return [
@@ -298,13 +298,13 @@ class TenderClarificationApiController extends Controller
 
             // Update the clarification with response using raw SQL for SQL Server compatibility
             $affected = DB::update(
-                "UPDATE t_VendorClarifications 
+                "UPDATE t_VendorClarifications
                  SET Answer = ?, AnswerDate = ?, ISPUBLISHEDTOALL = ?, ModifiedBy = ?, ModifiedOn = ?
-                 WHERE ClarificationID = ?", 
+                 WHERE ClarificationID = ?",
                 [
                     $request->answer,
                     date('Y-m-d H:i:s'),
-                    $request->is_published_to_all ?? false ? 1 : 0,
+                        $request->is_published_to_all ?? false ? 1 : 0,
                     $systemUserId,
                     date('Y-m-d H:i:s'),
                     $clarificationId
@@ -323,7 +323,7 @@ class TenderClarificationApiController extends Controller
                     'clarificationId' => $clarificationId,
                     'answer' => $request->answer,
                     'answerDate' => now()->format('Y-m-d H:i:s'),
-                    'isPublic' => (bool) ($request->is_published_to_all ?? false)
+                    'isPublic' => (bool)($request->is_published_to_all ?? false)
                 ]
             ]);
 

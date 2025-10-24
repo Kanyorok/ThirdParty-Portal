@@ -22,71 +22,71 @@
             <div class="card-body">
                 <table id="invoicesTable" class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Invoice No.</th>
-                            <th>Tenant</th>
-                            <th>Lease</th>
-                            <th>Billing Period</th>
-                            <th>Invoice Date</th>
-                            <th>Rent Amount</th>
-                            <th>Status</th>
-                            <th style="width: 20%">Actions</th>
-                        </tr>
+                    <tr>
+                        <th>#</th>
+                        <th>Invoice No.</th>
+                        <th>Tenant</th>
+                        <th>Lease</th>
+                        <th>Billing Period</th>
+                        <th>Invoice Date</th>
+                        <th>Rent Amount</th>
+                        <th>Status</th>
+                        <th style="width: 20%">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach($invoices as $invoice)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $invoice->InvoiceNumber ?? '-' }}</td>
-                                <td>{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
-                                <td>{{ $invoice->lease->LeaseNumber ?? '-' }}</td>
-                                <td>
-                                    {{ $invoice->BillingMonth ? \Carbon\Carbon::parse($invoice->BillingMonth)->format('m/Y') : '-' }}
-                                </td>
-                                <td>
-                                    {{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '-' }}
-                                </td>
-                                <td>{{ number_format($invoice->RentAmount, 2) ?? '-' }}</td>
-                                <td>
-                                    @if($invoice->Status instanceof \App\Enums\Property\PropertyInvoiceEnum)
-                                        <span class="badge bg-{{ $invoice->Status->badgeColor() }}">
+                    @foreach($invoices as $invoice)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $invoice->InvoiceNumber ?? '-' }}</td>
+                            <td>{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
+                            <td>{{ $invoice->lease->LeaseNumber ?? '-' }}</td>
+                            <td>
+                                {{ $invoice->BillingMonth ? \Carbon\Carbon::parse($invoice->BillingMonth)->format('m/Y') : '-' }}
+                            </td>
+                            <td>
+                                {{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '-' }}
+                            </td>
+                            <td>{{ number_format($invoice->RentAmount, 2) ?? '-' }}</td>
+                            <td>
+                                @if($invoice->Status instanceof \App\Enums\Property\PropertyInvoiceEnum)
+                                    <span class="badge bg-{{ $invoice->Status->badgeColor() }}">
                                             {{ $invoice->Status->label() }}
                                         </span>
+                                @else
+                                    <span class="badge bg-secondary">{{ $invoice->Status }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="{{ route('rentinvoice.show', $invoice->Id) }}"
+                                       class="btn btn-sm btn-info text-white">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    @if($invoice->receipts()->exists())
+                                        <button class="btn btn-sm btn-secondary" disabled>
+                                            <i class="bi bi-lock"></i> In Use
+                                        </button>
                                     @else
-                                        <span class="badge bg-secondary">{{ $invoice->Status }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-2 flex-wrap">
-                                        <a href="{{ route('rentinvoice.show', $invoice->Id) }}" 
-                                           class="btn btn-sm btn-info text-white">
-                                            <i class="bi bi-eye"></i> View
-                                        </a>
-                                        @if($invoice->receipts()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
-                                            </button>
-                                        @else
-                                        <a href="{{ route('rentinvoice.edit', $invoice->Id) }}" 
+                                        <a href="{{ route('rentinvoice.edit', $invoice->Id) }}"
                                            class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </a>
-                                            <form action="{{ route('rentinvoice.destroy', $invoice->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this Invoice?');"
-                                                  class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                                        <form action="{{ route('rentinvoice.destroy', $invoice->Id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this Invoice?');"
+                                              class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>

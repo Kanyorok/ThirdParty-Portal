@@ -76,7 +76,6 @@ class BancassurancePolicyService
         activity()->causedBy($user->Id)->performedOn($policy)->event('create')->log("Added Policy {$policy->Id}.");
         return new self($policy);
     }
-    
 
 
     public static function uploadpolicy(

@@ -16,14 +16,18 @@ $phpUploadMaxBytes = ini_get('upload_max_filesize');
 $phpPostMaxBytes = ini_get('post_max_size');
 
 // Convert PHP limits to MB for comparison
-function convertToMB($size) {
+function convertToMB($size)
+{
     $size = trim($size);
-    $last = strtolower($size[strlen($size)-1]);
-    $size = (float) $size;
-    switch($last) {
-        case 'g': $size *= 1024;
-        case 'm': $size *= 1024;
-        case 'k': $size *= 1024;
+    $last = strtolower($size[strlen($size) - 1]);
+    $size = (float)$size;
+    switch ($last) {
+        case 'g':
+            $size *= 1024;
+        case 'm':
+            $size *= 1024;
+        case 'k':
+            $size *= 1024;
     }
     return $size / (1024 * 1024);
 }

@@ -34,15 +34,15 @@ class FinanceGLTypeGroupSeeder extends Seeder
 
             if (!$exists) {
                 DB::table('t_FinanceGLTypeGroups')->insert([
-                    'TypeGroupCode'   => $code,
+                    'TypeGroupCode' => $code,
                     'GLAccountTypeId' => $type,
-                    'Description'     => $desc,
-                    'CreatedBy'       => 1,
-                    'CreatedOn'       => $now,
-                    'ModifiedBy'      => 1,
-                    'ModifiedOn'      => $now,
-                    'DeletedBy'       => null,
-                    'DeletedOn'       => null,
+                    'Description' => $desc,
+                    'CreatedBy' => 1,
+                    'CreatedOn' => $now,
+                    'ModifiedBy' => 1,
+                    'ModifiedOn' => $now,
+                    'DeletedBy' => null,
+                    'DeletedOn' => null,
                 ]);
             }
         }

@@ -17,13 +17,23 @@ class ChequeLeaf extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'ChequeBookID','LeafNumber','ChequeNumber','Status',
-        'ChequeID','ReservedOn','UsedOn','ClearedOn','CancelledOn','Notes',
-        'CreatedBy','ModifiedBy','DeletedBy',
+        'ChequeBookID', 'LeafNumber', 'ChequeNumber', 'Status',
+        'ChequeID', 'ReservedOn', 'UsedOn', 'ClearedOn', 'CancelledOn', 'Notes',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy',
     ];
 
-    public static function getPrimaryKey(): string { return 'LeafID'; }
+    public static function getPrimaryKey(): string
+    {
+        return 'LeafID';
+    }
 
-    public function book()   { return $this->belongsTo(ChequeBook::class, 'ChequeBookID', 'ChequeBookID'); }
-    public function cheque() { return $this->belongsTo(Cheque::class, 'ChequeID', 'ChequeID'); }
+    public function book()
+    {
+        return $this->belongsTo(ChequeBook::class, 'ChequeBookID', 'ChequeBookID');
+    }
+
+    public function cheque()
+    {
+        return $this->belongsTo(Cheque::class, 'ChequeID', 'ChequeID');
+    }
 }

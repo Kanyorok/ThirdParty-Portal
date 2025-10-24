@@ -38,11 +38,11 @@ try {
         actor: $user,
         copyRepoPermissions: false
     );
-    
+
     echo "   ✅ Storage successful\n";
     echo "   📄 Document ID: {$result->document->DocumentId}\n";
     echo "   📄 Version ID: {$result->document->current->Id}\n";
-    
+
 } catch (\Exception $e) {
     echo "   ❌ Storage failed: " . $e->getMessage() . "\n";
     exit(1);
@@ -82,7 +82,7 @@ try {
     echo "   📤 Retrieved content: '{$retrievedContent}'\n";
     echo "   📤 Retrieved length: " . strlen($retrievedContent) . " bytes\n";
     echo "   📤 Retrieved hash: " . md5($retrievedContent) . "\n";
-    
+
     echo "\n5. CONTENT COMPARISON:\n";
     if ($originalContent === $retrievedContent) {
         echo "   ✅ PERFECT MATCH!\n";
@@ -91,7 +91,7 @@ try {
         echo "   ❌ CONTENT MISMATCH!\n";
         echo "      Original: '{$originalContent}' (" . strlen($originalContent) . " bytes)\n";
         echo "      Retrieved: '{$retrievedContent}' (" . strlen($retrievedContent) . " bytes)\n";
-        
+
         // Character-by-character comparison
         echo "\n   🔍 Character-by-character analysis:\n";
         $maxLen = max(strlen($originalContent), strlen($retrievedContent));
@@ -100,14 +100,14 @@ try {
             $retrChar = $i < strlen($retrievedContent) ? $retrievedContent[$i] : '[END]';
             $match = $origChar === $retrChar ? '✅' : '❌';
             echo "      Position {$i}: '{$origChar}' vs '{$retrChar}' {$match}\n";
-            
+
             if ($origChar !== $retrChar) {
                 echo "      🚨 First difference at position {$i}\n";
                 break;
             }
         }
     }
-    
+
 } catch (\Exception $e) {
     echo "   ❌ getContent() failed: " . $e->getMessage() . "\n";
 }
@@ -130,12 +130,12 @@ try {
         actor: $user,
         copyRepoPermissions: false
     );
-    
+
     $retrievedEncrypted = $encResult->document->current->getContent();
-    
+
     if ($encryptedContent === $retrievedEncrypted) {
         echo "   ✅ Encrypted content matches!\n";
-        
+
         // Test decryption
         $decrypted = Crypt::decryptString($retrievedEncrypted);
         if ($decrypted === $bidContent) {
@@ -148,7 +148,7 @@ try {
         echo "      Original encrypted length: " . strlen($encryptedContent) . "\n";
         echo "      Retrieved encrypted length: " . strlen($retrievedEncrypted) . "\n";
     }
-    
+
 } catch (\Exception $e) {
     echo "   ❌ Encrypted content test failed: " . $e->getMessage() . "\n";
 }

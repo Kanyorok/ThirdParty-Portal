@@ -35,7 +35,7 @@ class TransactionReceiptsController extends Controller
         return view('inventory.transactions.receipts.index', compact('receipts'));
     }
 
-   public function create()
+    public function create()
     {
         $this->authorize('create', TransactionReceipt::class);
 
@@ -44,13 +44,13 @@ class TransactionReceiptsController extends Controller
         $transfers = TransactionTransfer::doesntHave('receipt')
             ->with(['items.item'])
             ->where('Status', Transfers::InTransit->value)
-           ->where('ToBranch', $branchId) 
+            ->where('ToBranch', $branchId)
             ->get();
 
 
         $users = User::whereHas('employee', function ($q) use ($branchId) {
-                $q->where('BranchId', $branchId);
-            })
+            $q->where('BranchId', $branchId);
+        })
             ->get();
 
         return view('inventory.transactions.receipts.create', compact('transfers', 'users'));

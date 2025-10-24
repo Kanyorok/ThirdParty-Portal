@@ -50,7 +50,7 @@ class FleetDriverController extends Controller
         }
 
         $staffNo = $employeesQuery
-            ->with('image') 
+            ->with('image')
             ->orderBy('LastName')
             ->get();
 
@@ -71,7 +71,7 @@ class FleetDriverController extends Controller
             $document = $request->file('Document');
 
             $validated = $request->validated();
-            $imageId = $request->input('ImageId'); 
+            $imageId = $request->input('ImageId');
 
             $this->fleetDriverService->create(array_merge($validated, ['ImageId' => $imageId]), $document);
             return redirect()->route('fleet.drivers.index')
@@ -94,7 +94,7 @@ class FleetDriverController extends Controller
         }
 
         $staffNo = $employeesQuery
-            ->with('image') 
+            ->with('image')
             ->orderBy('LastName')
             ->get();
 
@@ -110,7 +110,7 @@ class FleetDriverController extends Controller
         $this->authorize('update', FleetDriver::class);
 
         $validated = $request->validated();
-        $document = $request->file('Document'); 
+        $document = $request->file('Document');
 
         $this->fleetDriverService->update($id, $validated, $document);
 
@@ -146,7 +146,7 @@ class FleetDriverController extends Controller
             $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
                 ->pluck('name', 'Id');
 
-        
+
             // $trips = FleetTripLog::with(['vehicle'])
             //     ->where('DriverID', $driver->Id)
             //     ->orderByDesc('TripStartDate')
@@ -160,7 +160,7 @@ class FleetDriverController extends Controller
                 'assigners'
             ));
         }
-    
+
 
 
 

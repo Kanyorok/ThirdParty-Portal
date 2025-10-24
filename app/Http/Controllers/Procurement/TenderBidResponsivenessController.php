@@ -120,7 +120,7 @@ class TenderBidResponsivenessController extends Controller
     public function show(BidResponsiveness $bidResponsiveness)
     {
         $bidResponsiveness->load(['tenderSupplier.supplier', 'tenderSupplier.tender']);
-        
+
         return view('procurement.tendering.bidopeningandevaluation.responsivenesscheck.show', compact('bidResponsiveness'));
     }
 

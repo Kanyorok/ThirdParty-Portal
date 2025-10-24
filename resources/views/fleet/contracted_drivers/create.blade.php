@@ -12,7 +12,7 @@
             </ul>
         </div>
     @endif
-    
+
 <div class="card p-4 shadow rounded-4">
     <h4 class="mb-4">🧾 Register New Contracted Driver</h4>
         <p class="mb-4" style="font-style: italic;">
@@ -104,14 +104,14 @@
                 <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>
-            
-                        <!-- Document Upload -->
-            <div class="mb-3">
-                <label class="form-label">Upload Supporting Documents</label>
-                
-                <input type="file" name="Document" class="form-control" multiple>
-                <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
-            </div>
+
+        <!-- Document Upload -->
+        <div class="mb-3">
+            <label class="form-label">Upload Supporting Documents</label>
+
+            <input type="file" name="Document" class="form-control" multiple>
+            <small class="text-muted">e.g. ID copy, Certificate of Incorporation</small>
+        </div>
 
             <div class="mt-4">
                 <button type="submit" class="btn btn-success">💾 Save</button>

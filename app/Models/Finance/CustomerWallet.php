@@ -64,7 +64,7 @@ class CustomerWallet extends Model
     public function addFunds(float $amount, string $description, string $referenceType = 'manual', int $referenceId = null): CustomerWalletTransaction
     {
         $newBalance = $this->Balance + $amount;
-        
+
         $transaction = $this->transactions()->create([
             'CustomerID' => $this->CustomerID,
             'TransactionType' => 'deposit',
@@ -95,7 +95,7 @@ class CustomerWallet extends Model
         }
 
         $newBalance = $this->Balance - $amount;
-        
+
         $transaction = $this->transactions()->create([
             'CustomerID' => $this->CustomerID,
             'TransactionType' => 'withdrawal',

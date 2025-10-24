@@ -17,7 +17,8 @@
             <!-- Body -->
             <div class="card-body p-3">
                 <p class="text-muted small mb-3">
-                    Manage your budget activities here. Each activity is linked to a budget line and can be marked as active or inactive.
+                    Manage your budget activities here. Each activity is linked to a budget line and can be marked as
+                    active or inactive.
                 </p>
 
                 @if(session('success'))
@@ -52,7 +53,8 @@
                                 </td>
                                 <td>
                                     @if($activity->IsActive)
-                                        <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Active</span>
+                                        <span class="badge bg-success"><i
+                                                class="fas fa-check-circle me-1"></i> Active</span>
                                     @else
                                         <span class="badge bg-danger"><i class="fas fa-ban me-1"></i> Inactive</span>
                                     @endif
@@ -133,6 +135,7 @@
             .table-responsive {
                 font-size: 0.875rem;
             }
+
             .btn-sm {
                 padding: 0.2rem 0.4rem;
             }

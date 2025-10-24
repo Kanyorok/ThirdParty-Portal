@@ -50,7 +50,7 @@ class DepartmentNeedsController extends Controller
                 ->whereNotNull('ItemPrice')
                 ->whereHas('price', function ($q) {
                     $q->whereNotNull('ActualPrice')
-                      ->where('ActualPrice', '>', 0);
+                        ->where('ActualPrice', '>', 0);
                 })
                 ->exists();
 

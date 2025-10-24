@@ -25,6 +25,7 @@ return new class extends Migration {
             $table->index(['VoucherID']);
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('t_PettyCashLines');

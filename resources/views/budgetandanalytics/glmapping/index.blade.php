@@ -20,7 +20,7 @@
                             <th>GL Account No</th>
                             <th>Description</th>
                             <th>GL Type</th>
-{{--                            <th>Mapped to Budget Line</th>--}}
+                            {{--                            <th>Mapped to Budget Line</th>--}}
                             <th>Active</th>
                         </tr>
                     </thead>
@@ -31,7 +31,7 @@
                             <td>{{ $item->AccountID }}</td>
                             <td class="text-break">{{ $item->Description }}</td>
                             <td>{{ $item->GLAccountTypeID }}</td>
-{{--                            <td><span class="badge bg-success">✅ Yes</span></td>--}}
+                            {{--                            <td><span class="badge bg-success">✅ Yes</span></td>--}}
                             <td><span class="badge bg-success">✔</span></td>
                         </tr>
                     @endforeach

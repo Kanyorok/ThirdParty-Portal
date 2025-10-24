@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,11 +12,11 @@ return new class extends Migration
     {
         Schema::create('t_FinanceCreditAdjustments', function (Blueprint $table) {
             $table->id('Id');
-            
+
             // Foreign keys
             $table->unsignedBigInteger('CreditID');
             $table->unsignedBigInteger('CustomerID');
-            
+
             // Adjustment details
             $table->enum('AdjustmentType', ['increase', 'decrease', 'revision']);
             $table->decimal('Amount', 15, 2);
@@ -26,17 +25,17 @@ return new class extends Migration
             $table->enum('ReferenceType', ['credit_review', 'customer_request', 'business_growth', 'risk_assessment', 'management_decision']);
             $table->unsignedBigInteger('ReferenceID')->nullable();
             $table->unsignedBigInteger('RequestedBy');
-            
+
             // Approval workflow
             $table->enum('ApprovalStatus', ['draft', 'approved', 'rejected'])->default('draft');
             $table->text('ApprovalReason')->nullable();
             $table->unsignedBigInteger('ApprovedBy')->nullable();
             $table->timestamp('ApprovedOn')->nullable();
-            
+
             // Effective date
             $table->date('EffectiveFrom');
             $table->text('Notes')->nullable();
-            
+
             // Audit fields
             $table->unsignedBigInteger('CreatedBy');
             $table->timestamp('CreatedOn')->useCurrent();
@@ -44,12 +43,12 @@ return new class extends Migration
             $table->timestamp('ModifiedOn')->useCurrent()->useCurrentOnUpdate();
             $table->unsignedBigInteger('DeletedBy')->nullable();
             $table->timestamp('DeletedOn')->nullable();
-            
+
             // Indexes
             $table->index(['CreditID', 'ApprovalStatus']);
             $table->index(['CustomerID', 'CreatedOn']);
             $table->index('ApprovalStatus');
-            
+
             // Foreign key constraints
             $table->foreign('CreditID')->references('Id')->on('t_FinanceCreditManagement');
             $table->foreign('CustomerID')->references('Id')->on('t_ThirdParties');

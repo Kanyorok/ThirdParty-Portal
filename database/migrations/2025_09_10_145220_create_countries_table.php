@@ -54,7 +54,7 @@ return new class extends Migration {
         });
 
         // Seed data
-        
+
         Lead::query()->update(['CountryId' => null, 'LocationID' => null]);
         Competitor::query()->update(['CountryId' => null, 'LocationID' => null]);
         PropertyRegistry::query()->update(['CountryId' => null, 'LocationId' => null]);

@@ -1,7 +1,9 @@
 @if ($errors->any())
     <div class="alert alert-danger">
         <strong>Fix the following:</strong>
-        <ul class="mb-0">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        <ul class="mb-0">@foreach ($errors->all() as $e)
+                <li>{{ $e }}</li>
+            @endforeach</ul>
     </div>
 @endif
 
@@ -29,7 +31,7 @@
             @foreach($branches as $br)
                 <option value="{{ $br->BranchID }}"
                         data-bank="{{ $br->BankID }}"
-                        @selected(old('BranchID', $account->BranchID ?? '') == $br->BranchID)>
+                    @selected(old('BranchID', $account->BranchID ?? '') == $br->BranchID)>
                     {{ $br->BranchName }}
                 </option>
             @endforeach
@@ -43,29 +45,30 @@
     </div>
     <div class="col-md-6">
         <label class="form-label">Account Number <span class="text-danger">*</span></label>
-        <input name="AccountNumber" class="form-control" value="{{ old('AccountNumber', $account->AccountNumber ?? '') }}" required>
+        <input name="AccountNumber" class="form-control"
+               value="{{ old('AccountNumber', $account->AccountNumber ?? '') }}" required>
     </div>
 
     <div class="col-md-6">
         <label class="form-label">IBAN</label>
         <input name="IBAN" class="form-control" value="{{ old('IBAN', $account->IBAN ?? '') }}">
     </div>
-        <div class="col-md-6">
-            <label class="form-label">Currency <span class="text-danger">*</span></label>
-            <select name="CurrencyID" id="CurrencyID" class="form-select" required>
-                <option value="">-- select currency --</option>
-                @foreach($currencies as $cur)
-                    <option value="{{ $cur->Id }}"
+    <div class="col-md-6">
+        <label class="form-label">Currency <span class="text-danger">*</span></label>
+        <select name="CurrencyID" id="CurrencyID" class="form-select" required>
+            <option value="">-- select currency --</option>
+            @foreach($currencies as $cur)
+                <option value="{{ $cur->Id }}"
                         data-code="{{ $cur->Code }}"
                         data-symbol="{{ $cur->Symbol }}"
                         data-digits="{{ $cur->DecimalDigits }}"
-                        @selected(old('CurrencyID', $account->CurrencyID ?? '') == $cur->Id)>
-                        {{ $cur->Code }} — {{ $cur->Name }} {{ $cur->Symbol ? '(' . $cur->Symbol . ')' : '' }}
-                    </option>
-                @endforeach
-            </select>
-            <small id="currencyHint" class="text-muted d-block mt-1"></small>
-        </div>
+                    @selected(old('CurrencyID', $account->CurrencyID ?? '') == $cur->Id)>
+                    {{ $cur->Code }} — {{ $cur->Name }} {{ $cur->Symbol ? '(' . $cur->Symbol . ')' : '' }}
+                </option>
+            @endforeach
+        </select>
+        <small id="currencyHint" class="text-muted d-block mt-1"></small>
+    </div>
     <div class="col-md-6">
         <label class="form-label">GL Account</label>
         <select name="GLAccountID" id="GLAccountID" class="form-select">
@@ -106,34 +109,44 @@
 
 {{-- Simple client-side branch filter --}}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const bankSel = document.getElementById('BankID');
-    const branchSel = document.getElementById('BranchID');
-    function filterBranches() {
-        const bankId = bankSel.value;
-        [...branchSel.options].forEach(opt => {
-            if (!opt.value) { opt.hidden = false; return; }
-            opt.hidden = (opt.getAttribute('data-bank') !== bankId);
-        });
-        // If current selection doesn't match bank, clear it
-        if (branchSel.selectedOptions[0] && branchSel.selectedOptions[0].hidden) {
-            branchSel.value = '';
-        }
-    }
-    bankSel.addEventListener('change', filterBranches);
-    filterBranches();
-});
+    document.addEventListener('DOMContentLoaded', function () {
+        const bankSel = document.getElementById('BankID');
+        const branchSel = document.getElementById('BranchID');
 
-document.addEventListener('DOMContentLoaded', function () {
-    const sel = document.getElementById('CurrencyID');
-    const hint = document.getElementById('currencyHint');
-    function setHint() {
-        const opt = sel.selectedOptions[0];
-        if (!opt || !opt.value) { hint.textContent = ''; return; }
-        hint.textContent = `Code: ${opt.dataset.code} · Symbol: ${opt.dataset.symbol || '—'} · Decimals: ${opt.dataset.digits}`;
-    }
-    sel.addEventListener('change', setHint);
-    setHint();
-});
+        function filterBranches() {
+            const bankId = bankSel.value;
+            [...branchSel.options].forEach(opt => {
+                if (!opt.value) {
+                    opt.hidden = false;
+                    return;
+                }
+                opt.hidden = (opt.getAttribute('data-bank') !== bankId);
+            });
+            // If current selection doesn't match bank, clear it
+            if (branchSel.selectedOptions[0] && branchSel.selectedOptions[0].hidden) {
+                branchSel.value = '';
+            }
+        }
+
+        bankSel.addEventListener('change', filterBranches);
+        filterBranches();
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const sel = document.getElementById('CurrencyID');
+        const hint = document.getElementById('currencyHint');
+
+        function setHint() {
+            const opt = sel.selectedOptions[0];
+            if (!opt || !opt.value) {
+                hint.textContent = '';
+                return;
+            }
+            hint.textContent = `Code: ${opt.dataset.code} · Symbol: ${opt.dataset.symbol || '—'} · Decimals: ${opt.dataset.digits}`;
+        }
+
+        sel.addEventListener('change', setHint);
+        setHint();
+    });
 </script>
 

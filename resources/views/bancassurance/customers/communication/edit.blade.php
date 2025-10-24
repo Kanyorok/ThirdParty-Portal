@@ -9,7 +9,8 @@
 
             <div class="col-md-4">
                 <label class="form-label">Customer</label>
-                <input type="text" class="form-control" value="{{ $log->customers->thirdParty->ThirdPartyName }}" disabled>
+                <input type="text" class="form-control" value="{{ $log->customers->thirdParty->ThirdPartyName }}"
+                       disabled>
             </div>
 
             <div class="row mb-3">

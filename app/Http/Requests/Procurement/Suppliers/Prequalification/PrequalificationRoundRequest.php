@@ -72,7 +72,7 @@ abstract class PrequalificationRoundRequest extends FormRequest
                             $fail('Criteria score must be 10.');
                             return;
                         }
-                        if ((int) $value !== 10) {
+                        if ((int)$value !== 10) {
                             $fail('Criteria score is fixed at 10.');
                         }
                     }

@@ -8,7 +8,7 @@
 
     <div class="mb-3 text-end">
         <a href="{{ route('bancassurance.customers.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Register New Customer</a>
+            <i class="fas fa-plus"></i> Register New Customer</a>
     </div>
     <div><p><small>The list of registered customers below:</small></p></div>
     <table id="customerregistry" class="table table-bordered table-striped align-middle">
@@ -33,8 +33,8 @@
                     <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
                     <td>{{ $customer->DateOfBirth? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                      <td>
-                     
-                    <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
+
+                     <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
                     <a href="{{ route('bancassurance.customers.edit', $customer->Id) }}" class="btn btn-sm btn-warning">Edit</a>
                             @if($customer->policies()->exists())
                                 <button class="btn btn-sm btn-secondary" disabled>

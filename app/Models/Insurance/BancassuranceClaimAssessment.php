@@ -27,14 +27,17 @@ class BancassuranceClaimAssessment extends Model
     {
         return 'bancassuranceclaimassessmentId';
     }
+
     public function claim()
     {
         return $this->belongsTo(BancassuranceClaim::class, 'ClaimId', 'Id');
     }
+
     public function assessedby()
     {
         return $this->belongsTo(User::class, 'AssessedBy', 'Id');
     }
+
     public function decision()
     {
         return $this->belongsTo(CodeDetail::class, 'Decision', 'ID');

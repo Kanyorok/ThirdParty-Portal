@@ -25,7 +25,7 @@
                  <option value="">--Select Contact Type--</option>
                     @foreach ($contacttypes as $contacttype)
                     <option value="{{ $contacttype->ID }}">
-                    {{ $contacttype->Description ?? '-'}}
+                        {{ $contacttype->Description ?? '-'}}
                  </option>
                   @endforeach
             </select>
@@ -52,7 +52,9 @@
             </div>
 
             <div class="text-end">
-                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Log</button>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Log
+                </button>
             </div>
         </form>
     </div>

@@ -26,7 +26,8 @@
                             <select name="Category" id="Category" class="form-select" required>
                                 <option value="">-- Select Category --</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->Id }}" {{ old('Category') == $category->Id ? 'selected' : '' }}>
+                                    <option
+                                        value="{{ $category->Id }}" {{ old('Category') == $category->Id ? 'selected' : '' }}>
                                         {{ $category->Name }}
                                     </option>
                                 @endforeach
@@ -50,20 +51,23 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="UOM" class="form-label">Unit of Measure <span class="text-danger">*</span></label>
+                            <label for="UOM" class="form-label">Unit of Measure <span
+                                    class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="UOMName" value="{{ old('UOMName') }}" readonly>
                             <input type="hidden" name="UOM" id="UOM" value="{{ old('UOM') }}">
                         </div>
 
                         <div class="col-md-4">
-                            <label for="UnitCost" class="form-label">Unit Cost <span class="text-danger">*</span></label>
+                            <label for="UnitCost" class="form-label">Unit Cost <span
+                                    class="text-danger">*</span></label>
                             <input type="number" class="form-control" name="UnitCost" id="UnitCost"
                                    value="{{ old('UnitCost') }}" step="0.01" readonly>
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Branch <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" value="{{ auth()->user()->employee->branch->Name ?? 'N/A' }}" readonly>
+                            <input type="text" class="form-control"
+                                   value="{{ auth()->user()->employee->branch->Name ?? 'N/A' }}" readonly>
                             <input type="hidden" name="Branch" value="{{ auth()->user()->employee->BranchId }}">
                         </div>
                     </div>
@@ -75,7 +79,8 @@
                                 <option value="">-- Select Store --</option>
                                 @foreach($stores as $store)
                                     @if($store->BranchID == (auth()->user()->employee->BranchId ?? null))
-                                        <option value="{{ $store->Id }}" {{ old('Store') == $store->Id ? 'selected' : '' }}>
+                                        <option
+                                            value="{{ $store->Id }}" {{ old('Store') == $store->Id ? 'selected' : '' }}>
                                             {{ $store->StoreName }}
                                         </option>
                                     @endif
@@ -84,7 +89,8 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label for="currentQty" class="form-label">Current Qty <span class="text-danger">*</span></label>
+                            <label for="currentQty" class="form-label">Current Qty <span
+                                    class="text-danger">*</span></label>
                             <input type="number" class="form-control" name="CurrentQty" id="currentQty"
                                    value="{{ old('CurrentQty', 0) }}" min="0" step="0.01" required>
                         </div>
@@ -102,7 +108,8 @@
                                    value="{{ old('Reorder', 0) }}" min="0" step="0.01">
                         </div>
                         <div class="col-md-4">
-                            <label for="LastReceived" class="form-label">Last Received Date <span class="text-danger">*</span></label>
+                            <label for="LastReceived" class="form-label">Last Received Date <span
+                                    class="text-danger">*</span></label>
                             <input type="date" class="form-control" name="LastReceived" id="LastReceived"
                                    value="{{ old('LastReceived', now()->format('Y-m-d')) }}" required>
                         </div>
@@ -110,7 +117,9 @@
 
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-success"
-                                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Item</button>
+                                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save
+                            Item
+                        </button>
                         <a href="{{ url()->previous() }}" class="btn btn-secondary px-4 ms-2">Cancel</a>
                     </div>
                 </form>
@@ -237,18 +246,18 @@
         document.addEventListener('DOMContentLoaded', function () {
             const storeSelect = document.getElementById('Store');
             const userBranchId = {{ auth()->user()->employee->BranchId ?? 'null' }};
-            
+
             // If no stores are available for the user's branch, show message
             if (userBranchId) {
                 const storeOptions = storeSelect.querySelectorAll('option');
                 let hasStores = false;
-                
+
                 storeOptions.forEach(option => {
                     if (option.value !== '') {
                         hasStores = true;
                     }
                 });
-                
+
                 if (!hasStores) {
                     storeSelect.innerHTML = '<option value="">No stores available for your branch</option>';
                 }
@@ -260,12 +269,15 @@
         .form-label {
             font-weight: 500;
         }
+
         #UOMName {
             background-color: #f8f9fa;
         }
+
         .card-header {
             border-bottom: none;
         }
+
         .text-danger {
             font-weight: bold;
         }

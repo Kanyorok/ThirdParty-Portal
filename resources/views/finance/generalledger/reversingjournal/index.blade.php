@@ -191,17 +191,17 @@
                                         <i class="fas fa-book-open"></i>
                                     </a>
                                     @php $isPosted = strtolower($reversal->ApprovalStatus ?? '') === 'posted'; @endphp
-                                    <!-- Edit removed as requested -->
+                                        <!-- Edit removed as requested -->
                                     <button type="button"
                                             class="btn btn-sm btn-outline-danger custom-delete-btn {{ $isPosted ? 'disabled' : '' }}"
                                             title="Delete"
                                             {{ $isPosted ? 'disabled' : '' }}
                                             @if(!$isPosted)
                                                 data-bs-toggle="modal"
-                                                data-bs-target="#customDeleteConfirmModal"
-                                                data-name="{{ $reversal->RefNo ?? ('#'.$reversal->Id) }}"
-                                                data-route="{{ route('reversingjournal.destroy', $reversal->Id) }}"
-                                            @endif
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{ $reversal->RefNo ?? ('#'.$reversal->Id) }}"
+                                            data-route="{{ route('reversingjournal.destroy', $reversal->Id) }}"
+                                        @endif
                                     >
                                         <i class="fas fa-trash-alt"></i>
                                     </button>

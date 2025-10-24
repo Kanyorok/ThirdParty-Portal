@@ -19,9 +19,9 @@ class PettyCashFloat extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'Code','Name','CurrencyID','CustodianUserID',
-        'FloatLimit','ReorderLevel','OpeningBalance','IsActive',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'Code', 'Name', 'CurrencyID', 'CustodianUserID',
+        'FloatLimit', 'ReorderLevel', 'OpeningBalance', 'IsActive',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     protected $casts = [
@@ -31,8 +31,18 @@ class PettyCashFloat extends Model
         'IsActive' => 'boolean',
     ];
 
-    public function currency() { return $this->belongsTo(Currency::class, 'CurrencyID', 'Id'); }
-    public function vouchers() { return $this->hasMany(PettyCashVoucher::class, 'FloatID', 'FloatID'); }
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
+    }
 
-    public static function getPrimaryKey(): string { return 'FloatID'; }
+    public function vouchers()
+    {
+        return $this->hasMany(PettyCashVoucher::class, 'FloatID', 'FloatID');
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'FloatID';
+    }
 }

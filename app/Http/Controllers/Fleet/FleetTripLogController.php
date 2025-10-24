@@ -32,26 +32,26 @@ class FleetTripLogController extends Controller
         return view('fleet.trip_logs.index', compact('tripLogs'));
     }
 
-   public function create(Request $request)
-{
-    $this->authorize('create', FleetTripLog::class);
+    public function create(Request $request)
+    {
+        $this->authorize('create', FleetTripLog::class);
 
-    $parentTrip = null;
-    if ($request->has('parentTripId')) {
-        $parentTrip = FleetTripLog::findOrFail($request->parentTripId);
+        $parentTrip = null;
+        if ($request->has('parentTripId')) {
+            $parentTrip = FleetTripLog::findOrFail($request->parentTripId);
+        }
+
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+        $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
+        $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
+
+        // Prevent undefined variable in the create view
+        $tripLog = null;
+
+        return view('fleet.trip_logs.create', compact(
+            'vehicleTypes', 'loadTypes', 'tripTypes', 'parentTrip', 'tripLog'
+        ));
     }
-
-    $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-    $loadTypes    = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
-    $tripTypes    = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
-
-    // Prevent undefined variable in the create view
-    $tripLog = null;
-
-    return view('fleet.trip_logs.create', compact(
-        'vehicleTypes', 'loadTypes', 'tripTypes', 'parentTrip', 'tripLog'
-    ));
-}
 
 
     public function store(FleetTripLogRequest $request)
@@ -90,44 +90,43 @@ class FleetTripLogController extends Controller
     }
 
     public function edit($id)
-{
-    $this->authorize('update', FleetTripLog::class);
+    {
+        $this->authorize('update', FleetTripLog::class);
 
-    // Load parent + child trips
-    $tripLog = FleetTripLog::with([
-        'childTrips.parentTripType',
-        'childTrips.parentVehicleType',
-        'childTrips.parentLoadType',
-        'parentTripType',
-        'parentVehicleType',
-        'parentLoadType'
-    ])->findOrFail($id);
-
-    // Always resolve the parent trip (if this is a child, go to its parent)
-    $parentTrip = $tripLog->ParentTripID
-        ? FleetTripLog::with([
+        // Load parent + child trips
+        $tripLog = FleetTripLog::with([
             'childTrips.parentTripType',
             'childTrips.parentVehicleType',
             'childTrips.parentLoadType',
             'parentTripType',
             'parentVehicleType',
             'parentLoadType'
-        ])->findOrFail($tripLog->ParentTripID)
-        : $tripLog;
+        ])->findOrFail($id);
 
-    $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-    $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
-    $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
+        // Always resolve the parent trip (if this is a child, go to its parent)
+        $parentTrip = $tripLog->ParentTripID
+            ? FleetTripLog::with([
+                'childTrips.parentTripType',
+                'childTrips.parentVehicleType',
+                'childTrips.parentLoadType',
+                'parentTripType',
+                'parentVehicleType',
+                'parentLoadType'
+            ])->findOrFail($tripLog->ParentTripID)
+            : $tripLog;
 
-    return view('fleet.trip_logs.edit', [
-        'parentTrip'   => $parentTrip,
-        'childTrips'   => $parentTrip->childTrips,
-        'vehicleTypes' => $vehicleTypes,
-        'loadTypes'    => $loadTypes,
-        'tripTypes'    => $tripTypes,
-    ]);
-}
+        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+        $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
+        $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
 
+        return view('fleet.trip_logs.edit', [
+            'parentTrip' => $parentTrip,
+            'childTrips' => $parentTrip->childTrips,
+            'vehicleTypes' => $vehicleTypes,
+            'loadTypes' => $loadTypes,
+            'tripTypes' => $tripTypes,
+        ]);
+    }
 
 
     public function update(FleetTripLogRequest $request, $id)
@@ -137,10 +136,10 @@ class FleetTripLogController extends Controller
         $data = $request->validated();
         $this->tripLogService->updateTrip($parentTrip, $data);
         $parentAttributes = [
-            'TripType'    => $parentTrip->TripType,
-            'TripCode'    => $parentTrip->TripCode,
+            'TripType' => $parentTrip->TripType,
+            'TripCode' => $parentTrip->TripCode,
             'VehicleType' => $parentTrip->VehicleType,
-            'LoadType'    => $parentTrip->LoadType,
+            'LoadType' => $parentTrip->LoadType,
         ];
 
         if (!empty($data['childTrips'])) {
@@ -177,15 +176,15 @@ class FleetTripLogController extends Controller
     {
         $transfers = \App\Models\Inventory\TransactionTransfer::with(['fromBranch', 'toBranch'])
             ->where('Status', \App\Enums\Inventory\Transfers::InTransit)
-            ->get(['Id','TransferId','TransferDate','FromBranch','ToBranch']);
+            ->get(['Id', 'TransferId', 'TransferDate', 'FromBranch', 'ToBranch']);
 
-        return response()->json($transfers->map(function($t) {
+        return response()->json($transfers->map(function ($t) {
             return [
-                'Id'          => $t->Id,
-                'TransferId'  => $t->TransferId,
-                'TransferDate'=> $t->TransferDate,
-                'FromBranch'  => $t->fromBranch?->Name,
-                'ToBranch'    => $t->toBranch?->Name,
+                'Id' => $t->Id,
+                'TransferId' => $t->TransferId,
+                'TransferDate' => $t->TransferDate,
+                'FromBranch' => $t->fromBranch?->Name,
+                'ToBranch' => $t->toBranch?->Name,
             ];
         }));
     }
@@ -194,25 +193,25 @@ class FleetTripLogController extends Controller
     {
         $campaigns = MarketingPlanner::query()
             ->where('Status', PlannerStatus::Active)
-            ->with('activities') 
-            ->get(['Id','PlannerID','Name','Status','StartOn','EndOn']);
+            ->with('activities')
+            ->get(['Id', 'PlannerID', 'Name', 'Status', 'StartOn', 'EndOn']);
 
         return response()->json($campaigns->map(function ($t) {
             return [
-                'Id'         => $t->Id,
-                'PlannerID'  => $t->PlannerID,
-                'Name'       => $t->Name,
-                'StartOn'    => optional($t->StartOn)->toDateString(),
-                'EndOn'      => optional($t->EndOn)->toDateString(),
-                'Status'     => $t->Status instanceof \BackedEnum ? $t->Status->name : $t->Status,
+                'Id' => $t->Id,
+                'PlannerID' => $t->PlannerID,
+                'Name' => $t->Name,
+                'StartOn' => optional($t->StartOn)->toDateString(),
+                'EndOn' => optional($t->EndOn)->toDateString(),
+                'Status' => $t->Status instanceof \BackedEnum ? $t->Status->name : $t->Status,
                 'Activities' => $t->activities->map(fn($a) => [
-                    'Id'        => $a->Id,
-                    'Location'  => $a->Location,
-                    'StartOn'   => optional($a->StartOn)->toDateString(),
-                    'EndOn'     => optional($a->EndOn)->toDateString(),
+                    'Id' => $a->Id,
+                    'Location' => $a->Location,
+                    'StartOn' => optional($a->StartOn)->toDateString(),
+                    'EndOn' => optional($a->EndOn)->toDateString(),
                     'StartTime' => optional($a->StartTime)?->format('H:i') ?? '',
-                    'EndTime'   => optional($a->EndTime)?->format('H:i') ?? '',
-                    'Notes'     => $a->Notes,
+                    'EndTime' => optional($a->EndTime)?->format('H:i') ?? '',
+                    'Notes' => $a->Notes,
                 ]),
             ];
         }));

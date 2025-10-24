@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('t_ComplianceFilings', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('TemplateID')->constrained('t_ComplianceFilingTemplates','Id');
+            $table->foreignId('TemplateID')->constrained('t_ComplianceFilingTemplates', 'Id');
             $table->date('SubmissionDate');
             $table->string('FileName', 255)->nullable();
             $table->string('MimeType', 100)->nullable();
@@ -31,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-     Schema::dropIfExists('t_ComplianceFilings');
+        Schema::dropIfExists('t_ComplianceFilings');
     }
 };

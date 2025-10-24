@@ -11,36 +11,36 @@ class UnifiedPOTestDataSeeder extends Seeder
     public function run()
     {
         $this->command->info('🚀 Seeding Unified PO Test Data...');
-        
+
         // 1. Create additional Tenders if needed
         $this->seedTenders();
-        
-        // 2. Create additional Suppliers if needed  
+
+        // 2. Create additional Suppliers if needed
         $this->seedSuppliers();
-        
+
         // 3. Create TenderItems for existing tenders
         $this->seedTenderItems();
-        
+
         // 4. Create more TenderAwards with proper statuses
         $this->seedTenderAwards();
-        
+
         // 5. Create ConsolidatedProcurementPlan if needed
         $this->seedProcurementPlans();
-        
+
         // 6. Create PlanLineItems with correct ProcurementMethod
         $this->seedPlanLineItems();
-        
+
         // 7. Update existing data to be compatible
         $this->updateExistingData();
-        
+
         $this->command->info('✅ Unified PO Test Data seeding completed!');
     }
-    
+
     private function seedTenders()
     {
         $existingTenders = DB::table('t_Tenders')->count();
         $this->command->info("📋 Found {$existingTenders} existing tenders");
-        
+
         // Add more tenders for testing if needed
         $additionalTenders = [
             [
@@ -66,7 +66,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                 'ModifiedOn' => now()->subDays(25),
             ],
             [
-                'TenderNo' => 'TNDR-UNIFIED-002',  
+                'TenderNo' => 'TNDR-UNIFIED-002',
                 'Title' => 'Facility Maintenance Services Contract',
                 'TenderType' => 'rs', // Restricted
                 'TenderCategory' => 1,
@@ -88,7 +88,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                 'ModifiedOn' => now()->subDays(15),
             ]
         ];
-        
+
         foreach ($additionalTenders as $tender) {
             $exists = DB::table('t_Tenders')->where('TenderNo', $tender['TenderNo'])->exists();
             if (!$exists) {
@@ -97,12 +97,12 @@ class UnifiedPOTestDataSeeder extends Seeder
             }
         }
     }
-    
+
     private function seedSuppliers()
     {
         $existingSuppliers = DB::table('t_Suppliers')->count();
         $this->command->info("🏢 Found {$existingSuppliers} existing suppliers");
-        
+
         // Add more suppliers if we have less than 5
         if ($existingSuppliers < 5) {
             $additionalSuppliers = [
@@ -122,7 +122,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                     'TradingName' => 'Beta Facility Services',
                     'ThirdPartyName' => 'Beta Facility Services',
                     'Address' => '456 Industrial Area, Mombasa',
-                    'Phone' => '+254-700-654321', 
+                    'Phone' => '+254-700-654321',
                     'Email' => 'contact@betafacility.com',
                     'IsActive' => 1,
                     'CreatedBy' => 1,
@@ -135,7 +135,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                     'ThirdPartyName' => 'Gamma Tech Supplies',
                     'Address' => '789 Tech Hub, Kisumu',
                     'Phone' => '+254-700-987654',
-                    'Email' => 'sales@gammatech.co.ke', 
+                    'Email' => 'sales@gammatech.co.ke',
                     'IsActive' => 1,
                     'CreatedBy' => 1,
                     'ModifiedBy' => 1,
@@ -143,7 +143,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                     'ModifiedOn' => now()->subDays(40),
                 ]
             ];
-            
+
             foreach ($additionalSuppliers as $supplier) {
                 $exists = DB::table('t_Suppliers')->where('TradingName', $supplier['TradingName'])->exists();
                 if (!$exists) {
@@ -153,14 +153,14 @@ class UnifiedPOTestDataSeeder extends Seeder
             }
         }
     }
-    
+
     private function seedTenderItems()
     {
         $this->command->info("📦 Seeding tender items...");
-        
+
         // Get tenders that need items
         $tenders = DB::table('t_Tenders')->get();
-        
+
         // Sample items data
         $sampleItems = [
             ['name' => 'Desktop Computers', 'description' => 'Dell OptiPlex 7090 or equivalent', 'qty' => 10],
@@ -170,14 +170,14 @@ class UnifiedPOTestDataSeeder extends Seeder
             ['name' => 'Security Services', 'description' => '24/7 security guard services', 'qty' => 12], // months
             ['name' => 'Stationery Package', 'description' => 'Complete office stationery supplies', 'qty' => 50]
         ];
-        
+
         foreach ($tenders as $tender) {
             $existingItems = DB::table('t_TenderItems')->where('TenderID', $tender->Id)->count();
-            
+
             if ($existingItems < 2) {
                 // Add 2-3 items per tender
                 $itemsToAdd = array_slice($sampleItems, 0, rand(2, 3));
-                
+
                 foreach ($itemsToAdd as $item) {
                     DB::table('t_TenderItems')->insert([
                         'TenderID' => $tender->Id,
@@ -191,28 +191,28 @@ class UnifiedPOTestDataSeeder extends Seeder
                         'ModifiedOn' => now(),
                     ]);
                 }
-                
+
                 $this->command->info("  ✅ Added items to tender: {$tender->TenderNo}");
             }
         }
     }
-    
+
     private function seedTenderAwards()
     {
         $this->command->info("🏆 Seeding tender awards...");
-        
+
         // Get available tenders and suppliers
         $tenders = DB::table('t_Tenders')->limit(3)->get();
         $suppliers = DB::table('t_Suppliers')->limit(3)->get();
-        
+
         $awardIndex = 0;
         foreach ($tenders as $tender) {
             $existingAward = DB::table('t_TenderAwards')->where('TenderID', $tender->Id)->exists();
-            
+
             if (!$existingAward && isset($suppliers[$awardIndex])) {
                 $supplier = $suppliers[$awardIndex];
                 $awardIndex++;
-                
+
                 // Create different types of awards
                 $awards = [
                     [
@@ -240,14 +240,14 @@ class UnifiedPOTestDataSeeder extends Seeder
                         'ModifiedOn' => now()->subDays(10),
                     ]
                 ];
-                
+
                 foreach ($awards as $award) {
                     DB::table('t_TenderAwards')->insert($award);
                     $this->command->info("  ✅ Created award for tender {$tender->TenderNo} -> {$supplier->TradingName} (Status: {$award['ContractStatus']})");
                 }
             }
         }
-        
+
         // Also update the existing award to have an Active contract
         DB::table('t_TenderAwards')
             ->where('Id', 1)
@@ -262,16 +262,16 @@ class UnifiedPOTestDataSeeder extends Seeder
                 'ModifiedBy' => 1,
                 'ModifiedOn' => now(),
             ]);
-        
+
         $this->command->info("  ✅ Updated existing award to have Active contract status");
     }
-    
+
     private function seedProcurementPlans()
     {
         $this->command->info("📋 Seeding procurement plans...");
-        
+
         $existingPlans = DB::table('t_ConsolidatedProcurementPlan')->count();
-        
+
         if ($existingPlans < 2) {
             $plans = [
                 [
@@ -289,7 +289,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                 ],
                 [
                     'Title' => 'FY 2024-2025 IT Infrastructure Procurement',
-                    'ReferenceNumber' => 'PLAN-2024-002', 
+                    'ReferenceNumber' => 'PLAN-2024-002',
                     'FiscalYear' => '2024-2025',
                     'Status' => 'Approved',
                     'CreatedBy' => 1,
@@ -301,12 +301,12 @@ class UnifiedPOTestDataSeeder extends Seeder
                     'ModifiedOn' => now()->subDays(65),
                 ]
             ];
-            
+
             foreach ($plans as $plan) {
                 $exists = DB::table('t_ConsolidatedProcurementPlan')
                     ->where('ReferenceNumber', $plan['ReferenceNumber'])
                     ->exists();
-                    
+
                 if (!$exists) {
                     DB::table('t_ConsolidatedProcurementPlan')->insert($plan);
                     $this->command->info("  ✅ Created plan: {$plan['ReferenceNumber']}");
@@ -314,21 +314,21 @@ class UnifiedPOTestDataSeeder extends Seeder
             }
         }
     }
-    
+
     private function seedPlanLineItems()
     {
         $this->command->info("📝 Seeding plan line items...");
-        
+
         // Get approved plans
         $plans = DB::table('t_ConsolidatedProcurementPlan')
             ->where('Status', 'Approved')
             ->get();
-        
+
         foreach ($plans as $plan) {
             $existingItems = DB::table('t_PlanLineItem')
                 ->where('PlanID', $plan->PlanID)
                 ->count();
-            
+
             if ($existingItems < 3) {
                 $lineItems = [
                     [
@@ -358,7 +358,7 @@ class UnifiedPOTestDataSeeder extends Seeder
                         'MergedQty' => 10,
                         'UnitOfMeasure' => 'Sets',
                         'EstimatedUnitCost' => 125000,
-                        'ProcurementMethod' => 'Direct', // This is key for our query  
+                        'ProcurementMethod' => 'Direct', // This is key for our query
                         'SchedulePeriod' => 'Q3 2024',
                         'ExecutionStatus' => 'Approved',
                         'ExpectedDeliveryDate' => now()->addDays(45),
@@ -370,27 +370,27 @@ class UnifiedPOTestDataSeeder extends Seeder
                         'ModifiedOn' => now()->subDays(55),
                     ]
                 ];
-                
+
                 foreach ($lineItems as $item) {
                     DB::table('t_PlanLineItem')->insert($item);
                 }
-                
+
                 $this->command->info("  ✅ Added line items to plan: {$plan->ReferenceNumber}");
             }
         }
-        
+
         // Also update existing plan item to have correct method
         DB::table('t_PlanLineItem')
             ->where('ProcurementMethod', '107')
             ->update(['ProcurementMethod' => 'Direct']);
-        
+
         $this->command->info("  ✅ Updated existing plan items to use 'Direct' procurement method");
     }
-    
+
     private function updateExistingData()
     {
         $this->command->info("🔄 Updating existing data for compatibility...");
-        
+
         // Update existing awards to have proper contract status
         $updated = DB::table('t_TenderAwards')
             ->whereNull('ContractStatus')
@@ -400,16 +400,16 @@ class UnifiedPOTestDataSeeder extends Seeder
                 'ModifiedBy' => 1,
                 'ModifiedOn' => now()
             ]);
-        
+
         if ($updated > 0) {
             $this->command->info("  ✅ Updated {$updated} awards to have contract status");
         }
-        
+
         // Ensure we have at least one active contract
         $activeContracts = DB::table('t_TenderAwards')
             ->where('ContractStatus', 'Active')
             ->count();
-            
+
         if ($activeContracts == 0) {
             DB::table('t_TenderAwards')
                 ->where('AwardStatus', 'Approved')
@@ -422,10 +422,10 @@ class UnifiedPOTestDataSeeder extends Seeder
                     'ModifiedBy' => 1,
                     'ModifiedOn' => now()
                 ]);
-                
+
             $this->command->info("  ✅ Created at least one active contract");
         }
-        
+
         $this->command->info("✅ Data compatibility updates completed!");
     }
 }

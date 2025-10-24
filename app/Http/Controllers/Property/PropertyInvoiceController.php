@@ -120,9 +120,9 @@ class PropertyInvoiceController extends Controller
             $invoice = PropertyInvoice::findOrFail($id);
 
             if ($invoice->receipts()->exists()) {
-            return redirect()->back()
-            ->withErrors(['error' => 'This Invoice is in use and cannot be deleted.']);
-            } 
+                return redirect()->back()
+                    ->withErrors(['error' => 'This Invoice is in use and cannot be deleted.']);
+            }
 
             $invoice->delete();
 

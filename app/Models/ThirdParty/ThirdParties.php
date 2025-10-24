@@ -42,7 +42,7 @@ class ThirdParties extends Model
         'Phone',
         'Website',
         'Status',
-    // 'ThirdPartyType' legacy column deprecated (kept temporarily for backward compatibility)
+        // 'ThirdPartyType' legacy column deprecated (kept temporarily for backward compatibility)
         'IsPrequalified',
         'ApprovalStatus',
         'CreatedBy',
@@ -67,7 +67,7 @@ class ThirdParties extends Model
                 // Ensure at least one pivot type has supplier code pattern when marking prequalified
                 $model->loadMissing('types');
                 $isSupplier = $model->types->pluck('Code')->contains(fn($c) => str_starts_with($c, 'SU-'));
-                if (! $isSupplier) {
+                if (!$isSupplier) {
                     throw new \LogicException("Only supplier third parties (with SU-* type) can be marked as prequalified.");
                 }
             }

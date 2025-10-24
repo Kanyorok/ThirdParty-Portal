@@ -65,7 +65,7 @@ class CustomerController extends Controller
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
 
-        $customer = BancassuranceCustomer::with('referrals.referredByEmployee','genders')->findOrFail($Id);
+        $customer = BancassuranceCustomer::with('referrals.referredByEmployee', 'genders')->findOrFail($Id);
 
         return view('bancassurance.customers.show', compact('customer'));
     }

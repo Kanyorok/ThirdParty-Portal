@@ -180,19 +180,19 @@
                                        title="View Invoice">
                                         <i class="fas fa-eye"></i>
                                     </a>
-{{--                                    @if(strtolower($item->ApprovalStatus) === 'draft')--}}
-{{--                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"--}}
-{{--                                        class="btn btn-sm btn-outline-primary me-1"--}}
-{{--                                        title="Edit">--}}
-{{--                                            <i class="fas fa-edit"></i>--}}
-{{--                                        </a>--}}
-{{--                                    @else--}}
-{{--                                        <a href="#"--}}
-{{--                                        class="btn btn-sm btn-outline-primary me-1 disabled"--}}
-{{--                                        title="Edit (disabled)">--}}
-{{--                                            <i class="fas fa-edit"></i>--}}
-{{--                                        </a>--}}
-{{--                                    @endif--}}
+                                    {{--                                    @if(strtolower($item->ApprovalStatus) === 'draft')--}}
+                                    {{--                                        <a href="{{ route('invoiceentry.edit', $item->Id) }}"--}}
+                                    {{--                                        class="btn btn-sm btn-outline-primary me-1"--}}
+                                    {{--                                        title="Edit">--}}
+                                    {{--                                            <i class="fas fa-edit"></i>--}}
+                                    {{--                                        </a>--}}
+                                    {{--                                    @else--}}
+                                    {{--                                        <a href="#"--}}
+                                    {{--                                        class="btn btn-sm btn-outline-primary me-1 disabled"--}}
+                                    {{--                                        title="Edit (disabled)">--}}
+                                    {{--                                            <i class="fas fa-edit"></i>--}}
+                                    {{--                                        </a>--}}
+                                    {{--                                    @endif--}}
 
                                     @if(strtolower($item->ApprovalStatus) === 'draft')
                                         <button type="button"

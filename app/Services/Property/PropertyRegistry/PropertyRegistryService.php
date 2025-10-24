@@ -29,9 +29,9 @@ class PropertyRegistryService
         CategoryMaster $Category,
         string         $Owner,
         Carbon         $AcquisitionDate,
-        Country        $CountryId,
-        Locality       $LocationId,
-        string         $Address,
+        Country  $CountryId,
+        Locality $LocationId,
+        string   $Address,
         string         $PropertyDescription = null,
         User   $user,
         UploadedFile $document = null
@@ -72,12 +72,12 @@ public static function update(
     CategoryMaster   $Category,
     string           $Owner,
     Carbon           $AcquisitionDate,
-    Country          $CountryId,
-    Locality         $LocationId,
-    string           $Address,
-    ?string          $PropertyDescription = null,
+    Country  $CountryId,
+    Locality $LocationId,
+    string   $Address,
+    ?string  $PropertyDescription = null,
     User             $user,
-    bool            $IsActive,
+    bool     $IsActive,
     UploadedFile     $document = null
 ): self {
     $property->update([
@@ -87,12 +87,12 @@ public static function update(
         'Category'            => $Category->Id,
         'Owner'               => $Owner,
         'AcquisitionDate'     => $AcquisitionDate,
-        'CountryId'             => $CountryId->Id,
-        'LocationId'            => $LocationId->ID,
-        'Address'              => $Address,
+        'CountryId' => $CountryId->Id,
+        'LocationId' => $LocationId->ID,
+        'Address' => $Address,
         'PropertyDescription' => $PropertyDescription ?? '',
         'ModifiedBy'          => $user->Id,
-        'IsActive'            => $IsActive,
+        'IsActive' => $IsActive,
         'ModifiedOn'          => now(),
     ]);
 

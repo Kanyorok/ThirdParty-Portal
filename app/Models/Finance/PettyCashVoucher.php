@@ -19,13 +19,13 @@ class PettyCashVoucher extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-    'FloatID','VoucherType','DocNo','DocDate',
-    'CurrencyID','ExchangeRate','Amount','Status',
-    'Reference','Narration','BankAccountID','CashbookID',
-    'ApprovalStatus','SubmittedOn','SubmittedBy','ApprovedOn','ApprovedBy',  // <— add
-    'ReplenishmentBatchID',                                                   // <— add
-    'PostedOn','PostedBy','VoidedOn','VoidedBy',
-    'CreatedBy','ModifiedBy','DeletedBy'
+        'FloatID', 'VoucherType', 'DocNo', 'DocDate',
+        'CurrencyID', 'ExchangeRate', 'Amount', 'Status',
+        'Reference', 'Narration', 'BankAccountID', 'CashbookID',
+        'ApprovalStatus', 'SubmittedOn', 'SubmittedBy', 'ApprovedOn', 'ApprovedBy',  // <— add
+        'ReplenishmentBatchID',                                                   // <— add
+        'PostedOn', 'PostedBy', 'VoidedOn', 'VoidedBy',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     protected $casts = [
@@ -33,10 +33,28 @@ class PettyCashVoucher extends Model
         'Amount' => 'decimal:2',
     ];
 
-    public function float()     { return $this->belongsTo(PettyCashFloat::class, 'FloatID','FloatID'); }
-    public function currency()  { return $this->belongsTo(Currency::class, 'CurrencyID','Id'); }
-    public function lines()     { return $this->hasMany(PettyCashLine::class, 'VoucherID','VoucherID'); }
-    public function batch()     { return $this->belongsTo(PettyCashReplenishmentBatch::class, 'ReplenishmentBatchID','BatchID');  }
+    public function float()
+    {
+        return $this->belongsTo(PettyCashFloat::class, 'FloatID', 'FloatID');
+    }
 
-    public static function getPrimaryKey(): string { return 'VoucherID'; }
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
+    }
+
+    public function lines()
+    {
+        return $this->hasMany(PettyCashLine::class, 'VoucherID', 'VoucherID');
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(PettyCashReplenishmentBatch::class, 'ReplenishmentBatchID', 'BatchID');
+    }
+
+    public static function getPrimaryKey(): string
+    {
+        return 'VoucherID';
+    }
 }

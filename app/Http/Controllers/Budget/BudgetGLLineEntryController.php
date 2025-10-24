@@ -37,14 +37,14 @@ class BudgetGLLineEntryController extends Controller
     public function create()
     {
 
-        $budgets = Budget::select('Id', 'Name','From','To')->where('Status','draft')->get();
+        $budgets = Budget::select('Id', 'Name', 'From', 'To')->where('Status', 'draft')->get();
         $branches = Branch::select('Id', 'Name')->get();
         //Pick budgetlines that have activities only.
         $checkIds = BudgetActivityMaster::query()
             ->distinct()
             ->pluck('BudgetLineID')
             ->toArray();
-        $budgetLines = BudgetLine::select('Id', 'LineName')->whereNotIn('Id',$checkIds)->get();
+        $budgetLines = BudgetLine::select('Id', 'LineName')->whereNotIn('Id', $checkIds)->get();
 
         return view('budgetandanalytics.budgetworkspace.entrybyglline.create', compact(
             'budgets',
@@ -81,7 +81,7 @@ class BudgetGLLineEntryController extends Controller
                 'ModifiedOn' => now(),
             ]);
             // Increment allocation counter and save them cumulatively
-            $alloc=0;
+            $alloc = 0;
             foreach ($request->monthly_allocations as $month => $allocation) {
                 BudgetManualEntryAllocations::create([
                     'EntryID' => $entry->Id,
@@ -93,7 +93,7 @@ class BudgetGLLineEntryController extends Controller
                     'ModifiedBy' => $userId,
                     'ModifiedOn' => now(),
                 ]);
-                $alloc+=$allocation;
+                $alloc += $allocation;
             }
             //Update the Amount in the entry table
             BudgetManualEntry::where('Id', $entry->Id)->update(['Amount' => $alloc]);
@@ -211,7 +211,7 @@ class BudgetGLLineEntryController extends Controller
             ]);
 
             // Update allocations
-            $alloc=0;
+            $alloc = 0;
             $entry->allocations()->delete();
             foreach ($request->monthly_allocations as $month => $allocation) {
                 BudgetManualEntryAllocations::create([
@@ -224,7 +224,7 @@ class BudgetGLLineEntryController extends Controller
                     'ModifiedBy' => $userId,
                     'ModifiedOn' => now(),
                 ]);
-                $alloc+=$allocation;
+                $alloc += $allocation;
             }
 
             BudgetManualEntry::where('Id', $entry->Id)->update(['Amount' => $alloc]);

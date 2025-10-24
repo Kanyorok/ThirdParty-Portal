@@ -67,7 +67,7 @@ class FinanceGLAccountsSeeder extends Seeder
                 continue; // Skip if duplicate
             }
 
-            $typeId    = $accountTypeMap[$typeCode] ?? null;
+            $typeId = $accountTypeMap[$typeCode] ?? null;
             $groupId   = $getGroupId($groupCode);
             $subTypeId = $getSubTypeId($subCode);
 
@@ -78,29 +78,29 @@ class FinanceGLAccountsSeeder extends Seeder
             }
 
             DB::table('t_FinanceGLAccounts')->insert([
-                'GLCode'                 => $glCode,
-                'GLName'                 => $name,
-                'GLAccountTypeID'        => $typeId,
-                'GLTypeGroupID'          => $groupId,
-                'GLSubAccountTypeID'     => $subTypeId,
-                'ParentGLID'             => $parentId,
-                'NormalBalance'          => $normalBal,
-                'IsControlAccount'       => $isCtrl,
-                'IsPostingAccount'       => $isPost,
-                'CBSAccountCode'         => $cbsCode,
-                'BranchID'               => $branch,
-                'Description'            => $desc,
-                'IsActive'               => 1,
-                'GLAccountTypeValue'     => $type,
-                'GLTypeGroupIDValue'     => $accType,
-                'GLSubAccountTypeIDValue'=> $subType,
-                'GLDigits'               => $glDigits,
-                'CreatedBy'              => 1,
-                'CreatedOn'              => $now,
-                'ModifiedBy'             => 1,
-                'ModifiedOn'             => $now,
-                'DeletedBy'              => null,
-                'DeletedOn'              => null,
+                'GLCode' => $glCode,
+                'GLName' => $name,
+                'GLAccountTypeID' => $typeId,
+                'GLTypeGroupID' => $groupId,
+                'GLSubAccountTypeID' => $subTypeId,
+                'ParentGLID' => $parentId,
+                'NormalBalance' => $normalBal,
+                'IsControlAccount' => $isCtrl,
+                'IsPostingAccount' => $isPost,
+                'CBSAccountCode' => $cbsCode,
+                'BranchID' => $branch,
+                'Description' => $desc,
+                'IsActive' => 1,
+                'GLAccountTypeValue' => $type,
+                'GLTypeGroupIDValue' => $accType,
+                'GLSubAccountTypeIDValue' => $subType,
+                'GLDigits' => $glDigits,
+                'CreatedBy' => 1,
+                'CreatedOn' => $now,
+                'ModifiedBy' => 1,
+                'ModifiedOn' => $now,
+                'DeletedBy' => null,
+                'DeletedOn' => null,
             ]);
         }
     }

@@ -22,7 +22,7 @@ class TenderInvitationController extends Controller
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->getSupplierInvitations($request);
         }
-        
+
         // Otherwise return the web view
         return view('procurement.tendering.suppliermanagement.invitationresponsetracking.index');
     }
@@ -67,9 +67,9 @@ class TenderInvitationController extends Controller
     {
         try {
             $thirdPartyId = $request->query('third_party_id');
-            $page = (int) $request->query('page', 1);
-            $limit = (int) $request->query('limit', 10);
-            
+            $page = (int)$request->query('page', 1);
+            $limit = (int)$request->query('limit', 10);
+
             if (!$thirdPartyId) {
                 return response()->json([
                     'error' => 'Third Party ID is required'
@@ -77,7 +77,7 @@ class TenderInvitationController extends Controller
             }
 
             // Get all supplier IDs for this third party (some have multiple supplier rows)
-            $supplierIds = Supplier::whereHas('thirdParty', function($query) use ($thirdPartyId) {
+            $supplierIds = Supplier::whereHas('thirdParty', function ($query) use ($thirdPartyId) {
                 $query->where('Id', $thirdPartyId);
             })->pluck('Id');
 
@@ -89,14 +89,14 @@ class TenderInvitationController extends Controller
                     'limit' => $limit,
                     'supplierInfo' => [
                         'supplierId' => null,
-                        'thirdPartyId' => (int) $thirdPartyId,
+                        'thirdPartyId' => (int)$thirdPartyId,
                     ]
                 ]);
             }
 
             // Fetch tender invitations for these suppliers
             Log::info('Fetching invitations for suppliers', ['supplier_ids' => $supplierIds->values()->all()]);
-            
+
             try {
                 $invitationsQuery = TenderInvitation::with(['tender'])
                     ->whereIn('SupplierId', $supplierIds)
@@ -133,11 +133,11 @@ class TenderInvitationController extends Controller
             // Format the response to match frontend expectations
             $formattedData = $invitations->map(function ($invitation) {
                 $tenderData = null;
-                
+
                 // Safely access tender relationship
                 if ($invitation->tender) {
                     $tenderData = [
-                        'id' => (int) $invitation->tender->Id, // Ensure integer for matching
+                        'id' => (int)$invitation->tender->Id, // Ensure integer for matching
                         'tenderNo' => $invitation->tender->TenderNo ?? '',
                         'title' => $invitation->tender->Title ?? 'Untitled Tender',
                         'tenderType' => $invitation->tender->TenderType ?? 'rs',
@@ -150,7 +150,7 @@ class TenderInvitationController extends Controller
                 } else {
                     // Fallback tender data if relationship fails
                     $tenderData = [
-                        'id' => (int) $invitation->TenderId,
+                        'id' => (int)$invitation->TenderId,
                         'tenderNo' => 'LOADING...',
                         'title' => 'Tender (Loading...)',
                         'tenderType' => 'rs',
@@ -161,11 +161,11 @@ class TenderInvitationController extends Controller
                         'currency' => null,
                     ];
                 }
-                
+
                 return [
                     'invitation' => [
                         'InvitationID' => $invitation->InvitationID,
-                        'TenderId' => (int) $invitation->TenderId, // Ensure integer for matching
+                        'TenderId' => (int)$invitation->TenderId, // Ensure integer for matching
                         'SupplierId' => $invitation->SupplierId,
                         'ResponseStatus' => strtolower($invitation->ResponseStatus ?? 'pending'), // Convert to lowercase
                         'ResponseDate' => $invitation->ResponseDate,
@@ -191,7 +191,7 @@ class TenderInvitationController extends Controller
                 'limit' => $limit,
                 'supplierInfo' => [
                     'supplierIds' => $supplierIds->values()->all(),
-                    'thirdPartyId' => (int) $thirdPartyId,
+                    'thirdPartyId' => (int)$thirdPartyId,
                 ],
                 'debug' => [
                     'message' => 'Successfully fetched tender invitations',
@@ -235,7 +235,7 @@ class TenderInvitationController extends Controller
                 $invitation = DB::table('t_TenderInvitations')
                     ->where('InvitationID', $id)
                     ->first();
-                    
+
                 Log::info('=== STEP 2: Database read successful ===', [
                     'invitation_found' => $invitation ? true : false,
                     'current_status' => $invitation ? $invitation->ResponseStatus : 'N/A'
@@ -259,19 +259,19 @@ class TenderInvitationController extends Controller
             // Working minimal update - just the essential fields
             try {
                 Log::info('=== STEP 3: Attempting database update ===');
-                
+
                 // Start with just the status field that we know works
                 $updateData = [
                     'ResponseStatus' => $validated['responseStatus']
                 ];
 
                 // Add decline reason only if provided and we're declining
-                if ($validated['responseStatus'] === 'declined' && 
-                    isset($validated['declineReason']) && 
+                if ($validated['responseStatus'] === 'declined' &&
+                    isset($validated['declineReason']) &&
                     !empty($validated['declineReason'])) {
                     $updateData['DeclineReason'] = $validated['declineReason'];
                 }
-                
+
                 $affected = DB::table('t_TenderInvitations')
                     ->where('InvitationID', $id)
                     ->update($updateData);

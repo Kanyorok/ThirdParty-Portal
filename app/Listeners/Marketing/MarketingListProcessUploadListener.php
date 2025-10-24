@@ -69,7 +69,7 @@ class MarketingListProcessUploadListener implements ShouldQueue
                 SimpleXLSXGen::fromArray($failed, "Failed Import")->saveAs($file);
                 $service?->addAttachmentContent(file_get_contents($file), ExtensionsEnum::Xlsx->getMimeType(), $list->Label . ' Failed ' . now()->format('d M Y H:i') . '.xlsx', $actor);
                 unlink($file);
-            } catch (Exception | Throwable) {
+            } catch (Exception|Throwable) {
             }
         }
 

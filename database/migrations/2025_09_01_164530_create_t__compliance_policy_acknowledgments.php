@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('t_CompliancePolicyAcknowledgments', function (Blueprint $table) {
             $table->id('Id');
-            $table->foreignId('PolicyID')->constrained('t_CompliancePolicies','Id')->onDelete('cascade');
+            $table->foreignId('PolicyID')->constrained('t_CompliancePolicies', 'Id')->onDelete('cascade');
             $table->unsignedBigInteger('UserID'); // from t_Users
             $table->timestamp('AcknowledgedOn')->useCurrent();
         });
@@ -24,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-     Schema::dropIfExists('t_CompliancePolicyAcknowledgments');
+        Schema::dropIfExists('t_CompliancePolicyAcknowledgments');
     }
 };

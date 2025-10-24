@@ -24,12 +24,12 @@ class SKUController extends Controller
 
     public function index()
     {
-     $branchId = auth()->user()->employee?->BranchId;
+        $branchId = auth()->user()->employee?->BranchId;
         $this->authorize('viewAny', StockItem::class);
 
         $items = StockItem::with(['item', 'store', 'uom'])
-        ->where('Branch', $branchId)
-        ->get();
+            ->where('Branch', $branchId)
+            ->get();
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
@@ -52,7 +52,7 @@ class SKUController extends Controller
         $this->authorize('create', StockItem::class);
 
         $data = $request->validated();
-        $data['Status'] = 1; 
+        $data['Status'] = 1;
 
         try {
             $skuCode = $this->stockItemService->create($data);
@@ -150,7 +150,6 @@ class SKUController extends Controller
         return response()->json($items);
     }
 
-    
 
     public function getItemDetails(Request $request)
     {

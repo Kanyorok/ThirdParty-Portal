@@ -99,8 +99,8 @@ class BudgetLineMappingController extends Controller
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
         ],
-        [
-            'GLS.max' => 'You can only select one GL Account for each budget line.'
+            [
+                'GLS.max' => 'You can only select one GL Account for each budget line.'
         ]);
         try {
             DB::beginTransaction();
@@ -233,7 +233,7 @@ class BudgetLineMappingController extends Controller
         // Check Permissions
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetLine::class);
 
-         $validated = $request->validate([
+        $validated = $request->validate([
             //'BudgetLineCategoryID' => 'nullable|exists:t_BudgetLineCategories,Id',
             'LineName' => 'required|string|max:255',
             'DepartmentID' => 'required|exists:t_Departments,Id',
@@ -245,9 +245,9 @@ class BudgetLineMappingController extends Controller
             'GLS.*' => 'required|integer',
             // Add other fields and validation rules as needed
         ],
-         [
-             'GLS.max' => 'You can only select one GL Account for each budget line.'
-         ]);
+            [
+                'GLS.max' => 'You can only select one GL Account for each budget line.'
+            ]);
 
         try {
             DB::beginTransaction();
@@ -370,9 +370,9 @@ class BudgetLineMappingController extends Controller
         DB::beginTransaction();
         try {
             //Check if the line is mapped to any budget so that it prevents deletion.
-            $existActivity=BudgetActivity::where('BudgetLineId',$id)->exists();
-            $existLine=BudgetManualEntry::where('BudgetLineId',$id)->exists();
-            $existProjection=BudgetProjection::where('BudgetLineId',$id)->exists();
+            $existActivity = BudgetActivity::where('BudgetLineId', $id)->exists();
+            $existLine = BudgetManualEntry::where('BudgetLineId', $id)->exists();
+            $existProjection = BudgetProjection::where('BudgetLineId', $id)->exists();
 
             if ($existActivity || $existLine || $existProjection) {
                 return back()->with(

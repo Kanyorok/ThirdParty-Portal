@@ -11,9 +11,9 @@ class ComplianceIncident extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ObligationID','Title','Description','IncidentDate',
-        'SeverityID','ResponsibleUserID','Status',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn','DeletedBy','DeletedOn'
+        'ObligationID', 'Title', 'Description', 'IncidentDate',
+        'SeverityID', 'ResponsibleUserID', 'Status',
+        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
     ];
 
     public function obligation()
