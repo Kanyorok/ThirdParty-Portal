@@ -227,7 +227,7 @@ $(document).ready(function () {
 }
 
 .btn-info {
-    background-color: #0dcaf0 !important;
+    background-color: #0b5ed7 !important;
     color: white !important;
 }
 

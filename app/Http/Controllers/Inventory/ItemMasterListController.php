@@ -79,7 +79,7 @@ class ItemMasterListController extends Controller
             if ($item->inUse()) {
                 $actions .= '
                     <span class="btn btn-sm btn-info disabled" data-bs-toggle="tooltip" title="Item is in use and cannot be deleted">
-                        <i class="bi bi-info-circle"></i>
+                        <i class="bi bi-lock"></i>
                     </span>
                 ';
             } else {
