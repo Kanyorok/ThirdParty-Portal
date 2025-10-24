@@ -156,7 +156,7 @@ export default function RfqDetailPage() {
     const [clarLineId, setClarLineId] = useState<string>("");
     const [postingClar, setPostingClar] = useState<boolean>(false);
 
-    const totalLines = useMemo(() => details?.lines?.length || 0, [details]);
+    // const totalLines = useMemo(() => details?.lines?.length || 0, [details]);
     const grandTotal = useMemo(() => {
         return details?.lines.reduce((sum, l) => {
             const r = lineResponses[l.id];
@@ -176,7 +176,7 @@ export default function RfqDetailPage() {
                 code: String(c.code || ""),
                 symbol: String(c.symbol || c.code || ""),
                 isDefault: Boolean(c.isDefault) || String(c.symbol || "").toLowerCase() === "ksh",
-            })).filter((c) => c.code);
+            })).filter((c: CurrencyOption) => c.code);
             setCurrencies(options);
             const preferred = options.find((o) => o.isDefault) || options[0];
             if (!currency && preferred) setCurrency(preferred.code);
@@ -235,10 +235,11 @@ export default function RfqDetailPage() {
                         // fallback: use item at same index if available
                         if (!it) it = respItems[idx];
 
-                        const quoted = (it && (it.quotedPrice ?? it.QuotedPrice ?? it.unitPrice)) ?? undefined;
-                        const total = (it && (it.totalPayable ?? it.TotalPayable ?? it.totalPrice)) ?? (quoted != null ? Number((quoted * l.quantity).toFixed(2)) : undefined);
-                        const perItemLead = it && (it.leadTimeDays ?? it.leadTime ?? undefined);
-                        const comments = it && (it.comments ?? it.Comments ?? "") || "";
+                        const itAny = it as any;
+                        const quoted = (itAny?.quotedPrice ?? itAny?.QuotedPrice ?? itAny?.unitPrice) ?? undefined;
+                        const total = (itAny?.totalPayable ?? itAny?.TotalPayable ?? itAny?.totalPrice) ?? (quoted != null ? Number((quoted * l.quantity).toFixed(2)) : undefined);
+                        const perItemLead = itAny?.leadTimeDays ?? itAny?.leadTime ?? undefined;
+                        const comments = (itAny?.comments ?? itAny?.Comments ?? "") || "";
 
                         responseMap[l.id] = {
                             lineItemId: l.id,

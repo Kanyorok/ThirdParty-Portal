@@ -1,23 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
 
-// In Next 15+, dynamic route params must be awaited
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.accessToken) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
+  const url = new URL(request.url);
+  const parts = url.pathname.split("/");
+  const id = parts[parts.length - 2];
   if (!id) {
     return NextResponse.json({ message: "Round id is required" }, { status: 400 });
   }
 
   try {
-    const res = await fetch(`${EXTERNAL_API_BASE}/api/prequalification/rounds/${encodeURIComponent(id)}` , {
+  const res = await fetch(`${EXTERNAL_API_BASE}/api/prequalification/rounds/${encodeURIComponent(id)}` , {
       headers: {
         Accept: "application/json",
         Authorization: `Bearer ${session.accessToken}`,

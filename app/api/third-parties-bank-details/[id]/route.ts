@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 const EXTERNAL_API_BASE_URL = process.env.EXTERNAL_API_URL;
 
@@ -40,7 +40,7 @@ function transformToPascalCase(payload: FrontendBankDetailPayload): BackendBankD
     return transformed;
 }
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+export async function PUT(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken || !session.user?.thirdParty?.id) {
         return NextResponse.json(
@@ -49,7 +49,9 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         );
     }
 
-    const { id } = context.params;
+    const url = new URL(req.url);
+    const parts = url.pathname.split("/");
+    const id = parts[parts.length - 2];
 
     try {
         const frontendBody: FrontendBankDetailPayload = await req.json();
@@ -79,13 +81,15 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
     }
 }
 
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session || !session.accessToken) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = context.params;
+    const url = new URL(req.url);
+    const parts = url.pathname.split("/");
+    const id = parts[parts.length - 2];
 
     try {
         const res = await fetch(`${EXTERNAL_API_BASE_URL}/api/third-parties-bank-details/${id}`, {

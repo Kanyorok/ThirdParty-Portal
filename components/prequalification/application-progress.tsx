@@ -1,6 +1,4 @@
 "use client"
-
-import { useState } from "react"
 import { CategoryProgress, Round } from "@/types/types"
 import { Badge } from "@/components/common/badge"
 import { Button } from "@/components/common/button"
@@ -16,7 +14,6 @@ import {
     CheckCircle2, 
     XCircle, 
     Clock, 
-    AlertTriangle, 
     FileCheck, 
     Eye,
     Calendar,
@@ -31,42 +28,35 @@ interface ApplicationProgressProps {
 
 const getStatusConfig = (status: CategoryProgress['status']) => {
     switch (status) {
-        case 'D': // Draft
+    case 'DRAFT':
             return {
                 label: 'Draft',
                 icon: <FileCheck className="w-3 h-3" />,
                 variant: 'secondary' as const,
                 color: 'bg-gray-100 text-gray-800'
             };
-        case 'S': // Submitted
+    case 'SUBMITTED':
             return {
                 label: 'Submitted',
                 icon: <Clock className="w-3 h-3" />,
                 variant: 'default' as const,
                 color: 'bg-blue-100 text-blue-800'
             };
-        case 'U': // Under Review
+    case 'UNDER_REVIEW':
             return {
                 label: 'Under Review',
                 icon: <Eye className="w-3 h-3" />,
                 variant: 'default' as const,
                 color: 'bg-yellow-100 text-yellow-800'
             };
-        case 'C': // Conditional
-            return {
-                label: 'Conditional',
-                icon: <AlertTriangle className="w-3 h-3" />,
-                variant: 'destructive' as const,
-                color: 'bg-orange-100 text-orange-800'
-            };
-        case 'A': // Approved
+    case 'APPROVED':
             return {
                 label: 'Approved',
                 icon: <CheckCircle2 className="w-3 h-3" />,
                 variant: 'default' as const,
                 color: 'bg-green-100 text-green-800'
             };
-        case 'R': // Rejected
+    case 'REJECTED':
             return {
                 label: 'Rejected',
                 icon: <XCircle className="w-3 h-3" />,
@@ -123,12 +113,20 @@ const CategoryProgressCard = ({ category }: { category: CategoryProgress }) => {
     );
 };
 
+type AppSummary = {
+    total_categories: number;
+    approved_categories: number;
+    rejected_categories: number;
+    pending_categories: number;
+    overall_progress: number;
+}
+
 const ProgressSummary = ({ 
     summary, 
     overallStatus 
 }: { 
-    summary: Round['applicationProgress']['summary'];
-    overallStatus: Round['applicationProgress']['overall_status'];
+    summary: AppSummary;
+    overallStatus: 'DRAFT' | 'SUBMITTED' | 'PARTIAL' | 'COMPLETE' | 'UNKNOWN';
 }) => {
     if (!summary) return null;
 
@@ -194,15 +192,30 @@ const ProgressSummary = ({
 };
 
 export default function ApplicationProgress({ round, className }: ApplicationProgressProps) {
-    if (!round.applicationProgress) {
-        return (
-            <span className={cn("text-xs text-muted-foreground", className)}>
-                No application
-            </span>
-        );
+    // Build application progress view model from Round shape
+    const categories: CategoryProgress[] = Array.isArray(round.categories) ? round.categories : [];
+    const summaryFromRound = round.applicationSummary;
+    // Compute basic counts if summary not provided
+    const computed: AppSummary = summaryFromRound ?? categories.reduce<AppSummary>((acc, c) => {
+        acc.total_categories += 1;
+        if (c.status === 'APPROVED') acc.approved_categories += 1;
+        else if (c.status === 'REJECTED') acc.rejected_categories += 1;
+        else acc.pending_categories += 1;
+        // average progress across categories when available
+        acc.overall_progress += Number.isFinite(c.progress_percent) ? c.progress_percent : 0;
+        return acc;
+    }, { total_categories: 0, approved_categories: 0, rejected_categories: 0, pending_categories: 0, overall_progress: 0 });
+    if (!summaryFromRound && computed.total_categories > 0) {
+        computed.overall_progress = Math.round(computed.overall_progress / computed.total_categories);
     }
+    const overallStatus: 'DRAFT' | 'SUBMITTED' | 'PARTIAL' | 'COMPLETE' | 'UNKNOWN' = (() => {
+        if (computed.total_categories === 0) return 'UNKNOWN';
+        if (computed.approved_categories === computed.total_categories) return 'COMPLETE';
+        if (computed.approved_categories > 0 || computed.pending_categories > 0) return 'PARTIAL';
+        return 'DRAFT';
+    })();
 
-    const { applicationProgress } = round;
+    const applicationProgress = { categories, summary: computed, overall_status: overallStatus };
     const hasCategories = applicationProgress.categories.length > 0;
 
     // Simple progress bar for table view
@@ -243,7 +256,7 @@ export default function ApplicationProgress({ round, className }: ApplicationPro
                         <div className="space-y-4">
                             <h3 className="font-medium">Category Progress</h3>
                             <div className="grid gap-4">
-                                {applicationProgress.categories.map((category) => (
+                                {applicationProgress.categories.map((category: CategoryProgress) => (
                                     <CategoryProgressCard 
                                         key={category.category_id} 
                                         category={category} 

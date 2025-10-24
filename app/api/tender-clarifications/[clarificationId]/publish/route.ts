@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 interface PublishClarificationRequest {
   publishToAll: boolean;
@@ -8,10 +8,7 @@ interface PublishClarificationRequest {
   publishedBy?: string;
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { clarificationId: string } }
-) {
+export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -22,7 +19,9 @@ export async function PATCH(
       );
     }
 
-    const clarificationId = params.clarificationId;
+  const url = new URL(request.url);
+  const parts = url.pathname.split("/");
+  const clarificationId = parts[parts.length - 2];
     const body: PublishClarificationRequest = await request.json();
     const { publishToAll, notifySuppliers, publishedBy } = body;
 

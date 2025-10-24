@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 interface RespondClarificationRequest {
   response: string;
@@ -28,10 +28,7 @@ interface TenderClarification {
   modifiedOn?: string;
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { clarificationId: string } }
-) {
+export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -42,7 +39,9 @@ export async function PUT(
       );
     }
 
-    const clarificationId = params.clarificationId;
+  const url = new URL(request.url);
+  const parts = url.pathname.split("/");
+  const clarificationId = parts[parts.length - 2];
     const body: RespondClarificationRequest = await request.json();
     const { response, responseBy, publishToAll, status, attachments } = body;
 

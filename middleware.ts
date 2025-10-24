@@ -2,13 +2,14 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const AUTH_PAGES = new Set(["/signin", "/signup", "/forgot-password", "/reset-password"]) 
+// const AUTH_PAGES = new Set(["/signin", "/signup", "/forgot-password", "/reset-password"]) 
 const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || process.env.API_BASE_URL || ""
 
 // Cache for token validation to avoid excessive backend calls
 const tokenValidationCache = new Map<string, { valid: boolean; timestamp: number }>()
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function validateTokenWithBackend(accessToken: string): Promise<boolean> {
   // Check cache first
   const cached = tokenValidationCache.get(accessToken)
@@ -48,7 +49,8 @@ async function validateTokenWithBackend(accessToken: string): Promise<boolean> {
 
     return isValid
   } catch (error) {
-    console.warn('Backend token validation unavailable, skipping validation:', error.message)
+    const msg = error instanceof Error ? error.message : String(error)
+    console.warn('Backend token validation unavailable, skipping validation:', msg)
     // If backend is unavailable, assume token is valid to avoid blocking users
     // This allows the application to work even when backend validation endpoint doesn't exist
     tokenValidationCache.set(accessToken, {
@@ -92,8 +94,8 @@ export async function middleware(req: NextRequest) {
   }
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  let isAuth = !!token
-  const isAuthPage = AUTH_PAGES.has(pathname)
+  const isAuth = !!token
+  // const isAuthPage = AUTH_PAGES.has(pathname)
   const isDashboard = pathname.startsWith("/dashboard")
   const isApiRoute = pathname.startsWith("/api")
 

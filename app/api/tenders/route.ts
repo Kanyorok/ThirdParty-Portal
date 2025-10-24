@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 // Types for Tender data (matching the interface from tenders.tsx)
 interface Tender {
@@ -74,7 +74,7 @@ interface Tender {
 // Mock data for development/testing purposes
 const mockTenders: Tender[] = [
   {
-    id: 1,
+    id: "1",
     tenderNo: "TENDER/2024/001",
     title: "Supply and Installation of Office Equipment",
     tenderType: "op", // open
@@ -141,7 +141,7 @@ const mockTenders: Tender[] = [
     }
   },
   {
-    id: 2,
+    id: "2",
     tenderNo: "TENDER/2024/002",
     title: "Construction of Drainage System",
     tenderType: "rs", // restricted
@@ -208,7 +208,7 @@ const mockTenders: Tender[] = [
     }
   },
   {
-    id: 3,
+    id: "3",
     tenderNo: "TENDER/2024/003",
     title: "Supply of Medical Equipment",
     tenderType: "op", // open

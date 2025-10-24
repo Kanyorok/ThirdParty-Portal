@@ -16,7 +16,7 @@ export function getFlatNavItems(): SearchableNavItem[] {
             if (!item.disabled && !item.comingSoon) {
                 allItems.push({
                     label: item.title,
-                    group: group.label || "General",
+                    group: group.id || "General",
                     href: item.url,
                     icon: item.icon,
                 });

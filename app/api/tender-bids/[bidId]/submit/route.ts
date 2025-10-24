@@ -7,10 +7,7 @@ interface SubmitBidRequest {
   finalDeclaration?: string;
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { bidId: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -21,7 +18,9 @@ export async function POST(
       );
     }
 
-    const { bidId } = params;
+  const url = new URL(request.url);
+  const parts = url.pathname.split("/");
+  const bidId = parts[parts.length - 2];
     const body: SubmitBidRequest = await request.json();
 
     if (!body.confirmSubmission) {

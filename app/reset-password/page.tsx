@@ -1,12 +1,8 @@
 import { ResetPasswordForm } from "@/components/reset-password"
 import { redirect } from "next/navigation"
 
-interface ResetPasswordPageProps {
-    searchParams: { token?: string }
-}
-
-export default function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
-    const { token } = searchParams
+export default async function ResetPasswordPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+    const { token } = await searchParams
 
     if (!token) {
         redirect("/forgot-password")

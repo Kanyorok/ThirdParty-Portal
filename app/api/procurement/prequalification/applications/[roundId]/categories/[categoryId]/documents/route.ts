@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 const EXTERNAL_API_BASE = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
 
 // Proxy: POST upload document
-export async function POST(req: NextRequest, { params }: { params: Promise<{ roundId: string; categoryId: string }> }) {
+export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.accessToken) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-
-  const { roundId, categoryId } = await params;
+  const url = new URL(req.url);
+  const parts = url.pathname.split("/");
+  const categoryId = parts[parts.length - 2];
+  const roundId = parts[parts.indexOf("applications") + 1];
   if (!roundId || !categoryId) {
     return NextResponse.json({ message: "RoundId and CategoryId are required" }, { status: 400 });
   }

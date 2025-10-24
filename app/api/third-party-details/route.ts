@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 const EXTERNAL_API_BASE_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
 
@@ -65,7 +65,7 @@ interface ThirdPartyResponse {
     };
 }
 
-export enum BusinessTypeEnum {
+enum BusinessTypeEnum {
     SoleProprietorship = 1,
     Partnership = 2,
     LimitedCompany = 3,
