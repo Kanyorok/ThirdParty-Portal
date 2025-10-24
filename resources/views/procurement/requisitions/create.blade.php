@@ -55,7 +55,35 @@
                                     <td>{{ $item->DepartmentID }}</td>
                                     <td>{{ $item->Remarks }}</td>
                                     <td>{{ $item->itemcount }}</td>
-                                    <td>{{ number_format($item->ExpectedPrice, 2) }}</td>
+                                    @php
+                                        // Compute total cost for this requisition by summing (quantity * unit price)
+                                        $totalCost = 0;
+
+                                        // Try known possible collections that may hold line items
+                                        if (!empty($item->requisitionlineInfo) && is_iterable($item->requisitionlineInfo)) {
+                                            foreach ($item->requisitionlineInfo as $line) {
+                                                $qty = isset($line->Quantity) ? (float)$line->Quantity : 0;
+                                                $unit = isset($line->ExpectedPrice) ? (float)$line->ExpectedPrice : 0;
+                                                $totalCost += $qty * $unit;
+                                            }
+                                        } elseif (!empty($item->requisitionLines) && is_iterable($item->requisitionLines)) {
+                                            foreach ($item->requisitionLines as $line) {
+                                                $qty = isset($line->Quantity) ? (float)$line->Quantity : 0;
+                                                $unit = isset($line->ExpectedPrice) ? (float)$line->ExpectedPrice : 0;
+                                                $totalCost += $qty * $unit;
+                                            }
+                                        } elseif (!empty($item->lines) && is_iterable($item->lines)) {
+                                            foreach ($item->lines as $line) {
+                                                $qty = isset($line->Quantity) ? (float)$line->Quantity : 0;
+                                                $unit = isset($line->ExpectedPrice) ? (float)$line->ExpectedPrice : 0;
+                                                $totalCost += $qty * $unit;
+                                            }
+                                        } else {
+                                            // Fallback: if ExpectedPrice appears to already be the total, use it
+                                            $totalCost = isset($item->ExpectedPrice) ? (float)$item->ExpectedPrice : 0;
+                                        }
+                                    @endphp
+                                    <td>{{ number_format($totalCost, 2) }}</td>
                                     <td>{{ $item->Status }}</td>
                                     <td>
                                         <a href="{{ route('requisition.show', [$item->Id]) }}"
