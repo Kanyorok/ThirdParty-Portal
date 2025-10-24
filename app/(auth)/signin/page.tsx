@@ -1,7 +1,7 @@
 import SignInForm from "@/components/signin/login-form"
 import { ThemeToggle } from "@/app/dashboard/theme-toggle"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth-options"
 import { redirect } from "next/navigation"
 
 // Ensure this page is never statically cached so back navigation revalidates auth state

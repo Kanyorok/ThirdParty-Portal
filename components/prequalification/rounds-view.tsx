@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth/next";
 import RoundsTable from "./rounds-table";
 import RoundsToolbar from "./rounds-toolbar";
 import { Round } from "@/types/types";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 type ApiRound = {
     id?: string;

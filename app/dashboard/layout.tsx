@@ -11,7 +11,7 @@ import { HeaderActions } from "@/app/dashboard/header-actions";
 import { LayoutControls } from "@/app/dashboard/layout-controls";
 import { SearchDialog } from "@/app/dashboard/search-dialog";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
     const session = await getServerSession(authOptions);
