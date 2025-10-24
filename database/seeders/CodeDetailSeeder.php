@@ -391,6 +391,15 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'MedicalContributorStatus','Description' => 'Pending', 'Value' => 'P'],
             ['CodeID' => 'MedicalContributorStatus','Description' => 'Suspended', 'Value' => 'S'],
 
+            // Beneficiary Relationship
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Spouse', 'Value' => 'S'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Child', 'Value' => 'C'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Parent', 'Value' => 'P'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Sibling', 'Value' => 'S'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Relative', 'Value' => 'R'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Friend', 'Value' => 'F'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Legal Guardian', 'Value' => 'LG'],
+
             // PolicyTypeId
             ['CodeID' => 'PolicyTypeId', 'Description' => 'Life Insurance', 'Value' => 'L'],
             ['CodeID' => 'PolicyTypeId', 'Description' => 'Motor Insurance', 'Value' => 'B'],
