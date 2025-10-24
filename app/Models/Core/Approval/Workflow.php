@@ -4,6 +4,7 @@ namespace App\Models\Core\Approval;
 use App\Enums\WorkflowStatus;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Workflow extends Model
 {
@@ -39,7 +40,7 @@ class Workflow extends Model
 
     public function type()
     {
-        return $this->belongsTo(WorkflowType::class, 'Id');
+        return $this->belongsTo(WorkflowType::class,'WorkflowTypeId', 'Id');
     }
 
     public function stage()
@@ -47,5 +48,12 @@ class Workflow extends Model
         return $this->belongsTo(WorkFlowStage::class, 'stage', 'order');
     }
     
+     /**
+     * MORPH TO relationship - This connects to DepartmentNeed, etc.
+     */
+    public function source(): MorphTo
+    {
+        return $this->morphTo('source', 'Source', 'SourceID');
+    }
 
 }

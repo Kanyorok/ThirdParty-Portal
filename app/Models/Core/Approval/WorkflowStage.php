@@ -3,6 +3,7 @@
 namespace App\Models\Core\Approval;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkflowStage extends Model
@@ -58,9 +59,11 @@ class WorkflowStage extends Model
     {
         return $this->belongsTo(CodeDetail::class, 'StatusId', 'ID');
     }
-  public function workflow()
-    {
-        return $this->belongsTo(\App\Models\Core\Approval\Workflow::class, 'WorkFlowId', 'Id');
+    
+     public function workflow(): BelongsTo
+     {
+        return $this->belongsTo(Workflow::class, 'WorkFlowId', 'Id');
     }
+
 
     }

@@ -8,8 +8,7 @@ use App\Models\Core\Approval\CodeDetail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class WorkflowHistory extends Model
 {
@@ -42,6 +41,12 @@ class WorkflowHistory extends Model
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
 
+        public function source(): MorphTo
+    {
+        return $this->morphTo('source', 'Source', 'SourceID');
+    }
+
+
    
     public static function getPrimaryKey(): string
     {
@@ -56,6 +61,11 @@ class WorkflowHistory extends Model
     public function modifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
+
+    public function stage(): BelongsTo
+    {
+        return $this->belongsTo(WorkflowStage::class, 'Stage', 'Order');
     }
 
 }
