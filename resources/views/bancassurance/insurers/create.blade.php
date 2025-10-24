@@ -14,7 +14,7 @@
 
 <div class="container mt-4" style="max-width: 700px;">
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-info text-white">
+        <div class="card-header bg-primary text-white">
             <h5 class="mb-0">Provider</h5>
         </div>
 

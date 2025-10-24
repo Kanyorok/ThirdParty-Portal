@@ -31,13 +31,13 @@
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Payment Date</label>
                         <input type="text" class="form-control" 
-                            value="{{ $payment->PaymentDate ? \Carbon\Carbon::parse($payment->PaymentDate)->format('d M Y') : '-' }}" 
+                            value="{{ $payment->PaymentDate ? \Carbon\Carbon::parse($payment->PaymentDate)->format('d/m/Y') : '-' }}" 
                             readonly>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Next Payment Date</label>
                         <input type="text" class="form-control" 
-                            value="{{ $payment->NextPaymentDate ? \Carbon\Carbon::parse($payment->NextPaymentDate)->format('d M Y') : '-' }}" 
+                            value="{{ $payment->NextPaymentDate ? \Carbon\Carbon::parse($payment->NextPaymentDate)->format('d/m/Y') : '-' }}" 
                             readonly>
                     </div>
                 </div>

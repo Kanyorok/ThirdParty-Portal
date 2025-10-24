@@ -4,7 +4,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="card shadow-sm rounded-3">
-        <div class="card-header bg-info text-dark">
+        <div class="card-header bg-primary text-dark">
             <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Commission Rule</h5>
         </div>
         <div class="card-body">
