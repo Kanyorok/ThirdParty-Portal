@@ -314,13 +314,13 @@ class AppServiceProvider extends ServiceProvider
             Employee::getPrimaryKey() => Employee::class,
 
             //PROCUREMENT
-            't_DepartmentNeeds' => DepartmentNeed::class,
+            'department_need' => DepartmentNeed::class,
             RFQ::getPrimaryKey() => RFQ::class,
             RFQLine::getPrimaryKey() => RFQLine::class,
             Requisitions::getPrimaryKey() => Requisitions::class,
             RequisitionLine::getPrimaryKey() => RequisitionLine::class,
             Order::getPrimaryKey() => Order::class,
-            // DepartmentNeed::getPrimaryKey() => DepartmentNeed::class,
+            DepartmentNeed::getPrimaryKey() => DepartmentNeed::class,
             ProcurementMethod::getPrimaryKey() => ProcurementMethod::class,
             SchedulePlan::getPrimaryKey() => SchedulePlan::class,
             InterBranchRequisition::getPrimaryKey() => InterBranchRequisition::class,

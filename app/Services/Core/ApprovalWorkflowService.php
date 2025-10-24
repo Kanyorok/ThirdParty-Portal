@@ -35,11 +35,11 @@ abstract class ApprovalWorkflowService
      */
     protected function getPermissionFromStage(string $source): ?WorkflowStage
     {
-          Log::info('DEBUG getPermissionFromStage called', [
-        'source' => $source,
-        'expected' => 't_DepartmentNeeds',
-        'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
-    ]);
+        Log::info('DEBUG getPermissionFromStage called', [
+            'source' => $source,
+            'expected' => 't_DepartmentNeeds',
+            'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
+        ]);
         
         $workflow = Workflow::where('Source', $source)
             ->whereNull('DeletedOn')
@@ -70,7 +70,6 @@ abstract class ApprovalWorkflowService
                 'StageName' => $stage->StageName,
                 'Source' => $source,
             ]);
-            // This is critical - the stored procedure will fail if PermissionId is NULL
             return null;
         }
 
@@ -91,7 +90,6 @@ abstract class ApprovalWorkflowService
             ->first();
 
         if ($history && !empty($history->Stage)) {
-            // Stage stored as string, cast to int if numeric
             return is_numeric($history->Stage) ? (int)$history->Stage : null;
         }
 
@@ -161,24 +159,26 @@ abstract class ApprovalWorkflowService
     }
 
     /**
+     * Execute workflow action using stored procedure
+     * This replaces the manual approval/rejection logic
+     * 
      * @param User $actor
-     * @param CodeDetail $status //status to
-     * @param string $source Class::getPrimaryKey
-     * @param string|int $sourceId Class primary id
+     * @param CodeDetail $status
+     * @param string $source
+     * @param string|int $sourceId
      * @param string $remarks
      * @param string $statusColumn
-     * @return bool
+     * @return array Result from stored procedure
      * @throws ErroredException
      */
-    protected function approveAction(User $actor, CodeDetail $status, string $source, string|int $sourceId, string $remarks, string $statusColumn = 'Status'): bool
-    {
-        return $this->_execute($actor, $status, $source, $sourceId, $remarks, $statusColumn);
-    }
-
-    /**
-     * @throws ErroredException
-     */
-    private function _execute(User $actor, CodeDetail $status, string $source, string|int $sourceId, string $remarks, string $statusColumn): bool
+    protected function executeWorkflowAction(
+        User $actor,
+        CodeDetail $status,
+        string $source,
+        string|int $sourceId,
+        string $remarks,
+        string $statusColumn = 'Status'
+    ): array
     {
         $class = Relation::getMorphedModel($source);
         if (!($class && class_exists($class))) {
@@ -186,113 +186,142 @@ abstract class ApprovalWorkflowService
         }
         $table = (new $class)->getTable();
 
-           Log::info("DEBUG _execute called", [
-        'source_param' => $source,
-        'sourceId_param' => $sourceId,
-        'resolved_table' => $table,
-        'expected_table' => 't_DepartmentNeeds',
-        'actor' => $actor->Id
-    ]);
+        Log::info("Executing workflow action via SP", [
+            'source' => $table,
+            'sourceId' => $sourceId,
+            'userId' => $actor->Id,
+            'statusId' => $status->ID,
+            'statusColumn' => $statusColumn,
+        ]);
 
         try {
-            DB::beginTransaction();
-
-            // determine current stage id (from history or fallback to first stage)
-            $currentStageId = $this->getCurrentStageId($table, $sourceId);
-            if (!$currentStageId) {
-                Log::error("Unable to determine current stage", [
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                ]);
-                throw new ErroredException("Cannot determine current workflow stage");
-            }
-
-            // Verify the stage has a valid PermissionId
-            $stage = WorkflowStage::find($currentStageId);
-            if (!$stage || !$stage->PermissionId) {
-                Log::error("Stage is missing or has no PermissionId", [
-                    'stageId' => $currentStageId,
-                    'table' => $table,
-                    'sourceId' => $sourceId,
-                ]);
-                throw new ErroredException("Workflow stage configuration is invalid - missing PermissionId");
-            }
-
-            // create Approved history entry
-            $history = $this->createHistoryEntry(
-                $table,
-                $sourceId,
-                $status->ID,
-                (int)$currentStageId,
-                $actor->Id,
-                $remarks,
-                null
+            // Call the stored procedure
+            $result = DB::select(
+                'EXEC p_ProcessWorkflowAction 
+                    @Source = ?, 
+                    @SourceID = ?, 
+                    @UserID = ?, 
+                    @UserName = ?, 
+                    @Notes = ?, 
+                    @StatusColumn = ?, 
+                    @StatusID = ?',
+                [
+                    $table,
+                    (string)$sourceId,
+                    $actor->Id,
+                    $actor->FullName ?? $actor->UserName,
+                    $remarks,
+                    $statusColumn,
+                    $status->ID
+                ]
             );
 
-            Log::info("Recorded approval", [
-                'source' => $table, 
-                'sourceId' => $sourceId, 
-                'stage' => $currentStageId,
-                'stagePermissionId' => $stage->PermissionId,
-                'historyId' => $history->Id,
-                'actor' => $actor->Id
-            ]);
-
-            // Commit transaction before calling stored procedure
-            DB::commit();
-
-            // Now run stage processor to evaluate if the item should move to next stage
-            try {
-                Log::info("Executing p_ProcessWorkflowStages");
-                DB::statement('EXEC p_ProcessWorkflowStages @PermissionId = ?', [$stage->PermissionId]);
-
-                Log::info("p_ProcessWorkflowStages completed successfully");
-            } catch (\Throwable $e) {
-                Log::error('Error executing p_ProcessWorkflowStages', [
-                    'error' => $e->getMessage(),
-                    'source' => $table,
-                    'sourceId' => $sourceId,
-                ]);
-                throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
+            if (empty($result)) {
+                throw new ErroredException('No response from workflow action procedure');
             }
 
+            $response = (array)$result[0];
+
+            Log::info("Workflow action SP result", [
+                'status' => $response['Status'] ?? null,
+                'message' => $response['Message'] ?? null,
+                'workflowStatus' => $response['WorkflowStatus'] ?? null,
+            ]);
+
+            // Check if the SP returned an error
+            if (isset($response['Status']) && $response['Status'] === 'ERROR') {
+                throw new ErroredException($response['Message'] ?? 'Workflow action failed');
+            }
+
+            return $response;
+
+        } catch (QueryException $e) {
+            Log::error('QueryException executing workflow action', [
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'source' => $table,
+                'sourceId' => $sourceId,
+            ]);
+            throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         } catch (ErroredException $e) {
-            DB::rollBack();
             throw $e;
         } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Error in _execute', [
+            Log::error('Unexpected error in executeWorkflowAction', [
                 'error' => $e->getMessage(),
-                'source' => $table, 
-                'sourceId' => $sourceId
+                'source' => $table,
+                'sourceId' => $sourceId,
             ]);
             throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         }
-
-        return true;
-    }
-
-    /**
-     * Extract the clean error message from SQL Server RAISERROR
-     */
-    private function _extractSqlServerError(string $errorMessage): string
-    {
-        // Pattern 1: Extract message between [SQL Server] and next bracket or end
-        if (preg_match('/\[SQL Server\]\s*(.+?)(?:\s*\[|$)/s', $errorMessage, $matches)) {
-            $errorMessage = trim($matches[1]);
-        } else if (preg_match('/SQLSTATE\[.*?\]:\s*(.+?)(?:\s*\(|$)/s', $errorMessage, $matches)) {
-            $errorMessage = trim($matches[1]);
-        }
-
-        $cleanMessage = preg_replace('/\(Connection:.*?\)/', '', $errorMessage);
-        $cleanMessage = preg_replace('/SQLSTATE\[.*?\]:\s*/', '', $cleanMessage);
-
-        return trim($cleanMessage) ?: 'Database operation failed';
     }
 
     /**
      * @param User $actor
-     * @param CodeDetail $status //status to
+     * @param CodeDetail $status
+     * @param string $source
+     * @param string|int $sourceId
+     * @param string $remarks
+     * @param string $statusColumn
+     * @return bool
+     * @throws ErroredException
+     */
+    protected function approveAction(
+        User $actor,
+        CodeDetail $status,
+        string $source,
+        string|int $sourceId,
+        string $remarks,
+        string $statusColumn = 'Status'
+    ): bool
+    {
+        $result = $this->executeWorkflowAction($actor, $status, $source, $sourceId, $remarks, $statusColumn);
+        
+        // After SP execution, run stage processor to move to next stage if needed
+        $class = Relation::getMorphedModel($source);
+        $table = (new $class)->getTable();
+        
+        $stage = $this->getPermissionFromStage($table);
+        if ($stage && $stage->PermissionId) {
+            try {
+                Log::info("Executing p_ProcessWorkflowStages after approval");
+                DB::statement('EXEC p_ProcessWorkflowStages @PermissionId = ?', [$stage->PermissionId]);
+            } catch (\Throwable $e) {
+                Log::error('Error executing p_ProcessWorkflowStages', [
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't throw - the approval was already recorded
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * @param User $actor
+     * @param CodeDetail $status
+     * @param string $source
+     * @param string|int $sourceId
+     * @param string $remarks
+     * @param string $statusColumn
+     * @return bool
+     * @throws ErroredException
+     */
+    protected function rejectAction(
+        User $actor,
+        CodeDetail $status,
+        string $source,
+        string|int $sourceId,
+        string $remarks,
+        string $statusColumn = 'Status'
+    ): bool
+    {
+        $result = $this->executeWorkflowAction($actor, $status, $source, $sourceId, $remarks, $statusColumn);
+        return true;
+    }
+
+    /**
+     * @param User $actor
+     * @param CodeDetail $status
      * @param mixed $model The model instance being submitted
      * @param string $source Class::getPrimaryKey
      * @param string|int $sourceId Class primary id
@@ -300,7 +329,14 @@ abstract class ApprovalWorkflowService
      * @return bool
      * @throws ErroredException
      */
-    protected function submittedAction(User $actor, CodeDetail $status, $model, string $source, string|int $sourceId, string $remarks): bool
+    protected function submittedAction(
+        User $actor,
+        CodeDetail $status,
+        $model,
+        string $source,
+        string|int $sourceId,
+        string $remarks
+    ): bool
     {
         $class = Relation::getMorphedModel($source);
         if (!($class && class_exists($class))) {
@@ -344,8 +380,7 @@ abstract class ApprovalWorkflowService
                 'statusId' => $status->ID,
             ]);
 
-            // Create workflow history record with Stage = stage id
-            // The stored procedure will JOIN this with t_WorkFlowStages to get PermissionId
+            // Create workflow history record
             $history = $this->createHistoryEntry(
                 $table,
                 $sourceId,
@@ -353,7 +388,7 @@ abstract class ApprovalWorkflowService
                 (int)$stage->Id,
                 $actor->Id,
                 $remarks,
-                null // amount
+                null
             );
 
             Log::info("WorkflowHistory created successfully", [
@@ -400,16 +435,16 @@ abstract class ApprovalWorkflowService
             throw new ErroredException($this->_extractSqlServerError($e->getMessage()));
         } catch (ErroredException $e) {
             Log::warning("ROLLBACK triggered — all DB writes undone", [
-    'source' => $table ?? 'unknown',
-    'sourceId' => $sourceId ?? null,
-]);
+                'source' => $table ?? 'unknown',
+                'sourceId' => $sourceId ?? null,
+            ]);
             DB::rollBack();
             throw $e;
         } catch (Exception $e) {
             Log::warning("ROLLBACK triggered — all DB writes undone", [
-    'source' => $table ?? 'unknown',
-    'sourceId' => $sourceId ?? null,
-]);
+                'source' => $table ?? 'unknown',
+                'sourceId' => $sourceId ?? null,
+            ]);
             DB::rollBack();
             Log::error('Unexpected error in submittedAction', [
                 'error' => $e->getMessage(),
@@ -422,24 +457,21 @@ abstract class ApprovalWorkflowService
     }
 
     /**
-     * @param User $actor
-     * @param CodeDetail $status //status to
-     * @param string $source Class::getPrimaryKey
-     * @param string|int $sourceId Class primary id
-     * @param string $remarks
-     * @param string $statusColumn
-     * @return bool
-     * @throws ErroredException
+     * Extract the clean error message from SQL Server RAISERROR
      */
-    protected function rejectAction(User $actor, CodeDetail $status, string $source, string|int $sourceId, string $remarks, string $statusColumn = 'Status'): bool
+    private function _extractSqlServerError(string $errorMessage): string
     {
-        return $this->_execute($actor, $status, $source, $sourceId, $remarks, $statusColumn);
-    }
+        // Pattern 1: Extract message between [SQL Server] and next bracket or end
+        if (preg_match('/\[SQL Server\]\s*(.+?)(?:\s*\[|$)/s', $errorMessage, $matches)) {
+            $errorMessage = trim($matches[1]);
+        } else if (preg_match('/SQLSTATE\[.*?\]:\s*(.+?)(?:\s*\(|$)/s', $errorMessage, $matches)) {
+            $errorMessage = trim($matches[1]);
+        }
 
-    private function getSubmissionStatusId(): int
-    {
-        return CodeDetail::where('Description', 'Submitted for Approval')
-            ->value('ID');
+        $cleanMessage = preg_replace('/\(Connection:.*?\)/', '', $errorMessage);
+        $cleanMessage = preg_replace('/SQLSTATE\[.*?\]:\s*/', '', $cleanMessage);
+
+        return trim($cleanMessage) ?: 'Database operation failed';
     }
 
     /**
