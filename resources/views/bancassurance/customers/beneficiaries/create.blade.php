@@ -10,7 +10,7 @@
             <select name="CustomerID" class="form-select" required>
             <option value="">-- Select CustomerID --</option>
                 @foreach($customers as $customer)
-                    <option value="{{ $customer->Id }}">{{ $customer->thirdParty->ThirdPartyName }}</option>
+                    <option value="{{ $customer->Id }}">{{ $customer->thirdParty->ThirdPartyName ?? "-" }}</option>
                 @endforeach
             </select>
         </div>
