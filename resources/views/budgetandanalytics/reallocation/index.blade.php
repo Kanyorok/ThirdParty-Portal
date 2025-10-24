@@ -38,7 +38,7 @@
                                 <td>
                                     <div>{{ $r->fromLine->LineName ?? '—Null Line-' }}</div>
                                     <small
-                                        class="text-muted">{{ $r->fromLine->department->Name.' Dept' ?? '—No Department—' }}</small>
+                                        class="text-muted">{{ $r->fromLine->department?->Name.' Dept' ?? '—No Department—' }}</small>
                                 </td>
                                 <td>
                                     <div>{{ $r->toLine->LineName ?? '—Null Line-' }}</div>
