@@ -5,8 +5,7 @@ namespace App\Models\Procurement;
 use App\Enums\Procurement\DepartmentNeedsEnum;
 use App\Enums\WorkflowStatus;
 use App\Models\Core\Branch;
-use App\Models\Core\PendingWorkflow;
-use App\Models\Core\Workflow;
+use App\Models\Core\Approval\Workflow;
 use App\Models\HRM\Department;
 use App\Models\Inventory\ItemMasterList;
 use App\Services\Procurement\DepartmentNeedsWorkflow;
@@ -15,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Exports\NeedsExport;
+use App\Models\Core\Approval\WorkflowPending;
 
 class DepartmentNeed extends Model
 {
@@ -53,7 +53,7 @@ class DepartmentNeed extends Model
 
     public function pendingWorkflows(): MorphMany
     {
-        return $this->morphMany(PendingWorkflow::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
+        return $this->morphMany(WorkflowPending::class, __FUNCTION__, 'Source', 'SourceID', 'Id');
     }
 
     public function department()
