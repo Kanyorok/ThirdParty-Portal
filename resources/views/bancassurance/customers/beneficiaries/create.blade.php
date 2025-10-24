@@ -2,6 +2,7 @@
 @section('title', 'Add Beneficiary')
 @section('content')
 <div class="container mt-4">
+    {{-- @dd($customers) --}}
     <form method="POST" action="{{ route('bancassurance.customers.beneficiaries.store') }}">
         @csrf
         <div class="col-md-4">
@@ -9,7 +10,7 @@
             <select name="CustomerID" class="form-select" required>
             <option value="">-- Select CustomerID --</option>
                 @foreach($customers as $customer)
-                    <option value="{{ $customer->Id }}">{{ $customer->FullName }}</option>
+                    <option value="{{ $customer->Id }}">{{ $customer->thirdParty->ThirdPartyName }}</option>
                 @endforeach
             </select>
         </div>
@@ -65,6 +66,9 @@
             </div>
 
             <div class="text-end">
+                <a href="{{ route('bancassurance.customers.index') }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
                 <button class="btn btn-primary" type="submit">
                     <i class="fas fa-save"></i> Save Beneficiary
                 </button>
