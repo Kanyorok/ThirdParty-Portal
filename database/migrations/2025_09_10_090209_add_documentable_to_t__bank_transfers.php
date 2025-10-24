@@ -41,6 +41,7 @@ return new class extends Migration {
             $table->foreign('CurrencyID')->references('Id')->on('t_Currencies');
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('t_BankTransfers');

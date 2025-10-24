@@ -98,6 +98,8 @@
         </div>
 
         <a href="{{ route('renewlease.index') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Lease Renewal</button>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Updating...'; this.form.submit();">Update Lease Renewal
+        </button>
     </form>
 @endsection

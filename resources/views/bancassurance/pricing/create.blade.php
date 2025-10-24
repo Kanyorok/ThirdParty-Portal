@@ -2,8 +2,7 @@
 @section('title', 'Add Pricing Rule')
 @section('content')
 
-
-@if ($errors->any())
+    @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show">
             <strong>Please fix the following errors:</strong>
             <ul class="mb-0 mt-2">
@@ -45,7 +44,7 @@
                         <label for="RuleName" class="form-label">
                             Pricing Rule Name <span class="text-danger">*</span>
                         </label>
-                        <input type="text" name="RuleName" id="RuleName" 
+                        <input type="text" name="RuleName" id="RuleName"
                                class="form-control" maxlength="150" required>
                     </div>
                 </div>

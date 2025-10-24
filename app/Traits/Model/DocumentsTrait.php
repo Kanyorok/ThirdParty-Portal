@@ -50,4 +50,13 @@ trait DocumentsTrait
         $RelatedId = $this->{$this->primaryKey};
         return DocumentService::createInternalFileContent($module, $extension, $fileName, $content, $actor, $permissions, self::getPrimaryKey(), $RelatedId)->document;
     }
+
+    /**
+     * @throws ErroredException
+     */
+    public function newVersionFromUpload(Document $document, UploadedFile $file, User $actor): Document
+    {
+        $RelatedId = $this->{$this->primaryKey};
+        return (new DocumentService($document))->newVersionUpload($file, $actor, self::getPrimaryKey(), $RelatedId)->document;
+    }
 }

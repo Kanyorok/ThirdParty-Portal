@@ -19,7 +19,7 @@ class TenderSectionController extends Controller
     public function index()
     {
         $this->authorize(PermissionEnum::TenderRead);
-        
+
         $tenders = Tender::with(['tenderSections.sections'])
             ->where('Status', '!=', 'Draft')
             ->select('Id', 'TenderNo', 'Title', 'Status')
@@ -28,7 +28,7 @@ class TenderSectionController extends Controller
 
         $sections = Section::isActive()->with('criteria')->get();
 
-        return view('procurement.tendering.settings.tender-sections', 
+        return view('procurement.tendering.settings.tender-sections',
             compact('tenders', 'sections'));
     }
 
@@ -38,7 +38,7 @@ class TenderSectionController extends Controller
     public function show(Request $request)
     {
         $this->authorize(PermissionEnum::TenderRead);
-        
+
         $tenderId = $request->get('tender');
         if (!$tenderId) {
             return redirect()->back()->with('error', 'Please select a tender to configure sections.');
@@ -48,7 +48,7 @@ class TenderSectionController extends Controller
             ->findOrFail($tenderId);
 
         $availableSections = Section::isActive()->with('criteria')->get();
-        
+
         // Get currently assigned sections with their weights
         $assignedSections = $tender->tenderSections->pluck('sections', 'SectionID')->flatten();
         $sectionWeights = $tender->tenderSections->pluck('Weight', 'SectionID');
@@ -67,7 +67,7 @@ class TenderSectionController extends Controller
     public function store(Request $request)
     {
         $this->authorize(PermissionEnum::TenderWrite);
-        
+
         $request->validate([
             'tender_id' => 'required|exists:t_Tenders,Id',
             'sections' => 'required|array|min:1',
@@ -97,7 +97,7 @@ class TenderSectionController extends Controller
             // Create new section assignments
             foreach ($sections as $sectionId) {
                 $weight = $weights[$sectionId] ?? 0;
-                
+
                 TenderSection::create([
                     'TenderID' => $tenderId,
                     'SectionID' => $sectionId,
@@ -124,12 +124,12 @@ class TenderSectionController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 
+            return redirect()->back()->with('success',
                 'Evaluation sections assigned successfully! Total weight: ' . $totalWeight . '%');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             activity()
                 ->causedBy(Auth::user())
                 ->withProperties([
@@ -139,7 +139,7 @@ class TenderSectionController extends Controller
                 ])
                 ->log('Failed to assign evaluation sections to tender: ' . $e->getMessage());
 
-            return redirect()->back()->with('error', 
+            return redirect()->back()->with('error',
                 'Failed to assign sections: ' . $e->getMessage());
         }
     }
@@ -150,7 +150,7 @@ class TenderSectionController extends Controller
     public function getTenderSections($tenderId)
     {
         $this->authorize(PermissionEnum::TenderRead);
-        
+
         $tender = Tender::with(['tenderSections.sections.criteria'])
             ->findOrFail($tenderId);
 
@@ -190,13 +190,13 @@ class TenderSectionController extends Controller
     public function destroy($tenderId)
     {
         $this->authorize(PermissionEnum::TenderWrite);
-        
+
         DB::beginTransaction();
 
         try {
             $tender = Tender::findOrFail($tenderId);
             $sectionsCount = $tender->tenderSections()->count();
-            
+
             $tender->tenderSections()->delete();
 
             activity()
@@ -210,12 +210,12 @@ class TenderSectionController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 
+            return redirect()->back()->with('success',
                 'All evaluation sections removed from tender successfully.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 
+            return redirect()->back()->with('error',
                 'Failed to remove sections: ' . $e->getMessage());
         }
     }
@@ -232,8 +232,8 @@ class TenderSectionController extends Controller
         return [
             'is_valid' => abs($totalWeight - 100) < 0.01,
             'total_weight' => $totalWeight,
-            'message' => abs($totalWeight - 100) < 0.01 
-                ? 'Section weights are properly configured' 
+            'message' => abs($totalWeight - 100) < 0.01
+                ? 'Section weights are properly configured'
                 : "Section weights sum to {$totalWeight}%, should be 100%"
         ];
     }
@@ -244,7 +244,7 @@ class TenderSectionController extends Controller
     public static function getEvaluationReadiness($tenderId)
     {
         $tender = Tender::with('tenderSections')->find($tenderId);
-        
+
         if (!$tender) {
             return ['ready' => false, 'message' => 'Tender not found'];
         }
@@ -269,9 +269,9 @@ class TenderSectionController extends Controller
         }
 
         return [
-            'ready' => true, 
-            'message' => "Ready for evaluation: {$responsiveBids} responsive bid(s), " . 
-                        $tender->tenderSections->count() . " section(s) configured",
+            'ready' => true,
+            'message' => "Ready for evaluation: {$responsiveBids} responsive bid(s), " .
+                $tender->tenderSections->count() . " section(s) configured",
             'responsive_bids' => $responsiveBids,
             'sections_count' => $tender->tenderSections->count()
         ];

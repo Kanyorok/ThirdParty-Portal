@@ -170,6 +170,54 @@ class OrderService
             ->get();
     }
 
+    /**
+     * Fetch orders paginated (newest first).
+     *
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public static function fetchOrdersPaginated(int $perPage = 10)
+    {
+        $query = DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
+            ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
+            ->select(DB::raw('
+                t_Orders.Id,
+                t_Orders.OrderDate,
+                t_Orders.OrderNo,
+                COALESCE(t_RFQ.RFQNumber,t_Orders.ExtOrdNum) as ExtOrdNum,
+                t_Orders.Priority,
+                t_Orders.CreatedOn,
+                t_Users.Name as CreatedBy,
+                t_Orders.BranchID,
+                SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
+                COUNT(t_OrderLines.Id) as ordercount,
+                t_Orders.OrdTotExcl,
+                t_Orders.OrdTotIncl,
+                t_Orders.OrdTotTax,
+                t_Orders.OrdDiscAmnt
+            '))
+            ->groupBy(
+                't_Orders.Id',
+                't_Orders.OrderDate',
+                't_Orders.OrderNo',
+                't_Orders.ExtOrdNum',
+                't_Orders.Priority',
+                't_Orders.CreatedOn',
+                't_Users.Name',
+                't_Orders.BranchID',
+                't_Orders.OrdTotExcl',
+                't_Orders.OrdTotIncl',
+                't_Orders.OrdTotTax',
+                't_Orders.OrdDiscAmnt',
+                't_RFQ.RFQNumber'
+            )
+            ->orderByDesc('t_Orders.CreatedOn');
+
+        return $query->paginate($perPage);
+    }
+
 
     public static function fetchOrderDetails($id)
     {
@@ -181,7 +229,7 @@ class OrderService
             ->leftJoin(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', DB::raw('t_Suppliers.ThirdPartyID'))
             ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), function ($join) {
-                    $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
+                $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
                         ->where('t_CodeDetails.CodeID', '=', 'PaymentTerm');
                 })
             ->where('t_Orders.Id', '=', $id)
@@ -226,7 +274,7 @@ class OrderService
                 't_Orders.terms'
             );
         $result = $query->first();
-        Log::info('OrderService.fetchOrderDetails done', ['id' => $id, 'hasResult' => (bool) $result]);
+        Log::info('OrderService.fetchOrderDetails done', ['id' => $id, 'hasResult' => (bool)$result]);
         return $result;
     }
 

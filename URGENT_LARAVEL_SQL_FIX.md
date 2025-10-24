@@ -1,7 +1,9 @@
 # 🚨 **URGENT: Laravel SQL Server Parameter Binding Fix**
 
 ## 🎯 **THE PROBLEM**
+
 Laravel is generating unquoted SQL for SQL Server:
+
 ```sql
 ❌ BAD:  UPDATE t_TenderInvitations SET ResponseStatus = accepted WHERE InvitationID = 3
 ✅ GOOD: UPDATE t_TenderInvitations SET ResponseStatus = 'accepted' WHERE InvitationID = 3
@@ -130,6 +132,7 @@ public function update(Request $request, $id): JsonResponse
 ```
 
 Don't forget to add this import at the top:
+
 ```php
 use Illuminate\Support\Facades\DB;
 ```
@@ -143,6 +146,7 @@ curl -X PUT "http://localhost:8000/api/tender-invitations/3" \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "message": "Invitation response updated successfully",
@@ -158,7 +162,7 @@ curl -X PUT "http://localhost:8000/api/tender-invitations/3" \
 ## 🚀 **QUICK STEPS**
 
 1. **OPTION A (Recommended):** Add the model configuration above
-2. **OPTION B (Alternative):** Replace the controller method  
+2. **OPTION B (Alternative):** Replace the controller method
 3. **Test:** Run the curl command
 4. **Verify:** Check your database - ResponseStatus should be 'accepted'
 

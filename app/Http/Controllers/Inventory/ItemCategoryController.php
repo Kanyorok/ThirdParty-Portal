@@ -24,42 +24,64 @@ class ItemCategoryController extends Controller
 
     public function index()
     {
-        $categories = ItemCategories::whereNull('ParentId')->with('parent')->get();
+        // Server-side pagination: newest-first; allow per-page to be set via ?perPage= and persist in session
+        $allowed = [5, 10, 20, 50];
+        $requested = request()->query('perPage');
+
+        if ($requested !== null) {
+            $perPage = intval($requested);
+            if (!in_array($perPage, $allowed)) {
+                $perPage = 20;
+            }
+            // persist user choice
+            session(['itemcategory.perPage' => $perPage]);
+        } else {
+            $perPage = session('itemcategory.perPage', 20);
+            if (!in_array($perPage, $allowed)) {
+                $perPage = 20;
+            }
+        }
+
+        $categories = ItemCategories::whereNull('ParentId')
+            ->with('parent', 'status')
+            ->orderByDesc('Id')
+            ->paginate($perPage);
+
         return view('inventory.itemmaster.itemcategory.index', compact('categories'));
     }
 
-public function create()
-{
-    $this->authorize('create', ItemCategories::class);
+    public function create()
+    {
+        $this->authorize('create', ItemCategories::class);
 
-    $activeStatusId = CodeDetail::where('CodeID', 'CategoryStatus')
-        ->where('Description', 'Active')
-        ->value('Id');
+        $activeStatusId = CodeDetail::where('CodeID', 'CategoryStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
 
-    $categories = ItemCategories::whereNull('ParentId')
-        ->where('Status', $activeStatusId)
-        ->get();
+        $categories = ItemCategories::whereNull('ParentId')
+            ->where('Status', $activeStatusId)
+            ->get();
 
-    return view('inventory.itemmaster.itemcategory.create', compact('categories'));
-}
+        return view('inventory.itemmaster.itemcategory.create', compact('categories'));
+    }
 
-public function store(StoreItemCategoryRequest $request)
-{
-    $this->authorize('create', ItemCategories::class);
+    public function store(StoreItemCategoryRequest $request)
+    {
+        $this->authorize('create', ItemCategories::class);
 
-    // Force status to Active
-    $activeStatusId = CodeDetail::where('CodeID', 'CategoryStatus')
-        ->where('Description', 'Active')
-        ->value('Id');
+        // Force status to Active
+        $activeStatusId = CodeDetail::where('CodeID', 'CategoryStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
 
-    $data = $request->validated();
-    $data['Status'] = $activeStatusId;
+        $data = $request->validated();
+        $data['Status'] = $activeStatusId;
 
-    $this->service->create($data);
+        $this->service->create($data);
 
-    return redirect()->route('itemcategory.index')
-        ->with('success', 'Category created successfully.');
-}
+        return redirect()->route('itemcategory.index')
+            ->with('success', 'Category created successfully.');
+    }
 
     public function show($id)
     {
@@ -80,15 +102,15 @@ public function store(StoreItemCategoryRequest $request)
     }
 
     public function update(UpdateItemCategoryRequest $request, $id)
-{
-    $category = ItemCategories::findOrFail($id);
-    $this->authorize('update', $category);
+    {
+        $category = ItemCategories::findOrFail($id);
+        $this->authorize('update', $category);
 
-    $this->service->update($category, $request->validated());
+        $this->service->update($category, $request->validated());
 
-    return redirect()->route('itemcategory.index')
-        ->with('success', 'Category updated successfully.');
-}
+        return redirect()->route('itemcategory.index')
+            ->with('success', 'Category updated successfully.');
+    }
 
 
 

@@ -40,7 +40,7 @@ class SearchController extends Controller
                     ->orWhereHas('tags', function (Builder $q) use ($search) {
                         $q->where('t_DMSTags.Name', 'LIKE', "%{$search}%");
                     });
-            })->with(['current', 'repository'])->limit(5)->get();//todo search limit to db
+            })->with(['current', 'repository'])->limit(5)->get();
 
             return (new FilesCollection($files))->setMinified(true);
         }
@@ -52,7 +52,7 @@ class SearchController extends Controller
             $repos = Repository::query()->user($actor)->where(function (Builder $query) use ($search) {
                 $query->where('t_Repositories.Name', 'LIKE', "%{$search}%")
                     ->Orwhere('t_Repositories.Description', 'LIKE', "%{$search}%");
-            })->limit(5)->get();//todo search limit to db
+            })->limit(5)->get();
 
             return (new RepositoryCollection($repos))->setMinified(true);
         }

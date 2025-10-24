@@ -45,10 +45,50 @@ class PrequalificationRoundSetupController extends Controller
     {
         $validatedData = $request->validate([
             'sections' => ['nullable', 'array'],
-            'sections.*.weight' => ['required', 'integer', 'min:0', 'max:100'],
+            'sections.*.weight' => ['required', 'numeric', 'min:0', 'max:100'],
             'criteria' => ['nullable', 'array'],
             'criteria.*.included' => ['boolean'],
         ]);
+
+        // Enforce: total section weights must equal 100 (tolerance 0.01)
+        $totalWeight = collect($validatedData['sections'] ?? [])->sum(function ($s) { return (float)($s['weight'] ?? 0); });
+        if (abs($totalWeight - 100.0) > 0.01) {
+            return back()->withInput()->withErrors(['sections' => 'Total section weight must equal 100%. Current total is '.number_format($totalWeight,2).'%.']);
+        }
+
+        // Enforce: each selected section must have at least one included criterion
+        $sectionsSubmitted = array_keys($validatedData['sections'] ?? []);
+        $criteriaSubmitted = $validatedData['criteria'] ?? [];
+        $criteriaBySection = [];
+        foreach ($criteriaSubmitted as $criteriaId => $c) {
+            // Need to map criteriaId -> SectionId; fetch minimal map once
+            $criteriaBySection[$criteriaId] = $criteriaBySection[$criteriaId] ?? null;
+        }
+        if (!empty($sectionsSubmitted)) {
+            // Build CriteriaId -> SectionId map for submitted criteria set
+            $map = DB::table('t_Criterias as c')
+                ->select('c.Id as CriteriaId','c.SectionID as SectionId')
+                ->whereIn('c.Id', array_keys($criteriaSubmitted))
+                ->pluck('SectionId','CriteriaId');
+
+            $errors = [];
+            foreach ($sectionsSubmitted as $sectionId) {
+                $hasIncluded = false;
+                foreach ($criteriaSubmitted as $criteriaId => $payload) {
+                    $included = (bool)($payload['included'] ?? false);
+                    if ($included && (int)($map[$criteriaId] ?? 0) === (int)$sectionId) {
+                        $hasIncluded = true;
+                        break;
+                    }
+                }
+                if (!$hasIncluded) {
+                    $errors["sections.$sectionId"] = 'At least one criterion must be included for this section.';
+                }
+            }
+            if (!empty($errors)) {
+                return back()->withInput()->withErrors($errors);
+            }
+        }
 
         DB::beginTransaction();
 

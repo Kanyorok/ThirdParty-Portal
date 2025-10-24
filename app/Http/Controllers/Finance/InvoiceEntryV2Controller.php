@@ -20,17 +20,69 @@ use Illuminate\Validation\ValidationException;
 
 class InvoiceEntryV2Controller extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = FinanceInvoiceEntry::with(['thirdParty'])
-            ->orderBy('CreatedOn', 'desc')
-            ->paginate(15);
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
+        // Build query with filters
+        $query = FinanceInvoiceEntry::with(['thirdParty', 'currency']);
 
-        return view('finance.accountspayable.invoiceentry.index', compact('invoices'));
+        // Apply filters if provided
+        if ($request->filled('vendor_name')) {
+            $query->whereHas('thirdParty', function($q) use ($request) {
+                $q->where('ThirdPartyName', 'like', '%' . $request->vendor_name . '%')
+                  ->orWhere('TradingName', 'like', '%' . $request->vendor_name . '%');
+            });
+        }
+
+        if ($request->filled('invoice_number')) {
+            $query->where('InvoiceNumber', 'like', '%' . $request->invoice_number . '%');
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('InvoiceDate', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('InvoiceDate', '<=', $request->date_to);
+        }
+
+        if ($request->filled('amount_min')) {
+            $query->where('InvoiceAmount', '>=', $request->amount_min);
+        }
+
+        if ($request->filled('amount_max')) {
+            $query->where('InvoiceAmount', '<=', $request->amount_max);
+        }
+
+        if ($request->filled('approval_status') && $request->approval_status !== 'all') {
+            $query->where('ApprovalStatus', $request->approval_status);
+        }
+
+        // Apply sorting
+        $sortField = $request->sort_by ?? 'CreatedOn';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        // Paginate results
+        $perPage = $request->per_page ?? 15;
+        $invoices = $query->paginate($perPage)->withQueryString();
+
+        // Get filter options for dropdowns
+        $approvalStatuses = FinanceInvoiceEntry::distinct()
+            ->pluck('ApprovalStatus')
+            ->filter()
+            ->unique()
+            ->values();
+
+        return view('finance.accountspayable.invoiceentry.index', compact(
+            'invoices',
+            'approvalStatuses'
+        ));
     }
 
     public function create()
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
         $paymentMethods = CodeDetail::where('CodeID', 'PaymentMethod')
             ->orderBy('Description')
             ->get(['ID', 'Value', 'Description']);
@@ -43,6 +95,7 @@ class InvoiceEntryV2Controller extends Controller
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         // Load invoice with relationships like the original controller
         $invoice = FinanceInvoiceEntry::with([
             'thirdParty:Id,ThirdPartyName,TradingName',
@@ -90,8 +143,8 @@ class InvoiceEntryV2Controller extends Controller
                 ->select(
                     'i.ItemName',
                     'i.ItemDescription as Description',
-                    'ol.fQuantity as Quantity',
-                    'ol.fUnitPriceExcl as UnitCost'
+                    DB::raw('COALESCE(ol.fQuantity, 0) as Quantity'),
+                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as UnitCost')
                 )
                 ->get();
 
@@ -125,6 +178,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function quickSearchSuppliers(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             // Support both Select2 (q) and our previous (search_term) parameter styles
             $q = trim((string) ($request->input('search_term') ?? $request->input('q') ?? ''));
@@ -220,6 +274,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function findSupplier(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             // This method can accept either search_term or supplier_id
             if ($request->has('supplier_id')) {
@@ -237,24 +292,28 @@ class InvoiceEntryV2Controller extends Controller
                         'tp.TradingName',
                         'tp.RegistrationNumber',
                         'tp.Email',
-                        'tp.Phone'
+                        'tp.Phone',
+                        'tp.PhysicalAddress',
+                        'tp.BusinessType',
+                        's.Active_Status'
                     )
                     ->first();
             } else {
                 $request->validate(['search_term' => 'required|string|min:2']);
                 $q = trim((string) $request->search_term);
 
-                // Search in ThirdParties and join with Suppliers - LIMITED TO EMAIL, REG, PHONE ONLY
+                // Search in ThirdParties and join with Suppliers - Search in all relevant fields
                 $supplier = DB::table('t_ThirdParties as tp')
                     ->join('t_Suppliers as s', 's.ThirdPartyID', '=', 'tp.Id')
                     ->where(function($query) use ($q) {
                         $query->where('tp.RegistrationNumber', $q)
                               ->orWhere('tp.Email', $q)
                               ->orWhere('tp.Phone', $q)
-                              ->orWhere('tp.RegistrationNumber', 'like', "%{$q}%")
-                              ->orWhere('tp.Email', 'like', "%{$q}%")
-                              ->orWhere('tp.Phone', 'like', "%{$q}%");
+                              ->orWhere('tp.ThirdPartyName', 'like', "%{$q}%")
+                              ->orWhere('tp.TradingName', 'like', "%{$q}%")
+                              ->orWhere('tp.PhysicalAddress', 'like', "%{$q}%");
                     })
+                    ->where('s.Active_Status', 1) // Only active suppliers
                     ->select(
                         's.Id as SupplierID',
                         'tp.Id as ThirdPartyID',
@@ -262,7 +321,10 @@ class InvoiceEntryV2Controller extends Controller
                         'tp.TradingName',
                         'tp.RegistrationNumber',
                         'tp.Email',
-                        'tp.Phone'
+                        'tp.Phone',
+                        'tp.PhysicalAddress',
+                        'tp.BusinessType',
+                        's.Active_Status'
                     )
                     ->first();
             }
@@ -274,11 +336,24 @@ class InvoiceEntryV2Controller extends Controller
             // Get default currency for orders that don't have currency set
             $defaultCurrency = $this->getDefaultCurrency();
 
-            // Get related Purchase Orders for this ThirdParty via Supplier join
+            // Get IDs of POs that are already referenced in invoices to avoid duplicates
+            $existingPOIds = FinanceInvoiceEntry::pluck('POReference')->toArray();
+
+            // Get related Purchase Orders for this ThirdParty via Supplier join, excluding those already used in invoices
             $orders = DB::table('t_Orders as o')
                 ->join('t_Suppliers as s', 'o.AccountID', '=', 's.Id')
                 ->where('s.ThirdPartyID', '=', (int) $supplier->ThirdPartyID)
-                ->select('o.Id', 'o.OrderNo', 'o.Description', DB::raw('COALESCE(o.OrdTotExcl, 0) as TotalAmount'), 'o.OrderDate')
+                ->whereNotIn('o.Id', $existingPOIds)
+                ->select(
+                    'o.Id',
+                    'o.OrderNo',
+                    'o.Description',
+                    DB::raw('COALESCE(o.OrdTotExcl, 0) as OrdTotExcl'),
+                    DB::raw('COALESCE(o.OrdTotTax, 0) as OrdTotTax'),
+                    DB::raw('COALESCE(o.OrdDiscAmnt, 0) as OrdDiscAmnt'),
+                    DB::raw('COALESCE(o.OrdTotIncl, 0) as OrdTotIncl'),
+                    'o.OrderDate'
+                )
                 ->orderByRaw(Schema::hasColumn('t_Orders', 'OrderDate') ? 'OrderDate desc' : 'Id desc')
                 ->distinct()
                 ->get()
@@ -295,7 +370,12 @@ class InvoiceEntryV2Controller extends Controller
                         'Id' => $order->Id,
                         'OrderNo' => $order->OrderNo,
                         'Description' => $order->Description ?? '',
-                        'TotalAmount' => number_format((float)$order->TotalAmount, 2),
+                        'OrdTotExcl' => number_format((float)$order->OrdTotExcl, 2),
+                        'OrdDiscAmnt' => number_format((float)$order->OrdDiscAmnt, 2),
+                        'OrdTotTax' => number_format((float)$order->OrdTotTax, 2),
+                        'OrdTotIncl' => number_format((float)$order->OrdTotIncl, 2),
+                        // Backward compatibility: treat TotalAmount as inclusive amount
+                        'TotalAmount' => number_format((float)$order->OrdTotIncl, 2),
                         'OrderDate' => $order->OrderDate ? \Carbon\Carbon::parse($order->OrderDate)->format('d M Y') : '',
                         'Currency' => [
                             'Id' => $currency->Id ?? $defaultCurrency->Id,
@@ -341,7 +421,9 @@ class InvoiceEntryV2Controller extends Controller
                     'RegistrationNumber' => $supplier->RegistrationNumber,
                     'Email' => $supplier->Email,
                     'Phone' => $supplier->Phone,
-                    'IsActive' => true // Default to active since we don't have this field
+                    'Address' => $supplier->PhysicalAddress,
+                    'BusinessType' => $supplier->BusinessType,
+                    'IsActive' => (bool) $supplier->Active_Status
                 ],
                 'orders' => $orders,
                 'grns' => $grns,
@@ -366,25 +448,53 @@ class InvoiceEntryV2Controller extends Controller
      */
     private function getOrderLines($orderId)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
-            return DB::table('t_OrderLines as ol')
+            $rows = DB::table('t_OrderLines as ol')
                 ->leftJoin('t_Items as i', 'ol.iStockCodeID', '=', 'i.Id')
                 ->where('ol.iOrderID', $orderId)
                 ->select(
                     DB::raw('COALESCE(i.ItemName, ol.cDescription, \'Unknown Item\') as ItemName'),
-                    DB::raw('COALESCE(ol.fQuantity, 0) as Quantity'),
-                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as UnitPrice'),
-                    DB::raw('COALESCE(ol.fQuantity, 0) * COALESCE(ol.fUnitPriceExcl, 0) as LineTotal')
+                    DB::raw('COALESCE(i.ItemDescription, ol.cDescription, \'\') as ItemDescription'),
+                    DB::raw('COALESCE(ol.fQuantity, 0) as fQuantity'),
+                    DB::raw('COALESCE(ol.fUnitPriceExcl, 0) as fUnitPriceExcl'),
+                    DB::raw('COALESCE(ol.fUnitPriceIncl, 0) as fUnitPriceIncl'),
+                    DB::raw('COALESCE(ol.fLineDiscount, 0) as fLineDiscount'),
+                    DB::raw('COALESCE(ol.fTaxRate, 0) as fTaxRate'),
+                    DB::raw('COALESCE(ol.LineTotal, 0) as LineTotal')
                 )
-                ->get()
-                ->map(function($line) {
-                    return [
-                        'ItemName' => $line->ItemName ?? 'Unknown Item',
-                        'Quantity' => $line->Quantity ?? 0,
-                        'UnitPrice' => number_format((float)$line->UnitPrice, 2),
-                        'LineTotal' => number_format((float)$line->LineTotal, 2)
-                    ];
-                });
+                ->get();
+
+            return $rows->map(function ($r) {
+                $quantity = (float)($r->fQuantity ?? 0);
+                $unitExcl = (float)($r->fUnitPriceExcl ?? 0);
+                $unitIncl = (float)($r->fUnitPriceIncl ?? 0);
+                $discount = (float)($r->fLineDiscount ?? 0); // assume line amount
+                $taxRate = (float)($r->fTaxRate ?? 0);
+
+                $lineExcl = $quantity * $unitExcl;
+                if ($unitIncl > 0) {
+                    $lineInclGiven = $quantity * $unitIncl;
+                    $lineTax = max(0.0, $lineInclGiven - max(0.0, $lineExcl - $discount));
+                    $lineIncl = $r->LineTotal !== null ? (float)$r->LineTotal : $lineInclGiven;
+                } else {
+                    $lineTax = max(0.0, max(0.0, $lineExcl - $discount) * ($taxRate / 100.0));
+                    $lineIncl = $r->LineTotal !== null ? (float)$r->LineTotal : max(0.0, $lineExcl - $discount + $lineTax);
+                }
+
+                return [
+                    'ItemName' => $r->ItemName ?? 'Unknown Item',
+                    'Description' => $r->ItemDescription ?? '',
+                    'Quantity' => $quantity,
+                    'UnitPriceExcl' => $unitExcl,
+                    'UnitPriceIncl' => $unitIncl,
+                    'Discount' => $discount,
+                    'TaxRate' => $taxRate,
+                    'TaxAmount' => $lineTax,
+                    'LineExclusive' => $lineExcl,
+                    'LineInclusive' => $lineIncl,
+                ];
+            });
         } catch (\Exception $e) {
             Log::error('Error fetching order lines: ' . $e->getMessage(), [
                 'orderId' => $orderId,
@@ -399,6 +509,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     private function getGRNItems($grnId)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
         try {
             return DB::table('t_GoodsReceipts as gr')
                 ->leftJoin('t_Items as i', 'gr.ItemNo', '=', 'i.Id')
@@ -430,6 +541,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceInvoiceEntry::class);
         try {
             $validated = $request->validate([
                 'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
@@ -448,7 +560,7 @@ class InvoiceEntryV2Controller extends Controller
 
             $invoice = FinanceInvoiceEntry::create([
                 //'ThirdPartyID' => $validated['ThirdPartyID'], // Store in correct field for relationship
-                'SupplierID' => $validated['SupplierID'], // Also store SupplierID separately if needed
+                'SupplierID' => $validated['ThirdPartyID'], // Also store SupplierID separately if needed
                 'POId' => $validated['POReference'], // This is actually the PO ID from the form
                 'POReference'=>  $validated['POReference'],
                 'GRNId' => 1,//$validated['GRNReference'], //Set to one to avoid data type conversion since with po we can get the grn
@@ -456,7 +568,18 @@ class InvoiceEntryV2Controller extends Controller
                 'InvoiceNumber' => $validated['InvoiceNumber'],
                 'InvoiceDate' => $validated['InvoiceDate'],
                 'DueDate' => $validated['DueDate'],
-                'InvoiceAmount' => $validated['Amount'],
+                // Store inclusive amount for posting/approval
+                'InvoiceAmount' => (function() use ($validated) {
+                    // If form provided Amount, prefer it; otherwise if PO is present, fetch OrdTotIncl
+                    $formAmount = (float)$validated['Amount'];
+                    if (!empty($validated['POReference'])) {
+                        $ordTotIncl = DB::table('t_Orders')->where('Id', (int)$validated['POReference'])->value('OrdTotIncl');
+                        if ($ordTotIncl !== null) {
+                            return (float)$ordTotIncl;
+                        }
+                    }
+                    return $formAmount;
+                })(),
                 'Description' => $validated['Description'],
                 'CurrencyID' => 56, // Set to default currency
                 'ExchangeRate' => 1.0, // Set exchange rate to 1
@@ -503,6 +626,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function update(Request $request, $id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceInvoiceEntry::class);
         try {
             $invoice = FinanceInvoiceEntry::findOrFail($id);
 
@@ -545,6 +669,7 @@ class InvoiceEntryV2Controller extends Controller
      */
     public function edit($id)
     {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableUpdate, FinanceInvoiceEntry::class);
         $invoice = FinanceInvoiceEntry::with(['thirdParty'])->findOrFail($id);
 
         // Suppliers: fetch from suppliers joined to third parties for the dropdown
@@ -564,6 +689,81 @@ class InvoiceEntryV2Controller extends Controller
         $grns = DB::table('t_GoodsReceipts')->select('Id', 'GRNID', 'SupplierId')->get();
 
         return view('finance.accountspayable.invoiceentry.edit-v2', compact('invoice', 'suppliers', 'orders', 'currencies', 'grns'));
+    }
+
+    /**
+     * Delete invoice
+     */
+    public function destroy($id)
+    {
+        $this->authorize(PermissionEnum::FinanceAccountsPayableDelete, FinanceInvoiceEntry::class);
+            try {
+            DB::beginTransaction();
+
+            $invoice = FinanceInvoiceEntry::findOrFail($id);
+
+            // Check if invoice can be deleted (only draft invoices can be deleted)
+            if ($invoice->ApprovalStatus !== 'draft') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only draft invoices can be deleted. Approved or posted invoices cannot be removed.'
+                ], 422);
+            }
+
+            // Get invoice number for logging
+            $invoiceNumber = $invoice->InvoiceNumber;
+
+            // Delete associated documents first
+            if (method_exists($invoice, 'documents')) {
+                $documents = $invoice->documents();
+                if ($documents) {
+                    foreach ($documents->get() as $document) {
+                        // Use the document service to properly delete the document
+                        if (method_exists($document, 'delete')) {
+                            $document->delete();
+                        }
+                    }
+                }
+            }
+
+            // Delete the invoice
+            $invoice->delete();
+
+            DB::commit();
+
+            Log::info('Invoice deleted successfully', [
+                'invoice_id' => $id,
+                'invoice_number' => $invoiceNumber,
+                'deleted_by' => Auth::id()
+            ]);
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice deleted successfully'
+                ]);
+            }
+
+            return redirect()->route('invoiceentry.index')
+                ->with('success', 'Invoice deleted successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error deleting invoice: ' . $e->getMessage(), [
+                'invoice_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete invoice: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to delete invoice: ' . $e->getMessage());
+        }
     }
 
     /**

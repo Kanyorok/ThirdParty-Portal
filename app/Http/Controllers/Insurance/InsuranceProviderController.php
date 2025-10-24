@@ -29,7 +29,7 @@ class InsuranceProviderController extends Controller
         $providers = InsuranceProvider::all();
         $Countrys = Country::all();
 
-        return view('bancassurance.insurers.create', compact('providers','Countrys'));
+        return view('bancassurance.insurers.create', compact('providers', 'Countrys'));
     }
 
     public function store(InsuranceProviderRequest $request)
@@ -55,7 +55,7 @@ class InsuranceProviderController extends Controller
         $provider = InsuranceProvider::findOrFail($Id);
         $Countrys = Country::all();
 
-        return view('bancassurance.insurers.edit', compact('provider','Countrys'));
+        return view('bancassurance.insurers.edit', compact('provider', 'Countrys'));
     }
 
     public function viewProducts($Id)
@@ -112,8 +112,8 @@ class InsuranceProviderController extends Controller
 
             if ($provider->getProductByProvider()->exists()) {
                 return redirect()->back()
-                ->withErrors(['error' => 'This Provider is in use and cannot be deleted.']);
-            }  
+                    ->withErrors(['error' => 'This Provider is in use and cannot be deleted.']);
+            }
             $provider->delete();
 
             return redirect()->route('bancassurance.insurers.index')

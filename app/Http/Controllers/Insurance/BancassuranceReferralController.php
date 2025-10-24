@@ -22,7 +22,7 @@ class BancassuranceReferralController extends Controller
 public function index()
 {
     $this->authorize(PermissionEnum::BancassuranceReferralView, BancAssuranceReferral::class);
-    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser',])
+    $referrals = BancAssuranceReferral::with(['insuranceProduct','preferredInsurer','assignedToUser','customerreferral'])
     ->orderByDesc('Id')->get();
 
     return view('bancassurance.referrals.index', compact('referrals'));
@@ -216,7 +216,7 @@ Public function destroy($Id)
 
     if ($referral->customerreferral()->exists()) {
         return redirect()->back()
-        ->withErrors(['error' => 'This Property Block is in use and cannot be deleted.']);
+        ->withErrors(['error' => 'This referral is in use and cannot be deleted.']);
     }  
     $referral->DeletedBy = Auth()->Id();
     $referral->save();

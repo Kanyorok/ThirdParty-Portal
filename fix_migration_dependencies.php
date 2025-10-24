@@ -12,7 +12,7 @@ try {
         't_Images' => 'CREATE TABLE t_Images (ImageID int IDENTITY(1,1) PRIMARY KEY, [other_cols_placeholder] varchar(255))',
         't_ItemCategories' => 'CREATE TABLE t_ItemCategories (Id int IDENTITY(1,1) PRIMARY KEY, [CategoryName] varchar(255))',
     ];
-    
+
     echo "1. Creating missing dependency tables:\n";
     foreach ($criticalTables as $tableName => $sql) {
         try {
@@ -28,7 +28,7 @@ try {
             echo "   - $tableName: ❌ Error checking - " . $e->getMessage() . "\n";
         }
     }
-    
+
     // Step 2: Try to run specific migrations in dependency order
     echo "\n2. Running critical migrations in order:\n";
     $orderedMigrations = [
@@ -38,7 +38,7 @@ try {
         'database/migrations/2025_04_20_000000_create_procurement_periods_table.php',
         'database/migrations/2025_04_21_132746_create_procurement_period_supplier_table.php',
     ];
-    
+
     foreach ($orderedMigrations as $migration) {
         $name = basename($migration);
         echo "   - $name: ";
@@ -53,14 +53,14 @@ try {
             }
         } catch (Exception $e) {
             echo "❌ Error - " . $e->getMessage() . "\n";
-            
+
             // Check if it's a dependency issue
             if (strpos($e->getMessage(), 'references invalid table') !== false) {
                 echo "      ^^ This looks like a foreign key dependency issue\n";
             }
         }
     }
-    
+
 } catch (Exception $e) {
     echo "❌ CRITICAL ERROR: " . $e->getMessage() . "\n";
 }

@@ -43,7 +43,7 @@ class UserSessionController extends Controller
             foreach ($users as $u) {
                 $byUser[$u->Id] = [
                     'user' => $u,
-                    'total' => (int) ($duplicates->firstWhere('user_id', $u->Id)->cnt ?? 0),
+                    'total' => (int)($duplicates->firstWhere('user_id', $u->Id)->cnt ?? 0),
                     'sessions' => $sessionRows->where('user_id', $u->Id)->values(),
                 ];
             }

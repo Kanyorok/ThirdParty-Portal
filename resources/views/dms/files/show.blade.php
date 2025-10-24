@@ -107,7 +107,7 @@
                         <li class="list-group-item">Versions : <b
                                 class="float-end">{{ number_format($file->versions_count) }}</b></li>
                         <li class="list-group-item">Repository : <b
-                                class="float-end">{{ $file->repository->Name }}</b>
+                                class="float-end">{{ (new \App\Services\DMS\RepositoryService($file->repository))->getPath() }}</b>
                         </li>
                         <li class="list-group-item">Size : <b
                                 class="float-end">{{  \Illuminate\Support\Number::fileSize( $file->current->Size, 2) }}</b>
@@ -115,22 +115,28 @@
                     </ul>
                 </div>
                 <div class="card-footer">
-                    <div class="row">
-                        @if(!$file->ext()->canCheckOut())
-                            <div class="col-sm-6 col-12">
-                                <button class="btn btn-secondary w-100 action-download-file" type="button"><i
-                                        class="fas fa-download"></i> Download
-                                </button>
-                            </div>
-                        @endif
-                        @can('delete', $file)
-                            <div class="col-sm-6 col-12">
-                                <button class="btn btn-secondary w-100 file-action-trash" type="button"><i
-                                        class="fas fa-trash"></i> delete
-                                </button>
-                            </div>
-                        @endcan
+                    <div class="btn-group w-100">
+                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu" style="">
+                            @if($file->ext()->canSign())
+                                <a class="dropdown-item" href="javascript:void(0)"><i class="fas fa-check"></i> Mark for
+                                    Validation</a>
+                            @endif
+                            @if(!$file->ext()->canCheckOut())
+                                <a class="dropdown-item action-download-file" href="javascript:void(0)"><i
+                                        class="fas fa-download"></i> Download</a>
+                            @endif
+                            @can('delete', $file)
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item file-action-trash" href="javascript:void(0)"><i
+                                        class="fas fa-trash"></i> delete </a>
+                            @endcan
+                        </div>
                     </div>
+
                 </div>
             </div>
             <div class="card">
@@ -169,8 +175,10 @@
                                  aria-labelledby="filePropertiesHeader" data-bs-parent="#filePropertiesAccordion">
                                 <ul class="list-group list-group-flush">
                                     @foreach($file->properties as $property)
-                                        <li class="list-group-item ">{{ $property->Name }} : <b
-                                                class="float-end">{{ $property->formated_value }}</b></li>
+                                        <li class="list-group-item"
+                                            style="overflow-wrap: break-word;">{{ $property->Name }}
+                                            <br> <b
+                                                class="text-start">{{ $property->formated_value }}</b></li>
                                     @endforeach
                                 </ul>
                             </div>

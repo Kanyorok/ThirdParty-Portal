@@ -16,7 +16,7 @@ class LegalContractController extends Controller
     {
         // Placeholder for contract management
         $contracts = []; // TODO: Implement actual contract retrieval
-        
+
         return view('legal.contracts.index', compact('contracts'));
     }
 

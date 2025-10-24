@@ -3,31 +3,111 @@
 @section('styles')
     <link rel="stylesheet" href="{{ asset('assets/libs/select2/css/select2.min.css') }}">
     <style>
-        .select2-container { width: 100% !important; }
-        .je-table { min-width: 1700px; border-collapse: separate; border-spacing: 0; }
-        .je-table th, .je-table td { vertical-align: middle; white-space: nowrap; }
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .je-table {
+            min-width: 1700px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .je-table th, .je-table td {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
         /* sticky disabled */
-        .je-sticky { position: static; background: #fff; z-index: auto; }
-        .je-sticky-col { left: auto; }
-        .je-sticky-gl { left: auto; }
-        .je-table thead th.je-sticky { background: #f8f9fa; z-index: auto; }
+        .je-sticky {
+            position: static;
+            background: #fff;
+            z-index: auto;
+        }
+
+        .je-sticky-col {
+            left: auto;
+        }
+
+        .je-sticky-gl {
+            left: auto;
+        }
+
+        .je-table thead th.je-sticky {
+            background: #f8f9fa;
+            z-index: auto;
+        }
+
         /* column widths */
-        .je-table th.col-gl, .je-table td.col-gl { min-width: 360px; }
-        .je-table th.col-branch, .je-table td.col-branch { min-width: 220px; }
-        .je-table th.col-dept, .je-table td.col-dept { min-width: 280px; }
-        .je-table th.col-drcr, .je-table td.col-drcr { min-width: 120px; text-align: center; }
-        .je-table th.col-amount, .je-table td.col-amount { min-width: 200px; text-align: right; }
-        .je-table th.col-narr, .je-table td.col-narr { min-width: 420px; }
-        .je-table th.col-action, .je-table td.col-action { min-width: 120px; text-align: center; }
+        .je-table th.col-gl, .je-table td.col-gl {
+            min-width: 360px;
+        }
+
+        .je-table th.col-branch, .je-table td.col-branch {
+            min-width: 220px;
+        }
+
+        .je-table th.col-dept, .je-table td.col-dept {
+            min-width: 280px;
+        }
+
+        .je-table th.col-drcr, .je-table td.col-drcr {
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .je-table th.col-amount, .je-table td.col-amount {
+            min-width: 200px;
+            text-align: right;
+        }
+
+        .je-table th.col-narr, .je-table td.col-narr {
+            min-width: 420px;
+        }
+
+        .je-table th.col-action, .je-table td.col-action {
+            min-width: 120px;
+            text-align: center;
+        }
+
         /* inputs */
         .je-table .form-select,
         .je-table .form-control,
-        .je-table textarea { padding: 0.45rem 0.65rem; font-size: 0.875rem; }
-        .narration-input { min-height: 60px; resize: vertical; }
-        .totals-box { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.9rem; }
+        .je-table textarea {
+            padding: 0.45rem 0.65rem;
+            font-size: 0.875rem;
+        }
+
+        .narration-input {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .totals-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+
         /* match bootstrap for select2 */
-        .select2-container .select2-selection--single { height: calc(2.25rem + 2px); padding: 0.375rem 0.75rem; font-size: 1rem; border: 1px solid #ced4da; border-radius: 0.375rem; background-color: #fff; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 100%; top: 50%; transform: translateY(-50%); right: 0.75rem; }
+        .select2-container .select2-selection--single {
+            height: calc(2.25rem + 2px);
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            background-color: #fff;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 0.75rem;
+        }
     </style>
 @endsection
 @section('content')
@@ -111,7 +191,9 @@
                                         <select name="GLAccount[]" class="form-select gl-account-select" required>
                                             <option value="" selected disabled>Select GL</option>
                                             @foreach($gls as $gl)
-                                                <option value="{{$gl->Id}}" data-code="{{$gl->GLCode}}" data-name="{{$gl->GLName}}">{{$gl->GLCode}} ({{$gl->GLName}})</option>
+                                                <option value="{{$gl->Id}}" data-code="{{$gl->GLCode}}"
+                                                        data-name="{{$gl->GLName}}">{{$gl->GLCode}} ({{$gl->GLName}})
+                                                </option>
                                             @endforeach
                                         </select>
                                     </td>
@@ -136,10 +218,12 @@
                                         </select>
                                     </td>
                                     <td class="col-amount">
-                                        <input type="number" name="Amount[]" class="form-control amount-input text-end" step="0.01" required>
+                                        <input type="number" name="Amount[]" class="form-control amount-input text-end"
+                                               step="0.01" required>
                                     </td>
                                     <td class="col-narr">
-                                        <textarea name="Narration[]" class="form-control narration-input" placeholder="Narration"></textarea>
+                                        <textarea name="Narration[]" class="form-control narration-input"
+                                                  placeholder="Narration"></textarea>
                                     </td>
                                     <td class="col-action text-center">
                                         <button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove">
@@ -177,7 +261,7 @@
 @section('scripts')
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script>
-        (function(){
+        (function () {
             const recurringBody = document.getElementById('recurringBody');
             const totalDr = document.getElementById('totalDr');
             const totalCr = document.getElementById('totalCr');
@@ -195,19 +279,30 @@
                 });
                 totalDr.textContent = debit.toFixed(2);
                 totalCr.textContent = credit.toFixed(2);
-                if (debit === credit && debit > 0 && valid) { balanceStatus.className = 'badge bg-success'; balanceStatus.textContent = 'Balanced'; saveBtn.disabled = false; }
-                else { balanceStatus.className = 'badge bg-danger'; balanceStatus.textContent = 'Unbalanced / Invalid'; saveBtn.disabled = true; }
+                if (debit === credit && debit > 0 && valid) {
+                    balanceStatus.className = 'badge bg-success';
+                    balanceStatus.textContent = 'Balanced';
+                    saveBtn.disabled = false;
+                } else {
+                    balanceStatus.className = 'badge bg-danger';
+                    balanceStatus.textContent = 'Unbalanced / Invalid';
+                    saveBtn.disabled = true;
+                }
             }
 
-            function updateRowNumbers(){
-                [...recurringBody.rows].forEach((row, index) => { row.cells[0].textContent = index + 1; });
+            function updateRowNumbers() {
+                [...recurringBody.rows].forEach((row, index) => {
+                    row.cells[0].textContent = index + 1;
+                });
             }
 
             document.addEventListener('input', calculateRecurringTotals);
             document.addEventListener('change', calculateRecurringTotals);
 
             document.getElementById('addRow').addEventListener('click', () => {
-                if (window.jQuery && $.fn.select2) { $('.gl-account-select').select2('destroy'); }
+                if (window.jQuery && $.fn.select2) {
+                    $('.gl-account-select').select2('destroy');
+                }
                 const firstRow = recurringBody.querySelector('tr');
                 const clone = firstRow.cloneNode(true);
                 clone.querySelectorAll('input, select, textarea').forEach(el => {

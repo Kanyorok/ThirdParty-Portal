@@ -15,8 +15,8 @@ class ReallocationRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'BudgetID'        => ['required', 'exists:t_Budgets,Id'],
-            'ReallocationType'=> ['required', 'in:Branch,Department,Cross-Department'],
+            'BudgetID' => ['required', 'exists:t_Budgets,Id'],
+            'ReallocationType' => ['required', 'in:Branch,Department,Cross-Department'],
         ];
 
         $type = $this->input('ReallocationType');
@@ -30,8 +30,8 @@ class ReallocationRequest extends FormRequest
         }
 
         if ($type === 'Cross-Department') {
-            $rules['DepartmentID']    = ['required', 'exists:t_Departments,Id'];
-            $rules['ToDepartmentID']  = ['required', 'different:DepartmentID', 'exists:t_Departments,Id'];
+            $rules['DepartmentID'] = ['required', 'exists:t_Departments,Id'];
+            $rules['ToDepartmentID'] = ['required', 'different:DepartmentID', 'exists:t_Departments,Id'];
         }
 
         return $rules;
@@ -40,11 +40,11 @@ class ReallocationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'BudgetID.required'        => 'Please select a budget.',
-            'ReallocationType.required'=> 'Please choose a reallocation type.',
-            'BranchID.required'        => 'Branch selection is required for branch reallocations.',
-            'DepartmentID.required'    => 'Please select a source department.',
-            'ToDepartmentID.required'  => 'Please select a target department.',
+            'BudgetID.required' => 'Please select a budget.',
+            'ReallocationType.required' => 'Please choose a reallocation type.',
+            'BranchID.required' => 'Branch selection is required for branch reallocations.',
+            'DepartmentID.required' => 'Please select a source department.',
+            'ToDepartmentID.required' => 'Please select a target department.',
             'ToDepartmentID.different' => 'The target department must be different from the source department.',
         ];
     }

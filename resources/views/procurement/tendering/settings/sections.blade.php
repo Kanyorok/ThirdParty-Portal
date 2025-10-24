@@ -10,17 +10,19 @@
       </button>
     </div>
 
-    <div class="alert alert-info d-flex align-items-start" role="alert" style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
-      <i class="fa fa-info-circle me-2 mt-1"></i>
-      <div>
-        <strong>Evaluation setup:</strong>
-        <span title="Sections group related areas; Criteria are individual checks within sections. Reused across evaluations.">
+      <div class="alert alert-info d-flex align-items-start" role="alert"
+           style="background:#eef6ff;border:1px solid #cfe2ff;color:#084298;">
+          <i class="fa fa-info-circle me-2 mt-1"></i>
+          <div>
+              <strong>Evaluation setup:</strong>
+              <span
+                  title="Sections group related areas; Criteria are individual checks within sections. Reused across evaluations.">
           Evaluation is organized into Sections and Criteria. Sections group related evaluation areas (e.g., Technical, Financial), while Criteria define the specific checks scored within each section. These setups are global and will be reused across all evaluation processes (e.g., Tenders, RFQs).
         </span>
+          </div>
       </div>
-    </div>
 
-    <table class="table table-striped table-hover">
+      <table class="table table-striped table-hover">
       <thead>
         <tr>
           <th>Section Name</th>

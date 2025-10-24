@@ -10,7 +10,7 @@
 
     <p><small>The list below Consists of commission rules</small></p>
 
-        <table id='commissionrules' class="table table-bordered">
+    <table id='commissionrules' class="table table-bordered">
             <thead class="table-light">
                 <tr>
                     <th>#</th>

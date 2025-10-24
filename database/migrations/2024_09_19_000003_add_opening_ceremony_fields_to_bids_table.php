@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         if (!Schema::hasTable('t_BidSubmissions')) {
@@ -19,7 +18,7 @@ return new class extends Migration
             $table->text('ReadOutSummary')->nullable()->after('OfficersPresent'); // Public read-out details
             $table->boolean('BidSecurityPresent')->nullable()->after('ReadOutSummary');
             $table->boolean('ReceivedOnTime')->nullable()->after('BidSecurityPresent');
-            
+
             // Add indexes for ceremony tracking
             $table->index(['OpenedAt', 'CeremonyType']);
         });

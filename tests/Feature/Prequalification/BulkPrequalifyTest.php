@@ -23,9 +23,9 @@ class BulkPrequalifyTest extends TestCase
     {
         // Create an authenticated evaluator
         $user = User::create([
-            'UserID' => 'evaluator'.uniqid(),
+            'UserID' => 'evaluator' . uniqid(),
             'Name' => 'Evaluator',
-            'Email' => uniqid('eval').'@example.com',
+            'Email' => uniqid('eval') . '@example.com',
             'Phone' => '0700000000',
             'Password' => bcrypt('password'),
         ]);
@@ -43,12 +43,12 @@ class BulkPrequalifyTest extends TestCase
         ]);
 
         // Create two suppliers (ThirdParties) and applications
-    $tpPassed = ThirdParties::create([
+        $tpPassed = ThirdParties::create([
             'ThirdPartyName' => 'ACME Passed',
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
-    $tpFailed = ThirdParties::create([
+        $tpFailed = ThirdParties::create([
             'ThirdPartyName' => 'ACME Failed',
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,

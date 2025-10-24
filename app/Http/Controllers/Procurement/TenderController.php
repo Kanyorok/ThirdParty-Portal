@@ -188,13 +188,19 @@ class TenderController extends Controller
 
             $tenderId = $tender->Id;
             if (!empty($request->plan_items)) {
+                $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
                 foreach ($request->plan_items as $compositeKey => $item) {
                     $split = explode('-', $compositeKey);
                     $planItemId = (int)end($split);
+                    $itemId = $item['item_id'] ?? null;
+                    if ($itemId && !$this->isItemAllowedForTender((int)$itemId, (int)$tender->ItemCategoryId, $allowedTypeIds)) {
+                        Log::warning("Plan item $itemId rejected for tender due to category/type mismatch");
+                        continue;
+                    }
                     TenderItems::create([
                         'TenderID' => $tenderId,
                         'SourceType' => 'PLAN',
-                        'ItemID' => $item['item_id'] ?? null,
+                        'ItemID' => $itemId,
                         'PlanItemID' => $planItemId,
                         'PlannedQty' => $item['qty'],
                         'QtyToTender' => $item['qty'],
@@ -208,10 +214,15 @@ class TenderController extends Controller
             }
 
             if (!empty($request->manual_items)) {
+                $allowedTypeIds = $this->allowedItemTypeIdsForTender((int)$tender->TenderCategory);
                 foreach ($request->manual_items as $manualItem) {
                     if (empty($manualItem['item_id'])) {
                         // continue;
                     } else {
+                        if (!$this->isItemAllowedForTender((int)$manualItem['item_id'], (int)$tender->ItemCategoryId, $allowedTypeIds)) {
+                            Log::warning("Manual item {$manualItem['item_id']} rejected for tender due to category/type mismatch");
+                            continue;
+                        }
                         TenderItems::create([
                             'TenderID' => $tenderId,
                             'SourceType' => 'MANUAL',
@@ -378,6 +389,7 @@ class TenderController extends Controller
                 'currency_id' => 'required|exists:t_Currencies,Id',
                 'submission_deadline' => 'required|date|after:today',
                 'opening_date' => 'required|date|after_or_equal:submission_deadline',
+                'TenderType' => ['nullable', new Enum(TenderTypeEnum::class)],
                 'documents.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:2048',
             ]);
 
@@ -390,6 +402,9 @@ class TenderController extends Controller
                 $tender->CurrencyId = $validated['currency_id'];
                 $tender->SubmissionDeadline = $validated['submission_deadline'];
                 $tender->OpeningDate = $validated['opening_date'];
+                if (!empty($validated['TenderType'])) {
+                    $tender->TenderType = TenderTypeEnum::from($validated['TenderType']);
+                }
 
                 $tender->save();
 
@@ -564,7 +579,22 @@ class TenderController extends Controller
             $tender->fill($fillData);
 
             $tender->TenderType = TenderTypeEnum::from($request->TenderType);
-            $tender->TenderCategory = TenderCategoryEnum::from($request->TenderCategory);
+            // Store TenderCategory as FK Id instead of enum code
+            $catId = $request->input('tender_category_id') ?? $request->input('TenderCategory');
+            if (!is_null($catId) && !is_numeric($catId)) {
+                $label = match ((string)$catId) {
+                    'G','Goods','goods' => 'Goods',
+                    'S','Services','services' => 'Services',
+                    'W','Works','works' => 'Works',
+                    default => null,
+                };
+                if ($label) {
+                    $catId = \App\Models\Procurement\TenderCategory::where('TenderCategory', $label)->value('Id');
+                }
+            }
+            if ($catId) {
+                $tender->TenderCategory = (int)$catId;
+            }
             $tender->Status = TenderStatusEnum::from($request->Status);
             $tender->ModifiedBy = Auth::id();
             $tender->save();
@@ -689,6 +719,96 @@ class TenderController extends Controller
         }
     }
 
+    // AJAX: return distinct top-level item categories for the selected tender category
+public function allowedCategories(Request $request)
+{
+    $tenderCategoryId = (int) $request->query('tender_category_id', 0);
+    if ($tenderCategoryId <= 0) {
+        return response()->json(['ok' => true, 'categories' => []]);
+    }
+
+    // PRIMARY PATH: Two-level hierarchy (child -> parent or self if already root)
+    $rows = DB::table('t_Items as i')
+        ->join('t_TenderCategoryItemTypes as t', function ($j) use ($tenderCategoryId) {
+            $j->on('t.ItemTypeId', '=', 'i.ItemType')
+              ->where('t.TenderCategoryId', '=', $tenderCategoryId)
+              ->where('t.IsActive', '=', 1);
+        })
+        ->join('t_ItemCategories as c', 'c.Id', '=', 'i.Category')
+        ->leftJoin('t_ItemCategories as p', 'p.Id', '=', 'c.ParentId')
+        // If you soft delete or have active flags, uncomment as appropriate:
+        // ->whereNull('i.DeletedOn')
+        // ->whereNull('c.DeletedOn')
+        // ->where(function ($q) { $q->whereNull('p.DeletedOn')->orWhereNull('c.ParentId')->orWhere('c.ParentId', 0); })
+        ->distinct()
+        ->selectRaw('
+            COALESCE(NULLIF(c.ParentId, 0), c.Id) AS Id,
+            COALESCE(p.Name, c.Name)            AS Name
+        ')
+        ->orderBy('Id')
+        ->get();
+
+    if ($rows->isNotEmpty()) {
+        try {
+            Log::info('allowedCategories primary', [
+                'tenderCategoryId' => $tenderCategoryId,
+                'count' => $rows->count(),
+                'ids' => $rows->pluck('Id')->take(20)->values(), // cap to 20 for log brevity
+            ]);
+        } catch (\Throwable $e) {
+            // no-op logging guard
+        }
+        return response()->json(['ok' => true, 'categories' => $rows->values()]);
+    }
+
+    // FALLBACK: If the join path returns nothing (edge data states), compute
+    // roots from the same two-level logic via a simpler pass.
+    $allowedTypeIds = DB::table('t_TenderCategoryItemTypes')
+        ->where('TenderCategoryId', $tenderCategoryId)
+        ->where('IsActive', 1)
+        ->pluck('ItemTypeId');
+
+    if ($allowedTypeIds->isEmpty()) {
+        return response()->json(['ok' => true, 'categories' => []]);
+    }
+
+    $catIds = DB::table('t_Items')
+        ->whereIn('ItemType', $allowedTypeIds)
+        ->pluck('Category');
+
+    if ($catIds->isEmpty()) {
+        return response()->json(['ok' => true, 'categories' => []]);
+    }
+
+    // Map each category to its root (two-level)
+    $cats = DB::table('t_ItemCategories')->whereIn('Id', $catIds)->get(['Id','ParentId']);
+    $parentMap = DB::table('t_ItemCategories')
+        ->whereIn('Id', $cats->pluck('ParentId')->filter()->unique())
+        ->pluck('Id')
+        ->flip(); // keys = parent ids
+
+    $rootIds = $cats->map(function ($c) use ($parentMap) {
+        $pid = (int) ($c->ParentId ?? 0);
+        return $pid > 0 && $parentMap->has($pid) ? $pid : (int) $c->Id;
+    })->unique()->values();
+
+    $roots = DB::table('t_ItemCategories')
+        ->whereIn('Id', $rootIds)
+        ->orderBy('Id')
+        ->get(['Id','Name']);
+
+    try {
+        Log::info('allowedCategories fallback', [
+            'tenderCategoryId' => $tenderCategoryId,
+            'count' => $roots->count(),
+            'ids' => $roots->pluck('Id')->take(20)->values(),
+        ]);
+    } catch (\Throwable $e) {
+        // no-op logging guard
+    }
+    return response()->json(['ok' => true, 'categories' => $roots->values()]);
+}
+
     public function rejectTender(Request $request)
     {
         $this->authorize(PermissionEnum::TenderUpdate, Tender::class);
@@ -742,26 +862,34 @@ class TenderController extends Controller
      */
     private function getPrequalifiedSuppliers()
     {
-        // Find active prequalification rounds (DB code 'O' for Open)
+        // Active rounds (Status 'O' for Open). If none, fall back to all active suppliers.
         $activeRounds = \App\Models\Procurement\Prequalification\PrequalificationRound::where('Status', 'O')
             ->where('StartDate', '<=', now())
             ->where('EndDate', '>=', now())
             ->pluck('RoundID');
 
-        if ($activeRounds->isEmpty()) {
-            return collect([]); // No active rounds, no suppliers available
+        // Base supplier query: active suppliers, proper supplier type, with needed relations
+        $supplierQuery = \App\Models\ThirdParies\Supplier::query()
+            ->where('Active_Status', 1)
+            ->whereHas('thirdParty.types', function ($q) {
+                $q->where('Code', 'like', 'SU-%');
+            })
+            ->with(['thirdParty', 'supplierCategory.itemCategories']);
+
+        if ($activeRounds->isNotEmpty()) {
+            // Prefer suppliers in active rounds; include rows with NULL RoundID just in case
+            $supplierQuery->where(function ($q) use ($activeRounds) {
+                $q->whereIn('RoundID', $activeRounds)->orWhereNull('RoundID');
+            });
         }
 
-        // FIXED: Query t_Suppliers directly instead of looking for approved applications
-        // and derive SupplierCategory mapping via pivot if SupplierCategoryID is null
-        $prequalifiedSuppliers = \App\Models\ThirdParies\Supplier::whereIn('RoundID', $activeRounds)
-            ->where('Active_Status', 1)
-            ->with(['thirdParty', 'supplierCategory.itemCategories'])
-            ->get();
+        $prequalifiedSuppliers = $supplierQuery->get();
+
+        Log::info('Suppliers fetch — activeRounds=' . $activeRounds->count() . ', suppliers=' . $prequalifiedSuppliers->count());
 
         $suppliers = collect();
         
-        foreach ($prequalifiedSuppliers as $supplier) {
+    foreach ($prequalifiedSuppliers as $supplier) {
             if (!$supplier->thirdParty) continue;
             
             $thirdParty = $supplier->thirdParty;
@@ -784,19 +912,17 @@ class TenderController extends Controller
             if (!empty($supplier->SupplierCategoryID)) {
                 $supplierCategoryIds->push($supplier->SupplierCategoryID);
             }
-            // Add any categories from pivot t_ThirdParty_SupplierCategory (in case SupplierCategoryID is NULL)
+            // Add any categories from pivot t_ThirdParty_SupplierCategory (resilient across DB schemas)
             try {
-                $pivotCats = DB::table('t_ThirdParty_SupplierCategory')
-                    ->where('third_party_id', $supplier->ThirdPartyID)
-                    ->pluck('SupplierCategoryID');
+                $pivotCats = \App\Support\SupplierCategoryResolver::getCategoryIdsForThirdParty((int)$supplier->ThirdPartyID);
                 $supplierCategoryIds = $supplierCategoryIds->concat($pivotCats);
             } catch (\Throwable $e) {
-                Log::warning('Failed reading t_ThirdParty_SupplierCategory', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
+                Log::warning('Failed resolving supplier categories', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
             }
 
             $supplierCategoryIds = $supplierCategoryIds->filter()->unique()->values();
 
-            // From all supplier categories, collect mapped item categories (including subcategories)
+        // From all supplier categories, collect mapped item categories (including all descendants)
             if ($supplierCategoryIds->isNotEmpty()) {
                 try {
                     $parentItemCats = DB::table('t_SupplierCategory_ItemCategory')
@@ -804,17 +930,22 @@ class TenderController extends Controller
                         ->whereNull('DeletedOn')
                         ->pluck('ItemCategoryID');
 
-                    foreach ($parentItemCats as $parentCatId) {
-                        $itemCategoryIds[] = (int) $parentCatId;
-                        // include subcategories
-                        $subcategories = \App\Models\Inventory\ItemCategories::where('ParentId', $parentCatId)->pluck('Id');
-                        foreach ($subcategories as $subcategoryId) {
-                            $itemCategoryIds[] = (int) $subcategoryId;
-                        }
-                    }
+            // Expand to all descendants so parent prequalification covers all subcategories
+            $expanded = $this->getAllDescendantCategoryIds($parentItemCats->all(), includeSelf: true);
+            foreach ($expanded as $cid) { $itemCategoryIds[] = (int)$cid; }
                 } catch (\Throwable $e) {
                     Log::warning('Failed reading category mappings', ['supplierId' => $supplier->Id, 'error' => $e->getMessage()]);
                 }
+            }
+
+            // Also include top-level ancestors for all collected categories so UI top-level filter matches
+            if (!empty($itemCategoryIds)) {
+                $topLevelSet = [];
+                foreach ($itemCategoryIds as $cid) {
+                    $top = $this->resolveTopLevelCategoryId((int)$cid);
+                    if ($top) { $topLevelSet[] = (int)$top; }
+                }
+                $itemCategoryIds = array_merge($itemCategoryIds, $topLevelSet);
             }
 
             $suppliers->push([
@@ -824,7 +955,7 @@ class TenderController extends Controller
                 'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
                 'CategoryId' => null, // No longer used - categories come from SupplierCategory mapping
                 'SupplierCategoryID' => $supplierCategoryIds->first(), // Prefer first mapped category if any
-                'ItemCategoryIds' => array_unique($itemCategoryIds), // All categories this supplier can serve
+                'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))), // All categories supplier can serve (incl. top-level)
                 'RoundID' => $supplier->RoundID,
                 'ApplicationStatus' => 'Prequalified', // Since they're in t_Suppliers, they're prequalified
                 'ThirdPartyID' => $supplier->ThirdPartyID,
@@ -832,7 +963,122 @@ class TenderController extends Controller
         }
 
         // Remove duplicates based on supplier ID (a supplier might have multiple records)
-        return $suppliers->unique('Id')->values();
+        $result = $suppliers->unique('Id')->values();
+        Log::info('Suppliers prepared for UI: ' . $result->count());
+        try {
+            $sample = $result->take(3)->map(function ($s) {
+                return [
+                    'Id' => $s['Id'] ?? null,
+                    'Name' => $s['ThirdPartyName'] ?? $s['SupplierName'] ?? null,
+                    'ItemCategoryIds' => array_slice($s['ItemCategoryIds'] ?? [], 0, 12),
+                ];
+            });
+            Log::info('Suppliers sample (first 3)', ['sample' => $sample]);
+        } catch (\Throwable $e) {
+            // guard
+        }
+        return $result;
+    }
+
+    // Return allowed ItemType IDs for a tender category (FK Id)
+    private function allowedItemTypeIdsForTender(int $tenderCategoryId): array
+    {
+        if (!$tenderCategoryId) return [];
+        $ids = \App\Models\Procurement\TenderCategory::with('itemTypes')
+            ->where('Id', $tenderCategoryId)
+            ->first()?->itemTypes->pluck('Id')->all() ?? [];
+
+        if (empty($ids)) {
+            $label = \App\Models\Procurement\TenderCategory::where('Id', $tenderCategoryId)->value('TenderCategory');
+            $types = DB::table('t_ItemTypes')->pluck('Id', 'TypeName');
+            return match (strtoupper((string)$label)) {
+                'GOODS' => array_values(array_filter([
+                    $types['Stock'] ?? null,
+                    $types['Consumable'] ?? null,
+                    $types['Asset'] ?? null,
+                ])),
+                'SERVICES' => array_values(array_filter([
+                    $types['Services'] ?? null,
+                    $types['Intangibles'] ?? null,
+                ])),
+                'WORKS' => array_values(array_filter([
+                    $types['Services'] ?? null,
+                ])),
+                default => [],
+            };
+        }
+        return $ids;
+    }
+
+    // Validate an item is within tender's top-level category and allowed item types
+    private function isItemAllowedForTender(int $itemId, int $tenderTopCategoryId, array $allowedTypeIds): bool
+    {
+        $item = ItemMasterList::select('Id','Category','ItemType')->find($itemId);
+        if (!$item) return false;
+
+        // Top-level category match
+        $itemTop = $this->resolveTopLevelCategoryId((int)$item->Category);
+        if ($tenderTopCategoryId && $itemTop && $itemTop !== (int)$tenderTopCategoryId) {
+            return false;
+        }
+        // Item type allowed
+        if (!empty($allowedTypeIds) && !in_array((int)$item->ItemType, $allowedTypeIds, true)) {
+            return false;
+        }
+        return true;
+    }
+
+    private function resolveTopLevelCategoryId(?int $categoryId): ?int
+    {
+        // Resolve root ancestor, treating ParentId NULL or 0 as root across environments
+        if (!$categoryId) return null;
+        $seen = [];
+        $current = (int)$categoryId;
+        while (true) {
+            if ($current === 0) {
+                // hit a 0 parent marker; cannot go higher — best known is previous
+                return $seen ? (int)end($seen) : (int)$categoryId;
+            }
+            if (in_array($current, $seen, true)) {
+                // cycle protection
+                return (int)$current;
+            }
+            $seen[] = $current;
+            $row = ItemCategories::select('Id','ParentId')->find($current);
+            if (!$row) {
+                // missing link; return last known good
+                return (int)($seen[count($seen)-1] ?? $categoryId);
+            }
+            $parent = $row->ParentId;
+            if ($parent === null || (int)$parent === 0) {
+                return (int)$row->Id;
+            }
+            $current = (int)$parent;
+        }
+    }
+
+    /**
+     * Get all descendant category IDs (recursive) for one or more parent categories.
+     * Includes the provided category IDs in the returned set when $includeSelf is true.
+     */
+    private function getAllDescendantCategoryIds(array|int $categoryIds, bool $includeSelf = true): array
+    {
+        $start = array_values(array_unique(array_map('intval', is_array($categoryIds) ? $categoryIds : [$categoryIds])));
+        if (empty($start)) return [];
+
+        $all = $includeSelf ? $start : [];
+        $queue = collect($start);
+        while ($queue->isNotEmpty()) {
+            $batch = $queue->splice(0, 200)->all();
+            $children = DB::table('t_ItemCategories')->whereIn('ParentId', $batch)->pluck('Id');
+            $new = $children->diff($all);
+            if ($new->isNotEmpty()) {
+                $ids = $new->values()->all();
+                $all = array_values(array_unique(array_merge($all, $ids)));
+                $queue = $queue->merge($ids);
+            }
+        }
+        return $all;
     }
 
     /**

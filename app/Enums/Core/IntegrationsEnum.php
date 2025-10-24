@@ -11,6 +11,7 @@ enum IntegrationsEnum: string
     //3 char
     case ReportService = 'srs';
     case Email = 'ema';
+    case DMSCoreBanking = 'cdm';
     case SMS = 'sms';
     case InfoBip = 'ibp';
     case PBX = 'pbx';
@@ -35,6 +36,7 @@ enum IntegrationsEnum: string
             self::Channels => 'Internet & Mobile Banking',
             self::LLM => 'LLM (ai) Configuration',
             self::ReportService => "SQL Server Reporting Service",
+            self::DMSCoreBanking => "DMS Core Banking",
         };
     }
 

@@ -18,7 +18,8 @@
                     @method('PUT')
                     <div class="row mb-3">
                         <div class="mb-3 col-md-6">
-                            <label for="LineName" class="form-label">Line Name <span class="text-danger">*</span></label>
+                            <label for="LineName" class="form-label">Line Name <span
+                                    class="text-danger">*</span></label>
                             <input type="text" name="LineName" id="LineName" class="form-control"
                                    value="{{ old('LineName', $budgetLine->LineName) }}" required maxlength="255">
                         </div>
@@ -28,7 +29,8 @@
                             <select class="form-select" name="DepartmentID" required>
                                 <option selected disabled>-- Select Department --</option>
                                 @foreach ($departments as $department)
-                                    <option value="{{ $department->Id }}" {{ $department->Id == $budgetLine->DepartmentID ? 'selected' : '' }}>{{ $department->Name }}</option>
+                                    <option
+                                        value="{{ $department->Id }}" {{ $department->Id == $budgetLine->DepartmentID ? 'selected' : '' }}>{{ $department->Name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -38,7 +40,8 @@
                             <select class="form-select" name="GLAccountTypeID" id="glAccountTypeSelect" required>
                                 <option selected disabled>-- Select Account type --</option>
                                 @foreach ($glAccountTypes as $item)
-                                    <option value="{{ $item->Value }}" {{ $item->Value == $budgetLine->GLAccountTypeID ? 'selected' : '' }}>{{ $item->Description }}</option>
+                                    <option
+                                        value="{{ $item->Value }}" {{ $item->Value == $budgetLine->GLAccountTypeID ? 'selected' : '' }}>{{ $item->Description }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -48,14 +51,17 @@
                             <select class="form-select" name="GLAccountSubTypeID" id="glAccountSubTypeSelect" required>
                                 <option selected disabled>-- Select Sub-Type --</option>
                                 @foreach ($glSubtype as $subtype)
-                                    <option data-type-id="{{ $subtype->GLSubAccountTypeID }}" value="{{ $subtype->Id }}" {{ $subtype->Id == $budgetLine->GLAccountSubTypeID ? 'selected' : '' }}>{{ $subtype->Description }}</option>
+                                    <option data-type-id="{{ $subtype->GLSubAccountTypeID }}"
+                                            value="{{ $subtype->Id }}" {{ $subtype->Id == $budgetLine->GLAccountSubTypeID ? 'selected' : '' }}>{{ $subtype->Description }}</option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label for="Description" class="form-label">Description <span class="text-danger">*</span></label>
-                            <textarea name="Description" id="Description" class="form-control" rows="2" required>{{ old('Description', $budgetLine->Description) }}</textarea>
+                            <label for="Description" class="form-label">Description <span
+                                    class="text-danger">*</span></label>
+                            <textarea name="Description" id="Description" class="form-control" rows="2"
+                                      required>{{ old('Description', $budgetLine->Description) }}</textarea>
                         </div>
                     </div>
 
@@ -65,7 +71,8 @@
                         <label class="form-label">Select CBS GLs</label>
                         <select multiple class="form-select" id="glTypes" name="GLS[]" required size="8">
                             @foreach($gls as $gl)
-                                <option value="{{ $gl->Id }}" {{ in_array($gl->Id, $selectedGLs ?? []) ? 'selected' : '' }}>{{ $gl->Description }}</option>
+                                <option
+                                    value="{{ $gl->Id }}" {{ in_array($gl->Id, $selectedGLs ?? []) ? 'selected' : '' }}>{{ $gl->Description }}</option>
                             @endforeach
                         </select>
                         <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select GL.</div>
@@ -80,12 +87,15 @@
                     </div>
 
                     <!-- 🔗 Product Type Mapping -->
-                    <div class="mb-3" id="productTypeSection" style="display: {{ $budgetLine->IsProductDriven ? 'block' : 'none' }};">
+                    <div class="mb-3" id="productTypeSection"
+                         style="display: {{ $budgetLine->IsProductDriven ? 'block' : 'none' }};">
                         <h6>🔗 Product (Multiple)</h6>
                         <label class="form-label">Select Product</label>
-                        <select multiple class="form-select" name="ProductTypes[]" id="ProductTypesSelect" {{ $budgetLine->IsProductDriven ? '' : 'disabled' }}>
+                        <select multiple class="form-select" name="ProductTypes[]"
+                                id="ProductTypesSelect" {{ $budgetLine->IsProductDriven ? '' : 'disabled' }}>
                             @foreach($productTypes as $type)
-                                <option value="{{ $type->Id }}" {{ isset($selectedProductTypes) && in_array($type->Id, $selectedProductTypes) ? 'selected' : '' }}>{{ $type->Description }}</option>
+                                <option
+                                    value="{{ $type->Id }}" {{ isset($selectedProductTypes) && in_array($type->Id, $selectedProductTypes) ? 'selected' : '' }}>{{ $type->Description }}</option>
                             @endforeach
                         </select>
                         <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple Product.</div>
@@ -93,7 +103,10 @@
 
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('budgetlinemapping.index') }}" class="btn btn-outline-secondary">⬅ Back</a>
-                        <button type="submit" class="btn btn-primary" onclick="this.disabled=true; this.innerText='Saving...'; this.form.submit();">💾 Update Mapping</button>
+                        <button type="submit" class="btn btn-primary"
+                                onclick="this.disabled=true; this.innerText='Saving...'; this.form.submit();">💾 Update
+                            Mapping
+                        </button>
                     </div>
                 </form>
             </div>

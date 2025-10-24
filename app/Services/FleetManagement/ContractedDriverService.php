@@ -18,7 +18,7 @@ class ContractedDriverService
 
     public function create(array $data, UploadedFile $document = null): ContractedDriver
 {
-    return DB::transaction(function () use ($data,$document) {
+    return DB::transaction(function () use ($data, $document) {
         $data['DriverNo'] = $this->generateDriverNo();
         $data['FullName'] = $data['FullName'] ?? null;
         $data['NationalID'] = $data['NationalID'] ?? null;
@@ -30,25 +30,25 @@ class ContractedDriverService
         $data['IsActive'] = $data['IsActive'] ?? 1;
         $data['CreatedBy'] = Auth::id();
         $data['CreatedOn'] = now();
-        
+
 
         $drivers = ContractedDriver::create($data);
 
-            if ($document) {
+        if ($document) {
             $drivers->newDocument(
                 ModulesEnum::Fleet,
                 $document,
                 [PermissionEnum::ContractedDriverView->value],
                 Auth::user()
             );
-        }   
+        }
         activity()
             ->performedOn($driver)
             ->causedBy(Auth::user())
             ->log('Contracted Driver Created');
 
-             return $drivers;
-        });
+        return $drivers;
+    });
     }
 
     private function generateDriverNo(): string

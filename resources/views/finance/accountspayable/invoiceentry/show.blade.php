@@ -3,7 +3,7 @@
 @endphp
 
 @extends('layouts.app')
-@section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View'))
+{{-- @section('title', 'Invoice • ' . ($invoice->InvoiceNumber ?? 'View')) --}}
 
 @section('content')
     <style>
@@ -55,9 +55,9 @@
                         <a href="{{ route('invoiceentry.index') }}" class="btn btn-outline-secondary">
                             <i data-feather="arrow-left"></i> Back
                         </a>
-                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>
-                            <i data-feather="file-text"></i> View PO Items
-                        </button>
+{{--                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#poItemsModal" @disabled(!$invoice->order)>--}}
+{{--                            <i data-feather="file-text"></i> View PO Items--}}
+{{--                        </button>--}}
                         <button type="button" class="btn btn-success" onclick="window.print()">
                             <i data-feather="printer"></i> Print
                         </button>
@@ -107,17 +107,42 @@
                                 <table class="table align-middle mb-0">
                                     <tbody>
                                     <tr>
-                                        <td class="text-muted">Invoice Amount</td>
+                                        <td class="text-muted">Invoice Amount (After Tax)</td>
                                         <td class="text-end">
                                             <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td class="text-muted">PO Subtotal (Items)</td>
-                                        <td class="text-end">
-                                            <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
-                                        </td>
-                                    </tr>
+                                    @if(!empty($invoice->order))
+                                        @php
+                                            $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                                            $poTax = (float)($invoice->order->OrdTotTax ?? 0);
+                                            $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
+                                            $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                        @endphp
+                                        <tr>
+                                            <td class="text-muted">PO Discount</td>
+                                            <td class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Tax</td>
+                                            <td class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO Before Tax</td>
+                                            <td class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">PO After Tax</td>
+                                            <td class="text-end"><strong>{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</strong></td>
+                                        </tr>
+                                    @else
+                                        <tr>
+                                            <td class="text-muted">PO Subtotal (Items)</td>
+                                            <td class="text-end">
+                                                <span>{{ $currencySymbol }} {{ number_format($poSub, 2) }}</span>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     @if(property_exists($invoice, 'TaxAmount') || isset($invoice->TaxAmount))
                                         <tr>
                                             <td class="text-muted">Tax Amount</td>
@@ -269,12 +294,39 @@
                             @endforelse
                             </tbody>
                             @if(count($poItems) > 0)
-                                <tfoot class="table-light">
-                                <tr>
-                                    <th colspan="3" class="text-end">PO Subtotal</th>
-                                    <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
-                                </tr>
-                                </tfoot>
+                                @if(!empty($invoice->order))
+                                    @php
+                                        $poExcl = (float)($invoice->order->OrdTotExcl ?? 0);
+                                        $poTax = (float)($invoice->order->OrdTotTax ?? 0);
+                                        $poDisc = (float)($invoice->order->OrdDiscAmnt ?? 0);
+                                        $poIncl = (float)($invoice->order->OrdTotIncl ?? 0);
+                                    @endphp
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3" class="text-end">Discount</th>
+                                            <th class="text-end">- {{ $currencySymbol }} {{ number_format($poDisc, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Tax</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Total Before Tax</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="3" class="text-end">Total After Tax</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</th>
+                                        </tr>
+                                    </tfoot>
+                                @else
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="3" class="text-end">PO Subtotal</th>
+                                            <th class="text-end">{{ $currencySymbol }} {{ number_format($poSub, 2) }}</th>
+                                        </tr>
+                                    </tfoot>
+                                @endif
                             @endif
                         </table>
                     </div>
@@ -544,7 +596,7 @@
             html, body { font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
             /* Hide UI/controls */
-            .navbar, .btn, .modal, .lifecycle, .attachments-section { display: none !important; }
+            .navbar, .btn, .modal, .lifecycle, .attachments-section, .breadcrumb { display: none !important; }
 
             /* Flatten cards */
             .card, .shadow, .shadow-sm, .shadow-lg { box-shadow: none !important; border: 1px solid #e9ecef !important; }

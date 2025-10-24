@@ -36,7 +36,7 @@ echo "\n2. CHECKING REPOSITORY MODEL ACCESS:\n";
 try {
     $repoCount = Repository::count();
     echo "   ✅ Repository model working: {$repoCount} repositories found\n";
-    
+
     $repositories = Repository::limit(3)->get(['Name', 'Description', 'Visibility']);
     foreach ($repositories as $repo) {
         $visibility = is_object($repo->Visibility) ? $repo->Visibility->value : $repo->Visibility;
@@ -72,7 +72,7 @@ try {
     } else {
         echo "   ⚠️  User ID 1 not found\n";
     }
-    
+
     $firstActiveUser = User::whereNull('DeletedOn')->first();
     if ($firstActiveUser) {
         echo "   ✅ First active user ID {$firstActiveUser->Id}: {$firstActiveUser->FullName}\n";

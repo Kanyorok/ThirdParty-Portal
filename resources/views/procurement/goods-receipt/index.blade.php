@@ -20,6 +20,17 @@
                 </div>
 
                 <div class="card-body">
+                    @isset($serviceGlConfigured)
+                        @if(!$serviceGlConfigured)
+                            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                <i class="ti ti-alert-circle me-2"></i>
+                                <div>
+                                    Finance mapping for service receipts is not configured (missing transaction code 'GRN-SERVICE').
+                                    Please add it in Finance Transaction Types and link GL mapping to enable posting.
+                                </div>
+                            </div>
+                        @endif
+                    @endisset
                     <!-- Filters -->
                     <div class="row mb-4">
                         <div class="col-md-12">

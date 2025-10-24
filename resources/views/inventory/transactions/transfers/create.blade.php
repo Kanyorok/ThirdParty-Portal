@@ -33,14 +33,15 @@
             <div id="transferDetails" style="display: none">
                 <div class="row mb-3">
                     <div class="col-md-4">
-                        <label for="transferDate" class="form-label">Transfer Date <span class="text-danger">*</span></label>
-                        <input type="date" 
-                            class="form-control" 
-                            id="transferDate" 
-                            name="TransferDate" 
-                            required 
-                            value="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
-                            min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}">
+                        <label for="transferDate" class="form-label">Transfer Date <span
+                                class="text-danger">*</span></label>
+                        <input type="date"
+                               class="form-control"
+                               id="transferDate"
+                               name="TransferDate"
+                               required
+                               value="{{ \Carbon\Carbon::today()->format('Y-m-d') }}"
+                               min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}">
                     </div>
 
                     <div class="col-md-3">
@@ -51,11 +52,11 @@
 
                     <div class="col-md-3">
                         <label for="toBranch" class="form-label">To Branch <span class="text-danger">*</span></label>
-                        
+
                         {{-- For Interbranch (hidden field) --}}
                         <input type="hidden" id="toBranchHidden" name="ToBranch">
                         <input type="text" class="form-control" id="toBranchText" readonly style="display: none;">
-                        
+
                         {{-- For Procurement (dropdown) --}}
                         <select class="form-select" id="toBranchSelect" style="display: none;">
                             <option value="">-- Select Branch --</option>
@@ -105,11 +106,11 @@
 
                 {{-- Error Alert --}}
                 <div id="ajax-error" class="alert alert-danger d-none"></div>
-                
+
                 {{-- Action Buttons --}}
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success" id="submitBtn" 
-                        onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin me-1\'></i> Submitting...'; this.disabled=true; document.getElementById('transferForm').requestSubmit();">
+                    <button type="submit" class="btn btn-success" id="submitBtn"
+                            onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin me-1\'></i> Submitting...'; this.disabled=true; document.getElementById('transferForm').requestSubmit();">
                         <i class="fas fa-save me-1"></i> Submit Transfer
                     </button>
                     <a href="{{ route('transactionstransfers.index') }}" class="btn btn-secondary">
@@ -122,20 +123,20 @@
 @endsection
 
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
         const requisitionTypeSelect = document.getElementById('requisition_type');
         const requisitionIdSelect = document.getElementById('requisition_id');
         const transferDetails = document.getElementById('transferDetails');
         const itemsBody = document.getElementById('itemsBody');
-        const transferForm = document.getElementById('transferForm');
+            const transferForm = document.getElementById('transferForm');
 
         const fromBranchText = document.getElementById('fromBranch');
         const fromBranchHidden = document.getElementById('FromBranch');
 
-        const toBranchText = document.getElementById('toBranchText');
-        const toBranchSelect = document.getElementById('toBranchSelect');
-        const toBranchHidden = document.getElementById('toBranchHidden');
+            const toBranchText = document.getElementById('toBranchText');
+            const toBranchSelect = document.getElementById('toBranchSelect');
+            const toBranchHidden = document.getElementById('toBranchHidden');
 
         const requisitionTypeHidden = document.getElementById('RequisitionType');
         const requisitionIdHidden = document.getElementById('RequisitionId');
@@ -145,7 +146,7 @@
         const requisitionsBaseUrl = "{{ url(route('requisitions.by-type', ['type' => 'PLACEHOLDER'])) }}";
         const requisitionDetailsBaseUrl = "{{ url(route('requisitions.details', ['id' => 'PLACEHOLDER'])) }}";
 
-        // Load requisitions when type changes
+            // Load requisitions when type changes
         requisitionTypeSelect.addEventListener('change', function () {
             selectedType = this.value;
             requisitionTypeHidden.value = selectedType;
@@ -185,11 +186,11 @@
                         requisitionIdSelect.innerHTML = '<option value="">No requisitions found</option>';
                         return;
                     }
-                    
+
                     data.forEach(req => {
                         const text = selectedType === 'interbranch' ? req.ReqNo : req.GRNID;
                         const value = selectedType === 'interbranch' ? req.Id : req.id;
-                        
+
                         requisitionIdSelect.innerHTML += `<option value="${value}">${text}</option>`;
                     });
                 })
@@ -199,7 +200,7 @@
                 });
         });
 
-        // Load requisition details when number changes
+            // Load requisition details when number changes
         requisitionIdSelect.addEventListener('change', function () {
             const id = this.value;
 
@@ -241,7 +242,7 @@
                         // Show dropdown for ToBranch and hide others
                         toBranchSelect.style.display = 'block';
                         toBranchText.style.display = 'none';
-                        
+
                         // Pre-select if data available
                         if (data.to_branch && data.to_branch.Id) {
                             toBranchSelect.value = data.to_branch.Id;
@@ -253,10 +254,10 @@
                         fromBranchHidden.value = data.from_branch?.Id || '';
 
                         toBranchText.value = data.to_branch?.Name || 'N/A';
-                        
+
                         // For interbranch, use hidden field for ToBranch value
                         toBranchHidden.value = data.to_branch?.Id || '';
-                        
+
                         // Show text input for display and hide dropdown
                         toBranchText.style.display = 'block';
                         toBranchSelect.style.display = 'none';
@@ -287,10 +288,10 @@
                                     <input type="number" class="form-control" name="items[${index}][approved_qty]" value="${item.ApprovedQty || 0}" min="0" readonly>
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control" name="items[${index}][dispatched_qty]" 
-                                        value="${dispatchedQty || 0}" 
-                                        min="0" 
-                                        max="${item.ApprovedQty || 0}" 
+                                    <input type="number" class="form-control" name="items[${index}][dispatched_qty]"
+                                        value="${dispatchedQty || 0}"
+                                        min="0"
+                                        max="${item.ApprovedQty || 0}"
                                         required
                                         oninput="validateQuantity(this, ${item.ApprovedQty || 0})">
                                 </td>
@@ -313,130 +314,133 @@
                 });
         });
 
-        // Form submission handler
-        transferForm.addEventListener('submit', function (e) {
+            // Form submission handler
+            transferForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // Prepare form data based on requisition type
-            const formData = new FormData(this);
+                // Prepare form data based on requisition type
+                const formData = new FormData(this);
 
-            // For procurement, we need to manually add the ToBranch value from dropdown
-            if (selectedType === 'procurement') {
-                if (!toBranchSelect.value) {
-                    showError('Please select a To Branch for procurement transfer');
-                    toBranchSelect.focus();
-                    return;
+                // For procurement, we need to manually add the ToBranch value from dropdown
+                if (selectedType === 'procurement') {
+                    if (!toBranchSelect.value) {
+                        showError('Please select a To Branch for procurement transfer');
+                        toBranchSelect.focus();
+                        return;
+                    }
+                    // Remove any existing ToBranch value and add the selected one
+                    formData.delete('ToBranch');
+                    formData.append('ToBranch', toBranchSelect.value);
+                } else {
+                    // For interbranch, validate hidden field
+                    if (!toBranchHidden.value) {
+                        showError('Invalid To Branch configuration for interbranch transfer');
+                        return;
+                    }
                 }
-                // Remove any existing ToBranch value and add the selected one
-                formData.delete('ToBranch');
-                formData.append('ToBranch', toBranchSelect.value);
-            } else {
-                // For interbranch, validate hidden field
-                if (!toBranchHidden.value) {
-                    showError('Invalid To Branch configuration for interbranch transfer');
-                    return;
+
+                // Validate dispatched quantities
+                const dispatchedInputs = document.querySelectorAll('input[name*="dispatched_qty"]');
+                let hasInvalidQuantity = false;
+
+                dispatchedInputs.forEach(input => {
+                    const max = parseFloat(input.getAttribute('max'));
+                    const value = parseFloat(input.value);
+
+                    if (value > max) {
+                        showError(`Dispatched quantity cannot exceed approved quantity (${max})`);
+                        input.focus();
+                        hasInvalidQuantity = true;
+                        return;
+                    }
+
+                    if (value <= 0) {
+                        showError('Dispatched quantity must be greater than 0');
+                        input.focus();
+                        hasInvalidQuantity = true;
+                        return;
+                    }
+                });
+
+                if (hasInvalidQuantity) return;
+
+                // Debug: Log form data before submission
+                console.log('Submitting form with data:');
+                console.log('RequisitionType:', selectedType);
+                console.log('RequisitionId:', requisitionIdHidden.value);
+                console.log('FromBranch:', fromBranchHidden.value);
+
+                if (selectedType === 'procurement') {
+                    console.log('ToBranch (procurement):', toBranchSelect.value);
+                } else {
+                    console.log('ToBranch (interbranch):', toBranchHidden.value);
                 }
-            }
 
-            // Validate dispatched quantities
-            const dispatchedInputs = document.querySelectorAll('input[name*="dispatched_qty"]');
-            let hasInvalidQuantity = false;
-            
-            dispatchedInputs.forEach(input => {
-                const max = parseFloat(input.getAttribute('max'));
-                const value = parseFloat(input.value);
-                
-                if (value > max) {
-                    showError(`Dispatched quantity cannot exceed approved quantity (${max})`);
-                    input.focus();
-                    hasInvalidQuantity = true;
-                    return;
-                }
-                
-                if (value <= 0) {
-                    showError('Dispatched quantity must be greater than 0');
-                    input.focus();
-                    hasInvalidQuantity = true;
-                    return;
-                }
-            });
-
-            if (hasInvalidQuantity) return;
-
-            // Debug: Log form data before submission
-            console.log('Submitting form with data:');
-            console.log('RequisitionType:', selectedType);
-            console.log('RequisitionId:', requisitionIdHidden.value);
-            console.log('FromBranch:', fromBranchHidden.value);
-            
-            if (selectedType === 'procurement') {
-                console.log('ToBranch (procurement):', toBranchSelect.value);
-            } else {
-                console.log('ToBranch (interbranch):', toBranchHidden.value);
-            }
-
-            // Submit using fetch to handle the FormData properly
-            fetch(this.action, {
+                // Submit using fetch to handle the FormData properly
+                fetch(this.action, {
                 method: 'POST',
-                body: formData,
+                    body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
                 }
             })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = "{{ route('transactionstransfers.index') }}";
-                } else {
-                    return response.json().then(data => {
-                        throw new Error(data.message || 'Submission failed');
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = "{{ route('transactionstransfers.index') }}";
+                        } else {
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Submission failed');
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        showError('Submission failed: ' + error.message);
                     });
-                }
-            })
-            .catch(error => {
-                showError('Submission failed: ' + error.message);
-            });
         });
 
-        // Helper function to show errors
-        function showError(message) {
-            const errorDiv = document.getElementById('ajax-error');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('d-none');
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                errorDiv.classList.add('d-none');
-            }, 5000);
-        }
+            // Helper function to show errors
+            function showError(message) {
+                const errorDiv = document.getElementById('ajax-error');
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('d-none');
 
-        // Helper function to validate quantity in real-time
-        window.validateQuantity = function(input, maxQty) {
-            const value = parseFloat(input.value);
-            if (value > maxQty) {
-                input.setCustomValidity(`Quantity cannot exceed ${maxQty}`);
-            } else if (value <= 0) {
-                input.setCustomValidity('Quantity must be greater than 0');
-            } else {
-                input.setCustomValidity('');
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    errorDiv.classList.add('d-none');
+                }, 5000);
             }
-        };
-    });
-</script>
+
+            // Helper function to validate quantity in real-time
+            window.validateQuantity = function (input, maxQty) {
+                const value = parseFloat(input.value);
+                if (value > maxQty) {
+                    input.setCustomValidity(`Quantity cannot exceed ${maxQty}`);
+                } else if (value <= 0) {
+                    input.setCustomValidity('Quantity must be greater than 0');
+                } else {
+                    input.setCustomValidity('');
+                }
+            };
+        });
+    </script>
 @endpush
 
 <style>
-.table th {
-    font-weight: 600;
-    background-color: #f8f9fa;
-}
-.form-label {
-    font-weight: 500;
-}
-#itemsTable input[readonly] {
-    background-color: #f8f9fa;
-}
-.text-danger {
-    font-weight: bold;
-}
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+
+    .form-label {
+        font-weight: 500;
+    }
+
+    #itemsTable input[readonly] {
+        background-color: #f8f9fa;
+    }
+
+    .text-danger {
+        font-weight: bold;
+    }
 </style>

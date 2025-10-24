@@ -8,7 +8,8 @@
             <h5 class="mb-3">Policy Summary</h5>
             <div class="row">
                 <div class="col-md-4"><strong>Policy No:</strong><br>{{ $policy->PolicyNumber }}</div>
-                <div class="col-md-4"><strong>Customer:</strong><br>{{ $policy->customer->thirdParty->ThirdPartyName }}</div>
+                <div class="col-md-4"><strong>Customer:</strong><br>{{ $policy->customer->thirdParty->ThirdPartyName }}
+                </div>
                 <div class="col-md-4"><strong>Insurer:</strong><br>{{ $policy->insurer->Name }}</div>
             </div>
             <div class="row mt-3">

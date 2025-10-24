@@ -21,7 +21,7 @@
                     @foreach($policy->documents()->get(['t_Documents.Id', 't_Documents.DocumentId','MimeType','Name']) as $document)
                         {!! (new \App\Services\DMS\DocumentService($document))->summaryList() !!}
                     @endforeach
-                </div>        
+                </div>
 
         <form action="{{ route('bancassurance.policies.submitUnderwriting', $policy->Id) }}" method="POST"
               enctype="multipart/form-data">
@@ -33,12 +33,15 @@
         </div>
 
         <div class="text-end">
-            <button class="btn btn-primary" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit to Underwriter</button>
+            <button class="btn btn-primary"
+                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit to
+                Underwriter
+            </button>
         </div>
     </form>
 </div>
 @endsection
 @section('scripts')
  @include('snippets.actions.preview-files')
-@endsection   
+@endsection
 

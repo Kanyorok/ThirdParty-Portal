@@ -1,5 +1,6 @@
 <?php
 
+namespace App\Http\Controllers\Legal\Setup;
 
 use App\Http\Controllers\Controller;
 use App\Models\Legal\FilingType;

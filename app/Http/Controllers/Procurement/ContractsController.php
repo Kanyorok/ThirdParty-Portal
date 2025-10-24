@@ -28,12 +28,12 @@ class ContractsController extends Controller
         if ($request->filled('search')) {
             $query->whereHas('tender', function ($q) use ($request) {
                 $q->where('TenderNo', 'like', '%' . $request->search . '%')
-                  ->orWhere('Title', 'like', '%' . $request->search . '%');
+                    ->orWhere('Title', 'like', '%' . $request->search . '%');
             });
         }
 
         $contracts = $query->orderBy('ApprovedOn', 'desc')->paginate(15);
-        
+
         return view('procurement.contracts.contractcreation.index', compact('contracts'))
             ->with('filters', $request->only(['status_filter', 'search']));
     }
@@ -51,7 +51,7 @@ class ContractsController extends Controller
                 ->where('Id', $awardId)
                 ->where('AwardStatus', 'Approved')
                 ->first();
-                
+
             if (!$award) {
                 return redirect()->route('contracts.index')
                     ->with('error', 'Award not found or not approved yet.');
@@ -80,30 +80,30 @@ class ContractsController extends Controller
         ]);
 
         DB::beginTransaction();
-        
+
         try {
             $award = TenderAward::findOrFail($request->award_id);
-            
+
             if ($request->contract_type === 'legal_managed') {
                 // Send request to legal module
                 $legalRequest = $this->sendToLegalModule($award, $request->all());
-                
+
                 // Update award with contract request reference
                 $award->update([
                     'ContractStatus' => 'Sent to Legal',
                     'ContractRequestRef' => $legalRequest['reference'] ?? null,
                     'ModifiedBy' => Auth::id(),
                 ]);
-                
+
                 DB::commit();
-                
+
                 return redirect()->route('contracts.index')
                     ->with('success', 'Contract request sent to Legal Department successfully. Reference: ' . ($legalRequest['reference'] ?? 'N/A'));
-                    
+
             } else {
                 // Create contract within procurement
                 $contractRef = $this->generateContractReference($award);
-                
+
                 // Update award with contract details
                 $award->update([
                     'ContractStatus' => 'Draft Created',
@@ -116,13 +116,13 @@ class ContractsController extends Controller
                     'SpecialConditions' => $request->special_conditions,
                     'ModifiedBy' => Auth::id(),
                 ]);
-                
+
                 DB::commit();
-                
+
                 return redirect()->route('contracts.show', $award->Id)
                     ->with('success', 'Contract created successfully. Reference: ' . $contractRef);
             }
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -138,7 +138,7 @@ class ContractsController extends Controller
     {
         $contract = TenderAward::with(['tender', 'winningSupplier.thirdParty'])
             ->findOrFail($id);
-            
+
         return view('procurement.contracts.contractcreation.show', compact('contract'));
     }
 
@@ -149,7 +149,7 @@ class ContractsController extends Controller
     {
         $award = TenderAward::with(['tender', 'winningSupplier'])
             ->findOrFail($id);
-            
+
         return view('procurement.contracts.contractcreation.edit', compact('award'));
     }
 
@@ -168,7 +168,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
-        
+
         $award->update([
             'ContractValue' => $request->contract_value,
             'ContractStartDate' => $request->start_date,
@@ -192,7 +192,7 @@ class ContractsController extends Controller
             ->whereIn('ContractStatus', ['Draft Created', 'Under Review'])
             ->orderBy('CreatedOn', 'desc')
             ->paginate(15);
-            
+
         return view('procurement.contracts.contractcreation.approve_index', compact('contracts'));
     }
 
@@ -206,7 +206,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
-        
+
         $award->update([
             'ContractStatus' => 'Approved',
             'ContractApprovalRemarks' => $request->approval_remarks,
@@ -229,7 +229,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
-        
+
         // Set contract back to draft with rejection remarks
         $award->update([
             'ContractStatus' => 'Draft Created', // Return to draft for revision
@@ -283,7 +283,7 @@ class ContractsController extends Controller
             ->where('ContractStatus', 'Sent to Legal')
             ->orderBy('ModifiedOn', 'desc')
             ->paginate(15);
-            
+
         return view('procurement.contracts.legal.index', compact('legalRequests'));
     }
 
@@ -296,7 +296,7 @@ class ContractsController extends Controller
             ->where('Id', $awardId)
             ->where('AwardStatus', 'Approved')
             ->first();
-            
+
         if (!$award) {
             return redirect()->route('procawards.index')
                 ->with('error', 'Award not found or not approved yet.');
@@ -316,7 +316,7 @@ class ContractsController extends Controller
         ]);
 
         $award = TenderAward::findOrFail($id);
-        
+
         if ($award->ContractStatus !== 'Draft Created') {
             return redirect()->back()
                 ->with('error', 'Only draft contracts can be submitted for review.');
@@ -347,18 +347,18 @@ class ContractsController extends Controller
 
             if ($request->hasFile('contract_document')) {
                 $file = $request->file('contract_document');
-                
+
                 // Check if file is valid
                 if (!$file->isValid()) {
                     throw new \Exception('Invalid file uploaded: ' . $file->getErrorMessage());
                 }
-                
+
                 $originalName = $file->getClientOriginalName();
                 $fileName = time() . '_' . $originalName;
-                
+
                 // Store the file
                 $filePath = $file->storeAs('contracts/documents', $fileName, 'public');
-                
+
                 if (!$filePath) {
                     throw new \Exception('Failed to store file on disk');
                 }
@@ -366,7 +366,7 @@ class ContractsController extends Controller
                 // Handle existing documents - create a new structure to avoid JSON conflicts
                 $existingConditions = $award->SpecialConditions;
                 $documents = [];
-                
+
                 // Try to parse existing data as JSON (documents array)
                 if (!empty($existingConditions)) {
                     $parsed = json_decode($existingConditions, true);
@@ -383,7 +383,7 @@ class ContractsController extends Controller
                         ];
                     }
                 }
-                
+
                 $newDoc = [
                     'type' => 'Contract Document',
                     'original_name' => $originalName,
@@ -392,15 +392,15 @@ class ContractsController extends Controller
                     'uploaded_by' => Auth::id(),
                     'file_size' => $file->getSize()
                 ];
-                
+
                 $documents[] = $newDoc;
-                
+
                 // Update the award
                 $award->update([
                     'SpecialConditions' => json_encode($documents),
                     'ModifiedBy' => Auth::id(),
                 ]);
-                
+
                 // Log successful upload
                 \Log::info('Contract document uploaded successfully', [
                     'award_id' => $id,
@@ -408,7 +408,7 @@ class ContractsController extends Controller
                     'file_path' => $filePath,
                     'user_id' => Auth::id()
                 ]);
-                
+
                 // Return JSON response for AJAX
                 if ($request->ajax()) {
                     return response()->json([
@@ -417,7 +417,7 @@ class ContractsController extends Controller
                         'document' => $newDoc
                     ]);
                 }
-                
+
                 return redirect()->route('contracts.show', $id)
                     ->with('success', 'Document uploaded successfully.');
             }
@@ -430,18 +430,18 @@ class ContractsController extends Controller
                 'errors' => $e->errors(),
                 'user_id' => Auth::id()
             ]);
-            
+
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed: ' . implode(', ', $e->validator->errors()->all())
                 ], 422);
             }
-            
+
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput();
-                
+
         } catch (\Exception $e) {
             \Log::error('Contract document upload failed', [
                 'award_id' => $id,

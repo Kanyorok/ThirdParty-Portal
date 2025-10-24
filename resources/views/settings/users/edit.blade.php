@@ -51,15 +51,13 @@
 
         <div class="mb-2">
             <label class="form-label" for="Phone">Phone Number <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="Phone" name="Phone"
-                   placeholder="e.g. 254712345678"
-                   pattern="^2547\d{8}$"
-                   inputmode="tel"
-                   title="Phone number must start with 2547 and be 12 digits long (e.g. 254712345678)"
+            <input type="tel" class="form-control" id="Phone" name="Phone"
+                   placeholder="e.g., +12025550123"
+                   pattern="^\+[1-9]\d{7,14}$" inputmode="tel" autocomplete="tel"
+                   title="Use international format (E.164), e.g., +12025550123"
                    value="{{ $user->Phone }}" required>
-            <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert">
-                Phone number must be in the format 2547XXXXXXXX (e.g. 254712345678)
-            </p>
+            <small class="form-text text-muted">Use international format (E.164), e.g., +12025550123</small>
+            <p id="Phone_error" class="invalid-feedback d-none error col-12" role="alert"></p>
         </div>
 
         <div class="mb-2">

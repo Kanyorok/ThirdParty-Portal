@@ -24,16 +24,16 @@
     <!-- Providers Table -->
     <table id="InsuranceProvider" class="table table-bordered table-hover">
         <thead class="table-light">
-            <tr>
-                <th>#</th>
-                <th>Provider Number</th>
-                <th>Name</th>
-                <th>Contact Person</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
+        <tr>
+            <th>#</th>
+            <th>Provider Number</th>
+            <th>Name</th>
+            <th>Contact Person</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
         </thead>
 
         <tbody>
@@ -51,12 +51,12 @@
                         </span>
                     </td>
                     <td>
-                        <a href="{{ route('bancassurance.insurers.products', $provider->Id) }}" 
+                        <a href="{{ route('bancassurance.insurers.products', $provider->Id) }}"
                            class="btn btn-sm btn-info">
                             View Products
                         </a>
 
-                        <a href="{{ route('bancassurance.insurers.edit', $provider->Id) }}" 
+                        <a href="{{ route('bancassurance.insurers.edit', $provider->Id) }}"
                            class="btn btn-sm btn-warning">
                             Edit
                         </a>

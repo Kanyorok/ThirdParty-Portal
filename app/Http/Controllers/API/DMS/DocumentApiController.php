@@ -15,20 +15,29 @@ class DocumentApiController extends Controller
     {
         try {
             $actor = $request->user();
-            $q = trim((string) $request->query('q', ''));
-            $page = max(1, (int) $request->query('page', 1));
-            $limit = max(1, min(50, (int) $request->query('limit', 20)));
+            $q = trim((string)$request->query('q', ''));
+            $page = max(1, (int)$request->query('page', 1));
+            $limit = max(1, min(50, (int)$request->query('limit', 20)));
 
             $query = Document::query()
                 ->whereHas('current')
                 ->with(['current', 'repository'])
                 ->orderByDesc('ModifiedOn');
 
-            // ERP users: respect DMS permissions via user() scope; Third-party users: limit to Public visibility
+            $onlyMine = $request->boolean('my');
+            // ERP users: optionally filter to only their own documents
             if ($actor instanceof ThirdPartyUser) {
+                // Third-party users: always restrict to Public, and if my=1 then also CreatedBy = actor id
                 $query->where('t_Documents.Visibility', VisibilityEnum::Public->value);
+                if ($onlyMine) {
+                    $query->where('t_Documents.CreatedBy', $actor->Id);
+                }
             } else {
+                // Internal users: apply permission scope first
                 $query->user($actor);
+                if ($onlyMine) {
+                    $query->where('t_Documents.CreatedBy', $actor->Id);
+                }
             }
 
             if ($q !== '') {
@@ -64,7 +73,7 @@ class DocumentApiController extends Controller
                 'total' => $total,
                 'page' => $page,
                 'limit' => $limit,
-                'pages' => (int) ceil($total / $limit),
+                'pages' => (int)ceil($total / $limit),
             ]);
         } catch (\Throwable $e) {
             return response()->json([

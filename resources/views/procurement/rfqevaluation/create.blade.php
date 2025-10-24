@@ -20,13 +20,29 @@
 
     <form method="POST" action="{{ route('evaluations.store') }}" id="evaluationForm" novalidate>
       @csrf
+      @php
+        // Ensure $rfqs is ordered newest-first for the select dropdown.
+        // Support both LengthAwarePaginator and Collection/array inputs.
+        $rfqsCollection = $rfqs instanceof \Illuminate\Contracts\Support\Arrayable ? collect($rfqs) : (isset($rfqs) ? $rfqs : collect());
+
+        if (method_exists($rfqsCollection, 'sortByDesc')) {
+            // Prefer CreatedOn if available, otherwise sort by Id desc
+            if ($rfqsCollection->first() && isset($rfqsCollection->first()->CreatedOn)) {
+                $rfqsSorted = $rfqsCollection->sortByDesc('CreatedOn');
+            } else {
+                $rfqsSorted = $rfqsCollection->sortByDesc('Id');
+            }
+        } else {
+            $rfqsSorted = $rfqsCollection;
+        }
+      @endphp
       <!-- RFQ Section -->
       <div class="mb-3 row">
         <label class="col-sm-2 col-form-label">RFQ No <span class="text-danger">*</span></label>
         <div class="col-sm-4">
           <select class="form-select" id="rfq-select" name="RFQId" required>
             <option value="">Select DropDown Or Search</option>
-            @foreach ($rfqs as $rfq)
+            @foreach ($rfqsSorted as $rfq)
               @php
                 $plan = optional($rfq->requisition)->procurementPlan;
                 $planLabel = $plan ? trim(($plan->Title ?? '') . ' - ' . ($plan->ReferenceNumber ?? '')) : '';

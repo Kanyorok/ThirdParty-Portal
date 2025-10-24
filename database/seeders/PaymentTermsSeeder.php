@@ -10,12 +10,12 @@ class PaymentTermsSeeder extends Seeder
     public function run()
     {
         $this->command->info('🏦 Seeding Payment Terms...');
-        
+
         // Check if payment terms exist
         $existingTerms = DB::table('t_CodeDetails')
             ->where('CodeID', 'PaymentTerm')
             ->count();
-        
+
         if ($existingTerms < 10) {
             $paymentTerms = [
                 [
@@ -139,7 +139,7 @@ class PaymentTermsSeeder extends Seeder
                     'ModifiedOn' => now(),
                 ]
             ];
-            
+
             foreach ($paymentTerms as $term) {
                 $exists = DB::table('t_CodeDetails')->where('ID', $term['ID'])->exists();
                 if (!$exists) {
@@ -148,7 +148,7 @@ class PaymentTermsSeeder extends Seeder
                 }
             }
         }
-        
+
         $this->command->info('✅ Payment Terms seeding completed!');
     }
 }

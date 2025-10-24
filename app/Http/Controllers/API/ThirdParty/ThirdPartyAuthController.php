@@ -66,7 +66,7 @@ class ThirdPartyAuthController extends Controller
             }
 
             // Enforce account status BEFORE creating token
-            if (! $user->isActive()) {
+            if (!$user->isActive()) {
                 return response()->json(['message' => __('auth.account_inactive')], 403);
             }
             if (! $user->isApproved()) {

@@ -11,28 +11,28 @@ class ComplianceFilingTemplate extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Name','FilingTypeID','RegulatorID','FormatID',
-        'Frequency','DueDay','PortalURL','Description','IsActive',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn'
+        'Name', 'FilingTypeID', 'RegulatorID', 'FormatID',
+        'Frequency', 'DueDay', 'PortalURL', 'Description', 'IsActive',
+        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn'
     ];
 
     public function regulator()
     {
-        return $this->belongsTo(RegulatoryBody::class,'RegulatorID');
+        return $this->belongsTo(RegulatoryBody::class, 'RegulatorID');
     }
 
     public function type()
     {
-        return $this->belongsTo(FilingType::class,'FilingTypeID');
+        return $this->belongsTo(FilingType::class, 'FilingTypeID');
     }
 
     public function format()
     {
-        return $this->belongsTo(FileFormat::class,'FormatID');
+        return $this->belongsTo(FileFormat::class, 'FormatID');
     }
 
     public function filings()
     {
-        return $this->hasMany(ComplianceFiling::class,'TemplateID');
+        return $this->hasMany(ComplianceFiling::class, 'TemplateID');
     }
 }

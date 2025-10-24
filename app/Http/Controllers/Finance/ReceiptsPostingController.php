@@ -23,23 +23,51 @@ class ReceiptsPostingController extends Controller
 {
     // Removed constructor dependency injection to fix route registration issues
 
-    public function index()
+    public function index(Request $request)
     {
-        $receipts = FinanceReceipt::with(['customer', 'allocations'])
-            ->orderBy('CreatedOn', 'desc')
-            ->paginate(15);
+        $this->authorize(PermissionEnum::ReceiptPostingView, FinanceReceipt::class);
+        $query = FinanceReceipt::with(['customer', 'allocations']);
+
+        if ($request->filled('receipt_number')) {
+            $query->where('ReceiptNumber', 'like', '%'.$request->receipt_number.'%');
+        }
+        if ($request->filled('customer')) {
+            $cust = $request->customer;
+            $query->whereHas('customer', function($q) use ($cust){
+                $q->where('ThirdPartyName', 'like', '%'.$cust.'%');
+            });
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('Status', $request->status);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('ReceiptDate', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('ReceiptDate', '<=', $request->date_to);
+        }
+        if ($request->filled('amount_min')) {
+            $query->where('AmountReceived', '>=', (float)$request->amount_min);
+        }
+
+        $query->orderBy('CreatedOn', 'desc');
+
+        $perPage = (int)($request->per_page ?? 15);
+        $receipts = $query->paginate($perPage)->withQueryString();
 
         return view('finance.accountsreceivable.receiptsposting.index', compact('receipts'));
     }
 
     public function create(){
+        $this->authorize(PermissionEnum::ReceiptPostingCreate, FinanceReceipt::class);
         $paymentMethods = CodeDetail::where('CodeID', 'PaymentMethod')
             ->orderBy('Description')
-            ->get(['ID','Value','Description']);
+            ->get(['ID', 'Value', 'Description']);
         return view('finance.accountsreceivable.receiptsposting.create', compact('paymentMethods'));
     }
 
     public function show($id){
+        $this->authorize(PermissionEnum::ReceiptPostingView, FinanceReceipt::class);
         $receipt = FinanceReceipt::with(['customer', 'allocations.invoice', 'documents'])
             ->findOrFail($id);
 
@@ -56,18 +84,18 @@ class ReceiptsPostingController extends Controller
             'id_number' => 'required|string|min:2'
         ]);
 
-        $q = trim((string) $request->id_number);
-        $customer = ThirdParties::query()
-            ->where('RegistrationNumber', $q)
-            ->orWhere('TaxPIN', $q)
-            ->orWhere('Email', $q)
-            ->orWhere('Phone', $q)
-            ->orWhere('ThirdPartyName', 'like', "%{$q}%")
-            ->first();
+            $q = trim((string)$request->id_number);
+            $customer = ThirdParties::query()
+                ->where('RegistrationNumber', $q)
+                ->orWhere('TaxPIN', $q)
+                ->orWhere('Email', $q)
+                ->orWhere('Phone', $q)
+                ->orWhere('ThirdPartyName', 'like', "%{$q}%")
+                ->first();
 
         if (!$customer) {
             return response()->json(['error' => 'Customer not found'], 404);
-            }
+        }
         } catch (\Exception $e) {
             Log::error('Error in findCustomer: ' . $e->getMessage(), [
                 'request' => $request->all(),
@@ -79,7 +107,7 @@ class ReceiptsPostingController extends Controller
         try {
             $invoices = FinanceInvoice::where('CustomerID', $customer->Id)
             ->where('IsPaid', false)
-            ->where('ApprovalStatus', 'posted')
+                ->where('ApprovalStatus', 'posted')
             ->whereColumn('TotalAmount', '>', 'AmountPaid')
             ->orderBy('InvoiceDate')
             ->get()
@@ -109,51 +137,51 @@ class ReceiptsPostingController extends Controller
                 return [
                     'id'        => $inv->Id,
                     'number'    => $inv->InvoiceNumber,
-                    'issue_date'=> $issueDate,
-                    'due_date'  => $dueDate,
+                    'issue_date' => $issueDate,
+                    'due_date' => $dueDate,
                     'currency'  => [
-                        'code'   => 'KES', // Default currency
+                        'code' => 'KES', // Default currency
                         'symbol' => 'KSh'  // Default symbol
                     ],
-                    'total'     => (float) ($inv->TotalAmount ?? 0),
-                    'paid'      => (float) ($inv->AmountPaid ?? 0),
+                    'total' => (float)($inv->TotalAmount ?? 0),
+                    'paid' => (float)($inv->AmountPaid ?? 0),
                 ];
             });
 
-        // Get customer wallet balance
-        $walletBalance = 0;
-        try {
-            $wallet = CustomerWallet::where('CustomerID', $customer->Id)->where('IsActive', true)->first();
-            $walletBalance = $wallet ? (float) $wallet->Balance : 0;
-        } catch (\Exception $e) {
-            // Log error but continue without wallet
-            Log::info('Error retrieving wallet for customer ' . $customer->Id . ': ' . $e->getMessage());
-        }
+            // Get customer wallet balance
+            $walletBalance = 0;
+            try {
+                $wallet = CustomerWallet::where('CustomerID', $customer->Id)->where('IsActive', true)->first();
+                $walletBalance = $wallet ? (float)$wallet->Balance : 0;
+            } catch (\Exception $e) {
+                // Log error but continue without wallet
+                Log::info('Error retrieving wallet for customer ' . $customer->Id . ': ' . $e->getMessage());
+            }
 
-        if ($invoices->isEmpty() && $walletBalance == 0) {
-            return response()->json(['error' => 'No invoices found for this customer and no wallet balance'], 404);
-        }
+            if ($invoices->isEmpty() && $walletBalance == 0) {
+                return response()->json(['error' => 'No invoices found for this customer and no wallet balance'], 404);
+            }
 
-        $status = is_object($customer->Status ?? null) && method_exists($customer->Status, 'label')
-            ? $customer->Status->label()
-            : ((string) ($customer->Status ?? ''));
+            $status = is_object($customer->Status ?? null) && method_exists($customer->Status, 'label')
+                ? $customer->Status->label()
+                : ((string)($customer->Status ?? ''));
 
         return response()->json([
             'customer' => [
                 'id'        => $customer->Id,
-                'name'      => $customer->ThirdPartyName,
+                'name' => $customer->ThirdPartyName,
                 'id_number' => $customer->RegistrationNumber ?? $customer->TaxPIN ?? $q,
-                'email'     => $customer->Email,
-                'phone'     => $customer->Phone,
-                'status'    => $status ?: '—',
-                'currency'  => [
-                        'code'   => $invoices->first()['currency']['code'] ?? 'KES',
-                        'symbol' => $invoices->first()['currency']['symbol'] ?? 'KSh'
-                    ],
-                    'wallet_balance' => $walletBalance
+                'email' => $customer->Email,
+                'phone' => $customer->Phone,
+                'status' => $status ?: '—',
+                'currency' => [
+                    'code' => $invoices->first()['currency']['code'] ?? 'KES',
+                    'symbol' => $invoices->first()['currency']['symbol'] ?? 'KSh'
+                ],
+                'wallet_balance' => $walletBalance
             ],
             'invoices' => $invoices
-            ]);
+        ]);
         } catch (\Exception $e) {
             Log::error('Error processing customer data: ' . $e->getMessage(), [
                 'customer_id' => $customer->Id ?? null,
@@ -189,6 +217,7 @@ class ReceiptsPostingController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::ReceiptPostingCreate, FinanceReceipt::class);
         $validated = $request->validate([
             'CustomerId' => 'required|numeric',
             'AmountReceived' => 'required|numeric|min:0.01',
@@ -352,10 +381,9 @@ class ReceiptsPostingController extends Controller
             return redirect()->route('receiptsposting.show', $receipt->Id)
                 ->with('success', "Receipt {$receipt->ReceiptNumber} created successfully.");
 
-        }catch(\Throwable $tt){
+        } catch (\Throwable $tt) {
             return $tt->getMessage();
-        }
-        catch (ValidationException $e) {
+        } catch (ValidationException $e) {
             Log::error('Receipt validation failed', [
                 'errors' => $e->errors(),
                 'request_data' => $request->all()
@@ -456,7 +484,7 @@ class ReceiptsPostingController extends Controller
 
         return response()->json([
             'balance' => $wallet ? $wallet->Balance : 0,
-            'has_wallet' => (bool) $wallet
+            'has_wallet' => (bool)$wallet
         ]);
     }
 
@@ -468,9 +496,9 @@ class ReceiptsPostingController extends Controller
         // Find active credit profile for this customer
         $creditProfile = \App\Models\Finance\FinanceCreditManagement::where('CustomerID', $invoice->CustomerID)
             ->whereRaw('LOWER(Status) = ?', ['approved'])
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('ExpiryDate', '>=', now()->toDateString())
-                      ->orWhereNull('ExpiryDate');
+                    ->orWhereNull('ExpiryDate');
             })
             ->first();
 
@@ -505,23 +533,23 @@ class ReceiptsPostingController extends Controller
             $transactionService = app(TransactionService::class);
 
             $payload = [
-                'ModuleID'          => 1100000, // Finance module
-                'ThirdPartyID'      => $receipt->CustomerID,
+                'ModuleID' => 1100000, // Finance module
+                'ThirdPartyID' => $receipt->CustomerID,
                 'TransactionTypeID' => 20, // Receipts transaction type from seeder
-                'TransactionType'   => 'Receipt Posting',
-                'ReferenceNumber'   => $receipt->ReceiptNumber,
-                'TransactionDate'   => $receipt->PostingDate,
-                'Amount'            => $allocatedAmount ?? (float)$receipt->AmountReceived,
-                'TaxAmount'         => 0.00,
-                'BranchID'          => session('LoginBranchId', 1),
-                'DepartmentID'      => null,
-                'CurrencyID'        => 56, // KES
-                'CurrencyCode'      => 'KES',
-                'ExchangeRate'      => 1.0,
-                'Narration'         => "Receipt {$receipt->ReceiptNumber} from {$receipt->customer->ThirdPartyName}: {$reason}",
-                'SourceTable'       => 't_FinanceReceipts',
+                'TransactionType' => 'Receipt Posting',
+                'ReferenceNumber' => $receipt->ReceiptNumber,
+                'TransactionDate' => $receipt->PostingDate,
+                'Amount' => $allocatedAmount ?? (float)$receipt->AmountReceived,
+                'TaxAmount' => 0.00,
+                'BranchID' => session('LoginBranchId', 1),
+                'DepartmentID' => null,
+                'CurrencyID' => 56, // KES
+                'CurrencyCode' => 'KES',
+                'ExchangeRate' => 1.0,
+                'Narration' => "Receipt {$receipt->ReceiptNumber} from {$receipt->customer->ThirdPartyName}: {$reason}",
+                'SourceTable' => 't_FinanceReceipts',
                 'SystemDescription' => "Receipt posting - {$receipt->ReceiptNumber}",
-                'IdempotencyKey'    => "receipt_posting_{$receipt->Id}",
+                'IdempotencyKey' => "receipt_posting_{$receipt->Id}",
             ];
 
             $result = $transactionService->postFromTypeMapping($payload);
@@ -553,7 +581,7 @@ class ReceiptsPostingController extends Controller
     private function getPaymentMethodGLAccount(string $paymentMethod): int
     {
         // Get from GL mapping or use defaults
-        return match(strtolower($paymentMethod)) {
+        return match (strtolower($paymentMethod)) {
             'cash' => 1001, // Cash account
             'bank', 'bank_transfer' => 1002, // Bank account
             'mpesa', 'm-pesa' => 1003, // Mobile money account

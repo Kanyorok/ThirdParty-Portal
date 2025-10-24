@@ -24,7 +24,7 @@ return new class extends Migration {
             $table->dateTime('ModifiedOn')->nullable();
             $table->unsignedBigInteger('ModifiedBy')->nullable();
             $table->dateTime('DeletedOn')->nullable();
-            $table->unsignedBigInteger('DeletedBy')->nullable();            
+            $table->unsignedBigInteger('DeletedBy')->nullable();
         });
     }
 

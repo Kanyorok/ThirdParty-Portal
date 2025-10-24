@@ -37,10 +37,10 @@ class ComplianceObligationController extends Controller
         ]);
 
         $obligation = ComplianceObligation::create($validated + [
-            'IsActive'   => 1,
-            'CreatedBy'  => auth()->id() ?? 1,
-            'CreatedOn'  => now(),
-        ]);
+                'IsActive' => 1,
+                'CreatedBy' => auth()->id() ?? 1,
+                'CreatedOn' => now(),
+            ]);
 
         return redirect()->route('legal.compliance.obligations.show', $obligation->Id)
             ->with('success', 'Obligation created successfully.');
@@ -74,9 +74,9 @@ class ComplianceObligationController extends Controller
         ]);
 
         $obligation->update($validated + [
-            'ModifiedBy' => auth()->id() ?? 1,
-            'ModifiedOn' => now(),
-        ]);
+                'ModifiedBy' => auth()->id() ?? 1,
+                'ModifiedOn' => now(),
+            ]);
 
         return redirect()->route('legal.compliance.obligations.show', $id)
             ->with('success', 'Obligation updated successfully.');
@@ -86,7 +86,7 @@ class ComplianceObligationController extends Controller
     {
         $obligation = ComplianceObligation::findOrFail($id);
         $obligation->update([
-            'IsActive'  => 0,
+            'IsActive' => 0,
             'DeletedBy' => auth()->id() ?? 1,
             'DeletedOn' => now(),
         ]);
@@ -111,12 +111,12 @@ class ComplianceObligationController extends Controller
 
         ComplianceObligationDocument::create([
             'ObligationID' => $id,
-            'FileName'     => $file->getClientOriginalName(),
-            'MimeType'     => $file->getMimeType(),
-            'FilePath'     => $path,
-            'Version'      => $version,
-            'UploadedBy'   => auth()->id() ?? 1,
-            'UploadedOn'   => now(),
+            'FileName' => $file->getClientOriginalName(),
+            'MimeType' => $file->getMimeType(),
+            'FilePath' => $path,
+            'Version' => $version,
+            'UploadedBy' => auth()->id() ?? 1,
+            'UploadedOn' => now(),
         ]);
 
         return back()->with('success', 'Document uploaded successfully.');

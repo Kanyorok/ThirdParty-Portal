@@ -68,6 +68,13 @@ use Illuminate\Support\Facades\Route;
 // Newly added
 
 Route::prefix('finance')->group(function () {
+
+    Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('finance-reports.export');
+    Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
+        'index' => 'finance-reports.index',
+        'show' => 'finance-reports.show'
+    ]);
+
     Route::resource('journalbatch', JournalBatchController::class);
     Route::resource('ledgeraccounts', LedgerAccountsController::class);
     Route::resource('transactiontypes', TransactionTypesController::class);
@@ -76,7 +83,7 @@ Route::prefix('finance')->group(function () {
     Route::resource('vendormaster', VendorMasterController::class);
     // Original invoice entry (kept for compatibility)
     // Route::resource('invoiceentry', InvoiceEntryController::class);
-    
+
     // New simplified invoice entry approach
     Route::resource('invoiceentry', InvoiceEntryV2Controller::class)->names([
         'index' => 'invoiceentry.index',
@@ -87,7 +94,7 @@ Route::prefix('finance')->group(function () {
         'update' => 'invoiceentry.update',
         'destroy' => 'invoiceentry.destroy',
     ]);
-    
+
     // AJAX routes for supplier search in new invoice entry
     Route::post('invoiceentry-v2/api/suppliers/quick-search', [InvoiceEntryV2Controller::class, 'quickSearchSuppliers'])->name('finance.invoiceentry-v2.api.suppliers.quick-search');
     Route::post('invoiceentry-v2/api/suppliers/search', [InvoiceEntryV2Controller::class, 'findSupplier'])->name('finance.invoiceentry-v2.api.suppliers.search');
@@ -101,62 +108,62 @@ Route::prefix('finance')->group(function () {
     Route::resource('creditmanagement', CreditManagementController::class);
     Route::post('creditmanagement/{id}/approve', [CreditManagementController::class, 'approve'])->name('creditmanagement.approve');
     Route::get('creditmanagement/{id}/history', [CreditManagementController::class, 'history'])->name('creditmanagement.history');
-Route::resource('creditadjustment', CreditAdjustmentController::class);
+    Route::resource('creditadjustment', CreditAdjustmentController::class);
     Route::get('creditadjustment/create/{id}', [CreditAdjustmentController::class, 'createWithId'])->name('creditadjustment.createWithId');
-Route::post('creditadjustment/{id}/approve', [CreditAdjustmentController::class, 'approve'])->name('creditadjustment.approve');
+    Route::post('creditadjustment/{id}/approve', [CreditAdjustmentController::class, 'approve'])->name('creditadjustment.approve');
 
 // Invoice generation with credit integration
-Route::resource('invoicegeneration', InvoiceGenerationController::class);
-Route::post('invoicegeneration/check-credit', [InvoiceGenerationController::class, 'checkCredit'])->name('invoicegeneration.check-credit');
-Route::post('invoicegeneration/{id}/apply-credit', [InvoiceGenerationController::class, 'applyCredit'])->name('invoicegeneration.apply-credit');
+    Route::resource('invoicegeneration', InvoiceGenerationController::class);
+    Route::post('invoicegeneration/check-credit', [InvoiceGenerationController::class, 'checkCredit'])->name('invoicegeneration.check-credit');
+    Route::post('invoicegeneration/{id}/apply-credit', [InvoiceGenerationController::class, 'applyCredit'])->name('invoicegeneration.apply-credit');
 
 // Debug route to check credit utilization
-Route::get('debug/credit-utilization/{creditId}', function($creditId) {
-    $credit = \App\Models\Finance\FinanceCreditManagement::with('customer')->findOrFail($creditId);
+    Route::get('debug/credit-utilization/{creditId}', function ($creditId) {
+        $credit = \App\Models\Finance\FinanceCreditManagement::with('customer')->findOrFail($creditId);
 
-    // Get all invoices for this customer
-    $allInvoices = \App\Models\Finance\FinanceInvoice::with('customer')
-        ->where('CustomerID', $credit->CustomerID)
-        ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber']);
+        // Get all invoices for this customer
+        $allInvoices = \App\Models\Finance\FinanceInvoice::with('customer')
+            ->where('CustomerID', $credit->CustomerID)
+            ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber']);
 
-    // Also search by customer name
-    $invoicesByName = \App\Models\Finance\FinanceInvoice::with('customer')
-        ->whereHas('customer', function($query) use ($credit) {
-            $query->where('ThirdPartyName', 'like', "%{$credit->customer->ThirdPartyName}%");
-        })
-        ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber']);
+        // Also search by customer name
+        $invoicesByName = \App\Models\Finance\FinanceInvoice::with('customer')
+            ->whereHas('customer', function ($query) use ($credit) {
+                $query->where('ThirdPartyName', 'like', "%{$credit->customer->ThirdPartyName}%");
+            })
+            ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber']);
 
-    return response()->json([
-        'credit_profile' => [
-            'id' => $credit->Id,
-            'customer_id' => $credit->CustomerID,
-            'customer_name' => $credit->customer->ThirdPartyName,
-            'credit_limit' => $credit->CreditLimit,
-            'effective_from' => $credit->EffectiveFrom,
-        ],
-        'invoices_by_customer_id' => $allInvoices->toArray(),
-        'invoices_by_customer_name' => $invoicesByName->toArray(),
-        'summary' => [
-            'total_invoices_by_id' => $allInvoices->count(),
-            'total_invoices_by_name' => $invoicesByName->count(),
-            'draft_with_credit_by_id' => $allInvoices->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
-            'draft_with_credit_by_name' => $invoicesByName->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
-        ]
-    ], 200, [], JSON_PRETTY_PRINT);
-});
+        return response()->json([
+            'credit_profile' => [
+                'id' => $credit->Id,
+                'customer_id' => $credit->CustomerID,
+                'customer_name' => $credit->customer->ThirdPartyName,
+                'credit_limit' => $credit->CreditLimit,
+                'effective_from' => $credit->EffectiveFrom,
+            ],
+            'invoices_by_customer_id' => $allInvoices->toArray(),
+            'invoices_by_customer_name' => $invoicesByName->toArray(),
+            'summary' => [
+                'total_invoices_by_id' => $allInvoices->count(),
+                'total_invoices_by_name' => $invoicesByName->count(),
+                'draft_with_credit_by_id' => $allInvoices->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
+                'draft_with_credit_by_name' => $invoicesByName->where('ApprovalStatus', 'draft')->where('UseCredit', true)->count(),
+            ]
+        ], 200, [], JSON_PRETTY_PRINT);
+    });
 
 // Debug route to check invoices with credit applied
-Route::get('debug/invoices-with-credit', function() {
-    $invoicesWithCredit = \App\Models\Finance\FinanceInvoice::with('customer')
-        ->where('UseCredit', true)
-        ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber', 'CreditAppliedOn']);
+    Route::get('debug/invoices-with-credit', function () {
+        $invoicesWithCredit = \App\Models\Finance\FinanceInvoice::with('customer')
+            ->where('UseCredit', true)
+            ->get(['Id', 'CustomerID', 'TotalAmount', 'ApprovalStatus', 'UseCredit', 'InvoiceNumber', 'CreditAppliedOn']);
 
-    return response()->json([
-        'total_invoices_with_credit' => $invoicesWithCredit->count(),
-        'total_amount' => $invoicesWithCredit->sum('TotalAmount'),
-        'invoices' => $invoicesWithCredit->toArray()
-    ], 200, [], JSON_PRETTY_PRINT);
-});
+        return response()->json([
+            'total_invoices_with_credit' => $invoicesWithCredit->count(),
+            'total_amount' => $invoicesWithCredit->sum('TotalAmount'),
+            'invoices' => $invoicesWithCredit->toArray()
+        ], 200, [], JSON_PRETTY_PRINT);
+    });
 
 
     Route::resource('agingreportar', AgingReportARController::class);
@@ -184,6 +191,7 @@ Route::get('debug/invoices-with-credit', function() {
     Route::resource('reconupload', ReconUploadController::class);
     Route::resource('recurrentjournal', RecurrentJournalController::class);
     Route::resource('reversingjournal', ReversingJournalController::class);
+    Route::get('/reversingjournal/preview/{id}', [\App\Http\Controllers\Finance\ReversingJournalController::class, 'preview'])->name('reversingjournal.preview');
     Route::resource('salaryjournaltemplate', SalaryJournalTemplateController::class);
     Route::resource('taxefilling', TaxEfillingController::class);
     Route::resource('taxglmapping', TaxGLMappingController::class);
@@ -336,8 +344,8 @@ Route::prefix('finance')->middleware('auth')->group(function () {
     Route::resource('cashbook', CashBookController::class); // cashbook.*
     Route::get('cashbook/create/receipt', [CashBookController::class, 'createReceipt'])->name('cashbook.create.receipt');
     Route::get('cashbook/create/payment', [CashBookController::class, 'createPayment'])->name('cashbook.create.payment');
-    Route::post('cashbook/{id}/post',  [CashBookController::class, 'post'])->name('cashbook.post');
-    Route::post('cashbook/{id}/void',  [CashBookController::class, 'void'])->name('cashbook.void');
+    Route::post('cashbook/{id}/post', [CashBookController::class, 'post'])->name('cashbook.post');
+    Route::post('cashbook/{id}/void', [CashBookController::class, 'void'])->name('cashbook.void');
 
     // NEW: mapping preview for auto-GL
     Route::get('cashbook/txntype/{id}/mapping', [CashBookController::class, 'txnTypeMapping'])
@@ -347,13 +355,13 @@ Route::prefix('finance')->middleware('auth')->group(function () {
 
 Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
     Route::resource('banktransfers', BankTransferController::class)->names([
-        'index'  => 'banktransfers.index',
+        'index' => 'banktransfers.index',
         'create' => 'banktransfers.create',
-        'store'  => 'banktransfers.store',
-        'show'   => 'banktransfers.show',
-        'edit'   => 'banktransfers.edit',
+        'store' => 'banktransfers.store',
+        'show' => 'banktransfers.show',
+        'edit' => 'banktransfers.edit',
         'update' => 'banktransfers.update',
-        'destroy'=> 'banktransfers.destroy',
+        'destroy' => 'banktransfers.destroy',
     ]);
 
     Route::post('banktransfers/{id}/post', [BankTransferController::class, 'post'])->name('banktransfers.post');
@@ -363,19 +371,18 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
 
 Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
     Route::resource('banktransactions', BankTransactionController::class)->names([
-        'index'  => 'banktransactions.index',
+        'index' => 'banktransactions.index',
         'create' => 'banktransactions.create',
-        'store'  => 'banktransactions.store',
-        'show'   => 'banktransactions.show',
-        'edit'   => 'banktransactions.edit',
+        'store' => 'banktransactions.store',
+        'show' => 'banktransactions.show',
+        'edit' => 'banktransactions.edit',
         'update' => 'banktransactions.update',
-        'destroy'=> 'banktransactions.destroy',
+        'destroy' => 'banktransactions.destroy',
     ]);
 
     Route::post('banktransactions/{id}/post', [BankTransactionController::class, 'post'])->name('banktransactions.post');
     Route::post('banktransactions/{id}/void', [BankTransactionController::class, 'void'])->name('banktransactions.void');
 });
-
 
 
 Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
@@ -384,74 +391,78 @@ Route::prefix('finance')->name('finance.')->middleware('auth')->group(function (
         ->name('chequebooks.next-range');
 
     Route::resource('chequebooks', ChequeBookController::class)
-        ->only(['index','create','store','show','edit','update','destroy'])
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->names([
-            'index'   => 'chequebooks.index',
-            'create'  => 'chequebooks.create',
-            'store'   => 'chequebooks.store',
-            'show'    => 'chequebooks.show',
-            'edit'    => 'chequebooks.edit',
-            'update'  => 'chequebooks.update',
+            'index' => 'chequebooks.index',
+            'create' => 'chequebooks.create',
+            'store' => 'chequebooks.store',
+            'show' => 'chequebooks.show',
+            'edit' => 'chequebooks.edit',
+            'update' => 'chequebooks.update',
             'destroy' => 'chequebooks.destroy',
         ])
         ->parameters(['chequebooks' => 'id']);
 
-        // Cheques
+    // Cheques
     Route::get('cheques', [ChequeController::class, 'index'])->name('cheques.index');
 
     // Create
-    Route::get('cheques/issued/create',   [ChequeController::class, 'createIssued'])->name('cheques.issued.create');
-    Route::post('cheques/issued',         [ChequeController::class, 'storeIssued'])->name('cheques.issued.store');
+    Route::get('cheques/issued/create', [ChequeController::class, 'createIssued'])->name('cheques.issued.create');
+    Route::post('cheques/issued', [ChequeController::class, 'storeIssued'])->name('cheques.issued.store');
 
     Route::get('cheques/received/create', [ChequeController::class, 'createReceived'])->name('cheques.received.create');
-    Route::post('cheques/received',       [ChequeController::class, 'storeReceived'])->name('cheques.received.store');
+    Route::post('cheques/received', [ChequeController::class, 'storeReceived'])->name('cheques.received.store');
 
     // Show
     Route::get('cheques/{id}', [ChequeController::class, 'show'])->name('cheques.show');
 
     // Actions
     Route::post('cheques/{id}/deposit', [ChequeController::class, 'deposit'])->name('cheques.deposit'); // RECEIVED only
-    Route::post('cheques/{id}/clear',   [ChequeController::class, 'clear'])->name('cheques.clear');     // both
-    Route::post('cheques/{id}/bounce',  [ChequeController::class, 'bounce'])->name('cheques.bounce');   // both
-    Route::post('cheques/{id}/cancel',  [ChequeController::class, 'cancel'])->name('cheques.cancel');   // Draft/Issued/OnHand
+    Route::post('cheques/{id}/clear', [ChequeController::class, 'clear'])->name('cheques.clear');     // both
+    Route::post('cheques/{id}/bounce', [ChequeController::class, 'bounce'])->name('cheques.bounce');   // both
+    Route::post('cheques/{id}/cancel', [ChequeController::class, 'cancel'])->name('cheques.cancel');   // Draft/Issued/OnHand
 
     // Optional: spoil a specific unused leaf (mark as not usable)
-    Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function($book,$leaf){ $l = \App\Models\Finance\ChequeLeaf::where('ChequeBookID',$book)->findOrFail($leaf);
-        if ($l->Status !== 'Unused') return back()->with('error','Only Unused leaves can be spoiled.'); $l->Status = 'Spoiled';
-        $l->Notes  = 'Manually spoiled';  $l->save();
-       return back()->with('success','Leaf spoiled.');  })->name('chequebooks.leaves.spoil');
+    Route::post('chequebooks/{book}/leaves/{leaf}/spoil', function ($book, $leaf) {
+        $l = \App\Models\Finance\ChequeLeaf::where('ChequeBookID', $book)->findOrFail($leaf);
+        if ($l->Status !== 'Unused') return back()->with('error', 'Only Unused leaves can be spoiled.');
+        $l->Status = 'Spoiled';
+        $l->Notes = 'Manually spoiled';
+        $l->save();
+        return back()->with('success', 'Leaf spoiled.');
+    })->name('chequebooks.leaves.spoil');
 });
 
 
 Route::prefix('finance')->name('finance.')->middleware('auth')->group(function () {
     // Setup
     Route::resource('pettyfloats', PettyCashFloatController::class)->names([
-        'index'  => 'pettyfloats.index',
+        'index' => 'pettyfloats.index',
         'create' => 'pettyfloats.create',
-        'store'  => 'pettyfloats.store',
-        'edit'   => 'pettyfloats.edit',
+        'store' => 'pettyfloats.store',
+        'edit' => 'pettyfloats.edit',
         'update' => 'pettyfloats.update',
-        'destroy'=> 'pettyfloats.destroy',
+        'destroy' => 'pettyfloats.destroy',
     ])->except(['show']);
 
     // Vouchers
     Route::get('pettycash', [PettyCashController::class, 'index'])->name('pettycash.index');
     Route::get('pettycash/disbursement/create', [PettyCashController::class, 'createDisbursement'])->name('pettycash.disbursement.create');
     Route::get('pettycash/replenishment/create', [PettyCashController::class, 'createReplenishment'])->name('pettycash.replenishment.create');
-    Route::get('pettycash/refund/create',        [PettyCashController::class, 'createRefund'])->name('pettycash.refund.create');
-    Route::post('pettycash',                     [PettyCashController::class, 'store'])->name('pettycash.store');
+    Route::get('pettycash/refund/create', [PettyCashController::class, 'createRefund'])->name('pettycash.refund.create');
+    Route::post('pettycash', [PettyCashController::class, 'store'])->name('pettycash.store');
 
-    Route::get('pettycash/{id}',       [PettyCashController::class, 'show'])->name('pettycash.show');
+    Route::get('pettycash/{id}', [PettyCashController::class, 'show'])->name('pettycash.show');
     Route::post('pettycash/{id}/post', [PettyCashController::class, 'post'])->name('pettycash.post');
     Route::post('pettycash/{id}/void', [PettyCashController::class, 'void'])->name('pettycash.void');
-    Route::delete('pettycash/{id}',    [PettyCashController::class, 'destroy'])->name('pettycash.destroy');
+    Route::delete('pettycash/{id}', [PettyCashController::class, 'destroy'])->name('pettycash.destroy');
 
     Route::post('pettycash/{id}/submit', [PettyCashController::class, 'submitForApproval'])->name('pettycash.submit');
     Route::post('pettycash/{id}/approve', [PettyCashController::class, 'approve'])->name('pettycash.approve');
-    Route::post('pettycash/{id}/reject',  [PettyCashController::class, 'reject'])->name('pettycash.reject');
+    Route::post('pettycash/{id}/reject', [PettyCashController::class, 'reject'])->name('pettycash.reject');
 
     // Replenishment wizard
-    Route::get('pettycash/replenishment/wizard',        [PettyCashController::class, 'wizard'])->name('pettycash.wizard');
-    Route::get('pettycash/replenishment/wizard/preview',[PettyCashController::class, 'wizardPreview'])->name('pettycash.wizard.preview');
-    Route::post('pettycash/replenishment/wizard',       [PettyCashController::class, 'wizardStore'])->name('pettycash.wizard.store');
+    Route::get('pettycash/replenishment/wizard', [PettyCashController::class, 'wizard'])->name('pettycash.wizard');
+    Route::get('pettycash/replenishment/wizard/preview', [PettyCashController::class, 'wizardPreview'])->name('pettycash.wizard.preview');
+    Route::post('pettycash/replenishment/wizard', [PettyCashController::class, 'wizardStore'])->name('pettycash.wizard.store');
 });

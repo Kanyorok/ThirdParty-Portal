@@ -12,9 +12,18 @@ return new class extends Migration {
     {
         Schema::table('t_TenantMaintenance', function (Blueprint $table) {
             // Drop unique constraints first
-            try { $table->dropUnique('t_TenantMaintenance_IDRegistrationNo_unique'); } catch (\Throwable $e) {}
-            try { $table->dropUnique('t_TenantMaintenance_PhoneNumber_unique'); } catch (\Throwable $e) {}
-            try { $table->dropUnique('t_TenantMaintenance_EmailAddress_unique'); } catch (\Throwable $e) {}
+            try {
+                $table->dropUnique('t_TenantMaintenance_IDRegistrationNo_unique');
+            } catch (\Throwable $e) {
+            }
+            try {
+                $table->dropUnique('t_TenantMaintenance_PhoneNumber_unique');
+            } catch (\Throwable $e) {
+            }
+            try {
+                $table->dropUnique('t_TenantMaintenance_EmailAddress_unique');
+            } catch (\Throwable $e) {
+            }
 
             $table->dropColumn([
                 'TenantName',
@@ -48,31 +57,31 @@ return new class extends Migration {
     /**
      * Reverse the migrations.
      */
-public function down(): void
-{
-    Schema::table('t_TenantMaintenance', function (Blueprint $table) {
-        $table->dropForeign(['ThirdPartyId']);
-        $table->dropColumn('ThirdPartyId');
-        $table->string('TenantName')->nullable();
-        $table->string('IDRegistrationNo')->nullable();
-        $table->string('PhoneNumber')->nullable();
-        $table->string('EmailAddress')->nullable();
-        $table->string('Nationality')->nullable();
-        $table->string('PostalAddress')->nullable();
-    });
+    public function down(): void
+    {
+        Schema::table('t_TenantMaintenance', function (Blueprint $table) {
+            $table->dropForeign(['ThirdPartyId']);
+            $table->dropColumn('ThirdPartyId');
+            $table->string('TenantName')->nullable();
+            $table->string('IDRegistrationNo')->nullable();
+            $table->string('PhoneNumber')->nullable();
+            $table->string('EmailAddress')->nullable();
+            $table->string('Nationality')->nullable();
+            $table->string('PostalAddress')->nullable();
+        });
 
-    // Recreate unique indexes as filtered (SQL Server supports this)
-    DB::statement('CREATE UNIQUE INDEX t_TenantMaintenance_IDRegistrationNo_unique 
-                   ON t_TenantMaintenance(IDRegistrationNo) 
+        // Recreate unique indexes as filtered (SQL Server supports this)
+        DB::statement('CREATE UNIQUE INDEX t_TenantMaintenance_IDRegistrationNo_unique
+                   ON t_TenantMaintenance(IDRegistrationNo)
                    WHERE IDRegistrationNo IS NOT NULL');
 
-    DB::statement('CREATE UNIQUE INDEX t_TenantMaintenance_PhoneNumber_unique 
-                   ON t_TenantMaintenance(PhoneNumber) 
+        DB::statement('CREATE UNIQUE INDEX t_TenantMaintenance_PhoneNumber_unique
+                   ON t_TenantMaintenance(PhoneNumber)
                    WHERE PhoneNumber IS NOT NULL');
 
-    DB::statement('CREATE UNIQUE INDEX t_TenantMaintenance_EmailAddress_unique 
-                   ON t_TenantMaintenance(EmailAddress) 
+        DB::statement('CREATE UNIQUE INDEX t_TenantMaintenance_EmailAddress_unique
+                   ON t_TenantMaintenance(EmailAddress)
                    WHERE EmailAddress IS NOT NULL');
-}
+    }
 
 };

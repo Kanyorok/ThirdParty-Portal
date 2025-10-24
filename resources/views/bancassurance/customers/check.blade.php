@@ -8,7 +8,7 @@
 
     <div class="mb-3 text-end">
         <a href="{{ route('bancassurance.customers.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Register New Customer</a>
+            <i class="fas fa-plus"></i> Register New Customer</a>
     </div>
     <div><p><small>The list of registered customers below:</small></p></div>
     <table id="customerregistry" class="table table-bordered table-striped align-middle">
@@ -33,16 +33,25 @@
                     <td>{{ $customer->thirdParty->Email ?? '-' }}</td>
                     <td>{{ $customer->DateOfBirth? \Carbon\Carbon::parse($customer->DateOfBirth)->format('d/m/Y') : '-'  }}</td>
                      <td>
-                     
-                    <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
+
+                     <a href="{{ route('bancassurance.customers.show', $customer->Id) }}" class="btn btn-sm btn-info">view</a>
                     <a href="{{ route('bancassurance.customers.edit', $customer->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-                    <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Are you sure you want to delete this Customer?');">Delete
-                        </button>
-                    </form>
+                            @if($customer->policies()->exists())
+                                <button class="btn btn-sm btn-secondary" disabled>
+                                    <i class="bi bi-lock"></i> In Use
+                                </button>
+                            @else
+                                <form action="{{ route('bancassurance.customers.destroy', $customer->Id) }}" 
+                                        method="POST" 
+                                        onsubmit="return confirm('Are you sure you want to delete this customer?');"
+                                        class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            @endif
                 </td>
                 </tr>
             @empty

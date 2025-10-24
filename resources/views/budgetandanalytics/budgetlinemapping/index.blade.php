@@ -23,7 +23,8 @@
                 <!-- Budget Lines Table -->
                 <div class="table-responsive">
                     <p class="text-muted small mb-3">
-                        Below is a list of all existing budget lines with their departments, mapped GL accounts, and whether they are product-driven.
+                        Below is a list of all existing budget lines with their departments, mapped GL accounts, and
+                        whether they are product-driven.
                     </p>
                     <table class="table table-hover table-sm align-middle table-striped1"
                            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;font-size:13px">
@@ -96,7 +97,8 @@
                                             <i class="fas fa-info-circle me-2 text-info"></i>
                                             No budget lines have been added yet.
                                         </p>
-                                        <a href="{{ route('budgetlinemapping.create') }}" class="btn btn-info px-4 py-2">
+                                        <a href="{{ route('budgetlinemapping.create') }}"
+                                           class="btn btn-info px-4 py-2">
                                             <i class="fas fa-plus-circle me-2"></i> Add Budget Line
                                         </a>
                                     </div>
@@ -145,6 +147,7 @@
             .table-responsive {
                 font-size: 0.875rem;
             }
+
             .btn-sm {
                 padding: 0.2rem 0.4rem;
             }

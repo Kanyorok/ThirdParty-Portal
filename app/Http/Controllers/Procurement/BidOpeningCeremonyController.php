@@ -27,11 +27,11 @@ class BidOpeningCeremonyController extends Controller
     public function index(Request $request)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-        
+
         // Get tenders ready for opening (past submission deadline with submitted bids)
-        $tenders = Tender::whereHas('submissions', function($query) {
-                $query->where('BidStatus', 'submitted');
-            })
+        $tenders = Tender::whereHas('submissions', function ($query) {
+            $query->where('BidStatus', 'submitted');
+        })
             ->where('SubmissionDeadline', '<', now())
             ->select('Id', 'TenderNo', 'Title', 'SubmissionDeadline', 'OpeningDate')
             ->orderBy('SubmissionDeadline', 'desc')
@@ -48,13 +48,13 @@ class BidOpeningCeremonyController extends Controller
                     ->with(['supplier.thirdParty', 'openedByUser'])
                     ->orderBy('ReceivedAt')
                     ->get();
-                
+
                 // Determine ceremony status
                 $ceremonyStatus = $this->getCeremonyStatus($submissions);
             }
         }
 
-        return view('procurement.tendering.bidopeningandevaluation.opening.index', 
+        return view('procurement.tendering.bidopeningandevaluation.opening.index',
             compact('tenders', 'selectedTender', 'submissions', 'ceremonyStatus'));
     }
 
@@ -64,14 +64,14 @@ class BidOpeningCeremonyController extends Controller
     public function startCeremony(Request $request)
     {
         $this->authorize(PermissionEnum::BidSubmissionWrite);
-        
+
         $request->validate([
             'tender_ref' => 'required|exists:t_Tenders,TenderNo',
             'opening_notes' => 'nullable|string|max:1000'
         ]);
 
         $tender = Tender::where('TenderNo', $request->tender_ref)->firstOrFail();
-        
+
         // Validate that ceremony can be started
         if ($tender->SubmissionDeadline > now()) {
             return redirect()->back()->with('error', 'Cannot start ceremony before submission deadline.');
@@ -86,15 +86,15 @@ class BidOpeningCeremonyController extends Controller
         }
 
         DB::beginTransaction();
-        
+
         try {
             $openedCount = 0;
-            
+
             // Open all submitted bids
             foreach ($submittedBids as $bid) {
                 $bid->markAsOpened(Auth::user());
                 $openedCount++;
-                
+
                 // Log individual bid opening
                 activity()
                     ->performedOn($bid)
@@ -125,7 +125,7 @@ class BidOpeningCeremonyController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 
+            return redirect()->back()->with('success',
                 "Bid opening ceremony started successfully. {$openedCount} bids have been opened and are now accessible.");
 
         } catch (\Exception $e) {
@@ -141,25 +141,49 @@ class BidOpeningCeremonyController extends Controller
     public function accessDocuments($submissionId)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-        
+
         $submission = BidSubmission::with(['supplier.thirdParty', 'tender'])->findOrFail($submissionId);
-        
+
         // Check if documents can be accessed
         if (!$submission->canAccessDocuments()) {
             return redirect()->back()->with('error', 'Documents are sealed and cannot be accessed before bid opening ceremony.');
         }
 
         try {
-            // Decrypt and prepare documents for viewing
+            // Decrypt and prepare documents for viewing (support DMS-backed names)
             $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
-            $accessibleDocs = [];
 
+            // Gather DMS document IDs and fetch metadata in bulk
+            $docIds = collect($encryptedDocs)
+                ->map(fn($d) => $d['document_id'] ?? null)
+                ->filter()
+                ->values()
+                ->all();
+
+            $dmsDocs = [];
+            if (!empty($docIds)) {
+                $dmsDocs = \App\Models\DMS\Document::whereIn('DocumentId', $docIds)
+                    ->with('current')
+                    ->get()
+                    ->keyBy('DocumentId');
+            }
+
+            $accessibleDocs = [];
             foreach ($encryptedDocs as $doc) {
+                $documentId = $doc['document_id'] ?? null;
+                $linked = $documentId && isset($dmsDocs[$documentId]) ? $dmsDocs[$documentId] : null;
+                $name = $linked?->Name ?? ($doc['original_name'] ?? ($doc['original_filename'] ?? 'Unknown Document'));
+                $sizeBytes = $linked?->current?->Size ?? ($doc['file_size'] ?? null);
+                $uploadedAtVal = $linked?->getAttribute('CreatedOn');
+                $uploadedAt = ($uploadedAtVal instanceof \Carbon\Carbon)
+                    ? $uploadedAtVal->format('d/m/Y H:i:s')
+                    : ($uploadedAtVal ?: ($doc['uploaded_at'] ?? null));
+
                 $accessibleDocs[] = [
-                    'id' => $doc['id'] ?? 'unknown',
-                    'name' => $doc['original_filename'] ?? 'Unknown Document',
-                    'size' => $this->formatFileSize($doc['file_size'] ?? 0),
-                    'uploaded_at' => $doc['uploaded_at'] ?? null,
+                    'id' => $documentId ?? ($doc['id'] ?? 'unknown'),
+                    'name' => $name,
+                    'size' => $sizeBytes !== null ? $this->formatFileSize($sizeBytes) : 'N/A',
+                    'uploaded_at' => $uploadedAt,
                     'can_download' => true
                 ];
             }
@@ -174,7 +198,7 @@ class BidOpeningCeremonyController extends Controller
                 ])
                 ->log("Documents accessed for bid: {$submission->SupplierName}");
 
-            return view('procurement.tendering.bidopeningandevaluation.opening.documents', 
+            return view('procurement.tendering.bidopeningandevaluation.opening.documents',
                 compact('submission', 'accessibleDocs'));
 
         } catch (\Exception $e) {
@@ -189,9 +213,9 @@ class BidOpeningCeremonyController extends Controller
     public function downloadDocument($submissionId, $documentIndex)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-        
+
         $submission = BidSubmission::findOrFail($submissionId);
-        
+
         if (!$submission->canAccessDocuments()) {
             abort(403, 'Documents are sealed and cannot be accessed.');
         }
@@ -199,13 +223,13 @@ class BidOpeningCeremonyController extends Controller
         try {
             // In a real implementation, this would decrypt and serve the actual file
             $encryptedDocs = json_decode($submission->EncryptedDocuments, true) ?? [];
-            
+
             if (!isset($encryptedDocs[$documentIndex])) {
                 abort(404, 'Document not found.');
             }
 
             $doc = $encryptedDocs[$documentIndex];
-            
+
             // Log document download
             activity()
                 ->performedOn($submission)
@@ -237,7 +261,7 @@ class BidOpeningCeremonyController extends Controller
     public function generateSummary(Request $request, $tenderRef)
     {
         $this->authorize(PermissionEnum::BidSubmissionRead);
-        
+
         $tender = Tender::where('TenderNo', $tenderRef)->firstOrFail();
         $submissions = BidSubmission::forTender($tenderRef)
             ->with(['supplier.thirdParty', 'openedByUser'])
@@ -257,7 +281,7 @@ class BidOpeningCeremonyController extends Controller
                 'ceremony_started' => $submissions->where('OpenedAt', '!=', null)->isNotEmpty(),
                 'ceremony_date' => $submissions->where('OpenedAt', '!=', null)->first()?->OpenedAt
             ],
-            'bid_summary' => $submissions->map(function($bid) {
+            'bid_summary' => $submissions->map(function ($bid) {
                 return [
                     'supplier_name' => $bid->SupplierName,
                     'bid_amount' => $bid->BidAmount,
@@ -330,9 +354,9 @@ class BidOpeningCeremonyController extends Controller
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
-        
+
         $bytes /= pow(1024, $pow);
-        
+
         return round($bytes, 2) . ' ' . $units[$pow];
     }
 }

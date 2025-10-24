@@ -43,7 +43,7 @@ class VehicleManagementService
 
             // Set initial status to 'Available'
             $statusValue = $this->getStatusValue('Available');   // enum string
-            $statusId    = $this->getStatusIdByValue($statusValue); // numeric ID
+            $statusId = $this->getStatusIdByValue($statusValue); // numeric ID
             $vehicle->VehicleStatus = $statusId; // update vehicle field
             $vehicle->save();
 
@@ -81,7 +81,7 @@ class VehicleManagementService
             // Update status if provided or changed
             if (isset($data['VehicleStatus']) && $data['VehicleStatus'] !== $originalStatus) {
                 $statusValue = $data['VehicleStatus'];
-                $statusId    = $this->getStatusIdByValue($statusValue);
+                $statusId = $this->getStatusIdByValue($statusValue);
 
                 // Update vehicle field
                 $vehicle->VehicleStatus = $statusId;
@@ -132,11 +132,11 @@ class VehicleManagementService
     {
         $imageContent = base64_encode(file_get_contents($file->getRealPath()));
         return Image::create([
-            'Name'       => $file->getClientOriginalName(),
-            'Image'      => $imageContent,
-            'MIMEType'   => $file->getMimeType(),
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
+            'Name' => $file->getClientOriginalName(),
+            'Image' => $imageContent,
+            'MIMEType' => $file->getMimeType(),
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
@@ -151,19 +151,19 @@ class VehicleManagementService
 
         if ($vehicle->image) {
             $vehicle->image->update([
-                'Image'      => $imageData,
-                'MIMEType'   => $imageFile->getMimeType(),
-                'Name'       => $imageFile->getClientOriginalName(),
+                'Image' => $imageData,
+                'MIMEType' => $imageFile->getMimeType(),
+                'Name' => $imageFile->getClientOriginalName(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
         } else {
             $image = Image::create([
-                'Name'       => $imageFile->getClientOriginalName(),
-                'Image'      => $imageData,
-                'MIMEType'   => $imageFile->getMimeType(),
-                'CreatedBy'  => Auth::id(),
-                'CreatedOn'  => now(),
+                'Name' => $imageFile->getClientOriginalName(),
+                'Image' => $imageData,
+                'MIMEType' => $imageFile->getMimeType(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]);
@@ -201,13 +201,13 @@ class VehicleManagementService
 
         // Create workflow entry
         Workflow::create([
-            'Source'     => $source,
-            'SourceID'   => $sourceId,
-            'Stage'      => $statusId,       // numeric ID
-            'Status'     => $statusValue,    // enum string
-            'Notes'      => $notes,
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
+            'Source' => $source,
+            'SourceID' => $sourceId,
+            'Stage' => $statusId,       // numeric ID
+            'Status' => $statusValue,    // enum string
+            'Notes' => $notes,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
@@ -216,10 +216,10 @@ class VehicleManagementService
         PendingWorkflow::updateOrCreate(
             ['Source' => $source, 'SourceID' => $sourceId],
             [
-                'Stage'      => $statusId,
-                'UserId'     => Auth::id(),
-                'CreatedBy'  => Auth::id(),
-                'CreatedOn'  => now(),
+                'Stage' => $statusId,
+                'UserId' => Auth::id(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]

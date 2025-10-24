@@ -44,7 +44,7 @@
                         <div class="row g-2 align-items-end">
                             <div class="col-md-4">
                                 <label class="form-label small text-muted">Search Customer (Reg No./Tax PIN/Email/Phone/Name)</label>
-                                <input type="text" class="form-control" id="searchIdNumber" placeholder="e.g., REG123456 / P123456789 / email@domain.com / +2547... / Acme" autocomplete="off">
+                                <input type="text" class="form-control" id="searchIdNumber" placeholder="e.g., REG123456 / P123456789 / email@domain.com / +1202555... / Acme" autocomplete="off">
                                 <div class="invalid-feedback">Please enter an ID number to search.</div>
                             </div>
                             <div class="col-md-3">

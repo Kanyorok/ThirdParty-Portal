@@ -24,12 +24,12 @@ class SKUController extends Controller
 
     public function index()
     {
-     $branchId = auth()->user()->employee?->BranchId;
+        $branchId = auth()->user()->employee?->BranchId;
         $this->authorize('viewAny', StockItem::class);
 
         $items = StockItem::with(['item', 'store', 'uom'])
-        ->where('Branch', $branchId)
-        ->get();
+            ->where('Branch', $branchId)
+            ->get();
         return view('inventory.itemmaster.sku.index', compact('items'));
     }
 
@@ -52,7 +52,7 @@ class SKUController extends Controller
         $this->authorize('create', StockItem::class);
 
         $data = $request->validated();
-        $data['Status'] = 1; 
+        $data['Status'] = 1;
 
         try {
             $skuCode = $this->stockItemService->create($data);
@@ -74,16 +74,19 @@ class SKUController extends Controller
         return view('inventory.itemmaster.sku.show', compact('item', 'categories'));
     }
 
-    public function edit($id)
+   public function edit($id)
     {
         $item = StockItem::with('item.category.parent')->findOrFail($id);
         $this->authorize('update', $item);
 
-        $branches = auth()->user()->employee?->BranchId;
+        $branchId = auth()->user()->employee?->BranchId;
+        $branch = Branch::find($branchId);
+
         $categories = ItemCategories::whereNull('ParentId')
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
-        $stores = Store::where('BranchID', $branches)->get();
+
+        $stores = Store::where('BranchID', $branchId)->get();
 
         $category = $item->item->category;
         $parentCategoryId = $category->parent ? $category->parent->Id : $category->Id;
@@ -93,8 +96,9 @@ class SKUController extends Controller
             ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
             ->get();
 
-        return view('inventory.itemmaster.sku.edit', compact('item', 'branches', 'stores', 'categories', 'items'));
+        return view('inventory.itemmaster.sku.edit', compact('item', 'branch', 'stores', 'categories', 'items'));
     }
+
 
     public function update(StockItemRequest $request, $id)
     {
@@ -146,7 +150,6 @@ class SKUController extends Controller
         return response()->json($items);
     }
 
-    
 
     public function getItemDetails(Request $request)
     {

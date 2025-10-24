@@ -1,15 +1,18 @@
 # Credit History View Bug Fix
 
 ## Issue Description
+
 **Error**: `Call to a member function format() on string` on line 69 of credit management history view.
 
-**Root Cause**: The `FinanceCreditMovement` model was not properly casting date fields to Carbon instances, so when the view tried to call `->format()` on string date values, it failed.
+**Root Cause**: The `FinanceCreditMovement` model was not properly casting date fields to Carbon instances, so when the
+view tried to call `->format()` on string date values, it failed.
 
 ## Fixed Components
 
 ### 1. FinanceCreditMovement Model (`app/Models/Finance/FinanceCreditMovement.php`)
 
 **Added proper date casting:**
+
 ```php
 protected $casts = [
     'Amount' => 'decimal:2',
@@ -21,6 +24,7 @@ protected $casts = [
 ```
 
 **Added relationships:**
+
 ```php
 public function creditProfile()
 {
@@ -42,6 +46,7 @@ public function creditAdjustment()
 ### 2. History View (`resources/views/finance/accountsreceivable/creditmanagement/history.blade.php`)
 
 **Made date formatting more robust:**
+
 ```php
 // Before (causing error):
 {{ $movement->EffectiveOn->format('M d, Y') }}
@@ -55,6 +60,7 @@ public function creditAdjustment()
 ```
 
 **Added null safety checks:**
+
 ```php
 @if($movements && $movements->count())
     // Display movements
@@ -66,6 +72,7 @@ public function creditAdjustment()
 ### 3. Controller Enhancement (`app/Http/Controllers/Finance/CreditManagementController.php`)
 
 **Added defensive date handling in the history method:**
+
 ```php
 $movements = FinanceCreditMovement::where('CreditID', $credit->Id)
     ->orderBy('EffectiveOn', 'desc')
@@ -86,12 +93,14 @@ $movements = FinanceCreditMovement::where('CreditID', $credit->Id)
 ## Technical Details
 
 ### The Problem
+
 1. Database was storing dates as strings (VARCHAR or TEXT fields)
 2. Laravel model wasn't casting them to Carbon instances
 3. Blade template was calling `->format()` method on strings
 4. PHP threw `Call to a member function format() on string` error
 
 ### The Solution
+
 1. **Model Level**: Added proper `$casts` array to automatically convert strings to Carbon instances
 2. **View Level**: Added defensive parsing using `\Carbon\Carbon::parse()` for backward compatibility
 3. **Controller Level**: Added runtime date conversion for existing records

@@ -29,9 +29,9 @@ BEGIN
 
     -- Store fLineDiscount as absolute discount amount (not percentage)
     INSERT INTO t_OrderLines (iOrderID, fQuantity, fUnitPriceExcl, fUnitPriceIncl, flineDiscount, fTaxRate, CreatedBy,
-                  CreatedOn, ModifiedBy, ModifiedOn, BranchID, iStockCodeID, LineTotal)
+                              CreatedOn, ModifiedBy, ModifiedOn, BranchID, iStockCodeID, LineTotal)
     VALUES (@OrderId, @Quantity, @Price, @PriceIncl, @DiscAmount, @Tax, @User, getdate(), @User, getdate(), @BranchId,
-        @Item, @LineTotal)
+            @Item, @LineTotal)
 
 
     SET NOCOUNT OFF

@@ -25,6 +25,7 @@ class PropertyReceiptPolicy
     {
         return $user->can(PermissionEnum::PropertyReceiptDelete->value);
     }
+
     public function print(User $user, PropertyReceipt $PropertyReceipt): bool
     {
         return $user->can(PermissionEnum::PropertyReceiptPrint->value);

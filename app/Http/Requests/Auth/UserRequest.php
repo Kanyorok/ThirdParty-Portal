@@ -27,7 +27,8 @@ class UserRequest extends FormRequest
             'UserID' => ['required', 'string', 'max:100', 'min:3',],
             'Name' => ['required', 'string', 'max:255',],
             'Gender' => ['required', Rule::in(GenderEnum::values()),],
-            'Phone' => ['required', 'min:9', 'max:13', 'regex: /^[(2541)(2547)]+[0-9]{9}$/i', Rule::unique('t_Users')->ignore($id, 'Id'),/*// 'unique:App\Models\Auth\User,Phone'*/],
+            // E.164 format (international). Keep uniqueness on t_Users.Id
+            'Phone' => ['required', 'string', 'min:8', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/', Rule::unique('t_Users')->ignore($id, 'Id')],
             'Email' => ['required', 'email:rfc,dns', 'max:200', Rule::unique('t_Users')->ignore($id, 'Id'), /*'unique:App\Models\Auth\User,Phone'*/],
             //'ClientID' => ['required_if_declined:SyncAccount', 'max:20', Rule::unique('t_Users')->ignore($id, 'Id'), 'exists:App\Models\BR\Client,ClientID',],
             'Notes' => ['nullable', 'string', 'max:5000',],

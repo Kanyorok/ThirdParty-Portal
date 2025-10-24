@@ -28,7 +28,7 @@ class PropertyMaintenanceWorkCompletionService
         string $completionDate,
         string $workDoneSummary,
         ?string $partsUsed = null,
-        ?int $cost = null,
+        ?int    $cost = null,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
@@ -44,7 +44,7 @@ class PropertyMaintenanceWorkCompletionService
             'ModifiedBy' => $user->Id,
         ]);
 
- 
+
         if (strtolower($finalstatus->Description) === 'completed') {
             $requestNumber->update([
                 'Status' => PostingEnum::Completed->value
@@ -76,7 +76,7 @@ class PropertyMaintenanceWorkCompletionService
         string $completionDate,
         string $workDoneSummary,
         ?string $partsUsed = null,
-        ?int $cost = null,
+        ?int    $cost = null,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null

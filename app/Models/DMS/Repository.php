@@ -57,7 +57,6 @@ class Repository extends Model implements SpecialPermissionContract
         return $this->belongsTo(__CLASS__, 'ParentId', 'Id');
     }
 
-
     public function getShareEmailSubject(): string
     {
         return 'Notification: #permission permission to ' . $this->Name;

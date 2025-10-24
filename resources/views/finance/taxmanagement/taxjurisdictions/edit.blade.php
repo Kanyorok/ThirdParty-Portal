@@ -40,7 +40,7 @@
                 @method('PUT')
 
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Jurisdiction Name</label>
                         <input type="text"
                                name="JurisdictionName"
@@ -49,7 +49,7 @@
                                placeholder="e.g., Kenya, Uganda"
                                required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Currency</label>
                         <select name="Currency" class="form-select" required>
                             <option disabled selected value="">Select Currency</option>
@@ -57,6 +57,18 @@
                                 <option value="{{ $currency->Id }}"
                                     {{ $taxJurisdiction->Currency == $currency->Id ? 'selected' : '' }}>
                                     {{ $currency->Code }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Country</label>
+                        <select name="CountryID" class="form-select" required>
+                            <option value="" disabled>-- Select Country --</option>
+                            @foreach($countries as $country)
+                                <option value="{{ $country->Id }}"
+                                    {{ (old('CountryID', $taxJurisdiction->CountryID) == $country->Id) ? 'selected' : '' }}>
+                                    {{ $country->Name ?? $country->CountryCode ?? ('#'.$country->Id) }}
                                 </option>
                             @endforeach
                         </select>

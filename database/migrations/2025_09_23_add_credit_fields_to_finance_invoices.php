@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->dateTime('CreditAppliedOn')->nullable()->after('UseCredit');
             $table->unsignedBigInteger('CreditAppliedBy')->nullable()->after('CreditAppliedOn');
             $table->text('CreditApplicationReason')->nullable()->after('CreditAppliedBy');
-            
+
             // Add foreign key constraint
             $table->foreign('CreditAppliedBy')->references('Id')->on('t_Users');
         });

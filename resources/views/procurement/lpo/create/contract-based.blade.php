@@ -8,7 +8,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h4 class="mb-1">📄 Create Contract-Based LPO</h4>
-                        <p class="text-muted mb-0">Create Local Purchase Order from Contract: {{ $contract->ContractRef }}</p>
+                        <p class="text-muted mb-0">Create Local Purchase Order from
+                            Contract: {{ $contract->ContractRef }}</p>
                     </div>
                     <div>
                         <a href="{{ route('lpo.origination.contract-based') }}" class="btn btn-outline-secondary me-2">
@@ -53,7 +54,8 @@
                             <div class="col-md-3">
                                 <strong>Supplier:</strong>
                                 <div>{{ $contract->winningSupplier->SupplierName ?? 'N/A' }}</div>
-                                <div class="small text-muted">{{ $contract->winningSupplier->ContactPerson ?? '' }}</div>
+                                <div
+                                    class="small text-muted">{{ $contract->winningSupplier->ContactPerson ?? '' }}</div>
                             </div>
                             <div class="col-md-3">
                                 <strong>Contract Value:</strong>
@@ -99,39 +101,48 @@
                             <div class="row mb-4">
                                 <div class="col-md-3">
                                     <label class="form-label">LPO Number <span class="text-danger">*</span></label>
-                                    <input type="text" name="lpo_number" class="form-control @error('lpo_number') is-invalid @enderror" 
+                                    <input type="text" name="lpo_number"
+                                           class="form-control @error('lpo_number') is-invalid @enderror"
                                            value="{{ old('lpo_number', $lpoData['lpo_number']) }}" readonly>
                                     @error('lpo_number')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">LPO Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="lpo_date" class="form-control @error('lpo_date') is-invalid @enderror" 
+                                    <input type="date" name="lpo_date"
+                                           class="form-control @error('lpo_date') is-invalid @enderror"
                                            value="{{ old('lpo_date', now()->format('Y-m-d')) }}" required>
                                     @error('lpo_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Priority <span class="text-danger">*</span></label>
-                                    <select name="priority" class="form-select @error('priority') is-invalid @enderror" required>
+                                    <select name="priority" class="form-select @error('priority') is-invalid @enderror"
+                                            required>
                                         <option value="">Select Priority</option>
-                                        <option value="High" {{ old('priority') === 'High' ? 'selected' : '' }}>High</option>
-                                        <option value="Medium" {{ old('priority', 'Medium') === 'Medium' ? 'selected' : '' }}>Medium</option>
-                                        <option value="Low" {{ old('priority') === 'Low' ? 'selected' : '' }}>Low</option>
+                                        <option value="High" {{ old('priority') === 'High' ? 'selected' : '' }}>High
+                                        </option>
+                                        <option
+                                            value="Medium" {{ old('priority', 'Medium') === 'Medium' ? 'selected' : '' }}>
+                                            Medium
+                                        </option>
+                                        <option value="Low" {{ old('priority') === 'Low' ? 'selected' : '' }}>Low
+                                        </option>
                                     </select>
                                     @error('priority')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Expected Delivery <span class="text-danger">*</span></label>
-                                    <input type="date" name="expected_delivery_date" 
-                                           class="form-control @error('expected_delivery_date') is-invalid @enderror" 
+                                    <label class="form-label">Expected Delivery <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" name="expected_delivery_date"
+                                           class="form-control @error('expected_delivery_date') is-invalid @enderror"
                                            value="{{ old('expected_delivery_date') }}" required>
                                     @error('expected_delivery_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -140,12 +151,12 @@
                             <div class="row mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label">Payment Terms</label>
-                                    <textarea name="payment_terms" class="form-control" rows="3" 
+                                    <textarea name="payment_terms" class="form-control" rows="3"
                                               placeholder="Payment terms as per contract">{{ old('payment_terms', $contract->PaymentTerms ?? '') }}</textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Delivery Terms</label>
-                                    <textarea name="delivery_terms" class="form-control" rows="3" 
+                                    <textarea name="delivery_terms" class="form-control" rows="3"
                                               placeholder="Delivery terms and location">{{ old('delivery_terms', $contract->DeliveryTerms ?? '') }}</textarea>
                                 </div>
                             </div>
@@ -162,56 +173,59 @@
                                 <div class="table-responsive">
                                     <table class="table table-bordered" id="lpoItemsTable">
                                         <thead class="table-light">
-                                            <tr>
-                                                <th style="width: 5%;">#</th>
-                                                <th style="width: 25%;">Item Description <span class="text-danger">*</span></th>
-                                                <th style="width: 10%;">Quantity <span class="text-danger">*</span></th>
-                                                <th style="width: 10%;">Unit</th>
-                                                <th style="width: 15%;">Unit Price <span class="text-danger">*</span></th>
-                                                <th style="width: 10%;">Tax %</th>
-                                                <th style="width: 10%;">Discount %</th>
-                                                <th style="width: 15%;">Total Amount</th>
-                                                <th style="width: 5%;">Action</th>
-                                            </tr>
+                                        <tr>
+                                            <th style="width: 5%;">#</th>
+                                            <th style="width: 25%;">Item Description <span class="text-danger">*</span>
+                                            </th>
+                                            <th style="width: 10%;">Quantity <span class="text-danger">*</span></th>
+                                            <th style="width: 10%;">Unit</th>
+                                            <th style="width: 15%;">Unit Price <span class="text-danger">*</span></th>
+                                            <th style="width: 10%;">Tax %</th>
+                                            <th style="width: 10%;">Discount %</th>
+                                            <th style="width: 15%;">Total Amount</th>
+                                            <th style="width: 5%;">Action</th>
+                                        </tr>
                                         </thead>
                                         <tbody id="itemsTableBody">
-                                            <tr class="item-row">
-                                                <td class="row-number">1</td>
-                                                <td>
-                                                    <input type="text" name="items[0][description]" 
-                                                           class="form-control item-description" required
-                                                           placeholder="Enter item description...">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="items[0][quantity]" 
-                                                           class="form-control item-quantity" min="1" step="any" required>
-                                                </td>
-                                                <td>
-                                                    <input type="text" name="items[0][unit]" 
-                                                           class="form-control item-unit" placeholder="pcs, kg, etc.">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="items[0][unit_price]" 
-                                                           class="form-control item-unit-price" min="0" step="0.01" required>
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="items[0][tax_percentage]" 
-                                                           class="form-control item-tax" min="0" max="100" step="0.01">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="items[0][discount_percentage]" 
-                                                           class="form-control item-discount" min="0" max="100" step="0.01">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="items[0][total_amount]" 
-                                                           class="form-control item-total" readonly>
-                                                </td>
-                                                <td>
-                                                    <button type="button" class="btn btn-sm btn-danger remove-item-btn" title="Remove Item">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                        <tr class="item-row">
+                                            <td class="row-number">1</td>
+                                            <td>
+                                                <input type="text" name="items[0][description]"
+                                                       class="form-control item-description" required
+                                                       placeholder="Enter item description...">
+                                            </td>
+                                            <td>
+                                                <input type="number" name="items[0][quantity]"
+                                                       class="form-control item-quantity" min="1" step="any" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="items[0][unit]"
+                                                       class="form-control item-unit" placeholder="pcs, kg, etc.">
+                                            </td>
+                                            <td>
+                                                <input type="number" name="items[0][unit_price]"
+                                                       class="form-control item-unit-price" min="0" step="0.01"
+                                                       required>
+                                            </td>
+                                            <td>
+                                                <input type="number" name="items[0][tax_percentage]"
+                                                       class="form-control item-tax" min="0" max="100" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" name="items[0][discount_percentage]"
+                                                       class="form-control item-discount" min="0" max="100" step="0.01">
+                                            </td>
+                                            <td>
+                                                <input type="number" name="items[0][total_amount]"
+                                                       class="form-control item-total" readonly>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-danger remove-item-btn"
+                                                        title="Remove Item">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -221,7 +235,7 @@
                             <div class="row mb-4">
                                 <div class="col-md-8">
                                     <label class="form-label">Additional Notes</label>
-                                    <textarea name="notes" class="form-control" rows="3" 
+                                    <textarea name="notes" class="form-control" rows="3"
                                               placeholder="Any additional instructions or notes for this LPO...">{{ old('notes') }}</textarea>
                                 </div>
                                 <div class="col-md-4">
@@ -273,11 +287,11 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             let itemIndex = 1;
 
             // Add new item row
-            document.getElementById('addItemBtn').addEventListener('click', function() {
+            document.getElementById('addItemBtn').addEventListener('click', function () {
                 const tbody = document.getElementById('itemsTableBody');
                 const newRow = createItemRow(itemIndex);
                 tbody.appendChild(newRow);
@@ -286,7 +300,7 @@
             });
 
             // Remove item row
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (e.target.closest('.remove-item-btn')) {
                     const row = e.target.closest('tr');
                     if (document.querySelectorAll('.item-row').length > 1) {
@@ -300,7 +314,7 @@
             });
 
             // Calculate totals when values change
-            document.addEventListener('input', function(e) {
+            document.addEventListener('input', function (e) {
                 if (e.target.matches('.item-quantity, .item-unit-price, .item-tax, .item-discount')) {
                     calculateRowTotal(e.target.closest('tr'));
                     calculateTotals();
@@ -313,32 +327,32 @@
                 row.innerHTML = `
                     <td class="row-number">${index + 1}</td>
                     <td>
-                        <input type="text" name="items[${index}][description]" 
+                        <input type="text" name="items[${index}][description]"
                                class="form-control item-description" required
                                placeholder="Enter item description...">
                     </td>
                     <td>
-                        <input type="number" name="items[${index}][quantity]" 
+                        <input type="number" name="items[${index}][quantity]"
                                class="form-control item-quantity" min="1" step="any" required>
                     </td>
                     <td>
-                        <input type="text" name="items[${index}][unit]" 
+                        <input type="text" name="items[${index}][unit]"
                                class="form-control item-unit" placeholder="pcs, kg, etc.">
                     </td>
                     <td>
-                        <input type="number" name="items[${index}][unit_price]" 
+                        <input type="number" name="items[${index}][unit_price]"
                                class="form-control item-unit-price" min="0" step="0.01" required>
                     </td>
                     <td>
-                        <input type="number" name="items[${index}][tax_percentage]" 
+                        <input type="number" name="items[${index}][tax_percentage]"
                                class="form-control item-tax" min="0" max="100" step="0.01">
                     </td>
                     <td>
-                        <input type="number" name="items[${index}][discount_percentage]" 
+                        <input type="number" name="items[${index}][discount_percentage]"
                                class="form-control item-discount" min="0" max="100" step="0.01">
                     </td>
                     <td>
-                        <input type="number" name="items[${index}][total_amount]" 
+                        <input type="number" name="items[${index}][total_amount]"
                                class="form-control item-total" readonly>
                     </td>
                     <td>
@@ -400,7 +414,7 @@
             }
 
             // Form validation
-            document.getElementById('contractLPOForm').addEventListener('submit', function(e) {
+            document.getElementById('contractLPOForm').addEventListener('submit', function (e) {
                 const items = document.querySelectorAll('.item-row');
                 if (items.length === 0) {
                     e.preventDefault();

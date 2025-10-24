@@ -23,23 +23,49 @@
                 <div class="card-header bg-light fw-bold">➕ Request Stock from Another Branch</div>
                 <div class="card-body">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">From Branch <span class="text-danger">*</span></label>
-                            <input type="hidden" id="FromBranch" name="FromBranch" value="{{ $fromBranch->Id }}">
-                            <input type="text" class="form-control" value="{{ $fromBranch->Name }}" readonly>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">To Branch/ Requesting Branch <span class="text-danger">*</span></label>
-                            <select name="ToBranch" class="form-select" required>
-                                <option value="">Select Branch</option>
-                                @foreach ($branches as $branch)
-                                    <option
-                                        value="{{ $branch->Id }}" {{ old('ToBranch') == $branch->Id ? 'selected' : '' }}>
-                                        {{ $branch->Name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        @if($isHeadOffice)
+                            {{-- Head Office: From Branch is fixed, To Branch is selectable --}}
+                            <div class="col-md-4">
+                                <label class="form-label">From Branch <span class="text-danger">*</span></label>
+                                <input type="hidden" id="FromBranch" name="FromBranch" value="{{ $fromBranch->Id }}">
+                                <input type="text" class="form-control" value="{{ $fromBranch->Name }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">To Branch/ Requesting Branch <span class="text-danger">*</span></label>
+                                <select name="ToBranch" class="form-select" required>
+                                    <option value="">Select Branch</option>
+                                    @foreach ($branches as $branch)
+                                        <option
+                                            value="{{ $branch->Id }}" {{ old('ToBranch') == $branch->Id ? 'selected' : '' }}>
+                                            {{ $branch->Name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @else
+                            {{-- Non-Head Office: From Branch is selectable, To Branch is fixed --}}
+
+                            <div class="col-md-4">
+                                <label class="form-label">Requesting Branch <span class="text-danger">*</span></label>
+                                <input type="hidden" name="ToBranch" value="{{ $currentBranch->Id }}">
+                                <input type="text" class="form-control" value="{{ $currentBranch->Name }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">From Branch <span class="text-danger">*</span></label>
+                                <select name="FromBranch" id="FromBranch" class="form-select" required>
+                                    <option value="">Select Branch</option>
+                                    @foreach ($branches as $branch)
+                                        @if($branch->Id != $currentBranch->Id) {{-- Exclude current branch --}}
+                                            <option
+                                                value="{{ $branch->Id }}" {{ old('FromBranch') == $branch->Id ? 'selected' : '' }}>
+                                                {{ $branch->Name }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+
+                        @endif
                         <div class="col-md-4">
                             <label class="form-label">Date <span class="text-danger">*</span></label>
                             <input type="date" name="CreatedOn" class="form-control"
@@ -117,7 +143,7 @@
         <script>
             let itemCounter = 0;
 
-            // New: Function to populate categories based on selected branch's stock
+            // Function to populate categories based on selected branch's stock
             function populateCategoriesByBranch(entry, selectedCategory = null, callback = null) {
                 const categorySelect = entry.querySelector('.category-select');
                 const subcategorySelect = entry.querySelector('.subcategory-select');
@@ -136,7 +162,7 @@
                 entry.querySelector('.item-name-hidden').value = '';
 
                 if (!fromBranchId) {
-                    categorySelect.innerHTML = '<option value="">Select Requesting Branch First</option>';
+                    categorySelect.innerHTML = '<option value="">Select From Branch First</option>';
                     return callback?.();
                 }
 
@@ -166,8 +192,7 @@
                     });
             }
 
-
-            // Modified: Function to populate subcategories by branch and category
+            // Function to populate subcategories by branch and category
             function populateSubcategoriesByBranchAndCategory(entry, selectedSubcat = null, callback = null) {
                 const categorySelect = entry.querySelector('.category-select');
                 const subcategorySelect = entry.querySelector('.subcategory-select');
@@ -184,7 +209,6 @@
                 entry.querySelector('.item-code').value = '';
                 entry.querySelector('.item-uom').value = '';
                 entry.querySelector('.item-name-hidden').value = '';
-
 
                 if (!categoryId || !fromBranchId) {
                     return callback?.();
@@ -220,7 +244,7 @@
                     });
             }
 
-            // Renamed: Function to populate items by branch and category/subcategory
+            // Function to populate items by branch and category/subcategory
             function populateItemsByBranchAndCategoryOrSubcategory(entry, selectedItem = null, fallbackCategoryId = null) {
                 const categorySelect = entry.querySelector('.category-select');
                 const subcategorySelect = entry.querySelector('.subcategory-select');
@@ -365,7 +389,7 @@
                 if (values.ItemCode) {
                     itemCodeInput.value = values.ItemCode;
                 }
-                if (values.item_uom) { // Assuming item_uom might be passed in old values
+                if (values.item_uom) { 
                     itemUomInput.value = values.item_uom;
                 }
                 if (values.item_name) {
@@ -405,14 +429,13 @@
                 addItem();
             });
 
-            // Handle changes on Requesting Branch select to update all item categories
+            // Handle changes on From Branch select to update all item categories
             document.getElementById('FromBranch').addEventListener('change', function () {
                 const itemEntries = document.querySelectorAll('.item-entry');
                 itemEntries.forEach(entry => {
                     populateCategoriesByBranch(entry);
                 });
             });
-
 
             // Delegated event listener for category and subcategory changes
             document.addEventListener('change', function (e) {

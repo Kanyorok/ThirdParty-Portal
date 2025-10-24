@@ -37,7 +37,7 @@ class EnforceSessionTimeout
         $sessionId = $request->session()->getId();
         $connection = config('session.connection');
         $table = config('session.table', 'sessions');
-        $lifetimeSeconds = (int) config('session.lifetime', 20) * 60;
+        $lifetimeSeconds = (int)config('session.lifetime', 20) * 60;
 
         try {
             $row = DB::connection($connection)->table($table)->where('id', $sessionId)->first();
@@ -47,7 +47,7 @@ class EnforceSessionTimeout
         }
 
         if ($row && isset($row->last_activity)) {
-            $idleSeconds = time() - (int) $row->last_activity;
+            $idleSeconds = time() - (int)$row->last_activity;
             if ($idleSeconds > $lifetimeSeconds) {
                 Auth::guard('web')->logout();
                 $request->session()->invalidate();

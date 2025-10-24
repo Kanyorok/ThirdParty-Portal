@@ -95,43 +95,84 @@
                     <div class="border rounded-3 p-3 mb-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-7">
-                                <label class="form-label small text-muted">Search Supplier (Reg No./Email/Phone/Name)</label>
+                                <label class="form-label text-muted">Search Supplier (Reg No./Email/Phone/Name)</label>
                                 <select id="supplierSelect" class="form-control" style="width: 100%;">
                                     <option value="">-- Search and select a supplier --</option>
                                 </select>
                                 <div class="form-text" id="supplierSelectHint">Type at least 2 characters to search</div>
                             </div>
                             <div class="col-md-5 text-md-end">
-                                <span class="small text-muted">Use the dropdown to select a supplier</span>
+                                {{-- <span class="small text-muted">Search by registration number, email, phone, or name</span> --}}
                             </div>
                         </div>
 
                         <!-- Supplier summary (hidden until found) -->
-                        <div id="supplierCard" class="row g-3 mt-3 d-none">
-                            <div class="col-lg-8">
-                                <div class="card border-0 shadow-sm rounded-4">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <div class="text-uppercase text-muted small">Supplier</div>
-                                                <div class="h6 mb-0" id="suppName">—</div>
-                                                <div class="small text-muted" id="suppId">—</div>
-                                            </div>
-                                            <span class="badge bg-success" id="suppStatus">Active</span>
+                        <div id="supplierCard" class="mt-3 d-none">
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <div class="text-uppercase text-muted small">Supplier</div>
+                                            <div class="h5 mb-1" id="suppName">—</div>
+                                            <div class="small text-muted" id="suppId">—</div>
                                         </div>
-                                        <div class="row small mt-2">
-                                            <div class="col-md-4">Email: <span class="text-dark" id="suppEmail">—</span></div>
-                                            <div class="col-md-4">Phone: <span class="text-dark" id="suppPhone">—</span></div>
-                                            <div class="col-md-4">Reg No: <span class="text-dark" id="suppRegNo">—</span></div>
+                                        <span class="badge bg-success" id="suppStatus">Active</span>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="border-start border-primary border-3 ps-3">
+                                                <div class="text-uppercase text-muted small mb-1">Contact Information</div>
+                                                <div class="mb-2">
+                                                    <i class="fas fa-envelope text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppEmail">—</span>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <i class="fas fa-phone text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppPhone">—</span>
+                                                </div>
+                                                <div>
+                                                    <i class="fas fa-id-card text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppRegNo">—</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="border-start border-info border-3 ps-3">
+                                                <div class="text-uppercase text-muted small mb-1">Business Details</div>
+                                                <div class="mb-2">
+                                                    <i class="fas fa-building text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppType">—</span>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppAddress">—</span>
+                                                </div>
+                                                <div>
+                                                    <i class="fas fa-check-circle text-muted me-2"></i>
+                                                    <span class="text-dark" id="suppStatus">Active</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div class="col-lg-4">
-                                <div class="alert alert-info mb-0">
-                                    <div class="fw-semibold">Next</div>
-                                    <div class="small">Select a Purchase Order and corresponding GRN to create the invoice.</div>
+                                    <div class="mt-3 pt-3 border-top">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Supplier loaded successfully. Ready to select Purchase Orders.
+                                            </small>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" id="refreshSupplier" title="Refresh supplier data">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSupplier" title="Clear supplier selection">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -542,7 +583,7 @@
                         currentOrders = data.orders;
                         currentGRNs = data.grns;
                         if (data.defaultCurrency) updateCurrencyDisplay(data.defaultCurrency);
-                        showNotification(`Loaded supplier: ${data.supplier.Name}`, 'success');
+                        showNotification(`Loaded supplier: ${data.supplier.Name || 'Supplier'}`, 'success');
                         displaySupplier();
                         displayOrders();
                     }
@@ -566,6 +607,8 @@
                 document.getElementById('suppEmail').textContent = currentSupplier.Email || '—';
                 document.getElementById('suppPhone').textContent = currentSupplier.Phone || '—';
                 document.getElementById('suppRegNo').textContent = currentSupplier.RegistrationNumber || '—';
+                document.getElementById('suppType').textContent = currentSupplier.BusinessType || 'Standard Supplier';
+                document.getElementById('suppAddress').textContent = currentSupplier.Address || 'Not provided';
                 document.getElementById('suppStatus').textContent = currentSupplier.IsActive ? 'Active' : 'Inactive';
                 document.getElementById('suppStatus').className = `badge ${currentSupplier.IsActive ? 'bg-success' : 'bg-danger'}`;
 
@@ -574,6 +617,33 @@
                 document.getElementById('SupplierID').value = currentSupplier.SupplierID;
 
                 supplierCard.classList.remove('d-none');
+
+                // Add event listeners for new buttons
+                addSupplierCardEventListeners();
+            }
+
+            // Add event listeners for supplier card buttons
+            function addSupplierCardEventListeners() {
+                const refreshBtn = document.getElementById('refreshSupplier');
+                const clearBtn = document.getElementById('clearSupplier');
+
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', function() {
+                        if (currentSupplier && currentSupplier.SupplierID) {
+                            showNotification('Refreshing supplier data...', 'info');
+                            loadSupplierById(currentSupplier.SupplierID);
+                        }
+                    });
+                }
+
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function() {
+                        if (confirm('Are you sure you want to clear the selected supplier? This will reset the form.')) {
+                            resetSupplierView();
+                            showNotification('Supplier cleared. Select a new supplier to continue.', 'info');
+                        }
+                    });
+                }
             }
 
             // Initialize Select2 for PO selection
@@ -731,7 +801,8 @@
                 document.getElementById('selectedPONumber').textContent = order.OrderNo;
                 document.getElementById('selectedPODate').textContent = order.OrderDate;
                 const orderCurrency = order.Currency || currentCurrency;
-                document.getElementById('selectedPOAmount').textContent = `${orderCurrency.Symbol} ${order.TotalAmount}`;
+                // Display inclusive amount as primary
+                document.getElementById('selectedPOAmount').textContent = `${orderCurrency.Symbol} ${order.OrdTotIncl ?? order.TotalAmount}`;
                 document.getElementById('selectedPODescription').textContent = order.Description;
 
                 document.getElementById('selectedPOSummary').classList.remove('d-none');
@@ -858,9 +929,10 @@
                     // Set expected amount from PO
                     const selectedOrder = currentOrders.find(order => order.Id == selectedPO.Id);
                     if (selectedOrder) {
-                        const expectedAmountValue = parseFloat(selectedOrder.TotalAmount.replace(/,/g, ''));
+                        const inclusive = (selectedOrder.OrdTotIncl || selectedOrder.TotalAmount || '0').toString().replace(/,/g, '');
+                        const expectedAmountValue = parseFloat(inclusive);
                         const orderCurrency = selectedOrder.Currency || currentCurrency;
-                        document.getElementById('expectedAmount').textContent = `${orderCurrency.Symbol} ${selectedOrder.TotalAmount}`;
+                        document.getElementById('expectedAmount').textContent = `${orderCurrency.Symbol} ${selectedOrder.OrdTotIncl ?? selectedOrder.TotalAmount}`;
 
                         // Update currency display if order has different currency
                         if (selectedOrder.Currency) {
@@ -1022,48 +1094,70 @@
                 setLoading('poDetailsContent', 'PO');
 
                 let poContent = `
-                    <div class="row mb-3">
-                        <div class="col-md-6"><strong>Order No:</strong> ${order.OrderNo}</div>
-                        <div class="col-md-6"><strong>Order Date:</strong> ${order.OrderDate}</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-12"><strong>Description:</strong> ${order.Description}</div>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Purchase Order: ${order.OrderNo}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-sm-6"><strong>Order Date:</strong> ${order.OrderDate}</div>
+                                <div class="col-sm-6"><strong>Description:</strong> ${order.Description}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Discount:</strong> ${formatCurrency(order.OrdDiscAmnt || 0, order.Currency)}</div>
+                                <div class="col-md-3"><strong>Tax:</strong> ${formatCurrency(order.OrdTotTax || 0, order.Currency)}</div>
+                                <div class="col-md-3"><strong>Before Tax:</strong> ${formatCurrency(order.OrdTotExcl || 0, order.Currency)}</div>
+                                <div class="col-md-3"><strong>After Tax:</strong> ${formatCurrency(order.OrdTotIncl || order.TotalAmount || 0, order.Currency)}</div>
+                            </div>
+                        </div>
                     </div>`;
 
                 if (order.OrderLines && order.OrderLines.length > 0) {
+                    let grandTotal = 0;
+
                     poContent += `
-                        <h6>Order Lines</h6>
                         <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
+                            <table class="table table-sm mb-0 po-table">
+                                <thead class="table-light">
                                     <tr>
-                                        <th>Item</th>
-                                        <th class="text-end">Quantity</th>
-                                        <th class="text-end">Unit Price</th>
-                                        <th class="text-end">Line Total</th>
+                                        <th>#</th>
+                                        <th class="col-item">Item</th>
+                                        <th class="col-qty text-end">Qty</th>
+                                        <th class="col-price text-end">Unit Price</th>
+                                        <th class="col-total text-end">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>`;
 
-                    order.OrderLines.forEach(line => {
+                    order.OrderLines.forEach((line, index) => {
+                        const quantity = parseFloat(line.Quantity || 0);
+                        const unitPrice = parseFloat(line.UnitPriceExcl || line.UnitPrice || 0);
+                        const taxRate = parseFloat(line.TaxRate || 0);
+                        const discount = parseFloat(line.Discount || 0);
+
+                        const lineExcl = quantity * unitPrice;
+                        const lineTax = (lineExcl - discount) * (taxRate / 100);
+                        const lineTotal = lineExcl + lineTax - discount;
+                        grandTotal += lineTotal;
+
                         poContent += `
                             <tr>
-                                <td>${line.ItemName}</td>
-                                <td class="text-end">${line.Quantity}</td>
-                                <td class="text-end">${formatCurrency(line.UnitPrice, order.Currency)}</td>
-                                <td class="text-end">${formatCurrency(line.LineTotal, order.Currency)}</td>
+                                <td>${index + 1}</td>
+                                <td><strong>${line.ItemName || 'Unknown Item'}</strong></td>
+                                <td class="text-end">${quantity.toLocaleString()}</td>
+                                <td class="text-end">${formatCurrency(unitPrice, order.Currency)}</td>
+                                <td class="text-end fw-semibold">${formatCurrency(lineTotal, order.Currency)}</td>
                             </tr>`;
                     });
 
                     poContent += `
                                 </tbody>
-                                <tfoot>
-                                    <tr class="table-light">
-                                        <th colspan="3">Total Amount</th>
-                                        <th class="text-end">${formatCurrency(order.TotalAmount, order.Currency)}</th>
-                                    </tr>
-                                </tfoot>
                             </table>
+                        </div>
+                        <div class="card mt-3">
+                            <div class="card-footer text-end">
+                                <h6 class="mb-0">Grand Total: <strong>${formatCurrency(grandTotal, order.Currency)}</strong></h6>
+                            </div>
                         </div>`;
                 }
 

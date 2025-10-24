@@ -12,33 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('t_BancassuranceCustomers', function (Blueprint $table) {
-            // 1. Drop unique constraints via raw SQL (SQL Server safe)
-        });
+            // Drop unique constraints first
+            $table->dropUnique('t_bancassurancecustomers_nationalid_unique');
+            $table->dropUnique('t_bancassurancecustomers_krapin_unique');
+            $table->dropUnique('t_bancassurancecustomers_phonenumber_unique');
+            $table->dropUnique('t_bancassurancecustomers_email_unique');
 
-        DB::statement('DROP INDEX t_Bancassu_NationalID_unique ON t_BancassuranceCustomers');
-        DB::statement('DROP INDEX t_Bancassu_KRAPIN_unique ON t_BancassuranceCustomers');
-        DB::statement('DROP INDEX t_Bancassu_PhoneNumber_unique ON t_BancassuranceCustomers');
-        DB::statement('DROP INDEX t_Bancassu_Email_unique ON t_BancassuranceCustomers');
+            // Now drop columns
+            $table->dropColumn('FullName');
+            $table->dropColumn('NationalID');
+            $table->dropColumn('KRAPIN');
+            $table->dropColumn('PhoneNumber');
+            $table->dropColumn('Email');
+            $table->dropColumn('Address');
 
-        Schema::table('t_BancassuranceCustomers', function (Blueprint $table) {
-            // 2. Drop old customer info columns
-            $table->dropColumn([
-                'FullName',
-                'NationalID',
-                'KRAPIN',
-                'PhoneNumber',
-                'Email',
-                'Address'
-            ]);
-
-            // 3. Add ThirdPartyId
-            $table->foreignId('ThirdPartyId')
-                ->nullable()
-                ->constrained('t_ThirdParties', 'Id');
-        });
-    }
-
-
+            // Add new foreign key
+            $table->foreignId('ThirdPartyId')->constrained('t_ThirdParties','Id');
+    });
+}
 
     /**
      * Reverse the migrations.
@@ -46,16 +37,16 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('t_BancassuranceCustomers', function (Blueprint $table) {
-            // Drop foreign key + column
+            // Drop foreign key first
             $table->dropForeign(['ThirdPartyId']);
             $table->dropColumn('ThirdPartyId');
 
-            // Restore old columns as nullable (to avoid rollback failure on non-empty table)
-            $table->string('FullName')->nullable();
-            $table->string('NationalID')->nullable();
-            $table->string('KRAPIN')->nullable();
-            $table->string('PhoneNumber')->nullable();
-            $table->string('Email')->nullable();
+            // Restore dropped columns (with indexes)
+            $table->string('FullName');
+            $table->string('NationalID')->unique();
+            $table->string('KRAPIN')->unique();
+            $table->string('PhoneNumber')->unique();
+            $table->string('Email')->unique()->nullable();
             $table->string('Address')->nullable();
         });
     }

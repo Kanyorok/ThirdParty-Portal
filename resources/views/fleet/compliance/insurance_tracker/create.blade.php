@@ -40,7 +40,8 @@
                     <select class="form-select" name="InsuranceProvider" required>
                         <option value="">Select Provider</option>
                         @foreach ($insuranceProvider as $provider)
-                            <option value="{{ $provider->Id }}" {{ old('InsuranceProvider') == $provider->Id ? 'selected' : '' }}>
+                            <option
+                                value="{{ $provider->Id }}" {{ old('InsuranceProvider') == $provider->Id ? 'selected' : '' }}>
                                 {{ $provider->Name }}
                             </option>
                         @endforeach

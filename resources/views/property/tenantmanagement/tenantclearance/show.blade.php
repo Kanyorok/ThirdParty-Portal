@@ -12,7 +12,8 @@
                     <div class="mb-3">
                         <label class="form-label">Tenant && Lease</label>
                         <input type="text" class="form-control"
-                               value="Name: {{ $clearancetenant->lease->tenant->thirdParty->TradingName  ?? '-' }} &nbsp;&nbsp; LeaseNo: {{ $clearancetenant->lease->LeaseNumber ?? '-'}}" readonly>
+                               value="Name: {{ $clearancetenant->lease->tenant->thirdParty->TradingName  ?? '-' }} &nbsp;&nbsp; LeaseNo: {{ $clearancetenant->lease->LeaseNumber ?? '-'}}"
+                               readonly>
                     </div>
 
                     <div class="mb-3">

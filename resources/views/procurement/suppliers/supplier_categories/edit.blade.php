@@ -41,10 +41,12 @@
                     <select id="item_category_ids" name="item_category_ids[]" class="form-control" multiple size="6">
                         @php $selected = collect(old('item_category_ids', $category->itemCategories->pluck('Id')->all())); @endphp
                         @foreach(($itemCategories ?? []) as $cat)
-                            <option value="{{ $cat->Id }}" @selected($selected->contains($cat->Id))>{{ $cat->Name }}</option>
+                            <option
+                                value="{{ $cat->Id }}" @selected($selected->contains($cat->Id))>{{ $cat->Name }}</option>
                         @endforeach
                     </select>
-                    <small class="text-muted">Hold Ctrl / Cmd to select multiple. Only parent categories (no ParentId) listed.</small>
+                    <small class="text-muted">Hold Ctrl / Cmd to select multiple. Only parent categories (no ParentId)
+                        listed.</small>
                 </div>
 
                 <div class="d-flex justify-content-end">

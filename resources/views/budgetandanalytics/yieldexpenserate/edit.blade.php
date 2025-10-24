@@ -48,7 +48,8 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('ProductTypeID') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('ProductTypeID')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <!-- Rate Type -->
@@ -64,7 +65,8 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('RateTypeID') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('RateTypeID')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <!-- Rate Value -->
@@ -75,7 +77,8 @@
                                    name="RateValue"
                                    value="{{ old('RateValue', $driverRate->RateValue) }}"
                                    placeholder="e.g. 10.50" required>
-                            @error('RateValue') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('RateValue')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <!-- Source -->
@@ -86,7 +89,8 @@
                                    name="Source"
                                    value="{{ old('Source', $driverRate->Source) }}"
                                    placeholder="e.g. CBS, Manual" required>
-                            @error('Source') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            @error('Source')
+                            <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
 
@@ -112,9 +116,11 @@
             border: none;
             border-radius: 0.5rem;
         }
+
         .btn {
             font-size: 0.9rem;
         }
+
         .form-label {
             font-weight: 500;
         }

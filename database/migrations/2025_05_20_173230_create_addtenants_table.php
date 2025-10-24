@@ -35,6 +35,16 @@ return new class extends Migration {
      */
     public function down(): void
     {
+        DB::statement("
+            DECLARE @sql NVARCHAR(MAX) = '';
+            SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_NAME(parent_object_id)) +
+            ' DROP CONSTRAINT ' + QUOTENAME(name) + ';'
+            FROM sys.foreign_keys
+            WHERE referenced_object_id = OBJECT_ID('t_TenantMaintenance');
+            EXEC sp_executesql @sql;
+        ");
         Schema::dropIfExists('t_TenantMaintenance');
+
     }
+
 };

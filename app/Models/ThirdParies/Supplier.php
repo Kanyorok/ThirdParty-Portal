@@ -35,8 +35,8 @@ class Supplier extends ThirdParties
     ];
 
     protected $casts = [
-    'Active_Status' => 'boolean',
-    'CategoryId' => 'integer',
+        'Active_Status' => 'boolean',
+        'CategoryId' => 'integer',
     ];
 
     protected static function booted()
@@ -85,10 +85,10 @@ class Supplier extends ThirdParties
 
     public function scopeApprovedAndPrequalified($query)
     {
-    // Treat Active_Status true as approved/active supplier row for the round/category
-    return $query
-        ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
-        ->where('Active_Status', 1);
+        // Treat Active_Status true as approved/active supplier row for the round/category
+        return $query
+            ->whereHas('types', fn($q) => $q->where('Code', 'like', 'SU-%'))
+            ->where('Active_Status', 1);
     }
 
 

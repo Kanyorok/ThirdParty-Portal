@@ -18,11 +18,17 @@ class PettyCashReplenishmentBatch extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'FloatID','BankAccountID','BatchDate','TotalAmount','Status','CashbookID',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'FloatID', 'BankAccountID', 'BatchDate', 'TotalAmount', 'Status', 'CashbookID',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
-    public static function getPrimaryKey(): string { return 'BatchID'; }
+    public static function getPrimaryKey(): string
+    {
+        return 'BatchID';
+    }
 
-    public function float() { return $this->belongsTo(PettyCashFloat::class, 'FloatID','FloatID'); }
+    public function float()
+    {
+        return $this->belongsTo(PettyCashFloat::class, 'FloatID', 'FloatID');
+    }
 }

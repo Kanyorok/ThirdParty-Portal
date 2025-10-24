@@ -5,9 +5,10 @@
         width: 100% !important;
     }
 </style>
+
 <div class="d-flex flex-column" style="height: 85%; overflow-y: auto;">
-    <h2 class="text-center">{{ $file->Name }}</h2>
-    <h3>Current Repository : {{ $parent->Name }}</h3>
+    <h4 class="text-center">{{ $file->Name }}</h4>
+    <p>Current Repository : {{ (new \App\Services\DMS\RepositoryService($parent))->getPath() }}</p>
     <form action="{{ request()->url()  }}" method="post"
           id="changeRepositoryForm"> @csrf
         <div class="mb-3">
@@ -17,7 +18,9 @@
                 <option selected disabled>-- Select destination repo --</option>
                 @foreach($repositories as $repository)
                     @if($repository->Id !== $parent->Id)
-                        <option value="{{ $repository->RepositoryId }}">{{ $repository->Name }}</option>
+                        <option value="{{ $repository->RepositoryId }}">
+                            {{ (new \App\Services\DMS\RepositoryService($repository))->getPath() }}
+                        </option>
                     @endif
                 @endforeach
             </select>

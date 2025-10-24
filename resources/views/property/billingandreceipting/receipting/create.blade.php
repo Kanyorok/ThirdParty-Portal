@@ -6,7 +6,7 @@
 @endif
 
 <div class="container mt-4">
-  <p><small>Note: partial payment is applicable</small></p>
+    <p><small>Note: partial payment is applicable</small></p>
 
   <form action="{{ route('rentreceipt.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
@@ -17,20 +17,20 @@
 
         <div class="row g-3 mb-3">
           <div class="col-md-3">
-            <label class="form-label">Select Invoice<span class="text-danger">*</span></label>
+              <label class="form-label">Select Invoice<span class="text-danger">*</span></label>
             <select name="InvoiceID" id="invoice-select" class="form-select" required>
               <option value="">-- Select Invoice --</option>
               @foreach ($invoices as $invoice)
                 <option value="{{ $invoice->Id }}"
                   data-invoicenumber="{{ $invoice->InvoiceNumber ?? 'N/A' }}"
-                  data-tenantid-name="{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
+                        data-tenantid-name="{{ $invoice->lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
                   data-billingmonth-name="{{ $invoice->BillingMonth ?? 'N/A' }}"
-                  data-invoicedate-display="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '' }}"
-                  data-invoicedate-id="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : '' }}"
-                  data-rentamount="{{ $invoice->RentAmount ?? '0' }}"
-                  data-servicescharge="{{ $invoice->ServicesCharge ?? '0' }}"
-                  data-parkingfee="{{ $invoice->ParkingFee ?? '0' }}"
-                  data-othercharges="{{ $invoice->OtherCharges ?? '0' }}">
+                        data-invoicedate-display="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('d/m/Y') : '' }}"
+                        data-invoicedate-id="{{ $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : '' }}"
+                        data-rentamount="{{ $invoice->RentAmount ?? '0' }}"
+                        data-servicescharge="{{ $invoice->ServicesCharge ?? '0' }}"
+                        data-parkingfee="{{ $invoice->ParkingFee ?? '0' }}"
+                        data-othercharges="{{ $invoice->OtherCharges ?? '0' }}">
                   {{ $invoice->InvoiceNumber }}
                 </option>
               @endforeach
@@ -38,31 +38,31 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Invoice Number<span class="text-danger">*</span></label>
+              <label class="form-label">Invoice Number<span class="text-danger">*</span></label>
             <input type="text" id="invoice-display" class="form-control" readonly>
           </div>
         </div>
 
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="form-label">Tenant Name<span class="text-danger">*</span></label>
+              <label class="form-label">Tenant Name<span class="text-danger">*</span></label>
             <input type="text" id="tenantid-display" class="form-control" readonly>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Billing Month<span class="text-danger">*</span></label>
+              <label class="form-label">Billing Month<span class="text-danger">*</span></label>
             <input type="text" id="billingmonth-display" class="form-control" readonly>
             <input type="hidden" name="BillingMonth" id="billingmonth-id">
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Invoice Date<span class="text-danger">*</span></label>
-            <input type="text" id="invoicedate-display" class="form-control" readonly>
+              <label class="form-label">Invoice Date<span class="text-danger">*</span></label>
+              <input type="text" id="invoicedate-display" class="form-control" readonly>
             <input type="hidden" name="InvoiceDate" id="invoicedate-id">
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Rent Amount<span class="text-danger">*</span></label>
+              <label class="form-label">Rent Amount<span class="text-danger">*</span></label>
             <input type="number" id="rentamount-display" class="form-control" readonly>
             <input type="hidden" name="RentAmount" id="rentamount-id">
           </div>
@@ -96,22 +96,23 @@
             <input type="number" name="AmountPaidSoFar" id="amount_paid_so_far" class="form-control" readonly>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Balance<span class="text-danger">*</span></label>
+              <label class="form-label">Balance<span class="text-danger">*</span></label>
             <input type="number" class="form-control" name="Balance" id="balance" readonly step="0.01">
           </div>
           <div class="col-md-3">
-            <label class="form-label">Payment Date<span class="text-danger">*</span></label>
-            <input type="date" class="form-control" name="PaymentDate" id="paymentdate" required value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
+              <label class="form-label">Payment Date<span class="text-danger">*</span></label>
+              <input type="date" class="form-control" name="PaymentDate" id="paymentdate" required
+                     value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
           </div>
         </div>
 
         <div class="row g-3 mb-3">
           <div class="col-md-4">
-            <label class="form-label">Amount Paid Now<span class="text-danger">*</span></label>
+              <label class="form-label">Amount Paid Now<span class="text-danger">*</span></label>
             <input type="number" class="form-control" placeholder="e.g. 5000" name="AmountPaidNow" id="amount_paid_now" required min="1">
           </div>
           <div class="col-md-4">
-            <label class="form-label">Payment Method<span class="text-danger">*</span></label>
+              <label class="form-label">Payment Method<span class="text-danger">*</span></label>
             <select class="form-select" name="PaymentMethod" required>
               <option value="">----Select Payment Method---</option>
               @foreach ($codes as $code)
@@ -120,7 +121,7 @@
             </select>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Reference / Receipt No<span class="text-danger">*</span></label>
+              <label class="form-label">Reference / Receipt No<span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="ReferenceNo" placeholder="e.g. MPESA12345" required maxlength="100">
           </div>
         </div>
@@ -130,10 +131,10 @@
           <textarea class="form-control" name="Remarks" rows="2" placeholder="e.g. Paid KES 5,000 - next part due 10th"></textarea>
         </div>
 
-        <button type="submit" class="btn btn-success"
-          onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
-          Record Payment
-        </button>
+          <button type="submit" class="btn btn-success"
+                  onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
+              Record Payment
+          </button>
 
       </div>
     </div>
@@ -166,19 +167,19 @@
     document.getElementById('billingmonth-display').value = selected.getAttribute('data-billingmonth-name');
     document.getElementById('billingmonth-id').value = selected.getAttribute('data-billingmonth-name');
 
-    // Invoice date
-    document.getElementById('invoicedate-display').value = selected.getAttribute('data-invoicedate-display');
+      // Invoice date
+      document.getElementById('invoicedate-display').value = selected.getAttribute('data-invoicedate-display');
     document.getElementById('invoicedate-id').value = selected.getAttribute('data-invoicedate-id');
 
-    // Rent & charges
-    document.getElementById('rentamount-display').value = selected.getAttribute('data-rentamount');
-    document.getElementById('rentamount-id').value = selected.getAttribute('data-rentamount');
-    document.getElementById('servicescharge-display').value = selected.getAttribute('data-servicescharge');
-    document.getElementById('servicescharge-id').value = selected.getAttribute('data-servicescharge');
-    document.getElementById('parkingfee-display').value = selected.getAttribute('data-parkingfee');
-    document.getElementById('parkingfee-id').value = selected.getAttribute('data-parkingfee');
-    document.getElementById('othercharges-display').value = selected.getAttribute('data-othercharges');
-    document.getElementById('othercharges-id').value = selected.getAttribute('data-othercharges');
+      // Rent & charges
+      document.getElementById('rentamount-display').value = selected.getAttribute('data-rentamount');
+      document.getElementById('rentamount-id').value = selected.getAttribute('data-rentamount');
+      document.getElementById('servicescharge-display').value = selected.getAttribute('data-servicescharge');
+      document.getElementById('servicescharge-id').value = selected.getAttribute('data-servicescharge');
+      document.getElementById('parkingfee-display').value = selected.getAttribute('data-parkingfee');
+      document.getElementById('parkingfee-id').value = selected.getAttribute('data-parkingfee');
+      document.getElementById('othercharges-display').value = selected.getAttribute('data-othercharges');
+      document.getElementById('othercharges-id').value = selected.getAttribute('data-othercharges');
 
     const invoiceId = selected.value;
     if (invoiceId) {

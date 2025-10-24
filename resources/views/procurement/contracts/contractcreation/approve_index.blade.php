@@ -70,15 +70,24 @@
                                 <label class="form-label">Status</label>
                                 <select name="status_filter" class="form-select">
                                     <option value="">All Status</option>
-                                    <option value="Draft Created" {{ request('status_filter') === 'Draft Created' ? 'selected' : '' }}>Pending Review</option>
-                                    <option value="Under Review" {{ request('status_filter') === 'Under Review' ? 'selected' : '' }}>Under Review</option>
-                                    <option value="Approved" {{ request('status_filter') === 'Approved' ? 'selected' : '' }}>Approved</option>
+                                    <option
+                                        value="Draft Created" {{ request('status_filter') === 'Draft Created' ? 'selected' : '' }}>
+                                        Pending Review
+                                    </option>
+                                    <option
+                                        value="Under Review" {{ request('status_filter') === 'Under Review' ? 'selected' : '' }}>
+                                        Under Review
+                                    </option>
+                                    <option
+                                        value="Approved" {{ request('status_filter') === 'Approved' ? 'selected' : '' }}>
+                                        Approved
+                                    </option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Search</label>
-                                <input type="text" name="search" class="form-control" 
-                                       placeholder="Search by contract ref, title, or supplier..." 
+                                <input type="text" name="search" class="form-control"
+                                       placeholder="Search by contract ref, title, or supplier..."
                                        value="{{ request('search') }}">
                             </div>
                             <div class="col-md-3">
@@ -99,128 +108,132 @@
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Contract Info</th>
-                                        <th>Tender Details</th>
-                                        <th>Supplier</th>
-                                        <th>Value</th>
-                                        <th>Status</th>
-                                        <th>Duration</th>
-                                        <th class="text-center">Actions</th>
-                                    </tr>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Contract Info</th>
+                                    <th>Tender Details</th>
+                                    <th>Supplier</th>
+                                    <th>Value</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($contracts ?? [] as $index => $contract)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>
+                                @forelse($contracts ?? [] as $index => $contract)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>
+                                            <div>
+                                                <strong
+                                                    class="text-primary">{{ $contract->ContractRef ?? 'PENDING' }}</strong>
+                                                @if($contract->CreatedOn)
+                                                    <div class="text-muted small">
+                                                        Created: {{ $contract->CreatedOn->format('d/m/Y') }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($contract->tender)
                                                 <div>
-                                                    <strong class="text-primary">{{ $contract->ContractRef ?? 'PENDING' }}</strong>
-                                                    @if($contract->CreatedOn)
+                                                    <strong>{{ $contract->tender->TenderNo }}</strong>
+                                                    <div class="text-muted small">
+                                                        {{ Str::limit($contract->tender->Title, 40) }}
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($contract->winningSupplier && $contract->winningSupplier->thirdParty)
+                                                <div>
+                                                    <strong>{{ $contract->winningSupplier->thirdParty->TradingName ?? $contract->winningSupplier->thirdParty->Name }}</strong>
+                                                    @if($contract->winningSupplier->thirdParty->ContactPerson)
                                                         <div class="text-muted small">
-                                                            Created: {{ $contract->CreatedOn->format('d/m/Y') }}
+                                                            {{ $contract->winningSupplier->thirdParty->ContactPerson }}
                                                         </div>
                                                     @endif
                                                 </div>
-                                            </td>
-                                            <td>
-                                                @if($contract->tender)
-                                                    <div>
-                                                        <strong>{{ $contract->tender->TenderNo }}</strong>
-                                                        <div class="text-muted small">
-                                                            {{ Str::limit($contract->tender->Title, 40) }}
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($contract->winningSupplier && $contract->winningSupplier->thirdParty)
-                                                    <div>
-                                                        <strong>{{ $contract->winningSupplier->thirdParty->TradingName ?? $contract->winningSupplier->thirdParty->Name }}</strong>
-                                                        @if($contract->winningSupplier->thirdParty->ContactPerson)
-                                                            <div class="text-muted small">
-                                                                {{ $contract->winningSupplier->thirdParty->ContactPerson }}
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($contract->ContractValue)
-                                                    <strong class="text-success">
-                                                        {{ number_format($contract->ContractValue, 2) }}
-                                                    </strong>
-                                                    <div class="text-muted small">
-                                                        {{ is_object($contract->tender->Currency) ? $contract->tender->Currency->Code : ($contract->tender->Currency ?? 'KES') }}
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($contract->ContractValue)
+                                                <strong class="text-success">
+                                                    {{ number_format($contract->ContractValue, 2) }}
+                                                </strong>
+                                                <div class="text-muted small">
+                                                    {{ is_object($contract->tender->Currency) ? $contract->tender->Currency->Code : ($contract->tender->Currency ?? 'KES') }}
+                                                </div>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                                 <span class="badge {{ $contract->contract_status_badge['class'] }}">
                                                     {{ $contract->contract_status_badge['text'] }}
                                                 </span>
-                                            </td>
-                                            <td>
-                                                @if($contract->ContractStartDate && $contract->ContractEndDate)
-                                                    <div class="text-success small">
-                                                        <strong>Start:</strong> {{ $contract->ContractStartDate->format('d/m/Y') }}
-                                                    </div>
-                                                    <div class="text-danger small">
-                                                        <strong>End:</strong> {{ $contract->ContractEndDate->format('d/m/Y') }}
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted">Duration not set</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group" role="group">
-                                                    <a href="{{ route('contracts.show', $contract->Id) }}" 
-                                                       class="btn btn-sm btn-outline-info" title="View Contract">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    
-                                                    @if($contract->ContractStatus === 'Under Review')
-                                                        <button type="button" class="btn btn-sm btn-success" 
-                                                                onclick="approveContract({{ $contract->Id }})" title="Approve Contract">
-                                                            <i class="fas fa-check"></i> Approve
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-danger" 
-                                                                onclick="rejectContract({{ $contract->Id }})" title="Reject Contract">
-                                                            <i class="fas fa-times"></i> Reject
-                                                        </button>
-                                                    @elseif($contract->ContractStatus === 'Draft Created')
-                                                        <span class="badge bg-secondary">Awaiting Review</span>
-                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                                onclick="reviewContract({{ $contract->Id }})" title="View Details">
-                                                            <i class="fas fa-eye"></i> View
-                                                        </button>
-                                                    @elseif($contract->ContractStatus === 'Approved')
-                                                        <span class="badge bg-success">
+                                        </td>
+                                        <td>
+                                            @if($contract->ContractStartDate && $contract->ContractEndDate)
+                                                <div class="text-success small">
+                                                    <strong>Start:</strong> {{ $contract->ContractStartDate->format('d/m/Y') }}
+                                                </div>
+                                                <div class="text-danger small">
+                                                    <strong>End:</strong> {{ $contract->ContractEndDate->format('d/m/Y') }}
+                                                </div>
+                                            @else
+                                                <span class="text-muted">Duration not set</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('contracts.show', $contract->Id) }}"
+                                                   class="btn btn-sm btn-outline-info" title="View Contract">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+
+                                                @if($contract->ContractStatus === 'Under Review')
+                                                    <button type="button" class="btn btn-sm btn-success"
+                                                            onclick="approveContract({{ $contract->Id }})"
+                                                            title="Approve Contract">
+                                                        <i class="fas fa-check"></i> Approve
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger"
+                                                            onclick="rejectContract({{ $contract->Id }})"
+                                                            title="Reject Contract">
+                                                        <i class="fas fa-times"></i> Reject
+                                                    </button>
+                                                @elseif($contract->ContractStatus === 'Draft Created')
+                                                    <span class="badge bg-secondary">Awaiting Review</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                                            onclick="reviewContract({{ $contract->Id }})"
+                                                            title="View Details">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </button>
+                                                @elseif($contract->ContractStatus === 'Approved')
+                                                    <span class="badge bg-success">
                                                             <i class="fas fa-check-circle"></i> Approved
                                                         </span>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="8" class="text-center py-5">
-                                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                                <h6 class="text-muted">No Contracts in Approval Queue</h6>
-                                                <p class="text-muted">No contracts pending approval at this time.</p>
-                                                <a href="{{ route('contracts.index') }}" class="btn btn-primary">
-                                                    <i class="fas fa-plus"></i> Create New Contract
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforelse
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5">
+                                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                            <h6 class="text-muted">No Contracts in Approval Queue</h6>
+                                            <p class="text-muted">No contracts pending approval at this time.</p>
+                                            <a href="{{ route('contracts.index') }}" class="btn btn-primary">
+                                                <i class="fas fa-plus"></i> Create New Contract
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -250,7 +263,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Approval Remarks</label>
-                            <textarea name="approval_remarks" class="form-control" rows="3" 
+                            <textarea name="approval_remarks" class="form-control" rows="3"
                                       placeholder="Enter approval remarks and any conditions..."></textarea>
                         </div>
                     </div>
@@ -301,13 +314,13 @@
             form.action = `{{ url('/procurement/contracts') }}/${contractId}/approve`;
             new bootstrap.Modal(document.getElementById('approveModal')).show();
         }
-        
+
         function rejectContract(contractId) {
             const form = document.getElementById('rejectForm');
             form.action = `{{ url('/procurement/contracts') }}/${contractId}/reject`;
             new bootstrap.Modal(document.getElementById('rejectModal')).show();
         }
-        
+
         function reviewContract(contractId) {
             window.location.href = `{{ url('/procurement/contracts') }}/${contractId}`;
         }

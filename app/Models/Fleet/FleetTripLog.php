@@ -52,7 +52,7 @@ class FleetTripLog extends Model
     {
         return 'TripId';
     }
-   
+
     public function parentTripType()
     {
         return $this->belongsTo(CodeDetail::class, 'TripType', 'ID');
@@ -78,7 +78,6 @@ class FleetTripLog extends Model
         return $this->hasMany(FleetTripLog::class, 'ParentTripID', 'Id');
     }
 
-    
     public function creator()
     {
         return $this->belongsTo(User::class, 'CreatedBy');

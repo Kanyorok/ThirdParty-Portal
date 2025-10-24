@@ -34,14 +34,16 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $r->budget->Name ?? '—' }}</td>
-{{--                                <td>{{ $r->fromLine->LineName ?? '—Null Line-' }}</td>--}}
+                                {{--                                <td>{{ $r->fromLine->LineName ?? '—Null Line-' }}</td>--}}
                                 <td>
                                     <div>{{ $r->fromLine->LineName ?? '—Null Line-' }}</div>
-                                    <small class="text-muted">{{ $r->fromLine->department->Name.' Dept' ?? '—No Department—' }}</small>
+                                    <small
+                                        class="text-muted">{{ $r->fromLine->department->Name.' Dept' ?? '—No Department—' }}</small>
                                 </td>
                                 <td>
                                     <div>{{ $r->toLine->LineName ?? '—Null Line-' }}</div>
                                     <small class="text-muted">{{ $r->toLine->department?->Name.' Dept' ?? '—No Department—' }}</small>
+
                                 </td>
 
                                 <td>{{ number_format($r->Amount, 2) }}</td>
@@ -64,6 +66,7 @@
                                            title="View">
                                             <i class="fas fa-eye"></i>
                                         </a>
+
                                 </td>
 
                             </tr>
@@ -124,9 +127,11 @@
             border: none;
             border-radius: 0.5rem;
         }
+
         .btn {
             font-size: 0.85rem;
         }
+
         .table-hover tbody tr:hover {
             background-color: #f8f9fa;
             transition: background-color 0.2s ease;

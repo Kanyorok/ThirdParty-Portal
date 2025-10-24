@@ -25,7 +25,7 @@ class PriceManagementExport implements FromArray, WithHeadings
                 $item->price->EffectiveTo ?? '-',
                 $item->price->IsDefault ?? 0,
                 $item->price->Source ?? '-',
-                
+
             ];
         })->toArray();
     }
