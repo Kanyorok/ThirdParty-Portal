@@ -35,10 +35,12 @@ class InsuranceProvider extends Model
     {
         return 'InsuranceProvidersId';
     }
+
     public function getProductByProvider()
     {
         return $this->hasMany(InsuranceProduct::class, 'InsuranceproviderID', 'Id');
     }
+
     public function country()
     {
         return $this->belongsTo(Country::class, 'Country', 'Id');

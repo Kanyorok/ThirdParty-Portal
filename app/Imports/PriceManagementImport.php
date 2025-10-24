@@ -19,7 +19,7 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
     {
         $data = $row->toArray();
 
-        $itemCode    = $data['itemcode'] ?? $data['item_code'] ?? null;
+        $itemCode = $data['itemcode'] ?? $data['item_code'] ?? null;
         $actualPrice = $data['actualprice'] ?? $data['price'] ?? null;
 
         if (empty($itemCode) || empty($actualPrice)) {
@@ -40,15 +40,15 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
 
             // Normalize incoming row
             $newData = [
-                'ItemID'        => $item->Id,
-                'ItemCode'      => $itemCode,
-                'UOM'           => $uomId,
-                'ActualPrice'   => (float) $actualPrice,
-                'CurrencyCode'  => $data['currencycode'] ?? $data['currency'] ?? 'KES',
+                'ItemID' => $item->Id,
+                'ItemCode' => $itemCode,
+                'UOM' => $uomId,
+                'ActualPrice' => (float)$actualPrice,
+                'CurrencyCode' => $data['currencycode'] ?? $data['currency'] ?? 'KES',
                 'EffectiveFrom' => $this->parseDate($data['effectivefrom'] ?? $data['effective_from'] ?? null),
-                'EffectiveTo'   => $this->parseDate($data['effectiveto'] ?? $data['effective_to'] ?? null),
-                'IsDefault'     => $this->parseBoolean($data['isdefault'] ?? $data['default'] ?? $data['is_default'] ?? 0),
-                'Source'        => $data['source'] ?? 'ExcelImport',
+                'EffectiveTo' => $this->parseDate($data['effectiveto'] ?? $data['effective_to'] ?? null),
+                'IsDefault' => $this->parseBoolean($data['isdefault'] ?? $data['default'] ?? $data['is_default'] ?? 0),
+                'Source' => $data['source'] ?? 'ExcelImport',
             ];
 
             // Find the latest active price for this item and UOM
@@ -88,9 +88,9 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
 
             // Create new price record
             $created = PriceManagement::create(array_merge($newData, [
-                'PriceID'    => $priceId,
-                'CreatedBy'  => Auth::id() ?? 1,
-                'CreatedOn'  => now(),
+                'PriceID' => $priceId,
+                'CreatedBy' => Auth::id() ?? 1,
+                'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id() ?? 1,
                 'ModifiedOn' => now(),
             ]));
@@ -118,11 +118,11 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
         try {
             // Handle Excel serial numbers and numeric-like strings
             if (is_numeric($value)) {
-                $dateTime = ExcelDate::excelToDateTimeObject((float) $value);
+                $dateTime = ExcelDate::excelToDateTimeObject((float)$value);
                 return Carbon::instance($dateTime)->format('Y-m-d');
             }
             // Fallback to Carbon parsing for string dates
-            return Carbon::parse((string) $value)->format('Y-m-d');
+            return Carbon::parse((string)$value)->format('Y-m-d');
         } catch (\Throwable $e) {
             Log::warning("Invalid date format: {$value}");
             return null;
@@ -138,9 +138,9 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
             return $value ? 1 : 0;
         }
         if (is_numeric($value)) {
-            return ((int) $value) ? 1 : 0;
+            return ((int)$value) ? 1 : 0;
         }
-        $normalized = strtolower(trim((string) $value));
+        $normalized = strtolower(trim((string)$value));
         $truthy = [
             '1', 'true', 'yes', 'y', 'on', '=true()', '✓', 'check', 'checked'
         ];
@@ -163,24 +163,24 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
     {
         // If explicit numeric Id provided
         if ($uomInput !== null && $uomInput !== '') {
-            $candidate = trim((string) $uomInput);
+            $candidate = trim((string)$uomInput);
             if (ctype_digit($candidate)) {
-                $uom = UnitOfMeasure::where('Id', (int) $candidate)->first();
+                $uom = UnitOfMeasure::where('Id', (int)$candidate)->first();
                 if ($uom) {
-                    return (int) $uom->Id;
+                    return (int)$uom->Id;
                 }
             }
             // Try by code
             $uom = UnitOfMeasure::where('Code', $candidate)->first();
             if ($uom) {
-                return (int) $uom->Id;
+                return (int)$uom->Id;
             }
             Log::warning("UOM not found for input: {$candidate}");
         }
 
         // Fallback to item's configured UOM
         if (!empty($item->UOM)) {
-            return (int) $item->UOM;
+            return (int)$item->UOM;
         }
         return null;
     }

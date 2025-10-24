@@ -32,6 +32,7 @@ return new class extends Migration {
             $table->index(['IsActive']);
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('t_PettyCashFloats');

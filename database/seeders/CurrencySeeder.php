@@ -16,7 +16,6 @@ class CurrencySeeder extends Seeder
         $user = SystemHelper::user();
         $date = now();
         $source = 'https://raw.githubusercontent.com/ourworldincode/currency/main/currencies.json';
-
         try {
             $json = file_get_contents($source);
             if (!is_string($json)) {

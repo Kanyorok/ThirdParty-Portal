@@ -73,7 +73,9 @@ class PropertyMaintenanceAssign extends Model
     {
         return $this->belongsTo(User::class, 'ModifiedBy');
     }
-    public function taskcompletion(){
-        return $this->belongsTo(PropertyMaintenanceWorkCompletion::class,'RequestNumber','RequestNumber');
+
+    public function taskcompletion()
+    {
+        return $this->belongsTo(PropertyMaintenanceWorkCompletion::class, 'RequestNumber', 'RequestNumber');
     }
 }

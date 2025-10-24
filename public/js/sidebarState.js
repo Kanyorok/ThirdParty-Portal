@@ -3,163 +3,173 @@
 // Uses localStorage per user; idempotent restore
 
 export const SidebarState = (() => {
-	let cfg = {
-		rootSelector: 'nav.pc-sidebar',
-		itemSelector: 'li.pc-item',
-		linkSelector: 'a.pc-link',
-		submenuSelector: '.pc-submenu',
-		activeItemClass: 'active',
-		expandedItemClass: 'pc-trigger',
-		userKey: 'guest'
-	};
+    let cfg = {
+        rootSelector: 'nav.pc-sidebar',
+        itemSelector: 'li.pc-item',
+        linkSelector: 'a.pc-link',
+        submenuSelector: '.pc-submenu',
+        activeItemClass: 'active',
+        expandedItemClass: 'pc-trigger',
+        userKey: 'guest'
+    };
 
-	const storageKey = () => `erp:sidebar:${cfg.userKey}`;
-	const q = (sel, root = document) => root.querySelector(sel);
-	const qa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+    const storageKey = () => `erp:sidebar:${cfg.userKey}`;
+    const q = (sel, root = document) => root.querySelector(sel);
+    const qa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-	function read() {
-		try { return JSON.parse(localStorage.getItem(storageKey()) || '{}'); } catch { return {}; }
-	}
-	function write(state) {
-		localStorage.setItem(storageKey(), JSON.stringify(state));
-	}
+    function read() {
+        try {
+            return JSON.parse(localStorage.getItem(storageKey()) || '{}');
+        } catch {
+            return {};
+        }
+    }
 
-	function normalizePath(p) {
-		try { return new URL(p, location.href).pathname.replace(/\/+$|^\/+/, '/'); } catch { return ('' + p).replace(/\/+$/, ''); }
-	}
+    function write(state) {
+        localStorage.setItem(storageKey(), JSON.stringify(state));
+    }
 
-	function getState() {
-		const s = read();
-		return {
-			activeRouteId: s.activeRouteId ?? (window.__DEFAULT_ACTIVE_ROUTE__ || normalizePath(location.pathname)),
-			openItemIds: Array.isArray(s.openItemIds) ? s.openItemIds : []
-		};
-	}
+    function normalizePath(p) {
+        try {
+            return new URL(p, location.href).pathname.replace(/\/+$|^\/+/, '/');
+        } catch {
+            return ('' + p).replace(/\/+$/, '');
+        }
+    }
 
-	function setActive(routeId) {
-		const state = getState();
-		state.activeRouteId = routeId || null;
-		write(state);
-	}
+    function getState() {
+        const s = read();
+        return {
+            activeRouteId: s.activeRouteId ?? (window.__DEFAULT_ACTIVE_ROUTE__ || normalizePath(location.pathname)),
+            openItemIds: Array.isArray(s.openItemIds) ? s.openItemIds : []
+        };
+    }
 
-	function setOpenItemIds(ids) {
-		const state = getState();
-		state.openItemIds = Array.from(new Set(ids || []));
-		write(state);
-	}
+    function setActive(routeId) {
+        const state = getState();
+        state.activeRouteId = routeId || null;
+        write(state);
+    }
 
-	function computeAncestorItemIds(itemEl, root) {
-		const ids = new Set();
-		let current = itemEl;
-		while (current && current !== root) {
-			if (current.matches && current.matches(cfg.itemSelector)) {
-				const pid = current.dataset.parentId;
-				if (pid) ids.add(pid);
-			}
-			current = current.parentElement;
-		}
-		return Array.from(ids);
-	}
+    function setOpenItemIds(ids) {
+        const state = getState();
+        state.openItemIds = Array.from(new Set(ids || []));
+        write(state);
+    }
 
-	function clearActiveMarks(root) {
-		qa(`${cfg.itemSelector}.${cfg.activeItemClass}`, root).forEach(li => li.classList.remove(cfg.activeItemClass));
-	}
+    function computeAncestorItemIds(itemEl, root) {
+        const ids = new Set();
+        let current = itemEl;
+        while (current && current !== root) {
+            if (current.matches && current.matches(cfg.itemSelector)) {
+                const pid = current.dataset.parentId;
+                if (pid) ids.add(pid);
+            }
+            current = current.parentElement;
+        }
+        return Array.from(ids);
+    }
 
-	// Scroll helpers: keep the active item visible inside the sidebar
-	function getScrollContainer(root) {
-		// Prefer inner scroll area if present (AblePro uses .navbar-content)
-		return q('.navbar-content', root) || root;
-	}
+    function clearActiveMarks(root) {
+        qa(`${cfg.itemSelector}.${cfg.activeItemClass}`, root).forEach(li => li.classList.remove(cfg.activeItemClass));
+    }
 
-	function isInView(el, container, margin = 64) {
-		try {
-			const er = el.getBoundingClientRect();
-			const cr = (container === document || container === document.body)
-				? { top: 0, bottom: (window.innerHeight || document.documentElement.clientHeight) }
-				: container.getBoundingClientRect();
-			return er.top >= cr.top + margin && er.bottom <= cr.bottom - margin;
-		} catch {
-			return true;
-		}
-	}
+    // Scroll helpers: keep the active item visible inside the sidebar
+    function getScrollContainer(root) {
+        // Prefer inner scroll area if present (AblePro uses .navbar-content)
+        return q('.navbar-content', root) || root;
+    }
 
-	function scrollIntoCenterIfNeeded(el, root) {
-		try {
-			const container = getScrollContainer(root);
-			if (!isInView(el, container)) {
-				el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-			}
-		} catch {}
-	}
+    function isInView(el, container, margin = 64) {
+        try {
+            const er = el.getBoundingClientRect();
+            const cr = (container === document || container === document.body)
+                ? {top: 0, bottom: (window.innerHeight || document.documentElement.clientHeight)}
+                : container.getBoundingClientRect();
+            return er.top >= cr.top + margin && er.bottom <= cr.bottom - margin;
+        } catch {
+            return true;
+        }
+    }
 
-	function applyToDom() {
-		const root = q(cfg.rootSelector) || document;
-		const { activeRouteId, openItemIds } = getState();
+    function scrollIntoCenterIfNeeded(el, root) {
+        try {
+            const container = getScrollContainer(root);
+            if (!isInView(el, container)) {
+                el.scrollIntoView({behavior: 'smooth', block: 'center', inline: 'nearest'});
+            }
+        } catch {
+        }
+    }
 
-		clearActiveMarks(root);
+    function applyToDom() {
+        const root = q(cfg.rootSelector) || document;
+        const {activeRouteId, openItemIds} = getState();
 
-		// Expand saved ancestors
-		openItemIds.forEach(id => {
-			const li = q(`${cfg.itemSelector}[data-item-id="${id}"]`, root);
-			if (li) li.classList.add(cfg.expandedItemClass);
-		});
+        clearActiveMarks(root);
 
-		// Mark active item
-		if (activeRouteId) {
-			const link = q(`${cfg.linkSelector}[data-route-id="${activeRouteId}"]`, root) || q(`${cfg.linkSelector}[data-route="${activeRouteId}"]`, root);
-			const item = link?.closest(cfg.itemSelector);
-			if (item) item.classList.add(cfg.activeItemClass);
-			if (item) {
-				const ids = computeAncestorItemIds(item, root);
-				ids.forEach(id => {
-					const li = q(`${cfg.itemSelector}[data-item-id="${id}"]`, root);
-					if (li) li.classList.add(cfg.expandedItemClass);
-				});
-				// After classes are applied, ensure the active link is visible
-				if (link) {
-					setTimeout(() => scrollIntoCenterIfNeeded(link, root), 0);
-				}
-			}
-		}
-	}
+        // Expand saved ancestors
+        openItemIds.forEach(id => {
+            const li = q(`${cfg.itemSelector}[data-item-id="${id}"]`, root);
+            if (li) li.classList.add(cfg.expandedItemClass);
+        });
 
-	function handleSidebarClick(e) {
-		const link = e.target.closest(cfg.linkSelector);
-		if (!link) return;
+        // Mark active item
+        if (activeRouteId) {
+            const link = q(`${cfg.linkSelector}[data-route-id="${activeRouteId}"]`, root) || q(`${cfg.linkSelector}[data-route="${activeRouteId}"]`, root);
+            const item = link?.closest(cfg.itemSelector);
+            if (item) item.classList.add(cfg.activeItemClass);
+            if (item) {
+                const ids = computeAncestorItemIds(item, root);
+                ids.forEach(id => {
+                    const li = q(`${cfg.itemSelector}[data-item-id="${id}"]`, root);
+                    if (li) li.classList.add(cfg.expandedItemClass);
+                });
+                // After classes are applied, ensure the active link is visible
+                if (link) {
+                    setTimeout(() => scrollIntoCenterIfNeeded(link, root), 0);
+                }
+            }
+        }
+    }
 
-		const href = link.getAttribute('href');
-		if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    function handleSidebarClick(e) {
+        const link = e.target.closest(cfg.linkSelector);
+        if (!link) return;
 
-		const routeId = link.dataset.routeId || link.dataset.route || normalizePath(href);
-		setActive(normalizePath(routeId));
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
 
-		const item = link.closest(cfg.itemSelector);
-		const root = q(cfg.rootSelector) || document;
-		const openIds = item ? computeAncestorItemIds(item, root) : [];
-		setOpenItemIds(openIds);
+        const routeId = link.dataset.routeId || link.dataset.route || normalizePath(href);
+        setActive(normalizePath(routeId));
 
-		applyToDom();
-	}
+        const item = link.closest(cfg.itemSelector);
+        const root = q(cfg.rootSelector) || document;
+        const openIds = item ? computeAncestorItemIds(item, root) : [];
+        setOpenItemIds(openIds);
 
-	function bind() {
-		const root = q(cfg.rootSelector) || document;
-		root.addEventListener('click', handleSidebarClick, true);
+        applyToDom();
+    }
 
-		window.addEventListener('popstate', applyToDom);
-		document.addEventListener('partial:loaded', applyToDom);
-		if (window.htmx) document.body.addEventListener('htmx:afterSwap', applyToDom);
-	}
+    function bind() {
+        const root = q(cfg.rootSelector) || document;
+        root.addEventListener('click', handleSidebarClick, true);
 
-	function init(options = {}) {
-		cfg = { ...cfg, ...options };
-		// Seed data-route-id where missing
-		(q(cfg.rootSelector) || document).querySelectorAll(cfg.linkSelector).forEach(a => {
-			if (!a.dataset.routeId && a.dataset.route) a.dataset.routeId = normalizePath(a.dataset.route);
-		});
-		applyToDom();
-		bind();
-	}
+        window.addEventListener('popstate', applyToDom);
+        document.addEventListener('partial:loaded', applyToDom);
+        if (window.htmx) document.body.addEventListener('htmx:afterSwap', applyToDom);
+    }
 
-	return { init, restore: applyToDom, setActive, setOpenItemIds };
+    function init(options = {}) {
+        cfg = {...cfg, ...options};
+        // Seed data-route-id where missing
+        (q(cfg.rootSelector) || document).querySelectorAll(cfg.linkSelector).forEach(a => {
+            if (!a.dataset.routeId && a.dataset.route) a.dataset.routeId = normalizePath(a.dataset.route);
+        });
+        applyToDom();
+        bind();
+    }
+
+    return {init, restore: applyToDom, setActive, setOpenItemIds};
 })();
 

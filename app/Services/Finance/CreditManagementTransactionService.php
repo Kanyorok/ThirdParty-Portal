@@ -13,7 +13,7 @@ use Carbon\Carbon;
 class CreditManagementTransactionService
 {
     protected TransactionService $transactionService;
-    
+
     // Module and Transaction Type IDs from your seeder
     const FINANCE_MODULE_ID = 1100000;
     const CREDIT_MANAGEMENT_TRANSACTION_TYPE = 21; // From your seeder mapping
@@ -30,23 +30,23 @@ class CreditManagementTransactionService
     {
         try {
             $payload = [
-                'ModuleID'          => self::FINANCE_MODULE_ID,
-                'ThirdPartyID'      => $credit->CustomerID,
+                'ModuleID' => self::FINANCE_MODULE_ID,
+                'ThirdPartyID' => $credit->CustomerID,
                 'TransactionTypeID' => self::CREDIT_MANAGEMENT_TRANSACTION_TYPE,
-                'TransactionType'   => 'Credit Management - Initial Approval',
-                'ReferenceNumber'   => "CREDIT-{$credit->Id}",
-                'TransactionDate'   => $credit->EffectiveFrom ?? now()->toDateString(),
-                'Amount'            => (float)$credit->CreditLimit,
-                'TaxAmount'         => 0.00,
-                'BranchID'          => session('LoginBranchId', 1),
-                'DepartmentID'      => null,
-                'CurrencyID'        => 56, // KES
-                'CurrencyCode'      => 'KES',
-                'ExchangeRate'      => 1.0,
-                'Narration'         => "Credit limit approved for {$credit->customer->ThirdPartyName}: {$approvalReason}",
-                'SourceTable'       => 't_FinanceCreditManagement',
+                'TransactionType' => 'Credit Management - Initial Approval',
+                'ReferenceNumber' => "CREDIT-{$credit->Id}",
+                'TransactionDate' => $credit->EffectiveFrom ?? now()->toDateString(),
+                'Amount' => (float)$credit->CreditLimit,
+                'TaxAmount' => 0.00,
+                'BranchID' => session('LoginBranchId', 1),
+                'DepartmentID' => null,
+                'CurrencyID' => 56, // KES
+                'CurrencyCode' => 'KES',
+                'ExchangeRate' => 1.0,
+                'Narration' => "Credit limit approved for {$credit->customer->ThirdPartyName}: {$approvalReason}",
+                'SourceTable' => 't_FinanceCreditManagement',
                 'SystemDescription' => "Initial credit approval - Profile #{$credit->Id}",
-                'IdempotencyKey'    => "credit_approval_{$credit->Id}",
+                'IdempotencyKey' => "credit_approval_{$credit->Id}",
             ];
 
             $result = $this->transactionService->postFromTypeMapping($payload);
@@ -72,7 +72,7 @@ class CreditManagementTransactionService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             throw new \Exception("Failed to post GL transactions for credit approval: " . $e->getMessage());
         }
     }
@@ -83,31 +83,31 @@ class CreditManagementTransactionService
     public function postCreditAdjustment(FinanceCreditAdjustment $adjustment): array
     {
         try {
-            $transactionType = match($adjustment->AdjustmentType) {
+            $transactionType = match ($adjustment->AdjustmentType) {
                 'increase' => 'Credit Management - Credit Increase',
-                'decrease' => 'Credit Management - Credit Decrease', 
+                'decrease' => 'Credit Management - Credit Decrease',
                 'revision' => 'Credit Management - Credit Revision',
                 default => 'Credit Management - Adjustment'
             };
 
             $payload = [
-                'ModuleID'          => self::FINANCE_MODULE_ID,
-                'ThirdPartyID'      => $adjustment->CustomerID,
+                'ModuleID' => self::FINANCE_MODULE_ID,
+                'ThirdPartyID' => $adjustment->CustomerID,
                 'TransactionTypeID' => self::CREDIT_MANAGEMENT_TRANSACTION_TYPE,
-                'TransactionType'   => $transactionType,
-                'ReferenceNumber'   => "CREDIT-ADJ-{$adjustment->Id}",
-                'TransactionDate'   => $adjustment->EffectiveFrom->toDateString(),
-                'Amount'            => (float)$adjustment->Amount,
-                'TaxAmount'         => 0.00,
-                'BranchID'          => session('LoginBranchId', 1),
-                'DepartmentID'      => null,
-                'CurrencyID'        => 56, // KES
-                'CurrencyCode'      => 'KES',
-                'ExchangeRate'      => 1.0,
-                'Narration'         => "Credit {$adjustment->AdjustmentType} for {$adjustment->customer->ThirdPartyName}: {$adjustment->Reason}",
-                'SourceTable'       => 't_FinanceCreditAdjustments',
+                'TransactionType' => $transactionType,
+                'ReferenceNumber' => "CREDIT-ADJ-{$adjustment->Id}",
+                'TransactionDate' => $adjustment->EffectiveFrom->toDateString(),
+                'Amount' => (float)$adjustment->Amount,
+                'TaxAmount' => 0.00,
+                'BranchID' => session('LoginBranchId', 1),
+                'DepartmentID' => null,
+                'CurrencyID' => 56, // KES
+                'CurrencyCode' => 'KES',
+                'ExchangeRate' => 1.0,
+                'Narration' => "Credit {$adjustment->AdjustmentType} for {$adjustment->customer->ThirdPartyName}: {$adjustment->Reason}",
+                'SourceTable' => 't_FinanceCreditAdjustments',
                 'SystemDescription' => "Credit {$adjustment->AdjustmentType} - Adjustment #{$adjustment->Id}",
-                'IdempotencyKey'    => "credit_adjustment_{$adjustment->Id}",
+                'IdempotencyKey' => "credit_adjustment_{$adjustment->Id}",
             ];
 
             $result = $this->transactionService->postFromTypeMapping($payload);
@@ -134,7 +134,7 @@ class CreditManagementTransactionService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             throw new \Exception("Failed to post GL transactions for credit adjustment: " . $e->getMessage());
         }
     }
@@ -146,23 +146,23 @@ class CreditManagementTransactionService
     {
         try {
             $payload = [
-                'ModuleID'          => self::FINANCE_MODULE_ID,
-                'ThirdPartyID'      => $credit->CustomerID,
+                'ModuleID' => self::FINANCE_MODULE_ID,
+                'ThirdPartyID' => $credit->CustomerID,
                 'TransactionTypeID' => self::CREDIT_MANAGEMENT_TRANSACTION_TYPE,
-                'TransactionType'   => 'Credit Management - Credit Utilization',
-                'ReferenceNumber'   => $referenceNumber,
-                'TransactionDate'   => now()->toDateString(),
-                'Amount'            => (float)$amount,
-                'TaxAmount'         => 0.00,
-                'BranchID'          => session('LoginBranchId', 1),
-                'DepartmentID'      => null,
-                'CurrencyID'        => 56, // KES
-                'CurrencyCode'      => 'KES',
-                'ExchangeRate'      => 1.0,
-                'Narration'         => "Credit utilization - {$credit->customer->ThirdPartyName}: {$description}",
-                'SourceTable'       => 't_FinanceCreditManagement',
+                'TransactionType' => 'Credit Management - Credit Utilization',
+                'ReferenceNumber' => $referenceNumber,
+                'TransactionDate' => now()->toDateString(),
+                'Amount' => (float)$amount,
+                'TaxAmount' => 0.00,
+                'BranchID' => session('LoginBranchId', 1),
+                'DepartmentID' => null,
+                'CurrencyID' => 56, // KES
+                'CurrencyCode' => 'KES',
+                'ExchangeRate' => 1.0,
+                'Narration' => "Credit utilization - {$credit->customer->ThirdPartyName}: {$description}",
+                'SourceTable' => 't_FinanceCreditManagement',
                 'SystemDescription' => "Credit utilization - {$referenceNumber}",
-                'IdempotencyKey'    => "credit_utilization_{$credit->Id}_{$referenceNumber}",
+                'IdempotencyKey' => "credit_utilization_{$credit->Id}_{$referenceNumber}",
             ];
 
             $result = $this->transactionService->postFromTypeMapping($payload);
@@ -206,7 +206,7 @@ class CreditManagementTransactionService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             throw new \Exception("Failed to post GL transactions for credit utilization: " . $e->getMessage());
         }
     }
@@ -218,23 +218,23 @@ class CreditManagementTransactionService
     {
         try {
             $payload = [
-                'ModuleID'          => self::FINANCE_MODULE_ID,
-                'ThirdPartyID'      => $credit->CustomerID,
+                'ModuleID' => self::FINANCE_MODULE_ID,
+                'ThirdPartyID' => $credit->CustomerID,
                 'TransactionTypeID' => self::CREDIT_MANAGEMENT_TRANSACTION_TYPE,
-                'TransactionType'   => 'Credit Management - Credit Payment',
-                'ReferenceNumber'   => $referenceNumber,
-                'TransactionDate'   => now()->toDateString(),
-                'Amount'            => (float)$amount,
-                'TaxAmount'         => 0.00,
-                'BranchID'          => session('LoginBranchId', 1),
-                'DepartmentID'      => null,
-                'CurrencyID'        => 56, // KES
-                'CurrencyCode'      => 'KES',
-                'ExchangeRate'      => 1.0,
-                'Narration'         => "Credit payment - {$credit->customer->ThirdPartyName}: {$description}",
-                'SourceTable'       => 't_FinanceCreditManagement',
+                'TransactionType' => 'Credit Management - Credit Payment',
+                'ReferenceNumber' => $referenceNumber,
+                'TransactionDate' => now()->toDateString(),
+                'Amount' => (float)$amount,
+                'TaxAmount' => 0.00,
+                'BranchID' => session('LoginBranchId', 1),
+                'DepartmentID' => null,
+                'CurrencyID' => 56, // KES
+                'CurrencyCode' => 'KES',
+                'ExchangeRate' => 1.0,
+                'Narration' => "Credit payment - {$credit->customer->ThirdPartyName}: {$description}",
+                'SourceTable' => 't_FinanceCreditManagement',
                 'SystemDescription' => "Credit payment - {$referenceNumber}",
-                'IdempotencyKey'    => "credit_payment_{$credit->Id}_{$referenceNumber}",
+                'IdempotencyKey' => "credit_payment_{$credit->Id}_{$referenceNumber}",
             ];
 
             $result = $this->transactionService->postFromTypeMapping($payload);
@@ -278,7 +278,7 @@ class CreditManagementTransactionService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             throw new \Exception("Failed to post GL transactions for credit payment: " . $e->getMessage());
         }
     }
@@ -299,25 +299,25 @@ class CreditManagementTransactionService
             }
 
             $payload = [
-                'ModuleID'          => self::FINANCE_MODULE_ID,
-                'ThirdPartyID'      => $originalTx->ThirdPartyID,
+                'ModuleID' => self::FINANCE_MODULE_ID,
+                'ThirdPartyID' => $originalTx->ThirdPartyID,
                 'TransactionTypeID' => self::CREDIT_MANAGEMENT_TRANSACTION_TYPE,
-                'TransactionType'   => 'Credit Management - Reversal',
-                'ReferenceNumber'   => "REV-{$originalTx->ReferenceNumber}",
-                'TransactionDate'   => now()->toDateString(),
-                'Amount'            => (float)$originalTx->Amount,
-                'TaxAmount'         => 0.00,
-                'BranchID'          => session('LoginBranchId', 1),
-                'DepartmentID'      => null,
-                'CurrencyID'        => 56, // KES
-                'CurrencyCode'      => 'KES',
-                'ExchangeRate'      => 1.0,
-                'Narration'         => "Reversal: {$reason}",
-                'SourceTable'       => $originalTx->SourceTable,
+                'TransactionType' => 'Credit Management - Reversal',
+                'ReferenceNumber' => "REV-{$originalTx->ReferenceNumber}",
+                'TransactionDate' => now()->toDateString(),
+                'Amount' => (float)$originalTx->Amount,
+                'TaxAmount' => 0.00,
+                'BranchID' => session('LoginBranchId', 1),
+                'DepartmentID' => null,
+                'CurrencyID' => 56, // KES
+                'CurrencyCode' => 'KES',
+                'ExchangeRate' => 1.0,
+                'Narration' => "Reversal: {$reason}",
+                'SourceTable' => $originalTx->SourceTable,
                 'SystemDescription' => "Reversal of {$originalTx->SystemDescription}",
-                'IdempotencyKey'    => "reversal_{$originalIdempotencyKey}",
+                'IdempotencyKey' => "reversal_{$originalIdempotencyKey}",
                 // Reverse the DR/CR accounts
-                'DebitGLAccountID'  => $originalTx->CreditGLAccountID,  // Flip
+                'DebitGLAccountID' => $originalTx->CreditGLAccountID,  // Flip
                 'CreditGLAccountID' => $originalTx->DebitGLAccountID,   // Flip
             ];
 
@@ -344,7 +344,7 @@ class CreditManagementTransactionService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             throw new \Exception("Failed to reverse GL transaction: " . $e->getMessage());
         }
     }

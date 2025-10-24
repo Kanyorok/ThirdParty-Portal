@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Budget;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\Budget;
 use App\Models\Budget\BudgetActivity;
@@ -29,6 +30,7 @@ class BudgetConsolidationController extends Controller
     //
     public function index()
     {
+        $this->authorize(PermissionEnum::BudgetConsolidationView, BudgetConsolidationController::class);
         // /return 1;
         //Define data array that will store the data for all types entry
         $data = [];
@@ -80,14 +82,14 @@ class BudgetConsolidationController extends Controller
                         $budgetLineID = $activity->BudgetLineID;
                         $result = DB::select(
                             'EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?',
-                            [$budgetLineID, $b_id, $asDate,'L']
+                            [$budgetLineID, $b_id, $asDate, 'L']
                         );
 
                         // $result is an array of objects
-                        $actual =($result[0]->ClosingBalance =='.00'?0.00:$result[0]->ClosingBalance) ?? 0.00;
+                        $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
-                        $actual=abs($actual);
-                        $change=($actual/$activity->FullAllocation)*100;
+                        $actual = abs($actual);
+                        $change = ($actual / $activity->FullAllocation) * 100;
 
 
                         //Store this into the data arrays using keys from gl type value
@@ -97,8 +99,8 @@ class BudgetConsolidationController extends Controller
                             'allocationValues' => $allocationValues,
                             'allocationType' => $activity->AllocationType,
                             'fullAllocation' => $activity->FullAllocation,
-                            'actual'=>$actual,
-                            'change'=>$change,
+                            'actual' => $actual,
+                            'change' => $change,
                         ];
                     }
                     ///////////////////////// Fetching data for Entry By Line //////////////////////////////////////////
@@ -132,27 +134,27 @@ class BudgetConsolidationController extends Controller
                             //Fetch Actuals
                             //For Just pick for branch
                             //$b_id = Branch::find(session('LoginBranchId'))->BranchID ?? 1;
-                            $b_id ='001';// Branch::find(session('LoginBranchId'))->BranchID ?? 1;
+                            $b_id = '001';// Branch::find(session('LoginBranchId'))->BranchID ?? 1;
                             $asDate = date('Y-m-d');
                             $budgetLineID = $entry->BudgetLineID;
                             $result = DB::select(
                                 'EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?',
-                                [$budgetLineID, $b_id, $asDate,'L']
+                                [$budgetLineID, $b_id, $asDate, 'L']
                             );
 
                             // $result is an array of objects
-                            $actual =($result[0]->ClosingBalance =='.00'?0.00:$result[0]->ClosingBalance) ?? 0.00;
+                            $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
-                            $actual=abs($actual);
-                            $change=($actual/$fullAllocation)*100;
+                            $actual = abs($actual);
+                            $change = ($actual / $fullAllocation) * 100;
                             $data[$type->Description][$glAccountSubType][] = [
                                 'rate' => 0,
                                 'budgetLineName' => $budgetLineName,
                                 'allocationValues' => $allocationValues,
                                 'allocationType' => 'monthly',
                                 'fullAllocation' => $fullAllocation,
-                                'actual'=>$actual,
-                                'change'=>$change,
+                                'actual' => $actual,
+                                'change' => $change,
                             ];
                         }
                     }
@@ -172,7 +174,7 @@ class BudgetConsolidationController extends Controller
                     //Check allocation
                     $allocationType = $projection->AllocationType;
                     $allocationValues = []; //To help store monthly allocation
-                    if($allocationType === 'monthly'){
+                    if ($allocationType === 'monthly') {
                         $values = BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
                             ->select('Month', 'Amount')
                             ->get()
@@ -181,9 +183,9 @@ class BudgetConsolidationController extends Controller
                         if ($values) {
                             $allocationValues = $values;
                         }
-                        $fullAllocation=BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
-                                            ->sum('Amount');
-                    }else{
+                        $fullAllocation = BudgetProjectionData::where('BudgetProjectionID', $projection->Id)->where('BudgetId', $budgetId)
+                            ->sum('Amount');
+                    } else {
                         $fullAllocation = BudgetProjection::where('Id', $projection->Id)->pluck('FullAllocation')->first() ?? 0;
                     }
 
@@ -195,14 +197,14 @@ class BudgetConsolidationController extends Controller
                     $budgetLineID = $projection->BudgetLineID;
                     $result = DB::select(
                         'EXEC dbo.p_GetBudgetLineClosingBalance ?, ?, ?, ?',
-                        [$budgetLineID, $b_id, $asDate,'L']
+                        [$budgetLineID, $b_id, $asDate, 'L']
                     );
 
                     // $result is an array of objects
-                    $actual =($result[0]->ClosingBalance =='.00'?0.00:$result[0]->ClosingBalance) ?? 0.00;
+                    $actual = ($result[0]->ClosingBalance == '.00' ? 0.00 : $result[0]->ClosingBalance) ?? 0.00;
 
-                    $actual=abs($actual);
-                    $change=($actual/$fullAllocation)*100;
+                    $actual = abs($actual);
+                    $change = ($actual / $fullAllocation) * 100;
 
 
                     //Store data for the GL first in the data array and in the respective GL section
@@ -212,8 +214,8 @@ class BudgetConsolidationController extends Controller
                         'allocationValues' => $allocationValues,
                         'allocationType' => $allocationType,
                         'fullAllocation' => $fullAllocation,
-                        'actual'=>$actual,
-                        'change'=>$change,
+                        'actual' => $actual,
+                        'change' => $change,
                     ];
                     //Now get the Budgetline for that product
                     $budgetLineID = $projection->BudgetLineID;
@@ -258,8 +260,8 @@ class BudgetConsolidationController extends Controller
                         'allocationValues' => $allocationValues,
                         'allocationType' => $allocationType,
                         'fullAllocation' => ($fullAllocation * $rateValue) / 100,
-                        'actual'=>$actual,
-                        'change'=>$change,
+                        'actual' => $actual,
+                        'change' => $change,
                     ];
                 }
             }
@@ -302,7 +304,7 @@ class BudgetConsolidationController extends Controller
 
     private function buildExportRows(Request $request): array
     {
-        $headers = ['Category','Sub Type','Budget Line','Rate %','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Total','Actuals','% Change'];
+        $headers = ['Category', 'Sub Type', 'Budget Line', 'Rate %', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Total', 'Actuals', '% Change'];
         $rows = [$headers];
         $raw = $request->input('rows', []);
         $payload = is_array($raw) ? $raw : (json_decode((string)$raw, true) ?: []);

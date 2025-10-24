@@ -27,7 +27,7 @@ class BudgetProjectionsController extends Controller
     // View budget entry list
     public function index()
     {
-        $this->authorize(PermissionEnum::BudgetSetupView, BudgetDriverProjections::class);
+        $this->authorize(PermissionEnum::BudgetProjectionView, BudgetDriverProjections::class);
         //New Approach to do the Budget Projection Read
         $budgetsIDS = BudgetProjection::distinct('BudgetID')->pluck('BudgetID')->toArray();
         $data = [];
@@ -36,7 +36,7 @@ class BudgetProjectionsController extends Controller
             if (!$budget) continue;
             $data[] = [
                 'Name' => $budget->Name,
-                'ApprovalStatus'=>$budget->Status,
+                'ApprovalStatus' => $budget->Status,
                 'Products' => BudgetProjection::where('BudgetID', $budgetID)->count(),
                 'Accounts' => BudgetProjection::where('BudgetID', $budgetID)->sum('NumberOfAccounts'),
                 'Id' => $budget->Id,
@@ -52,7 +52,9 @@ class BudgetProjectionsController extends Controller
     // Show form for new entry
     public function create()
     {
+        $this->authorize(PermissionEnum::BudgetProjectionCreate, BudgetDriverProjections::class);
         $budgets = Budget::select('Id', 'Name')->where('Status','draft')->get();
+
         $currencies = Currency::all();
         $products = BudgetProduct::all();
         // $periods = BudgetPeriods::all();
@@ -68,8 +70,8 @@ class BudgetProjectionsController extends Controller
     {
         $productIDS = BudgetLineProductTypes::where('BudgetLineID', $budgetLineId)->pluck('ProductTypeID')->toArray();
         //Ensure that the prods being displ must have a Rate value entered.
-        $productsIdWithRate=BudgetDriverRates::pluck('ProductTypeID')->toArray();
-        $filteredProdID=array_intersect($productIDS,$productsIdWithRate);
+        $productsIdWithRate = BudgetDriverRates::pluck('ProductTypeID')->toArray();
+        $filteredProdID = array_intersect($productIDS, $productsIdWithRate);
 
         $product = BudgetProduct::whereIn('Id', $filteredProdID)->get();
         //$budgetLine = BudgetLine::with('products')->findOrFail($budgetLineId);
@@ -79,7 +81,7 @@ class BudgetProjectionsController extends Controller
     // Store budget product entry
     public function store(Request $request)
     {
-        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetDriverProjections::class);
+        $this->authorize(PermissionEnum::BudgetProjectionCreate, BudgetDriverProjections::class);
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
             // 'CurrencyID' => 'required|exists:t_Currencies,Id', (currently we will use 1 as currency)
@@ -89,9 +91,9 @@ class BudgetProjectionsController extends Controller
             'Products.*.Volume' => 'required|integer|min:0',
             // 'Products.*.Value'     => 'required|numeric|min:0', (till  futher notice, we will use 1 as value)
         ],
-        [
-            'Products.*.ProductID.required' => 'Please select a product',
-            'Products.*.Volume.required' => 'Please enter a volume',
+            [
+                'Products.*.ProductID.required' => 'Please select a product',
+                'Products.*.Volume.required' => 'Please enter a volume',
         ]);
 
         DB::beginTransaction();
@@ -147,7 +149,7 @@ class BudgetProjectionsController extends Controller
     public function storeProjections(Request $request)
     {
 
-        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetProjection::class);
+        $this->authorize(PermissionEnum::BudgetProjectionCreate, BudgetProjection::class);
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
@@ -213,7 +215,7 @@ class BudgetProjectionsController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetProjection::class);
+        $this->authorize(PermissionEnum::BudgetProjectionUpdate, BudgetProjection::class);
 
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
@@ -284,7 +286,7 @@ class BudgetProjectionsController extends Controller
 
     public function show($id)
     {
-        $this->authorize(PermissionEnum::BudgetSetupView, BudgetMonthlyProjectionAllocation::class);
+        $this->authorize(PermissionEnum::BudgetProjectionView, BudgetMonthlyProjectionAllocation::class);
 
         $productsIDS = BudgetProjection::where('BudgetID', $id)->pluck('ProductID')->toArray();
         $products = [];
@@ -310,7 +312,7 @@ class BudgetProjectionsController extends Controller
         //return $products;
 
         //$budget = BudgetDriverProjections::findOrFail($id);
-        $budget=Budget::findOrFail($id);
+        $budget = Budget::findOrFail($id);
 
         $rate = BudgetProduct::with(['rate'])
             ->get();
@@ -323,6 +325,7 @@ class BudgetProjectionsController extends Controller
 
     public function edit($id)
     {
+        $this->authorize(PermissionEnum::BudgetProjectionUpdate, BudgetProjection::class);
         // Retrieve the projection to edit
         $projection = BudgetProjection::findOrFail($id);
 
@@ -357,7 +360,7 @@ class BudgetProjectionsController extends Controller
 
     public function updateOld(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetDriverProjections::class);
+        $this->authorize(PermissionEnum::BudgetProjectionUpdate, BudgetDriverProjections::class);
         $validated = $request->validate([
             // 'CurrencyID' => 'nullable|exists:t_Currencies,Id',
             'Products' => 'nullable|array',
@@ -434,7 +437,7 @@ class BudgetProjectionsController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverProjections::class);
+        $this->authorize(PermissionEnum::BudgetProjectionDelete, BudgetDriverProjections::class);
         DB::beginTransaction();
         try {
             //Delete All Projections for that Budget
@@ -463,7 +466,7 @@ class BudgetProjectionsController extends Controller
 
     public function deleteProjection($id)
     {
-        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetDriverProjections::class);
+        $this->authorize(PermissionEnum::BudgetProjectionDelete, BudgetDriverProjections::class);
 
         try {
             DB::beginTransaction();

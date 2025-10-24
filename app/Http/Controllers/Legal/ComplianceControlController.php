@@ -17,17 +17,17 @@ class ComplianceControlController extends Controller
 {
     public function index()
     {
-        $controls = ComplianceControl::with(['area','controlType'])->get();
+        $controls = ComplianceControl::with(['area', 'controlType'])->get();
         return view('legal.compliance.controls.index', compact('controls'));
     }
 
     public function create()
     {
-        $areas = ComplianceArea::pluck('Name','Id');
-        $types = ControlType::pluck('Name','Id');
-        $owners = DB::table('t_Users')->pluck('Name','Id');
-        $obligations = ComplianceObligation::pluck('Title','Id');
-        return view('legal.compliance.controls.create', compact('areas','types','owners','obligations'));
+        $areas = ComplianceArea::pluck('Name', 'Id');
+        $types = ControlType::pluck('Name', 'Id');
+        $owners = DB::table('t_Users')->pluck('Name', 'Id');
+        $obligations = ComplianceObligation::pluck('Title', 'Id');
+        return view('legal.compliance.controls.create', compact('areas', 'types', 'owners', 'obligations'));
     }
 
     public function store(Request $request)
@@ -42,33 +42,33 @@ class ComplianceControlController extends Controller
         ]);
 
         $control = ComplianceControl::create($validated + [
-            'IsActive' => 1,
-            'CreatedBy' => auth()->id() ?? 1,
-            'CreatedOn' => now(),
-        ]);
+                'IsActive' => 1,
+                'CreatedBy' => auth()->id() ?? 1,
+                'CreatedOn' => now(),
+            ]);
 
-        if($request->has('Obligations')){
+        if ($request->has('Obligations')) {
             $control->obligations()->sync($request->Obligations);
         }
 
-        return redirect()->route('legal.compliance.controls.show',$control->Id)
-            ->with('success','Control created successfully.');
+        return redirect()->route('legal.compliance.controls.show', $control->Id)
+            ->with('success', 'Control created successfully.');
     }
 
     public function show($id)
     {
-        $control = ComplianceControl::with(['area','controlType','obligations','evidence'])->findOrFail($id);
+        $control = ComplianceControl::with(['area', 'controlType', 'obligations', 'evidence'])->findOrFail($id);
         return view('legal.compliance.controls.show', compact('control'));
     }
 
     public function edit($id)
     {
         $control = ComplianceControl::findOrFail($id);
-        $areas = ComplianceArea::pluck('Name','Id');
-        $types = ControlType::pluck('Name','Id');
-        $owners = DB::table('t_Users')->pluck('Name','Id');
-        $obligations = ComplianceObligation::pluck('Title','Id');
-        return view('legal.compliance.controls.edit', compact('control','areas','types','owners','obligations'));
+        $areas = ComplianceArea::pluck('Name', 'Id');
+        $types = ControlType::pluck('Name', 'Id');
+        $owners = DB::table('t_Users')->pluck('Name', 'Id');
+        $obligations = ComplianceObligation::pluck('Title', 'Id');
+        return view('legal.compliance.controls.edit', compact('control', 'areas', 'types', 'owners', 'obligations'));
     }
 
     public function update(Request $request, $id)
@@ -85,16 +85,16 @@ class ComplianceControlController extends Controller
         ]);
 
         $control->update($validated + [
-            'ModifiedBy' => auth()->id() ?? 1,
-            'ModifiedOn' => now(),
-        ]);
+                'ModifiedBy' => auth()->id() ?? 1,
+                'ModifiedOn' => now(),
+            ]);
 
-        if($request->has('Obligations')){
+        if ($request->has('Obligations')) {
             $control->obligations()->sync($request->Obligations);
         }
 
-        return redirect()->route('legal.compliance.controls.show',$id)
-            ->with('success','Control updated successfully.');
+        return redirect()->route('legal.compliance.controls.show', $id)
+            ->with('success', 'Control updated successfully.');
     }
 
     public function destroy($id)
@@ -106,7 +106,7 @@ class ComplianceControlController extends Controller
             'DeletedOn' => now(),
         ]);
         return redirect()->route('legal.compliance.controls.index')
-            ->with('success','Control deactivated.');
+            ->with('success', 'Control deactivated.');
     }
 
     public function uploadEvidence(Request $request, $id)
@@ -117,7 +117,7 @@ class ComplianceControlController extends Controller
 
         $control = ComplianceControl::findOrFail($id);
         $file = $request->file('evidence');
-        $latestVersion = ComplianceControlEvidence::where('ControlID',$id)->max('Version') ?? 0;
+        $latestVersion = ComplianceControlEvidence::where('ControlID', $id)->max('Version') ?? 0;
         $version = $latestVersion + 1;
         $path = $file->store('compliance/controls');
 
@@ -131,6 +131,6 @@ class ComplianceControlController extends Controller
             'UploadedOn' => now(),
         ]);
 
-        return back()->with('success','Evidence uploaded successfully.');
+        return back()->with('success', 'Evidence uploaded successfully.');
     }
 }

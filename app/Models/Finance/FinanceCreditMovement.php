@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Credit Movement Model
- * 
+ *
  * Amount field uses signed values:
  * - Positive amounts = increase available credit (payments, adjustments up, initial setup)
  * - Negative amounts = decrease available credit (invoice usage, adjustments down)
- * 
+ *
  * This simplifies calculations: SUM(Amount) gives net credit change
  */
 class FinanceCreditMovement extends Model
@@ -31,9 +31,9 @@ class FinanceCreditMovement extends Model
         'MovementType',
         'Amount',
         'ReferenceType',
-        'ReferenceID','Notes',
+        'ReferenceID', 'Notes',
         'EffectiveOn',
-        
+
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',

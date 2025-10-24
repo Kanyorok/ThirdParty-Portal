@@ -56,7 +56,7 @@ class ThirdPartyController extends Controller
             });
         }
 
-    $thirdParties = $query->paginate($request->input('per_page', 15));
+        $thirdParties = $query->paginate($request->input('per_page', 15));
 
         return ThirdPartyResource::collection($thirdParties);
     }

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -20,11 +19,11 @@ return new class extends Migration
             $table->foreignId('FuelType')->constrained('t_FuelTypes', 'Id');
             $table->foreignId('DriverID')->constrained('t_FleetDrivers', 'Id');
             $table->date('InspectionDate');
-            $table->bigInteger('Mileage')->default(0);      
-            $table->decimal('Fuel', 10, 2)->default(0);      
-            $table->decimal('EngineOil', 10, 2)->default(0); 
-            $table->decimal('Coolant', 10, 2)->default(0);  
-            $table->integer('Speedometer')->default(0);      
+            $table->bigInteger('Mileage')->default(0);
+            $table->decimal('Fuel', 10, 2)->default(0);
+            $table->decimal('EngineOil', 10, 2)->default(0);
+            $table->decimal('Coolant', 10, 2)->default(0);
+            $table->integer('Speedometer')->default(0);
             $table->boolean('Reflector')->nullable();
             $table->boolean('FireExtinguisher')->nullable();
             $table->boolean('FirstAidKit')->nullable();

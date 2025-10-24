@@ -56,7 +56,10 @@
                     </table>
                     <button class="btn btn-secondary btn-sm">➕ Add Item</button>
                 </div>
-                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Stock Issue</button>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Submit Stock
+                    Issue
+                </button>
             </form>
         </div>
     </div>

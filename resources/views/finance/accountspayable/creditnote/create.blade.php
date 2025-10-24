@@ -27,14 +27,14 @@
                 @csrf
                 @method('POST')
                 <div class="row mb-4">
-{{--                    <div class="col-md-6">--}}
-{{--                        <label for="notetype" class="form-label">Note Type</label>--}}
-{{--                        <select class="form-control" name="NoteType" required>--}}
-{{--                        <option disabled selected value="">--Select Note Type--</option>--}}
-{{--                            <option value="Credit">Credit Note</option>--}}
-{{--                            <option value="Debit">Debit Note</option>--}}
-{{--                        </select>--}}
-{{--                    </div>--}}
+                    {{--                    <div class="col-md-6">--}}
+                    {{--                        <label for="notetype" class="form-label">Note Type</label>--}}
+                    {{--                        <select class="form-control" name="NoteType" required>--}}
+                    {{--                        <option disabled selected value="">--Select Note Type--</option>--}}
+                    {{--                            <option value="Credit">Credit Note</option>--}}
+                    {{--                            <option value="Debit">Debit Note</option>--}}
+                    {{--                        </select>--}}
+                    {{--                    </div>--}}
                     <input type="hidden" name="NoteType" value="Credit">
                     <div class="col-md-6">
                         <label for="referenceInvoice" class="form-label">Reference Invoice</label>

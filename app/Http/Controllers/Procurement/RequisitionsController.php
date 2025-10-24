@@ -70,7 +70,7 @@ class RequisitionsController extends Controller
                 ->where('CodeID', 'RequisitionStatus')
                 ->where('Value', 'Ap')
                 ->value('ID');
-          
+
             $branchId = session('LoginBranchId');
             $departmentId = $employee?->DepartmentId ?? null;
 
@@ -175,7 +175,11 @@ class RequisitionsController extends Controller
 
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $uid = null;
-            try { $uid = \Illuminate\Support\Facades\Auth::id(); } catch (\Throwable $t) { $uid = null; }
+            try {
+                $uid = \Illuminate\Support\Facades\Auth::id();
+            } catch (\Throwable $t) {
+                $uid = null;
+            }
             Log::warning("Unauthorized access attempt to view Requisition ID: {$id} by user ID: " . ($uid ?? 'guest'));
             return redirect()->back()->with('error', 'Unauthorized access.');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -271,7 +275,7 @@ class RequisitionsController extends Controller
             'departments' => $departments,
         ]);
     }
-    
+
     public function getRequisitions(): JsonResponse{
         try{
             $details = $this->service->fetchRequisition();

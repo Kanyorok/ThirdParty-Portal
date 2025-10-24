@@ -18,8 +18,8 @@
             <select name="Item" id="item_id" class="form-select" required>
               <option value="">-- Select Item --</option>
               @foreach($items as $item)
-                <option value="{{ $item->Id }}" 
-                        data-uom-id="{{ $item->uom?->Id }}" 
+                    <option value="{{ $item->Id }}"
+                            data-uom-id="{{ $item->uom?->Id }}"
                         data-uom-name="{{ $item->uom?->Name }}">
                     {{ $item->ItemCode }} - {{ $item->ItemName }}
                 </option>
@@ -57,7 +57,9 @@
             <input type="text" name="Remarks" class="form-control" placeholder="Optional">
           </div>
           <div class="col-md-4 d-flex align-items-end justify-content-end">
-            <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Save Mapping</button>
+              <button type="submit" class="btn btn-success"
+                      onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">💾 Save Mapping
+              </button>
           </div>
         </div>
 

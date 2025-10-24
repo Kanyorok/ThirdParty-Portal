@@ -80,20 +80,26 @@
             @if(!auth()->user()->can(PermissionEnum::UsersSessions)) setInterval(timerIncrement, 1000); @endif
 
             // Detect offline -> when back online, force a timeout to avoid stale sessions across networks
-            window.addEventListener('online', function(){
+            window.addEventListener('online', function () {
                 try {
-                    $.post("{{ route('timeout') }}", {_token: window.csrf_token}).always(function(){
+                    $.post("{{ route('timeout') }}", {_token: window.csrf_token}).always(function () {
                         window.location.reload();
                     });
-                } catch(e){ window.location.reload(); }
+                } catch (e) {
+                    window.location.reload();
+                }
             });
 
             // When going offline, immediately treat session as expiring
-            window.addEventListener('offline', function(){
+            window.addEventListener('offline', function () {
                 try {
                     nWarning('Connection lost. Your session will end when connection is restored.');
-                } catch(e) {}
-                try { window.windowIdleTime = 0; } catch(e) {}
+                } catch (e) {
+                }
+                try {
+                    window.windowIdleTime = 0;
+                } catch (e) {
+                }
             });
 
             // Zero the idle timer on any action.
@@ -143,14 +149,21 @@
         }
 
         // Background heartbeat: ensure stale sessions are kicked promptly
-        (function(){
-            function ping(){
-                try{
-                    fetch("{{ route('auth.heartbeat') }}", {credentials:'include'})
-                        .then(function(r){ if(!r.ok){ window.location.href = "{{ route('login') }}"; } })
-                        .catch(function(){ /* offline - middleware will handle next request */ });
-                }catch(e){}
+        (function () {
+            function ping() {
+                try {
+                    fetch("{{ route('auth.heartbeat') }}", {credentials: 'include'})
+                        .then(function (r) {
+                            if (!r.ok) {
+                                window.location.href = "{{ route('login') }}";
+                            }
+                        })
+                        .catch(function () { /* offline - middleware will handle next request */
+                        });
+                } catch (e) {
+                }
             }
+
             setInterval(ping, 15000);
             window.addEventListener('online', ping);
         })();

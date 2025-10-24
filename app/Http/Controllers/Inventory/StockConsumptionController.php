@@ -11,7 +11,7 @@ use App\Models\Inventory\StockItem;
 use App\Models\Auth\User;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\UnitOfMeasure;
-use App\Models\HRM\Employee; 
+use App\Models\HRM\Employee;
 use App\Models\HRM\Department;
 use App\Models\Core\CodeDetail;
 use App\Services\Inventory\StockConsumptionService;
@@ -30,7 +30,7 @@ class StockConsumptionController extends Controller
 
     public function index()
     {
-        $consumptions = StockConsumption::with(['item','store','uom','issuedBy','branch','stockItem'])->get();
+        $consumptions = StockConsumption::with(['item', 'store', 'uom', 'issuedBy', 'branch', 'stockItem'])->get();
         return view('inventory.stockmanagement.stockconsumption.index', compact('consumptions'));
     }
 
@@ -44,11 +44,11 @@ class StockConsumptionController extends Controller
         })->get();
 
         $stores = Store::where('BranchID', $branchId)->get();
-        $items = StockItem::all(); 
+        $items = StockItem::all();
         $uoms = UnitOfMeasure::all();
         $types = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
 
-        return view('inventory.stockmanagement.stockconsumption.create', compact('branch','stores','items','uoms','types','users'));
+        return view('inventory.stockmanagement.stockconsumption.create', compact('branch', 'stores', 'items', 'uoms', 'types', 'users'));
     }
 
     public function store(StockConsumptionRequest $request)
@@ -61,51 +61,52 @@ class StockConsumptionController extends Controller
         }
     }
     public function edit($id)
-{
-    $consumption = StockConsumption::with(['item', 'store', 'uom', 'issuedBy', 'branch'])->findOrFail($id);
+    {
+        $consumption = StockConsumption::with(['item', 'store', 'uom', 'issuedBy', 'branch'])->findOrFail($id);
 
-    $branchId = auth()->user()->employee?->BranchId;
-    $branch   = Branch::findOrFail($branchId);
+        $branchId = auth()->user()->employee?->BranchId;
+        $branch = Branch::findOrFail($branchId);
 
-    $users = User::whereHas('employee', function ($q) use ($branchId) {
-        $q->where('BranchId', $branchId);
-    })->get();
+        $users = User::whereHas('employee', function ($q) use ($branchId) {
+            $q->where('BranchId', $branchId);
+        })->get();
 
-    $stores = Store::where('BranchID', $branchId)->get();
-    $items  = StockItem::where('Branch', $branchId)->get();
-    $uoms   = UnitOfMeasure::all();
-    $types  = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
+        $stores = Store::where('BranchID', $branchId)->get();
+        $items = StockItem::where('Branch', $branchId)->get();
+        $uoms = UnitOfMeasure::all();
+        $types = CodeDetail::where('CodeID', 'IssuedToType')->get(['ID', 'Description']);
 
-    return view('inventory.stockmanagement.stockconsumption.edit', compact(
-        'consumption', 'branch', 'stores', 'items', 'uoms', 'types', 'users'
-    ));
-}
- public function update(StockConsumptionRequest $request, $id)
-{
-    try {
-        $consumption = StockConsumption::findOrFail($id);
-        $this->stockConsumptionService->update($consumption, $request->validated());
-
-        return redirect()->route('stockconsumption.index')
-            ->with('success', 'Stock consumption updated successfully.');
-    } catch (\Exception $e) {
-        return back()->withErrors('Failed to update stock consumption: ' . $e->getMessage())->withInput();
+        return view('inventory.stockmanagement.stockconsumption.edit', compact(
+            'consumption', 'branch', 'stores', 'items', 'uoms', 'types', 'users'
+        ));
     }
-}
 
-public function show($id)
-{
-    $consumption = StockConsumption::with([
-        'item', 
-        'store', 
-        'uom', 
-        'issuedBy', 
-        'branch',
-        'stockItem'
-    ])->findOrFail($id);
+    public function update(StockConsumptionRequest $request, $id)
+    {
+        try {
+            $consumption = StockConsumption::findOrFail($id);
+            $this->stockConsumptionService->update($consumption, $request->validated());
 
-    return view('inventory.stockmanagement.stockconsumption.show', compact('consumption'));
-}
+            return redirect()->route('stockconsumption.index')
+                ->with('success', 'Stock consumption updated successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors('Failed to update stock consumption: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function show($id)
+    {
+        $consumption = StockConsumption::with([
+            'item',
+            'store',
+            'uom',
+            'issuedBy',
+            'branch',
+            'stockItem'
+        ])->findOrFail($id);
+
+        return view('inventory.stockmanagement.stockconsumption.show', compact('consumption'));
+    }
 
 
 
@@ -120,7 +121,7 @@ public function show($id)
     public function getItems(Request $request)
     {
         $branchId = auth()->user()->employee?->BranchId;
-        $storeId = $request->get('StoreID'); 
+        $storeId = $request->get('StoreID');
 
         $query = StockItem::with(['uom', 'item']);
 
@@ -132,17 +133,16 @@ public function show($id)
 
         $items = $query->get();
 
-        return response()->json($items->map(function($item) {
+        return response()->json($items->map(function ($item) {
             return [
-                'Id'         => $item->Id,
-                'ItemName'   => $item->item?->ItemName ?? '',
-                'UOM'        => $item->UOM,
-                'UOMCode'    => $item->uom?->Code ?? '',
+                'Id' => $item->Id,
+                'ItemName' => $item->item?->ItemName ?? '',
+                'UOM' => $item->UOM,
+                'UOMCode' => $item->uom?->Code ?? '',
                 'CurrentQty' => $item->CurrentQty,
             ];
         }));
     }
-
 
 
     public function getIssuedToOptions(Request $request)

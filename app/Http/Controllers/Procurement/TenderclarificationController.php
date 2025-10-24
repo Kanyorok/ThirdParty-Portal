@@ -34,16 +34,16 @@ class TenderclarificationController extends Controller
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('Question', 'LIKE', "%{$search}%")
-                  ->orWhere('Answer', 'LIKE', "%{$search}%");
+                    ->orWhere('Answer', 'LIKE', "%{$search}%");
             });
         }
 
         // Order by latest questions first, but prioritize unanswered ones
         $clarifications = $query->orderByRaw('CASE WHEN Answer IS NULL THEN 0 ELSE 1 END')
-                                ->orderBy('QuestionDate', 'desc')
-                                ->paginate(20);
+            ->orderBy('QuestionDate', 'desc')
+            ->paginate(20);
 
         // Get statistics
         $stats = [
@@ -55,13 +55,13 @@ class TenderclarificationController extends Controller
 
         // Get active tenders for filter dropdown
         $tenders = Tender::select('Id', 'TenderNo', 'Title')
-                         ->where('Status', 'pb') // published tenders
-                         ->orderBy('CreatedOn', 'desc')
-                         ->take(20)
-                         ->get();
+            ->where('Status', 'pb') // published tenders
+            ->orderBy('CreatedOn', 'desc')
+            ->take(20)
+            ->get();
 
-        return view('procurement.tendering.suppliermanagement.clarificationhandling.index', 
-                    compact('clarifications', 'stats', 'tenders', 'status'));
+        return view('procurement.tendering.suppliermanagement.clarificationhandling.index',
+            compact('clarifications', 'stats', 'tenders', 'status'));
     }
 
     /**
@@ -76,19 +76,19 @@ class TenderclarificationController extends Controller
             ->paginate(15);
 
         // Add supplier names
-        $pendingClarifications->getCollection()->transform(function($clarification) {
+        $pendingClarifications->getCollection()->transform(function ($clarification) {
             $supplierName = 'Unknown Supplier';
             if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-                $supplierName = $clarification->vendorID->thirdParty->TradingName 
-                             ?? $clarification->vendorID->thirdParty->ThirdPartyName;
+                $supplierName = $clarification->vendorID->thirdParty->TradingName
+                    ?? $clarification->vendorID->thirdParty->ThirdPartyName;
             }
             $clarification->supplierName = $supplierName;
             $clarification->daysPending = now()->diffInDays($clarification->QuestionDate);
             return $clarification;
         });
 
-        return view('procurement.tendering.suppliermanagement.clarificationhandling.pending', 
-                    compact('pendingClarifications'));
+        return view('procurement.tendering.suppliermanagement.clarificationhandling.pending',
+            compact('pendingClarifications'));
     }
 
     /**
@@ -97,18 +97,18 @@ class TenderclarificationController extends Controller
     public function create($clarification_id)
     {
         $clarification = VendorClarifications::with(['tenderID', 'vendorID'])
-                                             ->findOrFail($clarification_id);
+            ->findOrFail($clarification_id);
 
         // Get supplier name
         $supplierName = 'Unknown Supplier';
         if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-            $supplierName = $clarification->vendorID->thirdParty->TradingName 
-                         ?? $clarification->vendorID->thirdParty->ThirdPartyName;
+            $supplierName = $clarification->vendorID->thirdParty->TradingName
+                ?? $clarification->vendorID->thirdParty->ThirdPartyName;
         }
         $clarification->supplierName = $supplierName;
 
-        return view('procurement.tendering.suppliermanagement.clarificationhandling.create', 
-                    compact('clarification'));
+        return view('procurement.tendering.suppliermanagement.clarificationhandling.create',
+            compact('clarification'));
     }
 
     /**
@@ -149,7 +149,7 @@ class TenderclarificationController extends Controller
             ]);
 
             return redirect()->route('tenderclarification.index')
-                            ->with('success', 'Clarification response submitted successfully.');
+                ->with('success', 'Clarification response submitted successfully.');
         } catch (\Throwable $e) {
             Log::error('Failed to save clarification response', [
                 'clarification_id' => $validated['clarification_id'],
@@ -168,25 +168,25 @@ class TenderclarificationController extends Controller
     public function edit(Request $request)
     {
         $clarificationId = $request->query('clarification_id');
-        
+
         if (!$clarificationId) {
             return redirect()->route('tenderclarification.index')
-                           ->with('error', 'Clarification ID is required.');
+                ->with('error', 'Clarification ID is required.');
         }
 
         $clarification = VendorClarifications::with(['tenderID', 'vendorID'])
-                                             ->findOrFail($clarificationId);
+            ->findOrFail($clarificationId);
 
         // Get supplier name
         $supplierName = 'Unknown Supplier';
         if ($clarification->vendorID && $clarification->vendorID->thirdParty) {
-            $supplierName = $clarification->vendorID->thirdParty->TradingName 
-                         ?? $clarification->vendorID->thirdParty->ThirdPartyName;
+            $supplierName = $clarification->vendorID->thirdParty->TradingName
+                ?? $clarification->vendorID->thirdParty->ThirdPartyName;
         }
         $clarification->supplierName = $supplierName;
 
-        return view('procurement.tendering.suppliermanagement.clarificationhandling.edit', 
-                    compact('clarification'));
+        return view('procurement.tendering.suppliermanagement.clarificationhandling.edit',
+            compact('clarification'));
     }
 
     /**
@@ -201,25 +201,25 @@ class TenderclarificationController extends Controller
         ]);
 
         $count = 0;
-        
+
         switch ($request->action) {
             case 'make_public':
                 $count = VendorClarifications::whereIn('ClarificationID', $request->clarification_ids)
-                                            ->whereNotNull('Answer')
-                                            ->update(['ISPUBLISHEDTOALL' => true]);
+                    ->whereNotNull('Answer')
+                    ->update(['ISPUBLISHEDTOALL' => true]);
                 break;
-                
+
             case 'make_private':
                 $count = VendorClarifications::whereIn('ClarificationID', $request->clarification_ids)
-                                            ->update(['ISPUBLISHEDTOALL' => false]);
+                    ->update(['ISPUBLISHEDTOALL' => false]);
                 break;
-                
+
             case 'delete':
                 $count = VendorClarifications::whereIn('ClarificationID', $request->clarification_ids)
-                                            ->update([
-                                                'DeletedBy' => $request->user()->Id,
-                                                'DeletedOn' => now()
-                                            ]);
+                    ->update([
+                        'DeletedBy' => $request->user()->Id,
+                        'DeletedOn' => now()
+                    ]);
                 break;
         }
 

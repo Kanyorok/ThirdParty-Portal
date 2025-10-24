@@ -28,9 +28,9 @@ class PropertyMaintananceAssignController extends Controller
         $maintenancerequests = PropertyMaintenanceRequest::all();
         $employees = Employee::all();
         $suppliers = Supplier::where('Active_Status', true)
-                     ->select('ThirdPartyID')
-                     ->distinct()
-                     ->get();
+            ->select('ThirdPartyID')
+            ->distinct()
+            ->get();
         $assignmentTypes = CodeDetail::where('CodeID', 'AssignmentType')->get();
         $priorityLevels = CodeDetail::where('CodeID','PriorityLevel')->get();
         return view('property.maintenanceandissues.assignrequests.create', compact('maintenancerequests', 'employees', 'suppliers', 'priorityLevels','assignmentTypes'));
@@ -139,7 +139,7 @@ class PropertyMaintananceAssignController extends Controller
 
             if ($assignment->taskcompletion()->exists()) {
                 return redirect()->back()
-                ->withErrors(['error' => 'This Maintenance assignment is in use and cannot be deleted.']);
+                    ->withErrors(['error' => 'This Maintenance assignment is in use and cannot be deleted.']);
             }
 
             $assignment->delete();

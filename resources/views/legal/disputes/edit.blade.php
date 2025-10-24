@@ -23,30 +23,36 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Case Number</label>
-                        <input type="text" name="CaseNumber" value="{{ old('CaseNumber', $case->CaseNumber) }}" class="form-control" required>
+                        <input type="text" name="CaseNumber" value="{{ old('CaseNumber', $case->CaseNumber) }}"
+                               class="form-control" required>
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Court Name</label>
-                        <input type="text" name="CourtName" value="{{ old('CourtName', $case->CourtName) }}" class="form-control" required>
+                        <input type="text" name="CourtName" value="{{ old('CourtName', $case->CourtName) }}"
+                               class="form-control" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Filing Date</label>
-                        <input type="date" name="FilingDate" value="{{ old('FilingDate', $case->FilingDate ? \Carbon\Carbon::parse($case->FilingDate)->format('Y-m-d') : '') }}" class="form-control" required>
+                        <input type="date" name="FilingDate"
+                               value="{{ old('FilingDate', $case->FilingDate ? \Carbon\Carbon::parse($case->FilingDate)->format('Y-m-d') : '') }}"
+                               class="form-control" required>
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Opposing Party</label>
-                        <input type="text" name="OpposingParty" value="{{ old('OpposingParty', $case->OpposingParty) }}" class="form-control" required>
+                        <input type="text" name="OpposingParty" value="{{ old('OpposingParty', $case->OpposingParty) }}"
+                               class="form-control" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Case Type</label>
                         <select class="form-select" name="CaseType" id="CaseType" required>
-                            <option value="{{old('CaseType', $case->CaseType)}}" selected>{{old('CaseType', $case->CaseType)}}</option>
+                            <option value="{{old('CaseType', $case->CaseType)}}"
+                                    selected>{{old('CaseType', $case->CaseType)}}</option>
                             @foreach($caseTypes as $type)
                                 <option value="{{ $type->Value }}">{{ $type->Value }}</option>
                             @endforeach
@@ -67,15 +73,16 @@
                             @endforeach
                         </select>
                     </div>
-{{--                    <div class="col-md-6">--}}
-{{--                        <label class="form-label">DMS Document ID(Optional)</label>--}}
-{{--                        <input type="text" name="DMSDocID" value="{{ old('DMSDocID', $case->DMSDocID) }}" class="form-control">--}}
-{{--                    </div>--}}
+                    {{--                    <div class="col-md-6">--}}
+                    {{--                        <label class="form-label">DMS Document ID(Optional)</label>--}}
+                    {{--                        <input type="text" name="DMSDocID" value="{{ old('DMSDocID', $case->DMSDocID) }}" class="form-control">--}}
+                    {{--                    </div>--}}
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Summary</label>
-                    <textarea name="Summary" class="form-control" rows="3" required>{{ old('Summary', $case->Summary) }}</textarea>
+                    <textarea name="Summary" class="form-control" rows="3"
+                              required>{{ old('Summary', $case->Summary) }}</textarea>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mb-3">

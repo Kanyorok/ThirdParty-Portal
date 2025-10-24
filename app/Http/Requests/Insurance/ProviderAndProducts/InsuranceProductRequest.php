@@ -26,14 +26,14 @@ class InsuranceProductRequest extends FormRequest
         return [
             'InsuranceProviderID' => 'required|exists:t_InsuranceProviders,Id',
             'Name' => [
-            'required',
-            'string',
-            'max:50',
-            Rule::unique(InsuranceProduct::class, 'Name')
-                ->where(function ($query) {
-                    return $query->where('InsuranceProviderID', $this->InsuranceProviderID)
-                                 ->where('Type', $this->Type);
-                }),
+                'required',
+                'string',
+                'max:50',
+                Rule::unique(InsuranceProduct::class, 'Name')
+                    ->where(function ($query) {
+                        return $query->where('InsuranceProviderID', $this->InsuranceProviderID)
+                            ->where('Type', $this->Type);
+                    }),
             ],
             'Type' => 'required|exists:t_CodeDetails,ID',
             'Description' => 'nullable|string|max:100',

@@ -25,9 +25,9 @@ class TransactionAdjustmentController extends Controller
     {
         $branchId = auth()->user()->employee?->BranchId;
         $adjustments = StockAdjustment::with('items')
-        ->latest('CreatedOn')
-        ->where('Branch', $branchId)
-        ->paginate(20);
+            ->latest('CreatedOn')
+            ->where('Branch', $branchId)
+            ->paginate(20);
         return view('inventory.transactions.adjustments.index', compact('adjustments'));
     }
     public function create()
@@ -37,16 +37,16 @@ class TransactionAdjustmentController extends Controller
         $branch = Branch::findOrFail($branchId);
 
         $users = User::whereHas('employee', function ($q) use ($branchId) {
-                $q->where('BranchId', $branchId);
-            })
+            $q->where('BranchId', $branchId);
+        })
             ->get();
 
         $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
         $stockItems = StockItem::with(['item', 'uom'])
-        ->where('Branch', $branchId)
-        ->get();
+            ->where('Branch', $branchId)
+            ->get();
 
-        return view('inventory.transactions.adjustments.create', compact('branch', 'users', 'reasons','stockItems'));
+        return view('inventory.transactions.adjustments.create', compact('branch', 'users', 'reasons', 'stockItems'));
     }
 
     public function store(StockAdjustmentRequest $request)

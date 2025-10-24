@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Tender Bid Opening Ceremony')
 @section('content')
-<meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container mt-4">
     <h4 class="mb-4">🔓 Tender Bid Opening Ceremony</h4>
 
@@ -31,8 +31,9 @@
                     <select class="form-select" id="tenderNo">
                         <option selected disabled>-- Choose Tender Ready for Opening --</option>
                         @foreach ($tenders as $item)
-                            <option value="{{ $item->TenderNo }}" {{ (isset($tender) && $tender->TenderNo === $item->TenderNo) ? 'selected' : '' }}>
-                                {{ $item->TenderNo }} | {{ $item->Title }} 
+                            <option
+                                value="{{ $item->TenderNo }}" {{ (isset($tender) && $tender->TenderNo === $item->TenderNo) ? 'selected' : '' }}>
+                                {{ $item->TenderNo }} | {{ $item->Title }}
                                 <small>(Opening: {{ $item->OpeningDate->format('d/m/Y H:i') }})</small>
                             </option>
                         @endforeach
@@ -94,7 +95,8 @@
                         </div>
                         <div class="col-md-4 text-end">
                             @if($ceremonyStatus['can_start'])
-                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#startCeremonyModal">
+                                <button class="btn btn-success" data-bs-toggle="modal"
+                                        data-bs-target="#startCeremonyModal">
                                     <i class="fas fa-unlock"></i> Start Opening Ceremony
                                 </button>
                             @elseif($ceremonyStatus['status'] === 'partial' && isset($tender))
@@ -102,7 +104,8 @@
                                     <i class="fas fa-flag-checkered"></i> Complete Ceremony
                                 </button>
                             @elseif($ceremonyStatus['status'] === 'completed')
-                                <a href="{{ route('bid-responsiveness.index') }}?tender={{ $tender->TenderNo ?? '' }}" class="btn btn-info">
+                                <a href="{{ route('bid-responsiveness.index') }}?tender={{ $tender->TenderNo ?? '' }}"
+                                   class="btn btn-info">
                                     <i class="fas fa-arrow-right"></i> Proceed to Responsiveness Check
                                 </a>
                             @endif
@@ -122,194 +125,197 @@
         <thead class="table-light">
             <tr>
                 <th>Supplier Name</th>
-                            <th>Bid Amount</th>
-                            <th>Submission Details</th>
-                            <th>Security</th>
-                            <th>Status</th>
-                            <th>Opening Details</th>
+                <th>Bid Amount</th>
+                <th>Submission Details</th>
+                <th>Security</th>
+                <th>Status</th>
+                <th>Opening Details</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-                    @forelse ($submissions as $item)
-                        <tr>
-                            <td>
-                                <strong>{{ $item->SupplierName }}</strong><br>
-                                <small class="text-muted">
-                                    <i class="fas fa-{{ $item->SubmissionSource === 'portal' ? 'globe' : 'hand-paper' }}"></i>
-                                    {{ ucfirst($item->SubmissionSource) }}
-                                </small>
-                            </td>
-                            <td>
-                                @if($item->BidAmount && $item->OpenedAt)
-                                    <strong>{{ $item->Currency }} {{ number_format($item->BidAmount, 2) }}</strong><br>
-                                    <small class="text-muted">{{ $item->ValidityPeriod }} days validity</small>
-                                @elseif($item->BidAmount && !$item->OpenedAt)
-                                    <span class="badge bg-warning">🔒 Sealed</span>
-                                @else
-                                    <span class="text-muted">Not available</span>
-                                @endif
-                            </td>
-                            <td>
-                                <strong>Received:</strong> {{ \Carbon\Carbon::parse($item->ReceivedAt)->format('d/m/Y H:i') }}<br>
-                                <strong>Documents:</strong> {{ $item->document_count }} files<br>
-                                <small class="text-muted">
-                                    @if($item->submission_timely ?? true)
-                                        <i class="fas fa-check text-success"></i> On time
-                                    @else
-                                        <i class="fas fa-exclamation text-warning"></i> Late
-                                    @endif
-                                </small>
-                            </td>
-                            <td>
-                                @if($item->BidSecurityPresent === true)
-                                    <span class="badge bg-success">✅ Present</span>
-                                @elseif($item->BidSecurityPresent === false)
-                                    <span class="badge bg-danger">❌ Missing</span>
-                                @elseif($item->has_bid_security ?? false)
-                                    <span class="badge bg-info">📋 To Check</span>
-                                @else
-                                    <span class="badge bg-secondary">❓ Unknown</span>
-                                @endif
-                            </td>
-                            <td>{!! $item->status_badge !!}</td>
-                            <td>
-                                @if($item->OpenedAt)
-                                    <strong>Opened:</strong> {{ $item->OpenedAt->format('d/m/Y H:i') }}<br>
-                                    <strong>By:</strong> {{ $item->openedByUser->name ?? 'Unknown' }}<br>
-                                    @if($item->CeremonyType)
-                                        <span class="badge bg-info">{{ ucfirst($item->CeremonyType) }} Opening</span>
-                                    @endif
-                                @else
-                                    <span class="text-muted">Not opened yet</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($item->OpenedAt)
-                                    <!-- Bid is opened - show view/read-out actions -->
-                                    <button class="btn btn-sm btn-outline-info mb-1" 
-                                            onclick="showBidDetails({{ $item->Id }})">
-                                        <i class="fas fa-eye"></i> View Details
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success mb-1" 
-                                            onclick="showReadOutSummary({{ $item->Id }})">
-                                        <i class="fas fa-microphone"></i> Read Out
-                                    </button>
-                                @elseif(isset($tender) && $tender->OpeningDate && $tender->OpeningDate <= now())
-                                    <!-- Ceremony started but bid not opened yet - show opening action -->
-                                    <button class="btn btn-sm btn-warning mb-1" 
-                                            onclick="openIndividualBid({{ $item->Id }})" 
-                                            id="open-btn-{{ $item->Id }}">
-                                        <i class="fas fa-unlock"></i> Open Bid
-                                    </button>
-                                @else
-                                    <!-- Ceremony not started - show sealed status -->
-                                    <span class="text-muted">🔒 Sealed</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted">
-                                <i class="fas fa-inbox"></i> No bid submissions found for this tender.
+        @forelse ($submissions as $item)
+            <tr>
+                <td>
+                    <strong>{{ $item->SupplierName }}</strong><br>
+                    <small class="text-muted">
+                        <i class="fas fa-{{ $item->SubmissionSource === 'portal' ? 'globe' : 'hand-paper' }}"></i>
+                        {{ ucfirst($item->SubmissionSource) }}
+                    </small>
+                </td>
+                <td>
+                    @if($item->BidAmount && $item->OpenedAt)
+                        <strong>{{ $item->Currency }} {{ number_format($item->BidAmount, 2) }}</strong><br>
+                        <small class="text-muted">{{ $item->ValidityPeriod }} days validity</small>
+                    @elseif($item->BidAmount && !$item->OpenedAt)
+                        <span class="badge bg-warning">🔒 Sealed</span>
+                    @else
+                        <span class="text-muted">Not available</span>
+                    @endif
+                </td>
+                <td>
+                    <strong>Received:</strong> {{ \Carbon\Carbon::parse($item->ReceivedAt)->format('d/m/Y H:i') }}<br>
+                    <strong>Documents:</strong> {{ $item->document_count }} files<br>
+                    <small class="text-muted">
+                        @if($item->submission_timely ?? true)
+                            <i class="fas fa-check text-success"></i> On time
+                        @else
+                            <i class="fas fa-exclamation text-warning"></i> Late
+                        @endif
+                    </small>
+                </td>
+                <td>
+                    @if($item->BidSecurityPresent === true)
+                        <span class="badge bg-success">✅ Present</span>
+                    @elseif($item->BidSecurityPresent === false)
+                        <span class="badge bg-danger">❌ Missing</span>
+                    @elseif($item->has_bid_security ?? false)
+                        <span class="badge bg-info">📋 To Check</span>
+                    @else
+                        <span class="badge bg-secondary">❓ Unknown</span>
+                    @endif
+                </td>
+                <td>{!! $item->status_badge !!}</td>
+                <td>
+                    @if($item->OpenedAt)
+                        <strong>Opened:</strong> {{ $item->OpenedAt->format('d/m/Y H:i') }}<br>
+                        <strong>By:</strong> {{ $item->openedByUser->name ?? 'Unknown' }}<br>
+                        @if($item->CeremonyType)
+                            <span class="badge bg-info">{{ ucfirst($item->CeremonyType) }} Opening</span>
+                        @endif
+                    @else
+                        <span class="text-muted">Not opened yet</span>
+                    @endif
+                </td>
+                <td>
+                    @if($item->OpenedAt)
+                        <!-- Bid is opened - show view/read-out actions -->
+                        <button class="btn btn-sm btn-outline-info mb-1"
+                                onclick="showBidDetails({{ $item->Id }})">
+                            <i class="fas fa-eye"></i> View Details
+                        </button>
+                        <button class="btn btn-sm btn-outline-success mb-1"
+                                onclick="showReadOutSummary({{ $item->Id }})">
+                            <i class="fas fa-microphone"></i> Read Out
+                        </button>
+                    @elseif(isset($tender) && $tender->OpeningDate && $tender->OpeningDate <= now())
+                        <!-- Ceremony started but bid not opened yet - show opening action -->
+                        <button class="btn btn-sm btn-warning mb-1"
+                                onclick="openIndividualBid({{ $item->Id }})"
+                                id="open-btn-{{ $item->Id }}">
+                            <i class="fas fa-unlock"></i> Open Bid
+                        </button>
+                    @else
+                        <!-- Ceremony not started - show sealed status -->
+                        <span class="text-muted">🔒 Sealed</span>
+                    @endif
                 </td>
             </tr>
-                    @endforelse
+        @empty
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    <i class="fas fa-inbox"></i> No bid submissions found for this tender.
+                </td>
+            </tr>
+        @endforelse
         </tbody>
     </table>
             </div>
 </div>
     @else
         <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> Please select a tender to view its bid submissions ready for opening ceremony.
+            <i class="fas fa-info-circle"></i> Please select a tender to view its bid submissions ready for opening
+            ceremony.
         </div>
     @endif
 </div>
 
-<!-- Start Ceremony Modal -->
-<div class="modal fade" id="startCeremonyModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('tender-opening.start-ceremony') }}">
-                @csrf
+    <!-- Start Ceremony Modal -->
+    <div class="modal fade" id="startCeremonyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('tender-opening.start-ceremony') }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-unlock"></i> Start Opening Ceremony</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="tender_ref" value="{{ $tender->TenderNo ?? '' }}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Opening Type *</label>
+                            <select class="form-select" name="opening_type" required>
+                                <option value="">-- Select Opening Type --</option>
+                                <option value="public">Public Opening (Open to suppliers/public)</option>
+                                <option value="recorded">Recorded Opening (Internal record)</option>
+                            </select>
+                            <small class="text-muted">Public openings allow supplier attendance, recorded are for
+                                internal documentation</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Officers Present</label>
+                            <textarea class="form-control" name="officers_present" rows="2"
+                                      placeholder="List procurement officers and witnesses present during ceremony"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ceremony Notes</label>
+                            <textarea class="form-control" name="ceremony_notes" rows="3"
+                                      placeholder="Any special notes or observations about the opening ceremony"></textarea>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Important:</strong> Starting the ceremony will publicly read out bid basics
+                            (supplier names, amounts, security presence) and mark all bids as opened for responsiveness
+                            check.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-unlock"></i> Start Ceremony
+        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bid Details Modal -->
+    <div class="modal fade" id="bidDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-unlock"></i> Start Opening Ceremony</h5>
+                    <h5 class="modal-title"><i class="fas fa-eye"></i> Bid Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <input type="hidden" name="tender_ref" value="{{ $tender->TenderNo ?? '' }}">
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Opening Type *</label>
-                        <select class="form-select" name="opening_type" required>
-                            <option value="">-- Select Opening Type --</option>
-                            <option value="public">Public Opening (Open to suppliers/public)</option>
-                            <option value="recorded">Recorded Opening (Internal record)</option>
-                        </select>
-                        <small class="text-muted">Public openings allow supplier attendance, recorded are for internal documentation</small>
+                <div class="modal-body" id="bidDetailsContent">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Officers Present</label>
-                        <textarea class="form-control" name="officers_present" rows="2" 
-                                  placeholder="List procurement officers and witnesses present during ceremony"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Ceremony Notes</label>
-                        <textarea class="form-control" name="ceremony_notes" rows="3" 
-                                  placeholder="Any special notes or observations about the opening ceremony"></textarea>
-                    </div>
-
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i> 
-                        <strong>Important:</strong> Starting the ceremony will publicly read out bid basics 
-                        (supplier names, amounts, security presence) and mark all bids as opened for responsiveness check.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-unlock"></i> Start Ceremony
-        </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Bid Details Modal -->
-<div class="modal fade" id="bidDetailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-eye"></i> Bid Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="bidDetailsContent">
-                <div class="text-center">
-                    <i class="fas fa-spinner fa-spin"></i> Loading...
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Read Out Summary Modal -->
-<div class="modal fade" id="readOutModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-microphone"></i> Public Read-Out Summary</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="readOutContent">
-                <div class="text-center">
-                    <i class="fas fa-spinner fa-spin"></i> Loading...
+    <!-- Read Out Summary Modal -->
+    <div class="modal fade" id="readOutModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-microphone"></i> Public Read-Out Summary</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="readOutContent">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 </div>
 
 <script>
@@ -335,46 +341,46 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success message
-                alert(`🎉 Bid Opened Successfully!\n\nRead Out: ${data.data.read_out_summary}`);
-                
-                // Refresh page to update status
-                location.reload();
-            } else {
-                alert('❌ Error: ' + data.message);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert(`🎉 Bid Opened Successfully!\n\nRead Out: ${data.data.read_out_summary}`);
+
+                    // Refresh page to update status
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-unlock"></i> Open Bid';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Failed to open bid. Please try again.');
                 if (button) {
                     button.disabled = false;
                     button.innerHTML = '<i class="fas fa-unlock"></i> Open Bid';
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('❌ Failed to open bid. Please try again.');
-            if (button) {
-                button.disabled = false;
-                button.innerHTML = '<i class="fas fa-unlock"></i> Open Bid';
-            }
-        });
+            });
     }
 
     // Show detailed bid information
     function showBidDetails(bidId) {
         const modal = new bootstrap.Modal(document.getElementById('bidDetailsModal'));
         const content = document.getElementById('bidDetailsContent');
-        
+
         content.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading bid details...</div>';
         modal.show();
 
         fetch(`/procurement/tender-opening/bid-details/${bidId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const details = data.data;
-                content.innerHTML = `
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const details = data.data;
+                    content.innerHTML = `
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-primary">Submission Information</h6>
@@ -389,7 +395,7 @@
                             <p><strong>Delivery:</strong> ${details.bid_details.delivery_period}</p>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-success">Submission Details</h6>
@@ -427,30 +433,30 @@
                         </div>
                     </div>
                 `;
-            } else {
-                content.innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            content.innerHTML = `<div class="alert alert-danger">❌ Failed to load bid details</div>`;
-        });
+                } else {
+                    content.innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                content.innerHTML = `<div class="alert alert-danger">❌ Failed to load bid details</div>`;
+            });
     }
 
     // Show read-out summary
     function showReadOutSummary(bidId) {
         const modal = new bootstrap.Modal(document.getElementById('readOutModal'));
         const content = document.getElementById('readOutContent');
-        
+
         content.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading read-out summary...</div>';
         modal.show();
 
         fetch(`/procurement/tender-opening/read-out/${bidId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const readOut = data.data;
-                content.innerHTML = `
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const readOut = data.data;
+                    content.innerHTML = `
                     <div class="card border-primary mb-3">
                         <div class="card-header bg-primary text-white">
                             <h6 class="mb-0">📢 Public Announcement</h6>
@@ -494,14 +500,14 @@
                         </div>
                     </div>
                 `;
-            } else {
-                content.innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            content.innerHTML = `<div class="alert alert-danger">❌ Failed to load read-out summary</div>`;
-        });
+                } else {
+                    content.innerHTML = `<div class="alert alert-danger">❌ ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                content.innerHTML = `<div class="alert alert-danger">❌ Failed to load read-out summary</div>`;
+            });
     }
 
     // Complete ceremony
@@ -517,19 +523,19 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(`🎉 ${data.message}`);
-                location.reload();
-            } else {
-                alert('❌ Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('❌ Failed to complete ceremony. Please try again.');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`🎉 ${data.message}`);
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Failed to complete ceremony. Please try again.');
+            });
     }
 </script>
 @endsection

@@ -111,7 +111,7 @@ class ThirdPartyUser extends Authenticatable implements MustVerifyEmailContract
     {
         return $query->whereHas('thirdParty', function ($q) {
             // Prefer pivot relationship filtering
-            $q->whereHas('types', function($t){
+            $q->whereHas('types', function ($t) {
                 $t->where('Code', 'like', 'SU-%');
             })->orWhere('ThirdPartyType', ThirdPartyTypeEnum::Supplier); // legacy fallback
         });

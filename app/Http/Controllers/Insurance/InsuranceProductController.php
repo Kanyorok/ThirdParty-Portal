@@ -110,8 +110,8 @@ class InsuranceProductController extends Controller
 
             if ($product->policies()->exists()) {
                 return redirect()->back()
-                ->withErrors(['error' => 'This Product is in use and cannot be deleted.']);
-            } 
+                    ->withErrors(['error' => 'This Product is in use and cannot be deleted.']);
+            }
             $product->delete();
 
             return redirect()->route('bancassurance.products.index')

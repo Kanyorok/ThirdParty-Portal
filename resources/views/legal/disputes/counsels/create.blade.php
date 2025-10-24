@@ -67,7 +67,8 @@
 
                 <div class="mb-3">
                     <label class="form-label">Remarks</label>
-                    <textarea name="Remarks" class="form-control" rows="2" placeholder="Additional notes or remarks" required>{{ old('Remarks') }}</textarea>
+                    <textarea name="Remarks" class="form-control" rows="2" placeholder="Additional notes or remarks"
+                              required>{{ old('Remarks') }}</textarea>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mb-3">

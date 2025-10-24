@@ -17,6 +17,7 @@ class BudgetLineLedgerLimit extends Model
     {
         return 'BudgetLineLedgerLimitId';
     }
+
     protected $fillable = [
         'BudgetID',
         'ReallocationID',

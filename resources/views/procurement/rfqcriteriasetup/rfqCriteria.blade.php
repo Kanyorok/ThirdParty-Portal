@@ -5,9 +5,9 @@
     <div class="container mt-4">
         <h4 class="mb-3">📑 {{ $rfq->RFQNumber }} Criteria Form</h4>
 
-                        <form action="{{ route('rfqcriterias.store') }}"
-                                    method="POST" enctype="multipart/form-data" id="rfqCriteriaForm">
-                                @csrf
+        <form action="{{ route('rfqcriterias.store') }}"
+              method="POST" enctype="multipart/form-data" id="rfqCriteriaForm">
+            @csrf
 
             <input type="hidden" name="rfq_id" value="{{ $rfq->Id }}">
 
@@ -29,7 +29,9 @@
                                    name="weights[{{ $section->section->Id }}]"
                                    value="{{ number_format($section->Weight, 2) }}"
                                    step="0.01" min="0" max="100" required>
-                            <button type="button" class="btn btn-outline-danger btn-sm remove-section-btn" title="Remove Section">&times;</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-section-btn"
+                                    title="Remove Section">&times;
+                            </button>
                         </td>
                     </tr>
 

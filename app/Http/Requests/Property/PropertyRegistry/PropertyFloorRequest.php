@@ -32,7 +32,7 @@ class PropertyFloorRequest extends FormRequest
                 'string',
                 'max:50',
                 Rule::unique(PropertyFloor::class, 'FloorLabel')
-                    ->where(fn ($query) => $query
+                    ->where(fn($query) => $query
                         ->where('PropertyID', $this->PropertyID)
                         ->where('BlockID', $this->BlockID)
                     ),

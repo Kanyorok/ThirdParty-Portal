@@ -11,8 +11,8 @@ class ComplianceAlert extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'CalendarEntryID','DaysBefore','EscalationLevel','Channel',
-        'IsActive','CreatedBy','CreatedOn'
+        'CalendarEntryID', 'DaysBefore', 'EscalationLevel', 'Channel',
+        'IsActive', 'CreatedBy', 'CreatedOn'
     ];
 
     public function calendarEntry()

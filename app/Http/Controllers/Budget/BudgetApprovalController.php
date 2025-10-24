@@ -20,45 +20,47 @@ class BudgetApprovalController extends Controller
         return view('budgetandanalytics.budgetworkspace.approval.create');
     }
 
-    public function approve(Request $request){
-        //Permission to approve budget
-
-         $validated = $request->validate([
-            'BudgetID'     => 'required|exists:t_Budgets,Id',
-            'approval_reason' => 'required|string',
-        ]);
-
-         //Approve Budget
-        try {
-            Budget::where('id', $validated['BudgetID'])->update([
-                'Status'=>'approved',
-            ]);
-
-            return  back()->with('success', 'Budget Approved Successfully');
-        }catch(\Throwable $th){
-            Log::error('Error in approving budget',$th->getMessage());
-            return back()->with('error','Something went wrong');
-        }
-    }
-
-    public function reject(Request $request){
+    public function approve(Request $request)
+    {
         //Permission to approve budget
 
         $validated = $request->validate([
-            'BudgetID'     => 'required|exists:t_Budgets,Id',
+            'BudgetID' => 'required|exists:t_Budgets,Id',
+            'approval_reason' => 'required|string',
+        ]);
+
+        //Approve Budget
+        try {
+            Budget::where('id', $validated['BudgetID'])->update([
+                'Status' => 'approved',
+            ]);
+
+            return back()->with('success', 'Budget Approved Successfully');
+        } catch (\Throwable $th) {
+            Log::error('Error in approving budget', $th->getMessage());
+            return back()->with('error', 'Something went wrong');
+        }
+    }
+
+    public function reject(Request $request)
+    {
+        //Permission to approve budget
+
+        $validated = $request->validate([
+            'BudgetID' => 'required|exists:t_Budgets,Id',
             'rejection_reason' => 'required|string',
         ]);
 
         //Approve Budget
         try {
             Budget::where('id', $validated['BudgetID'])->update([
-                'Status'=>'rejected',
+                'Status' => 'rejected',
             ]);
 
-            return  back()->with('success', 'Budget Rejected Successfully');
-        }catch(\Throwable $th){
-            Log::error('Error in approving budget',$th->getMessage());
-            return back()->with('error','Something went wrong');
+            return back()->with('success', 'Budget Rejected Successfully');
+        } catch (\Throwable $th) {
+            Log::error('Error in approving budget', $th->getMessage());
+            return back()->with('error', 'Something went wrong');
         }
     }
 }

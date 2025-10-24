@@ -143,8 +143,8 @@ class PrequalificationRoundController extends Controller
 
     private function syncSectionsAndCriteria(PrequalificationRound $round, array $sections): void
     {
-    $now = now();
-    $userId = Auth::id();
+        $now = now();
+        $userId = Auth::id();
 
         // Filter only included sections
         $includedSectionsData = collect($sections)->filter(function ($section) {

@@ -1,6 +1,6 @@
 <script>
 
-    document.getElementById('reallocationType').addEventListener('change', function() {
+    document.getElementById('reallocationType').addEventListener('change', function () {
         let type = this.value;
         let deptSection = document.getElementById('departmentSection');
         let toDeptSection = document.getElementById('toDepartmentSection');
@@ -25,7 +25,7 @@
 
 
     // Toggle branch/department fields
-    document.getElementById('reallocationType').addEventListener('change', function() {
+    document.getElementById('reallocationType').addEventListener('change', function () {
         let type = this.value;
         document.getElementById('branchSection').style.display = 'none';
         document.getElementById('departmentSection').style.display = 'none';
@@ -42,7 +42,7 @@
     });
 
     // Fetch budget lines dynamically
-    document.getElementById('departmentSelect')?.addEventListener('change', function() {
+    document.getElementById('departmentSelect')?.addEventListener('change', function () {
         let deptId = this.value;
         if (deptId) {
             fetch(`/budgetandanalytics/reallocation/budget-lines/${deptId}`)
@@ -57,7 +57,7 @@
         }
     });
 
-    document.getElementById('toDepartmentSelect')?.addEventListener('change', function() {
+    document.getElementById('toDepartmentSelect')?.addEventListener('change', function () {
         let deptId = this.value;
         if (deptId) {
             fetch(`/budgetandanalytics/reallocation/budget-lines/${deptId}`)
@@ -73,7 +73,7 @@
     });
 
     // Fetch line details
-    document.getElementById('fromLine')?.addEventListener('change', function() {
+    document.getElementById('fromLine')?.addEventListener('change', function () {
         let lineId = this.value;
         let branchId = document.querySelector('[name="BranchID"]')?.value || '';
         if (lineId) {

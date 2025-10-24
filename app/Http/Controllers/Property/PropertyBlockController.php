@@ -26,7 +26,7 @@ class PropertyBlockController extends Controller
     }
     public function create(){
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyBlock::class);
-        $properties = PropertyRegistry::where('IsActive',true)->get();
+        $properties = PropertyRegistry::where('IsActive', true)->get();
         return view('property.propertyregistry.structuralmapping.addblock.create', compact('properties'));
     }
 
@@ -111,8 +111,8 @@ class PropertyBlockController extends Controller
 
             if ($block->floor()->exists()) {
                 return redirect()->back()
-                ->withErrors(['error' => 'This Property Block is in use and cannot be deleted.']);
-            }  
+                    ->withErrors(['error' => 'This Property Block is in use and cannot be deleted.']);
+            }
             $block->delete();
 
             return redirect()->route('addblock.index')

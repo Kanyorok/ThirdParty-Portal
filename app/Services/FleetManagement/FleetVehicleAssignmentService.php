@@ -25,7 +25,7 @@ class FleetVehicleAssignmentService
         }
 
         // Extract number from last ID
-        $lastNumber = (int) str_replace('ASG-', '', $lastInspection->AssignmentID);
+        $lastNumber = (int)str_replace('ASG-', '', $lastInspection->AssignmentID);
 
 
         // Increment
@@ -43,18 +43,18 @@ class FleetVehicleAssignmentService
     {
         return DB::transaction(function () use ($data) {
             $assignment = FleetVehicleAssignment::create([
-                'AssignmentID'       => $this->generateAssignmentNo(),
-                'TripNo'             => $data['TripNo'],
-                'VehicleType'        => $data['VehicleType'],
-                'DriverID'        => $data['DriverID'],
-                'VehicleID'          => $data['VehicleID'],
+                'AssignmentID' => $this->generateAssignmentNo(),
+                'TripNo' => $data['TripNo'],
+                'VehicleType' => $data['VehicleType'],
+                'DriverID' => $data['DriverID'],
+                'VehicleID' => $data['VehicleID'],
                 'LastInspectionDate' => $data['LastInspectionDate'],
-                'AssignmentDate'     => $data['AssignmentDate'] ?? null,
-                'Purpose'            => $data['Purpose'] ?? null,
-                'Notes'              => $data['Notes'] ?? null,
-                'AssignedBy'         => $data['AssignedBy'] ?? null,
-                'CreatedBy'          => Auth::id(),
-                'CreatedOn'          => now(),
+                'AssignmentDate' => $data['AssignmentDate'] ?? null,
+                'Purpose' => $data['Purpose'] ?? null,
+                'Notes' => $data['Notes'] ?? null,
+                'AssignedBy' => $data['AssignedBy'] ?? null,
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
 
             ]);
 

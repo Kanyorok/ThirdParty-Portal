@@ -100,8 +100,8 @@ Route::namespace('Budget')->prefix('budget')->group(function () {
     Route::resource('budgetformula', BudgetFormulaController::class);
     Route::resource('budgetconsolidation', BudgetConsolidationController::class);
 // Export routes (no CDN libs; server-side using local packages)
-Route::post('budgetconsolidation/export/excel', [BudgetConsolidationController::class, 'exportExcel'])->name('budgetconsolidation.export.excel');
-Route::post('budgetconsolidation/export/pdf', [BudgetConsolidationController::class, 'exportPdf'])->name('budgetconsolidation.export.pdf');
+    Route::post('budgetconsolidation/export/excel', [BudgetConsolidationController::class, 'exportExcel'])->name('budgetconsolidation.export.excel');
+    Route::post('budgetconsolidation/export/pdf', [BudgetConsolidationController::class, 'exportPdf'])->name('budgetconsolidation.export.pdf');
     Route::resource('budgetvsactualdashboard', BudgetvsActualDashboardController::class);
     Route::resource('budgetvarianceanalysis', BudgetVarianceAnalysisController::class);
     Route::resource('kpiscorecards', BudgetKPIscorecardsController::class);

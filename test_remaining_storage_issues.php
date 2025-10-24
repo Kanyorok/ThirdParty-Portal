@@ -34,7 +34,7 @@ $testCases = [
 foreach ($testCases as $testName => $testCase) {
     try {
         echo "   🔄 Testing {$testName} (" . strlen($testCase['content']) . " bytes)...\n";
-        
+
         $result = DocumentService::createContent(
             repository: $repository,
             extension: $testCase['extension'],
@@ -43,9 +43,9 @@ foreach ($testCases as $testName => $testCase) {
             actor: $user,
             copyRepoPermissions: true
         );
-        
+
         echo "   ✅ {$testName}: SUCCESS\n";
-        
+
         // Test retrieval
         $retrieved = $result->document->current->getContent();
         if ($retrieved === $testCase['content']) {
@@ -53,12 +53,12 @@ foreach ($testCases as $testName => $testCase) {
         } else {
             echo "   ⚠️  {$testName} retrieval: MISMATCH\n";
         }
-        
+
     } catch (\Exception $e) {
         echo "   🚨 {$testName} FAILED: " . $e->getMessage() . "\n";
         echo "      Error type: " . get_class($e) . "\n";
         echo "      Location: " . $e->getFile() . ":" . $e->getLine() . "\n";
-        
+
         // This could be our culprit!
         if (strpos($e->getMessage(), 'storage') !== false ||
             strpos($e->getMessage(), 'disk') !== false ||
@@ -75,18 +75,18 @@ try {
     $bidSubmission = new BidSubmission();
     $bidSubmission->TenderRef = 'TEST-DIRECT-' . time();
     $bidSubmission->SupplierId = 1;
-    
+
     echo "   📄 BidSubmission populated: {$bidSubmission->TenderRef}\n";
-    
+
     // We can't easily test with real UploadedFile, but we can test the key generation
     $reflectionClass = new ReflectionClass(EncryptedBidDocumentService::class);
     $keyMethod = $reflectionClass->getMethod('generateBidEncryptionKey');
     $keyMethod->setAccessible(true);
-    
+
     $encryptionKey = $keyMethod->invoke(null, $bidSubmission);
     echo "   ✅ Encryption key generation: SUCCESS\n";
     echo "   🔑 Key preview: " . substr($encryptionKey, 0, 20) . "...\n";
-    
+
 } catch (\Exception $e) {
     echo "   🚨 EncryptedBidDocumentService test FAILED: " . $e->getMessage() . "\n";
 }
@@ -97,26 +97,26 @@ try {
     $storagePath = storage_path('app');
     $freeBytes = disk_free_space($storagePath);
     $freeMB = round($freeBytes / 1024 / 1024, 2);
-    
+
     echo "   📊 Free disk space: {$freeMB} MB\n";
-    
+
     if ($freeMB < 100) {
         echo "   ⚠️  LOW DISK SPACE - This could cause storage exceptions!\n";
     } else {
         echo "   ✅ Sufficient disk space available\n";
     }
-    
+
     // Test file permissions
     $testFile = $storagePath . '/permission_test_' . time() . '.txt';
     $written = file_put_contents($testFile, 'permission test');
-    
+
     if ($written) {
         echo "   ✅ File write permissions: OK\n";
         unlink($testFile);
     } else {
         echo "   ❌ File write permissions: FAILED\n";
     }
-    
+
 } catch (\Exception $e) {
     echo "   ❌ Disk/permission check failed: " . $e->getMessage() . "\n";
 }
@@ -126,13 +126,13 @@ echo "\n4. TESTING STORAGE DISK CONFIGURATION:\n";
 try {
     $defaultDisk = config('filesystems.default');
     echo "   📋 Default filesystem disk: {$defaultDisk}\n";
-    
+
     $disks = config('filesystems.disks');
     if (isset($disks[$defaultDisk])) {
         $diskConfig = $disks[$defaultDisk];
         echo "   📋 Disk driver: " . ($diskConfig['driver'] ?? 'unknown') . "\n";
         echo "   📋 Disk root: " . ($diskConfig['root'] ?? 'unknown') . "\n";
-        
+
         $rootPath = $diskConfig['root'] ?? '';
         if (!empty($rootPath) && !file_exists($rootPath)) {
             echo "   ❌ Disk root path does not exist!\n";
@@ -142,7 +142,7 @@ try {
             echo "   ✅ Disk configuration appears valid\n";
         }
     }
-    
+
 } catch (\Exception $e) {
     echo "   ❌ Storage configuration check failed: " . $e->getMessage() . "\n";
 }
@@ -151,9 +151,9 @@ echo "\n5. CHECKING FOR TRANSACTION/ROLLBACK ISSUES:\n";
 
 try {
     echo "   🔄 Testing database transaction with storage...\n";
-    
+
     DB::beginTransaction();
-    
+
     $result = DocumentService::createContent(
         repository: $repository,
         extension: ExtensionsEnum::Txt,
@@ -162,14 +162,14 @@ try {
         actor: $user,
         copyRepoPermissions: false
     );
-    
+
     DB::commit();
     echo "   ✅ Transaction + storage: SUCCESS\n";
-    
+
 } catch (\Exception $e) {
     DB::rollBack();
     echo "   🚨 Transaction + storage FAILED: " . $e->getMessage() . "\n";
-    
+
     if (strpos($e->getMessage(), 'transaction') !== false) {
         echo "   🎯 TRANSACTION-RELATED STORAGE ISSUE!\n";
     }

@@ -17,7 +17,7 @@ use App\Models\Core\CodeDetail;
 
 class FleetVehicleAssignment extends Model
 {
-     use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';

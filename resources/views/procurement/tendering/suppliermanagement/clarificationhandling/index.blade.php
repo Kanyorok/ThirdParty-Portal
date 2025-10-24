@@ -29,36 +29,36 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>@php
-                            $tenderNo = $clarification->TenderID;
-                            try {
-                                $t = \App\Models\Procurement\Tender::find($clarification->TenderID);
-                                if ($t) {
-                                    $tenderNo = $t->TenderNo ?? $clarification->TenderID;
-                                }
-                            } catch (\Throwable $e) {
-                                // ignore and fallback to id
-                            }
-                        @endphp
-                        {{ $tenderNo }}</td>
-                        <td>@php
-                            $vendorName = $clarification->VendorID;
-                            try {
-                                // try Supplier model that links to thirdParty
-                                $sup = \App\Models\ThirdParies\Supplier::with('thirdParty')->find($clarification->VendorID);
-                                if ($sup && $sup->thirdParty) {
-                                    $vendorName = $sup->thirdParty->ThirdPartyName ?? ($sup->thirdParty->TradingName ?? $clarification->VendorID);
-                                } else {
-                                    // fallback: maybe VendorID is a ThirdParties id
-                                    $tp = \App\Models\ThirdParty\ThirdParties::find($clarification->VendorID);
-                                    if ($tp) {
-                                        $vendorName = $tp->ThirdPartyName ?? ($tp->TradingName ?? $clarification->VendorID);
+                                $tenderNo = $clarification->TenderID;
+                                try {
+                                    $t = \App\Models\Procurement\Tender::find($clarification->TenderID);
+                                    if ($t) {
+                                        $tenderNo = $t->TenderNo ?? $clarification->TenderID;
                                     }
+                                } catch (\Throwable $e) {
+                                    // ignore and fallback to id
                                 }
-                            } catch (\Throwable $e) {
-                                // ignore and show raw id
-                            }
-                        @endphp
-                        {{ $vendorName }}</td>
+                            @endphp
+                            {{ $tenderNo }}</td>
+                        <td>@php
+                                $vendorName = $clarification->VendorID;
+                                try {
+                                    // try Supplier model that links to thirdParty
+                                    $sup = \App\Models\ThirdParies\Supplier::with('thirdParty')->find($clarification->VendorID);
+                                    if ($sup && $sup->thirdParty) {
+                                        $vendorName = $sup->thirdParty->ThirdPartyName ?? ($sup->thirdParty->TradingName ?? $clarification->VendorID);
+                                    } else {
+                                        // fallback: maybe VendorID is a ThirdParties id
+                                        $tp = \App\Models\ThirdParty\ThirdParties::find($clarification->VendorID);
+                                        if ($tp) {
+                                            $vendorName = $tp->ThirdPartyName ?? ($tp->TradingName ?? $clarification->VendorID);
+                                        }
+                                    }
+                                } catch (\Throwable $e) {
+                                    // ignore and show raw id
+                                }
+                            @endphp
+                            {{ $vendorName }}</td>
                         <td>{{ $clarification->Question }}</td>
                         <td>
                             <span class="badge {{ $clarification->Answer ? 'bg-success' : 'bg-warning' }}">

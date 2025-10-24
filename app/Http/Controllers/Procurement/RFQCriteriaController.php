@@ -154,7 +154,7 @@ class RFQCriteriaController extends Controller
     public function destroy($id)
     {
         $criteria = RFQCriteria::findOrFail($id);
-    $criteria->DeletedBy = Auth::id();
+        $criteria->DeletedBy = Auth::id();
         $criteria->save();
         $criteria->delete();
 

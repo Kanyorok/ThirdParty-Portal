@@ -55,7 +55,9 @@
                         </select>
                     </div>
                     <input type="hidden" name="SupplierId" id="supplier-id" value=""/>
-                    <div id="existing-response-alert" class="alert alert-info d-none">Existing response found. Fields are locked.</div>
+                    <div id="existing-response-alert" class="alert alert-info d-none">Existing response found. Fields
+                        are locked.
+                    </div>
                     <h5>Requisition Items Details:</h5>
                     <div id="requisition-items-container"></div>
 
@@ -163,10 +165,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <select name="Currency" class="form-control" required>
                                         <option value="">-- Select Currency --</option>
                                         @foreach($currencies as $curr)
-                                            <option value="{{ $curr->Code }}" {{ $curr->Symbol === 'Ksh' ? 'selected' : '' }}>
+                        <option value="{{ $curr->Code }}" {{ $curr->Symbol === 'Ksh' ? 'selected' : '' }}>
                                                 {{ $curr->Symbol }}
-                                            </option>
-                                        @endforeach
+                        </option>
+@endforeach
                                     </select>
                                 </td>
                                 <td><input type="number" name="RequisitionItems[${index}][totalpayable]" class="form-control totalpayable" readonly></td>

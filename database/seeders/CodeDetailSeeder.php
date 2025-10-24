@@ -581,12 +581,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Completed', 'Value' => 'CO'],
 
 
-             //Vehicle Availability Status
+            //Vehicle Availability Status
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
 
-             //Driver Availability Status
+            //Driver Availability Status
 
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
@@ -618,20 +618,20 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Yearly', 'Value' => 'y','DisplayOrder'=>0],
 
             // Legal Execution Status
-            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Pending',  'Value' => 'P'],
-            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Signed',   'Value' => 'S'],
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Signed', 'Value' => 'S'],
             ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Archived', 'Value' => 'A'],
 
             //Legal Document Type
             ['CodeID' => 'LegalDocumentType', 'Description' => 'Contract', 'Value' => 'C'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'Lease',    'Value' => 'L'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'NDA',      'Value' => 'N'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'MOU',      'Value' => 'M'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'Lease', 'Value' => 'L'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'NDA', 'Value' => 'N'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'MOU', 'Value' => 'M'],
 
             //Legal Case Status
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Open',      'Value' => 'O'],
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Closed',    'Value' => 'C'],
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed',  'Value' => 'A'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Open', 'Value' => 'O'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Closed', 'Value' => 'C'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed', 'Value' => 'A'],
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Dismissed', 'Value' => 'D'],
 
 

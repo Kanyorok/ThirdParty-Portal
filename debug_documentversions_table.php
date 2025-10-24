@@ -19,19 +19,19 @@ try {
     if (Schema::hasTable('t_DocumentVersions')) {
         $count = DB::table('t_DocumentVersions')->count();
         echo "   ✅ t_DocumentVersions: EXISTS (Records: {$count})\n";
-        
+
         // Check table structure
         echo "\n2. CHECKING TABLE STRUCTURE:\n";
-        $columns = DB::select("SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT 
-                              FROM INFORMATION_SCHEMA.COLUMNS 
-                              WHERE TABLE_NAME = 't_DocumentVersions' 
+        $columns = DB::select("SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
+                              FROM INFORMATION_SCHEMA.COLUMNS
+                              WHERE TABLE_NAME = 't_DocumentVersions'
                               ORDER BY ORDINAL_POSITION");
-        
+
         foreach ($columns as $column) {
             $nullable = $column->IS_NULLABLE === 'YES' ? 'NULL' : 'NOT NULL';
             echo "   📋 {$column->COLUMN_NAME}: {$column->DATA_TYPE} ({$nullable})\n";
         }
-        
+
         // Check if Blob column exists
         $blobColumn = collect($columns)->firstWhere('COLUMN_NAME', 'Blob');
         if ($blobColumn) {
@@ -39,7 +39,7 @@ try {
         } else {
             echo "   ❌ 'Blob' column MISSING!\n";
         }
-        
+
     } else {
         echo "   ❌ t_DocumentVersions: MISSING TABLE!\n";
         echo "   🚨 This is why DocumentService fails!\n";
@@ -53,7 +53,7 @@ try {
 echo "\n3. CHECKING EXISTING DOCUMENT VERSIONS:\n";
 try {
     $versions = DocumentVersion::limit(3)->get(['Id', 'Name', 'Version', 'Path', 'Size', 'Blob']);
-    
+
     if ($versions->count() > 0) {
         echo "   ✅ Found {$versions->count()} document versions:\n";
         foreach ($versions as $version) {
@@ -74,7 +74,7 @@ try {
     $version = DocumentVersion::first();
     if ($version) {
         echo "   📋 Testing with version ID: {$version->Id}\n";
-        
+
         if (method_exists($version, 'getContent')) {
             $content = $version->getContent();
             echo "   ✅ getContent() method exists and returned: " . strlen($content) . " bytes\n";
@@ -92,7 +92,7 @@ try {
 echo "\n5. CHECKING WHAT CONTENT IS ACTUALLY STORED:\n";
 try {
     $versionsWithBlob = DocumentVersion::whereNotNull('Blob')->limit(2)->get(['Id', 'Name', 'Blob']);
-    
+
     if ($versionsWithBlob->count() > 0) {
         echo "   ✅ Found versions with Blob content:\n";
         foreach ($versionsWithBlob as $version) {

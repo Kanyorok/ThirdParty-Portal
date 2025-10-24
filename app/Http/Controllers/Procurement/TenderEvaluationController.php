@@ -116,7 +116,7 @@ class TenderEvaluationController extends Controller
         $this->authorize(PermissionEnum::BidSubmissionWrite);
 
         $bid = BidSubmission::findOrFail($bidId);
-        
+
         // Find tender
         $tender = Tender::where('TenderNo', $bid->TenderRef)->firstOrFail();
 
@@ -212,7 +212,7 @@ class TenderEvaluationController extends Controller
                 if (Schema::hasColumn('t_TenderCommitteeEvaluations', 'SupplierId')) {
                     $insertData['SupplierId'] = $bid->SupplierId;
                 }
-                
+
                 Log::info('About to insert TenderCommitteeEvaluation with data:', $insertData);
 
                 // Create committee evaluation record
@@ -252,7 +252,7 @@ class TenderEvaluationController extends Controller
                 ]);
 
                 // Mark committee member as having evaluated
-            $committeeMember->update([
+                $committeeMember->update([
                     'HasEvaluated' => true,
                     'ModifiedBy' => Auth::id(),
                     'ModifiedOn' => now(),
@@ -270,26 +270,26 @@ class TenderEvaluationController extends Controller
                     'sections_evaluated' => count($sectionScores),
                     'criteria_scored' => count($validated['scores'])
                 ])
-                ->log("Section-based evaluation " . ($validated['evaluation_type'] === 'final' ? 'completed' : 'saved as draft') . 
-                      " for {$bid->SupplierName} - Score: " . round($totalWeightedScore, 2));
+                ->log("Section-based evaluation " . ($validated['evaluation_type'] === 'final' ? 'completed' : 'saved as draft') .
+                    " for {$bid->SupplierName} - Score: " . round($totalWeightedScore, 2));
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => $validated['evaluation_type'] === 'final' 
-                    ? 'Evaluation completed successfully!' 
+                'message' => $validated['evaluation_type'] === 'final'
+                    ? 'Evaluation completed successfully!'
                     : 'Evaluation saved as draft.',
                 'total_score' => round($totalWeightedScore, 2),
                 'evaluation_type' => $validated['evaluation_type'],
-                'redirect' => $validated['evaluation_type'] === 'final' 
-                    ? route('evaluationdashboard.index') 
+                'redirect' => $validated['evaluation_type'] === 'final'
+                    ? route('evaluationdashboard.index')
                     : null
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             activity()
                 ->causedBy(Auth::user())
                 ->withProperties([
@@ -310,17 +310,17 @@ class TenderEvaluationController extends Controller
     {
         $row = DB::table('t_TenderCommitteeMembers as m')
             ->leftJoin('t_TenderCommittee as c', 'c.Id', '=', 'm.CommitteeID')
-            ->join('t_Users as u', function($join) {
+            ->join('t_Users as u', function ($join) {
                 $join->on('u.Id', '=', 'm.UserID')
-                     ->orOn('u.EmployeeId', '=', 'm.UserID');
+                    ->orOn('u.EmployeeId', '=', 'm.UserID');
             })
             ->where('u.Id', $userId)
-            ->where(function($q) use ($tenderId){
+            ->where(function ($q) use ($tenderId) {
                 $q->where('m.TenderID', $tenderId)
-                  ->orWhere('c.ReferenceId', $tenderId);
+                    ->orWhere('c.ReferenceId', $tenderId);
             })
             ->where('m.IsActive', 1)
-            ->where(function($q){
+            ->where(function ($q) {
                 $q->whereNull('m.Response')->orWhere('m.Response', 1);
             })
             ->select('m.Id')
@@ -366,10 +366,10 @@ class TenderEvaluationController extends Controller
             ->groupBy('MemberID');
 
         $summaryData = [];
-        
+
         foreach ($tender->submissions()->where('BidStatus', 'evaluated')->get() as $bid) {
             $bidEvaluations = [];
-            
+
             foreach ($evaluations as $memberId => $memberEvaluations) {
                 // Calculate member's score for this bid
                 // This is a simplified version - in practice, you'd need to link evaluations to specific bids
@@ -378,17 +378,17 @@ class TenderEvaluationController extends Controller
                     $section = $evaluation->section;
                     $tenderSection = $tender->tenderSections->firstWhere('SectionID', $section->Id);
                     $weight = $tenderSection ? $tenderSection->Weight : 0;
-                    
+
                     return ($evaluation->Score / 10) * $weight;
                 });
-                
+
                 $bidEvaluations[] = [
                     'member_id' => $memberId,
                     'member_name' => $memberEvaluations->first()->tenderCommitteeMember->employee->full_name ?? 'Unknown',
                     'score' => $memberScore
                 ];
             }
-            
+
             $summaryData[] = [
                 'bid' => $bid,
                 'evaluations' => $bidEvaluations,
@@ -406,13 +406,13 @@ class TenderEvaluationController extends Controller
     private function calculateScoreVariance($evaluations)
     {
         if (count($evaluations) < 2) return 0;
-        
+
         $scores = collect($evaluations)->pluck('score');
         $mean = $scores->avg();
         $variance = $scores->map(function ($score) use ($mean) {
-            return pow($score - $mean, 2);
-        })->sum() / (count($evaluations) - 1);
-        
+                return pow($score - $mean, 2);
+            })->sum() / (count($evaluations) - 1);
+
         return sqrt($variance); // Standard deviation
     }
 }

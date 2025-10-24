@@ -24,15 +24,15 @@ class CommissionRuleService
         ?bool $IsActive = null,
         User   $user
     ) : self {
-         
+
         $rule = BancassuranceCommissionRule::create([
         'RuleName' => $RuleName,
         'ProductId'=> $ProductId->Id,
-        'PolicyTypeId' => $PolicyTypeId->ID ?? null,
+            'PolicyTypeId' => $PolicyTypeId->ID ?? null,
         'CommissionRate' => $CommissionRate,
         'FixedAmount' => $FixedAmount,
-        'AppliesTo' => $AppliesTo->ID ?? null,
-        'IsActive' => $IsActive ? 1 : 0 ?? null,
+            'AppliesTo' => $AppliesTo->ID ?? null,
+            'IsActive' => $IsActive ? 1 : 0 ?? null,
         'CreatedBy' => $user->Id,
         'ModifiedBy' => $user->Id,
         ]);

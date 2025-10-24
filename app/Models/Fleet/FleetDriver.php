@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\DocumentsTrait;
 use App\Models\HRM\Employee;
-use App\Models\Fleet\FleetTripLog; 
+use App\Models\Fleet\FleetTripLog;
 
 
 class FleetDriver extends Model
@@ -61,12 +61,12 @@ class FleetDriver extends Model
     public function image()
     {
         return $this->belongsTo(Image::class, 'ImageId', 'ImageID');
-    }   
+    }
 
     public function driverImage()
     {
         return $this->belongsTo(Employee::class, 'ImageId', 'Id');
-    }   
+    }
 
     public function driverStatus()
     {

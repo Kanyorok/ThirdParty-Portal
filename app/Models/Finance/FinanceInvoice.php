@@ -51,7 +51,7 @@ class FinanceInvoice extends Model
         'Status',
         'ApprovalStatus',
         'ApprovalReason',
-        
+
         // Credit application tracking
         'UseCredit',
         'CreditAppliedOn',
@@ -71,7 +71,7 @@ class FinanceInvoice extends Model
         'DueDate'     => 'date',
         'IsPaid'      => 'boolean',
         'IsGenerated' => 'boolean',
-        'UseCredit'   => 'boolean',
+        'UseCredit' => 'boolean',
         'CreditAppliedOn' => 'datetime',
     ];
 
@@ -149,7 +149,7 @@ class FinanceInvoice extends Model
     }
 
     public function customer(){
-        return $this->belongsTo(ThirdParties::class,'CustomerID','Id');
+        return $this->belongsTo(ThirdParties::class, 'CustomerID', 'Id');
     }
 
     public function source(){
@@ -168,8 +168,9 @@ class FinanceInvoice extends Model
         return $this->belongsTo(Currency::class,'CurrencyID','Id');
     }
 
-    public function creditAppliedByUser(){
-        return $this->belongsTo(User::class,'CreditAppliedBy','Id');
+    public function creditAppliedByUser()
+    {
+        return $this->belongsTo(User::class, 'CreditAppliedBy', 'Id');
     }
 
     /**
@@ -177,7 +178,7 @@ class FinanceInvoice extends Model
      */
     public function hasCreditApplied(): bool
     {
-        return (bool) $this->UseCredit;
+        return (bool)$this->UseCredit;
     }
 
     /**

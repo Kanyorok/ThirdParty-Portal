@@ -83,7 +83,8 @@
 
         <div class="mb-3">
             <label for="RequestedDate" class="form-label">Date Needed</label>
-            <input type="date" name="RequestedDate" id="RequestedDate" value="{{ old('RequestedDate') }}" min="{{ now()->toDateString() }}"
+            <input type="date" name="RequestedDate" id="RequestedDate" value="{{ old('RequestedDate') }}"
+                   min="{{ now()->toDateString() }}"
                    class="form-control @error('RequestedDate') is-invalid @enderror" required>
             @error('RequestedDate')
             <div class="invalid-feedback">{{ $message }}</div>
@@ -117,6 +118,7 @@
         const submitBtn = document.getElementById('submitBtn');
 
         const priceErrorId = 'priceErrorMsg';
+
         function ensurePriceErrorEl() {
             let el = document.getElementById(priceErrorId);
             if (!el) {

@@ -39,7 +39,7 @@ class VehicleController extends Controller
         $this->authorize('viewAny', FleetVehicle::class);
 
         $vehicles = FleetVehicle::with(['vehicleType', 'fuelType', 'branch'])
-            ->get(); 
+            ->get();
 
         return view('fleet.vehicles.index', compact('vehicles'));
     }
@@ -175,7 +175,7 @@ class VehicleController extends Controller
         $this->authorize('update', $vehicle);
 
         $vehicle->update([
-            'IsActive'   => 0,
+            'IsActive' => 0,
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
@@ -241,8 +241,8 @@ class VehicleController extends Controller
                     'Source' => 'Assignment',
                     'Period' => $assignment->AssignmentDate
                         ? \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') .
-                          ' → ' .
-                          ($assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—')
+                        ' → ' .
+                        ($assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—')
                         : null,
                 ];
             });
@@ -257,8 +257,8 @@ class VehicleController extends Controller
                     'Source' => 'ContractedAssignment',
                     'Period' => $assignment->AssignmentDate
                         ? \Carbon\Carbon::parse($assignment->AssignmentDate)->format('d/m/Y') .
-                          ' → ' .
-                          ($assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—')
+                        ' → ' .
+                        ($assignment->UnassignmentDate ? \Carbon\Carbon::parse($assignment->UnassignmentDate)->format('d/m/Y') : '—')
                         : null,
                 ];
             });

@@ -24,43 +24,43 @@
             <div class="card-body">
                 <table id="propertyblocks" class="table table-bordered table-striped table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th>Property</th>
-                            <th>Block Name</th>
-                            <th>Description</th>
-                            <th style="width: 20%">Actions</th>
-                        </tr>
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th>Property</th>
+                        <th>Block Name</th>
+                        <th>Description</th>
+                        <th style="width: 20%">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach($blocks as $block)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $block->property->PropertyName ?? '-'}}</td>
-                                <td>{{ $block->BlockName ?? '-'}}</td>
-                                <td>{{ $block->Description ?? '-'}}</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('addblock.edit', $block->Id) }}" 
-                                           class="btn btn-sm btn-warning">
-                                           <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
+                    @foreach($blocks as $block)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $block->property->PropertyName ?? '-'}}</td>
+                            <td>{{ $block->BlockName ?? '-'}}</td>
+                            <td>{{ $block->Description ?? '-'}}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('addblock.edit', $block->Id) }}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
 
-                                        @if($block->floor()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>In Use</button>
-                                        @else
-                                            <form action="{{ route('addblock.destroy', $block->Id) }}" 
-                                                  method="POST" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this Block?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">Delete</button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                                    @if($block->floor()->exists())
+                                        <button class="btn btn-sm btn-secondary" disabled>In Use</button>
+                                    @else
+                                        <form action="{{ route('addblock.destroy', $block->Id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Are you sure you want to delete this Block?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                     </tbody>
                 </table>
             </div>

@@ -25,7 +25,7 @@
                                     data-floor="{{ $maintenancerequest->floor->FloorLabel ?? '-' }}"
                                     data-unit="{{ $maintenancerequest->unit->UnitCode ?? '-'}}"
                                     data-description="{{ $maintenancerequest->IssueDescription ?? '-'}}">
-                                    {{ $maintenancerequest->RequestNumber ?? '-'}} 
+                                    {{ $maintenancerequest->RequestNumber ?? '-'}}
                                 </option>
                             @endforeach
                         </select>
@@ -41,7 +41,8 @@
                     <div class="col-md-3">
                         <label class="form-label">Property</label>
                         <input type="text" id="property-display" class="form-control" readonly>
-                        <input type="hidden" name="Property" id="property-id" value="{{ old('Property', $property->Id ?? '-') }}">
+                        <input type="hidden" name="Property" id="property-id"
+                               value="{{ old('Property', $property->Id ?? '-') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Block</label>
@@ -77,7 +78,8 @@
                       <select class="form-select" name="InternalTechnician" id="internalTechnicianSelect">
                           <option value="">--Select a technician--</option>
                           @foreach ($employees as $employee)
-                              <option value="{{ $employee->Id }}">{{ $employee->EmployeeID }} -- {{ $employee->FirstName }},{{ $employee->LastName }}</option>
+                              <option value="{{ $employee->Id }}">{{ $employee->EmployeeID }}
+                                  -- {{ $employee->FirstName }},{{ $employee->LastName }}</option>
                           @endforeach
                       </select>
                   </div>
@@ -116,12 +118,16 @@
                 <!-- Instructions -->
                 <div class="mb-3">
                     <label class="form-label">Instructions / Notes<span class="text-danger">*</span></label>
-                    <textarea class="form-control" rows="2" name="InstructionNotes" placeholder="Describe what needs to be done..." required></textarea>
+                    <textarea class="form-control" rows="2" name="InstructionNotes"
+                              placeholder="Describe what needs to be done..." required></textarea>
                 </div>
 
                 <!-- Submit -->
                 <div class="text-end">
-                    <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Assign Task</button>
+                    <button type="submit" class="btn btn-success"
+                            onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Assign
+                        Task
+                    </button>
                 </div>
             </div>
         </div>

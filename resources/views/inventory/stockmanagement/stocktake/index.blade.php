@@ -2,9 +2,9 @@
 @section('title', ' Stock Take Records')
 @section('content')
 <div class="container mt-4">
-  <a href="{{ route('stocktake.create') }}" class="btn btn-success">Add New Stock Take</a>
+    <a href="{{ route('stocktake.create') }}" class="btn btn-success">Add New Stock Take</a>
 
-  <p><small>The list is of different stock take counts</small></p>
+    <p><small>The list is of different stock take counts</small></p>
     @if($stocks->count())
         <table id="stocktake" class="table table-bordered table-striped align-middle">
     <thead class="table-light">
