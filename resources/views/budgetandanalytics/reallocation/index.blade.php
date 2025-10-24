@@ -42,8 +42,8 @@
                                 </td>
                                 <td>
                                     <div>{{ $r->toLine->LineName ?? '—Null Line-' }}</div>
-                                    <small
-                                        class="text-muted">{{ $r->toLine->department->Name.' Dept' ?? '—No Department—' }}</small>
+                                    <small class="text-muted">{{ $r->toLine->department?->Name.' Dept' ?? '—No Department—' }}</small>
+
                                 </td>
 
                                 <td>{{ number_format($r->Amount, 2) }}</td>
@@ -61,11 +61,12 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('budgetandanalytics.reallocation.show', ['id' => $r->id]) }}"
-                                       class="btn btn-sm btn-outline-primary"
-                                       title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                         <a href="{{ route('budgetandanalytics.reallocation.show', ['id' => $r->id]) }}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
                                 </td>
 
                             </tr>

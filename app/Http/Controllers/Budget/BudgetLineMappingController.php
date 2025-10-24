@@ -42,7 +42,7 @@ class BudgetLineMappingController extends Controller
         $budgetCategories = BudgetLineCategories::all();
 
         //Pull the GLS
-        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description', 'GLAccountTypeID as GTType')->get();
+        $gls = BudgetGLMaster::select('BudgetGLID as Id', 'Description', 'GLAccountTypeID as GTType','AccountID')->get();
 
         //Fetch Product type
         $productTypes = BudgetProductType::select('Id', 'Name')->get();

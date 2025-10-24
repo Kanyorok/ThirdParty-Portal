@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Budget;
 
+use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Budget\ReallocationRequest;
 use App\Models\Budget\Budget;
@@ -26,12 +27,14 @@ class BudgetReallocationController extends Controller
 {
     public function index()
     {
+        $this->authorize(PermissionEnum::BudgetReallocationView, BudgetReallocationController::class);
         $reallocations = BudgetReallocation::orderBy('CreatedOn', 'desc')->get();
         return view('budgetandanalytics.reallocation.index', compact('reallocations'));
     }
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::BudgetReallocationView, BudgetReallocationController::class);
         $realloc = BudgetReallocation::with([
             'budget',
             'fromLine.department',
@@ -62,8 +65,9 @@ class BudgetReallocationController extends Controller
 
     public function create()
     {
-        $budgets = Budget::where('Status', 'approved')->where('IsLimitSet', true)->get();
-        $branches = \App\Models\Core\Branch::all();
+        $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
+        $budgets     = Budget::where('Status', 'approved')->where('IsLimitSet',true)->get();
+        $branches    = \App\Models\Core\Branch::all();
         $departments = \App\Models\HRM\Department::all();
         $lines = BudgetLine::all();
 
@@ -80,6 +84,7 @@ class BudgetReallocationController extends Controller
 
     public function allocate(ReallocationRequest $request)
     {
+        $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
         $validated = $request->validated();
         $budgetLines = array();
         $budgetId = $validated['BudgetID'];
@@ -129,6 +134,7 @@ class BudgetReallocationController extends Controller
 
     protected function getBudgetLinesData($budgetID, $branchID, $departmentID)
     {
+        $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
         // Get line IDs from BudgetActivity
         $lineIdsFromActivities = BudgetActivity::where('BudgetID', $budgetID)
             ->where('BranchID', $branchID)
@@ -175,6 +181,9 @@ class BudgetReallocationController extends Controller
 
     public function store(Request $request)
     {
+
+        $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
+
         //return $request;
         // 1) Validate input
         $validated = $request->validate([
@@ -350,6 +359,7 @@ class BudgetReallocationController extends Controller
      */
     public function approve($id, Request $request)
     {
+        $this->authorize(PermissionEnum::ApproveReallocation, BudgetReallocationController::class);
         $request->validate([
             'ApprovalReason' => 'nullable|string|max:1000',
         ]);
@@ -398,6 +408,7 @@ class BudgetReallocationController extends Controller
 
     public function reject($id, Request $request)
     {
+        $this->authorize(PermissionEnum::ApproveReallocation, BudgetReallocationController::class);
         $request->validate([
             'ApprovalReason' => 'required|string|max:1000',
         ]);
@@ -419,6 +430,7 @@ class BudgetReallocationController extends Controller
      */
     private function adjustLineAmount($lineId, $amount, $branchId = null)
     {
+        $this->authorize(PermissionEnum::BudgetReallocationCreate, BudgetReallocationController::class);
         // Activity driven?
         $isActivityDriven = BudgetActivityMaster::where('BudgetLineID', $lineId)
             ->where('IsActive', 1)
