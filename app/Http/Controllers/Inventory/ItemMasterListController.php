@@ -70,6 +70,7 @@ class ItemMasterListController extends Controller
                 <div class="btn-group" role="group">
                     <a href="' . $viewUrl . '" class="btn btn-sm btn-view" data-bs-toggle="tooltip" title="View Item">
                         <i class="bi bi-eye"></i>
+                        
                     </a>
                     <a href="' . $editUrl . '" class="btn btn-sm btn-edit" data-bs-toggle="tooltip" title="Edit Item">
                         <i class="bi bi-pencil-square"></i>
