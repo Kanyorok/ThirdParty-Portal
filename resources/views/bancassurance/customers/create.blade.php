@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'New Customer Profile')
+@section('title', 'Customer Profile')
 
 @section('content')
 <div class="container mt-5">
@@ -14,11 +14,6 @@
         <div class="card-body p-4">
             <form method="POST" action="{{ route('bancassurance.customers.store') }}" enctype="multipart/form-data">
                 @csrf
-
-                {{-- Customer Selection --}}
-                <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">
-                    <i class="fas fa-address-book me-2 text-success"></i> Customer Information
-                </h6>
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
@@ -45,11 +40,6 @@
                         </select>
                     </div>
                 </div>
-
-                {{-- Personal Information --}}
-                <h6 class="fw-bold text-secondary mb-3 border-bottom pb-2">
-                    <i class="fas fa-id-card me-2 text-success"></i> Personal Information
-                </h6>
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
