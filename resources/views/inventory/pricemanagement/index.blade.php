@@ -121,15 +121,21 @@
                         <td>{{ $price->EffectiveTo ? \Carbon\Carbon::parse($price->EffectiveTo)->format('Y-m-d') : '—' }}</td>
                         <td>{!! $price->IsDefault ? '✔️' : '' !!}</td> --}}
                         <td>
-                            <a href="{{ route('pricemanagement.edit', $price->Id) }}" class="btn btn-sm btn-info">Edit</a>
-                            <form action="{{ route('pricemanagement.destroy', $price->Id) }}" method="POST"
-                                style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-danger"
-                                    onclick="return confirm('Delete this price?')">Delete
-                                </button>
-                            </form>
+                            <div class="d-flex gap-1">
+                                <a href="{{ route('pricemanagement.edit', $price->Id) }}" 
+                                   class="btn btn-sm btn-info" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('pricemanagement.destroy', $price->Id) }}" method="POST"
+                                    style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('Delete this price?')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -161,6 +167,10 @@
         </div>
     </div>
 </div>
+
+<!-- Add Font Awesome CSS for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>

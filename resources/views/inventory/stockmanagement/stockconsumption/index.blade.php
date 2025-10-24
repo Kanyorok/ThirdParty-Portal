@@ -3,6 +3,8 @@
 
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    {{-- Font Awesome for icons --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 
 @section('content')
@@ -48,14 +50,7 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $consumption->ConsumptionNo }}</td>
                     <td>
-                        {{-- Try different approaches --}}
-                        {{ $consumption->item_name ?? 'N/A' }} {{-- Using the accessor --}}
-                        
-                        {{-- OR --}}
-                        {{-- {{ $consumption->stockItem?->ItemName ?? $consumption->item?->item?->ItemName ?? 'N/A' }} --}}
-                        
-                        {{-- OR --}}
-                        {{-- {{ $consumption->masterItem?->ItemName ?? 'N/A' }} --}}
+                        {{ $consumption->item_name ?? 'N/A' }}
                     </td>
                     <td>{{ $consumption->Quantity }}</td>
                     <td>{{ optional($consumption->uom)->Name }}</td>
@@ -64,16 +59,26 @@
                     <td>{{ optional($consumption->issuedBy)->Name }}</td>
                     <td>{{ \Carbon\Carbon::parse($consumption->IssuedOn)->format('m/d/Y') }}</td>
                     <td>
-                        <a href="{{ route('stockconsumption.show', $consumption->Id) }}"
-                           class="btn btn-secondary btn-sm">View</a>
-                        <a href="{{ route('stockconsumption.edit', $consumption->Id) }}" class="btn btn-warning btn-sm">Edit</a>
-                        <a href="#" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ $consumption->Id }}')">Delete</a>
-                        <form id="delete-form-{{ $consumption->Id }}"
-                              action="{{ route('stockconsumption.destroy', $consumption->Id) }}" method="POST"
-                              style="display:none;">
-                            @csrf
-                            @method('DELETE')
-                        </form>
+                        <div class="d-flex gap-1">
+                            <a href="{{ route('stockconsumption.show', $consumption->Id) }}"
+                               class="btn btn-sm btn-primary" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('stockconsumption.edit', $consumption->Id) }}" 
+                               class="btn btn-sm btn-warning" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" 
+                                    onclick="confirmDelete('{{ $consumption->Id }}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <form id="delete-form-{{ $consumption->Id }}"
+                                  action="{{ route('stockconsumption.destroy', $consumption->Id) }}" method="POST"
+                                  style="display:none;">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @endforeach

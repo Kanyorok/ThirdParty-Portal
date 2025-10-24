@@ -272,19 +272,16 @@
                 }
             }
 
-            // Initial load sequence
             if (initialCategoryId) {
                 loadSubcategories(initialCategoryId, initialSubcategoryId);
             }
             if (!initialSubcategoryId && initialCategoryId) {
-                // Only load items from the main category if no subcategory exists
                 loadItems(initialCategoryId, null, initialItemId);
             }
             if (initialBranchId) {
                 loadStores(initialBranchId, initialStoreId);
             }
 
-            // Event listeners
             categorySelect.addEventListener('change', function () {
                 loadSubcategories(this.value);
                 loadItems(this.value);
@@ -298,7 +295,6 @@
                 loadStores(this.value);
             });
 
-            // Initial validation on page load
             validateAllQuantities();
         });
     </script>
