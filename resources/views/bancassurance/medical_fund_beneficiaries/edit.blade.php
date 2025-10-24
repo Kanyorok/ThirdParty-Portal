@@ -14,7 +14,7 @@
     <div class="card">
         <div class="card-body">
             {{-- 🔁 Shallow member route for update --}}
-            <form action="{{ route('bancassurance.beneficiaries.update', $beneficiary->ID) }}" method="POST">
+            <form action="{{ route('bancassurance.beneficiaries.update', $beneficiary->Id) }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -74,7 +74,7 @@
                 <div class="mt-3 d-flex gap-2">
                     <button class="btn btn-primary">Update</button>
                     {{-- 📚 Collection route remains nested (by fund) --}}
-                    <a href="{{ route('bancassurance.medicalfunds.beneficiaries.index', ['medical_fund' => $medical_fund->ID]) }}"
+                    <a href="{{ route('bancassurance.medicalfunds.beneficiaries.index', ['medical_fund' => $medical_fund->Id]) }}"
                        class="btn btn-outline-secondary">Back</a>
                 </div>
             </form>
