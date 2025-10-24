@@ -107,7 +107,7 @@
                                 <table class="table align-middle mb-0">
                                     <tbody>
                                     <tr>
-                                        <td class="text-muted">Invoice Amount (Inclusive)</td>
+                                        <td class="text-muted">Invoice Amount (After Tax)</td>
                                         <td class="text-end">
                                             <strong>{{ $currencySymbol }} {{ number_format((float)($invoice->InvoiceAmount ?? 0), 2) }}</strong>
                                         </td>
@@ -128,11 +128,11 @@
                                             <td class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">PO Exclusive</td>
+                                            <td class="text-muted">PO Before Tax</td>
                                             <td class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">PO Inclusive</td>
+                                            <td class="text-muted">PO After Tax</td>
                                             <td class="text-end"><strong>{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</strong></td>
                                         </tr>
                                     @else
@@ -311,11 +311,11 @@
                                             <th class="text-end">{{ $currencySymbol }} {{ number_format($poTax, 2) }}</th>
                                         </tr>
                                         <tr>
-                                            <th colspan="3" class="text-end">Exclusive</th>
+                                            <th colspan="3" class="text-end">Total Before Tax</th>
                                             <th class="text-end">{{ $currencySymbol }} {{ number_format($poExcl, 2) }}</th>
                                         </tr>
                                         <tr>
-                                            <th colspan="3" class="text-end">Inclusive</th>
+                                            <th colspan="3" class="text-end">Total After Tax</th>
                                             <th class="text-end">{{ $currencySymbol }} {{ number_format($poIncl, 2) }}</th>
                                         </tr>
                                     </tfoot>

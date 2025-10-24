@@ -339,7 +339,7 @@
                                 <li><span class="label">Start Date</span><span>{{ $recurring->StartDate ? \Carbon\Carbon::parse($recurring->StartDate)->format('d/m/Y') : 'N/A' }}</span></li>
                                 <li><span class="label">Next Run</span><span>{{ $recurring->NextRunDate ? \Carbon\Carbon::parse($recurring->NextRunDate)->format('d/m/Y') : 'N/A' }}</span></li>
                                 <li><span class="label">Frequency</span><span>{{ ucfirst( $frequencies[$recurring->Frequency ?? ''] ?? '-' ) }}</span></li>
-                                <li><span class="label">End Date</span><span>{{ $recurring->CutOffDate ? \Carbon\Carbon::parse($recurring->CutOffDate)->format('d/m/Y') : ($journalEntry->Date ? \Carbon\Carbon::parse($journalEntry->Date)->format('d/m/Y') : 'N/A') }}</span></li>
+                                <li><span class="label">End Date</span><span>{{  \Carbon\Carbon::parse($recurring->CuttOffDate)->format('d/m/Y')  }}</span></li>
                             @endif
                             </ul>
                         </div>

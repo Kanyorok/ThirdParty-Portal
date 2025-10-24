@@ -106,7 +106,7 @@ class PaymentVoucherController extends Controller
         $this->authorize(PermissionEnum::PaymentVoucherCreate, FinanceVoucher::class);
 
         $validated = $request->validate([
-            'VoucherNo'=> 'required|string',
+            //'VoucherNo'=> 'required|string',
             'InvoiceNo' => 'required|exists:t_FinanceInvoiceEntry,Id',
             'TotAmnt'=>'required|numeric|min:0.00',
             'PaymentMethod'=>'required|string',
@@ -151,7 +151,7 @@ class PaymentVoucherController extends Controller
             }
 
             $voucher = FinanceVoucher::create([
-                'VoucherNo'=> $validated['VoucherNo'],
+//                'VoucherNo'=> $validated['VoucherNo'],
                 'InvoiceNo'=> $validated['InvoiceNo'],
                 'TotalAmount'=> $validated['TotAmnt'],
                 'PaymentMethod'=> $validated['PaymentMethod'],
@@ -175,7 +175,8 @@ class PaymentVoucherController extends Controller
         }catch (\Throwable $th) {
             DB::rollBack();
             Log::error($th->getMessage());
-            return back()->with('error', $th->getMessage());
+//            return back()->with('error', $th->getMessage());
+            return back()->with('error', 'Ooops! An error occurred, Please try again later.');
         }
     }
 

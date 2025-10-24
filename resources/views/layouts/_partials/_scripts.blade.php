@@ -164,13 +164,23 @@
                         if (inputEl._flatpickr) {
                             return; // already initialized
                         }
-                        flatpickr(inputEl, {
+
+                        // if author marked input with data-disable-past, instruct flatpickr to disable past days
+                        var opts = {
                             // Keep submitted value as ISO (server-friendly), show dd/mm/yyyy to users
                             dateFormat: 'Y-m-d',
                             altInput: true,
                             altFormat: 'd/m/Y',
                             allowInput: true
-                        });
+                        };
+
+                        if (inputEl.dataset && inputEl.dataset.disablePast && String(inputEl.dataset.disablePast) === 'true') {
+                            opts.minDate = 'today';
+                            // on mobile, prevent native datepicker so flatpickr controls appearance
+                            inputEl.type = 'text';
+                        }
+
+                        flatpickr(inputEl, opts);
                     });
                 }
             } catch (e) {

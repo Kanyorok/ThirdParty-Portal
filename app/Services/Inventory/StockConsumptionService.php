@@ -53,7 +53,7 @@ class StockConsumptionService
             // Create stock consumption record
             $stockConsumption = StockConsumption::create([
                 'ConsumptionNo' => $consumptionNo,
-                'ItemID'        => $stockItem->Id, // Store StockItem ID
+                'ItemID' => $stockItem->ItemID, 
                 'StoreID'       => $data['StoreID'] ?? null,
                 'BranchID'      => $data['BranchID'],
                 'UOM'           => $data['UOM'],

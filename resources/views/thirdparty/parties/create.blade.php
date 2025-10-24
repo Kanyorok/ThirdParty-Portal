@@ -103,7 +103,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="Phone" class="form-label">Phone</label>
-                                    <input type="tel" class="form-control @error('Phone') is-invalid @enderror" id="Phone" name="Phone" value="{{ old('Phone') }}">
+                                    <input type="tel" class="form-control @error('Phone') is-invalid @enderror" id="Phone" name="Phone" value="{{ old('Phone') }}" pattern="^\+[1-9]\d{7,14}$" inputmode="tel" placeholder="e.g., +12025550123" aria-describedby="Phone_help">
+                                    <div class="form-text" id="Phone_help">Use international format (E.164), starting with + and country code, 8–15 digits total.</div>
                                     @error('Phone')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
