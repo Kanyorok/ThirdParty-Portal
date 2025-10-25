@@ -2,5 +2,5 @@
 // This file is intentionally kept minimal to avoid conflicting settings
 // that can break API routes (e.g., output: 'export' disables server routes).
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
+const nextConfig = { output: 'standalone' };
 module.exports = nextConfig
