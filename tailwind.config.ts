@@ -1,5 +1,3 @@
-import { keyframes } from "motion/react";
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     darkMode: 'class',
@@ -27,6 +25,6 @@ module.exports = {
                 shimmer: "shimmer 1.5s infinite"
             },
         },
-        plugins: [],
     },
+    plugins: [],
 }

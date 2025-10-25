@@ -1,4 +1,13 @@
 import type { NextConfig } from "next";
+import path from "path";
+
+// Minimal type to avoid bringing in webpack types
+type WebpackConfigLike = {
+  resolve?: {
+    alias?: Record<string, string>;
+  } & Record<string, unknown>;
+  [key: string]: unknown;
+};
 
 const nextConfig: NextConfig = {
   // Produce standalone output for Docker multi-stage COPY (.next/standalone)
@@ -57,7 +66,16 @@ const nextConfig: NextConfig = {
         ]
       }
     ]
-  }
+  },
+  // Ensure path alias '@' resolves reliably across environments (Windows/CI)
+  webpack: (config: WebpackConfigLike) => {
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...(config.resolve?.alias || {}),
+      "@": path.resolve(__dirname, "."),
+    };
+    return config as any;
+  },
 };
 
 export default nextConfig;
