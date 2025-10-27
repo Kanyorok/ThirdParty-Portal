@@ -45,10 +45,10 @@ class PriceManagementImport implements OnEachRow, WithHeadingRow
                 'UOM'           => $uomId,
                 'ActualPrice'   => (float) $actualPrice,
                 'CurrencyCode'  => $data['currencycode'] ?? $data['currency'] ?? 'KES',
-                'EffectiveFrom' => $this->parseDate($data['effectivefrom'] ?? $data['effective_from'] ?? null),
-                'EffectiveTo'   => $this->parseDate($data['effectiveto'] ?? $data['effective_to'] ?? null),
+                // 'EffectiveFrom' => $this->parseDate($data['effectivefrom'] ?? $data['effective_from'] ?? null),
+                // 'EffectiveTo'   => $this->parseDate($data['effectiveto'] ?? $data['effective_to'] ?? null),
                 'IsDefault'     => $this->parseBoolean($data['isdefault'] ?? $data['default'] ?? $data['is_default'] ?? 0),
-                'Source'        => $data['source'] ?? 'ExcelImport',
+                // 'Source'        => $data['source'] ?? 'ExcelImport',
             ];
 
             // Find the latest active price for this item and UOM

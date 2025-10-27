@@ -70,23 +70,23 @@
                     <input type="text" class="form-control" name="CurrencyCode" value="KES" required>
                 </div>
                 <div class="row">
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         <label class="form-label">Effective From</label>
                         <input type="date" class="form-control" name="EffectiveFrom" required>
-                    </div>
-                    <div class="col-md-6">
+                    </div> --}}
+                    {{-- <div class="col-md-6">
                         <label class="form-label">Effective To</label>
                         <input type="date" class="form-control" name="EffectiveTo">
-                    </div>
+                    </div> --}}
                 </div>
                 <div class="form-check mt-3">
                     <input class="form-check-input" type="checkbox" name="IsDefault" id="isDefault" value="1">
                     <label class="form-check-label" for="isDefault">Mark as Default Price</label>
                 </div>
-                <div class="mb-3 mt-3">
+                {{-- <div class="mb-3 mt-3">
                     <label class="form-label">Source</label>
                     <input type="text" class="form-control" name="Source" placeholder="Optional">
-                </div>
+                </div> --}}
                 <button type="submit" class="btn btn-primary mt-3">Save Price</button>
             </form>
         </div>
