@@ -20,13 +20,20 @@ export const getFieldStatus = <T extends FieldValues>(
     return "default";
 };
 
+const normalizeToE164 = (input: string): string => {
+    if (!input) return input;
+    const digits = input.replace(/\D+/g, "");
+    if (digits.length >= 8 && digits.length <= 15) return `+${digits}`;
+    return input; // fallback; server will still validate
+};
+
 export const transformRegisterFormDataForApi = (formData: RegisterFormInputs) => {
     const { firstName, lastName, email, phone, password, confirmPassword } = formData;
     return {
         FirstName: firstName,
         LastName: lastName,
         Email: email,
-        Phone: phone,
+        Phone: normalizeToE164(phone),
         Password: password,
         Password_confirmation: confirmPassword,
     };
@@ -57,7 +64,7 @@ export const transformThirdPartyDetailsForApi = (formData: ThirdPartyDetailsForm
         Country: country,
         PhysicalAddress: physicalAddress,
         Email: email,
-        Phone: phone,
+        Phone: normalizeToE164(phone),
         Website: website,
         ThirdPartyType: mappedThirdPartyType,
     };
