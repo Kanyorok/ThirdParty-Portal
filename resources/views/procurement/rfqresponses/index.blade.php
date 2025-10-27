@@ -22,6 +22,7 @@
                     <th>Total Price</th>
                     <th>Days to Delivery</th>
                     <th>Delivery Date</th>
+                    <th>Source</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
@@ -62,6 +63,13 @@
                             @endif
                         </td>
                         <td>{{ $deliveryDate->format('d/m/Y') }}</td>
+                        <td>
+                            @if($response->CreatedBy == auth()->id())
+                                Manual
+                            @else
+                                Third Party
+                            @endif
+                        </td>
                         <td>
                             <button class="btn btn-sm btn-info" data-bs-toggle="modal"
                                     data-bs-target="#viewModal{{ $response->Id }}">View
@@ -134,6 +142,16 @@
                                         <th>Duration (Days)</th>
                                         <td>{{ $response->DurationDays }}</td>
                                     </tr>
+                                    <tr>
+                                        <th>Source</th>
+                                        <td>
+                                            @if($response->CreatedBy == auth()->id())
+                                                Manual
+                                            @else
+                                                Third Party
+                                            @endif
+                                        </td>
+                                    </tr>
                                 </table>
 
                                 <h6>Quoted Items</h6>
@@ -200,6 +218,11 @@
                                                                                         class="form-control"
                                                                                         value="{{ $response->TotalPayable }}"
                                                                                         readonly></div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col"><label>Source</label><input type="text" class="form-control"
+                                                                                     value="@if($response->CreatedBy == auth()->id()) Manual @else Third Party @endif"
+                                                                                     readonly></div>
                                 </div>
 
                                 <h6>Items</h6>
