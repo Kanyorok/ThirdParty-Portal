@@ -344,6 +344,77 @@
   window.loadPlanItemsForPlan = loadPlanItemsForPlan;
   window.addPlanItemToGrid = addPlanItemToGrid;
 
+  // ---- Manual Entry: add rows with Item Master select
+  let manualRowSeq = 0;
+  function addManualItemRow() {
+    const tbody = document.getElementById('manualItemsBody');
+    if (!tbody) return;
+
+    manualRowSeq += 1;
+    const key = `m${Date.now()}_${manualRowSeq}`;
+    const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
+
+    // Build options: prefer filtering by selected Item Category; if none, show full list
+    let optionsHtml = '';
+    if (selectedItemCategory) {
+      optionsHtml = getFilteredItemOptions(selectedItemCategory);
+    } else {
+      optionsHtml = '<option selected disabled>-- Select Item (choose Item Category first) --</option>';
+      (allItemsWithCategoryIds || []).forEach(item => {
+        optionsHtml += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+      });
+    }
+
+    const tr = document.createElement('tr');
+    tr.dataset.key = key;
+    tr.innerHTML = `
+      <td>
+        <select class="form-select form-select-sm manual-item-select"
+                name="manual_items[${key}][item_id]" required>
+          ${optionsHtml}
+        </select>
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm" min="1" step="1"
+               name="manual_items[${key}][qty]" value="1" required>
+      </td>
+      <td>
+        <input type="file" class="form-control form-control-sm"
+               name="manual_items[${key}][specs]">
+      </td>
+      <td>
+        <input type="text" class="form-control form-control-sm"
+               name="manual_items[${key}][pr_ref]" placeholder="Optional">
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+
+    // Ensure options are filtered to current category if user changes it later
+    updateManualItemSelects();
+  }
+
+  // Expose for the "Add Item" button
+  window.addManualItemRow = addManualItemRow;
+
+  // Auto-add a first row when opening the Manual Entry tab if empty
+  const manualTabBtn = document.getElementById('manual-tab');
+  if (manualTabBtn) {
+    // When Bootstrap finishes showing the tab
+    manualTabBtn.addEventListener('shown.bs.tab', () => {
+      const body = document.getElementById('manualItemsBody');
+      if (body && body.children.length === 0) addManualItemRow();
+    });
+    // Fallback: on click (in case shown.bs.tab isn't available)
+    manualTabBtn.addEventListener('click', () => {
+      const body = document.getElementById('manualItemsBody');
+      if (body && body.children.length === 0) addManualItemRow();
+    });
+  }
+
   // ---- Helpers
   async function refreshItemCategories() {
     const catId = tenderCatSel && tenderCatSel.value ? tenderCatSel.value : '';
@@ -392,11 +463,19 @@
     return html;
   }
 
+  function getAllItemOptions() {
+    let html = '<option selected disabled>-- Select Item --</option>';
+    (allItemsWithCategoryIds || []).forEach(item => {
+      html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+    });
+    return html;
+  }
+
   function updateManualItemSelects() {
-    const selectedItemCategory = itemCatSel.value;
+    const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
     document.querySelectorAll('.manual-item-select').forEach(select => {
       const prevValue = select.value;
-      select.innerHTML = getFilteredItemOptions(selectedItemCategory);
+      select.innerHTML = selectedItemCategory ? getFilteredItemOptions(selectedItemCategory) : getAllItemOptions();
       // keep previous if still valid
       if ([...select.options].some(opt => opt.value === prevValue)) {
         select.value = prevValue;

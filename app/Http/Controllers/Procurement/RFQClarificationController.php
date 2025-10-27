@@ -122,8 +122,6 @@ class RFQClarificationController extends Controller
     // Respond to a clarification (procurement-side)
     public function respond(Request $request): JsonResponse
     {
-        $this->authorize('update', RFQClarification::class);
-
         $validated = $request->validate([
             'id' => 'required|integer|exists:t_RFQClarifications,Id',
             'answer' => 'required|string',

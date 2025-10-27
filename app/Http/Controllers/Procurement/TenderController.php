@@ -78,7 +78,11 @@ class TenderController extends Controller
             $categoryToTopLevel[$category->Id] = $current->Id;
         }
 
-        $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')->get()->map(function ($item) use ($categoryToTopLevel) {
+        // Items from t_Items where DeletedOn is NULL (active only)
+        $allItemsWithCategoryIds = ItemMasterList::select('Id', 'ItemName', 'Category')
+            ->whereNull('DeletedOn')
+            ->orderBy('ItemName')
+            ->get()->map(function ($item) use ($categoryToTopLevel) {
             return [
                 'Id' => $item->Id,
                 'ItemName' => $item->ItemName,
