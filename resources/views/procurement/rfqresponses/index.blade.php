@@ -66,16 +66,18 @@
                             <button class="btn btn-sm btn-info" data-bs-toggle="modal"
                                     data-bs-target="#viewModal{{ $response->Id }}">View
                             </button>
+                            @if($response->CreatedBy == auth()->id())
                             <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
                                     data-bs-target="#editModal{{ $response->Id }}">Edit
                             </button>
-                            
+
                             <form action="{{ route('rfqresponses.destroy', $response->Id) }}" method="POST"
                                   class="d-inline" onsubmit="return confirm('Are you sure?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-danger">Delete</button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -287,5 +289,5 @@
 
     // Clarifications moved to full-screen page (top button links)
     </script>
-    
+
 @endsection
