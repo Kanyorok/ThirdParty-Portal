@@ -116,7 +116,52 @@
                     { data: 'category_names', name: 'category_names' },
                     { data: 'PrimaryContact', name: 'PrimaryContact', render: d => d || 'N/A' },
                     { data: 'PrimaryEmail', name: 'PrimaryEmail' },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center' }
+                    {
+                        data: 'actions',
+                        name: 'actions',
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center',
+                        render: function (data) {
+                            if (!data) return '';
+                            try {
+                                const div = document.createElement('div');
+                                div.innerHTML = data;
+
+                                // Remove Edit and Delete buttons/links
+                                const toRemove = [];
+                                div.querySelectorAll('a, button').forEach(el => {
+                                    const text = (el.textContent || '').trim().toLowerCase();
+                                    const cls = (el.className || '').toLowerCase();
+                                    if (
+                                        text.includes('edit') ||
+                                        text.includes('delete') ||
+                                        cls.includes('btn-warning') || // common Edit style
+                                        cls.includes('btn-danger')   || // common Delete style
+                                        cls.includes('btn-edit')     ||
+                                        cls.includes('btn-delete')
+                                    ) {
+                                        toRemove.push(el);
+                                    }
+                                });
+                                toRemove.forEach(el => el.remove());
+
+                                // Remove any standalone delete forms if present
+                                div.querySelectorAll('form').forEach(form => {
+                                    const inner = (form.textContent || form.innerHTML || '').toLowerCase();
+                                    if (inner.includes('delete')) form.remove();
+                                });
+
+                                return div.innerHTML.trim();
+                            } catch (e) {
+                                // Fallback: strip by regex if DOM ops fail
+                                return String(data)
+                                    .replace(/<a[^>]*>\s*edit\s*<\/a>/gi, '')
+                                    .replace(/<button[^>]*>\s*delete\s*<\/button>/gi, '')
+                                    .replace(/<form[^>]*>.*?delete.*?<\/form>/gis, '');
+                            }
+                        }
+                    }
                 ],
                 dom: 'lfrtip',
                 pageLength: 10,
