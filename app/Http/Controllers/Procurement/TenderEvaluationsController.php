@@ -47,6 +47,39 @@ class TenderEvaluationsController extends Controller
                 ->values()
                 ->all();
 
+            // Fetch selected criteria for this tender and group them by section for display
+            $selectedTenderCriteria = TenderCriteria::where('TenderID', $value->Id)
+                ->where('IsActive', true)
+                // Ensure correct PK casing so relations hydrate properly
+                ->with([
+                    'criteria:Id,CriteriaName,SectionID',
+                    'section:Id,SectionName'
+                ])
+                ->get();
+
+            // Flat list of selected criteria names
+            $criteriaNamesFlat = $selectedTenderCriteria
+                ->map(fn($tc) => optional($tc->criteria)->CriteriaName)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            // Group selected criteria names by Section name
+            $criteriaBySection = [];
+            $selectedTenderCriteria
+                ->groupBy('SectionID')
+                ->each(function ($rows, $sectionId) use (&$criteriaBySection) {
+                    $first = $rows->first();
+                    $sectionName = optional($first->section)->SectionName ?: ('Section #'.$sectionId);
+                    $names = $rows
+                        ->map(fn($tc) => optional($tc->criteria)->CriteriaName)
+                        ->filter()
+                        ->values()
+                        ->all();
+                    $criteriaBySection[$sectionName] = $names;
+                });
+
             $data[] = [
                 'id' => $value->Id,
                 'TenderNo' => $value->TenderNo,
@@ -57,6 +90,9 @@ class TenderEvaluationsController extends Controller
                 'criteriaNumber' => TenderCriteria::where('TenderID', $value->Id)
                     ->where('IsActive', true)
                     ->count(),
+                // Provide selected criteria for modal display
+                'criteriaNames' => $criteriaNamesFlat,
+                'criteriaBySection' => $criteriaBySection,
             ];
         }
         //return$data;
@@ -120,7 +156,7 @@ class TenderEvaluationsController extends Controller
     {
         //check if user has permission to create tender sections
         $this->authorize(PermissionEnum::TenderWrite, Tender::class);
-        
+
         // Log the incoming request data for debugging
         Log::info('Tender sections form submission', [
             'tender_id' => $request->tender_id,
@@ -128,7 +164,7 @@ class TenderEvaluationsController extends Controller
             'weights' => $request->weights,
             'all_data' => $request->all()
         ]);
-        
+
         // Validate the request data
         $request->validate([
             'tender_id' => 'required|exists:t_Tenders,Id',
@@ -140,13 +176,13 @@ class TenderEvaluationsController extends Controller
         $tenderId = $request->tender_id;
         $sections = $request->sections;
         $weights = $request->weights;
-        
+
         // Calculate total weight for selected sections only
         $totalWeight = 0;
         foreach ($sections as $sectionId) {
             $totalWeight += floatval($weights[$sectionId] ?? 0);
         }
-        
+
         // Check if the total weight is 100
         if (abs($totalWeight - 100) > 0.01) { // Allow small floating point differences
             return back()->with('error', 'The total weight must be exactly 100%. Current total: ' . $totalWeight . '%');
@@ -156,7 +192,7 @@ class TenderEvaluationsController extends Controller
         try {
             // First, delete existing sections for this tender to avoid duplicates
             TenderSection::where('TenderID', $tenderId)->delete();
-            
+
             // Loop through each selected section and add with its weight
             foreach ($sections as $sectionId) {
                 // Check if the section exists
@@ -165,7 +201,7 @@ class TenderEvaluationsController extends Controller
                     DB::rollBack();
                     return back()->with('error', 'Section with ID ' . $sectionId . ' does not exist.');
                 }
-              
+
                 // Create or update the tender section
                 $tenderSection = TenderSection::create([
                     'TenderID' => $request->tender_id, // Assuming tender_id is passed in the request
@@ -182,9 +218,9 @@ class TenderEvaluationsController extends Controller
                     ->causedBy(Auth::id())
                     ->log('Created or updated tender sections for tender ID: ' . $tenderId);
             }
-            
+
             DB::commit();
-            
+
             // Log success
             Log::info('Tender sections created successfully', [
                 'tender_id' => $tenderId,
