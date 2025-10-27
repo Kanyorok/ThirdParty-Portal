@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 class DepartmentNeedsWorkflow extends ApprovalWorkflowService
 {
-  // Match existing CodeID used for Department Needs in t_CodeDetails
+    // Match existing CodeID used for Department Needs in t_CodeDetails
     public const CODE_ID = 'DepartmentNeedsStatus';
 
     /**
@@ -116,18 +116,16 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
     }
 
     /**
-     * Check if a user can approve a specific Department Need
+     * Check if a user can approve a specific Department Need (public wrapper for maker-checker)
      * 
      * @param DepartmentNeed $need
      * @param User $user
      * @return bool
      */
-    public function canApprove(DepartmentNeed $need, User $user): bool
+    public function canApproveNeed(DepartmentNeed $need, User $user): bool
     {
-        // Check if there's a pending workflow for this user
-        return $need->pendingWorkflows()
-            ->where('UserId', $user->Id)
-            ->whereNull('DeletedOn')
-            ->exists();
+        // Call the parent's protected canApprove method with resolved table and ID
+        $table = $need->getTable();
+        return parent::canApprove($table, $need->getKey(), $user);
     }
 }

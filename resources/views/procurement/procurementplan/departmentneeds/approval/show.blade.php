@@ -70,9 +70,6 @@
                 <label class="form-label fw-semibold">Submitted By</label>
                 <div class="form-control-plaintext border rounded bg-light px-3 py-2">
                     {{ $need->creator->Name ?? 'N/A' }}
-                    {{-- <small class="text-muted">
-                          ({{ $need->creator->Department ?? 'Unknown Department' }})
-                    </small> --}}
                 </div>
             </div>
         </div>
@@ -105,20 +102,24 @@
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">
-        @can('approve', $need)
+        @if($canApprove)
+            <!-- Approve Button: Only shown if user can approve (maker-checker check) -->
             <form action="{{ route('department-need-approval.update', ['department_need' => $need->Id]) }}" method="POST" class="d-inline">
                 @csrf
                 @method('PUT')
                 <button type="submit" class="btn btn-success">Approve</button>
             </form>
+            
+            <!-- Reject Button: Also conditional for maker-checker -->
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject</button>
         @else
+            <!-- Disabled buttons for unauthorized users -->
             <button type="button" class="btn btn-success" disabled title="You cannot approve this item">Approve</button>
-        @endcan
-        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject
-        </button>
+            <button type="button" class="btn btn-danger" disabled title="You cannot reject this item">Reject</button>
+        @endif
+        
         <a href="{{ route('department-need-approval.index') }}" class="btn btn-secondary">
             Back to List
         </a>
-    </div>
     </div>
 @endsection
