@@ -62,7 +62,7 @@ class MedicalFundDisbursementController extends Controller
             if ($contributor) {
                 $beneficiaries = $contributor->beneficiaries()->where('IsActive', true)->get()
                     ->map(fn($b) => [
-                        'ID' => $b->Id,
+                        'Id' => $b->Id,
                         'FullName' => $b->FullName,
                     ]);
 
@@ -89,7 +89,7 @@ class MedicalFundDisbursementController extends Controller
                 if ($coverages->isEmpty()) {
                     $packageIds = $contributor->packages()->pluck('Id')->filter()->values();
                     if ($packageIds->isEmpty()) {
-                        $packageIds = $contributor->packages()->pluck('ID')->filter()->values();
+                        $packageIds = $contributor->packages()->pluck('Id')->filter()->values();
                     }
 
                     if ($packageIds->isNotEmpty()) {
@@ -101,9 +101,9 @@ class MedicalFundDisbursementController extends Controller
                             foreach ($covCols as $covCol) {
                                 try {
                                     $rows = \DB::table($pivot . ' as pc')
-                                        ->join('t_Coverages as c', 'pc.' . $covCol, '=', 'c.ID')
+                                        ->join('t_Coverages as c', 'pc.' . $covCol, '=', 'c.Id')
                                         ->whereIn('pc.' . $pkgCol, $packageIds->all())
-                                        ->select('c.ID as ID', 'c.Name', 'pc.AnnualLimit', 'pc.PerVisitLimit', 'pc.WaitingPeriodDays', 'pc.Scope')
+                                        ->select('c.Id as Id', 'c.Name', 'pc.AnnualLimit', 'pc.PerVisitLimit', 'pc.WaitingPeriodDays', 'pc.Scope')
                                         ->get();
 
                                     if ($rows->isNotEmpty()) {

@@ -126,12 +126,6 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                                    No customers found.
-                                </td>
-                            </tr>
                         @endforelse
                     </tbody>
                 </table>
