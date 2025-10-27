@@ -111,7 +111,6 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
     {
         return $need->workflowHistory()
             ->with(['creator', 'status', 'stage'])
-            ->orderBy('CreatedOn', 'desc')
             ->get();
     }
 

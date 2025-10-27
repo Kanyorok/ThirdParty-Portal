@@ -70,7 +70,7 @@ abstract class ApprovalWorkflowService
                 'StageName' => $stage->StageName,
                 'Source' => $source,
             ]);
-            // This is critical - the stored procedure will fail if PermissionId is NULL
+            // stored procedure will fail if PermissionId is NULL
             return null;
         }
 
@@ -432,11 +432,7 @@ abstract class ApprovalWorkflowService
         return $this->_execute($actor, $status, $source, $sourceId, $remarks, $statusColumn);
     }
 
-    private function getSubmissionStatusId(): int
-    {
-        return CodeDetail::where('Description', 'Submitted for Approval')
-            ->value('ID');
-    }
+ 
 
     /**
      * @param string $source Model::getPrimaryKey
@@ -457,4 +453,29 @@ abstract class ApprovalWorkflowService
             ->limit($limit)
             ->get();
     }
+
+    /**
+ * Check if a user can approve/reject (not the submitter and has pending)
+ */
+public function canApprove(string $source, string|int $sourceId, User $user): bool
+{
+    // Check for pending
+    $hasPending = DB::table('t_WorkFlowPending')
+        ->where('Source', $source)
+        ->where('SourceID', (string)$sourceId)
+        ->where('UserId', $user->Id)
+        ->whereNull('DeletedOn')
+        ->exists();
+    if (!$hasPending) {
+        return false;
+    }
+    // Check if user is not the submitter
+    $submitterId = DB::table('t_WorkFlowHistory')
+        ->where('Source', $source)
+        ->where('SourceID', (string)$sourceId)
+        ->whereNull('DeletedOn')
+        ->orderBy('CreatedOn', 'asc')
+        ->value('CreatedBy');
+    return $submitterId !== $user->Id;
+}
 }

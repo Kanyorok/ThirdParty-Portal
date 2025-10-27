@@ -32,12 +32,15 @@ class DepartmentNeed extends Model
         'NeedID', 'BranchID', 'DepartmentID', 'ItemID', 'RequestedQty', 'EstimatedUnitCost',
         'Justification', 'Status', 'FiscalYear', 'RequestedDate', 'PriorityLevel', 'IsEmergency',
         'CreatedBy', 'ModifiedBy', 'DeletedBy', 'IsUsed',
-
     ];
 
     protected $casts = [
-        'Status' => DepartmentNeedsEnum::class,];
+        'Status' => DepartmentNeedsEnum::class,
+    ];
 
+    /**
+     * Get the morph map alias for this model
+     */
     public static function getPrimaryKey(): string
     {
         return 'department_needs';
@@ -48,37 +51,45 @@ class DepartmentNeed extends Model
         return $this->belongsTo(ItemMasterList::class, 'ItemID', 'Id');
     }
 
-     public function workflows(): MorphMany
+    /**
+     * Get all workflows for this department need
+     */
+    public function workflows(): MorphMany
     {
         return $this->morphMany(
             Workflow::class, 
             'source', 
-            'Source', 
-            'SourceID', 
-            'Id'
+            'Source',      // Column name in t_Workflow table
+            'SourceID',    // ID column in t_Workflow table
+            'Id'           // Local key
         );
     }
 
-
-     public function pendingWorkflows(): MorphMany
+    /**
+     * Get pending workflows for this department need
+     */
+    public function pendingWorkflows(): MorphMany
     {
         return $this->morphMany(
             WorkflowPending::class, 
             'source', 
-            'Source', 
-            'SourceID', 
-            'Id'
+            'Source',      // Column name in t_WorkFlowPending table
+            'SourceID',    // ID column in t_WorkFlowPending table
+            'Id'           // Local key
         );
     }
 
-     public function workflowHistory(): MorphMany
+    /**
+     * Get workflow history for this department need
+     */
+    public function workflowHistory(): MorphMany
     {
         return $this->morphMany(
             WorkflowHistory::class,
-            'source',
-            'Source',
-            'SourceID',
-            'Id'
+            'source',      // Relationship name
+            'Source',      // Column name in t_WorkflowHistory table
+            'SourceID',    // ID column in t_WorkflowHistory table
+            'Id'           // Local key
         )->orderBy('CreatedOn', 'desc');
     }
 
@@ -92,17 +103,21 @@ class DepartmentNeed extends Model
         return $this->belongsTo(Branch::class, 'BranchID');
     }
 
-    // Workflow status helpers
+    /**
+     * Check if need is pending approval
+     */
     public function isPendingApproval(): bool
     {
         return in_array($this->Status, [
-            Workflowstatus::Submitted,
+            WorkflowStatus::Submitted,
             WorkflowStatus::Pending,
             WorkflowStatus::UnderReview,
         ]);
     }
 
-    //checlast pending workflow action
+    /**
+     * Get the latest workflow action
+     */
     public function latestWorkflowAction()
     {
         return $this->workflowHistory()
@@ -110,7 +125,7 @@ class DepartmentNeed extends Model
             ->first();
     }
 
-     /**
+    /**
      * Check if a specific user has a pending approval for this need
      */
     public function hasPendingApprovalFor(int $userId): bool
@@ -121,8 +136,9 @@ class DepartmentNeed extends Model
             ->exists();
     }
 
-    // Auto-submit for approval when created
-       
+    /**
+     * Boot method for model events
+     */
     protected static function boot()
     {
         parent::boot();
@@ -169,6 +185,4 @@ class DepartmentNeed extends Model
             }
         });
     }
-    
-
 }
