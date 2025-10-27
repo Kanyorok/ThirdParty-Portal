@@ -16,7 +16,7 @@
                     </select>
                 </form>
                 <a href="#" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addSection1Modal">
-                    + Tender Criteria</a>
+                    + Sections</a>
             </div>
         </div>
 
@@ -76,9 +76,23 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{route('tender-criteria',$item['id'])}}"
-                               class="btn btn-sm">{{$item['criteriaNumber']}} <i class="fa fa-eye"
-                                                                                 style="font-size:18px;color:rgb(63, 63, 252)"></i></a>
+                            @php
+                                $criteriaNames = $item['criteriaNames'] ?? [];
+                                $criteriaBySection = $item['criteriaBySection'] ?? [];
+                            @endphp
+                            @if(($item['criteriaNumber'] ?? 0) > 0)
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#criteriaModal"
+                                        data-tenderref="{{ $item['TenderNo'] }}"
+                                        data-criteria='@json($criteriaNames)'
+                                        data-criteria-grouped='@json($criteriaBySection)'>
+                                    {{ $item['criteriaNumber'] }}
+                                </button>
+                            @else
+                                <span class="text-muted">0</span>
+                            @endif
                         </td>
                         <td>100</td>
                         <td>{{$item['criteriaNumber']*10}}</td>
@@ -120,12 +134,30 @@
         </div>
     </div>
 
+    <!-- Criteria Items Modal -->
+    <div class="modal fade" id="criteriaModal" tabindex="-1" aria-labelledby="criteriaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="criteriaModalLabel">Criteria Items</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="criteriaList" class="list-group list-group-flush"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Section Modal -->
     <div class="modal fade" id="addSection1Modal" tabindex="-1" aria-labelledby="addSectionLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content rounded-3 shadow">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addItemModalLabel">Add New Criteria</h5>
+                    <h5 class="modal-title" id="addItemModalLabel">Add New Sections</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -154,7 +186,7 @@
                             <thead class="table-light">
                             <tr>
                                 <th>Include</th>
-                                <th>Criteria</th>
+                                <th>Sections</th>
                                 <th>Weight (%)</th>
                             </tr>
                             </thead>
@@ -203,7 +235,7 @@
                             class="btn btn-success"
                             id="saveCriteriaBtn"
                         >
-                            Save Criteria
+                            Save Sections
                         </button>
                     </div>
                 </form>
@@ -303,6 +335,72 @@
 
             // Initialize on load
             updateTotal();
+
+            // Criteria modal population (grouped by Section if provided)
+            const criteriaModal = document.getElementById('criteriaModal');
+            if (criteriaModal) {
+                criteriaModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const tenderRef = button?.getAttribute('data-tenderref') || '';
+                    const namesJson = button?.getAttribute('data-criteria') || '[]';
+                    const groupedJson = button?.getAttribute('data-criteria-grouped') || '{}';
+                    let names = [];
+                    let grouped = {};
+                    try { names = JSON.parse(namesJson); } catch (_) { names = []; }
+                    try { grouped = JSON.parse(groupedJson); } catch (_) { grouped = {}; }
+
+                    const list = criteriaModal.querySelector('#criteriaList');
+                    list.innerHTML = '';
+                    const groupedKeys = grouped && typeof grouped === 'object' ? Object.keys(grouped) : [];
+
+                    if (groupedKeys.length) {
+                        // Render grouped by section
+                        groupedKeys.forEach(sectionName => {
+                            // Section heading
+                            const header = document.createElement('li');
+                            header.className = 'list-group-item fw-bold bg-light';
+                            header.textContent = sectionName || 'Unnamed Section';
+                            list.appendChild(header);
+
+                            const items = Array.isArray(grouped[sectionName]) ? grouped[sectionName] : [];
+                            // Normalize to objects and keep only selected when a flag exists
+                            const selectedItems = items
+                                .map(v => typeof v === 'string' ? { name: v, selected: true } : v)
+                                .filter(v => v && (v.selected === undefined ? true : !!v.selected));
+
+                            if (selectedItems.length) {
+                                selectedItems.forEach(v => {
+                                    const li = document.createElement('li');
+                                    li.className = 'list-group-item text-danger'; // red text for chosen items
+                                    li.textContent = v.name ?? v;
+                                    list.appendChild(li);
+                                });
+                            } else {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item text-muted';
+                                li.textContent = 'No criteria selected.';
+                                list.appendChild(li);
+                            }
+                        });
+                    } else if (Array.isArray(names) && names.length) {
+                        // Fallback: flat list
+                        names.forEach(n => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item text-danger';
+                            li.textContent = n;
+                            list.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item text-muted';
+                        li.textContent = 'No criteria items found.';
+                        list.appendChild(li);
+                    }
+
+                    const title = criteriaModal.querySelector('#criteriaModalLabel');
+                    if (title) title.textContent = `Criteria Items${tenderRef ? ' — ' + tenderRef : ''}`;
+                });
+            }
         });
     </script>
 

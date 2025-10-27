@@ -26,7 +26,8 @@ class ItemMasterListRequest extends FormRequest
             'InventoryType' => 'required|exists:t_InventoryTypes,Id',
             'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'Document' => 'nullable|file|max:2048',
-            'ItemDescription' => 'nullable|string',
+            // Item Description is mandatory
+            'ItemDescription' => 'required|string',
             'Status' => 'nullable|exists:t_CodeDetails,ID',
             'ItemPrice' => 'nullable|string',
             'remove_image' => 'nullable|boolean',

@@ -47,6 +47,39 @@ class TenderEvaluationsController extends Controller
                 ->values()
                 ->all();
 
+            // Fetch selected criteria for this tender and group them by section for display
+            $selectedTenderCriteria = TenderCriteria::where('TenderID', $value->Id)
+                ->where('IsActive', true)
+                // Ensure correct PK casing so relations hydrate properly
+                ->with([
+                    'criteria:Id,CriteriaName,SectionID',
+                    'section:Id,SectionName'
+                ])
+                ->get();
+
+            // Flat list of selected criteria names
+            $criteriaNamesFlat = $selectedTenderCriteria
+                ->map(fn($tc) => optional($tc->criteria)->CriteriaName)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            // Group selected criteria names by Section name
+            $criteriaBySection = [];
+            $selectedTenderCriteria
+                ->groupBy('SectionID')
+                ->each(function ($rows, $sectionId) use (&$criteriaBySection) {
+                    $first = $rows->first();
+                    $sectionName = optional($first->section)->SectionName ?: ('Section #'.$sectionId);
+                    $names = $rows
+                        ->map(fn($tc) => optional($tc->criteria)->CriteriaName)
+                        ->filter()
+                        ->values()
+                        ->all();
+                    $criteriaBySection[$sectionName] = $names;
+                });
+
             $data[] = [
                 'id' => $value->Id,
                 'TenderNo' => $value->TenderNo,
@@ -57,6 +90,9 @@ class TenderEvaluationsController extends Controller
                 'criteriaNumber' => TenderCriteria::where('TenderID', $value->Id)
                     ->where('IsActive', true)
                     ->count(),
+                // Provide selected criteria for modal display
+                'criteriaNames' => $criteriaNamesFlat,
+                'criteriaBySection' => $criteriaBySection,
             ];
         }
         //return$data;
