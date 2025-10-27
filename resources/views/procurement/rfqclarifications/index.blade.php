@@ -107,12 +107,17 @@
         headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}' },
         body: JSON.stringify({ id, answer })
       });
-      if(!res.ok) throw new Error();
+      if(!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || 'Failed to save response');
+      }
       btn.textContent = 'Saved';
       setTimeout(()=>{ btn.textContent = 'Send'; btn.disabled = false; }, 800);
+      // Reload the list to show updated answer
+      loadClarifications();
     }catch(e){
-      btn.textContent = 'Error';
-      setTimeout(()=>{ btn.textContent = 'Send'; btn.disabled = false; }, 800);
+      btn.textContent = 'Error: ' + e.message;
+      setTimeout(()=>{ btn.textContent = 'Send'; btn.disabled = false; }, 2000);
     }
   }
 
