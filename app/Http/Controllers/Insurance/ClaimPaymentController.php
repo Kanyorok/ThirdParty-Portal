@@ -33,8 +33,7 @@ public function create()
 }
 
 
-
-public function index()
+    public function index()
 {
     $payments = BancassuranceClaimPayment::with('payment','claim')->get();
 

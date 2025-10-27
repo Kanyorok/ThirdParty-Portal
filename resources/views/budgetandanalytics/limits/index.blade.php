@@ -112,6 +112,7 @@
             .table-responsive {
                 font-size: 0.875rem;
             }
+
             .btn-sm {
                 padding: 0.2rem 0.4rem;
             }

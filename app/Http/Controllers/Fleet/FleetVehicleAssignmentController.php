@@ -22,7 +22,7 @@ class FleetVehicleAssignmentController extends Controller
     public function __construct(FleetVehicleAssignmentService $service)
     {
         $this->service = $service;
-        
+
     }
 
     /** Show all assignments */
@@ -33,9 +33,9 @@ class FleetVehicleAssignmentController extends Controller
             ->get();
 
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-            ->pluck('name', 'Id');    
+            ->pluck('name', 'Id');
 
-        return view('fleet.assignments.index', compact('assignments','assigners'));
+        return view('fleet.assignments.index', compact('assignments', 'assigners'));
     }
 
     /** Show create form */
@@ -74,17 +74,17 @@ class FleetVehicleAssignmentController extends Controller
     }
 
     /** Show edit form */
-   public function edit($id)
+    public function edit($id)
     {
         $assignment = FleetVehicleAssignment::with(['vehicle', 'fleetVehicleType', 'driver', 'trip', 'assigner'])
             ->where('Id', $id)
             ->firstOrFail();
 
         $fleetVehicles = FleetVehicle::all();
-            $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-                ->pluck('name', 'Id');
-            $fleetTrips = FleetTripLog::all();
-            $fleetInspections = FleetVehicleInspection::all();
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
+        $fleetTrips = FleetTripLog::all();
+        $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.edit', compact('assignment', 'fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
     }
@@ -92,18 +92,18 @@ class FleetVehicleAssignmentController extends Controller
 
     /** Update an assignment */
     public function update(FleetVehicleAssignmentRequest $request, $id)
-{
-    try {
-        $assignment = FleetVehicleAssignment::findOrFail($id);
+    {
+        try {
+            $assignment = FleetVehicleAssignment::findOrFail($id);
 
-        $this->service->update($assignment, $request->validated());
+            $this->service->update($assignment, $request->validated());
 
-        return redirect()->route('fleet.assignments.index')
-            ->with('success', 'Vehicle assignment updated successfully.');
-    } catch (\Exception $e) {
-        return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
+            return redirect()->route('fleet.assignments.index')
+                ->with('success', 'Vehicle assignment updated successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['VehicleID' => $e->getMessage()])->withInput();
+        }
     }
-}
 
 
     /** Delete an assignment */
@@ -118,7 +118,6 @@ class FleetVehicleAssignmentController extends Controller
     }
 
 
-    
     /* ------------------ AJAX HELPERS ------------------ */
 
     public function getVehiclesByTrip($Id)
@@ -146,24 +145,24 @@ class FleetVehicleAssignmentController extends Controller
         ]);
     }
 
-public function getVehicleDriver($Id)
-{
-    $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
-        ->whereNull('DeletedOn')
-        ->latest('AssignmentDate')
-        ->first();
-
-    if (!$driverAssignment) {
-        $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
+    public function getVehicleDriver($Id)
+    {
+        $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
             ->whereNull('DeletedOn')
             ->latest('AssignmentDate')
             ->first();
-    }
 
-    return response()->json([
-        'driverId'   => $driverAssignment?->DriverID,
-        'driverName' => $driverAssignment?->driver?->FullName, 
-    ]);
-}
+        if (!$driverAssignment) {
+            $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
+                ->whereNull('DeletedOn')
+                ->latest('AssignmentDate')
+                ->first();
+        }
+
+        return response()->json([
+            'driverId' => $driverAssignment?->DriverID,
+            'driverName' => $driverAssignment?->driver?->FullName,
+        ]);
+    }
 
 }

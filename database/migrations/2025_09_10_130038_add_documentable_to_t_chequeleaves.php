@@ -34,9 +34,9 @@ return new class extends Migration {
 
             $table->foreign('ChequeBookID')->references('ChequeBookID')->on('t_ChequeBooks');
 
-            $table->unique(['ChequeBookID','LeafNumber']);
-            $table->unique(['ChequeBookID','ChequeNumber']);
-            $table->index(['ChequeBookID','Status']);
+            $table->unique(['ChequeBookID', 'LeafNumber']);
+            $table->unique(['ChequeBookID', 'ChequeNumber']);
+            $table->index(['ChequeBookID', 'Status']);
         });
     }
 

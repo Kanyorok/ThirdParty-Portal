@@ -75,7 +75,7 @@ class PrequalificationApplication extends Model
      */
     public function getApplicationNoAttribute(): string
     {
-        return (string) ($this->attributes['ApplicationID'] ?? '');
+        return (string)($this->attributes['ApplicationID'] ?? '');
     }
 
     public function categoryStatuses()

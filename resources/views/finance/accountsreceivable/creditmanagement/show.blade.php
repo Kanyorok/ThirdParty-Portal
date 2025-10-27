@@ -20,7 +20,7 @@
 
         @if($errors->any())
             <div class="alert alert-danger alert-dismissible fade show shadow-sm rounded-3" role="alert">
-                <i class="fas fa-exclamation-triangle me-1"></i> 
+                <i class="fas fa-exclamation-triangle me-1"></i>
                 <ul class="mb-0">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -37,7 +37,8 @@
             <div class="d-flex gap-2">
                 @php $isApproved = strtolower($credit->Status ?? '') === 'approved'; @endphp
                 @if($isApproved)
-                    <a href="{{ route('creditadjustment.create', $credit->Id) }}" class="btn btn-sm btn-outline-success">
+                    <a href="{{ route('creditadjustment.create', $credit->Id) }}"
+                       class="btn btn-sm btn-outline-success">
                         <i class="fas fa-plus me-1"></i> Add Credit Adjustment
                     </a>
                 @else
@@ -58,8 +59,10 @@
             <!-- Header -->
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start">
                 <div>
-                    <div class="h5 mb-0">Credit Profile — <span class="fw-semibold">{{ $credit->customer->ThirdPartyName ?? '-' }}</span></div>
-                    <div class="small text-muted">ID: {{ $credit->customer->RegistrationNumber ?? '-' }} • {{ $credit->customer->Email ?? '-' }}</div>
+                    <div class="h5 mb-0">Credit Profile — <span
+                            class="fw-semibold">{{ $credit->customer->ThirdPartyName ?? '-' }}</span></div>
+                    <div class="small text-muted">ID: {{ $credit->customer->RegistrationNumber ?? '-' }}
+                        • {{ $credit->customer->Email ?? '-' }}</div>
                 </div>
                 <div class="text-md-end mt-2 mt-md-0">
                     <div class="small text-muted">Status</div>
@@ -92,7 +95,8 @@
                         <div class="fs-5 fw-semibold text-danger">KSh {{ number_format($used,2) }}</div>
                         <div class="small text-muted">Open AR</div>
                         <div class="text-muted mt-1" style="font-size: 0.65rem;">
-                            <i class="fas fa-info-circle"></i> From {{ $credit->EffectiveFrom ? \Carbon\Carbon::parse($credit->EffectiveFrom)->format('M d, Y') : 'N/A' }}
+                            <i class="fas fa-info-circle"></i>
+                            From {{ $credit->EffectiveFrom ? \Carbon\Carbon::parse($credit->EffectiveFrom)->format('M d, Y') : 'N/A' }}
                         </div>
                     </div>
                 </div>
@@ -107,10 +111,12 @@
                     <div class="border rounded-3 p-3 h-100">
                         <div class="small text-muted">Risk Assessment</div>
                         <div>
-                            <span class="badge {{ $credit->risk_badge_class }}">{{ $credit->RiskLevel ?? 'Medium' }}</span> 
+                            <span
+                                class="badge {{ $credit->risk_badge_class }}">{{ $credit->RiskLevel ?? 'Medium' }}</span>
                             <span class="small text-muted">(Score {{ $credit->RiskScore ?? 50 }})</span>
                         </div>
-                        <div class="small text-muted mt-1">Review Cycle: {{ $credit->ReviewCycleMonths ?? 6 }} months</div>
+                        <div class="small text-muted mt-1">Review Cycle: {{ $credit->ReviewCycleMonths ?? 6 }}months
+                        </div>
                         @if($credit->NextReviewDate)
                             <div class="small {{ $credit->isReviewDue() ? 'text-danger' : 'text-muted' }} mt-1">
                                 Next Review: {{ $credit->NextReviewDate->format('M d, Y') }}
@@ -130,7 +136,9 @@
                     <div class="small text-muted">{{ number_format($util,2) }}%</div>
                 </div>
                 <div class="progress" style="height:10px;">
-                    <div class="progress-bar {{ $util < 50 ? 'bg-success' : ($util < 80 ? 'bg-warning' : 'bg-danger') }}" style="width: {{ $util }}%"></div>
+                    <div
+                        class="progress-bar {{ $util < 50 ? 'bg-success' : ($util < 80 ? 'bg-warning' : 'bg-danger') }}"
+                        style="width: {{ $util }}%"></div>
                 </div>
             </div>
 
@@ -151,7 +159,14 @@
                     <div class="text-muted small text-uppercase mb-2">Recent Events</div>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
-                            <thead class="table-light"><tr><th>Date</th><th>Event</th><th>Ref</th><th class="text-end">Amount</th></tr></thead>
+                            <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Event</th>
+                                <th>Ref</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                            </thead>
                             <tbody>
                             @php
                                 $events = $credit->movements()->orderByDesc('EffectiveOn')->limit(15)->get();
@@ -164,7 +179,9 @@
                                     <td class="text-end">{{ number_format($ev->Amount,2) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="text-muted">No events yet.</td></tr>
+                                <tr>
+                                    <td colspan="4" class="text-muted">No events yet.</td>
+                                </tr>
                             @endforelse
                             </tbody>
                         </table>
@@ -175,10 +192,12 @@
             {{-- Approval Action Buttons --}}
             @if(strtolower($credit->Status ?? '') === 'pending')
                 <div class="mt-4 d-flex justify-content-end gap-3">
-                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal" data-action="reject">
+                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#actionRejectModal"
+                            data-action="reject">
                         <i class="fas fa-times-circle me-1"></i> Reject
                     </button>
-                    <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#actionApproveModal" data-action="approve">
+                    <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#actionApproveModal"
+                            data-action="approve">
                         <i class="fas fa-check-circle me-1"></i> Approve
                     </button>
                 </div>
@@ -190,7 +209,8 @@
     {{-- Approval Modals --}}
     @if(strtolower($credit->Status ?? '') === 'pending')
         {{-- Approve Modal --}}
-        <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+        <div class="modal fade" id="actionApproveModal" tabindex="-1" aria-labelledby="approveModalLabel"
+             aria-hidden="true">
             <div class="modal-dialog">
                 <form method="POST" action="{{ route('creditmanagement.approve', $credit->Id) }}">
                     @csrf
@@ -202,15 +222,20 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="mb-3">Are you sure you want to approve this credit profile for <strong>{{ $credit->customer->ThirdPartyName }}</strong>?</p>
+                            <p class="mb-3">Are you sure you want to approve this credit profile for
+                                <strong>{{ $credit->customer->ThirdPartyName }}</strong>?</p>
                             <div class="mb-3">
                                 <label for="reason" class="form-label">Approval Reason</label>
-                                <textarea class="form-control" name="Reason" id="reason" rows="3" required placeholder="Enter approval reason..."></textarea>
+                                <textarea class="form-control" name="Reason" id="reason" rows="3" required
+                                          placeholder="Enter approval reason..."></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-success" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">Approve</button>
+                            <button class="btn btn-success" type="submit"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                                Approve
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -218,7 +243,8 @@
         </div>
 
         {{-- Reject Modal --}}
-        <div class="modal fade" id="actionRejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal fade" id="actionRejectModal" tabindex="-1" aria-labelledby="rejectModalLabel"
+             aria-hidden="true">
             <div class="modal-dialog">
                 <form method="POST" action="{{ route('creditmanagement.approve', $credit->Id) }}">
                     @csrf
@@ -230,15 +256,20 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="mb-3">Are you sure you want to reject this credit profile for <strong>{{ $credit->customer->ThirdPartyName }}</strong>?</p>
+                            <p class="mb-3">Are you sure you want to reject this credit profile for
+                                <strong>{{ $credit->customer->ThirdPartyName }}</strong>?</p>
                             <div class="mb-3">
                                 <label for="reason" class="form-label">Rejection Reason</label>
-                                <textarea class="form-control" name="Reason" id="reason" rows="3" required placeholder="Enter rejection reason..."></textarea>
+                                <textarea class="form-control" name="Reason" id="reason" rows="3" required
+                                          placeholder="Enter rejection reason..."></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-danger" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">Reject</button>
+                            <button class="btn btn-danger" type="submit"
+                                    onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Processing...'; this.form.submit();}">
+                                Reject
+                            </button>
                         </div>
                     </div>
                 </form>

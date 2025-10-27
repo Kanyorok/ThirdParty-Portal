@@ -36,7 +36,7 @@ class PropertyBlock extends Model
     }
     public function floor()
     {
-        return $this->hasMany(PropertyFloor::class,'BlockID', 'Id');
+        return $this->hasMany(PropertyFloor::class, 'BlockID', 'Id');
     }
 }
 

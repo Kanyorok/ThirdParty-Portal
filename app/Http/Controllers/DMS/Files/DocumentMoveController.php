@@ -32,7 +32,7 @@ class DocumentMoveController extends Controller
         return view('dms.files.move')
             ->with('file', $document)
             ->with('parent', $document->repository)
-            ->with('repositories', RepositoryService::getUserQuery($request->user())->where('t_Repositories.Id', '!=', $document->RepositoryId)->get(['RepositoryId', 'Name', 'Visibility']));
+            ->with('repositories', RepositoryService::getUserQuery($request->user())->where('t_Repositories.Id', '!=', $document->RepositoryId)->with(['parent:Id,Name'])->get(['Id', 'RepositoryId', 'Name', 'Visibility', 'ParentId']));
     }
 
     /**

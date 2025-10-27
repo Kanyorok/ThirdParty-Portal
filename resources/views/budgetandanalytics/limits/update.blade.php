@@ -71,6 +71,7 @@
             border-color: #0dcaf0;
             transition: all 0.2s ease-in-out;
         }
+
         .btn-outline-info:hover {
             background-color: #0dcaf0;
             color: #fff;

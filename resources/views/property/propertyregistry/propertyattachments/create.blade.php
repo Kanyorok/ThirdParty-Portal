@@ -2,7 +2,7 @@
 @section('title', 'Add Property Attachment')
 @section('content')
 
-@if ($errors->any())
+    @if ($errors->any())
         <div class="alert alert-danger">
             <ul class="mb-0">
                 @foreach ($errors->all() as $error)
@@ -10,13 +10,13 @@
                 @endforeach
             </ul>
         </div>
-@endif
+    @endif
 
 <div class="container mt-4">
     <form action="{{ route('attachments.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
   <div class="card shadow">
-    <div class="card-header bg-light fw-bold">Upload Document</div>
+      <div class="card-header bg-light fw-bold">Upload Document</div>
     <div class="card-body">
       <div class="row g-3 mb-3">
         <div class="col-md-6">
@@ -46,8 +46,8 @@
             </select>
           </div>
         <div class="col-md-6">
-          <label class="form-label">Upload File<span class="text-danger">*</span></label>
-          <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" required>
+            <label class="form-label">Upload File<span class="text-danger">*</span></label>
+            <input type="file" name="file[]" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx" required>
         </div>
       </div>
 
@@ -55,7 +55,9 @@
         <label class="form-label">Description / Notes </label>
           <textarea class="form-control" rows="2" placeholder="Optional notes..." name="Description"></textarea>
       </div>
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Upload Document</button>
+        <button type="submit" class="btn btn-success"
+                onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Upload Document
+        </button>
     </form>
     </div>
   </div>

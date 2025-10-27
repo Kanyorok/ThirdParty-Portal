@@ -5,6 +5,7 @@ namespace App\Http\Requests\ThirdPartyAuth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Enums\BusinessTypeEnum;
+
 // Legacy enum no longer used for validation of ThirdPartyType; now using dynamic TypeId from t_ThirdPartyTypes
 
 class StoreThirdPartyRequest extends FormRequest
@@ -41,6 +42,24 @@ class StoreThirdPartyRequest extends FormRequest
             'RegistrationNumber.unique' => __('auth.registration_number_exists'),
             'TaxPIN.unique' => __('auth.tax_pin_exists'),
             'Email.unique' => __('auth.email_exists'),
+            'Phone.regex' => 'Phone format is invalid. Use international format, e.g., +254712345678',
         ];
+    }
+
+    /**
+     * Normalize phone to +E.164 before validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $raw = (string) ($this->input('Phone') ?? '');
+        if ($raw === '') {
+            return;
+        }
+
+        $digits = preg_replace('/\D+/', '', $raw) ?? '';
+        if (strlen($digits) >= 8 && strlen($digits) <= 15) {
+            $normalized = '+' . ltrim($digits, '+');
+            $this->merge(['Phone' => $normalized]);
+        }
     }
 }

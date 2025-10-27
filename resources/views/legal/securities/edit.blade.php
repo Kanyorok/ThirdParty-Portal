@@ -22,7 +22,7 @@
                     <select class="form-select" name="SecurityType" id="SecurityType" required>
                         <option disabled value="">-- Select Security Type --</option>
                         @foreach($details as $item)
-                            <option value="{{ $item->Value }}" 
+                            <option value="{{ $item->Value }}"
                                 {{ $security->SecurityType == $item->Value ? 'selected' : '' }}>
                                 {{ $item->Value }}
                             </option>
@@ -77,7 +77,7 @@
                     <select class="form-select" name="Locations" id="Locations" required>
                         <option disabled value="">-- Select Location --</option>
                         @foreach($locations as $item)
-                            <option value="{{ $item->Value }}" 
+                            <option value="{{ $item->Value }}"
                                 {{ $security->Locations == $item->Value ? 'selected' : '' }}>
                                 {{ $item->Value }}
                             </option>
@@ -85,10 +85,11 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="mb-3">
                 <label for="SecurityStatus" class="form-label">Security Status</label>
-                <select name="SecurityStatus" class="form-select" required>{{ old('SecurityStatus', $security->SecurityStatus)}}
+                <select name="SecurityStatus" class="form-select"
+                        required>{{ old('SecurityStatus', $security->SecurityStatus)}}
                     <option value="Held">Held</option>
                     <option value="Released">Released</option>
                     <option value="Discharged">Discharged</option>
@@ -98,7 +99,8 @@
 
             <div class="mb-3">
                 <label>Remarks</label>
-                <textarea name="Remarks" class="form-control" rows="2" required>{{ old('Remarks', $security->Remarks) }}</textarea>
+                <textarea name="Remarks" class="form-control" rows="2"
+                          required>{{ old('Remarks', $security->Remarks) }}</textarea>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mb-3">

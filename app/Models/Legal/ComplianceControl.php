@@ -11,9 +11,9 @@ class ComplianceControl extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Title','Description','ComplianceAreaID','ControlTypeID',
-        'OwnerID','IsActive','CreatedBy','CreatedOn',
-        'ModifiedBy','ModifiedOn','DeletedBy','DeletedOn'
+        'Title', 'Description', 'ComplianceAreaID', 'ControlTypeID',
+        'OwnerID', 'IsActive', 'CreatedBy', 'CreatedOn',
+        'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
     ];
 
     public function area()

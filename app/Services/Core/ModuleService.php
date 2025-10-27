@@ -30,7 +30,7 @@ class ModuleService
         if (!$user) {
             $user = \Illuminate\Support\Facades\Auth::user();
         }
-        if(!$user){
+        if (!$user) {
             return 'guest-navbar-modules';
         }
         return $user->UserID . '-navbar_modules';

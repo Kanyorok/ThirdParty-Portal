@@ -83,7 +83,7 @@ class PaymentVoucherController extends Controller
                 'Id'=>$value->Id,
                 'InvoiceNumber'=>$value->InvoiceNumber,
                 // ThirdPartyID is stored in SupplierID field for AP module
-                'ThirdPartyID'=>$value->SupplierID,
+                'ThirdPartyID' => $value->SupplierID,
                 'CurrencyID'=>$value->CurrencyID,
                 'InvoiceAmount'=>$value->InvoiceAmount,
                 'CurrencyCode'=>$value->currency->Code,
@@ -207,7 +207,7 @@ class PaymentVoucherController extends Controller
             $invoices[]=[
                 'Id'=>$value->Id,
                 'InvoiceNumber'=>$value->InvoiceNumber,
-                'ThirdPartyID'=>$value->SupplierID,
+                'ThirdPartyID' => $value->SupplierID,
                 'CurrencyID'=>$value->CurrencyID,
                 'InvoiceAmount'=>$value->InvoiceAmount,
                 'CurrencyCode'=>$value->currency->Code,

@@ -28,7 +28,7 @@ class InvoiceEntryController extends Controller
     {
         $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceInvoiceEntry::class);
 
-        $invoices = FinanceInvoiceEntry::with(['thirdParty:Id,ThirdPartyName','supplier:Id'])
+        $invoices = FinanceInvoiceEntry::with(['thirdParty:Id,ThirdPartyName', 'supplier:Id'])
             ->get();
 
         return view('finance.accountspayable.invoiceentry.index', compact('invoices'));
@@ -59,7 +59,7 @@ class InvoiceEntryController extends Controller
         // return$request->all();
         $validated = $request->validate([
             'InvoiceNumber'=> 'required|string',
-            'ThirdPartyID'=> 'required|exists:t_ThirdParties,Id',
+            'ThirdPartyID' => 'required|exists:t_ThirdParties,Id',
             'CurrencyID'=> 'required|exists:t_Currencies,Id',
             'ExchangeRate'=> 'required|numeric|min:0',
             'POReference'=> 'required|exists:t_Orders,OrderNo',
@@ -123,8 +123,8 @@ class InvoiceEntryController extends Controller
 
             $invoice =  FinanceInvoiceEntry::create([
                 'InvoiceNumber'=> $validated['InvoiceNumber'],
-                'SupplierID'=> $legacySupplierId, // legacy field; prefer ThirdPartyID
-                'ThirdPartyID'=> $thirdPartyId,
+                'SupplierID' => $legacySupplierId, // legacy field; prefer ThirdPartyID
+                'ThirdPartyID' => $thirdPartyId,
                 'CurrencyID'=> $validated['CurrencyID'],
                 'ExchangeRate'=> $validated['ExchangeRate'],
                 'POReference'=> $poId,
@@ -203,7 +203,7 @@ class InvoiceEntryController extends Controller
 
         // Get supplier third party name
         $supplier = FacadesDB::table('t_Suppliers as s')
-            ->leftJoin('t_ThirdParties as tp','tp.Id','=','s.ThirdPartyID')
+            ->leftJoin('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
             ->where('s.Id', $po->AccountID)
             ->select(DB::raw("ISNULL(tp.TradingName, tp.ThirdPartyName) as SupplierName"))
             ->first();
@@ -361,7 +361,7 @@ class InvoiceEntryController extends Controller
                 : '—',
             'amount'         => number_format((float)($invoice->InvoiceAmount ?? 0), 2),
             'exRate'         => $invoice->ExchangeRate ?? 1.0,
-            'vendorName'     => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
+            'vendorName' => ($invoice->thirdParty->TradingName ?? $invoice->thirdParty->ThirdPartyName) ?? '—',
             'poNo'           => $invoice->order->OrderNo ?? '—',
             'grnNo'          => $invoice->grn->GRNID ?? '—',
             'poSub'          => $poSub,
@@ -489,7 +489,7 @@ class InvoiceEntryController extends Controller
     {
         $invoice = FinanceInvoiceEntry::findOrFail($id);
         $suppliers = Supplier::select('Id', 'SupplierName')->get();
-        $orders = Order::select('Id','AccountID','Description','OrdTotExcl','OrderNo')->get();
+        $orders = Order::select('Id', 'AccountID', 'Description', 'OrdTotExcl', 'OrderNo')->get();
         $currencies = Currency::select('Id', 'Code')->get();
         $grns = GoodsReceipt::select('Id', 'GRNID', 'SupplierId')->get();
 

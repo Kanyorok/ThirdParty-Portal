@@ -22,17 +22,17 @@ class FleetVehicleAssignmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'TripNo' => 'nullable|exists:t_TripLogs,Id',
-        'VehicleType' => 'nullable|string|exists:t_CodeDetails,ID',
-        'VehicleID' => 'nullable|string|exists:t_FleetVehicles,Id',
-        'DriverID' => 'nullable|integer',
-        'AssignedBy' => 'nullable|integer|exists:t_Employees,Id',
-        'LastInspectionDate' => 'nullable|date',
-        'AssignmentDate' => 'required|date',
-        'Purpose' => 'nullable|string',
-        'Notes' => 'nullable|string',
+            'TripNo' => 'nullable|exists:t_TripLogs,Id',
+            'VehicleType' => 'nullable|string|exists:t_CodeDetails,ID',
+            'VehicleID' => 'nullable|string|exists:t_FleetVehicles,Id',
+            'DriverID' => 'nullable|integer',
+            'AssignedBy' => 'nullable|integer|exists:t_Employees,Id',
+            'LastInspectionDate' => 'nullable|date',
+            'AssignmentDate' => 'required|date',
+            'Purpose' => 'nullable|string',
+            'Notes' => 'nullable|string',
 
-        
+
         ];
     }
 }

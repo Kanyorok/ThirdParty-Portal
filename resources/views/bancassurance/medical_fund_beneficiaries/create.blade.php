@@ -23,8 +23,9 @@
                     <div class="col-md-3">
                         <label class="form-label">Relationship *</label>
                         <select name="Relationship" class="form-select" required>
+                            <option value="">-- select --</option>
                             @foreach($relationships as $rel)
-                            <option value="{{ $rel->Name }}">{{ $rel->Name }}</option>
+                                <option value="{{ $rel->ID }}" {{ old('Relationship') == $rel->ID ? 'selected' : '' }}>{{ $rel->Description }}</option>
                             @endforeach
                         </select>
                     </div>

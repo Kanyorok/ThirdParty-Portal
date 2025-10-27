@@ -42,9 +42,10 @@ return new class extends Migration {
             $table->foreign('FloatID')->references('FloatID')->on('t_PettyCashFloats');
             $table->foreign('CurrencyID')->references('Id')->on('t_Currencies');
             $table->foreign('BankAccountID')->references('AccountID')->on('t_BankAccounts');
-            $table->index(['FloatID','VoucherType','Status']);
+            $table->index(['FloatID', 'VoucherType', 'Status']);
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('t_PettyCashVouchers');

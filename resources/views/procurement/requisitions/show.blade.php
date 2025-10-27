@@ -142,12 +142,12 @@
                                 <label class="form-label" for="UOM">UOM </label>
 
                                 <select class="form-control" name="UOM" id="UOM" required>
-                                    
+
                                 </select>
 
                                 <p id="UOM_error" class="invalid-feedback d-none error col-12" role="alert"></p>
                             </div>
-                         
+
                             <input type="hidden" name="EstimatedPrice" id="EstimatedPrice">
 
 {{--                            <div class="mb-3">--}}
@@ -321,7 +321,7 @@
         });
 
         // Compute Estimated Cost when quantity changes
-        $('#Quantity').on('input', function(){
+        $('#Quantity').on('input', function () {
             const qty = parseFloat($(this).val() || 0) || 0;
             const unit = parseFloat($('#EstimatedPrice').val() || 0) || 0;
             const total = qty * unit;

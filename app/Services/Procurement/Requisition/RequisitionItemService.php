@@ -21,7 +21,7 @@ class RequisitionItemService
 
     public static function create(array $data, User $actor): RequisitionLine
     {
-        return  RequisitionLine::create([
+        return RequisitionLine::create([
         'Module' => $data['Module'],
         'Type' => $data['Type'],
         'Item' => $data['Item'],

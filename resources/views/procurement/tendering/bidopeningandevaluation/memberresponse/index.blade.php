@@ -18,7 +18,8 @@
                     @foreach ($tenders as $entry)
                         @if($entry->tender)
                             <option value="{{ $entry->tender->Id }}">
-                                {{ $entry->tender->TenderNo ?? 'No Tender No' }} - {{ $entry->tender->Title ?? 'No Title' }}
+                                {{ $entry->tender->TenderNo ?? 'No Tender No' }}
+                                - {{ $entry->tender->Title ?? 'No Title' }}
                             </option>
                         @endif
                     @endforeach

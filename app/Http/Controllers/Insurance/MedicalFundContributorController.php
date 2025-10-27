@@ -8,7 +8,8 @@ use App\Models\Core\CodeDetail;
 use App\Models\Insurance\MedicalFund;
 use App\Models\Insurance\MedicalFundContributor;
 use App\Models\ThirdParty\ThirdParties;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
+
 
 class MedicalFundContributorController extends Controller
 {
@@ -95,28 +96,35 @@ class MedicalFundContributorController extends Controller
     /**
      * Display the specified contributor details.
      */
-    public function show(MedicalFundContributor $contributor)
-    {
-        $contributor->load(['fund', 'beneficiaries', 'packages']);
+public function show(MedicalFundContributor $contributor)
+{
+    // Load relationships
+    $contributor->load(['fund', 'beneficiaries', 'packages']);
+    $medical_fund = $contributor->fund;
 
-        $totals = [
-            'contrib_sum' => $contributor->contributions()->sum('Amount'),
-            'disb_sum'    => $contributor->disbursements()->sum('Amount'),
-        ];
+    // Paginate beneficiaries for the view
+    $beneficiaries = $contributor->beneficiaries()->orderByDesc('Id')->paginate(10);
 
-        // If you have a BeneficiaryRelationship model, replace this with its call.
-        $relationships = collect([
-            (object)['Code' => 'SELF', 'Name' => 'Self'],
-            (object)['Code' => 'SPOUSE', 'Name' => 'Spouse'],
-            (object)['Code' => 'CHILD', 'Name' => 'Child'],
-            (object)['Code' => 'PARENT', 'Name' => 'Parent'],
-            (object)['Code' => 'GUARDIAN', 'Name' => 'Guardian'],
-            (object)['Code' => 'SIBLING', 'Name' => 'Sibling'],
-            (object)['Code' => 'OTHER', 'Name' => 'Other'],
-        ]);
+    // Totals for contributions and disbursements
+    $totals = [
+        'contrib_sum' => $contributor->contributions()->sum('Amount'),
+        'disb_sum'    => $contributor->disbursements()->sum('Amount'),
+    ];
 
-        return view('bancassurance.medical_fund_contributors.show', compact('contributor', 'totals', 'relationships'));
-    }
+    // ✅ Fetch relationships directly from t_CodeDetails
+    $relationships = \DB::table('t_CodeDetails')
+        ->where('CodeID', 'BeneficiaryRelationship')
+        ->orderBy('Description')
+        ->get(['ID', 'Description']);
+
+    return view('bancassurance.medical_fund_contributors.show', compact(
+        'contributor', 'medical_fund', 'beneficiaries', 'totals', 'relationships'
+    ));
+}
+
+
+
+
 
     /**
      * Show the form for editing the specified contributor.
@@ -190,9 +198,9 @@ class MedicalFundContributorController extends Controller
             $subOn = $existing->get((int)$pid) ?: $today;
             return [
                 $pid => [
-                    'IsActive'     => 1,
+                    'IsActive'     => true,
                     'SubscribedOn' => $subOn,
-                    'IsPrimary'    => $pid === $primaryId ? 1 : 0,
+                    'IsPrimary'    => $pid === $primaryId ? true : false,
                 ],
             ];
         })->all();

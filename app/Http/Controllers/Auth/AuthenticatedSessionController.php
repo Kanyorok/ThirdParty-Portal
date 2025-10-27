@@ -50,7 +50,7 @@ class AuthenticatedSessionController extends Controller
         try {
             $sessionToken = bin2hex(random_bytes(32));
         } catch (\Throwable $e) {
-            $sessionToken = (string) Str::uuid();
+            $sessionToken = (string)Str::uuid();
         }
         $request->session()->put('session_token', $sessionToken);
 
@@ -103,7 +103,7 @@ class AuthenticatedSessionController extends Controller
         // Record single-session metadata and attach user_id to current DB session row
         try {
             // bump session version and set current session id
-            $user->session_version = (int) $user->session_version + 1;
+            $user->session_version = (int)$user->session_version + 1;
             $user->current_session_id = $currentSessionId;
             $user->last_login_at = now();
             $user->save();
@@ -115,7 +115,7 @@ class AuthenticatedSessionController extends Controller
             ]);
 
             // Cache single-session token so other instances are rejected immediately
-            \Illuminate\Support\Facades\Cache::put('user_session_token_' . $user->getAuthIdentifier(), $sessionToken, now()->addMinutes(((int) config('session.lifetime', 20)) + 5));
+            \Illuminate\Support\Facades\Cache::put('user_session_token_' . $user->getAuthIdentifier(), $sessionToken, now()->addMinutes(((int)config('session.lifetime', 20)) + 5));
 
             // Ensure DB session row carries user_id for cleanup logic
             $connection = config('session.connection');

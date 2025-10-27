@@ -23,25 +23,26 @@ class EncryptedBidDocumentService
      */
     public static function storeEncryptedBidDocuments(
         BidSubmission $bidSubmission,
-        array $documents,
-        User $actor
-    ): array {
+        array         $documents,
+        User          $actor
+    ): array
+    {
         try {
             $storedDocuments = [];
             $bidRepository = self::getBidRepository();
-            
+
             foreach ($documents as $document) {
                 if ($document instanceof UploadedFile) {
                     // Generate unique encryption key for this bid
                     $encryptionKey = self::generateBidEncryptionKey($bidSubmission);
-                    
+
                     // Read and encrypt the document content
                     $originalContent = file_get_contents($document->getRealPath());
                     $encryptedContent = Crypt::encryptString($originalContent);
-                    
+
                     // Get the original file extension
                     $originalExtension = ExtensionsEnum::fromMimeType($document->getMimeType());
-                    
+
                     // Store encrypted content in DMS directly
                     $dmsDocument = DocumentService::createContent(
                         repository: $bidRepository,
@@ -51,7 +52,7 @@ class EncryptedBidDocumentService
                         actor: $actor,
                         copyRepoPermissions: true
                     );
-                    
+
                     $storedDocuments[] = [
                         'document_id' => $dmsDocument->document->DocumentId,
                         'original_name' => $document->getClientOriginalName(),
@@ -61,15 +62,15 @@ class EncryptedBidDocumentService
                     ];
                 }
             }
-            
+
             return $storedDocuments;
-            
+
         } catch (\Exception $e) {
             Log::error('Error storing encrypted bid documents: ' . $e->getMessage());
             throw new \Exception('Failed to store encrypted bid documents: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Decrypt and retrieve bid documents (only during/after ceremony)
      */
@@ -78,22 +79,22 @@ class EncryptedBidDocumentService
         if (!$bidSubmission->canAccessDocuments()) {
             throw new \Exception('Bid documents are sealed until the opening ceremony.');
         }
-        
+
         try {
             $decryptedDocuments = [];
             $encryptedDocs = json_decode($bidSubmission->EncryptedDocuments, true) ?? [];
-            
+
             foreach ($encryptedDocs as $docInfo) {
                 $dmsDocument = Document::where('DocumentId', $docInfo['document_id'])->first();
-                
+
                 if ($dmsDocument && $dmsDocument->current) {
                     try {
                         // Get encrypted content from DMS
                         $encryptedContent = $dmsDocument->current->getContent();
-                        
+
                         // Decrypt using stored key (we're using Laravel's default encryption)
                         $decryptedContent = Crypt::decryptString($encryptedContent);
-                        
+
                         $decryptedDocuments[] = [
                             'name' => $docInfo['original_name'],
                             'content' => $decryptedContent,
@@ -107,18 +108,18 @@ class EncryptedBidDocumentService
                     }
                 }
             }
-            
+
             // Log access for audit trail
             Log::info("Bid documents accessed for submission {$bidSubmission->Id} by user {$actor->Id}");
-            
+
             return $decryptedDocuments;
-            
+
         } catch (\Exception $e) {
             Log::error('Error decrypting bid documents: ' . $e->getMessage());
             throw new \Exception('Failed to decrypt bid documents: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Generate unique encryption key for bid submission
      */
@@ -126,7 +127,7 @@ class EncryptedBidDocumentService
     {
         return hash('sha256', $bidSubmission->TenderRef . $bidSubmission->SupplierId . now()->timestamp);
     }
-    
+
     /**
      * Generate secure filename for bid documents
      */
@@ -135,14 +136,14 @@ class EncryptedBidDocumentService
         $extension = $document->getClientOriginalExtension();
         return "BID_{$bidSubmission->TenderRef}_{$bidSubmission->SupplierId}_" . Str::uuid() . ".{$extension}";
     }
-    
+
     /**
      * Get or create the bid documents repository in DMS
      */
     private static function getBidRepository(): Repository
     {
         $repository = Repository::where('Name', 'Encrypted Bid Documents')->first();
-        
+
         if (!$repository) {
             $repository = Repository::create([
                 'Name' => 'Encrypted Bid Documents',
@@ -153,10 +154,10 @@ class EncryptedBidDocumentService
                 'ModifiedBy' => 1,
             ]);
         }
-        
+
         return $repository;
     }
-    
+
     /**
      * Start bid opening ceremony - makes documents accessible
      */
@@ -164,7 +165,7 @@ class EncryptedBidDocumentService
     {
         $submissions = BidSubmission::where('TenderRef', $tenderRef)->get();
         $count = 0;
-        
+
         foreach ($submissions as $submission) {
             $submission->update([
                 'DocumentsAccessible' => true,
@@ -173,12 +174,12 @@ class EncryptedBidDocumentService
             ]);
             $count++;
         }
-        
+
         Log::info("Bid opening ceremony started for tender {$tenderRef} by officer {$ceremonyOfficer->Id}. {$count} submissions unlocked.");
-        
+
         return $count;
     }
-    
+
     /**
      * Check if bid opening ceremony has started for a tender
      */

@@ -58,7 +58,7 @@ class FinanceJournalLines extends Model
     public function glAccount()
     {
         return $this->belongsTo(FinanceGLAccounts::class, 'GLAccountID')
-            ->select('Id','GLAccountTypeID','GLTypeGroupID','GLSubAccountTypeID','GLName','GLTypeGroupID','GLCode');
+            ->select('Id', 'GLAccountTypeID', 'GLTypeGroupID', 'GLSubAccountTypeID', 'GLName', 'GLTypeGroupID', 'GLCode');
     }
 
     public function branch()

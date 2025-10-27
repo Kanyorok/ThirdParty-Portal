@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="container mt-5">
-    
+
     <div class="card mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">New Classification Details</h6>
@@ -24,10 +24,12 @@
                     <label for="item_category_ids" class="form-label">Top-level Item Categories (multi-select)</label>
                     <select id="item_category_ids" name="item_category_ids[]" class="form-control" multiple size="6">
                         @foreach(($itemCategories ?? []) as $cat)
-                            <option value="{{ $cat->Id }}" @selected(collect(old('item_category_ids', []))->contains($cat->Id))>{{ $cat->Name }}</option>
+                            <option
+                                value="{{ $cat->Id }}" @selected(collect(old('item_category_ids', []))->contains($cat->Id))>{{ $cat->Name }}</option>
                         @endforeach
                     </select>
-                    <small class="text-muted">Hold Ctrl / Cmd to select multiple. Only parent categories (no ParentId) listed.</small>
+                    <small class="text-muted">Hold Ctrl / Cmd to select multiple. Only parent categories (no ParentId)
+                        listed.</small>
                 </div>
 
                 <div class="mb-3">

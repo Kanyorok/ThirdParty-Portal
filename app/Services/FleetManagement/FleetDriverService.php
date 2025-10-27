@@ -20,18 +20,18 @@ class FleetDriverService
     public function create(array $data, UploadedFile $document = null): FleetDriver
     {
         return DB::transaction(function () use ($data, $document) {
-            $data['DriverNo']   = $this->generateDriverNo();
-            $data['IsActive']   = $data['IsActive'] ?? 1;
-            $data['CreatedBy']  = Auth::id();
-            $data['CreatedOn']  = now();
+            $data['DriverNo'] = $this->generateDriverNo();
+            $data['IsActive'] = $data['IsActive'] ?? 1;
+            $data['CreatedBy'] = Auth::id();
+            $data['CreatedOn'] = now();
 
             if (empty($data['DriverStatus'])) {
-                $defaultStatusValue     = $this->getDefaultStatusValue();
-                $statusId               = $this->getStatusIdByValue($defaultStatusValue);
-                $data['DriverStatus']   = $statusId;
+                $defaultStatusValue = $this->getDefaultStatusValue();
+                $statusId = $this->getStatusIdByValue($defaultStatusValue);
+                $data['DriverStatus'] = $statusId;
                 $statusValueForWorkflow = $defaultStatusValue;
             } else {
-                $statusId               = $data['DriverStatus']; 
+                $statusId = $data['DriverStatus'];
                 $statusValueForWorkflow = $this->getStatusValueById($statusId);
             }
 
@@ -71,7 +71,7 @@ class FleetDriverService
     public function update(int $id, array $data, UploadedFile $document = null): FleetDriver
     {
         return DB::transaction(function () use ($id, $data, $document) {
-            $driver         = FleetDriver::findOrFail($id);
+            $driver = FleetDriver::findOrFail($id);
             $originalStatus = $driver->DriverStatus;
 
             $driver->fill($data);
@@ -93,7 +93,7 @@ class FleetDriverService
             }
 
             if (isset($data['DriverStatus']) && $data['DriverStatus'] != $originalStatus) {
-                $statusId    = $data['DriverStatus'];
+                $statusId = $data['DriverStatus'];
                 $statusValue = $this->getStatusValueById($statusId);
 
                 if ($statusId && $statusValue) {
@@ -159,8 +159,8 @@ class FleetDriverService
             return 'DRV-0001';
         }
 
-        $lastId = (int) str_replace('DRV-', '', $latestDriver->DriverNo);
-        $newId  = $lastId + 1;
+        $lastId = (int)str_replace('DRV-', '', $latestDriver->DriverNo);
+        $newId = $lastId + 1;
 
         return 'DRV-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
     }
@@ -205,13 +205,13 @@ class FleetDriverService
     private function logWorkflow(string $source, int $sourceId, ?int $statusId, ?string $statusValue, ?string $notes = null)
     {
         Workflow::create([
-            'Source'     => $source,
-            'SourceID'   => $sourceId,
-            'Stage'      => $statusId,
-            'Status'     => $statusValue,
-            'Notes'      => $notes,
-            'CreatedBy'  => Auth::id(),
-            'CreatedOn'  => now(),
+            'Source' => $source,
+            'SourceID' => $sourceId,
+            'Stage' => $statusId,
+            'Status' => $statusValue,
+            'Notes' => $notes,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
             'ModifiedBy' => Auth::id(),
             'ModifiedOn' => now(),
         ]);
@@ -219,11 +219,11 @@ class FleetDriverService
         PendingWorkflow::updateOrCreate(
             ['Source' => $source, 'SourceID' => $sourceId],
             [
-                'Stage'      => $statusId,
-                'Status'     => $statusValue,
-                'UserId'     => Auth::id(),
-                'CreatedBy'  => Auth::id(),
-                'CreatedOn'  => now(),
+                'Stage' => $statusId,
+                'Status' => $statusValue,
+                'UserId' => Auth::id(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
                 'ModifiedBy' => Auth::id(),
                 'ModifiedOn' => now(),
             ]

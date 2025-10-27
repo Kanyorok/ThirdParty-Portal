@@ -20,9 +20,9 @@ class BudgetProductMasterController extends Controller
         // Transform into structured array
         $data = $products->map(function ($p) {
             return [
-                'Code'   => $p->ProductTypeID,
-                'Name'   => $p->Description,
-                'Type'   => BudgetProductType::where('ProductCode', $p->ProductTypeID)->pluck('Name')->first(),
+                'Code' => $p->ProductTypeID,
+                'Name' => $p->Description,
+                'Type' => BudgetProductType::where('ProductCode', $p->ProductTypeID)->pluck('Name')->first(),
                 'GLCode' => BudgetGLMaster::where('AccountID', $p->GLAccountID)->pluck('GLAccountTypeID')->first(),
             ];
         });

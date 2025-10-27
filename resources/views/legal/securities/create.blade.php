@@ -65,7 +65,8 @@
             </div>
             <div class="mb-3">
                 <label>Remarks</label>
-                <textarea name="Remarks" class="form-control" rows="2" placeholder="Additional notes or details" required></textarea>
+                <textarea name="Remarks" class="form-control" rows="2" placeholder="Additional notes or details"
+                          required></textarea>
             </div>
             <div class="d-flex justify-content-end gap-2 mb-3">
                 <a href="{{ route('legal.securities.index') }}" class="btn btn-outline-secondary"><i class="fas fa-long-arrow-alt-left"></i> Back</a>

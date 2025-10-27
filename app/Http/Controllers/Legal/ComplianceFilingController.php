@@ -15,21 +15,21 @@ class ComplianceFilingController extends Controller
     // List all filings
     public function index()
     {
-        $filings = ComplianceFiling::with(['template'])->orderBy('SubmissionDate','desc')->get();
+        $filings = ComplianceFiling::with(['template'])->orderBy('SubmissionDate', 'desc')->get();
         return view('legal.compliance.filings.index', compact('filings'));
     }
 
     // Show filing detail
     public function show($id)
     {
-        $filing = ComplianceFiling::with(['template','acknowledgments'])->findOrFail($id);
+        $filing = ComplianceFiling::with(['template', 'acknowledgments'])->findOrFail($id);
         return view('legal.compliance.filings.show', compact('filing'));
     }
 
     // Filing create form
     public function create()
     {
-        $templates = ComplianceFilingTemplate::pluck('Name','Id');
+        $templates = ComplianceFilingTemplate::pluck('Name', 'Id');
         return view('legal.compliance.filings.create', compact('templates'));
     }
 
@@ -47,8 +47,10 @@ class ComplianceFilingController extends Controller
             'Description' => 'nullable|string',
         ]);
 
-        $fileName = null; $mime = null; $path = null;
-        if($request->hasFile('File')){
+        $fileName = null;
+        $mime = null;
+        $path = null;
+        if ($request->hasFile('File')) {
             $file = $request->file('File');
             $fileName = $file->getClientOriginalName();
             $mime = $file->getMimeType();
@@ -67,23 +69,23 @@ class ComplianceFilingController extends Controller
             'CreatedOn' => now(),
         ]);
 
-        return redirect()->route('legal.compliance.filings.index')->with('success','Filing submitted successfully.');
+        return redirect()->route('legal.compliance.filings.index')->with('success', 'Filing submitted successfully.');
     }
 
     // Template list
     public function templates()
     {
-        $templates = ComplianceFilingTemplate::with(['regulator','type','format'])->get();
+        $templates = ComplianceFilingTemplate::with(['regulator', 'type', 'format'])->get();
         return view('legal.compliance.filings.templates', compact('templates'));
     }
 
     // Template create form
     public function createTemplate()
     {
-        $types = DB::table('t_FilingTypes')->pluck('Name','Id');
-        $regulators = DB::table('t_RegulatoryBodies')->pluck('Name','Id');
-        $formats = DB::table('t_FileFormats')->pluck('Name','Id');
-        return view('legal.compliance.filings.create-template', compact('types','regulators','formats'));
+        $types = DB::table('t_FilingTypes')->pluck('Name', 'Id');
+        $regulators = DB::table('t_RegulatoryBodies')->pluck('Name', 'Id');
+        $formats = DB::table('t_FileFormats')->pluck('Name', 'Id');
+        return view('legal.compliance.filings.create-template', compact('types', 'regulators', 'formats'));
     }
 
     // Store template
@@ -100,12 +102,12 @@ class ComplianceFilingController extends Controller
         ]);
 
         ComplianceFilingTemplate::create($validated + [
-            'IsActive' => 1,
-            'CreatedBy' => auth()->id() ?? 1,
-            'CreatedOn' => now(),
-        ]);
+                'IsActive' => 1,
+                'CreatedBy' => auth()->id() ?? 1,
+                'CreatedOn' => now(),
+            ]);
 
-        return redirect()->route('legal.compliance.filings.templates')->with('success','Template created successfully.');
+        return redirect()->route('legal.compliance.filings.templates')->with('success', 'Template created successfully.');
     }
 
     // Upload acknowledgment
@@ -128,6 +130,6 @@ class ComplianceFilingController extends Controller
             'UploadedOn' => now(),
         ]);
 
-        return back()->with('success','Acknowledgment uploaded successfully.');
+        return back()->with('success', 'Acknowledgment uploaded successfully.');
     }
 }

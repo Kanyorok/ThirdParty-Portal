@@ -7,26 +7,26 @@
   @if($errors->any())
     <div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
   @endif
-
   <div class="card">
     <div class="card-body">
       <form action="{{ route('bancassurance.medicalfunds.disbursements.store', ['medical_fund' => $medical_fund->Id]) }}" method="POST" id="disbForm">
         @csrf
+        <input type="hidden" name="FundId" value="{{ $medical_fund->Id }}">
 
         <div class="row g-3">
           {{-- Contributor --}}
           <div class="col-md-6">
             @if(isset($contributor) && $contributor)
-              <input type="hidden" name="ContributorId" id="ContributorID" value="{{ $contributor->Id }}">
+              <input type="hidden" name="ContributorId" id="ContributorId" value="{{ $contributor->Id }}">
               <label class="form-label">Contributor</label>
-              <input type="text" class="form-control" value="{{ $contributor->thirdParty->ThirdPartyId }}" disabled>
+              <input type="text" class="form-control" value="{{ $contributor->thirdParty->ThirdPartyName }}" disabled>
               <div class="form-text">Locked to this contributor.</div>
             @else
               <label class="form-label">Contributor *</label>
-              <select name="ContributorId" id="ContributorID" class="form-select" required>
+              <select name="ContributorId" id="ContributorId" class="form-select" required>
                 <option value="">-- select contributor --</option>
                 @foreach($contributors as $c)
-                  <option value="{{ $c->Id }}">{{ $c->thirdParty->ThirdPartyId }}</option>
+                  <option value="{{ $c->Id }}">{{ $c->thirdParty->ThirdPartyName }}</option>
                 @endforeach
               </select>
             @endif
@@ -35,35 +35,44 @@
           {{-- Beneficiary --}}
           <div class="col-md-6">
             <label class="form-label">Beneficiary *</label>
-            <select name="BeneficiaryId" id="BeneficiaryID" class="form-select" required>
+            <select name="BeneficiaryId" id="BeneficiaryId" class="form-select" required>
               <option value="">-- select beneficiary --</option>
               @if(isset($beneficiaries) && $beneficiaries->count())
                 @foreach($beneficiaries as $b)
-                  <option value="{{ $b->ID }}">{{ $b->FullName }}</option>
+                  @php
+                    $bId = data_get($b, 'Id') ?? data_get($b, 'ID');
+                    $bName = data_get($b, 'FullName') ?? data_get($b, 'Fullname') ?? $b->FullName ?? '';
+                  @endphp
+                  <option value="{{ $bId }}">{{ $bName }}</option>
                 @endforeach
               @endif
             </select>
           </div>
-
+          {{-- coverages debug removed --}}
           {{-- Coverage --}}
-          <div class="col-md-6">
-            <label class="form-label">Coverage *</label>
-            <select name="CoverageId" id="CoverageID" class="form-select" required>
-              <option value="">-- select coverage --</option>
-              @if(isset($coverages) && $coverages->count())
-                @foreach($coverages as $cov)
-                  <option value="{{ $cov->ID }}"
-                          data-annual="{{ $cov->pivot->AnnualLimit ?? $cov->AnnualLimit ?? '' }}"
-                          data-pervisit="{{ $cov->pivot->PerVisitLimit ?? $cov->PerVisitLimit ?? '' }}"
-                          data-wait="{{ $cov->pivot->WaitingPeriodDays ?? $cov->WaitingPeriodDays ?? '' }}"
-                          data-scope="{{ $cov->pivot->Scope ?? $cov->Scope ?? 'PerBeneficiary' }}">
-                    {{ $cov->Name }}
-                  </option>
-                @endforeach
-              @endif
-            </select>
-            <div class="form-text">Only coverages allowed by the contributor’s active packages are listed.</div>
-          </div>
+          <select name="CoverageId" id="CoverageId" class="form-select" required>
+            <option value="">-- select coverage --</option>
+            @if(isset($coverages) && $coverages->count())
+              @foreach($coverages as $cov)
+                @php
+                  $covId = data_get($cov, 'Id') ?? data_get($cov, 'ID');
+                  $covName = data_get($cov, 'Name') ?? ($cov->Name ?? '');
+                  $annual = data_get($cov, 'pivot.AnnualLimit') ?? data_get($cov, 'AnnualLimit') ?? '';
+                  $pervisit = data_get($cov, 'pivot.PerVisitLimit') ?? data_get($cov, 'PerVisitLimit') ?? '';
+                  $wait = data_get($cov, 'pivot.WaitingPeriodDays') ?? data_get($cov, 'WaitingPeriodDays') ?? '';
+                  $scope = data_get($cov, 'pivot.Scope') ?? data_get($cov, 'Scope') ?? 'PerBeneficiary';
+                @endphp
+                <option value="{{ $covId }}"
+                        data-annual="{{ $annual }}"
+                        data-pervisit="{{ $pervisit }}"
+                        data-wait="{{ $wait }}"
+                        data-scope="{{ $scope }}">
+                  {{ $covName }}
+                </option>
+              @endforeach
+            @endif
+          </select>
+
 
           <div class="col-md-3">
             <label class="form-label">Date *</label>

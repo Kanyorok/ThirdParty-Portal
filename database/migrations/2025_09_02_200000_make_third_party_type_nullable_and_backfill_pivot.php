@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         // Make legacy column nullable for backward compatibility
@@ -31,7 +30,7 @@ return new class extends Migration
                 continue; // cannot map string enum code (S/T) to new TypeId without a mapping table
             }
             DB::table('t_ThirdPartyType_ThirdParties')->insert([
-                'TypeId' => (int) $tp->ThirdPartyType,
+                'TypeId' => (int)$tp->ThirdPartyType,
                 'ThirdPartyId' => $tp->Id,
                 'CreatedOn' => now(),
             ]);

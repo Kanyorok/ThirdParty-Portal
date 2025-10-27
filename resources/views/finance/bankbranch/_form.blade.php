@@ -7,7 +7,9 @@
     <div class="alert alert-danger">
         <strong>Fix the following:</strong>
         <ul class="mb-0">
-            @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+            @foreach ($errors->all() as $e)
+                <li>{{ $e }}</li>
+            @endforeach
         </ul>
     </div>
 @endif
@@ -19,13 +21,15 @@
             <input type="hidden" name="BankID" value="{{ $bank->BankID }}">
             <input class="form-control" value="{{ $bank->BankName }}" disabled>
         @else
-            <input type="number" name="BankID" class="form-control" value="{{ old('BankID', $branch->BankID ?? '') }}" required>
+            <input type="number" name="BankID" class="form-control" value="{{ old('BankID', $branch->BankID ?? '') }}"
+                   required>
             {{-- Replace with a select of Banks if desired --}}
         @endif
     </div>
     <div class="col-md-6">
         <label class="form-label">Branch Name <span class="text-danger">*</span></label>
-        <input name="BranchName" class="form-control" value="{{ old('BranchName', $branch->BranchName ?? '') }}" required>
+        <input name="BranchName" class="form-control" value="{{ old('BranchName', $branch->BranchName ?? '') }}"
+               required>
     </div>
 
     <div class="col-md-4">
@@ -38,7 +42,8 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">Country ID</label>
-        <input type="number" name="CountryID" class="form-control" value="{{ old('CountryID', $branch->CountryID ?? '') }}">
+        <input type="number" name="CountryID" class="form-control"
+               value="{{ old('CountryID', $branch->CountryID ?? '') }}">
     </div>
 
     <div class="col-md-6">
@@ -67,7 +72,7 @@
     <div class="col-md-12 d-flex align-items-center">
         <div class="form-check">
             <input type="checkbox" name="IsActive" id="IsActive" class="form-check-input"
-                   {{ old('IsActive', $branch->IsActive ?? 1) ? 'checked' : '' }}>
+                {{ old('IsActive', $branch->IsActive ?? 1) ? 'checked' : '' }}>
             <label for="IsActive" class="form-check-label">Active</label>
         </div>
     </div>

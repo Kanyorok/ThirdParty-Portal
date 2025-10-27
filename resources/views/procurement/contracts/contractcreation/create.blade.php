@@ -10,7 +10,8 @@
                         <h4>📝 New Contract Creation</h4>
                         @if($award)
                             <p class="text-muted mb-0">
-                                Creating contract from approved award: <strong>{{ $award->tender->TenderNo ?? 'N/A' }}</strong>
+                                Creating contract from approved award:
+                                <strong>{{ $award->tender->TenderNo ?? 'N/A' }}</strong>
                             </p>
                         @endif
                     </div>
@@ -89,32 +90,37 @@
 
                                 <!-- Contract Type Selection -->
                                 <div class="mb-4">
-                                    <label class="form-label">Contract Management Type <span class="text-danger">*</span></label>
+                                    <label class="form-label">Contract Management Type <span
+                                            class="text-danger">*</span></label>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="card border {{ old('contract_type') === 'procurement_managed' || !old('contract_type') ? 'border-primary' : '' }}">
+                                            <div
+                                                class="card border {{ old('contract_type') === 'procurement_managed' || !old('contract_type') ? 'border-primary' : '' }}">
                                                 <div class="card-body text-center">
-                                                    <input type="radio" name="contract_type" id="procurement_managed" 
-                                                           value="procurement_managed" class="form-check-input" 
-                                                           {{ old('contract_type') === 'procurement_managed' || !old('contract_type') ? 'checked' : '' }}>
+                                                    <input type="radio" name="contract_type" id="procurement_managed"
+                                                           value="procurement_managed" class="form-check-input"
+                                                        {{ old('contract_type') === 'procurement_managed' || !old('contract_type') ? 'checked' : '' }}>
                                                     <label for="procurement_managed" class="form-check-label d-block">
                                                         <i class="fas fa-cogs fa-2x text-primary d-block mb-2"></i>
                                                         <strong>Procurement Managed</strong>
-                                                        <small class="text-muted d-block">Create and manage contract within procurement</small>
+                                                        <small class="text-muted d-block">Create and manage contract
+                                                            within procurement</small>
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="card border {{ old('contract_type') === 'legal_managed' ? 'border-primary' : '' }}">
+                                            <div
+                                                class="card border {{ old('contract_type') === 'legal_managed' ? 'border-primary' : '' }}">
                                                 <div class="card-body text-center">
-                                                    <input type="radio" name="contract_type" id="legal_managed" 
+                                                    <input type="radio" name="contract_type" id="legal_managed"
                                                            value="legal_managed" class="form-check-input"
-                                                           {{ old('contract_type') === 'legal_managed' ? 'checked' : '' }}>
+                                                        {{ old('contract_type') === 'legal_managed' ? 'checked' : '' }}>
                                                     <label for="legal_managed" class="form-check-label d-block">
                                                         <i class="fas fa-balance-scale fa-2x text-warning d-block mb-2"></i>
                                                         <strong>Legal Department</strong>
-                                                        <small class="text-muted d-block">Send request to legal department for contract creation</small>
+                                                        <small class="text-muted d-block">Send request to legal
+                                                            department for contract creation</small>
                                                     </label>
                                                 </div>
                                             </div>
@@ -125,66 +131,70 @@
                                 <!-- Contract Basic Information -->
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Contract Title <span class="text-danger">*</span></label>
-                                        <input type="text" name="contract_title" class="form-control" 
-                                               value="{{ old('contract_title', $award->tender->Title ?? '') }}" 
+                                        <label class="form-label">Contract Title <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" name="contract_title" class="form-control"
+                                               value="{{ old('contract_title', $award->tender->Title ?? '') }}"
                                                placeholder="Enter contract title">
                 </div>
                 <div class="col-md-6">
-                                        <label class="form-label">Contract Value <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" name="contract_value" class="form-control" 
-                                                   value="{{ old('contract_value', $award->AwardedAmount ?? '') }}" 
-                                                   step="0.01" min="0" placeholder="0.00">
-                                            <span class="input-group-text">{{ is_object($award->tender->Currency) ? $award->tender->Currency->Code : ($award->tender->Currency ?? 'KES') }}</span>
-                                        </div>
+                    <label class="form-label">Contract Value <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="number" name="contract_value" class="form-control"
+                               value="{{ old('contract_value', $award->AwardedAmount ?? '') }}"
+                               step="0.01" min="0" placeholder="0.00">
+                        <span
+                            class="input-group-text">{{ is_object($award->tender->Currency) ? $award->tender->Currency->Code : ($award->tender->Currency ?? 'KES') }}</span>
+                    </div>
                 </div>
             </div>
 
             <div class="mb-3">
-                                    <label class="form-label">Contract Description <span class="text-danger">*</span></label>
-                                    <textarea name="contract_description" class="form-control" rows="3" 
-                                              placeholder="Provide detailed description of contract scope and deliverables">{{ old('contract_description', $award->tender->Description ?? '') }}</textarea>
+                <label class="form-label">Contract Description <span class="text-danger">*</span></label>
+                <textarea name="contract_description" class="form-control" rows="3"
+                          placeholder="Provide detailed description of contract scope and deliverables">{{ old('contract_description', $award->tender->Description ?? '') }}</textarea>
             </div>
 
                                 <!-- Contract Duration -->
             <div class="row mb-3">
                 <div class="col-md-6">
-                                        <label class="form-label">Contract Start Date <span class="text-danger">*</span></label>
-                                        <input type="date" name="start_date" class="form-control" 
-                                               value="{{ old('start_date', $award->ContractStartDate ? $award->ContractStartDate->format('Y-m-d') : date('Y-m-d')) }}">
+                    <label class="form-label">Contract Start Date <span class="text-danger">*</span></label>
+                    <input type="date" name="start_date" class="form-control"
+                           value="{{ old('start_date', $award->ContractStartDate ? $award->ContractStartDate->format('Y-m-d') : date('Y-m-d')) }}">
                 </div>
                 <div class="col-md-6">
-                                        <label class="form-label">Contract End Date <span class="text-danger">*</span></label>
-                                        <input type="date" name="end_date" class="form-control" 
-                                               value="{{ old('end_date', $award->ContractEndDate ? $award->ContractEndDate->format('Y-m-d') : '') }}">
+                    <label class="form-label">Contract End Date <span class="text-danger">*</span></label>
+                    <input type="date" name="end_date" class="form-control"
+                           value="{{ old('end_date', $award->ContractEndDate ? $award->ContractEndDate->format('Y-m-d') : '') }}">
                 </div>
             </div>
 
                                 <!-- Terms and Conditions -->
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Payment Terms <span class="text-danger">*</span></label>
-                                        <textarea name="payment_terms" class="form-control" rows="3" 
+                                        <label class="form-label">Payment Terms <span
+                                                class="text-danger">*</span></label>
+                                        <textarea name="payment_terms" class="form-control" rows="3"
                                                   placeholder="Specify payment schedule, milestones, and conditions">{{ old('payment_terms', $award->PaymentTerms ?? 'Payment upon delivery and acceptance of goods/services as per agreed milestones') }}</textarea>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Delivery Terms</label>
-                                        <textarea name="delivery_terms" class="form-control" rows="3" 
+                                        <textarea name="delivery_terms" class="form-control" rows="3"
                                                   placeholder="Specify delivery timeline, locations, and acceptance criteria">{{ old('delivery_terms', $award->DeliveryTerms ?? '') }}</textarea>
                                     </div>
             </div>
 
             <div class="mb-3">
-                                    <label class="form-label">Special Conditions</label>
-                                    <textarea name="special_conditions" class="form-control" rows="3" 
-                                              placeholder="Any special conditions, penalties, or additional requirements">{{ old('special_conditions', $award->SpecialConditions ?? '') }}</textarea>
+                <label class="form-label">Special Conditions</label>
+                <textarea name="special_conditions" class="form-control" rows="3"
+                          placeholder="Any special conditions, penalties, or additional requirements">{{ old('special_conditions', $award->SpecialConditions ?? '') }}</textarea>
             </div>
 
                                 <!-- Action Buttons -->
                                 <div class="row">
                                     <div class="col-md-12 text-end">
-                                        <button type="button" class="btn btn-outline-secondary me-2" onclick="history.back()">
+                                        <button type="button" class="btn btn-outline-secondary me-2"
+                                                onclick="history.back()">
                                             <i class="fas fa-times"></i> Cancel
                                         </button>
                                         <button type="submit" class="btn btn-primary">
@@ -206,7 +216,7 @@
                                 <i class="fas fa-trophy"></i> View Awards
                             </a>
                         </div>
-            </div>
+                    </div>
                 @endif
             </div>
         </div>
@@ -214,31 +224,31 @@
 
     <script>
         // Handle contract type selection highlighting
-        document.querySelectorAll('input[name="contract_type"]').forEach(function(input) {
-            input.addEventListener('change', function() {
+        document.querySelectorAll('input[name="contract_type"]').forEach(function (input) {
+            input.addEventListener('change', function () {
                 // Remove border from all cards
-                document.querySelectorAll('.card.border').forEach(function(card) {
+                document.querySelectorAll('.card.border').forEach(function (card) {
                     card.classList.remove('border-primary');
                 });
-                
+
                 // Add border to selected card
                 this.closest('.card').classList.add('border-primary');
             });
         });
 
         // Auto-calculate end date based on tender duration if available
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const startDateInput = document.querySelector('input[name="start_date"]');
             const endDateInput = document.querySelector('input[name="end_date"]');
-            
+
             if (startDateInput && endDateInput && !endDateInput.value) {
-                startDateInput.addEventListener('change', function() {
+                startDateInput.addEventListener('change', function () {
                     if (this.value) {
                         // Default to 12 months contract duration
                         const startDate = new Date(this.value);
                         const endDate = new Date(startDate);
                         endDate.setMonth(endDate.getMonth() + 12);
-                        
+
                         endDateInput.value = endDate.toISOString().split('T')[0];
                     }
                 });

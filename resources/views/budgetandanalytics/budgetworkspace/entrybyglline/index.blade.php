@@ -19,19 +19,22 @@
             <!-- Body -->
             <div class="card-body p-3">
                 <p class="text-muted mb-3" style="font-size: 14px;">
-                    Listing of manual budget entries grouped by budget line. You can view details, check allocations, or delete entries.
+                    Listing of manual budget entries grouped by budget line. You can view details, check allocations, or
+                    delete entries.
                 </p>
 
                 <div class="table-responsive">
                     @if($groupedEntries->count())
-                        <table class="table table-bordered table-hover table-striped align-middle text-center entry-table" style="min-width: 850px;">
+                        <table
+                            class="table table-bordered table-hover table-striped align-middle text-center entry-table"
+                            style="min-width: 850px;">
                             <thead class="table-light">
                             <tr>
                                 <th>#</th>
                                 <th>Budget</th>
                                 <th>Budget Line</th>
                                 <th>Total Allocation</th>
-{{--                                <th>Source</th>--}}
+                                {{--                                <th>Source</th>--}}
                                 <th class="text-center">Actions</th>
                             </tr>
                             </thead>
@@ -53,7 +56,7 @@
                                         </a>
                                     </td>
                                     <td>{{ number_format($totalAllocation, 2) }}</td>
-{{--                                    <td><span class="badge bg-secondary">Manual Entry</span></td>--}}
+                                    {{--                                    <td><span class="badge bg-secondary">Manual Entry</span></td>--}}
                                     <td class="text-center" style="white-space: nowrap;">
                                         <a href="{{ route('entrybyglline.show', $item->BudgetID) }}"
                                            class="btn btn-sm btn-outline-primary me-1" title="View Entry">
@@ -99,6 +102,7 @@
             font-size: 13px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .entry-table th,
         .entry-table td {
             vertical-align: middle;

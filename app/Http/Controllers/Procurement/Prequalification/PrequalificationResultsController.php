@@ -33,12 +33,12 @@ class PrequalificationResultsController extends Controller
         }
 
         $preqSections = $round->prequalificationSections()
-            ->with(['masterSection','criteria'])
+            ->with(['masterSection', 'criteria'])
             ->get()
             ->keyBy('SectionId');
 
         // Normalize section weights so their sum equals 100
-        $totalSectionWeight = max(0.0, (float) ($preqSections->sum('Weight') ?? 0));
+        $totalSectionWeight = max(0.0, (float)($preqSections->sum('Weight') ?? 0));
         $weightScale = ($totalSectionWeight > 0 && abs($totalSectionWeight - 100.0) > 0.0001)
             ? (100.0 / $totalSectionWeight)
             : 1.0;
@@ -57,8 +57,9 @@ class PrequalificationResultsController extends Controller
             $criteriaArr = [];
             $sectionTotal = 0.0;
             foreach ($sectionEvaluations as $eval) {
-                $rawScore = (float) ($eval->Score ?? 0); // out of 10
-                if ($rawScore < 0) $rawScore = 0; if ($rawScore > 10) $rawScore = 10;
+                $rawScore = (float)($eval->Score ?? 0); // out of 10
+                if ($rawScore < 0) $rawScore = 0;
+                if ($rawScore > 10) $rawScore = 10;
                 $weighted = ($perCriterionWeight * ($rawScore / 10)); // already a % portion of 100
                 $sectionTotal += $weighted;
                 $criteriaArr[] = [
@@ -93,7 +94,7 @@ class PrequalificationResultsController extends Controller
         $grandTotal = $calc['grandTotal'] ?? 0.0;
         // Compare with 2-decimal rounding to match UI and avoid 59.999999 vs 60 issues
         $score = round($grandTotal, 2);
-        $passingThreshold = (int) config('prequalification.passing_threshold', 60);
+        $passingThreshold = (int)config('prequalification.passing_threshold', 60);
         $decision = ($score >= $passingThreshold) ? 'Passed' : 'Failed';
 
         return PrequalificationResult::updateOrCreate(
@@ -107,6 +108,7 @@ class PrequalificationResultsController extends Controller
             ]
         );
     }
+
     /**
      * Admin-only method to generate results for an application.
      */

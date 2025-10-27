@@ -13,7 +13,7 @@ class OrderLines extends Model
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
     const DELETED_AT = 'DeletedOn';
-    
+
     protected $connection = 'sqlsrv';
     protected $table = 't_OrderLines';
     protected $primaryKey = 'Id';
@@ -74,7 +74,7 @@ class OrderLines extends Model
         $subtotal = $this->fQuantity * $this->fUnitPriceExcl;
         $taxAmount = $subtotal * ($this->TaxPercentage / 100);
         $discountAmount = $subtotal * ($this->DiscountPercentage / 100);
-        
+
         return $subtotal + $taxAmount - $discountAmount;
     }
 

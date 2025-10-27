@@ -229,7 +229,7 @@ class OrderService
             ->leftJoin(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', DB::raw('t_Suppliers.ThirdPartyID'))
             ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), function ($join) {
-                    $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
+                $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
                         ->where('t_CodeDetails.CodeID', '=', 'PaymentTerm');
                 })
             ->where('t_Orders.Id', '=', $id)
@@ -274,7 +274,7 @@ class OrderService
                 't_Orders.terms'
             );
         $result = $query->first();
-        Log::info('OrderService.fetchOrderDetails done', ['id' => $id, 'hasResult' => (bool) $result]);
+        Log::info('OrderService.fetchOrderDetails done', ['id' => $id, 'hasResult' => (bool)$result]);
         return $result;
     }
 

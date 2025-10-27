@@ -31,8 +31,29 @@ class RegisterThirdPartyUserRequest extends FormRequest
     {
         return [
             'Email.unique' => __('auth.user_exists'),
+            'Phone.regex' => 'Phone format is invalid. Use international format, e.g., +254712345678',
             'Password.confirmed' => __('auth.password_mismatch'),
         ];
+    }
+
+    /**
+     * Normalize phone to +E.164 before validation (allow inputs like 2547..., +2547..., spaces, dashes).
+     */
+    protected function prepareForValidation(): void
+    {
+        $raw = (string) ($this->input('Phone') ?? '');
+        if ($raw === '') {
+            return;
+        }
+
+        // Strip everything except digits
+        $digits = preg_replace('/\D+/', '', $raw) ?? '';
+
+        // If we have a plausible E.164 length, prefix with + (8-15 digits total)
+        if (strlen($digits) >= 8 && strlen($digits) <= 15) {
+            $normalized = '+' . ltrim($digits, '+');
+            $this->merge(['Phone' => $normalized]);
+        }
     }
 
     protected function failedValidation(Validator $validator)

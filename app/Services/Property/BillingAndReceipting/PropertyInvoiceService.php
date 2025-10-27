@@ -62,7 +62,7 @@ class PropertyInvoiceService
             $finance = app(\App\Services\Finance\InvoiceIntakeService::class);
             //Get the tenantID
             $tenantID =PropertyNewLease::find($Lease->Id)->Tenant;
-            $thirdPartyID=PropertyNewTenant::find($tenantID)->ThirdPartyId;
+            $thirdPartyID = PropertyNewTenant::find($tenantID)->ThirdPartyId;
             // Build Finance lines (include only non-zero lines)
             $lines = [];
             $addLine = function (string $name, float $amount) use (&$lines, $Lease) {
@@ -95,7 +95,7 @@ class PropertyInvoiceService
 
                     'ModuleID' => 500000,
                     'CurrencyID' =>56,
-                    'CustomerID' => $thirdPartyID  ?? null,
+                    'CustomerID' => $thirdPartyID ?? null,
 
                     'InvoiceID' => $invoice->Id,
                     'InvoiceNumber' => $InvoiceNumber,

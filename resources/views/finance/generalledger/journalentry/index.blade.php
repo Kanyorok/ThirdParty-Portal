@@ -189,10 +189,10 @@
                                             {{ $isPosted ? 'disabled' : '' }}
                                             @if(!$isPosted)
                                                 data-bs-toggle="modal"
-                                                data-bs-target="#customDeleteConfirmModal"
-                                                data-name="{{ $journalEntry->RefNo ?? ('#'.$journalEntry->Id) }}"
-                                                data-route="{{ route('journalentry.destroy', $journalEntry->Id) }}"
-                                            @endif
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{ $journalEntry->RefNo ?? ('#'.$journalEntry->Id) }}"
+                                            data-route="{{ route('journalentry.destroy', $journalEntry->Id) }}"
+                                        @endif
                                     >
                                         <i class="fas fa-trash-alt"></i>
                                     </button>

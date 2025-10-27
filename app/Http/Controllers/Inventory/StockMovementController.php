@@ -48,8 +48,8 @@ class StockMovementController extends Controller
             DB::raw('MAX(BalanceQty) as closing_qty'),
             DB::raw('SUM(TotalCost) as total_value')
         )
-        ->groupBy('ItemID')
-        ->get();
+            ->groupBy('ItemID')
+            ->get();
 
         // Calculate opening balance
         $movementData = [];

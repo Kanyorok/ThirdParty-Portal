@@ -1,12 +1,34 @@
 <html>
 <head>
     <style>
-        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10px; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { padding: 4px 6px; border: 1px solid #ddd; word-wrap: break-word; }
-        thead th { background: #f5f5f5; }
-        .text-end { text-align: right; }
-        .text-center { text-align: center; }
+        body {
+            font-family: DejaVu Sans, Arial, sans-serif;
+            font-size: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            padding: 4px 6px;
+            border: 1px solid #ddd;
+            word-wrap: break-word;
+        }
+
+        thead th {
+            background: #f5f5f5;
+        }
+
+        .text-end {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
     </style>
     <title>Budget Consolidation Export</title>
 </head>
@@ -24,7 +46,7 @@
         <div>Printed: {{ now()->format('d M Y, H:i') }}</div>
         <div>By: {{ optional(auth()->user())->Name ?? optional(auth()->user())->UserID ?? '—' }}</div>
     </div>
-    </div>
+</div>
 <table>
     <thead>
     <tr>

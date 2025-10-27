@@ -103,13 +103,13 @@
                 <div class="col-md-4">
                     <label class="form-label">Chassis Number</label>
                     <input type="text"
-                        class="form-control"
-                        name="ChassisNo"
-                        value="{{ old('ChassisNo', $vehicle->ChassisNo) }}"
-                        minlength="17"
-                        maxlength="17"
-                        pattern=".{17}"
-                        title="Chassis Number must be exactly 17 characters">
+                           class="form-control"
+                           name="ChassisNo"
+                           value="{{ old('ChassisNo', $vehicle->ChassisNo) }}"
+                           minlength="17"
+                           maxlength="17"
+                           pattern=".{17}"
+                           title="Chassis Number must be exactly 17 characters">
                 </div>
 
 

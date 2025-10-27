@@ -5,7 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up(): void {
+    public function up(): void
+    {
         Schema::create('t_PettyCashReplenishmentBatches', function (Blueprint $table) {
             $table->id('BatchID');
             $table->unsignedBigInteger('FloatID');
@@ -25,10 +26,12 @@ return new class extends Migration {
 
             $table->foreign('FloatID')->references('FloatID')->on('t_PettyCashFloats');
             $table->foreign('BankAccountID')->references('AccountID')->on('t_BankAccounts');
-            $table->index(['FloatID','Status']);
+            $table->index(['FloatID', 'Status']);
         });
     }
-    public function down(): void {
+
+    public function down(): void
+    {
         Schema::dropIfExists('t_PettyCashReplenishmentBatches');
     }
 };

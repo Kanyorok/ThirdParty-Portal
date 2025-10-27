@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         if (!Schema::hasTable('t_BidSubmissions')) {
@@ -107,10 +106,10 @@ return new class extends Migration
         });
         Schema::table('t_BidSubmissions', function (Blueprint $table) {
             foreach ([
-                'BidAmount', 'Currency', 'ValidityPeriod', 'DeliveryPeriod', 'PaymentTerms', 'BidStatus',
-                'OpenedAt', 'OpenedBy', 'ReceivedOnTime',
-                'TechnicalScore', 'FinancialScore', 'TotalScore', 'IsResponsive', 'ResponsivenessRemarks', 'EvaluationNotes',
-            ] as $col) {
+                         'BidAmount', 'Currency', 'ValidityPeriod', 'DeliveryPeriod', 'PaymentTerms', 'BidStatus',
+                         'OpenedAt', 'OpenedBy', 'ReceivedOnTime',
+                         'TechnicalScore', 'FinancialScore', 'TotalScore', 'IsResponsive', 'ResponsivenessRemarks', 'EvaluationNotes',
+                     ] as $col) {
                 if (Schema::hasColumn('t_BidSubmissions', $col)) {
                     $table->dropColumn($col);
                 }
