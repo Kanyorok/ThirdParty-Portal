@@ -9,7 +9,7 @@
     <div class="container mt-4">
 
         <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-end align-items-center mb-3">
             <a href="{{ route('PropertyRegistry.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i> Add Property
             </a>
@@ -55,17 +55,17 @@
                                 <td>
                                     <div class="d-flex gap-2 flex-wrap">
                                         <a href="{{ route('PropertyRegistry.show', $property->Id) }}"
-                                           class="btn btn-sm btn-info text-white">
-                                            <i class="bi bi-eye"></i> View
+                                           class="btn btn-sm btn-info text-white" title="View Property">
+                                            <i class="bi bi-eye"></i>
                                         </a>
                                         <a href="{{ route('PropertyRegistry.edit', $property->Id) }}"
-                                           class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil-square"></i> Edit
+                                           class="btn btn-sm btn-warning" title="Edit Property">
+                                            <i class="bi bi-pencil-square"></i>
                                         </a>
 
                                         @if($property->getBlockByProperty()->exists())
-                                            <button class="btn btn-sm btn-secondary" disabled>
-                                                <i class="bi bi-lock"></i> In Use
+                                            <button class="btn btn-sm btn-secondary" title="In Use">
+                                                <i class="bi bi-lock"></i>
                                             </button>
                                         @else
                                             <form action="{{ route('PropertyRegistry.destroy', $property->Id) }}"
@@ -73,8 +73,8 @@
                                                   onsubmit="return confirm('Are you sure you want to delete this property?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Delete
+                                                <button class="btn btn-sm btn-danger" title="Delete Property">
+                                                    <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
                                         @endif
