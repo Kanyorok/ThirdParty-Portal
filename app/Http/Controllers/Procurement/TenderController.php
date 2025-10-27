@@ -418,12 +418,34 @@ class TenderController extends Controller
         }
         $items = TenderItems::where('TenderID', $id)->where('ItemCategory', $tender->ItemCategoryId)->get();
         $otherItemsForThatTender = ItemMasterList::where('Category', $tender->ItemCategoryId)->get();
-        $suppliers = TenderSupplier::where('TenderID', $id)->with('supplier')->get();
-        $existingSupplierIds = $suppliers->pluck('SupplierID')->toArray();
-        $otherSuppliers = Supplier::select('Id', 'ThirdPartyName', 'CategoryId', 'ContactPhone', 'ContactEmail')
-            ->where('CategoryId', $tender->ItemCategoryId)
-            ->whereNotIn('Id', $existingSupplierIds)
+        // Include supplier->thirdParty so we can display proper contact details
+        $suppliers = TenderSupplier::where('TenderID', $id)
+            ->with(['supplier.thirdParty'])
             ->get();
+
+        $existingSupplierIds = collect($suppliers)->pluck('SupplierID')->map(fn($v) => (int)$v)->values();
+
+        // Build addable suppliers list using the prequalification helper and filter by tender's top-level category
+        $topCategoryId = (int) $tender->ItemCategoryId;
+        $prequalified = $this->getPrequalifiedSuppliers(); // Collection of arrays
+        $otherSuppliers = collect($prequalified)
+            ->filter(function ($s) use ($topCategoryId, $existingSupplierIds) {
+                $id = (int) ($s['Id'] ?? 0);
+                $cats = collect($s['ItemCategoryIds'] ?? []);
+                return $id > 0
+                    && !$existingSupplierIds->contains($id)
+                    && ($topCategoryId ? $cats->contains($topCategoryId) : true);
+            })
+            ->map(function ($s) {
+                // Normalize to object with properties expected by the view
+                return (object) [
+                    'Id'           => (int) ($s['Id'] ?? 0),
+                    'SupplierName' => (string) ($s['ThirdPartyName'] ?? $s['SupplierName'] ?? ''),
+                    'ContactEmail' => (string) ($s['Email'] ?? ''),
+                    'ContactPhone' => (string) ($s['Phone'] ?? ''),
+                ];
+            })
+            ->values();
         $tenderCategory = TenderCategory::find($tender->TenderCategory)->Id;
         $tenderCategories = TenderCategory::select('Id', 'TenderCategory')->get();
         $itemCategory = ItemCategories::find($tender->ItemCategoryId)->Name;
@@ -444,7 +466,7 @@ class TenderController extends Controller
             $manualItem->item_name = ItemMasterList::find($manualItem->item_id)?->ItemName ?? 'N/A';
         }
 
-        return view('procurement.tendering.tendersetup.tenderinitiation.edit', compact(
+    return view('procurement.tendering.tendersetup.tenderinitiation.edit', compact(
             'tender',
             'tenderCategory',
             'tenderCategories',
@@ -1038,6 +1060,7 @@ public function allowedCategories(Request $request)
                 'SupplierName' => $thirdParty->ThirdPartyName,
                 'ThirdPartyName' => $thirdParty->ThirdPartyName,
                 'Email' => $thirdParty->Email ?? '', // Include Email for restricted tender invitations
+                'Phone' => $thirdParty->Phone ?? '',
                 'CategoryId' => null, // No longer used - categories come from SupplierCategory mapping
                 'SupplierCategoryID' => $supplierCategoryIds->first(), // Prefer first mapped category if any
                 'ItemCategoryIds' => array_values(array_unique(array_map('intval', $itemCategoryIds))), // All categories supplier can serve (incl. top-level)
