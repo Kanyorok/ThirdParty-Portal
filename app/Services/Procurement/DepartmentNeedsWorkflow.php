@@ -123,8 +123,11 @@ class DepartmentNeedsWorkflow extends ApprovalWorkflowService
      */
     public function canApproveNeed(DepartmentNeed $need, User $user): bool
     {
-        // Call the parent's protected canApprove method with resolved table and ID
-        $table = $need->getTable();
-        return parent::canApprove($table, $need->getKey(), $user);
+               return parent::canApprove(
+            DepartmentNeed::getPrimaryKey(), // Morph alias (e.g., 'department_needs')
+            $need->getKey(), 
+            $user
+        );
+
     }
 }
