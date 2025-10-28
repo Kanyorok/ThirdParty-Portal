@@ -25,7 +25,7 @@ class RFQResponseController extends Controller
         $currencies = \App\Models\Core\Currency::query()
             ->orderByRaw("CASE WHEN Symbol = 'Ksh' THEN 0 ELSE 1 END")
             ->orderBy('Name')
-            ->get(['Id','Name','Code','Symbol']);
+            ->get(['Id', 'Name', 'Code', 'Symbol']);
 
         // Get all unique SupplierIds from the pivot table t_RFQ_Supplier
         $supplierIds = DB::table('t_RFQ_Supplier')->pluck('SupplierId')->unique();
@@ -273,8 +273,8 @@ class RFQResponseController extends Controller
 
     public function findExisting(Request $request)
     {
-        $rfqId = (int) $request->query('rfqId');
-        $supplierId = (int) $request->query('supplierId');
+        $rfqId = (int)$request->query('rfqId');
+        $supplierId = (int)$request->query('supplierId');
 
         if (!$rfqId || !$supplierId) {
             return response()->json(['exists' => false]);
@@ -303,7 +303,7 @@ class RFQResponseController extends Controller
             'exists' => true,
             'header' => [
                 'currency' => $existing->Currency,
-                'durationDays' => (int) ($existing->DurationDays ?? 0),
+                'durationDays' => (int)($existing->DurationDays ?? 0),
                 'status' => $existing->Status ?? null,
                 'submittedOn' => $existing->SubmittedOn ? \Illuminate\Support\Carbon::parse($existing->SubmittedOn)->toISOString() : null,
             ],
@@ -311,9 +311,9 @@ class RFQResponseController extends Controller
                 return [
                     'name' => $it->ItemName,
                     'uom' => $it->UOM,
-                    'quantity' => (float) $it->Quantity,
-                    'quotedPrice' => (float) $it->QuotedPrice,
-                    'totalPayable' => (float) $it->TotalPayable,
+                    'quantity' => (float)$it->Quantity,
+                    'quotedPrice' => (float)$it->QuotedPrice,
+                    'totalPayable' => (float)$it->TotalPayable,
                 ];
             }),
         ]);

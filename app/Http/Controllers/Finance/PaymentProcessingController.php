@@ -123,7 +123,7 @@ class PaymentProcessingController extends Controller
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
                     'ModuleID'          => $MODULE_ID,
-                    'ThirdPartyID'=>$invoice->ThirdPartyID,
+                    'ThirdPartyID' => $invoice->ThirdPartyID,
                     'IsScheduled'=>$isScheduled,
                     'VoucherID'=>$voucherID,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,

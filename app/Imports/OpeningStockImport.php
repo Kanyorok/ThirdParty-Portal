@@ -59,29 +59,29 @@ class OpeningStockImport implements ToModel, WithHeadingRow
         $skuCode = 'SKU-' . '0' . $branchId . '-' . '0' . $storeId . '-' . $codePart;
 
         return new StockItem([
-            'SKUCode'     => $skuCode,
-            'ItemID'      => $item->Id,
-            'Batch'       => $row['batchtracked'] ?? false,
-            'Serial'      => $row['serialtracked'] ?? false,
-            'Perishable'  => $row['perishable'] ?? false,
-            'Saleable'    => $row['saleable'] ?? false,
+            'SKUCode' => $skuCode,
+            'ItemID' => $item->Id,
+            'Batch' => $row['batchtracked'] ?? false,
+            'Serial' => $row['serialtracked'] ?? false,
+            'Perishable' => $row['perishable'] ?? false,
+            'Saleable' => $row['saleable'] ?? false,
             'Purchasable' => $row['purchasable'] ?? false,
-            'Branch'      => $branchId,
-            'Store'       => $storeId,
-            'CurrentQty'  => $row['qty'] ?? 0,
-            'Min'         => $row['minstocklevel'] ?? 0,
-            'Reorder'     => $row['reorderqty'] ?? 0,
-            'Max'         => $row['maxstocklevel'] ?? 0,
-            'UOM'         => $uomId,   
-            'UnitCost'    => $priceId, 
-            'LastReceived'=> !empty($row['lastreceiveddate'])
-                                ? Carbon::createFromFormat('d/m/Y', $row['lastreceiveddate'])
-                                : now(),
-            'Status'      => $row['isactive'] ?? true,
-            'CreatedBy'   => auth()->id(),
-            'CreatedOn'   => now(),
-            'ModifiedBy'  => auth()->id(),
-            'ModifiedOn'  => now(),
+            'Branch' => $branchId,
+            'Store' => $storeId,
+            'CurrentQty' => $row['qty'] ?? 0,
+            'Min' => $row['minstocklevel'] ?? 0,
+            'Reorder' => $row['reorderqty'] ?? 0,
+            'Max' => $row['maxstocklevel'] ?? 0,
+            'UOM' => $uomId,
+            'UnitCost' => $priceId,
+            'LastReceived' => !empty($row['lastreceiveddate'])
+                ? Carbon::createFromFormat('d/m/Y', $row['lastreceiveddate'])
+                : now(),
+            'Status' => $row['isactive'] ?? true,
+            'CreatedBy' => auth()->id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => auth()->id(),
+            'ModifiedOn' => now(),
         ]);
     }
 }

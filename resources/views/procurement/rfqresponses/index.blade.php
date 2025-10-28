@@ -22,6 +22,7 @@
                     <th>Total Price</th>
                     <th>Days to Delivery</th>
                     <th>Delivery Date</th>
+                    <th>Source</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
@@ -63,19 +64,28 @@
                         </td>
                         <td>{{ $deliveryDate->format('d/m/Y') }}</td>
                         <td>
+                            @if($response->CreatedBy == auth()->id())
+                                Manual
+                            @else
+                                Third Party
+                            @endif
+                        </td>
+                        <td>
                             <button class="btn btn-sm btn-info" data-bs-toggle="modal"
                                     data-bs-target="#viewModal{{ $response->Id }}">View
                             </button>
+                            @if($response->CreatedBy == auth()->id())
                             <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
                                     data-bs-target="#editModal{{ $response->Id }}">Edit
                             </button>
-                            
+
                             <form action="{{ route('rfqresponses.destroy', $response->Id) }}" method="POST"
                                   class="d-inline" onsubmit="return confirm('Are you sure?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-danger">Delete</button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -131,6 +141,16 @@
                                     <tr>
                                         <th>Duration (Days)</th>
                                         <td>{{ $response->DurationDays }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Source</th>
+                                        <td>
+                                            @if($response->CreatedBy == auth()->id())
+                                                Manual
+                                            @else
+                                                Third Party
+                                            @endif
+                                        </td>
                                     </tr>
                                 </table>
 
@@ -198,6 +218,11 @@
                                                                                         class="form-control"
                                                                                         value="{{ $response->TotalPayable }}"
                                                                                         readonly></div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col"><label>Source</label><input type="text" class="form-control"
+                                                                                     value="@if($response->CreatedBy == auth()->id()) Manual @else Third Party @endif"
+                                                                                     readonly></div>
                                 </div>
 
                                 <h6>Items</h6>
@@ -287,5 +312,5 @@
 
     // Clarifications moved to full-screen page (top button links)
     </script>
-    
+
 @endsection

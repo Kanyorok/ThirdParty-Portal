@@ -2,18 +2,18 @@
 @section('title', 'Property Registry View')
 
 @section('content')
-<div class="container mt-4" style="max-width: 1000px;">
+    <div class="container mt-4" style="max-width: 1000px;">
 
-    <div class="card shadow-lg border-0 rounded-3">
-        {{-- Header --}}
-        <div class="card-header text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Property Information</h5>
-            <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-light btn-sm">
-                <i class="bi bi-arrow-left"></i> Back
-            </a>
-        </div>
+        <div class="card shadow-lg border-0 rounded-3">
+            {{-- Header --}}
+            <div class="card-header text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Property Information</h5>
+                <a href="{{ route('PropertyRegistry.index') }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
 
-        {{-- Body --}}
+            {{-- Body --}}
         <div class="card-body">
             <form>
                 <div class="row g-3">
@@ -46,13 +46,15 @@
 
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Acquisition Date</label>
-                        <input type="text" class="form-control" 
-                               value="{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d/m/Y') : '-' }}" readonly>
+                        <input type="text" class="form-control"
+                               value="{{ $property->AcquisitionDate ? \Carbon\Carbon::parse($property->AcquisitionDate)->format('d/m/Y') : '-' }}"
+                               readonly>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Country</label>
-                        <input type="text" class="form-control" value="{{ $property->propertyCountry->Name ?? '-' }}" readonly>
+                        <input type="text" class="form-control" value="{{ $property->propertyCountry->Name ?? '-' }}"
+                               readonly>
                     </div>
 
                     <div class="col-md-6">
@@ -67,7 +69,8 @@
 
                     {{-- View Structure --}}
                     <div class="col-12 text-end mt-2">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#structureModal">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#structureModal">
                             <i class="bi bi-diagram-3"></i> View Property Structure
                         </button>
                     </div>
@@ -93,7 +96,7 @@
             </form>
         </div>
 
-        {{-- Audit Info --}}
+            {{-- Audit Info --}}
         <div class="card-footer small bg-light text-muted">
             <div class="row g-2">
                 <div class="col-md-3">
@@ -110,88 +113,89 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
-</div>
 
 
-{{-- Property Structure Modal (Collapsible) --}}
-<div class="modal fade" id="structureModal" tabindex="-1" aria-labelledby="structureModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content shadow">
-      <div class="modal-header text-white">
-        <h6 class="modal-title" id="structureModalLabel">
-            Property Structure - {{ $property->PropertyName }}
-            <p><small>click the blocks to view the floors</small></p>
-        </h6>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
+    {{-- Property Structure Modal (Collapsible) --}}
+    <div class="modal fade" id="structureModal" tabindex="-1" aria-labelledby="structureModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content shadow">
+                <div class="modal-header text-white">
+                    <h6 class="modal-title" id="structureModalLabel">
+                        Property Structure - {{ $property->PropertyName }}
+                        <p><small>click the blocks to view the floors</small></p>
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
 
-        @forelse($property->getBlockByProperty as $block)
-            {{-- Block --}}
-            <div class="mb-2">
-                <a class="text-primary d-block" 
-                   data-bs-toggle="collapse" href="#block-{{ $block->Id }}">
-                   Block: {{ $block->BlockName ?? '-' }}
-                </a>
+                    @forelse($property->getBlockByProperty as $block)
+                        {{-- Block --}}
+                        <div class="mb-2">
+                            <a class="text-primary d-block"
+                               data-bs-toggle="collapse" href="#block-{{ $block->Id }}">
+                                Block: {{ $block->BlockName ?? '-' }}
+                            </a>
 
 
-                <div class="collapse ms-3 mt-2" id="block-{{ $block->Id }}">
+                            <div class="collapse ms-3 mt-2" id="block-{{ $block->Id }}">
 
-                    <p><small>click the floor to view the units</small></p>
-                    @forelse($block->floor as $floor)
-                        {{-- Floor --}}
-                        <a class="d-block text-primary ms-2" 
-                           data-bs-toggle="collapse" href="#floor-{{ $floor->Id }}">
-                           Floor: {{ $floor->FloorLabel ?? '-' }}
-                        </a>
+                                <p><small>click the floor to view the units</small></p>
+                                @forelse($block->floor as $floor)
+                                    {{-- Floor --}}
+                                    <a class="d-block text-primary ms-2"
+                                       data-bs-toggle="collapse" href="#floor-{{ $floor->Id }}">
+                                        Floor: {{ $floor->FloorLabel ?? '-' }}
+                                    </a>
 
-                        <div class="collapse ms-4 mt-1" id="floor-{{ $floor->Id }}">
-                            <p class="text-muted small">{{ $floor->FloorNotes ?? '-' }}</p>
+                                    <div class="collapse ms-4 mt-1" id="floor-{{ $floor->Id }}">
+                                        <p class="text-muted small">{{ $floor->FloorNotes ?? '-' }}</p>
 
-                            @forelse($floor->units as $unit)
-                                {{-- Unit --}}
-                                <div class="ms-4 border rounded p-2 mb-1 bg-light">
-                                    <span class="fw-bold">Unit: {{ $unit->UnitCode ?? '-' }}</span>  
-                                    <span class="ms-2"> Size: {{ $unit->UnitSize ?? '-' }}</span>  
-                                    <span class="ms-2">
-                                        Availability: 
+                                        @forelse($floor->units as $unit)
+                                            {{-- Unit --}}
+                                            <div class="ms-4 border rounded p-2 mb-1 bg-light">
+                                                <span class="fw-bold">Unit: {{ $unit->UnitCode ?? '-' }}</span>
+                                                <span class="ms-2"> Size: {{ $unit->UnitSize ?? '-' }}</span>
+                                                <span class="ms-2">
+                                        Availability:
                                         @if($unit->CurrentStatus)
-                                            <span class="badge bg-success">Vacant</span>
-                                        @else
-                                            <span class="badge bg-danger">Occupied</span>
-                                        @endif
+                                                        <span class="badge bg-success">Vacant</span>
+                                                    @else
+                                                        <span class="badge bg-danger">Occupied</span>
+                                                    @endif
                                     </span>
-                                    <span class="ms-2">
-                                        Rentable: 
+                                                <span class="ms-2">
+                                        Rentable:
                                         @if($unit->IsRentable)
-                                            <span class="badge bg-success">Yes</span>
-                                        @else
-                                            <span class="badge bg-danger">No</span>
-                                        @endif
+                                                        <span class="badge bg-success">Yes</span>
+                                                    @else
+                                                        <span class="badge bg-danger">No</span>
+                                                    @endif
                                     </span>
-                                </div>
-                            @empty
-                                <div class="ms-4 text-muted small">No units found.</div>
-                            @endforelse
+                                            </div>
+                                        @empty
+                                            <div class="ms-4 text-muted small">No units found.</div>
+                                        @endforelse
+                                    </div>
+                                @empty
+                                    <div class="ms-3 text-muted">No floors found.</div>
+                                @endforelse
+                            </div>
                         </div>
                     @empty
-                        <div class="ms-3 text-muted">No floors found.</div>
+                        <p class="text-muted">No blocks linked to this property.</p>
                     @endforelse
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Close
+                    </button>
                 </div>
             </div>
-        @empty
-            <p class="text-muted">No blocks linked to this property.</p>
-        @endforelse
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            <i class="bi bi-x-circle"></i> Close
-        </button>
-      </div>
-    </div>
-  </div>
+        </div>
 </div>
 @endsection
 

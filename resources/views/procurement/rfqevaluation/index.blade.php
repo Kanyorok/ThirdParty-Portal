@@ -4,12 +4,12 @@
 
 @section('content')
   <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="mb-0">RFQ Evaluations</h2>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="mb-0">RFQ Evaluations</h2>
       <a href="{{ route('evaluations.create') }}" class="btn btn-success">+ Create Evaluation</a>
     </div>
 
-    <div class="table-responsive mt-3">
+      <div class="table-responsive mt-3">
       <table class="table table-bordered table-striped">
         <thead class="table-light">
           <tr>
@@ -26,28 +26,29 @@
         </thead>
         <tbody>
           @php
-            // Group evaluations by RFQ number, then sort groups so the RFQs with the latest responses appear first.
-            $groupedByRFQ = collect($evaluationsRanked)
-              ->groupBy('rfq.RFQNumber')
-              ->sortByDesc(function($group) {
-                // determine latest response/evaluation id in the group (best-effort fallbacks)
-                return $group->max(function($item) {
-                  return $item['response']->Id ?? $item['response']->id ?? $item['evaluation']->Id ?? $item['evaluation']->id ?? 0;
+              // Group evaluations by RFQ number, then sort groups so the RFQs with the latest responses appear first.
+              $groupedByRFQ = collect($evaluationsRanked)
+                ->groupBy('rfq.RFQNumber')
+                ->sortByDesc(function($group) {
+                  // determine latest response/evaluation id in the group (best-effort fallbacks)
+                  return $group->max(function($item) {
+                    return $item['response']->Id ?? $item['response']->id ?? $item['evaluation']->Id ?? $item['evaluation']->id ?? 0;
+                  });
                 });
-              });
           @endphp
           @forelse ($groupedByRFQ as $rfqNumber => $group)
-            <tr class="table-primary fw-bold"></tr>
+              <tr class="table-primary fw-bold"></tr>
               <td colspan="9">
-                <div class="d-flex justify-content-between align-items-center">
-                  <span>RFQ Number: {{ $rfqNumber }}</span>
-                  @php $rfqIdForGroup = optional($group->first()['rfq'] ?? null)->Id ?? ($group->first()['rfq']->id ?? null); @endphp
-                  @if($rfqIdForGroup)
-                    <a href="{{ route('evaluations.consolidated', ['rfq' => $rfqIdForGroup]) }}" class="btn btn-sm btn-outline-primary">
-                      Consolidated Scores
-                    </a>
-                  @endif
-                </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                      <span>RFQ Number: {{ $rfqNumber }}</span>
+                      @php $rfqIdForGroup = optional($group->first()['rfq'] ?? null)->Id ?? ($group->first()['rfq']->id ?? null); @endphp
+                      @if($rfqIdForGroup)
+                          <a href="{{ route('evaluations.consolidated', ['rfq' => $rfqIdForGroup]) }}"
+                             class="btn btn-sm btn-outline-primary">
+                              Consolidated Scores
+                          </a>
+                      @endif
+                  </div>
               </td>
             </tr>
 
@@ -70,7 +71,7 @@
                 <td>{{ $Index + 1 }}</td>
                 <td>{{ $evaluation->CommitteeMemberName }}</td>
                 <td>{{ $rfqNumber }}</td>
-                <td>{{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}</td>
+                  <td>{{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}</td>
                 <td>{{ number_format($response->TotalPayable ?? 0, 2) }}</td>
                 <td>{{ $response->DurationDays ?? '-' }} Days</td>
                 <td>{{ $weightedTotal }}%</td>
@@ -139,7 +140,7 @@
                 <hr>
               <div class="card mb-4">
                 <div class="card-header bg-light fw-bold">
-                  Supplier: {{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}
+                    Supplier: {{ $response?->supplier?->thirdParty?->ThirdPartyName ?? $response?->supplier?->thirdParty?->TradingName ?? $response?->SupplierName ?? 'N/A' }}
                 </div>
                 <div class="card-body">
                   <p><strong>Total Quoted:</strong> KES {{ number_format($response->TotalPayable ?? 0, 2) }}</p>
@@ -208,7 +209,7 @@
                           @endphp
                           <tr>
                             <td></td>
-                            <td>{{ $entry->rfqCriteriaUnscoped?->criteria?->CriteriaName ?? 'N/A' }}</td>
+                              <td>{{ $entry->rfqCriteriaUnscoped?->criteria?->CriteriaName ?? 'N/A' }}</td>
                             <td>{{ $maxScorePerCriteria }}</td>
                             <td>{{ $entry->Score }}</td>
                             <td>{{ $entry->Comments ?? '-' }}</td>

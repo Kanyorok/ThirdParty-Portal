@@ -94,7 +94,7 @@
         const toDepartmentSection = document.getElementById('toDepartmentSection');
         const nextButtonContainer = document.getElementById('nextButtonContainer');
 
-        reallocationType.addEventListener('change', function() {
+        reallocationType.addEventListener('change', function () {
             let type = this.value;
 
             // Reset sections
@@ -124,7 +124,7 @@
             nextButtonContainer.style.display = type ? 'block' : 'none';
         });
 
-        document.getElementById('reallocationType').addEventListener('change', function() {
+        document.getElementById('reallocationType').addEventListener('change', function () {
             let type = this.value;
             let deptSection = document.getElementById('departmentSection');
             let toDeptSection = document.getElementById('toDepartmentSection');

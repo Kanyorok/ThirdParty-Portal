@@ -391,6 +391,15 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'MedicalContributorStatus','Description' => 'Pending', 'Value' => 'P'],
             ['CodeID' => 'MedicalContributorStatus','Description' => 'Suspended', 'Value' => 'S'],
 
+            // Beneficiary Relationship
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Spouse', 'Value' => 'S'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Child', 'Value' => 'C'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Parent', 'Value' => 'P'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Sibling', 'Value' => 'S'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Relative', 'Value' => 'R'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Friend', 'Value' => 'F'],
+            ['CodeID' => 'BeneficiaryRelationship', 'Description' => 'Legal Guardian', 'Value' => 'LG'],
+
             // PolicyTypeId
             ['CodeID' => 'PolicyTypeId', 'Description' => 'Life Insurance', 'Value' => 'L'],
             ['CodeID' => 'PolicyTypeId', 'Description' => 'Motor Insurance', 'Value' => 'B'],
@@ -572,12 +581,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Completed', 'Value' => 'CO'],
 
 
-             //Vehicle Availability Status
+            //Vehicle Availability Status
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
             ['CodeID' => 'VehicleAvailabilityStatus', 'Description' => 'AssignedTrip', 'Value' => 'at'],
 
-             //Driver Availability Status
+            //Driver Availability Status
 
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'Available', 'Value' => 'av'],
             ['CodeID' => 'DriverAvailabilityStatus', 'Description' => 'OnTrip', 'Value' => 'ot'],
@@ -609,20 +618,20 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'JournalPaymentFrequency', 'Description' => 'Yearly', 'Value' => 'y','DisplayOrder'=>0],
 
             // Legal Execution Status
-            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Pending',  'Value' => 'P'],
-            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Signed',   'Value' => 'S'],
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Pending', 'Value' => 'P'],
+            ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Signed', 'Value' => 'S'],
             ['CodeID' => 'LegalExecutionStatusType', 'Description' => 'Archived', 'Value' => 'A'],
 
             //Legal Document Type
             ['CodeID' => 'LegalDocumentType', 'Description' => 'Contract', 'Value' => 'C'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'Lease',    'Value' => 'L'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'NDA',      'Value' => 'N'],
-            ['CodeID' => 'LegalDocumentType', 'Description' => 'MOU',      'Value' => 'M'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'Lease', 'Value' => 'L'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'NDA', 'Value' => 'N'],
+            ['CodeID' => 'LegalDocumentType', 'Description' => 'MOU', 'Value' => 'M'],
 
             //Legal Case Status
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Open',      'Value' => 'O'],
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Closed',    'Value' => 'C'],
-            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed',  'Value' => 'A'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Open', 'Value' => 'O'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Closed', 'Value' => 'C'],
+            ['CodeID' => 'LegalCaseStatus', 'Description' => 'Appealed', 'Value' => 'A'],
             ['CodeID' => 'LegalCaseStatus', 'Description' => 'Dismissed', 'Value' => 'D'],
 
 

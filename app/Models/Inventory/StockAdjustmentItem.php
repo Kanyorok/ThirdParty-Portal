@@ -21,7 +21,7 @@ class StockAdjustmentItem extends Model
     protected $connection = 'sqlsrv';
     protected $primaryKey = 'Id';
     protected $fillable = [
-        'AdjustmentId', 'Item', 'AdjustmentQty', 'Remarks', 'UOM','UnitCost', 'Reason',
+        'AdjustmentId', 'Item', 'AdjustmentQty', 'Remarks', 'UOM', 'UnitCost', 'Reason',
         'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn', 'DeletedBy', 'DeletedOn'
     ];
 
@@ -35,13 +35,14 @@ class StockAdjustmentItem extends Model
     {
         return $this->belongsTo(User::class, 'CreatedBy', 'Id');
     }
- 
+
     public function modifier()
     {
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
 
     }
-     public function reason()
+
+    public function reason()
     {
         return $this->belongsTo(CodeDetail::class, 'Reason', 'Id');
     }

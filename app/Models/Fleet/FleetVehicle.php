@@ -20,8 +20,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Auth\User;
-use App\Models\Fleet\FleetMaintenanceSchedule; 
-use App\Models\Fleet\FleetRepairLog; 
+use App\Models\Fleet\FleetMaintenanceSchedule;
+use App\Models\Fleet\FleetRepairLog;
 
 
 
@@ -68,10 +68,10 @@ class FleetVehicle extends Model
         return 'VehicleId';
     }
 
-     public function image()
-{
-    return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
-}
+    public function image()
+    {
+        return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
+    }
 
 
     public function vehicleType()

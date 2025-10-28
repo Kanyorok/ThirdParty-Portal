@@ -27,8 +27,21 @@
                 {{-- Row 1 --}}
                 <div class="row mb-3">
                     <div class="col-md-4">
+<<<<<<< HEAD
+=======
+                        <label for="BarCode" class="form-label">Bar Code <span class="text-danger">*</span></label>
+                        <input type="text" name="BarCode" id="BarCode" class="form-control @error('BarCode') is-invalid @enderror"
+                               value="{{ old('BarCode') }}" required>
+                        @error('BarCode')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+>>>>>>> dev
                         <label for="ItemName" class="form-label">Item Name <span class="text-danger">*</span></label>
-                        <input type="text" name="ItemName" id="ItemName" class="form-control @error('ItemName') is-invalid @enderror" 
+                        <input type="text" name="ItemName" id="ItemName" class="form-control @error('ItemName') is-invalid @enderror"
                                value="{{ old('ItemName') }}" required>
                         @error('ItemName')
                             <div class="invalid-feedback">
@@ -147,8 +160,8 @@
                 </div>
                 {{-- Full-width Row --}}
                 <div class="mb-3">
-                    <label for="ItemDescription" class="form-label">Item Description</label>
-                    <textarea name="ItemDescription" id="ItemDescription" class="form-control @error('ItemDescription') is-invalid @enderror" rows="3">{{ old('ItemDescription') }}</textarea>
+                    <label for="ItemDescription" class="form-label">Item Description <span class="text-danger">*</span></label>
+                    <textarea name="ItemDescription" id="ItemDescription" class="form-control @error('ItemDescription') is-invalid @enderror" rows="3" required>{{ old('ItemDescription') }}</textarea>
                     @error('ItemDescription')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -161,7 +174,7 @@
                             onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">
                         ✅ Save Item
                     </button>
-                    
+
                 </div>
             </form>
         </div>

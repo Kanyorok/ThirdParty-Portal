@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DMS\DocumentValidationController;
 use App\Http\Controllers\DMS\Files\DocumentActionsController;
 use App\Http\Controllers\DMS\Files\DocumentActivityController;
 use App\Http\Controllers\DMS\Files\DocumentCheckOutController;
@@ -28,6 +29,7 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::get('recent', DocumentRecentController::class)->name('repo.recent');
     Route::get('bulk-upload', DocumentUploadController::class)->name('files.upload');
     Route::prefix('document/{document}')->group(function () {
+        //mark for validation -> ()
         Route::get('activities', DocumentActivityController::class)->name('file.activities');
         Route::get('embed-preview', DocumentPreviewController::class)->name('file.embed-preview');
         Route::get('preview', [DocumentActionsController::class, 'preview'])->name('file.preview');
@@ -41,11 +43,20 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
 
     Route::prefix('repo/{repository}')->group(function () {
         Route::put('repo-visibility', [RepositoryPermissionController::class, 'visibility'])->name('repo.visibility');
+
         Route::resource('repo-permissions', RepositoryPermissionController::class)->only(['index', 'store', 'destroy']);
         Route::resource('repo-move', RepositoryMoveController::class)->only(['index', 'store']);
         Route::resource('files', DocumentController::class)->parameters(['files' => 'document'])->except('create');
     });
     Route::resource('repo', RepositoryController::class)->parameters(['repo' => 'repository'])->except('create');
+
+    Route::put('validation/{documentValidation}/approve', [DocumentValidationController::class, 'approve'])->name('dms.validation.approve');
+    Route::resource('validation', DocumentValidationController::class)->names([
+        'index' => 'dms.validation.index',
+        'show' => 'dms.validation.show',
+        'update' => 'dms.validation.update',
+        'destroy' => 'dms.validation.destroy',
+    ])->only(['index', 'show', 'update', 'destroy']);
 
     Route::prefix('file-tags/{d_m_s_tags}')->group(function () {
         Route::get('files', DocumentTagController::class)->name('file-tags.files');
@@ -58,6 +69,14 @@ Route::namespace('DMS')->prefix('dms')->group(function () {
     Route::post('legal-hold/{dMSLegalHold}/release', [LegalHoldController::class, 'release'])->name('legal-hold.release');
     Route::resource('legal-hold', LegalHoldController::class)->parameters(['legal-hold' => 'dMSLegalHold'])->except('edit');
 
+    //settings
+    Route::get('document-signature/{dMSSignature}/documents', \App\Http\Controllers\DMS\Settings\SignatureDocumentsController::class)->name('document-signature.documents');
+    Route::resource('document-signature', \App\Http\Controllers\DMS\Settings\SignatureController::class)->parameters(['document-signature' => 'dMSSignature']);//->except('edit');
+
+    Route::resource('document-validation-type/{documentValidationType}/doc-validation-type-approvers', \App\Http\Controllers\DMS\Settings\ValidationTypeApproverController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('document-validation-type', \App\Http\Controllers\DMS\Settings\DocumentValidationTypeController::class)->parameters(['document-signature' => 'documentValidationType'])->except(['create', 'edit']);
+
+    //reports
     Route::get('reports/{report}/{format}', [ReportsController::class, 'export'])->name('dms-reports.export');
     Route::resource('reports', ReportsController::class)->only(['index', 'show'])->names([
         'index' => 'dms-reports.index',

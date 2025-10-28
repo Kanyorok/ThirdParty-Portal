@@ -33,7 +33,7 @@ class PropertyFloorController extends Controller
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
-        $lineentries = PropertyRegistry::with('getBlockByProperty')->where('IsActive',true)->get();
+        $lineentries = PropertyRegistry::with('getBlockByProperty')->where('IsActive', true)->get();
 
 
         return view('property.propertyregistry.structuralmapping.addfloor.create', compact('lineentries'));
@@ -57,7 +57,7 @@ class PropertyFloorController extends Controller
                 $validated['FloorLabel'],
                 $validated['FloorNotes'] ?? '',
                 Auth::user()
-            ); 
+            );
             return redirect()->route('addfloor.index')->with('success', 'Floor added!');
         } catch (Exception $e) {
             return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
@@ -86,7 +86,7 @@ class PropertyFloorController extends Controller
                 'string',
                 'max:50',
                 Rule::unique(PropertyFloor::class, 'FloorLabel')
-                    ->where(fn ($query) => $query
+                    ->where(fn($query) => $query
                         ->where('PropertyID', $request->PropertyID)
                         ->where('BlockID', $request->BlockID)
                     )
@@ -124,14 +124,14 @@ class PropertyFloorController extends Controller
 
     public function destroy($id)
     {
-       $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyFloor::class);
+        $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyFloor::class);
         try {
             $floor = PropertyFloor::findOrFail($id);
 
             if ($floor->units()->exists()) {
                 return redirect()->back()
-                ->withErrors(['error' => 'This Property Floor is in use and cannot be deleted.']);
-            } 
+                    ->withErrors(['error' => 'This Property Floor is in use and cannot be deleted.']);
+            }
 
             $floor->delete();
 

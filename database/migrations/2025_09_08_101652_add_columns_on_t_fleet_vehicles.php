@@ -32,7 +32,7 @@ return new class extends Migration {
             $table->dropColumn('ImageId');
             $table->dropForeign(['VehicleStatus']);
             $table->dropColumn('VehicleStatus');
-            
+
         });
     }
 };

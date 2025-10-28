@@ -17,7 +17,7 @@ return new class extends Migration {
             }
 
             // Drop other legacy columns if they exist
-            $drop = ['SupplierName','ContactEmail','ContactPhone','Address','IsPrequalified'];
+            $drop = ['SupplierName', 'ContactEmail', 'ContactPhone', 'Address', 'IsPrequalified'];
             foreach ($drop as $col) {
                 if (Schema::hasColumn('t_Suppliers', $col)) {
                     $table->dropColumn($col);
@@ -25,13 +25,13 @@ return new class extends Migration {
             }
 
             // Add new columns if they don’t exist
-            if (!Schema::hasColumn('t_Suppliers','RoundID')) {
+            if (!Schema::hasColumn('t_Suppliers', 'RoundID')) {
                 $table->unsignedBigInteger('RoundID')->nullable()->after('Id');
             }
-            if (!Schema::hasColumn('t_Suppliers','ThirdPartyID')) {
+            if (!Schema::hasColumn('t_Suppliers', 'ThirdPartyID')) {
                 $table->unsignedBigInteger('ThirdPartyID')->nullable()->after('RoundID');
             }
-            if (!Schema::hasColumn('t_Suppliers','Active_Status')) {
+            if (!Schema::hasColumn('t_Suppliers', 'Active_Status')) {
                 $table->boolean('Active_Status')->default(1)->after('ThirdPartyID');
             }
         });
@@ -40,7 +40,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('t_Suppliers', function (Blueprint $table) {
-            if (Schema::hasColumn('t_Suppliers','Active_Status')) {
+            if (Schema::hasColumn('t_Suppliers', 'Active_Status')) {
                 $table->dropColumn('Active_Status');
             }
             // Not restoring old columns automatically

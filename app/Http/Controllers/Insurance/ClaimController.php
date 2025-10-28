@@ -104,11 +104,12 @@ public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $i
         $assessment = BancassuranceClaimAssessment::findOrFail($id);
         return view('bancassurance.claims.assessment_show', compact('assessment'));
     }
+
     public function assessmentedit($id)
     {
         $assessment = BancassuranceClaimAssessment::findOrFail($id);
         $decisions = CodeDetail::where('CodeID', 'Decision')->get();
-        return view('bancassurance.claims.assessment_edit', compact('assessment','decisions'));
+        return view('bancassurance.claims.assessment_edit', compact('assessment', 'decisions'));
     }
 
     public function assessmentupdate(BancassuranceClaimAssessmentRequest $request, $id)
@@ -126,7 +127,7 @@ public function storeAssessment(BancassuranceClaimAssessmentRequest $request, $i
         $Decision = CodeDetail::findOrFail($validated['Decision']);
 
         $assessment = BancassuranceClaimAssessmentService::update(
-            $assessment, 
+            $assessment,
             $validated['AssessmentComments'],
             $validated['AssessmentAmount'],
             $Decision,

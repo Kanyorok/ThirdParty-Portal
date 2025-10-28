@@ -30,7 +30,8 @@
                     <select id="budget" class="form-select" name="BudgetID" required>
                         <option disabled value="">-- Select Budget --</option>
                         @foreach($budgets as $budget)
-                            <option value="{{ $budget->Id }}" {{ $projection->BudgetID == $budget->Id ? 'selected' : '' }}>
+                            <option
+                                value="{{ $budget->Id }}" {{ $projection->BudgetID == $budget->Id ? 'selected' : '' }}>
                                 {{ $budget->Name }}
                             </option>
                         @endforeach
@@ -42,7 +43,8 @@
                     <select id="budgetLine" class="form-select" name="BudgetLineID" required>
                         <option disabled value="">-- Select Budget Line --</option>
                         @forelse($budgetLines as $budgetline)
-                            <option value="{{ $budgetline->Id }}" {{ $projection->BudgetLineID == $budgetline->Id ? 'selected' : '' }}>
+                            <option
+                                value="{{ $budgetline->Id }}" {{ $projection->BudgetLineID == $budgetline->Id ? 'selected' : '' }}>
                                 {{ $budgetline->LineName }}
                             </option>
                         @empty
@@ -73,8 +75,12 @@
                     <label class="form-label">Allocation Type</label>
                     <select name="AllocationType" class="form-select" id="allocationType" required>
                         <option disabled value="">-- Select allocation type --</option>
-                        <option value="full" {{ $projection->AllocationType === 'full' ? 'selected' : '' }}>Annual or Full Allocation</option>
-                        <option value="monthly" {{ $projection->AllocationType === 'monthly' ? 'selected' : '' }}>Monthly Allocation</option>
+                        <option value="full" {{ $projection->AllocationType === 'full' ? 'selected' : '' }}>Annual or
+                            Full Allocation
+                        </option>
+                        <option value="monthly" {{ $projection->AllocationType === 'monthly' ? 'selected' : '' }}>
+                            Monthly Allocation
+                        </option>
                     </select>
                 </div>
 

@@ -118,7 +118,7 @@ class ChartOfAccountsController extends Controller
     {
         $validated = $request->validate([
             //'GLCode'             => 'required|string',
-            'GLName'             => [
+            'GLName' => [
                 'required',
                 'string',
                 'max:50',
@@ -127,10 +127,10 @@ class ChartOfAccountsController extends Controller
             ],
             'GLAccountTypeID'    => 'required',
             'GLTypeGroupID'      => 'required|exists:t_FinanceGLTypeGroups,Id',
-            'Currency'           => 'required|exists:t_Currencies,Id',
+            'Currency' => 'required|exists:t_Currencies,Id',
             'GLSubAccountTypeID' => 'required|exists:t_FinanceGLSubAccountTypes,Id',
             'Description'        => 'required|string|max:255',
-            'IsActive'           => 'nullable|boolean',
+            'IsActive' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();
@@ -188,7 +188,7 @@ class ChartOfAccountsController extends Controller
             }
 
             //Code to ensure all other GL are assigned this during init setup. To be commented after setup.
-            $gls = FinanceGLAccounts::select('Id', 'GLCode','GLAccountTypeID')->get();
+            $gls = FinanceGLAccounts::select('Id', 'GLCode', 'GLAccountTypeID')->get();
             foreach ($branches as $branch) {
                 foreach ($gls as $gl) {
                     //Insert into t_GLBranch if does not exists
@@ -268,10 +268,10 @@ class ChartOfAccountsController extends Controller
             ],
             'GLAccountTypeID'    => 'required',
             'GLTypeGroupID'      => 'required|exists:t_FinanceGLTypeGroups,Id',
-            'Currency'           => 'required|exists:t_Currencies,Id',
+            'Currency' => 'required|exists:t_Currencies,Id',
             'GLSubAccountTypeID' => 'required|exists:t_FinanceGLSubAccountTypes,Id',
             'Description'        => 'required|string|max:255',
-            'IsActive'           => 'nullable|boolean',
+            'IsActive' => 'nullable|boolean',
         ]);
 
         DB::beginTransaction();

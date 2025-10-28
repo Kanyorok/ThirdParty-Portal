@@ -23,7 +23,7 @@ class BancassurancePolicy extends Model
     protected $fillable = [
         'CustomerID', 'ProductID', 'InsurerID', 'PolicyNumber', 'SumAssured',
         'PremiumAmount', 'PolicyStartDate', 'PolicyEndDate', 'PaymentFrequency',
-        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive', 'Status','RiderAddOnId', 'CreatedBy',
+        'ReferralID', 'IssuedDate', 'ExpiryDate', 'IsActive', 'Status', 'RiderAddOnId', 'CreatedBy',
         'ModifiedBy', 'DeletedBy'
     ];
 

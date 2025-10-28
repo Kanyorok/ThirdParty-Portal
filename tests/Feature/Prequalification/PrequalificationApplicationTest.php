@@ -24,9 +24,9 @@ class PrequalificationApplicationTest extends TestCase
     {
         // Manually create user & round since factories may not exist in this codebase
         $user = User::create([
-            'UserID' => 'tester'.uniqid(),
+            'UserID' => 'tester' . uniqid(),
             'Name' => 'Test Supplier',
-            'Email' => uniqid('test').'@example.com',
+            'Email' => uniqid('test') . '@example.com',
             'Password' => bcrypt('password'),
         ]);
 
@@ -56,7 +56,7 @@ class PrequalificationApplicationTest extends TestCase
             'category_ids' => [],
         ];
 
-    $response = $this->postJson(route('api.procurement.prequalification.applications.store'), $payload);
+        $response = $this->postJson(route('api.procurement.prequalification.applications.store'), $payload);
 
         $response->assertStatus(409)
             ->assertJsonStructure([
@@ -67,15 +67,15 @@ class PrequalificationApplicationTest extends TestCase
     public function test_different_users_can_each_apply_to_same_round(): void
     {
         $userA = User::create([
-            'UserID' => 'userA'.uniqid(),
+            'UserID' => 'userA' . uniqid(),
             'Name' => 'User A',
-            'Email' => uniqid('userA').'@example.com',
+            'Email' => uniqid('userA') . '@example.com',
             'Password' => bcrypt('password'),
         ]);
         $userB = User::create([
-            'UserID' => 'userB'.uniqid(),
+            'UserID' => 'userB' . uniqid(),
             'Name' => 'User B',
-            'Email' => uniqid('userB').'@example.com',
+            'Email' => uniqid('userB') . '@example.com',
             'Password' => bcrypt('password'),
         ]);
 

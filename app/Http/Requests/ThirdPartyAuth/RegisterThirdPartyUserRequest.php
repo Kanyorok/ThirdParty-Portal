@@ -21,7 +21,7 @@ class RegisterThirdPartyUserRequest extends FormRequest
             'FirstName' => ['required', 'string', 'max:255'],
             'LastName' => ['required', 'string', 'max:255'],
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:t_ThirdPartyUsers,Email'],
-            'Phone' => ['required', 'string', 'max:20'],
+            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'Password' => ['required', 'string', 'min:8', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'Password_confirmation' => ['required', 'string'],
         ];
@@ -31,8 +31,29 @@ class RegisterThirdPartyUserRequest extends FormRequest
     {
         return [
             'Email.unique' => __('auth.user_exists'),
+            'Phone.regex' => 'Phone format is invalid. Use international format, e.g., +254712345678',
             'Password.confirmed' => __('auth.password_mismatch'),
         ];
+    }
+
+    /**
+     * Normalize phone to +E.164 before validation (allow inputs like 2547..., +2547..., spaces, dashes).
+     */
+    protected function prepareForValidation(): void
+    {
+        $raw = (string) ($this->input('Phone') ?? '');
+        if ($raw === '') {
+            return;
+        }
+
+        // Strip everything except digits
+        $digits = preg_replace('/\D+/', '', $raw) ?? '';
+
+        // If we have a plausible E.164 length, prefix with + (8-15 digits total)
+        if (strlen($digits) >= 8 && strlen($digits) <= 15) {
+            $normalized = '+' . ltrim($digits, '+');
+            $this->merge(['Phone' => $normalized]);
+        }
     }
 
     protected function failedValidation(Validator $validator)

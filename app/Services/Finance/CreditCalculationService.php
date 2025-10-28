@@ -21,9 +21,9 @@ class CreditCalculationService
         // Find active credit profile for customer
         $credit = FinanceCreditManagement::where('CustomerID', $customerId)
             ->whereRaw('LOWER(Status) = ?', ['approved'])
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('ExpiryDate', '>=', now()->toDateString())
-                      ->orWhereNull('ExpiryDate');
+                    ->orWhereNull('ExpiryDate');
             })
             ->first();
 
@@ -112,7 +112,7 @@ class CreditCalculationService
                 'can_apply' => false,
                 'available_amount' => $utilization['available'],
                 'message' => "Insufficient credit. Available: KSh " . number_format($utilization['available'], 2) .
-                           ", Required: KSh " . number_format($amount, 2)
+                    ", Required: KSh " . number_format($amount, 2)
             ];
         }
 
@@ -164,23 +164,23 @@ class CreditCalculationService
         $customer = ThirdParties::find($customerId);
         $customerName = $customer ? $customer->ThirdPartyName : null;
 
-        $query = FinanceInvoice::where(function($mainQuery) use ($customerId, $customerName) {
+        $query = FinanceInvoice::where(function ($mainQuery) use ($customerId, $customerName) {
             $mainQuery->where('CustomerID', $customerId);
 
             // Handle customer ID mismatches by searching by name
             if ($customerName) {
-                $mainQuery->orWhereHas('customer', function($customerQuery) use ($customerName) {
+                $mainQuery->orWhereHas('customer', function ($customerQuery) use ($customerName) {
                     $customerQuery->where('ThirdPartyName', 'like', "%{$customerName}%");
                 });
             }
         })
-        ->where(function($query) {
-            $query->where('ApprovalStatus', 'posted')
-                  ->orWhere(function($subQuery) {
-                      $subQuery->where('ApprovalStatus', 'draft')
-                               ->where('UseCredit', true);
-                  });
-        });
+            ->where(function ($query) {
+                $query->where('ApprovalStatus', 'posted')
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('ApprovalStatus', 'draft')
+                            ->where('UseCredit', true);
+                    });
+            });
 
         // Only include invoices after credit effective date
         if ($effectiveFrom) {

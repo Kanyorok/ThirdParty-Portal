@@ -25,16 +25,16 @@ class InsuranceProviderRequest extends FormRequest
     {
         return [
             'Name' => [
-            'required',
-            'string',
-            'max:100',
-            Rule::unique(InsuranceProvider::class, 'Name')
-                ->where(fn($query) => $query->where('Country', $this->Country)),
+                'required',
+                'string',
+                'max:100',
+                Rule::unique(InsuranceProvider::class, 'Name')
+                    ->where(fn($query) => $query->where('Country', $this->Country)),
             ],
             'Country' => 'required|string|max:50',
             'ContactPerson' => 'required|string|max:100',
             'Email' => 'required|email|max:100',
-            'Phone' => 'required|string|max:50',
+            'Phone' => ['required','string','max:20','regex:/^\+[1-9]\d{7,14}$/'],
             'IsActive' => 'nullable|boolean',
         ];
     }

@@ -40,10 +40,10 @@ class EnsureSingleActiveSession
             // Cache-based single-session token enforcement (works even without DB columns)
             $cacheKey = 'user_session_token_' . $userId;
             $cacheToken = Cache::get($cacheKey);
-            $sessionToken = (string) $request->session()->get('session_token', '');
+            $sessionToken = (string)$request->session()->get('session_token', '');
 
             if ($cacheToken) {
-                if (empty($sessionToken) || !hash_equals((string) $cacheToken, (string) $sessionToken)) {
+                if (empty($sessionToken) || !hash_equals((string)$cacheToken, (string)$sessionToken)) {
                     Auth::guard('web')->logout();
                     $request->session()->invalidate();
                     $request->session()->regenerateToken();
@@ -55,7 +55,7 @@ class EnsureSingleActiveSession
                 }
             } elseif (!empty($sessionToken)) {
                 // Seed cache if missing
-                Cache::put($cacheKey, $sessionToken, now()->addMinutes(((int) config('session.lifetime', 20)) + 5));
+                Cache::put($cacheKey, $sessionToken, now()->addMinutes(((int)config('session.lifetime', 20)) + 5));
             }
 
             // If the user's current_session_id is set and doesn't match this one, kill this session immediately

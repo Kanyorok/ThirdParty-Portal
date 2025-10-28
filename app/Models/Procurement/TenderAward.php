@@ -93,7 +93,7 @@ class TenderAward extends Model
     {
         return $this->belongsTo(Supplier::class, 'WinningSupplierID', 'Id');
     }
-    
+
     /**
      * Get the winning supplier's third party details
      */

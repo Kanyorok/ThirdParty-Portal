@@ -25,8 +25,8 @@ class LocalitySelectController extends Controller
         $data = [];
         // Preferred: filter by numeric CountryId directly from t_Localities.CountryId
         if ($request->filled('countryId')) {
-            $search = (string) $request->get('q', '');
-            $countryId = (int) $request->get('countryId');
+            $search = (string)$request->get('q', '');
+            $countryId = (int)$request->get('countryId');
             $data = Locality::query()
                 ->where('CountryId', $countryId)
                 ->with(['in'])

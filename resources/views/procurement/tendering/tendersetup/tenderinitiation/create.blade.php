@@ -200,14 +200,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                 <label for="submissionDeadline" class="form-label fw-bold">Submission Deadline: <span class="text-danger">*</span></label>
-                <input type="date" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
+                <input type="date" data-disable-past="true" class="form-control @error('submission_deadline') is-invalid @enderror" id="submissionDeadline" name="submission_deadline" value="{{ old('submission_deadline') }}" required>
                 @error('submission_deadline')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                 <label for="openingDate" class="form-label fw-bold">Opening Date: <span class="text-danger">*</span></label>
-                <input type="date" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
+                <input type="date" data-disable-past="true" class="form-control @error('opening_date') is-invalid @enderror" id="openingDate" name="opening_date" value="{{ old('opening_date') }}" required>
                 @error('opening_date')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
@@ -344,6 +344,77 @@
   window.loadPlanItemsForPlan = loadPlanItemsForPlan;
   window.addPlanItemToGrid = addPlanItemToGrid;
 
+  // ---- Manual Entry: add rows with Item Master select
+  let manualRowSeq = 0;
+  function addManualItemRow() {
+    const tbody = document.getElementById('manualItemsBody');
+    if (!tbody) return;
+
+    manualRowSeq += 1;
+    const key = `m${Date.now()}_${manualRowSeq}`;
+    const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
+
+    // Build options: prefer filtering by selected Item Category; if none, show full list
+    let optionsHtml = '';
+    if (selectedItemCategory) {
+      optionsHtml = getFilteredItemOptions(selectedItemCategory);
+    } else {
+      optionsHtml = '<option selected disabled>-- Select Item (choose Item Category first) --</option>';
+      (allItemsWithCategoryIds || []).forEach(item => {
+        optionsHtml += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+      });
+    }
+
+    const tr = document.createElement('tr');
+    tr.dataset.key = key;
+    tr.innerHTML = `
+      <td>
+        <select class="form-select form-select-sm manual-item-select"
+                name="manual_items[${key}][item_id]" required>
+          ${optionsHtml}
+        </select>
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm" min="1" step="1"
+               name="manual_items[${key}][qty]" value="1" required>
+      </td>
+      <td>
+        <input type="file" class="form-control form-control-sm"
+               name="manual_items[${key}][specs]">
+      </td>
+      <td>
+        <input type="text" class="form-control form-control-sm"
+               name="manual_items[${key}][pr_ref]" placeholder="Optional">
+      </td>
+      <td>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-row">Remove</button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+
+    // Ensure options are filtered to current category if user changes it later
+    updateManualItemSelects();
+  }
+
+  // Expose for the "Add Item" button
+  window.addManualItemRow = addManualItemRow;
+
+  // Auto-add a first row when opening the Manual Entry tab if empty
+  const manualTabBtn = document.getElementById('manual-tab');
+  if (manualTabBtn) {
+    // When Bootstrap finishes showing the tab
+    manualTabBtn.addEventListener('shown.bs.tab', () => {
+      const body = document.getElementById('manualItemsBody');
+      if (body && body.children.length === 0) addManualItemRow();
+    });
+    // Fallback: on click (in case shown.bs.tab isn't available)
+    manualTabBtn.addEventListener('click', () => {
+      const body = document.getElementById('manualItemsBody');
+      if (body && body.children.length === 0) addManualItemRow();
+    });
+  }
+
   // ---- Helpers
   async function refreshItemCategories() {
     const catId = tenderCatSel && tenderCatSel.value ? tenderCatSel.value : '';
@@ -392,11 +463,19 @@
     return html;
   }
 
+  function getAllItemOptions() {
+    let html = '<option selected disabled>-- Select Item --</option>';
+    (allItemsWithCategoryIds || []).forEach(item => {
+      html += `<option value="${item.Id}" data-item-category="${item.Category}">${item.ItemName}</option>`;
+    });
+    return html;
+  }
+
   function updateManualItemSelects() {
-    const selectedItemCategory = itemCatSel.value;
+    const selectedItemCategory = itemCatSel ? itemCatSel.value : '';
     document.querySelectorAll('.manual-item-select').forEach(select => {
       const prevValue = select.value;
-      select.innerHTML = getFilteredItemOptions(selectedItemCategory);
+      select.innerHTML = selectedItemCategory ? getFilteredItemOptions(selectedItemCategory) : getAllItemOptions();
       // keep previous if still valid
       if ([...select.options].some(opt => opt.value === prevValue)) {
         select.value = prevValue;
@@ -404,7 +483,7 @@
     });
   }
 
-  function populateSuppliers(categoryId = null) {
+  async function populateSuppliers(categoryId = null) {
     suppliersList.innerHTML = '';
 
     // Require a category for restricted tenders to narrow the list meaningfully
@@ -417,39 +496,51 @@
       return;
     }
 
-    const catNum = Number(categoryId);
-    if (DEBUG) console.debug('populateSuppliers: categoryId', catNum, 'total suppliers', (suppliers || []).length);
-    // Filter to prequalified suppliers whose mapped ItemCategoryIds include the selected category
-    const filtered = (suppliers || [])
-      .filter(s => Array.isArray(s.ItemCategoryIds))
-      .filter(s => s.ItemCategoryIds.map(Number).includes(catNum))
-      // sort by display name for nicer UX
-      .sort((a, b) => {
-        const an = (a.ThirdPartyName || a.SupplierName || '').toLowerCase();
-        const bn = (b.ThirdPartyName || b.SupplierName || '').toLowerCase();
-        return an.localeCompare(bn);
-      });
+    try {
+      const url = `{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${encodeURIComponent(categoryId)}`;
+      const res = await fetch(url, { credentials: 'same-origin' });
+      if (!res.ok) {
+        if (DEBUG) console.warn('prequalified-suppliers HTTP error', res.status, res.statusText);
+        const opt = document.createElement('option');
+        opt.disabled = true;
+        opt.textContent = 'Failed to load suppliers';
+        suppliersList.appendChild(opt);
+        if (supplierMatchCount) supplierMatchCount.textContent = '';
+        return;
+      }
+      const { success, data } = await res.json();
+      const rows = Array.isArray(data) ? data : [];
 
-    if (DEBUG) {
-      const sample = filtered.slice(0, 3).map(s => ({ id: s.Id, name: s.ThirdPartyName || s.SupplierName, cats: (s.ItemCategoryIds || []).slice(0, 8) }));
-      console.debug('populateSuppliers: filtered count', filtered.length, 'sample', sample);
-    }
-    if (supplierMatchCount) supplierMatchCount.textContent = `Matching suppliers: ${filtered.length}`;
+      if (supplierMatchCount) supplierMatchCount.textContent = `Matching suppliers: ${rows.length}`;
+      if (!rows.length) {
+        const opt = document.createElement('option');
+        opt.disabled = true;
+        opt.textContent = 'No prequalified suppliers match this category';
+        suppliersList.appendChild(opt);
+        return;
+      }
 
-    if (!filtered.length) {
+      rows
+        .map(r => ({
+          value: r.SupplierId || r.ThirdPartyId || '',
+          label: r.SupplierName || `Supplier #${r.SupplierId || r.ThirdPartyId || ''}`
+        }))
+        .filter(r => String(r.value).length > 0)
+        .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
+        .forEach(({ value, label }) => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = label;
+          suppliersList.appendChild(opt);
+        });
+    } catch (e) {
+      if (DEBUG) console.warn('prequalified-suppliers fetch failed', e);
       const opt = document.createElement('option');
       opt.disabled = true;
-      opt.textContent = 'No prequalified suppliers match this category';
+      opt.textContent = 'Failed to load suppliers';
       suppliersList.appendChild(opt);
-      return;
+      if (supplierMatchCount) supplierMatchCount.textContent = '';
     }
-
-    filtered.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.Id;
-      opt.textContent = s.ThirdPartyName || s.SupplierName || `Supplier #${s.Id}`;
-      suppliersList.appendChild(opt);
-    });
   }
 
   // ---- Events
@@ -488,6 +579,84 @@
     suppliersSection.style.display = 'block';
     if (itemCatSel && itemCatSel.value) populateSuppliers(itemCatSel.value);
   }
+
+  // ---- Date constraints and validation
+  const submissionInput = document.getElementById('submissionDeadline');
+  const openingInput = document.getElementById('openingDate');
+  const form = document.querySelector('form[action="{{ route('initiatetender.store') }}"]');
+
+  function setMinDatesToToday() {
+    const today = new Date();
+    // format YYYY-MM-DD
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const iso = `${yyyy}-${mm}-${dd}`;
+    if (submissionInput) submissionInput.min = iso;
+    if (openingInput) openingInput.min = iso;
+  }
+
+  function showFieldError(inputEl, message) {
+    // remove existing helper
+    let helper = inputEl.parentNode.querySelector('.invalid-feedback.d-block.date-error');
+    if (!helper) {
+      helper = document.createElement('div');
+      helper.className = 'invalid-feedback d-block date-error';
+      inputEl.parentNode.appendChild(helper);
+    }
+    helper.textContent = message;
+    inputEl.classList.add('is-invalid');
+  }
+
+  function clearFieldError(inputEl) {
+    const helper = inputEl.parentNode.querySelector('.invalid-feedback.d-block.date-error');
+    if (helper) helper.remove();
+    inputEl.classList.remove('is-invalid');
+  }
+
+  function validateDates() {
+    clearFieldError(submissionInput);
+    clearFieldError(openingInput);
+
+    if (!submissionInput || !openingInput) return true;
+
+    const subVal = submissionInput.value;
+    const openVal = openingInput.value;
+
+    // If either is empty, rely on HTML required attribute for presence
+    if (!subVal || !openVal) return true;
+
+    const subDate = new Date(subVal);
+    const openDate = new Date(openVal);
+
+    if (subDate > openDate || subDate.getTime() === openDate.getTime()) {
+      showFieldError(submissionInput, 'Submission Deadline must be before the Opening Date.');
+      showFieldError(openingInput, 'Opening Date must be after the Submission Deadline.');
+      return false;
+    }
+    return true;
+  }
+
+  // set today as min for both inputs to prevent past dates
+  setMinDatesToToday();
+
+  // Keep validation in sync when user changes either date
+  if (submissionInput) submissionInput.addEventListener('change', validateDates);
+  if (openingInput) openingInput.addEventListener('change', validateDates);
+
+  // Validate on form submit and prevent submission if invalid
+  if (form) {
+    form.addEventListener('submit', function (ev) {
+      if (!validateDates()) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        // focus first invalid
+        const firstInvalid = form.querySelector('.is-invalid');
+        if (firstInvalid) firstInvalid.focus();
+      }
+    });
+  }
+
 })();
 </script>
 

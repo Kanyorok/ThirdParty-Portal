@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\ThirdParies\Supplier;
-use App\Models\Inventory\ItemCategories; // model representing t_ItemCategories
+use App\Models\Inventory\ItemCategories;
+
+// model representing t_ItemCategories
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 

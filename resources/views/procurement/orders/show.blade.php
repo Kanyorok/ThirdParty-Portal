@@ -2,95 +2,114 @@
 @section('title', 'View Purchase Order')
 @section('content')
 
-<div class="container py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">Purchase Order</h5>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-dark" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
-            <a href="{{ route('purchaseOrder.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+    <div class="container py-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Purchase Order</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-dark" onclick="window.print()"><i class="fas fa-print"></i> Print
+                </button>
+                <a href="{{ route('purchaseOrder.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i>
+                    Back</a>
+            </div>
         </div>
-    </div>
 
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            @if(isset($orderInfo))
-                <div class="row mb-3">
-                    <div class="col-md-4"><strong>LPO No:</strong> {{ $orderInfo->ExtOrdNum ?? '--' }}</div>
-                    <div class="col-md-4"><strong>Order No:</strong> {{ $orderInfo->OrderNo ?? '--' }}</div>
-                    <div class="col-md-4"><strong>Date:</strong> {{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('d/m/Y') : '--' }}</div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6"><strong>Supplier:</strong> {{ $orderInfo->SupplierName ?? $orderInfo->TradingName ?? ('Supplier #' . ($orderInfo->SupplierId ?? '')) }}</div>
-                    <div class="col-md-6"><strong>Address:</strong> {{ $orderInfo->SupplierAddress ?? '' }}</div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4"><strong>Priority:</strong> {{ $orderInfo->Priority ?? '--' }}</div>
-                    <div class="col-md-4"><strong>Payment Terms:</strong> {{ $orderInfo->TermsDescription ?? '--' }}</div>
-                    <div class="col-md-4"><strong>Branch:</strong> {{ $orderInfo->BranchName ?? $orderInfo->BranchID ?? '--' }}</div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Item</th>
-                            <th>Description</th>
-                            <th class="text-end">Qty</th>
-                            <th class="text-end">Unit Price</th>
-                            <th class="text-end">Tax %</th>
-                            <th class="text-end">Discount %</th>
-                            <th class="text-end">Line Total</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @forelse($lineInfo ?? [] as $i => $line)
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
-                                <td>{{ $line->ItemName ?? ('#'.$line->ItemId) }}</td>
-                                <td>{{ $line->ItemDescription ?? '' }}</td>
-                                <td class="text-end">{{ number_format((float)($line->Quantity ?? 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float)($line->UnitPrice ?? 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float)($line->Tax ?? 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float)($line->Discount ?? 0), 2) }}</td>
-                                <td class="text-end">{{ number_format((float)($line->LineTotal ?? 0), 2) }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="text-center">No line items</td>
-                            </tr>
-                        @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-md-4 offset-md-8">
-                        <div class="d-flex justify-content-between"><span>Exclusive Total</span><strong>{{ number_format((float)($orderInfo->ExclusiveTotal ?? 0), 2) }}</strong></div>
-                        <div class="d-flex justify-content-between"><span>Tax Amount</span><strong>{{ number_format((float)($orderInfo->TaxAmount ?? 0), 2) }}</strong></div>
-                        <div class="d-flex justify-content-between"><span>Inclusive Total</span><strong>{{ number_format((float)($orderInfo->InclusiveTotal ?? 0), 2) }}</strong></div>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                @if(isset($orderInfo))
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>LPO No:</strong> {{ $orderInfo->ExtOrdNum ?? '--' }}</div>
+                        <div class="col-md-4"><strong>Order No:</strong> {{ $orderInfo->OrderNo ?? '--' }}</div>
+                        <div class="col-md-4">
+                            <strong>Date:</strong> {{ isset($orderInfo->OrderDate) ? \Carbon\Carbon::parse($orderInfo->OrderDate)->format('d/m/Y') : '--' }}
+                        </div>
                     </div>
-                </div>
-            @else
-                <div class="alert alert-warning">Order details not available.</div>
-            @endif
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Supplier:</strong> {{ $orderInfo->SupplierName ?? $orderInfo->TradingName ?? ('Supplier #' . ($orderInfo->SupplierId ?? '')) }}
+                        </div>
+                        <div class="col-md-6"><strong>Address:</strong> {{ $orderInfo->SupplierAddress ?? '' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Priority:</strong> {{ $orderInfo->Priority ?? '--' }}</div>
+                        <div class="col-md-4"><strong>Payment Terms:</strong> {{ $orderInfo->TermsDescription ?? '--' }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Branch:</strong> {{ $orderInfo->BranchName ?? $orderInfo->BranchID ?? '--' }}</div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Item</th>
+                                <th>Description</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Tax %</th>
+                                <th class="text-end">Discount %</th>
+                                <th class="text-end">Line Total</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @forelse($lineInfo ?? [] as $i => $line)
+                                <tr>
+                                    <td>{{ $i + 1 }}</td>
+                                    <td>{{ $line->ItemName ?? ('#'.$line->ItemId) }}</td>
+                                    <td>{{ $line->ItemDescription ?? '' }}</td>
+                                    <td class="text-end">{{ number_format((float)($line->Quantity ?? 0), 2) }}</td>
+                                    <td class="text-end">{{ number_format((float)($line->UnitPrice ?? 0), 2) }}</td>
+                                    <td class="text-end">{{ number_format((float)($line->Tax ?? 0), 2) }}</td>
+                                    <td class="text-end">{{ number_format((float)($line->Discount ?? 0), 2) }}</td>
+                                    <td class="text-end">{{ number_format((float)($line->LineTotal ?? 0), 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center">No line items</td>
+                                </tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4 offset-md-8">
+                            <div class="d-flex justify-content-between">
+                                <span>Exclusive Total</span><strong>{{ number_format((float)($orderInfo->ExclusiveTotal ?? 0), 2) }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Tax Amount</span><strong>{{ number_format((float)($orderInfo->TaxAmount ?? 0), 2) }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Inclusive Total</span><strong>{{ number_format((float)($orderInfo->InclusiveTotal ?? 0), 2) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="alert alert-warning">Order details not available.</div>
+                @endif
+            </div>
         </div>
     </div>
-</div>
 
 @endsection
 
 @push('styles')
-<style>
-@media print {
-    nav, .btn, .breadcrumb, .navbar, .footer { display: none !important; }
-    .card { border: none; }
-}
-</style>
+    <style>
+        @media print {
+            nav, .btn, .breadcrumb, .navbar, .footer {
+                display: none !important;
+            }
+
+            .card {
+                border: none;
+            }
+        }
+    </style>
 @endpush
 @php use Carbon\Carbon; @endphp
 @extends('layouts.app')

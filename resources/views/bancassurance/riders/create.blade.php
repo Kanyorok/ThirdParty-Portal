@@ -2,15 +2,15 @@
 @section('title', 'Add Rider & Add On')
 @section('content')
 
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
 <div class="container mt-4">
     <div class="card shadow-sm">
@@ -56,7 +56,7 @@
                         <label for="AdditionalPremium" class="form-label">
                             Additional Premium <span class="text-danger">*</span>
                         </label>
-                        <input type="number" name="AdditionalPremium" id="AdditionalPremium" 
+                        <input type="number" name="AdditionalPremium" id="AdditionalPremium"
                                class="form-control" step="0.01" min="0" required>
                     </div>
                 </div>
@@ -92,7 +92,7 @@
     </div>
 </div>
 
-<!-- Script -->
+    <!-- Script -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const ProviderSelect = document.getElementById('Provider-select');

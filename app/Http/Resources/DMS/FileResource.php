@@ -7,6 +7,7 @@ use App\Services\DMS\DocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Number;
+use Illuminate\Support\Str;
 
 class FileResource extends JsonResource
 {
@@ -46,7 +47,7 @@ class FileResource extends JsonResource
 
         return array_merge([
             'id' => $this->DocumentId,
-            'name' => $this->Name,
+            'name' => Str::limit(implode(".", array_slice(explode('.', $this->Name), 0, -1)), 45, '* *') . '.' . $this->resource->ext()->value,
             'visibility' => [
                 'value' => $this->resource->Visibility->value,
                 'name' => $this->resource->Visibility->name,

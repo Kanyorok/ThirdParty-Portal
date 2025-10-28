@@ -5,7 +5,8 @@
     {{-- Error Message --}}
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm rounded-3 mt-3">
-            <h6 class="fw-bold mb-2"><i class="fas fa-exclamation-circle me-1"></i> Please fix the following issues:</h6>
+            <h6 class="fw-bold mb-2"><i class="fas fa-exclamation-circle me-1"></i> Please fix the following issues:
+            </h6>
             <ul class="mb-0 ps-3">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -108,7 +109,8 @@
                                                             @foreach($group['Children'] as $child)
                                                                 <li class="list-group-item border-0 ps-0">
                                                                     <strong>{{ $child['SegmentValue'] ?? '' }}</strong>
-                                                                    <span class="text-muted">— {{ $child['Description'] }}</span>
+                                                                    <span
+                                                                        class="text-muted">— {{ $child['Description'] }}</span>
                                                                 </li>
                                                             @endforeach
                                                         </ul>

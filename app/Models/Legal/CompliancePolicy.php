@@ -11,13 +11,13 @@ class CompliancePolicy extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Title','CategoryID','ComplianceAreaID','EffectiveDate','Version',
-        'FileName','MimeType','FilePath','IsActive',
-        'CreatedBy','CreatedOn','ModifiedBy','ModifiedOn'
+        'Title', 'CategoryID', 'ComplianceAreaID', 'EffectiveDate', 'Version',
+        'FileName', 'MimeType', 'FilePath', 'IsActive',
+        'CreatedBy', 'CreatedOn', 'ModifiedBy', 'ModifiedOn'
     ];
 
     public function acknowledgments()
     {
-        return $this->hasMany(CompliancePolicyAcknowledgment::class,'PolicyID');
+        return $this->hasMany(CompliancePolicyAcknowledgment::class, 'PolicyID');
     }
 }

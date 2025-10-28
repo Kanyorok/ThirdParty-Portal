@@ -40,7 +40,8 @@
                             <label>Currency</label>
                             <select name="Currency" class="form-select" required>
                                 @foreach($currencies as $currency)
-                                    <option value="{{$currency->Id}}" {{$gl->CurrencyID==$currency->Id?'selected':''}}>{{$currency->Code}}</option>
+                                    <option
+                                        value="{{$currency->Id}}" {{$gl->CurrencyID==$currency->Id?'selected':''}}>{{$currency->Code}}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -85,7 +86,10 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-centre mt-1">
                         <a href="{{ route('chartofaccounts.index') }}" class="btn btn-secondary">Back</a>
-                        <button class="btn btn-success" type="submit" onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Updating...'; this.form.submit();}">Update GL Account</button>
+                        <button class="btn btn-success" type="submit"
+                                onclick="if(this.form.checkValidity()){ this.disabled=true; this.innerText='Updating...'; this.form.submit();}">
+                            Update GL Account
+                        </button>
                     </div>
                 </form>
             </div>

@@ -19,19 +19,19 @@
     <div class="card shadow">
         <div class="card-header bg-light fw-bold">Lease Billing Details</div>
         <div class="card-body">
-            
+
             <!-- Lease + Tenant -->
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Lease</label>
-                    <input type="text" class="form-control" 
+                    <input type="text" class="form-control"
                            value="{{ $invoices->lease->LeaseNumber }}" readonly>
                     <input type="hidden" name="Lease" value="{{ $invoices->Lease }}">
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Tenant</label>
-                    <input type="text" class="form-control" 
+                    <input type="text" class="form-control"
                            value="{{ $invoices->lease->tenant->thirdParty->ThirdPartyName }}" readonly>
                     <input type="hidden" name="TenantId" value="{{ $invoices->TenantId }}">
                 </div>

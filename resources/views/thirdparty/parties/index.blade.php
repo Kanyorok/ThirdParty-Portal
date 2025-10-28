@@ -700,20 +700,24 @@
             </div>
 
             <!-- Bulk Actions -->
-            <div class="bulk-actions-container" style="display: none; margin-bottom: 1rem; padding: 1rem; background-color: var(--primary-50); border-radius: 0.5rem; border: 1px solid var(--primary-200);">
+            <div class="bulk-actions-container"
+                 style="display: none; margin-bottom: 1rem; padding: 1rem; background-color: var(--primary-50); border-radius: 0.5rem; border: 1px solid var(--primary-200);">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-3">
                         <span class="text-primary fw-semibold">
                             <span id="selectedCount">0</span> item(s) selected
                         </span>
                         <div class="bulk-action-buttons d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-success bulk-action-btn" data-action="approve" data-url="{{ route('thirdparty.parties.bulk-action') }}">
+                            <button type="button" class="btn btn-sm btn-success bulk-action-btn" data-action="approve"
+                                    data-url="{{ route('thirdparty.parties.bulk-action') }}">
                                 <i class="fas fa-check-circle"></i> Approve Selected
                             </button>
-                            <button type="button" class="btn btn-sm btn-warning bulk-action-btn" data-action="activate" data-url="{{ route('thirdparty.parties.bulk-action') }}">
+                            <button type="button" class="btn btn-sm btn-warning bulk-action-btn" data-action="activate"
+                                    data-url="{{ route('thirdparty.parties.bulk-action') }}">
                                 <i class="fas fa-play-circle"></i> Update Active
                             </button>
-                            <button type="button" class="btn btn-sm btn-danger bulk-action-btn" data-action="reject" data-url="{{ route('thirdparty.parties.bulk-action') }}">
+                            <button type="button" class="btn btn-sm btn-danger bulk-action-btn" data-action="reject"
+                                    data-url="{{ route('thirdparty.parties.bulk-action') }}">
                                 <i class="fas fa-times-circle"></i> Reject Selected
                             </button>
                         </div>
@@ -801,13 +805,13 @@
                 }
             },
             columns: [{
-                    data: null,
-                    orderable: false,
-                    searchable: false,
-                    render: function(data, type, row) {
-                        return `<input type="checkbox" name="selectedItems[]" value="${row.Id}" class="item-checkbox">`;
-                    }
-                },
+                data: null,
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return `<input type="checkbox" name="selectedItems[]" value="${row.Id}" class="item-checkbox">`;
+                }
+            },
                 {
                     data: 'Id',
                     name: 'Id'
@@ -819,7 +823,9 @@
                 {
                     data: 'TradingName',
                     name: 'TradingName',
-                    render: function(data){ return data || 'N/A'; }
+                    render: function (data) {
+                        return data || 'N/A';
+                    }
                 },
                 {
                     data: 'Country',
@@ -971,23 +977,23 @@
         const clearSelectionBtn = $('#clearSelection');
 
         // Handle select all checkbox
-        selectAllCheckbox.on('change', function() {
+        selectAllCheckbox.on('change', function () {
             const isChecked = $(this).is(':checked');
             $('.item-checkbox').prop('checked', isChecked);
             updateBulkActions();
         });
 
         // Handle individual checkboxes
-        $(document).on('change', '.item-checkbox', function() {
+        $(document).on('change', '.item-checkbox', function () {
             updateSelectAllState();
             updateBulkActions();
         });
 
         // Handle bulk action buttons
-        $('.bulk-action-btn').on('click', function(e) {
+        $('.bulk-action-btn').on('click', function (e) {
             e.preventDefault();
             const action = $(this).data('action');
-            const selectedItems = $('.item-checkbox:checked').map(function() {
+            const selectedItems = $('.item-checkbox:checked').map(function () {
                 return $(this).val();
             }).get();
 
@@ -998,7 +1004,7 @@
 
             const actionName = $(this).text().trim();
             const confirmed = confirm(`Are you sure you want to ${actionName.toLowerCase()} ${selectedItems.length} selected item(s)?`);
-            
+
             if (!confirmed) {
                 return;
             }
@@ -1017,30 +1023,30 @@
                     selectedItems: selectedItems,
                     _token: $('meta[name="csrf-token"]').attr('content')
                 },
-                success: function(response) {
+                success: function (response) {
                     alert(response.message || 'Action completed successfully');
                     reloadTable();
                     clearSelection();
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     const errorMessage = xhr.responseJSON?.message || 'An error occurred while processing the request';
                     alert(errorMessage);
                 },
-                complete: function() {
+                complete: function () {
                     $button.prop('disabled', false).html(originalText);
                 }
             });
         });
 
         // Clear selection
-        clearSelectionBtn.on('click', function() {
+        clearSelectionBtn.on('click', function () {
             clearSelection();
         });
 
         function updateSelectAllState() {
             const totalCheckboxes = $('.item-checkbox').length;
             const checkedCheckboxes = $('.item-checkbox:checked').length;
-            
+
             if (checkedCheckboxes === 0) {
                 selectAllCheckbox.prop('checked', false);
                 selectAllCheckbox.prop('indeterminate', false);
@@ -1055,11 +1061,11 @@
 
         function updateBulkActions() {
             const selectedCount = $('.item-checkbox:checked').length;
-            
+
             if (selectedCount > 0) {
                 bulkActionsContainer.show();
                 selectedCountSpan.text(selectedCount);
-                
+
                 // Enable/disable buttons based on selection
                 $('.bulk-action-btn').prop('disabled', false);
             } else {

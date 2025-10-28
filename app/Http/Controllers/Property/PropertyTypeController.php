@@ -18,21 +18,21 @@ class PropertyTypeController extends Controller
 
     public function index()
     {
-        $this->authorize(PermissionEnum::PropertyTypeView , PropertyType::class);
+        $this->authorize(PermissionEnum::PropertyTypeView, PropertyType::class);
         $types = PropertyType::with('propertycategory')->get();
         //dd($properties);
         return view('property.propertyregistry.propertytype.index', compact('types'));
     }
 
     public function create(){
-        $this->authorize(PermissionEnum::PropertyTypeCreate , PropertyType::class);
+        $this->authorize(PermissionEnum::PropertyTypeCreate, PropertyType::class);
         $categories = CategoryMaster::all();
         return view('property.propertyregistry.propertytype.create', compact('categories'));
     }
 
     public function store(PropertyTypeRequest $request)
     {
-        $this->authorize(PermissionEnum::PropertyTypeCreate , PropertyType::class);
+        $this->authorize(PermissionEnum::PropertyTypeCreate, PropertyType::class);
         $validated = $request->validated();
 
         $category = CategoryMaster::findOrFail($validated['PropertyCategoryId']);
@@ -61,7 +61,7 @@ class PropertyTypeController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::PropertyTypeUpdate , PropertyType::class);
+        $this->authorize(PermissionEnum::PropertyTypeUpdate, PropertyType::class);
         $validated = $request->validate([
             'PropertyTypeName' => 'required|string|max:50',
             'PropertyCategoryId' => 'required|exists:t_CategoryMaster,Id',
@@ -100,7 +100,7 @@ class PropertyTypeController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::PropertyTypeDelete , PropertyType::class);
+        $this->authorize(PermissionEnum::PropertyTypeDelete, PropertyType::class);
         try {
             $type = PropertyType::findOrFail($id);
 

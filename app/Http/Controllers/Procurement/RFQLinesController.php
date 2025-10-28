@@ -120,7 +120,7 @@ class RFQLinesController extends Controller
             $allCategoryIds = collect();
             // If a specific ItemCategoryId is provided, use it as the base
             if (!empty($itemCategoryId)) {
-                $baseIds = collect([(int) $itemCategoryId]);
+                $baseIds = collect([(int)$itemCategoryId]);
             } else {
                 $baseIds = $categories->pluck('Id')->unique()->values();
             }

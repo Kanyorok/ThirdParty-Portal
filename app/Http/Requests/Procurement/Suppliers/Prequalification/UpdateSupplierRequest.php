@@ -26,7 +26,7 @@ class UpdateSupplierRequest extends FormRequest
             'Country' => ['required', 'string', 'max:50'],
             'PhysicalAddress' => ['nullable', 'string', 'max:255'],
             'Email' => ['required', 'email', 'max:255', Rule::unique('t_ThirdParties', 'Email')->ignore($this->route('supplier')->Id)],
-            'Phone' => ['nullable', 'string', 'max:20'],
+            'Phone' => ['nullable', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'Website' => ['nullable', 'url', 'max:255'],
             'IsPrequalified' => ['nullable', 'boolean'],
             'ApprovalStatus' => ['required', 'string'],

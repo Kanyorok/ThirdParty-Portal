@@ -13,7 +13,8 @@
     @endif
 
     <div class="container my-3">
-        <form action="{{ route('invoiceentry.update', $invoice->Id) }}" method="post" enctype="multipart/form-data" id="invoiceForm">
+        <form action="{{ route('invoiceentry.update', $invoice->Id) }}" method="post" enctype="multipart/form-data"
+              id="invoiceForm">
             @csrf
             @method('PUT')
 
@@ -64,35 +65,45 @@
                         <h6 class="mb-3 text-muted">
                             <i class="fas fa-file-alt text-info me-2"></i> Invoice Details
                         </h6>
-                        
+
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Invoice Number <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="InvoiceNumber" value="{{ old('InvoiceNumber', $invoice->InvoiceNumber) }}" required>
+                                <input type="text" class="form-control" name="InvoiceNumber"
+                                       value="{{ old('InvoiceNumber', $invoice->InvoiceNumber) }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="InvoiceDate" value="{{ old('InvoiceDate', $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : '') }}" required>
+                                <input type="date" class="form-control" name="InvoiceDate"
+                                       value="{{ old('InvoiceDate', $invoice->InvoiceDate ? \Carbon\Carbon::parse($invoice->InvoiceDate)->format('Y-m-d') : '') }}"
+                                       required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Due Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" name="DueDate" value="{{ old('DueDate', $invoice->DueDate ? \Carbon\Carbon::parse($invoice->DueDate)->format('Y-m-d') : '') }}" required>
+                                <input type="date" class="form-control" name="DueDate"
+                                       value="{{ old('DueDate', $invoice->DueDate ? \Carbon\Carbon::parse($invoice->DueDate)->format('Y-m-d') : '') }}"
+                                       required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Amount <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">KSh</span>
-                                    <input type="number" step="0.01" class="form-control" name="Amount" value="{{ old('Amount', $invoice->Amount) }}" required>
+                                    <input type="number" step="0.01" class="form-control" name="Amount"
+                                           value="{{ old('Amount', $invoice->Amount) }}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Attachment</label>
-                                <input type="file" class="form-control" name="attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                                <div class="form-text">PDF, DOC, DOCX, JPG, JPEG, PNG (max 10MB). Leave empty to keep existing attachment.</div>
+                                <input type="file" class="form-control" name="attachment"
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                <div class="form-text">PDF, DOC, DOCX, JPG, JPEG, PNG (max 10MB). Leave empty to keep
+                                    existing attachment.
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Description</label>
-                                <textarea class="form-control" name="Description" rows="3" placeholder="Optional invoice description...">{{ old('Description', $invoice->Description) }}</textarea>
+                                <textarea class="form-control" name="Description" rows="3"
+                                          placeholder="Optional invoice description...">{{ old('Description', $invoice->Description) }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -110,13 +121,13 @@
                                         <span>{{ $document->DocumentName }}</span>
                                     </div>
                                     <div>
-                                        <a href="{{ route('documents.preview', $document->Id) }}" 
-                                           class="btn btn-sm btn-outline-primary me-2" 
+                                        <a href="{{ route('documents.preview', $document->Id) }}"
+                                           class="btn btn-sm btn-outline-primary me-2"
                                            target="_blank" title="Preview">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('documents.download', $document->Id) }}" 
-                                           class="btn btn-sm btn-outline-secondary" 
+                                        <a href="{{ route('documents.download', $document->Id) }}"
+                                           class="btn btn-sm btn-outline-secondary"
                                            title="Download">
                                             <i class="fas fa-download"></i>
                                         </a>
@@ -131,7 +142,8 @@
                         <button type="submit" class="btn btn-primary btn-lg px-5" id="btnSubmit">
                             <i class="fas fa-save me-2"></i> Update Invoice
                         </button>
-                        <a href="{{ route('invoiceentry.show', $invoice->Id) }}" class="btn btn-secondary btn-lg px-5 ms-3">
+                        <a href="{{ route('invoiceentry.show', $invoice->Id) }}"
+                           class="btn btn-secondary btn-lg px-5 ms-3">
                             <i class="fas fa-times me-2"></i> Cancel
                         </a>
                     </div>
@@ -142,11 +154,11 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const invoiceForm = document.getElementById('invoiceForm');
 
             // Form submission handling
-            invoiceForm.addEventListener('submit', function(e) {
+            invoiceForm.addEventListener('submit', function (e) {
                 const submitBtn = document.getElementById('btnSubmit');
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Updating...';

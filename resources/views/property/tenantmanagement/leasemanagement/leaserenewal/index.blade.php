@@ -31,16 +31,21 @@
           <td>{{ $leaserenewal->NewStartDate ? \Carbon\Carbon::parse($leaserenewal->NewStartDate)->format('d/m/Y') : '-' }}</td>
           <td>{{ $leaserenewal->NewEndDate ? \Carbon\Carbon::parse($leaserenewal->NewEndDate)->format('d/m/Y') : '-' }}</td>
           <td>{{ $leaserenewal->paymentFrequency->Description ?? '-' }}</td>
-          <td><a href="{{ route('renewlease.show', $leaserenewal->Id) }}"
-                 class="btn btn-sm btn-info">View</a>
-              <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" class="btn btn-sm btn-warning">Edit</a>
-              <form action="{{ route('renewlease.destroy', $leaserenewal->Id) }}" method="POST" class="d-inline">
+          <td>
+            <a href="{{ route('renewlease.show', $leaserenewal->Id) }}"
+                 class="btn btn-sm btn-info text-white" title="View lease"><i class="bi bi-eye"></i>
+            </a>     
+            <a href="{{ route('renewlease.edit', $leaserenewal->Id) }}" 
+            class="btn btn-sm btn-warning" title="Edit lease"><i class="bi bi-pencil-square"></i>
+            </a>
+            <form action="{{ route('renewlease.destroy', $leaserenewal->Id) }}" method="POST" class="d-inline">
                   @csrf
                   @method('DELETE')
-                  <button type="submit" class="btn btn-sm btn-danger"
-                          onclick="return confirm('Are you sure you want to delete this lease schedule?');">Delete
+                  <button type="submit" class="btn btn-sm btn-danger" title="Delete lease" 
+                          onclick="return confirm('Are you sure you want to delete this lease schedule?');">
+                          <i class="bi bi-trash"></i>
                   </button>
-              </form>
+            </form>
           </td>
       </tr>
     @endforeach

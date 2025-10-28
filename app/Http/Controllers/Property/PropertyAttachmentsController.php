@@ -35,7 +35,7 @@ class PropertyAttachmentsController extends Controller
     {
         $this->authorize(PermissionEnum::PropertyAttachmentsCreate, PropertyAttachments::class);
         $validated = $request->validated();
-        
+
         $PropertyID = PropertyRegistry::findOrFail($validated['PropertyID']);
         $DocumentType = CodeDetail::findOrFail($validated['DocumentType']);
         $user = Auth::user();
@@ -56,7 +56,7 @@ class PropertyAttachmentsController extends Controller
     public function edit($Id)
     {
 
-    $this->authorize(PermissionEnum::PropertyAttachmentsView, PropertyAttachments::class);
+        $this->authorize(PermissionEnum::PropertyAttachmentsView, PropertyAttachments::class);
     $propertyattachments = PropertyAttachments::findOrFail($Id);
     $properties = PropertyRegistry::all();
     $documenttypes = CodeDetail::where('CodeID', 'DocumentType')->get();
@@ -75,7 +75,7 @@ public function update(PropertyAttachmentsRequest $request, $id)
     $PropertyID   = PropertyRegistry::findOrFail($validated['PropertyID']);
     $DocumentType = CodeDetail::findOrFail($validated['DocumentType']);
     $user         = Auth::user();
-    
+
 
     DB::beginTransaction();
 

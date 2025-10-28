@@ -15,7 +15,7 @@
             </div>
             <div class="col-md-6">
                 <label for="appointmentDate" class="form-label">Appointment Date</label>
-                <input type="date" class="form-control" id="appointmentDate">
+                <input type="date" class="form-control" id="appointmentDate" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}" required>
             </div>
         </div>
 
@@ -34,5 +34,51 @@
         <button type="submit" class="btn btn-primary">Appoint Committee</button>
     </form>
 </div>
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+@endpush
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const el = document.getElementById('appointmentDate');
+            if (el) {
+                // Compute today's date in local timezone to avoid server/browser TZ mismatches
+                const pad = (n) => String(n).padStart(2, '0');
+                const now = new Date();
+                const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+                // Enforce min on the DOM element (fallback if datepicker fails)
+                el.min = todayStr;
+                if (!el.value || el.value < todayStr) {
+                    el.value = todayStr;
+                }
+
+                // Match Raise Needs date picker behavior
+                flatpickr(el, {
+                    dateFormat: 'Y-m-d',
+                    altInput: true,
+                    altFormat: 'd/m/Y',
+                    allowInput: true,
+                    minDate: 'today', // disables past dates and greys them out in the calendar
+                    defaultDate: new Date(),
+                    disableMobile: true
+                });
+
+                // Guard against manual edits: prevent setting a past date
+                el.addEventListener('change', () => {
+                    if (el.value && el.value < el.min) {
+                        el.setCustomValidity('Date cannot be earlier than today.');
+                        el.reportValidity();
+                        el.value = el.min;
+                        // Clear message after correction
+                        el.setCustomValidity('');
+                    }
+                });
+            }
+        });
+    </script>
+@endpush
 
 @endsection

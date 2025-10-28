@@ -19,13 +19,13 @@ class Cheque extends Model
     const DELETED_AT = 'DeletedOn';
 
     protected $fillable = [
-        'Direction','BankAccountID','ChequeBookID','ChequeNumber',
-        'ChequeDate','DueDate','IsPostDated','CurrencyID','Amount',
-        'PartyType','PartyID','PartyName',
-        'Status','ReceivedDate','DepositDate','ClearDate','BounceDate',
-        'CashbookID_Deposit','CashbookID_Clear',
-        'Reference','Narration','IsActive',
-        'CreatedBy','ModifiedBy','DeletedBy'
+        'Direction', 'BankAccountID', 'ChequeBookID', 'ChequeNumber',
+        'ChequeDate', 'DueDate', 'IsPostDated', 'CurrencyID', 'Amount',
+        'PartyType', 'PartyID', 'PartyName',
+        'Status', 'ReceivedDate', 'DepositDate', 'ClearDate', 'BounceDate',
+        'CashbookID_Deposit', 'CashbookID_Clear',
+        'Reference', 'Narration', 'IsActive',
+        'CreatedBy', 'ModifiedBy', 'DeletedBy'
     ];
 
     protected $casts = [
@@ -40,9 +40,23 @@ class Cheque extends Model
         'IsActive' => 'boolean',
     ];
 
-    public static function getPrimaryKey(): string { return 'ChequeID'; }
+    public static function getPrimaryKey(): string
+    {
+        return 'ChequeID';
+    }
 
-    public function bankAccount() { return $this->belongsTo(BankAccount::class, 'BankAccountID', 'AccountID'); }
-    public function chequeBook()  { return $this->belongsTo(ChequeBook::class, 'ChequeBookID', 'ChequeBookID'); }
-    public function currency()    { return $this->belongsTo(Currency::class, 'CurrencyID', 'Id'); }
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class, 'BankAccountID', 'AccountID');
+    }
+
+    public function chequeBook()
+    {
+        return $this->belongsTo(ChequeBook::class, 'ChequeBookID', 'ChequeBookID');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'CurrencyID', 'Id');
+    }
 }

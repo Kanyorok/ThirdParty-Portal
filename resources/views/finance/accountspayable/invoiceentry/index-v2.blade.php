@@ -2,22 +2,22 @@
 @section('title','Invoice Entries')
 
 @section('content')
-<div class="container my-3">
-    <div class="card shadow-sm rounded-3">
-        <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 text-muted">
-                <i class="fas fa-file-invoice text-info me-2"></i> Invoice Entries
-            </h6>
-            <a href="{{ route('invoiceentry.create') }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus me-1"></i> New Invoice
-            </a>
-        </div>
+    <div class="container my-3">
+        <div class="card shadow-sm rounded-3">
+            <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 text-muted">
+                    <i class="fas fa-file-invoice text-info me-2"></i> Invoice Entries
+                </h6>
+                <a href="{{ route('invoiceentry.create') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i> New Invoice
+                </a>
+            </div>
 
-        <div class="card-body p-0">
-            @if($invoices->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+            <div class="card-body p-0">
+                @if($invoices->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
                             <tr>
                                 <th>Invoice No.</th>
                                 <th>Supplier</th>
@@ -29,8 +29,8 @@
                                 <th>Status</th>
                                 <th class="text-center">Actions</th>
                             </tr>
-                        </thead>
-                        <tbody>
+                            </thead>
+                            <tbody>
                             @foreach($invoices as $invoice)
                                 <tr>
                                     <td>
@@ -73,27 +73,27 @@
                                     </td>
                                 </tr>
                             @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                            </tbody>
+                        </table>
+                    </div>
 
-                <!-- Pagination -->
-                @if($invoices->hasPages())
-                    <div class="p-3">
-                        {{ $invoices->links() }}
+                    <!-- Pagination -->
+                    @if($invoices->hasPages())
+                        <div class="p-3">
+                            {{ $invoices->links() }}
+                        </div>
+                    @endif
+                @else
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-invoice text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted">No invoices found</h5>
+                        <p class="text-muted">Create your first invoice entry to get started.</p>
+                        <a href="{{ route('invoiceentry.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Create Invoice
+                        </a>
                     </div>
                 @endif
-            @else
-                <div class="text-center py-5">
-                    <i class="fas fa-file-invoice text-muted mb-3" style="font-size: 3rem;"></i>
-                    <h5 class="text-muted">No invoices found</h5>
-                    <p class="text-muted">Create your first invoice entry to get started.</p>
-                    <a href="{{ route('invoiceentry.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i> Create Invoice
-                    </a>
-                </div>
-            @endif
+            </div>
         </div>
     </div>
-</div>
 @endsection

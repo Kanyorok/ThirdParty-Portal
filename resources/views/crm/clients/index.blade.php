@@ -27,7 +27,7 @@
                                                         id="member_no" placeholder="ClientID"></div>
                     <div class="col-12 col-md-3"><input type="search" class="form-control w-100 search-form-item"
                                                         name="phone" autocomplete="off" maxlength="50" id="phone"
-                                                        placeholder="phone no +254700XXXYYY"></div>
+                                                        placeholder="phone e.g., +12025550123"></div>
                     <div class="col-12 col-md-3"><input type="search" class="form-control w-100 search-form-item"
                                                         name="name" autocomplete="off" maxlength="50" id="name"
                                                         placeholder="name"></div>

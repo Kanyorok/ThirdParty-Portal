@@ -46,7 +46,7 @@
                             <td>{{ $application->supplier->Phone ?? 'N/A' }}</td>
                             <td>
                                 @if($application->category)
-                                <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
+                                    <span class="badge bg-secondary">{{ $application->category->CategoryName }}</span>
                                 @else
                                 <span class="text-muted">N/A</span>
                                 @endif

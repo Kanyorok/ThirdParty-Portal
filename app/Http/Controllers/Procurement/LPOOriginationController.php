@@ -34,12 +34,12 @@ class LPOOriginationController extends Controller
             $contractBasedCount = $this->getContractBasedLPOsCount();
             $awardBasedCount = $this->getAwardBasedLPOsCount();
             $directProcurementCount = $this->getDirectProcurementLPOsCount();
-            
+
             // Recent LPOs by type - using more defensive approach
             $recentContractLPOs = collect(); // Empty collection for now
-            $recentAwardLPOs = collect(); // Empty collection for now  
+            $recentAwardLPOs = collect(); // Empty collection for now
             $recentDirectLPOs = collect(); // Empty collection for now
-            
+
             // Try to get recent LPOs safely
             try {
                 $recentContractLPOs = Order::where('OriginationType', 'contract')
@@ -49,7 +49,7 @@ class LPOOriginationController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Failed to load recent contract LPOs: ' . $e->getMessage());
             }
-            
+
             try {
                 $recentAwardLPOs = Order::where('OriginationType', 'award')
                     ->latest('CreatedOn')
@@ -58,7 +58,7 @@ class LPOOriginationController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Failed to load recent award LPOs: ' . $e->getMessage());
             }
-            
+
             try {
                 $recentDirectLPOs = Order::where('OriginationType', 'direct_procurement')
                     ->latest('CreatedOn')
@@ -70,7 +70,7 @@ class LPOOriginationController extends Controller
 
             return view('procurement.lpo.origination.index', compact(
                 'contractBasedCount',
-                'awardBasedCount', 
+                'awardBasedCount',
                 'directProcurementCount',
                 'recentContractLPOs',
                 'recentAwardLPOs',
@@ -103,16 +103,16 @@ class LPOOriginationController extends Controller
     }
 
     /**
-     * Show award-based LPO creation options  
+     * Show award-based LPO creation options
      */
     public function showAwardBasedOptions()
     {
         try {
             // Get approved awards that don't require contracts (for direct LPO)
             $availableAwards = TenderAward::where('is_approved', true)
-                ->where(function($query) {
+                ->where(function ($query) {
                     $query->whereNull('ContractStatus')
-                          ->orWhere('ContractStatus', '!=', 'Executed');
+                        ->orWhere('ContractStatus', '!=', 'Executed');
                 })
                 ->whereHas('tender')
                 ->with(['tender', 'winningSupplier'])
@@ -134,20 +134,20 @@ class LPOOriginationController extends Controller
         try {
             // Get approved procurement plans with direct procurement items
             $directProcurementPlans = ConsolidatedProcurementPlan::where('Status', 'Approved')
-                ->whereHas('planLineItems', function($query) {
-                    $query->whereHas('procurementMode', function($subQuery) {
+                ->whereHas('planLineItems', function ($query) {
+                    $query->whereHas('procurementMode', function ($subQuery) {
                         $subQuery->where('Description', 'LIKE', '%Direct%')
-                               ->orWhere('Description', 'LIKE', '%direct%');
+                            ->orWhere('Description', 'LIKE', '%direct%');
                     })
-                    ->where('ExecutionStatus', 'Pending');
+                        ->where('ExecutionStatus', 'Pending');
                 })
-                ->with(['planLineItems' => function($query) {
-                    $query->whereHas('procurementMode', function($subQuery) {
+                ->with(['planLineItems' => function ($query) {
+                    $query->whereHas('procurementMode', function ($subQuery) {
                         $subQuery->where('Description', 'LIKE', '%Direct%')
-                               ->orWhere('Description', 'LIKE', '%direct%');
+                            ->orWhere('Description', 'LIKE', '%direct%');
                     })
-                    ->where('ExecutionStatus', 'Pending')
-                    ->with(['item', 'procurementMode']);
+                        ->where('ExecutionStatus', 'Pending')
+                        ->with(['item', 'procurementMode']);
                 }])
                 ->orderBy('ApprovedOn', 'desc')
                 ->paginate(15);
@@ -233,15 +233,15 @@ class LPOOriginationController extends Controller
     public function createFromDirectProcurement(Request $request, $planId)
     {
         try {
-            $plan = ConsolidatedProcurementPlan::with(['planLineItems' => function($query) {
-                $query->whereHas('procurementMode', function($subQuery) {
+            $plan = ConsolidatedProcurementPlan::with(['planLineItems' => function ($query) {
+                $query->whereHas('procurementMode', function ($subQuery) {
                     $subQuery->where('Description', 'LIKE', '%Direct%')
-                           ->orWhere('Description', 'LIKE', '%direct%');
+                        ->orWhere('Description', 'LIKE', '%direct%');
                 })
-                ->where('ExecutionStatus', 'Pending')
-                ->with(['item', 'procurementMode']);
+                    ->where('ExecutionStatus', 'Pending')
+                    ->with(['item', 'procurementMode']);
             }])
-            ->findOrFail($planId);
+                ->findOrFail($planId);
 
             if ($plan->Status !== 'Approved') {
                 return redirect()->back()->with('error', 'Only approved procurement plans can be used for LPO creation.');
@@ -261,7 +261,7 @@ class LPOOriginationController extends Controller
                 'origination_type' => 'direct_procurement',
                 'plan' => $plan,
                 'plan_items' => $plan->planLineItems,
-                'estimated_total' => $plan->planLineItems->sum(function($item) {
+                'estimated_total' => $plan->planLineItems->sum(function ($item) {
                     return $item->MergedQty * $item->EstimatedUnitCost;
                 }),
                 'lpo_number' => Order::generateLPONumber()
@@ -342,7 +342,7 @@ class LPOOriginationController extends Controller
 
             DB::commit();
 
-            $message = $action === 'save_draft' 
+            $message = $action === 'save_draft'
                 ? 'Contract-based LPO draft saved successfully!'
                 : 'Contract-based LPO created successfully!';
 
@@ -388,9 +388,9 @@ class LPOOriginationController extends Controller
     private function getAwardBasedLPOsCount(): int
     {
         return TenderAward::where('is_approved', true)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('ContractStatus')
-                      ->orWhere('ContractStatus', '!=', 'Executed');
+                    ->orWhere('ContractStatus', '!=', 'Executed');
             })
             ->count();
     }
@@ -398,12 +398,12 @@ class LPOOriginationController extends Controller
     private function getDirectProcurementLPOsCount(): int
     {
         return ConsolidatedProcurementPlan::where('Status', 'Approved')
-            ->whereHas('planLineItems', function($query) {
-                $query->whereHas('procurementMode', function($subQuery) {
+            ->whereHas('planLineItems', function ($query) {
+                $query->whereHas('procurementMode', function ($subQuery) {
                     $subQuery->where('Description', 'LIKE', '%Direct%')
-                           ->orWhere('Description', 'LIKE', '%direct%');
+                        ->orWhere('Description', 'LIKE', '%direct%');
                 })
-                ->where('ExecutionStatus', 'Pending');
+                    ->where('ExecutionStatus', 'Pending');
             })
             ->count();
     }

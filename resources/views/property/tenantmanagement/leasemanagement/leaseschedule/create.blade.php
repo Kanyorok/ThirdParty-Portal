@@ -12,7 +12,7 @@
     <form action="{{ route('schedulelease.store') }}" method="POST">
       @csrf
       <div class="card shadow">
-        <div class="card-header bg-light fw-bold">Generate Billing Periods</div>
+          <div class="card-header bg-light fw-bold">Generate Billing Periods</div>
         <div class="card-body">
           <div class="row g-3 mb-3">
             <!-- Lease Number Dropdown -->
@@ -21,18 +21,18 @@
               <select id="lease-select" name="LeaseId" class="form-select" required>
                 <option value="">-- Select Lease --</option>
                 @foreach ($newleases as $lease)
-                  <option value="{{ $lease->Id }}" 
-                    data-leasenumber="{{ $lease->LeaseNumber }}"
-                    data-tenant-id="{{ $lease->Tenant }}" 
-                    data-tenant-name="{{ $lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
+                      <option value="{{ $lease->Id }}"
+                              data-leasenumber="{{ $lease->LeaseNumber }}"
+                              data-tenant-id="{{ $lease->Tenant }}"
+                              data-tenant-name="{{ $lease->tenant->thirdParty->ThirdPartyName ?? 'N/A' }}"
                     data-property-id="{{ $lease->PropertyID }}"
                     data-property-name="{{ $lease->property->PropertyName ?? 'N/A' }}"
                     data-frequency-id="{{ $lease->PaymentFrequency }}"
-                    data-frequency-name="{{ $lease->code->Description ?? 'N/A' }}"
-                    data-baserent="{{ $lease->MonthlyRent ?? 0 }}"
-                    data-servicecharge="{{ $lease->ServiceCharge ?? 0 }}"
-                    data-parkingfee="{{ $lease->ParkingFee ?? 0 }}"
-                    data-othercharges="{{ $lease->OtherCharges ?? 0 }}">
+                              data-frequency-name="{{ $lease->code->Description ?? 'N/A' }}"
+                              data-baserent="{{ $lease->MonthlyRent ?? 0 }}"
+                              data-servicecharge="{{ $lease->ServiceCharge ?? 0 }}"
+                              data-parkingfee="{{ $lease->ParkingFee ?? 0 }}"
+                              data-othercharges="{{ $lease->OtherCharges ?? 0 }}">
                     {{ $lease->LeaseNumber }}
                   </option>
                 @endforeach
@@ -78,39 +78,41 @@
               <input type="date" class="form-control" name="EndDate" value="2026-04-30" required>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Base Rent<span class="text-danger">*</span></label>
-              <input type="number" class="form-control" name="BaseRent" id="baserent" value="25000" required>
+                <label class="form-label">Base Rent<span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="BaseRent" id="baserent" value="25000" required>
             </div>
           </div>
 
           <div class="row g-3 mb-3">
             <div class="col-md-4">
-              <label class="form-label">Service Charge<span class="text-danger">*</span></label>
-              <input type="number" class="form-control" name="ServiceCharge" id="servicecharge" value="15000" required>
+                <label class="form-label">Service Charge<span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="ServiceCharge" id="servicecharge" value="15000"
+                       required>
+            </div>
+              <div class="col-md-4">
+                  <label class="form-label">Parking Fee<span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" name="ParkingFee" id="parkingfee" value="2000" required>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Parking Fee<span class="text-danger">*</span></label>
-              <input type="number" class="form-control" name="ParkingFee" id="parkingfee" value="2000" required>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Other Charges<span class="text-danger">*</span></label>
-              <input type="number" class="form-control" name="OtherCharges" id="othercharges" value="0" required>
+                <label class="form-label">Other Charges<span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="OtherCharges" id="othercharges" value="0" required>
             </div>
           </div>
 
-          <!-- Total Amount -->
-          <div class="row g-3 mb-3">
+            <!-- Total Amount -->
+            <div class="row g-3 mb-3">
             <div class="col-md-4">
-              <label class="form-label">Total Amount</label>
-              <input type="number" class="form-control" id="total-amount" name="TotalAmount" value="0" readonly>
+                <label class="form-label">Total Amount</label>
+                <input type="number" class="form-control" id="total-amount" name="TotalAmount" value="0" readonly>
             </div>
           </div>
 
           <!-- Submit Button -->
           <div class="text-end">
-            <a href="{{ route('schedulelease.index') }}" class="btn btn-secondary">Cancel</a>
+              <a href="{{ route('schedulelease.index') }}" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-success"
-              onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"> Generate Schedule </button>
+                    onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();"> Generate Schedule
+            </button>
           </div>
         </div>
       </div>
@@ -119,11 +121,11 @@
 
   <!-- Scripts -->
   <script>
-    // Auto-fill lease details
+      // Auto-fill lease details
     document.getElementById('lease-select').addEventListener('change', function() {
       const selected = this.options[this.selectedIndex];
 
-      // Lease details
+        // Lease details
       document.getElementById('lease-display').value = selected.getAttribute('data-leasenumber') || '';
       document.getElementById('tenant-id').value = selected.getAttribute('data-tenant-id') || '';
       document.getElementById('tenant-display').value = selected.getAttribute('data-tenant-name') || '';
@@ -132,32 +134,32 @@
       document.getElementById('frequency-id').value = selected.getAttribute('data-frequency-id') || '';
       document.getElementById('frequency-display').value = selected.getAttribute('data-frequency-name') || '';
 
-      // Charges
-      document.getElementById('baserent').value = selected.getAttribute('data-baserent') || 0;
-      document.getElementById('servicecharge').value = selected.getAttribute('data-servicecharge') || 0;
-      document.getElementById('parkingfee').value = selected.getAttribute('data-parkingfee') || 0;
-      document.getElementById('othercharges').value = selected.getAttribute('data-othercharges') || 0;
+        // Charges
+        document.getElementById('baserent').value = selected.getAttribute('data-baserent') || 0;
+        document.getElementById('servicecharge').value = selected.getAttribute('data-servicecharge') || 0;
+        document.getElementById('parkingfee').value = selected.getAttribute('data-parkingfee') || 0;
+        document.getElementById('othercharges').value = selected.getAttribute('data-othercharges') || 0;
 
-      // Recalculate total
-      calculateTotal();
+        // Recalculate total
+        calculateTotal();
     });
 
-    // Calculate total amount
-    function calculateTotal() {
-      const baseRent = parseFloat(document.getElementById('baserent').value) || 0;
-      const serviceCharge = parseFloat(document.getElementById('servicecharge').value) || 0;
-      const parkingFee = parseFloat(document.getElementById('parkingfee').value) || 0;
-      const otherCharges = parseFloat(document.getElementById('othercharges').value) || 0;
+      // Calculate total amount
+      function calculateTotal() {
+          const baseRent = parseFloat(document.getElementById('baserent').value) || 0;
+          const serviceCharge = parseFloat(document.getElementById('servicecharge').value) || 0;
+          const parkingFee = parseFloat(document.getElementById('parkingfee').value) || 0;
+          const otherCharges = parseFloat(document.getElementById('othercharges').value) || 0;
 
-      const total = baseRent + serviceCharge + parkingFee + otherCharges;
-      document.getElementById('total-amount').value = total;
-    }
+          const total = baseRent + serviceCharge + parkingFee + otherCharges;
+          document.getElementById('total-amount').value = total;
+      }
 
-    // Trigger calculation on input change
-    document.querySelectorAll('#baserent, #servicecharge, #parkingfee, #othercharges')
-      .forEach(input => input.addEventListener('input', calculateTotal));
+      // Trigger calculation on input change
+      document.querySelectorAll('#baserent, #servicecharge, #parkingfee, #othercharges')
+          .forEach(input => input.addEventListener('input', calculateTotal));
 
-    // Initial calculation on page load
-    window.addEventListener('DOMContentLoaded', calculateTotal);
+      // Initial calculation on page load
+      window.addEventListener('DOMContentLoaded', calculateTotal);
   </script>
 @endsection

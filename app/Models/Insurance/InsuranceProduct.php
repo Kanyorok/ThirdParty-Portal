@@ -34,16 +34,19 @@ class InsuranceProduct extends Model
     {
         return 'InsuranceProductsId';
     }
+
     public function provider()
     {
         return $this->belongsTo(InsuranceProvider::class,'InsuranceProviderID','Id');
     }
-    Public function type()
+
+    public function type()
     {
-        return $this->belongsTo(CodeDetail::class,'Type','ID');
+        return $this->belongsTo(CodeDetail::class, 'Type', 'ID');
     }
+
     public function policies()
     {
-        return $this->hasMany(BancassurancePolicy::class,'ProductID','Id');
+        return $this->hasMany(BancassurancePolicy::class, 'ProductID', 'Id');
     }
 }

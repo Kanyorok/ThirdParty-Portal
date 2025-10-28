@@ -47,7 +47,7 @@ class PropertyCategoryController extends Controller
 
     public function edit($id)
     {
-       $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
+        $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
         $category = CategoryMaster::findOrFail($id);
 
         return view('property.propertyregistry.propertycategory.edit', compact('category'));
@@ -55,7 +55,7 @@ class PropertyCategoryController extends Controller
 
     public function update(Request $request, $id)
     {
-       $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
+        $this->authorize(PermissionEnum::PropertyCategoryUpdate, CategoryMaster::class);
         $validated = $request->validate([
             'Description' => 'nullable|string|max:100',
         ]);
@@ -89,14 +89,14 @@ class PropertyCategoryController extends Controller
 
     public function destroy($id)
     {
-       $this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
+        $this->authorize(PermissionEnum::PropertyCategoryDelete, CategoryMaster::class);
         try {
             $category = CategoryMaster::findOrFail($id);
 
             if ($category->propertytypes()->exists()) {
                 return redirect()->back()
                     ->withErrors(['error' => 'This Property category is in use and cannot be deleted.']);
-            }            
+            }
 
             $category->delete();
 

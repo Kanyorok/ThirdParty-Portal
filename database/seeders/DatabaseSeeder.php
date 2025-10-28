@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(BranchSeeder::class);
         $this->call(CodeDetailSeeder::class);
         $this->call(SysFilterSeeder::class);
+        $this->call(DocumentValidationTypeSeeder::class);
         $this->call(CurrencySeeder::class);
         //$this->call(LocalitySeeder::class);
         $this->call(ModuleSeeder::class);

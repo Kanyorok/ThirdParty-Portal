@@ -81,7 +81,7 @@
                                         <input type="hidden" name="items[{{ $index }}][item]"
                                                value="{{ $item['item'] }}">
                                     </td>
-                                    
+
                                     <td>
                                         <input type="number" name="items[{{ $index }}][uom]"
                                                class="form-control uom"
@@ -145,9 +145,11 @@
           <textarea name="GeneralRemarks" class="form-control">{{ old('GeneralRemarks') }}</textarea>
       </div>
 
-        <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Post Receipt</button>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Post Receipt
+                </button>
 
-    </form>
+            </form>
   </div>
     </div>
 

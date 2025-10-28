@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -26,14 +25,14 @@ return new class extends Migration
             $table->enum('Status', ['Draft', 'Posted'])->default('Draft');
             $table->string('ApprovalReason')->nullable();
             $table->decimal('UnappliedAmount', 15, 2)->default(0); // For wallet/excess amount
-            
+
             $table->foreignId('CreatedBy')->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn');
             $table->foreignId('ModifiedBy')->constrained('t_Users', 'Id');
             $table->dateTime('ModifiedOn');
             $table->foreignId('DeletedBy')->nullable()->constrained('t_Users', 'Id');
             $table->softDeletes('DeletedOn');
-            
+
             $table->index(['CustomerID', 'ReceiptDate']);
             $table->index(['Status', 'PostingDate']);
         });

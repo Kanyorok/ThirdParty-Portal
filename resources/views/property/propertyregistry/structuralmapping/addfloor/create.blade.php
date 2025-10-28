@@ -45,7 +45,9 @@
                     <textarea class="form-control" rows="2" placeholder="Optional floor notes"
                               name="FloorNotes"></textarea>
                 </div>
-                <button type="submit" class="btn btn-success" onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Floor</button>
+                <button type="submit" class="btn btn-success"
+                        onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save Floor
+                </button>
                 <a href="{{ route('addfloor.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>

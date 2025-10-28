@@ -219,8 +219,8 @@ class PropertyNewLeaseController extends Controller
 
         if ($newlease->invoices()->exists()) {
             return redirect()->back()
-            ->withErrors(['error' => 'This lease is in use and cannot be deleted.']);
-        } 
+                ->withErrors(['error' => 'This lease is in use and cannot be deleted.']);
+        }
 
         PropertyLeaseSchedule::where('LeaseNumber', $newlease->Id)->delete();
         $newlease->delete();
