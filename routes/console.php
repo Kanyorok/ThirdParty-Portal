@@ -28,6 +28,8 @@ Schedule::command('app:loan-re-assignment-command')->dailyAt('6:00')->withoutOve
 
 Schedule::command('app:task-due-reminder-command')->dailyAt('08:40')->withoutOverlapping()->runInBackground();
 
+Schedule::command('app:update-gl-balances')->dailyAt('11:45')->withoutOverlapping()->runInBackground();
+
 //$schedule->command('')->everyFifteenMinutes();
 
 //add a reminder sent in schedule users, leads and clients && add meeting type to meeting
