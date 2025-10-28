@@ -38,13 +38,13 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="tenderInfo" class="form-label">Tender</label>
-                        <input type="text" class="form-control" id="tenderInfo" 
+                        <input type="text" class="form-control" id="tenderInfo"
                                value="{{ $clarification->tenderID->TenderNo ?? 'N/A' }} - {{ $clarification->tenderID->Title ?? 'No Title' }}" readonly>
                     </div>
                     <div class="col-md-6">
                         <label for="supplierName" class="form-label">From Supplier</label>
-                        <input type="text" class="form-control" id="supplierName" 
-                               value="{{ $clarification->supplier_name ?? 'Unknown Supplier' }}" readonly>
+               <input type="text" class="form-control" id="supplierName"
+                   value="{{ $clarification->supplierName ?? 'Unknown Supplier' }}" readonly>
                     </div>
                 </div>
 
@@ -58,11 +58,11 @@
 
                 <div class="mb-3">
                     <label for="responseText" class="form-label">Response <span class="text-danger">*</span></label>
-                    <textarea class="form-control @error('answer') is-invalid @enderror" 
-                              id="responseText" 
-                              name="answer" 
-                              rows="5" 
-                              placeholder="Enter or update the official response..." 
+                    <textarea class="form-control @error('answer') is-invalid @enderror"
+                              id="responseText"
+                              name="answer"
+                              rows="5"
+                              placeholder="Enter or update the official response..."
                               required>{{ old('answer', $clarification->Answer ?? '') }}</textarea>
                     @error('answer')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -71,11 +71,11 @@
                 </div>
 
                 <div class="form-check mb-3">
-                    <input class="form-check-input" 
-                           type="checkbox" 
-                           name="is_published_to_all" 
-                           id="publishToAll" 
-                           value="1" 
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="is_published_to_all"
+                           id="publishToAll"
+                           value="1"
                            {{ old('is_published_to_all', $clarification->ISPUBLISHEDTOALL ?? false) ? 'checked' : '' }}>
                     <label class="form-check-label" for="publishToAll">
                         <strong>Publish this clarification for all bidders</strong>
@@ -87,7 +87,7 @@
 
                 @if($clarification->AnswerDate)
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
+                        <i class="fas fa-info-circle"></i>
                         This clarification was previously answered on {{ $clarification->AnswerDate->format('F d, Y \a\t h:i A') }}.
                         You are now editing the existing response.
                     </div>
