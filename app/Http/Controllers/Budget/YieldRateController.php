@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Budget;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Budget\BudgetDriverRates;
+use App\Models\Budget\BudgetLine;
+use App\Models\Budget\BudgetLineProductTypes;
 use App\Models\Budget\BudgetPeriodTypes;
 use App\Models\Budget\BudgetProduct;
 use App\Models\Budget\BudgetProductType;
@@ -20,10 +22,33 @@ class YieldRateController extends Controller
     //
     public function index()
     {
-        $driverRates = BudgetDriverRates::with('productType', 'periodType', 'rateType')->get();
+        $driverRatesData = BudgetDriverRates::with('rateType')->latest()->get();
+
+        //Group this into data array
+        $driverRates = [];
+        foreach ($driverRatesData as $driverRate) {
+            //Get Product Name
+
+            $product = BudgetProduct::findOrFail($driverRate->ProductTypeId);
+            $driverRates[] = [
+                'Id' => $driverRate->Id,
+                'Description' => $product,
+                'RateTypeName' => $driverRate->rateType->RateTypeName,
+                'RateTypeNameID' => $driverRate->rateType->Id,
+                'RateValue' => $driverRate->RateValue,
+                'Source' => $driverRate->Source,
+            ];
+        }
 
         $periodTypes = BudgetPeriodTypes::select('Id', 'PeriodType')->get();
-        $productTypes = BudgetProduct::select('Id', 'Description as Name')->get();
+
+        //Get Products thay are containe din budgetline
+        $budgetLineWithProducts = BudgetLine::where('IsProductDriven', true)->pluck('Id')->toArray();
+        $productIds = BudgetLineProductTypes::whereIn('BudgetLineId', $budgetLineWithProducts)->pluck('ProductTypeId')->toArray();
+        $existingProductsRate = BudgetDriverRates::pluck('ProductTypeId')->toArray();
+        $filterProductsId = array_diff($productIds, $existingProductsRate);
+        $productTypes = BudgetProduct::select('Id', 'Description as Name')->whereIn('Id', $filterProductsId)->get();
+
         $rateTypes = BudgetRates::select('Id', 'RateTypeName')->get();
 
         return view('budgetandanalytics.yieldexpenserate.index', compact(
@@ -48,7 +73,7 @@ class YieldRateController extends Controller
         $validated = $request->validate([
             // 'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
             'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
-            'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
+            //'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
             'RateValue' => 'required|numeric|min:0|max:100',
             // 'EffectiveDate'  => 'required|date',
             'Source' => 'required|string|max:100',
@@ -59,7 +84,7 @@ class YieldRateController extends Controller
             $driverRate = BudgetDriverRates::create([
                 'PeriodTypeID' => 1, //for nullable period type
                 'ProductTypeID' => $validated['ProductTypeID'],
-                'RateTypeID' => $validated['RateTypeID'],
+                'RateTypeID' => 1,//$validated['RateTypeID'],
                 'RateValue' => $validated['RateValue'],
                 'EffectiveDate' => 1, //for nullable effective date
                 'Source' => $validated['Source'],
@@ -112,10 +137,33 @@ class YieldRateController extends Controller
 
     public function edit($id)
     {
-        $driverRate = BudgetDriverRates::findOrFail($id);
+        $driverRatesData = BudgetDriverRates::with('rateType')->latest()->get();
+
+        //Group this into data array
+        $driverRates = [];
+        foreach ($driverRatesData as $driverRate) {
+            //Get Product Name
+            $product = BudgetProduct::findOrFail($driverRate->ProductTypeId);
+            $driverRates[] = [
+                'Id' => $driverRate->Id,
+                'Description' => $product,
+                'RateTypeName' => $driverRate->rateType->RateTypeName,
+                'RateValue' => $driverRate->RateValue,
+                'Source' => $driverRate->Source,
+            ];
+        }
         $periodTypes = BudgetPeriodTypes::select('Id', 'PeriodType')->get();
-        $productTypes = BudgetProduct::select('Id', 'Description as Name')->get();
+
+        //Get Products thay are containe din budgetline
+        $budgetLineWithProducts = BudgetLine::where('IsProductDriven', true)->pluck('Id')->toArray();
+        $productIds = BudgetLineProductTypes::whereIn('BudgetLineId', $budgetLineWithProducts)->pluck('ProductTypeId')->toArray();
+        $existingProductsRate = BudgetDriverRates::pluck('ProductTypeId')->toArray();
+        $filterProductsId = array_diff($productIds, $existingProductsRate);
+        $productTypes = BudgetProduct::select('Id', 'Description as Name')->whereIn('Id', $filterProductsId)->get();
+
         $rateTypes = BudgetRates::select('Id', 'RateTypeName')->get();
+
+        $productType = BudgetProduct::findOrFail($driverRate->ProductTypeId);
 
         return view('budgetandanalytics.yieldexpenserate.edit', compact(
             'driverRate',
@@ -128,13 +176,14 @@ class YieldRateController extends Controller
     public function update(Request $request, $id)
     {
         //Check permissions
+        //return $request;
         $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetDriverRates::class);
 
         //Validate request
         $validated = $request->validate([
             // 'PeriodTypeID'   => 'required|integer|exists:t_BudgetPeriodTypes,id',
-            'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
-            'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
+            //'ProductTypeID' => 'required|integer|exists:t_BudgetProducts,id',
+            //'RateTypeID' => 'required|integer|exists:t_BudgetRates,id',
             'RateValue' => 'required|numeric|min:0|max:100',
             // 'EffectiveDate'  => 'required|date',
             'Source' => 'required|string|max:100',
@@ -145,8 +194,8 @@ class YieldRateController extends Controller
             $driverRate = BudgetDriverRates::findOrFail($id);
             $driverRate->update([
                 'PeriodTypeID' => 1,
-                'ProductTypeID' => $validated['ProductTypeID'],
-                'RateTypeID' => $validated['RateTypeID'],
+                //'ProductTypeID' => $validated['ProductTypeID'],
+                'RateTypeID' => 1,//$validated['RateTypeID'],
                 'RateValue' => $validated['RateValue'],
                 'EffectiveDate' => 1,
                 'Source' => $validated['Source'],

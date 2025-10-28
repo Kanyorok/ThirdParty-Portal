@@ -4,7 +4,6 @@
 
 @section('content')
     <div class="container mt-4">
-        <h4 class="fw-bold mb-3">Terminate Lease</h4>
 
         <form action="{{ route('terminatelease.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -20,7 +19,8 @@
                                 <option value="">-- Select Lease --</option>
                                 @foreach ($newtenants as $newtenant)
                                     <option value="{{ $newtenant->Id }}">
-                                        LSno: {{ $newtenant->LeaseNumber }} — Name: {{ $newtenant->tenant->TenantName }}
+                                        LSno: {{ $newtenant->LeaseNumber }} —
+                                        Name: {{ $newtenant->tenant->thirdParty->ThirdPartyName }}
                                     </option>
                                 @endforeach
                             </select>
@@ -31,7 +31,7 @@
                             <label class="form-label">Termination Date<span class="text-danger">*</span></label>
                             <input type="date" name="TerminationDate"
                                    class="form-control @error('TerminationDate') is-invalid @enderror"
-                                   value="{{ old('TerminationDate', Carbon::now()->format('d/m/Y')) }}" required>
+                                   value="{{ old('TerminationDate', Carbon::now()->format('Y-m-d')) }}" required>
                         </div>
                     </div>
 
@@ -60,8 +60,8 @@
 
                     <!-- Document Upload -->
                     <div class="mb-3">
-                        <label class="form-label">Upload Supporting Documents</label>
-                        <input type="file" name="Document" class="form-control" multiple>
+                        <label class="form-label">Upload Supporting Documents<span class="text-danger">*</span></label>
+                        <input type="file" name="Document[]" class="form-control" multiple required>
                         <small class="text-muted">e.g. Lease Document, Contract Termination Documents</small>
                     </div>
 

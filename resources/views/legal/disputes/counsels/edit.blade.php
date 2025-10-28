@@ -17,6 +17,15 @@
 
         {{-- Body --}}
         <div class="card-body bg-white">
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            <p class="text-muted">
+                Use this form to update counsel information associated with the case. Ensure the counsel’s name, firm, contact details, and role are correctly recorded for proper case management.
+            </p>
             <form method="POST" action="{{ route('legal.disputes.counsels.update', [$case->Id, $counsel->Id]) }}" class="row g-3">
                 @csrf
                 @method('PUT')
@@ -28,22 +37,30 @@
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Law Firm</label>
-                    <input type="text" name="FirmName" value="{{ $counsel->FirmName }}" class="form-control shadow-sm">
+                    <input type="text" name="FirmName" value="{{ $counsel->FirmName }}" class="form-control shadow-sm"
+                           required>
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Email</label>
-                    <input type="email" name="Email" value="{{ $counsel->Email }}" class="form-control shadow-sm">
+                    <input type="email" name="Email" value="{{ $counsel->Email }}" class="form-control shadow-sm"
+                           required>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Phone</label>
-                    <input type="text" name="Phone" value="{{ $counsel->Phone }}" class="form-control shadow-sm">
+                        <label class="form-label fw-semibold">Phone</label>
+                        <input type="tel" name="Phone"
+                               value="{{ old('Phone', $counsel->Phone) }}"
+                               class="form-control"
+                               placeholder="e.g., +12025550123"
+                               required
+                               pattern="^\+[1-9]\d{7,14}$"
+                               title="Use international format (E.164), e.g., +12025550123">
                 </div>
 
                 <div class="col-md-12">
                     <label class="form-label fw-semibold">Role</label>
-                    <input type="text" name="Role" value="{{ $counsel->Role }}" class="form-control shadow-sm">
+                    <input type="text" name="Role" value="{{ $counsel->Role }}" class="form-control shadow-sm" required>
                 </div>
 
                 {{-- Footer buttons --}}

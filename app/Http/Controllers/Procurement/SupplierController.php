@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Procurement;
 use App\Http\Controllers\Controller;
 use App\Models\ThirdParty\SupplierCategory;
 use App\Models\ThirdParty\ThirdParties;
-use App\Enums\ThirdPartyTypeEnum;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
@@ -17,7 +17,39 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = ThirdParties::suppliers()->with('categories');
+            $query = ThirdParties::suppliers()
+                ->with([
+                    'categories.itemCategories',
+                    'types',
+                    'legacyCategories.category',
+                    'prequalificationApplications.category.itemCategories'
+                ])
+                ->select([
+                    'Id',
+                    'ThirdPartyName',
+                    'TradingName',
+                    'ApprovalStatus',
+                    'IsPrequalified',
+                    'Email',
+                ])
+                ->addSelect([
+                    // Primary contact derived from latest ThirdPartyUser by CreatedOn
+                    'PrimaryFirstName' => DB::table('t_ThirdPartyUsers')
+                        ->select('FirstName')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                    'PrimaryLastName' => DB::table('t_ThirdPartyUsers')
+                        ->select('LastName')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                    'PrimaryEmail' => DB::table('t_ThirdPartyUsers')
+                        ->select('Email')
+                        ->whereColumn('t_ThirdPartyUsers.ThirdPartyId', 't_ThirdParties.Id')
+                        ->orderByDesc('CreatedOn')
+                        ->limit(1),
+                ]);
 
             if ($request->filled('search.value')) {
                 $searchValue = $request->input('search.value');
@@ -38,7 +70,8 @@ class SupplierController extends Controller
 
             return DataTables::of($query)
                 ->addColumn('ThirdPartyType', function ($supplier) {
-                    return $supplier->ThirdPartyType->label();
+                    $codes = $supplier->types->pluck('Code')->filter()->unique();
+                    return $codes->isNotEmpty() ? $codes->join(', ') : 'Supplier';
                 })
                 ->addColumn('ApprovalStatus', function ($supplier) {
                     return $supplier->ApprovalStatus->label();
@@ -47,7 +80,70 @@ class SupplierController extends Controller
                     return $supplier->IsPrequalified ? 'Yes' : 'No';
                 })
                 ->addColumn('category_names', function ($supplier) {
-                    return $supplier->categories->pluck('CategoryName')->implode(', ');
+                    if (!$supplier->IsPrequalified) {
+                        return '<span class="text-muted">Not prequalified</span>';
+                    }
+
+                    // Collect new pivot categories first
+                    $newCats = $supplier->categories ?? collect();
+
+                    // Categories from prequalification applications (each application has a single category)
+                    $appCats = ($supplier->prequalificationApplications ?? collect())
+                        ->pluck('category')
+                        ->filter()
+                        ->unique('SupplierCategoryID');
+
+                    // Map legacy categories to synthetic objects (only if legacy exists and not already represented)
+                    $legacyCats = ($supplier->legacyCategories ?? collect())->map(function ($map) {
+                        $label = $map->category->Name ?? $map->category->Description ?? 'Category';
+                        return (object) [
+                            'CategoryName' => $label,
+                            'itemCategories' => collect(),
+                        ];
+                    });
+
+                    // Merge ensuring uniqueness by CategoryName
+                    $merged = $newCats
+                        ->concat($appCats)
+                        ->concat($legacyCats)
+                        ->map(function ($cat) {
+                            $cat->CategoryName = $cat->CategoryName ?? 'Category';
+                            return $cat;
+                        })
+                        ->unique(function ($c) {
+                            if (isset($c->SupplierCategoryID)) {
+                                return 'id-'.$c->SupplierCategoryID;
+                            }
+                            return 'name-'.strtolower($c->CategoryName);
+                        });
+
+                    if ($merged->isEmpty()) {
+                        return '<span class="text-warning">No categories assigned</span>';
+                    }
+
+                    $html = '<dl class="mb-0">';
+                    foreach ($merged as $cat) {
+                        $catName = e($cat->CategoryName ?? 'Category');
+                        $itemCats = $cat->itemCategories ?? collect();
+                        $count = $itemCats->count();
+                        $badge = $count > 0 ? " <span class=\"badge bg-secondary ms-1\">{$count}</span>" : '';
+                        $itemList = $count > 0
+                            ? e($itemCats->pluck('Name')->filter()->unique()->implode(', '))
+                            : 'No specific items';
+                        $html .= "<dt class=\"fw-semibold\">{$catName}{$badge}</dt><dd class=\"mb-1\">{$itemList}</dd>";
+                    }
+                    $html .= '</dl>';
+                    return $html;
+                })
+                ->addColumn('TradingName', function ($supplier) {
+                    return $supplier->TradingName ?? 'N/A';
+                })
+                ->addColumn('PrimaryContact', function ($supplier) {
+                    $full = trim(($supplier->PrimaryFirstName ?? '') . ' ' . ($supplier->PrimaryLastName ?? ''));
+                    return $full !== '' ? $full : 'N/A';
+                })
+                ->addColumn('PrimaryEmail', function ($supplier) {
+                    return $supplier->PrimaryEmail ?? $supplier->Email ?? 'N/A';
                 })
                 ->addColumn('actions', function ($supplier) {
                     $viewUrl = route('suppliers.show', $supplier->Id);
@@ -66,7 +162,7 @@ class SupplierController extends Controller
                     </div>
                 ';
                 })
-                ->rawColumns(['actions'])
+                ->rawColumns(['actions','category_names'])
                 ->make(true);
         }
 
@@ -83,10 +179,19 @@ class SupplierController extends Controller
     public function store(StoreSupplierRequest $request)
     {
         $validatedData = $request->validated();
-        $validatedData['ThirdPartyType'] = ThirdPartyTypeEnum::Supplier;
         $validatedData['CreatedBy'] = Auth::id();
 
         $supplier = ThirdParties::create($validatedData);
+        // Attach supplier type via pivot (Code like SU-%). Pick first matching type.
+        $supplierTypeId = DB::table('t_ThirdPartyTypes')->where('Code','like','SU-%')->value('TypeId');
+        if ($supplierTypeId) {
+            DB::table('t_ThirdPartyType_ThirdParties')->insert([
+                'TypeId' => $supplierTypeId,
+                'ThirdPartyId' => $supplier->Id,
+                'CreatedOn' => now(),
+                'ModifiedOn' => now(),
+            ]);
+        }
         $supplier->categories()->sync($request->input('category_ids', []));
 
         return redirect()->route('suppliers.index')->with('success', 'Supplier created successfully.');
@@ -94,14 +199,14 @@ class SupplierController extends Controller
 
     public function show(ThirdParties $supplier)
     {
-        $supplier->load('categories');
+    $supplier->load('categories','types');
         return view('procurement.suppliers.show', compact('supplier'));
     }
 
     public function edit(ThirdParties $supplier)
     {
         $categories = SupplierCategory::all();
-        $supplier->load('categories');
+    $supplier->load('categories','types');
         return view('procurement.suppliers.edit', compact('supplier', 'categories'));
     }
 

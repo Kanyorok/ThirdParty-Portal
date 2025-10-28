@@ -10,12 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        if (Schema::hasTable('t_Sections')) {
+            return; // Table already exists; skip creating
+        }
         Schema::create('t_Sections', function (Blueprint $table) {
             $table->id('Id');
             $table->string('SectionName', 100)->unique();
             $table->text('Description')->nullable();
             $table->boolean('IsActive')->default(true);
-
             $table->foreignId('CreatedBy')->nullable()->constrained('t_Users', 'Id');
             $table->dateTime('CreatedOn')->useCurrent();
             $table->foreignId('ModifiedBy')->nullable()->constrained('t_Users', 'Id');

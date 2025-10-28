@@ -153,15 +153,9 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                                         {{ $isCriterionIncluded ? 'checked' : '' }}>
                                     <label for="criteria_included_{{ $criteria->Id }}">{{ $criteria->CriteriaName }}</label>
                                 </div>
-                                <div class="mt-2 criteria-weight-container" style="{{ $isCriterionIncluded ? '' : 'display:none;' }}">
-                                    <label class="form-label mb-0">Weight</label>
-                                    <input type="number"
-                                        name="sections[{{ $index }}][criteria][{{ $c_index }}][weight]"
-                                        value="{{ old("sections.$index.criteria.$c_index.weight", $linkedCriterion->Weight ?? 0) }}"
-                                        class="form-control form-control-sm criteria-weight-input"
-                                        placeholder="Weight %"
-                                        min="0" max="10">
-                                </div>
+                                <!-- Fixed per-criterion max score set by system: always 10 -->
+                                <input type="hidden" name="sections[{{ $index }}][criteria][{{ $c_index }}][weight]" value="10">
+                                <div class="text-muted small mt-1">Score for this criterion is fixed at 10.</div>
                             </div>
                         </div>
                         @endforeach
@@ -184,14 +178,16 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
     </div>
 
     @if(!$readOnly)
-    <div class="mt-4">
-        <button type="submit" class="btn btn-primary">
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary" id="publishBtn">
             @if($isEdit)
             <i class="fas fa-save me-1"></i> Update Round
             @else
             <i class="fas fa-plus-circle me-1"></i> Create Round
             @endif
         </button>
+        <button type="button" class="btn btn-outline-secondary" id="saveDraftBtn">Save as Draft</button>
+        <input type="hidden" name="save_as_draft" id="save_as_draft" value="0">
     </div>
     @endif
 </form>
@@ -203,7 +199,9 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
         const accordionItems = document.querySelectorAll('.accordion-item');
         const totalSectionWeightProgress = document.getElementById('totalWeightProgress');
         const sectionWeightWarning = document.getElementById('weightWarning');
-        const submitBtn = document.querySelector('button[type="submit"]');
+    const submitBtn = document.getElementById('publishBtn');
+    const saveDraftBtn = document.getElementById('saveDraftBtn');
+    const saveAsDraftInput = document.getElementById('save_as_draft');
 
         function updateTotalWeights() {
             let totalSectionWeight = 0;
@@ -244,9 +242,8 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
                 }
             }
 
-            if (submitBtn) {
-                submitBtn.disabled = !isSectionWeightValid;
-            }
+            // Only block publish button; draft can always be saved
+            if (submitBtn) submitBtn.disabled = !isSectionWeightValid;
         }
 
         document.querySelectorAll('input[id^="section_included_"]').forEach(checkbox => {
@@ -286,33 +283,18 @@ $currentStatus = old('Status', $prequalificationRound->Status->value ?? 'D');
             });
         });
 
-        document.querySelectorAll('input[id^="criteria_included_"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const weightContainer = this.closest('.card-body').querySelector('.criteria-weight-container');
-                const weightInput = weightContainer?.querySelector('input');
+        // No criteria score inputs: score is fixed at 10 by the system.
 
-                if (this.checked) {
-                    if (weightContainer) {
-                        weightContainer.style.display = 'block';
-                    }
-                } else {
-                    if (weightContainer) {
-                        weightContainer.style.display = 'none';
-                    }
-                    if (weightInput) {
-                        weightInput.value = 0;
-                    }
-                }
+        if (saveDraftBtn && saveAsDraftInput) {
+            saveDraftBtn.addEventListener('click', function() {
+                saveAsDraftInput.value = '1';
+                // Ensure Status is set to Draft
+                const statusSelect = document.getElementById('Status');
+                if (statusSelect) statusSelect.value = 'D';
+                // Submit form
+                this.closest('form').submit();
             });
-        });
-
-        document.querySelectorAll('.criteria-weight-input').forEach(input => {
-            input.addEventListener('input', function() {
-                const value = parseInt(this.value) || 0;
-                if (value < 0) this.value = 0;
-                if (value > 10) this.value = 10;
-            });
-        });
+        }
 
         updateTotalWeights();
     });

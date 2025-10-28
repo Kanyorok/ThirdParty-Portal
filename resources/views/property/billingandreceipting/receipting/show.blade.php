@@ -1,110 +1,133 @@
+@php use Carbon\Carbon; @endphp
 @extends('layouts.app')
+
 @section('title', 'Rent Receipt Details')
 
 @section('content')
-  <div class="container mt-5" style="max-width: 800px;">
-    <h3 class="mb-4">Rent Receipt Details</h3>
+<div class="container mt-4" style="max-width: 1000px;">
 
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <form>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Tenant Name</label>
-              <input type="text" class="form-control form-control-sm"
-                value="{{ $receipt->invoice->lease->tenant->TenantName ?? '-' }}" disabled>
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+
+            {{-- Receipt Information --}}
+            <h6 class="mb-3 text-dark">Rent Receipt Information</h6>
+            <hr>
+            <div class="row g-3 text-dark">
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Tenant Name</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                           value="{{ $receipt->invoice->lease->tenant->thirdParty->ThirdPartyName  ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Invoice Number</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->invoice->InvoiceNumber ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Billing Month</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->BillingMonth ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Invoice Date</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->InvoiceDate ? Carbon::parse($receipt->InvoiceDate)->format('d/m/Y') : '-' }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Payment Date</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->PaymentDate ? Carbon::parse($receipt->PaymentDate)->format('d/m/Y') : '-' }}" readonly>
+                </div>
+
+                {{-- Financials --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Rent Amount</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ number_format($receipt->RentAmount ?? 0, 2) }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Service Charge</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ number_format($receipt->ServicesCharge ?? 0, 2) }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Parking Fee</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ number_format($receipt->ParkingFee ?? 0, 2) }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Other Charges</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ number_format($receipt->OtherCharges ?? 0, 2) }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Total Due</label>
+                    <input type="text" class="form-control bg-light text-dark fw-bold"
+                        value="{{ number_format(
+                            ($receipt->RentAmount ?? 0) +
+                            ($receipt->ServicesCharge ?? 0) +
+                            ($receipt->ParkingFee ?? 0) +
+                            ($receipt->OtherCharges ?? 0), 2) }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Amount Paid</label>
+                    <input type="text" class="form-control bg-light text-dark fw-bold"
+                        value="{{ number_format($receipt->AmountPaidNow ?? 0, 2) }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Balance</label>
+                    <input type="text" class="form-control bg-light text-dark fw-bold"
+                        value="{{ number_format(
+                            (($receipt->RentAmount ?? 0) +
+                            ($receipt->ServicesCharge ?? 0) +
+                            ($receipt->ParkingFee ?? 0) +
+                            ($receipt->OtherCharges ?? 0)) -
+                            ($receipt->AmountPaidNow ?? 0), 2) }}" readonly>
+                </div>
+
+                {{-- Payment Info --}}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Payment Method</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->code->Description ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Reference Number</label>
+                    <input type="text" class="form-control bg-light text-dark"
+                        value="{{ $receipt->ReferenceNo ?? '-' }}" readonly>
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Remarks</label>
+                    <textarea class="form-control bg-light text-dark" rows="2" readonly>{{ $receipt->Remarks ?? '—' }}</textarea>
+                </div>
             </div>
+        </div>
 
-            <div class="col-md-6">
-              <label class="form-label">Invoice Number</label>
-              <input type="text" class="form-control form-control-sm"
-                value="{{ $receipt->invoice->InvoiceNumber ?? '-' }}" disabled>
+        {{-- Footer with Audit Info + Actions --}}
+        <div class="card-footer d-flex justify-content-between align-items-center py-2 bg-light small text-dark">
+            <div>
+                Created by <strong>{{ $receipt->createdByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $receipt->CreatedOn ? Carbon::parse($receipt->CreatedOn)->format('d/m/Y') : '-' }}</strong>
+                | Modified by <strong>{{ $receipt->modifiedByUser->Name ?? '-' }}</strong>
+                on <strong>{{ $receipt->ModifiedOn ? Carbon::parse($receipt->ModifiedOn)->format('d/m/Y') : '-' }}</strong>
             </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <label class="form-label">Billing Month</label>
-              <input type="text" class="form-control form-control-sm" value="{{ $receipt->BillingMonth ?? '-' }}"
-                disabled>
+            <div>
+                <a href="{{ route('rentreceipt.index') }}" class="btn btn-sm btn-secondary">Back</a>
             </div>
-
-            <div class="col-md-4">
-              <label class="form-label">Invoice Date</label>
-              <input type="text" class="form-control form-control-sm"
-                value="{{ \Carbon\Carbon::parse($receipt->InvoiceDate)->format('d/m/Y') ?? '-' }}" disabled>
-            </div>
-
-            <div class="col-md-4">
-              <label class="form-label">Payment Date</label>
-              <input type="text" class="form-control form-control-sm"
-                value="{{ \Carbon\Carbon::parse($receipt->PaymentDate)->format('d/m/Y') ?? '-' }}" disabled>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Rent Amount (KES)</label>
-            <input type="text" class="form-control" value="{{ number_format($receipt->RentAmount, 2) }}" disabled>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Service Charge (KES)</label>
-            <input type="text" class="form-control" value="{{ number_format($receipt->ServicesCharge, 2) }}" disabled>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Parking Fee (KES)</label>
-            <input type="text" class="form-control" value="{{ number_format($receipt->ParkingFee, 2) }}" disabled>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Other Charges (KES)</label>
-            <input type="text" class="form-control" value="{{ number_format($receipt->OtherCharges, 2) }}" disabled>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <label class="form-label"><strong>Total Due (KES)</strong></label>
-              <input type="text" class="form-control form-control-sm"
-                value="{{ number_format(($receipt->RentAmount ?? 0) + ($receipt->ServicesCharge ?? 0) + ($receipt->ParkingFee ?? 0) + ($receipt->OtherCharges ?? 0), 2) }}"
-                disabled>
-            </div>
-
-            <div class="col-md-4">
-              <label class="form-label"><strong>Amount Paid (KES)</strong></label>
-              <input type="text" class="form-control form-control-sm"
-                value="{{ number_format($receipt->AmountPaidNow ?? 0, 2) }}" disabled>
-            </div>
-
-            <div class="col-md-4">
-              <label class="form-label"><strong>Balance (KES)</strong></label>
-              <input type="text" class="form-control form-control-sm"
-                value="{{ number_format(($receipt->RentAmount ?? 0) + ($receipt->ServicesCharge ?? 0) + ($receipt->ParkingFee ?? 0) + ($receipt->OtherCharges ?? 0) - ($receipt->AmountPaidNow ?? 0), 2) }}"
-                disabled>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Payment Method</label>
-            <input type="text" class="form-control" value="{{ $receipt->code->Description ?? '-' }}" disabled>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Reference Number</label>
-            <input type="text" class="form-control" value="{{ $receipt->ReferenceNo ?? '-' }}" disabled>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Remarks</label>
-            <textarea class="form-control" rows="3" disabled>{{ $receipt->Remarks ?? '-' }}</textarea>
-          </div>
-        </form>
-      </div>
-
-      <div class="card-footer d-flex justify-content-between">
-        <a href="{{ route('rentreceipt.edit', $receipt->Id) }}" class="btn btn-primary">Edit</a>
-        <a href="{{ route('rentreceipt.index') }}" class="btn btn-secondary">Back</a>
-      </div>
+        </div>
     </div>
-  </div>
+</div>
 @endsection

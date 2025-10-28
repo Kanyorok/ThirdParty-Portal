@@ -35,7 +35,9 @@
          <input class="form-check-input" type="checkbox" name="Active" value="1" id="Active" checked>
          <label class="form-check-label" for="Active">Is Active?</label>
     </div>
-    <button type="submit" class="btn btn-primary">Save</button>
+     <button type="submit" class="btn btn-success"
+             onclick="this.disabled=true; this.innerText='Submitting...'; this.form.submit();">Save
+     </button>
   </form>
 </div>
 

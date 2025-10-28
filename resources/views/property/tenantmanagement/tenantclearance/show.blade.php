@@ -1,22 +1,19 @@
 @php use Carbon\Carbon; @endphp
 @extends('layouts.app')
 
-@section('title', 'Tenant Details')
+@section('title', 'Tenant Clearance')
 
 @section('content')
     <div class="container mt-5" style="max-width: 800px;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold">Tenant Clearance Details</h3>
-            <a href="#" class="btn btn-outline-secondary btn-sm">← Back to List</a>
-        </div>
 
         <form>
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
                     <div class="mb-3">
-                        <label class="form-label">Tenant</label>
+                        <label class="form-label">Tenant && Lease</label>
                         <input type="text" class="form-control"
-                               value="{{ $clearancetenant->lease->tenant->TenantName ?? '-' }}" readonly>
+                               value="Name: {{ $clearancetenant->lease->tenant->thirdParty->TradingName  ?? '-' }} &nbsp;&nbsp; LeaseNo: {{ $clearancetenant->lease->LeaseNumber ?? '-'}}"
+                               readonly>
                     </div>
 
                     <div class="mb-3">
@@ -26,25 +23,26 @@
                                readonly>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Final Inspection Done</label>
-                        <input type="text" class="form-control"
-                               value="{{ (int)$clearancetenant->FinalInspection === 1 ? 'Yes' : ((int)$clearancetenant->FinalInspection === 0 ? 'No' : '-') }}"
-                               readonly>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Dues Cleared</label>
-                        <input type="text" class="form-control"
-                               value="{{ (int)$clearancetenant->AllDuesPaid === 1 ? 'Yes' : ((int)$clearancetenant->AllDuesPaid === 0 ? 'No' : '-') }}"
-                               readonly>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Keys Returned</label>
-                        <input type="text" class="form-control"
-                               value="{{ (int)$clearancetenant->KeysReturned === 1 ? 'Yes' : ((int)$clearancetenant->KeysReturned === 0 ? 'No' : '-') }}"
-                               readonly>
+                    {{-- Three fields on one row --}}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Final Inspection Done</label>
+                            <input type="text" class="form-control"
+                                   value="{{ (int)$clearancetenant->FinalInspection === 1 ? 'Yes' : ((int)$clearancetenant->FinalInspection === 0 ? 'No' : '-') }}"
+                                   readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Dues Cleared</label>
+                            <input type="text" class="form-control"
+                                   value="{{ (int)$clearancetenant->AllDuesPaid === 1 ? 'Yes' : ((int)$clearancetenant->AllDuesPaid === 0 ? 'No' : '-') }}"
+                                   readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Keys Returned</label>
+                            <input type="text" class="form-control"
+                                   value="{{ (int)$clearancetenant->KeysReturned === 1 ? 'Yes' : ((int)$clearancetenant->KeysReturned === 0 ? 'No' : '-') }}"
+                                   readonly>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -64,9 +62,10 @@
                 </div>
 
                 <div class="card-footer bg-light d-flex justify-content-between">
-                    <a href="{{ route('tenantclearance.edit', $clearancetenant->Id) }}" class="btn btn-outline-primary"><i
-                            class="bi bi-pencil-square"></i> Edit</a>
-                    <a href="{{ route('tenantclearance.index') }}" class="btn btn-outline-secondary">Back</a>
+                    <a href="{{ route('tenantclearance.edit', $clearancetenant->Id) }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-square"></i> Edit
+                    </a>
+                    <a href="{{ route('tenantclearance.index') }}" class="btn btn-secondary">Back</a>
                 </div>
             </div>
         </form>

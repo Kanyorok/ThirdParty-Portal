@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Property\PropertyRegistry;
 
+use App\Models\PropertyManagement\PropertyUnit;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PropertyUnitRequest extends FormRequest
 {
@@ -25,7 +27,18 @@ class PropertyUnitRequest extends FormRequest
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
             'FloorID' => 'required|exists:t_PropertyFloor,Id',
-            'UnitCode' => 'required|string|max:50',
+            'UnitCode' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique((new PropertyUnit)->getTable())
+                    ->where(fn($query) => $query
+                        ->where('PropertyID', $this->PropertyID)
+                        ->where('BlockID', $this->BlockID)
+                        ->where('FloorID', $this->FloorID)
+                    )
+                    ->ignore($this->route('id'), 'Id'),
+            ],
             'UnitSize' => 'required|integer',
             'IsRentable' => 'required|boolean',
             'CurrentStatus' => 'required|boolean',

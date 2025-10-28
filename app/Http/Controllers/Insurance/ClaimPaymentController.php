@@ -6,25 +6,34 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Insurance\BancassuranceClaimPaymentRequest;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancassuranceClaim;
+use App\Models\Insurance\BancassuranceClaimAssessment;
 use App\Models\Insurance\BancassuranceClaimPayment;
 use App\Services\Insurance\BancassuranceClaimPaymentService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class ClaimPaymentController extends Controller
 {
-    //
+
 public function create()
 {
-    $unpaidClaims = BancassuranceClaim::all();
-    $payments = CodeDetail::where('CodeID','PaymentMethod')->get();
+    // IDs from CodeDetail
+    $approvedDecisionId = CodeDetail::where('CodeID', 'Decision')
+        ->where('Description', 'Approved')
+        ->value('ID');
 
-    return view('bancassurance.claims.payments.create', compact('unpaidClaims','payments'));
+    $unpaidClaims = BancassuranceClaimAssessment::with(['decision', 'claim.status'])
+        ->where('Decision', $approvedDecisionId)
+        ->get();
+
+    $payments = CodeDetail::where('CodeID', 'PaymentMethod')->get();
+
+
+    return view('bancassurance.claims.payments.create', compact('unpaidClaims', 'payments'));
 }
 
-public function index()
+
+    public function index()
 {
     $payments = BancassuranceClaimPayment::with('payment','claim')->get();
 
@@ -43,7 +52,7 @@ public function store(BancassuranceClaimPaymentRequest $request)
         Carbon::parse($validated['PaymentDate']),
         $validated['PaymentAmount'],
         $validated['PaymentReference'],
-        $validated['Note'],
+        $validated['Note'] ?? '',
         $validated['PaidBy'],
         $PaymentMethod,
         $request->user(),

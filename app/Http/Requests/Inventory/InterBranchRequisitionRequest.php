@@ -16,7 +16,6 @@ class InterBranchRequisitionRequest extends FormRequest
         return [
             'FromBranch' => 'required|exists:t_Branches,Id',
             'ToBranch' => 'required|exists:t_Branches,Id|different:FromBranch',
-            'CreatedOn' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.Item' => 'required|exists:t_Items,Id',
             'items.*.ItemCode' => 'required|exists:t_Items,ItemCode',

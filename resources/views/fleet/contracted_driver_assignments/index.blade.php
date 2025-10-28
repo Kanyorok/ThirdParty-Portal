@@ -14,8 +14,8 @@
                     <th>#</th>
                     <th>Vehicle</th>
                     <th>Driver</th>
-                    <th>Assignment Date</th>
-                    <th>Unassignment Date</th>
+                    <th>Assigned On</th>
+                    <th>Unassigned On</th>
                     <th>Purpose</th>
                     <th>Notes</th>
                 </tr>

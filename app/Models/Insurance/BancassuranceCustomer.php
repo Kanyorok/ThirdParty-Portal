@@ -2,6 +2,8 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Auth\User;
+use App\Models\ThirdParty\ThirdParties;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Core\CodeDetail;
@@ -19,16 +21,11 @@ class BancassuranceCustomer extends Model
     protected $primaryKey = 'Id';
 
     protected $fillable = [
+        'ThirdPartyId',
         'ReferralID',
-        'FullName',
-        'NationalID',
-        'KRAPIN',
         'DateOfBirth',
         'Gender',
         'MaritalStatus',
-        'PhoneNumber',
-        'Email',
-        'Address',
         'Occupation',
         'CreatedBy',
         'ModifiedBy',
@@ -60,4 +57,23 @@ class BancassuranceCustomer extends Model
         return $this->belongsTo(CodeDetail::class, 'Occupation', 'ID');
     }
 
+    public function modifiedByUser()
+    {
+        return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'CreatedBy', 'Id');
+    }
+
+    public function policies()
+    {
+        return $this->hasMany(BancassurancePolicy::class, 'CustomerID', 'Id');
+    }
+
+    public function thirdParty()
+    {
+        return $this->belongsTo(ThirdParties::class, 'ThirdPartyId', 'Id');
+    }
 }

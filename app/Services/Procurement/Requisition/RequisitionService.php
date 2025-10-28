@@ -95,7 +95,8 @@ class RequisitionService {
             t_CodeDetails.Description as Status,
             t_Requisitions.CreatedOn,
             t_Requisitions.Id,
-            SUM(isnull(t_RequisitionLines.ExpectedPrice,0)) as ExpectedPrice,
+            -- Sum of (Quantity * ExpectedPrice) to get the total cost per requisition
+            SUM(ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)) as ExpectedPrice,
             COUNT(t_RequisitionLines.Id) as itemcount,
             t_ConsolidatedProcurementPlan.Title + \' - \' + t_ConsolidatedProcurementPlan.ReferenceNumber as PlanTitle
         '))
@@ -135,7 +136,7 @@ class RequisitionService {
                 't_Requisitions.CreatedOn',
                 DB::raw('isnull(t_Users.Name, t_Requisitions.CreatedBy) AS CreatedBy'),
                 't_Requisitions.Id',
-                DB::raw('SUM(ISNULL(t_RequisitionLines.ExpectedPrice, 0)) AS ExpectedPrice'),
+                DB::raw('SUM(ISNULL(t_RequisitionLines.Quantity, 0) * ISNULL(t_RequisitionLines.ExpectedPrice, 0)) AS ExpectedPrice'),
                 DB::raw('COUNT(t_RequisitionLines.Id) AS itemcount'),
                 DB::raw("t_ConsolidatedProcurementPlan.Title + ' - ' + t_ConsolidatedProcurementPlan.ReferenceNumber AS PlanTitle")
             ])

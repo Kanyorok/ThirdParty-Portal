@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetServiceAlertRequest;
 use App\Services\FleetManagement\FleetServiceAlertService;
 use App\Models\Fleet\FleetMaintenanceSchedule;
+use App\Models\Fleet\FleetServiceAlert;
 
 class FleetServiceAlertController extends Controller
 {
@@ -19,6 +20,7 @@ class FleetServiceAlertController extends Controller
     // List upcoming service alerts
     public function index()
     {
+        $this->authorize('viewAny', FleetServiceAlert::class);
         $schedules = FleetMaintenanceSchedule::with(['vehicle', 'maintenanceType', 'alert'])
             ->whereDate('ScheduledDate', '>=', now()->toDateString())
             ->orderBy('CreatedOn')
@@ -49,8 +51,9 @@ class FleetServiceAlertController extends Controller
 
 
     public function acknowledge(int $scheduleId)
-    {
-        $this->service->acknowledgeFromSchedule($scheduleId);
+{
+    $this->authorize('acknowledge', FleetServiceAlert::class);
+    $this->service->acknowledgeFromSchedule($scheduleId);
 
         return redirect()->route('fleet.alerts.index')
             ->with('success', 'Service alert acknowledged successfully.');

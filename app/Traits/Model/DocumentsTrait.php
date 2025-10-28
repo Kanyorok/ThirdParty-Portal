@@ -2,19 +2,29 @@
 
 namespace App\Traits\Model;
 
+use App\Enums\Core\ExtensionsEnum;
 use App\Enums\Core\ModulesEnum;
 use App\Exceptions\ErroredException;
 use App\Models\Auth\User;
 use App\Models\DMS\Document;
+use App\Models\DMS\DocumentRelation;
 use App\Services\DMS\DocumentService;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Http\UploadedFile;
 
 trait DocumentsTrait
 {
-    public function documents(): MorphMany
+    public function documents(): HasManyThrough
     {
-        return $this->morphMany(__CLASS__, 'related', "Related", "RelatedID", 'Id');
+        return $this->hasManyThrough(
+            Document::class,
+            DocumentRelation::class,
+            'RelatedID', // Foreign key on DocumentRelation table
+            'Id', // Foreign key on Document table
+            'Id', // Local key on current model
+            'DocumentId' // Local key on DocumentRelation table
+        )->where('t_DocumentRelations.Related', self::getPrimaryKey());
+
     }
 
 
@@ -27,9 +37,26 @@ trait DocumentsTrait
         //     throw new ErroredException("Implement UserActorTrait in model");
         // }
 
-        $Related = self::getPrimaryKey();
         $RelatedId = $this->{$this->primaryKey};
 
-        return DocumentService::createInternal($module, $file, $actor, $permissions, $Related, $RelatedId)->document;
+        return DocumentService::createInternal($module, $file, $actor, $permissions, self::getPrimaryKey(), $RelatedId)->document;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function newDocumentFromContent(ModulesEnum $module, ExtensionsEnum $extension, string $fileName, string $content, User $actor, array|string $permissions): Document
+    {
+        $RelatedId = $this->{$this->primaryKey};
+        return DocumentService::createInternalFileContent($module, $extension, $fileName, $content, $actor, $permissions, self::getPrimaryKey(), $RelatedId)->document;
+    }
+
+    /**
+     * @throws ErroredException
+     */
+    public function newVersionFromUpload(Document $document, UploadedFile $file, User $actor): Document
+    {
+        $RelatedId = $this->{$this->primaryKey};
+        return (new DocumentService($document))->newVersionUpload($file, $actor, self::getPrimaryKey(), $RelatedId)->document;
     }
 }

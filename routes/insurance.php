@@ -18,12 +18,23 @@ use App\Http\Controllers\Insurance\InsuranceProviderProductController;
 use App\Http\Controllers\Insurance\PolicyController;
 use App\Http\Controllers\Insurance\PremiumController;
 use App\Http\Controllers\Insurance\PricingRuleController;
-use App\Http\Controllers\Insurance\ProductLifecycleController;
 use App\Http\Controllers\Insurance\SettingsController;
 use App\Http\Controllers\Insurance\ReportsController;
+use App\Http\Controllers\Insurance\MedicalFundController;
+use App\Http\Controllers\Insurance\MedicalFundContributionController;
+use App\Http\Controllers\Insurance\MedicalFundDisbursementController;
 use App\Http\Controllers\Insurance\UnderwritingController;
+use App\Http\Controllers\Insurance\MedicalFundBeneficiaryController;
+use App\Http\Controllers\Insurance\MedicalFundContributorController;
+use App\Http\Controllers\Insurance\ContributorBeneficiaryController; // new, see quick store below
+use App\Http\Controllers\Insurance\MedicalFundPackageController;
+
+
+
+
 
 Route::namespace('Insurance')->prefix('insurance')->group(function () {
+
 
     Route::prefix('bancassurance/referrals')->name('bancassurance.referrals.')->group(function () {
         Route::get('create', [BancassuranceReferralController::class, 'create'])->name('create');
@@ -40,15 +51,16 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
     });
 
     Route::prefix('bancassurance/customers')->name('bancassurance.customers.')->group(function () {
-        Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('check', [CustomerController::class, 'check'])->name('check');
-        Route::get('create', [CustomerController::class, 'create'])->name('create');
-        Route::post('store', [CustomerController::class, 'store'])->name('store');
-        Route::get('show/{Id}', [CustomerController::class, 'show'])->name('show');
-        Route::delete('delete/{Id}', [CustomerController::class, 'destroy'])->name('destroy');
-        Route::get('edit/{Id}', [CustomerController::class, 'edit'])->name('edit');
-        Route::put('update/{Id}', [CustomerController::class, 'update'])->name('update');
-        Route::get('{customerId}/portfolio', [CustomerController::class, 'portfolio'])->name('portfolio');
+    Route::get('/', [CustomerController::class, 'index'])->name('index');
+    Route::get('check', [CustomerController::class, 'check'])->name('check');
+    Route::get('create', [CustomerController::class, 'create'])->name('create');
+    Route::post('store', [CustomerController::class, 'store'])->name('store');
+    Route::get('show/{Id}', [CustomerController::class, 'show'])->name('show');
+    Route::delete('delete/{Id}', [CustomerController::class, 'destroy'])->name('destroy');
+    Route::get('edit/{Id}', [CustomerController::class, 'edit'])->name('edit');
+    Route::put('update/{Id}', [CustomerController::class, 'update'])->name('update');
+    Route::get('{customerId}/portfolio', [CustomerController::class, 'portfolio'])->name('portfolio');
+    Route::get('{customerId}/referral-defaults', [CustomerController::class, 'getReferralAndDefaults'])->name('referral-defaults');
     });
     Route::prefix('bancassurance/customers/beneficiaries')->name('bancassurance.customers.beneficiaries.')->group(function () {
         Route::get('create', [CustomerBeneficiaryController::class, 'create'])->name('create');
@@ -59,7 +71,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('/', [CustomerCommunicationController::class, 'index'])->name('index');
         Route::get('create', [CustomerCommunicationController::class, 'create'])->name('create');
         Route::post('store', [CustomerCommunicationController::class, 'store'])->name('store');
-        Route::get('show', [CustomerCommunicationController::class, 'show'])->name('show');
+        Route::get('show/{Id}', [CustomerCommunicationController::class, 'show'])->name('show');
         Route::delete('delete/{Id}', [CustomerCommunicationController::class, 'destroy'])->name('destroy');
         Route::get('edit/{Id}', [CustomerCommunicationController::class, 'edit'])->name('edit');
         Route::put('update/{Id}', [CustomerCommunicationController::class, 'update'])->name('update');
@@ -71,6 +83,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::post('store', [PolicyController::class, 'store'])->name('store');
         Route::get('review', [PolicyController::class, 'reviewIndex'])->name('reviewIndex');
         Route::get('products/{insurerId}', [PolicyController::class, 'getProductsByInsurer'])->name('policy.products');
+        Route::get('rideraddons/{productId}', [PolicyController::class, 'getRiderAddOnsByProduct'])->name('policy.rideraddons');
         Route::get('{id}/review', [PolicyController::class, 'review'])->name('review'); // ✅ Add this
         Route::post('{id}/submit', [PolicyController::class, 'submitForUnderwriting'])->name('submitUnderwriting');
         Route::get('{id}/feedback', [PolicyController::class, 'feedbackForm'])->name('feedbackForm');
@@ -82,8 +95,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
         Route::post('{id}/endorsement/store', [PolicyController::class, 'storeEndorsement'])->name('storeEndorsement');
         Route::get('endorsements/list', [PolicyController::class, 'endorsementList'])->name('endorsements.list');
-        Route::get('{id}/endorsement', [PolicyController::class, 'endorsementForm'])->name('endorsementForm');
-        Route::get('register', [PolicyController::class, 'register'])->name('register');
+            Route::get('register', [PolicyController::class, 'register'])->name('register');
         Route::post('{id}/renew/store', [PolicyController::class, 'storeRenewal'])->name('storeRenewal');
         Route::get('{id}/show', [PolicyController::class, 'show'])->name('show');
     });
@@ -114,18 +126,22 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('/', [ClaimController::class, 'index'])->name('index');
         Route::get('create', [ClaimController::class, 'create'])->name('create');
         Route::post('store', [ClaimController::class, 'store'])->name('store');
-        Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
-        Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
+        Route::get('list', [ClaimController::class, 'assessmentlist'])->name('assessment_list');
+        Route::get('list/{id}', [ClaimController::class, 'assessmentshow'])->name('assessment_show');
+        Route::get('edit/{id}', [ClaimController::class, 'assessmentedit'])->name('assessment_edit');
+        Route::put('update/{id}', [ClaimController::class, 'assessmentupdate'])->name('assessment_update');
+        // Route::get('{claimId}/documents', [ClaimController::class, 'documentUploadForm'])->name('documents');
+        // Route::post('{claimId}/documents/upload', [ClaimController::class, 'uploadDocuments'])->name('documents.upload');
         Route::get('{id}/assess', [ClaimController::class, 'assessForm'])->name('assessForm');
         Route::post('{id}/assess/store', [ClaimController::class, 'storeAssessment'])->name('assess');
 
         // ✅ Fix these two lines:
-        Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
-        Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
-        Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
-        Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
-        Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
-        Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.index');
+        // Route::get('{id}/approve', [ClaimController::class, 'approvalForm'])->name('approveForm');
+        // Route::post('{id}/approve/store', [ClaimController::class, 'storeApproval'])->name('approveStore');
+        // Route::get('approval/list', [ClaimController::class, 'approvalQueue'])->name('approvalQueue');
+        // Route::get('{id}/settle', [ClaimController::class, 'paymentForm'])->name('settleForm');
+        // Route::post('{id}/settle/store', [ClaimController::class, 'storePayment'])->name('settle.store');
+        // Route::get('payments', [ClaimController::class, 'paymentIndex'])->name('payments.claims.index');
         Route::get('{id}/close', [ClaimClosureController::class, 'closeForm'])->name('closeForm');
         Route::post('{id}/close', [ClaimClosureController::class, 'storeClosure'])->name('storeClosure');
         Route::get('closed', [ClaimClosureController::class, 'closedClaimsIndex'])->name('closed');
@@ -182,8 +198,7 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
     });
 
 
-    Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(function () {
-
+        Route::prefix('bancassurance/products')->name('bancassurance.products.')->group(function () {
         // Product Setup
         Route::get('/', [InsuranceProductController::class, 'index'])->name('index');
         Route::get('create', [InsuranceProductController::class, 'create'])->name('create');
@@ -191,8 +206,6 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('{Id}/edit', [InsuranceProductController::class, 'edit'])->name('edit');
         Route::put('{Id}/update', [InsuranceProductController::class, 'update'])->name('update');
         Route::delete('delete/{Id}', [InsuranceProductController::class, 'destroy'])->name('destroy');
-        // Route::get('{Id}/map', [InsuranceProductController::class, 'mapForm'])->name('map');
-        // Route::post('{Id}/map', [InsuranceProductController::class, 'storeMap'])->name('map.store');
 
 
     });
@@ -224,10 +237,27 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         Route::get('/{ProductId}', [PricingRuleController::class, 'getProductByProvider'])->name('getProductByProvider');
     });
 
-    Route::prefix('bancassurance/lifecycle')->name('bancassurance.lifecycle.')->group(function () {
-        Route::get('/', [ProductLifecycleController::class, 'index'])->name('index');
-        Route::post('toggle/{id}', [ProductLifecycleController::class, 'toggleStatus'])->name('toggle');
-    });
+    // Route::prefix('medical')->as('bancassurance.')->group(function () {
+ 
+    //     // Medical Funds (no hyphen → clean names)
+    //     Route::resource('medicalfunds', MedicalFundController::class)
+    //         ->parameters(['medicalfunds' => 'medicalfund']);
+ 
+    //     // Nested: Beneficiaries
+    //     Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
+    //         ->shallow()
+    //         ->parameters(['medicalfunds' => 'medical_fund','beneficiaries' => 'beneficiary']);
+ 
+    //     // Nested: Contributions
+    //     Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
+    //         ->shallow()
+    //         ->parameters(['medicalfunds' => 'medical_fund','contributions' => 'contribution']);
+ 
+    //     // Nested: Disbursements
+    //     Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
+    //         ->shallow()
+    //         ->parameters(['medicalfunds' => 'medical_fund','disbursements' => 'disbursement']);
+    // });
 
     Route::prefix('bancassurance/settings')->name('bancassurance.settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
@@ -244,3 +274,55 @@ Route::namespace('Insurance')->prefix('insurance')->group(function () {
         'show' => 'insurance-reports.show'
     ]);
 });
+
+Route::middleware(['web','auth'])
+    ->prefix('insurance/bancassurance')   // keep your current base URL
+    ->as('bancassurance.')
+    ->group(function () {
+
+        // Medical Funds
+        Route::resource('medicalfunds', MedicalFundController::class)
+            ->parameters(['medicalfunds' => 'medical_fund']);
+
+        // Beneficiaries (nested under fund) — shallow member routes:
+        // index/create/store need {medical_fund}; show/edit/update/destroy use shallow names.
+        Route::resource('medicalfunds.beneficiaries', MedicalFundBeneficiaryController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'beneficiaries' => 'beneficiary']);
+
+        // Contributions (nested under fund) — shallow for member routes
+        Route::resource('medicalfunds.contributions', MedicalFundContributionController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'contributions' => 'contribution']);
+
+        // Disbursements (nested under fund) — shallow for member routes
+        Route::resource('medicalfunds.disbursements', MedicalFundDisbursementController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'disbursements' => 'disbursement']);
+
+        // Packages (nested under fund) — shallow for member routes
+        Route::resource('medicalfunds.packages', MedicalFundPackageController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'packages' => 'package']);
+
+        // Contributors (nested under fund) — shallow for member routes
+        Route::resource('medicalfunds.contributors', MedicalFundContributorController::class)
+            ->shallow()
+            ->parameters(['medicalfunds' => 'medical_fund', 'contributors' => 'contributor']);
+
+        // Quick add beneficiary from contributor show page
+        Route::post('contributors/{contributor}/beneficiaries', [ContributorBeneficiaryController::class, 'store'])
+            ->name('contributors.beneficiaries.store');
+
+        // Coverage remaining (AJAX): only {contributor} in the URL (matches your JS)
+        // Controller signature: remainingLimit(Request $request, MedicalFundContributor $contributor)
+        Route::get('contributors/{contributor}/coverage-remaining',
+            [MedicalFundDisbursementController::class, 'remainingLimit']
+        )->name('coverage.remaining');
+
+        // Contributor options (AJAX): beneficiaries + coverages for a contributor in a given fund
+        // Controller signature: options(MedicalFund $medical_fund, MedicalFundContributor $contributor)
+        Route::get('medicalfunds/{medical_fund}/contributors/{contributor}/options',
+            [MedicalFundDisbursementController::class, 'options']
+        )->name('medicalfunds.contributors.options');
+    });

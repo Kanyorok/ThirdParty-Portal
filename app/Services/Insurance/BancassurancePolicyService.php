@@ -11,6 +11,7 @@ use App\Models\Insurance\BancassuranceCustomer;
 use App\Models\Insurance\BancassurancePolicy;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\InsuranceProduct;
+use App\Models\Insurance\InsuranceProductRider;
 use App\Models\Insurance\InsuranceProvider;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
@@ -35,9 +36,10 @@ class BancassurancePolicyService
         Carbon $PolicyEndDate,
         CodeDetail $PaymentFrequency,
         ?BancAssuranceReferral $ReferralID = null,
-        ?Carbon                $IssuedDate = null,
-        ?Carbon                $ExpiryDate = null,
-        bool                   $IsActive = true,
+        ?InsuranceProductRider $RiderAddOn = null,
+        ?Carbon $IssuedDate = null,
+        ?Carbon $ExpiryDate = null,
+        bool    $IsActive = true,
         InsurancePolicyStatus  $Status,
         User                   $user
     ): self
@@ -61,6 +63,7 @@ class BancassurancePolicyService
             'PolicyEndDate' => $PolicyEndDate,
             'PaymentFrequency' => $PaymentFrequency->ID,
             'ReferralID' => $ReferralID->Id ?? null,
+            'RiderAddOn' => $RiderAddOn->Id ?? null,
             'IssuedDate' => $IssuedDate,
             'ExpiryDate' => $ExpiryDate,
             'IsActive' => $IsActive,
@@ -73,7 +76,6 @@ class BancassurancePolicyService
         activity()->causedBy($user->Id)->performedOn($policy)->event('create')->log("Added Policy {$policy->Id}.");
         return new self($policy);
     }
-    
 
 
     public static function uploadpolicy(
@@ -83,7 +85,7 @@ class BancassurancePolicyService
     ): self {
         if ($document) {
         $policy->newDocument(
-            ModulesEnum::Property,
+            ModulesEnum::Insurance,
             $document,
             [PermissionEnum::BancassurancePolicyView->value],
             $user

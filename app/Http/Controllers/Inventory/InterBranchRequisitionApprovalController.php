@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory\InterBranchRequisition;
 use App\Services\Inventory\InterBranchRequisitionService;
 use Illuminate\Http\Request;
+use App\Models\Core\Branch;
 use Illuminate\Support\Facades\Auth;
 
 class InterBranchRequisitionApprovalController extends Controller
@@ -17,16 +18,28 @@ class InterBranchRequisitionApprovalController extends Controller
     {
         $this->service = $service;
     }
-
     public function index(Request $request)
     {
+        $branchId = auth()->user()->employee?->BranchId;
+        $currentBranch = Branch::findOrFail($branchId);
+        
+        $isHeadOffice = $currentBranch->IsHQ;
 
-        $pendingStatus = InterBranchRequisitionEnum::Submitted->value;
-        $pendingRequisitions = InterBranchRequisition::where('Status', $pendingStatus)->get();
+        $query = InterBranchRequisition::where('Status', InterBranchRequisitionEnum::Submitted->value);
+
+        if (!$isHeadOffice) {
+            $query->where('ToBranch', $branchId);
+        }
+
+        $pendingRequisitions = $query->get();
 
         $requisition = null;
         if ($request->has('ReqId') && !empty($request->ReqId)) {
             $requisition = InterBranchRequisition::where('Id', $request->ReqId)->first();
+
+            if ($requisition && !$isHeadOffice && $requisition->ToBranch != $branchId) {
+                return redirect()->back()->with('error', 'You are not authorized to view this requisition.');
+            }
 
             if ($requisition) {
                 $requisition->load(['fromBranch', 'toBranch', 'creator', 'items', 'items.item']);
@@ -39,9 +52,9 @@ class InterBranchRequisitionApprovalController extends Controller
         return view('inventory.interbranchrequisition.approval.index', [
             'pendingRequisitions' => $pendingRequisitions,
             'requisition' => $requisition,
+            'isHeadOffice' => $isHeadOffice, 
         ]);
     }
-
 
     public function submitDecision(Request $request)
     {

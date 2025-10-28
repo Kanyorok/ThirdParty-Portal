@@ -16,7 +16,7 @@
             <tr>
                 <th>#</th>
                 <th>Fuel Name</th>
-                <th>Description</th>
+                <th>Notes</th>
                 <th>Active</th>
                 <th>Actions</th>
             </tr>

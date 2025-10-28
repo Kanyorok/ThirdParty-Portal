@@ -4,8 +4,10 @@ namespace App\Http\Requests\HRM;
 
 use App\Enums\Employee\GenderEnum;
 use App\Exceptions\ErroredException;
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
 use App\Models\HRM\Department;
+use App\Models\HRM\Employee;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -27,8 +29,12 @@ class AddEmployeeRequest extends FormRequest
             'FirstName' => ['required', 'string', 'max:250'],
             'MiddleName' => ['nullable', 'string', 'max:250'],
             'LastName' => ['required', 'string', 'max:250'],
-            'Phone' => ['required', 'string', /*'regex:/^([0-9\s\-\+\(\)]*)$/', 'min:10'*/],
-            'Email' => ['required', 'email:rfc,dns', 'max:250'],
+            // E.164 format: +<country code><national number>, total length 8-15 digits
+            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
+            'Email' => ['required', Rule::email()
+                ->rfcCompliant(strict: false)
+                ->validateMxRecord()
+                ->preventSpoofing(), 'max:250'],
             'Department' => ['required'],
             'Branch' => ['required'],
             'Gender' => ['required', 'string'],
@@ -115,5 +121,34 @@ class AddEmployeeRequest extends FormRequest
             return $department;
         }
         throw ValidationException::withMessages(['Department' => 'invalid department']);
+    }
+
+    public function getPhoneNumber(): string
+    {
+        $input = (string) $this->validated('Phone');
+        // Trim spaces and enforce E.164 normalization
+        $normalized = preg_replace('/\s+/', '', $input);
+
+        if (!is_string($normalized) || !preg_match('/^\+[1-9]\d{7,14}$/', $normalized)) {
+            throw ValidationException::withMessages(['Phone' => 'invalid phone number, use E.164 e.g. +12025550123']);
+        }
+
+        $userDup = User::where('Phone', $normalized)->exists();
+        $empDup = Employee::where('Phone', $normalized)->exists();
+
+        if ($userDup || $empDup) {
+            throw ValidationException::withMessages(['Phone' => 'phone already exists']);
+        }
+        return $normalized;
+    }
+
+    public function getEmail(): string
+    {
+        $email = $this->validated('Email');
+        if (User::where('Email', $email)->exists() || Employee::where('Email', $email)->exists()) {
+            throw ValidationException::withMessages(['Email' => 'email already exists']);
+        }
+        return $email;
+
     }
 }

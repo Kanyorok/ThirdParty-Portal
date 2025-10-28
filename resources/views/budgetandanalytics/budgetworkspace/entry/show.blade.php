@@ -28,7 +28,7 @@
         <div class="row mb-3">
             <div class="col-md-12">
                 <label for="scenario" class="form-label">Budget Name: </label>
-                <b>{{$budget->budget->Name}}</b>
+                <b>{{$budget->Name}}</b>
             </div>
 
             {{-- <div class="col-md-6">
@@ -119,19 +119,25 @@
                             </td>
 
                             <td>
-                                <a href="{{ route('budgetprojections.edit', $projection['Id']) }}"
-                                   class="btn btn-sm btn-info">
-                                    ✏️ Edit
-                                </a>
+                                @if($budget->Status==='approved')
+                                    <span class="badge rounded-pill bg-success text-white text-decoration-none">
+                                        Approved Budget
+                                    </span>
+                                @else
+                                    <a href="{{ route('budgetprojections.edit', $projection['Id']) }}"
+                                       class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
 
-                                <button type="button"
-                                        class="btn btn-sm btn-danger custom-delete-btn"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#customDeleteConfirmModal"
-                                        data-name="{{ $projection['Name'] }}" {{-- Pass item name --}}
-                                        data-route="{{ route('budgetprojections.deleteProjection', $projection['Id']) }}"> {{-- Pass delete route --}}
-                                    Delete
-                                </button>
+                                    <button type="button"
+                                            class="btn btn-sm btn-danger custom-delete-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#customDeleteConfirmModal"
+                                            data-name="{{ $projection['Name'] }}" {{-- Pass item name --}}
+                                            data-route="{{ route('budgetprojections.deleteProjection', $projection['Id']) }}"> {{-- Pass delete route --}}
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

@@ -50,7 +50,7 @@ class FleetModelPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function edit(User $user, FleetModel $fleetModel): bool
+    public function edit(User $user): bool
     {
         return $user->can(PermissionEnum::FleetModelUpdate->value);
     }

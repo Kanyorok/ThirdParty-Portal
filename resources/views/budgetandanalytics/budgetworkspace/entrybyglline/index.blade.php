@@ -1,91 +1,112 @@
 @extends('layouts.app')
 @section('title', 'Budget Entry Listing')
+
 @section('content')
-    <div class="card mt-4">
+    <div class="container mt-0">
+        <div class="card shadow-sm rounded-3">
+            <!-- Header -->
 
-{{--        <div class="card-header bg-dark text-white">📑 Budget Entries by Line (Manual Entry)</div>--}}
-        <div class="card-body">
-            <!-- Filters -->
-            <form class="row g-3 mb-3">
-                {{-- <div class="col-md-4">
-                    <label class="form-label">Budget Period</label>
-                    <select class="form-select">
-                        <option selected>FY2025-Q1</option>
-                        <option>FY2025-Q2</option>
-                    </select>
-                </div> --}}
-                {{-- <div class="col-md-4 d-flex align-items-end">
-                    <button class="btn btn-primary w-100">Filter</button>
-                </div> --}}
-            </form>
-            <div>
-                <p class="text-muted">This page lists all budget entries by budget line. You can view, edit, or delete
-                    entries as needed.</p>
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3">
+                <h6 class="mb-0 text-primary">
+                    <i class="fas fa-file-invoice-dollar me-2"></i> Entries by Line
+                </h6>
+                <a href="{{ route('entrybyglline.create') }}" class="btn btn-info btn-sm">
+                    <i class="fas fa-plus me-1"></i> Add Entry
+                </a>
             </div>
 
-            <!-- Budget Table -->
-            <div class="mb-2 d-flex justify-content-between">
-                <a href="{{ route('entrybyglline.create') }}" class="btn btn-success">➕ Add Entry</a>
-            </div>
-            <div style="overflow-x: auto;">
-                @if($groupedEntries->count())
-                    <table class="table table-bordered table-striped text-center" style="min-width: 800px;">
-                        <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Budget</th>
-                            <th>Budget Line</th>
-                            <th>Total Allocation</th>
-                            <th>Source</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
 
-                        @foreach ($groupedEntries as $budgetId => $entries)
-                            @php
-                                $item = $entries->first();
-                                $totalAllocation = $entries->flatMap(function($entry) { return $entry->allocations ?? collect(); })->sum('Allocation');
-                            @endphp
+            <!-- Body -->
+            <div class="card-body p-3">
+                <p class="text-muted mb-3" style="font-size: 14px;">
+                    Listing of manual budget entries grouped by budget line. You can view details, check allocations, or
+                    delete entries.
+                </p>
+
+                <div class="table-responsive">
+                    @if($groupedEntries->count())
+                        <table
+                            class="table table-bordered table-hover table-striped align-middle text-center entry-table"
+                            style="min-width: 850px;">
+                            <thead class="table-light">
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $item->budget->Name ?? $item->BudgetID }}</td>
-                                <td>
-                                    <a href="{{ route('entrybyglline.glview', $budgetId) }}"
-                                       class="btn btn-sm btn-info">View Budget Lines</a>
-                                </td>
-                                <td>{{ number_format($totalAllocation, 2) }}</td>
-                                <td>Manual Entry</td>
-                                <td style="width: 200px; white-space: nowrap;">
-                                    <a href="{{ route('entrybyglline.show', $item->BudgetID) }}"
-                                       class="btn btn-sm btn-primary">👁️</a>
-                                    {{-- <form action="{{ route('entrybyglline.destroy', $item->Id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this entry?')">🗑️</button>
-                                    </form> --}}
-                                    <button type="button"
-                                            class="btn btn-sm btn-danger custom-delete-btn"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#customDeleteConfirmModal"
-                                            data-name="{{ $item->budget->Name  }}" {{-- Pass item name --}}
-                                            data-route="{{route('entrybyglline.destroy', $item->Id)}}"> {{--Pass delete route--}}
-                                        🗑️
-                                    </button>
-                                </td>
+                                <th>#</th>
+                                <th>Budget</th>
+                                <th>Budget Line</th>
+                                <th>Total Allocation</th>
+                                {{--                                <th>Source</th>--}}
+                                <th class="text-center">Actions</th>
                             </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <div class="alert alert-info text-center">
-                        <strong>No budget entries found.</strong> Please add a new entry to get started.
-                    </div>
-                @endif
+                            </thead>
+                            <tbody>
+                            @foreach ($groupedEntries as $budgetId => $entries)
+                                @php
+                                    $item = $entries->first();
+                                    $totalAllocation = $entries->flatMap(function($entry) {
+                                        return $entry->allocations ?? collect();
+                                    })->sum('Allocation');
+                                @endphp
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td>{{ $item->budget->Name ?? $item->BudgetID }}</td>
+                                    <td>
+                                        <a href="{{ route('entrybyglline.glview', $budgetId) }}"
+                                           class="btn btn-sm btn-outline-info" title="View Budget Lines">
+                                            <i class="fas fa-stream"></i>
+                                        </a>
+                                    </td>
+                                    <td>{{ number_format($totalAllocation, 2) }}</td>
+                                    {{--                                    <td><span class="badge bg-secondary">Manual Entry</span></td>--}}
+                                    <td class="text-center" style="white-space: nowrap;">
+                                        <a href="{{ route('entrybyglline.show', $item->BudgetID) }}"
+                                           class="btn btn-sm btn-outline-primary me-1" title="View Entry">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger custom-delete-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#customDeleteConfirmModal"
+                                                data-name="{{ $item->budget->Name }}"
+                                                data-route="{{ route('entrybyglline.destroy', $item->Id) }}"
+                                                @if($item->budget->Status === 'approved') disabled @endif
+                                        >
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <div class="text-center p-4 border rounded-3 bg-light">
+                            <p class="mb-2 text-muted">
+                                <i class="fas fa-info-circle me-2 text-info"></i>
+                                No budget entries found.
+                            </p>
+                            <a href="{{ route('entrybyglline.create') }}" class="btn btn-info btn-sm">
+                                <i class="fas fa-plus-circle me-1"></i> Add Entry
+                            </a>
+                        </div>
+                    @endif
+                </div>
             </div>
-
         </div>
-</div>
-    @include('components.modals.delete-confirm')
+    </div>
 
+    @include('components.modals.delete-confirm')
+@endsection
+
+@section('styles')
+    <style>
+        .entry-table {
+            font-size: 13px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .entry-table th,
+        .entry-table td {
+            vertical-align: middle;
+            text-align: center;
+        }
+    </style>
 @endsection

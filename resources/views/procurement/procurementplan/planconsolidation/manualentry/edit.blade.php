@@ -81,8 +81,8 @@
                     <select name="budget_line_id" id="budget_line_id" class="form-select" required>
                         @foreach ($budgetLines as $budgetLine)
                             <option
-                                value="{{ $budgetLine->BudgetLineID }}" {{ $lineItem->BudgetLineID == $budgetLine->BudgetLineID ? 'selected' : '' }}>
-                                {{ $budgetLine->Description }}
+                                value="{{ $budgetLine->Id }}" {{ $lineItem->BudgetLineID == $budgetLine->Id ? 'selected' : '' }}>
+                                {{ $budgetLine->LineName }}
                             </option>
                         @endforeach
                     </select>

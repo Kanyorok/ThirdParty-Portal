@@ -55,15 +55,15 @@ return [
                     'private' => 0660,
                 ],
                 'dir' => [
-                    'public' => 0765,
-                    'private' => 0760,
+                    'public' => 0776,
+                    'private' => 0765,
                 ],
             ],
         ],
 
         'temp' => [
             'driver' => 'local',
-            'root' => storage_path('app/temp'),
+            'root' => storage_path('app/temp'), //sys_get_temp_dir(),
             'permissions' => [
                 'file' => [
                     'public' => 0664,

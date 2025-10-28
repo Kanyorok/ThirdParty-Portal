@@ -20,6 +20,7 @@ use App\Models\Communication\Email;
 use App\Models\Communication\EmailConversation;
 use App\Models\CRM\Campaign;
 use App\Models\CRM\CampaignParty;
+use App\Models\Fleet\FleetDriver;
 use App\Models\CRM\Contact;
 use App\Models\CRM\Lead;
 use App\Models\DMS\Image;
@@ -99,6 +100,33 @@ class CRMEmailService
     {
         return self::create($actor, $subject, $body, $priorityEnum, [[$user->Name => $user->Email]], User::getPrimaryKey(), $user->Id, $cc, replyTo: $replyTo);
     }
+
+    /**
+     * Create an email record with explicit to/cc/bcc arrays. Useful for parties that don't have a dedicated wrapper.
+     *
+     * @param User $actor The acting user who creates the email
+     * @param string $subject
+     * @param string $body
+     * @param array $to Array of associative arrays like [["Name" => "email@domain"]]
+     * @param string $Party Optional party key (e.g., 'ThirdParty')
+     * @param string $PartyID Optional party id
+     * @param array $cc Array of associative arrays like [["Name" => "email@domain"]]
+     * @param array $bcc Array of associative arrays like [["Name" => "email@domain"]]
+     * @param EmailPriorityEnum|null $priorityEnum
+     * @param Email|null $replyTo
+     * @return CRMEmailService
+     */
+    public static function createRaw(User $actor, string $subject, string $body, array $to, string $Party = '', string $PartyID = '', array $cc = [], array $bcc = [], EmailPriorityEnum $priorityEnum = null, Email $replyTo = null): CRMEmailService
+    {
+        return self::create($actor, $subject, $body, ($priorityEnum) ?? EmailPriorityEnum::Normal, $to, $Party, $PartyID, $cc, $bcc, $replyTo);
+    }
+
+     public static function createDriver(FleetDriver $driver, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal, Email $replyTo = null): CRMEmailService
+    {
+        return self::create($actor, $subject, $body, $priorityEnum, [[$driver->FullName => $driver->Email]], FleetDriver::getPrimaryKey(), $driver->Id, $cc, replyTo: $replyTo);
+    }
+
+
 
     public static function createBoard(Board $board, string $subject, string $body, User $actor, array $cc = [], EmailPriorityEnum $priorityEnum = EmailPriorityEnum::Normal): CRMEmailService
     {

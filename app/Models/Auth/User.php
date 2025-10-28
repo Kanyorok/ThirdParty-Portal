@@ -63,7 +63,7 @@ class User extends Authenticatable
         $branchId = session('LoginBranchId');
         if (!$branchId) return collect();
 
-        return ModelRole::where('model_id', $this->UserID)
+    return ModelRole::where('model_id', $this->Id)
             ->where('model_type', self::getPrimaryKey())
             ->where('BranchId', $branchId)
             ->with('role')
@@ -108,7 +108,7 @@ class User extends Authenticatable
         // Remove existing roles for this user + branch
         ModelRole::where([
             'model_id' => $this->Id,
-            'model_type' => self::class,
+            'model_type' => self::getPrimaryKey(),
             'BranchId' => $branchId,
         ])->delete();
 
@@ -122,9 +122,7 @@ class User extends Authenticatable
                 'model_type' => self::getPrimaryKey(),
                 'role_id' => $roleModel->id,
                 'BranchId' => $branchId,
-                'CreatedBy' => $actorId,
                 'CreatedOn' => now(),
-                'ModifiedBy' => $actorId,
                 'ModifiedOn' => now(),
             ]);
         }

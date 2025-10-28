@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Legal;
-
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
@@ -20,6 +19,8 @@ class LegalTemplateController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize(PermissionEnum::ContractView, LegalClause::class);
+
         $q      = trim((string) $request->input('q'));
         $status = (string) $request->input('status', '');
         $type   = (string) $request->input('type', '');
@@ -56,6 +57,8 @@ class LegalTemplateController extends Controller
 
     public function show($id)
     {
+        $this->authorize(PermissionEnum::ContractView, LegalClause::class);
+
         $template = LegalTemplate::with('clauses')->findOrFail($id);
         $clauses  = $template->clauses; // already ordered
         return view('legal.templates.show', compact('template', 'clauses'));
@@ -63,6 +66,8 @@ class LegalTemplateController extends Controller
 
     public function create()
     {
+        $this->authorize(PermissionEnum::ContractCreate, LegalClause::class);
+
         $clauses = LegalClause::query()
             ->select('Id', 'Title', 'ClauseType', 'Content', 'Version', 'IsStandard')
             ->orderBy('Title')
@@ -105,6 +110,8 @@ class LegalTemplateController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize(PermissionEnum::ContractCreate, LegalClause::class);
+
         // 1) Validate
         $validated = $request->validate([
             'TemplateName' => ['required', 'string', 'max:255'],

@@ -7,6 +7,8 @@ use App\Models\Inventory\ItemCategories;
 use App\Models\Procurement\ConsolidatedProcurementPlan;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PlanFromNeedsRequest extends FormRequest
 {
@@ -30,9 +32,16 @@ class PlanFromNeedsRequest extends FormRequest
             'category_id' => 'nullable|integer|exists:t_ItemCategories,Id',
             'selected_needs' => 'required|array|min:1',
             'selected_needs.*' => 'required|integer|exists:t_DepartmentNeeds,Id',
-            'budget_line_id' => 'required|array',
-            'budget_line_id.*' => 'nullable|integer|exists:t_BudgetMaster,BudgetLineID',
+            // Budget line optional overall; keep as array if provided
+            'budget_line_id' => 'nullable|array',
+            'budget_line_id.*' => 'nullable|integer',
         ];
+    }
+
+    // Budget line optional: remove conditional enforcement
+    public function withValidator($validator): void
+    {
+        // Intentionally left light; no per-need budget line enforcement
     }
 
     public function getPlan(): ConsolidatedProcurementPlan

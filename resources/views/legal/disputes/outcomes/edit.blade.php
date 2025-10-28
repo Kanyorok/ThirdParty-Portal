@@ -5,8 +5,14 @@
 <div class="container">
     <div class="card p-2 shadow rounded-4 mb-0">
         <div class="card-body mb-0">
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
             <p class="text-muted">
-                Update the outcome details for case: 
+                Update the outcome details for case:
                 <strong class="text-dark">{{ $case->CaseTitle }}</strong>
             </p>
 
@@ -17,14 +23,14 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Outcome</label>
-                        <input type="text" name="Outcome" 
-                            value="{{ old('Outcome', $outcome->Outcome) }}" 
+                        <input type="text" name="Outcome"
+                               value="{{ old('Outcome', $outcome->Outcome) }}"
                             class="form-control" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Judge Name</label>
-                        <input type="text" name="JudgeName" 
-                            value="{{ old('JudgeName', $outcome->JudgeName) }}" 
+                        <input type="text" name="JudgeName"
+                               value="{{ old('JudgeName', $outcome->JudgeName) }}"
                             class="form-control" required>
                     </div>
                 </div>
@@ -32,15 +38,15 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Judgment Date</label>
-                        <input type="date" name="JudgmentDate" 
-                            value="{{ old('JudgmentDate', $outcome->JudgmentDate) }}" 
+                        <input type="date" name="JudgmentDate"
+                               value="{{ old('JudgmentDate', $outcome->JudgmentDate) }}"
                             class="form-control" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Penalty Amount</label>
-                        <input type="number" step="0.01" name="PenaltyAmount" 
-                            value="{{ old('PenaltyAmount', $outcome->PenaltyAmount) }}" 
-                            class="form-control" placeholder="0.00" required>
+                        <input type="number" step="0.01" name="PenaltyAmount"
+                               value="{{ old('PenaltyAmount', $outcome->PenaltyAmount) }}"
+                               class="form-control" placeholder="0.00">
                     </div>
                 </div>
 
@@ -57,7 +63,7 @@
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mb-3">
-                    <a href="{{ route('legal.disputes.outcomes.index', $case->Id) }}" 
+                    <a href="{{ route('legal.disputes.outcomes.index', $case->Id) }}"
                         class="btn btn-outline-secondary">
                         <i class="fas fa-long-arrow-alt-left"></i> Back
                     </a>

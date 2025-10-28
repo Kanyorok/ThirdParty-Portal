@@ -20,15 +20,15 @@ class PropertyMaintenanceWorkCompletionService
      */
     public function __construct(PropertyMaintenanceWorkCompletion $propertyMaintenanceWorkCompletion)
     {
-        $this->assignment = $propertyMaintenanceWorkCompletion;
+        //
     }
 
     public static function create(
         PropertyMaintenanceAssign $requestNumber,
         string $completionDate,
         string $workDoneSummary,
-        string $partsUsed,
-        int $cost,
+        ?string $partsUsed = null,
+        ?int    $cost = null,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
@@ -37,14 +37,14 @@ class PropertyMaintenanceWorkCompletionService
             'RequestNumber' => $requestNumber->Id,
             'CompletionDate' => $completionDate,
             'WorkDoneSummary' => $workDoneSummary,
-            'PartsUsed' => $partsUsed,
-            'Cost' => $cost,
+            'PartsUsed' => $partsUsed ?? null,
+            'Cost' => $cost ?? null,
             'FinalStatus' => $finalstatus->ID,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,
         ]);
 
- 
+
         if (strtolower($finalstatus->Description) === 'completed') {
             $requestNumber->update([
                 'Status' => PostingEnum::Completed->value
@@ -75,8 +75,8 @@ class PropertyMaintenanceWorkCompletionService
         PropertyMaintenanceWorkCompletion $requestNumber,
         string $completionDate,
         string $workDoneSummary,
-        string $partsUsed,
-        int $cost,
+        ?string $partsUsed = null,
+        ?int    $cost = null,
         CodeDetail $finalstatus,
         User $user,
         UploadedFile $document = null
@@ -85,8 +85,8 @@ class PropertyMaintenanceWorkCompletionService
             'RequestNumber' => $requestNumber->RequestNumber,
             'CompletionDate' => $completionDate,
             'WorkDoneSummary' => $workDoneSummary,
-            'PartsUsed' => $partsUsed,
-            'Cost' => $cost,
+            'PartsUsed' => $partsUsed ?? null,
+            'Cost' => $cost ?? null,
             'FinalStatus' => $finalstatus->ID,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,

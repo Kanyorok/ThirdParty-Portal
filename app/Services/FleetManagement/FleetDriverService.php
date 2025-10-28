@@ -5,29 +5,56 @@ namespace App\Services\FleetManagement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Fleet\FleetDriver;
+use App\Models\Core\CodeDetail;
+use App\Models\Core\Workflow;
+use App\Models\Core\PendingWorkflow;
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
+use Illuminate\Http\UploadedFile;
 
 class FleetDriverService
 {
     /**
-     * Create a new Driver
+     * Create a new Driver with default status and workflow
      */
-    public function create(array $data): FleetDriver
+    public function create(array $data, UploadedFile $document = null): FleetDriver
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $document) {
             $data['DriverNo'] = $this->generateDriverNo();
-            $data['FullName'] = $data['FullName'] ?? null;
-            $data['StaffNumber'] = $data['StaffNumber'] ?? null;
-            $data['NationalID'] = $data['NationalID'] ?? null;
-            $data['Phone'] = $data['Phone'] ?? null;
-            $data['LicenseNumber'] = $data['LicenseNumber'] ?? null;
-            $data['LicenseExpiryDate'] = $data['LicenseExpiryDate'] ?? null;
-            $data['EmploymentType'] = $data['EmploymentType'] ?? null;
-            $data['Notes'] = $data['Notes'] ?? null;
             $data['IsActive'] = $data['IsActive'] ?? 1;
             $data['CreatedBy'] = Auth::id();
             $data['CreatedOn'] = now();
 
+            if (empty($data['DriverStatus'])) {
+                $defaultStatusValue = $this->getDefaultStatusValue();
+                $statusId = $this->getStatusIdByValue($defaultStatusValue);
+                $data['DriverStatus'] = $statusId;
+                $statusValueForWorkflow = $defaultStatusValue;
+            } else {
+                $statusId = $data['DriverStatus'];
+                $statusValueForWorkflow = $this->getStatusValueById($statusId);
+            }
+
             $driver = FleetDriver::create($data);
+
+            if ($document) {
+                $driver->newDocument(
+                    ModulesEnum::Fleet,
+                    $document,
+                    [PermissionEnum::FleetDriverView->value],
+                    Auth::user()
+                );
+            }
+
+            if ($statusId) {
+                $this->logWorkflow(
+                    'DriverAvailability',
+                    $driver->Id,
+                    $statusId,
+                    $statusValueForWorkflow,
+                    'Driver created'
+                );
+            }
 
             activity()
                 ->performedOn($driver)
@@ -35,6 +62,89 @@ class FleetDriverService
                 ->log('Driver Created');
 
             return $driver;
+        });
+    }
+
+    /**
+     * Update Driver by ID, log workflow if status changed
+     */
+    public function update(int $id, array $data, UploadedFile $document = null): FleetDriver
+    {
+        return DB::transaction(function () use ($id, $data, $document) {
+            $driver = FleetDriver::findOrFail($id);
+            $originalStatus = $driver->DriverStatus;
+
+            $driver->fill($data);
+            $driver->ModifiedBy = Auth::id();
+            $driver->ModifiedOn = now();
+            $driver->save();
+
+            if ($document) {
+                foreach ($driver->documents as $doc) {
+                    $doc->delete();
+                }
+
+                $driver->newDocument(
+                    ModulesEnum::Fleet,
+                    $document,
+                    [PermissionEnum::FleetDriverView->value],
+                    Auth::user()
+                );
+            }
+
+            if (isset($data['DriverStatus']) && $data['DriverStatus'] != $originalStatus) {
+                $statusId = $data['DriverStatus'];
+                $statusValue = $this->getStatusValueById($statusId);
+
+                if ($statusId && $statusValue) {
+                    $this->logWorkflow(
+                        'DriverAvailability',
+                        $driver->Id,
+                        $statusId,
+                        $statusValue,
+                        'Driver status updated'
+                    );
+                }
+            }
+
+            activity()
+                ->performedOn($driver)
+                ->causedBy(Auth::user())
+                ->withProperties(['attributes' => $data])
+                ->log('Fleet Driver Updated');
+
+            return $driver;
+        });
+    }
+
+    /**
+     * Soft delete a Fleet Driver by ID
+     */
+    public function delete(int $id): bool
+    {
+        return DB::transaction(function () use ($id) {
+            $driver = FleetDriver::findOrFail($id);
+
+            $driver->DeletedBy = Auth::id();
+            $driver->DeletedOn = now();
+            $driver->save();
+
+            $driver->delete();
+
+            $this->logWorkflow(
+                'DriverAvailability',
+                $driver->Id,
+                null,
+                'Deleted',
+                'Driver deleted'
+            );
+
+            activity()
+                ->performedOn($driver)
+                ->causedBy(Auth::user())
+                ->log('Fleet Driver Deleted');
+
+            return true;
         });
     }
 
@@ -56,48 +166,67 @@ class FleetDriverService
     }
 
     /**
-     * Update Driver by ID
+     * Get CodeDetail ID by Value (DriverAvailabilityStatus)
      */
-    public function update(int $id, array $data): FleetDriver
+    private function getStatusIdByValue(?string $value): ?int
     {
-        return DB::transaction(function () use ($id, $data) {
-            $records = FleetDriver::findOrFail($id);
+        if (!$value) return null;
 
-            $records->fill($data);
-            $records->ModifiedBy = Auth::id();
-            $records->ModifiedOn = now();
-            $records->save();
-
-            activity()
-                ->performedOn($records)
-                ->causedBy(Auth::user())
-                ->withProperties(['attributes' => $data])
-                ->log('Fleet Driver Updated');
-
-            return $records;
-        });
+        return CodeDetail::where('CodeID', 'DriverAvailabilityStatus')
+            ->where('Value', $value)
+            ->value('Id');
     }
 
     /**
-     * Soft delete a Fleet Driver by ID
+     * Get CodeDetail Value by ID (DriverAvailabilityStatus)
      */
-    public function delete(int $id): bool
+    private function getStatusValueById(?int $id): ?string
     {
-        return DB::transaction(function () use ($id) {
-            $records = FleetDriver::findOrFail($id);
+        if (!$id) return null;
 
-            $records->DeletedBy = Auth::id();
-            $records->DeletedOn = now();
-            $records->save();
+        return CodeDetail::where('CodeID', 'DriverAvailabilityStatus')
+            ->where('Id', $id)
+            ->value('Value');
+    }
 
-            $records->delete(); // Soft delete
+    /**
+     * Get the default status value (DriverAvailabilityStatus)
+     */
+    private function getDefaultStatusValue(): ?string
+    {
+        return CodeDetail::where('CodeID', 'DriverAvailabilityStatus')
+            ->where('Description', 'Available')
+            ->value('Value');
+    }
 
-            activity()
-                ->performedOn($records)
-                ->causedBy(Auth::user())
-                ->log('Fleet Driver Deleted');
+    /**
+     * Log workflow and pending workflow
+     */
+    private function logWorkflow(string $source, int $sourceId, ?int $statusId, ?string $statusValue, ?string $notes = null)
+    {
+        Workflow::create([
+            'Source' => $source,
+            'SourceID' => $sourceId,
+            'Stage' => $statusId,
+            'Status' => $statusValue,
+            'Notes' => $notes,
+            'CreatedBy' => Auth::id(),
+            'CreatedOn' => now(),
+            'ModifiedBy' => Auth::id(),
+            'ModifiedOn' => now(),
+        ]);
 
-            return true;
-        });
+        PendingWorkflow::updateOrCreate(
+            ['Source' => $source, 'SourceID' => $sourceId],
+            [
+                'Stage' => $statusId,
+                'Status' => $statusValue,
+                'UserId' => Auth::id(),
+                'CreatedBy' => Auth::id(),
+                'CreatedOn' => now(),
+                'ModifiedBy' => Auth::id(),
+                'ModifiedOn' => now(),
+            ]
+        );
     }
 }

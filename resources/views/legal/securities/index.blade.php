@@ -9,6 +9,7 @@
     </div>
     <div class="card-body">
         <p class="text-muted">List of registered loan securities and collateral items.</p>
+        <div class=" table-responsive">
         <table class="table table-hover table-sm align-middle text-centre"
                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
             <thead>
@@ -29,7 +30,15 @@
                         <td>{{ $sec->SecurityType }}</td>
                         <td>{{ $sec->OwnerName }}</td>
                         <td>{{ $sec->LoanAccountNumber }}</td>
-                        <td><span class="text-success">{{ $sec->SecurityStatus }}</span></td>
+                        <td>
+                            @if($sec->SecurityStatus === 'Held')
+                                <span class="badge bg-secondary">Held</span>
+                            @elseif($sec->SecurityStatus === 'Released')
+                                <span class="badge bg-success">Released</span>
+                            @elseif($sec->SecurityStatus === 'Discharged')
+                                <span class="badge bg-warning">Discharged</span>
+                            @endif
+                        </td>
                         <td>{{ $sec->Institution }}</td>
                         <td>{{ number_format($sec->Value, 2) }}</td>
                         <td>
@@ -64,6 +73,7 @@
                 @endif
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @include('components.modals.delete-confirm')

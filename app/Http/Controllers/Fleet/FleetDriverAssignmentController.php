@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\FleetManagement\FleetDriverAssignmentRequest;
 use App\Models\Fleet\ContractedDriver;
 use App\Models\Fleet\FleetVehicle;
+use App\Models\Fleet\FleetVehicleInspection;
 use App\Models\Fleet\FleetDriverAssignment;
 use App\Models\HRM\Employee;
 use App\Services\FleetManagement\FleetDriverAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Core\CodeDetail;
 
 class FleetDriverAssignmentController extends Controller
 {
@@ -30,8 +32,12 @@ class FleetDriverAssignmentController extends Controller
             abort(404, 'Driver ID is required.');
         }
 
-        $driver = ContractedDriver::findOrFail($driverId);
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $driver = \App\Models\Fleet\FleetDriver::findOrFail($driverId);
+        $activeStatusId = CodeDetail::where('CodeID', 'VehicleStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
+
+        $vehicles = FleetVehicle::where('Status', $activeStatusId)->get();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
 
@@ -66,11 +72,9 @@ class FleetDriverAssignmentController extends Controller
     // ================= EDIT =================
     public function edit($id)
     {
-        // Fetch the assignment with its driver and vehicle
         $assignment = FleetDriverAssignment::with(['vehicle', 'assignedBy', 'driver'])
             ->findOrFail($id);
 
-        // Optionally, ensure only assignments of this driver can be fetched
         if (!$assignment->driver) {
             abort(404, 'Driver not found for this assignment.');
         }
@@ -134,7 +138,6 @@ class FleetDriverAssignmentController extends Controller
     {
         $driver = ContractedDriver::findOrFail($driverId);
 
-        // Only fetch assignments belonging to this driver
         $assignments = $driver->assignments()->with(['vehicle', 'assignedBy'])->get();
 
         $vehicles = FleetVehicle::where('IsActive', 1)->get();
@@ -142,5 +145,52 @@ class FleetDriverAssignmentController extends Controller
             ->pluck('name', 'Id');
 
         return view('fleet.drivers.show', compact('driver', 'assignments', 'vehicles', 'assigners'));
+    }
+
+    // ================= ASSIGNMENT INSPECTION REDIRECTS =================
+    public function assignInspection($assignmentId)
+    {
+        $assignment = FleetDriverAssignment::with(['vehicle', 'driver'])->findOrFail($assignmentId);
+
+        $vehicles = FleetVehicle::all();
+        $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
+        $drivers = \App\Models\Fleet\FleetDriver::where('IsActive', 1)->get();
+        $fuels = \App\Models\Fleet\FuelType::all();
+
+        return view('fleet.vehicle_inspection.create', compact('assignment', 'inspectionTypes', 'vehicles', 'drivers', 'fuels'));
+    }
+
+    public function unassignInspection($assignmentId)
+    {
+        $assignment = FleetDriverAssignment::with(['vehicle', 'driver'])->findOrFail($assignmentId);
+
+        // Always eager-load inspectionType
+        $parentInspection = FleetVehicleInspection::with('inspectionType')
+            ->where('VehicleID', $assignment->VehicleID)
+            ->whereDate('InspectionDate', $assignment->AssignmentDate)
+            ->orderByDesc('InspectionDate')
+            ->first();
+
+        // Fallback also eager-loads inspectionType
+        if (!$parentInspection) {
+            $parentInspection = FleetVehicleInspection::with('inspectionType')
+                ->where('VehicleID', $assignment->VehicleID)
+                ->orderByDesc('InspectionDate')
+                ->first();
+        }
+
+        $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
+        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $drivers = \App\Models\Fleet\FleetDriver::where('IsActive', 1)->get();
+        $fuels = \App\Models\Fleet\FuelType::all();
+
+        return view('fleet.vehicle_inspection.create', compact(
+            'assignment',
+            'parentInspection',
+            'inspectionTypes',
+            'vehicles',
+            'drivers',
+            'fuels'
+        ));
     }
 }

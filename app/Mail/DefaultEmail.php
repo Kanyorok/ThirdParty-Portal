@@ -32,10 +32,17 @@ class DefaultEmail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $to = collect($this->crmEmail->To)->flatten()->toArray();
+        $cc = collect($this->crmEmail->CC)->flatten()->toArray();
+        $bcc = collect($this->crmEmail->BCC)->flatten()->toArray();
+
+        // NEVER expose CC as a visible header. Merge any CC entries into BCC so they're hidden.
+        $mergedBcc = array_values(array_filter(array_merge($bcc, $cc)));
+
         return new Envelope(
-            to: collect($this->crmEmail->To)->flatten()->toArray(),
-            cc: collect($this->crmEmail->CC)->flatten()->toArray(),
-            bcc: $this->crmEmail->BCC,
+            to: $to,
+            cc: [],
+            bcc: $mergedBcc,
             subject: $this->crmEmail->Subject,
         );
     }

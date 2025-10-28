@@ -23,7 +23,8 @@ class UpdateThirdPartyUserProfileRequest extends FormRequest
         return [
             'firstName' => ['nullable', 'string', 'max:100'],
             'lastName' => ['nullable', 'string', 'max:100'],
-            'phone' => ['nullable', 'string', 'max:50'],
+            // E.164 format when provided
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'gender' => ['nullable', Rule::enum(GenderEnum::class)],
             'imageId' => ['nullable', 'integer', 'exists:t_Images,Id'],
 
@@ -43,6 +44,7 @@ class UpdateThirdPartyUserProfileRequest extends FormRequest
             ],
             'vatNumber' => ['nullable', 'string', 'max:50'],
             'country' => ['nullable', 'string', 'max:100'],
+            'countryId' => ['nullable', 'integer', 'exists:t_Countries,Id'],
             'physicalAddress' => ['nullable', 'string', 'max:500'],
             'website' => ['nullable', 'url', 'max:255'],
         ];

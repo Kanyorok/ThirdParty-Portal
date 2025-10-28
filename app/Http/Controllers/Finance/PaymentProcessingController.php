@@ -15,20 +15,50 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentProcessingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentProcessingView, FinanceVoucher::class);
 
-        $vouchers = FinanceVoucher::with('invoice:Id,InvoiceNumber')
+        $query = FinanceVoucher::with('invoice:Id,InvoiceNumber')
             ->select('Id', 'VoucherNo', 'InvoiceNo', 'TotalAmount', 'PaymentMethod',
-                'ApprovalStatus','PaymentType', 'Description','Status','IsProcessed')->where('ApprovalStatus', 'posted')
-            ->get();
+                'ApprovalStatus','PaymentType', 'Description','Status','IsProcessed')
+            ->where('ApprovalStatus', 'posted');
+
+        if ($request->filled('voucher_no')) {
+            $query->where('VoucherNo', 'like', '%'.$request->voucher_no.'%');
+        }
+        if ($request->filled('invoice_number')) {
+            $invNum = $request->invoice_number;
+            $query->whereHas('invoice', function($q) use ($invNum){
+                $q->where('InvoiceNumber', 'like', '%'.$invNum.'%');
+            });
+        }
+        if ($request->filled('payment_method')) {
+            $query->where('PaymentMethod', $request->payment_method);
+        }
+        if ($request->filled('payment_type')) {
+            $query->where('PaymentType', $request->payment_type);
+        }
+        if ($request->filled('processed')) {
+            $query->where('IsProcessed', filter_var($request->processed, FILTER_VALIDATE_BOOLEAN));
+        }
+        if ($request->filled('amount_min')) {
+            $query->where('TotalAmount', '>=', (float)$request->amount_min);
+        }
+
+        $sortField = $request->sort_by ?? 'Id';
+        $sortDirection = $request->sort_direction ?? 'desc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = (int)($request->per_page ?? 10);
+        $vouchers = $query->paginate($perPage)->withQueryString();
+
         return view('finance.accountspayable.paymentprocessing.index',compact('vouchers'));
     }
 
     public function create(){
 
-        // $this->authorize('create', PaymentProcessing::class);
+        $this->authorize(PermissionEnum::PaymentProcessingCreate, FinanceVoucher::class);
         $vouchers = FinanceVoucher::select('Id', 'VoucherNo', 'InvoiceNo', 'TotAmnt')
             ->where('Status','Approved')
             ->get();
@@ -38,7 +68,7 @@ class PaymentProcessingController extends Controller
 
     public function show($id)
     {
-        $this->authorize(PermissionEnum::FinanceAccountsPayableView, FinanceVoucher::class);
+        $this->authorize(PermissionEnum::PaymentProcessingView, FinanceVoucher::class);
 
         $voucher = FinanceVoucher::with('invoice.supplier')->findOrFail($id);
         $amtPaidOnInvoice=FinanceVoucher::where('InvoiceNo', $voucher->InvoiceNo)->where('ApprovalStatus','posted')->sum('TotalAmount');
@@ -47,7 +77,7 @@ class PaymentProcessingController extends Controller
     }
 
     public function postVoucher(Request $request, TransactionService $svc){
-        $this->authorize(PermissionEnum::FinanceAccountsPayableCreate, FinanceVoucher::class);
+        // $this->authorize(PermissionEnum::PaymentProcessingCreate, FinanceVoucher::class);
 
         $validated = $request->validate([
             'Reason' => 'required|string|max:255',
@@ -68,7 +98,7 @@ class PaymentProcessingController extends Controller
 
                 // Load the invoice with the same relations, and lock row for update
                 $invoice = FinanceInvoiceEntry::with([
-                    'supplier:Id,SupplierName',
+                    'thirdParty:Id,TradingName,ThirdPartyName',
                     'currency:Id,Name,Code,Symbol',
                     'order:Id,OrderNo,Description,OrdTotExcl',
                     'grn:id,GRNID,SupplierId',
@@ -93,7 +123,7 @@ class PaymentProcessingController extends Controller
                 // Build payload for TransactionService (service does idempotency)
                 $payload = [
                     'ModuleID'          => $MODULE_ID,
-                    'ThirdPartyID'=>$invoice->SupplierID,
+                    'ThirdPartyID' => $invoice->ThirdPartyID,
                     'IsScheduled'=>$isScheduled,
                     'VoucherID'=>$voucherID,
                     'TransactionTypeID' => $TRANSACTION_TYPEID,

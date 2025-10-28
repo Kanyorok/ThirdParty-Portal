@@ -8,7 +8,7 @@
 <meta name="msapplication-TileImage" content="{{ asset('assets/img/icons/mstile-144x144.png') }}') }}">
 <meta name="msapplication-config" content="{{ asset('browserconfig.xml') }}">
 <meta name="theme-color" content="#2e3192">
-<link rel="icon" href="{{ asset('assets/images/favicon.svg') }}" type="image/x-icon"><!-- [Font] Family -->
+<link rel="icon" href="{{ asset('assets/img/CBT-Logo.jpg') }}" type="image/x-icon"><!-- [Font] Family -->
 <link rel="stylesheet" href="{{ asset('assets/fonts/inter/inter.css') }}" id="main-font-link">
 <link rel="stylesheet" href="{{ asset('assets/fonts/phosphor/duotone/style.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/fonts/tabler-icons.min.css') }}"><!-- [Feather Icons] https://feathericons.com -->
@@ -21,5 +21,11 @@
 <link rel="stylesheet" href="{{ asset('assets/libs/dataTables/bootstrap5.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/libs/notyf/notyf.min.css') }}">
+
+{{-- Added as it is used in Property and Insurance beautification --}}
+{{-- Include Bootstrap Icons --}}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+{{-- Include DataTables CSS --}}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @yield('styles')
 

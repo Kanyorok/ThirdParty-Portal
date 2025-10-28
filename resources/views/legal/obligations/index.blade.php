@@ -12,72 +12,74 @@
     </div>
     <div class="card-body">
         <p class="text-muted">Maintain and track all legal obligations to ensure compliance with regulatory, contractual, and organizational requirements.</p>
-        <table class="table table-hover table-sm align-middle text-centre"
-            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-            <thead>
-                <tr>
-                    <th>Obligation</th>
-                    <th>Source</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if($obligations->count())
-                @foreach($obligations as $obligation)
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle text-centre"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                <thead>
                     <tr>
-                        <td>{{ $obligation->Title }}</td>
-                        <td>{{ $obligation->SourceType }}</td>
-                        <td>{{ \Carbon\Carbon::parse($obligation->DueDate)->format('d-m-Y') }}</td>
-                        <td>
-                            @if($obligation->Status == 'Pending')
-                                <span class="badge bg-warning text-dark">Pending</span>
-                            @elseif($obligation->Status == 'Completed')
-                                <span class="badge bg-success">Completed</span>
-                            @else
-                                <span class="badge bg-danger">Overdue</span>
-                            @endif
-                        </td>
-                        <td>
-                            <a href="{{ route('legal.obligations.show', $obligation->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                            <button 
-                                type="button" 
-                                class="btn btn-sm btn-primary" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#EditObligationsModal-{{$obligation->Id}}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            {{-- <a href="{{ route('legal.obligations.edit', $obligation->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a> --}}
-                            <button type="button"
-                                class="btn btn-sm btn-danger custom-delete-btn"
-                                data-bs-toggle="modal"
-                                data-bs-target="#customDeleteConfirmModal"
-                                data-name="{{$obligation->Title}}"   
-                                data-route="{{ route('legal.obligations.destroy', $obligation->Id) }}">
-                                <i  class="fas fa-trash-alt"></i>
-                            </button>
-                            {{-- <a href="{{ route('legal.obligations.assignments.index', $obligation->ID) }}" class="btn btn-sm btn-info">👤 Assign</a> --}}
-                        </td>
+                        <th>Obligation</th>
+                        <th>Source</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
-                @endforeach
-                @else
-                    <tr>
-                        <td colspan="6" class="p-0">
-                            <div class="text-centre p-4 border rounded-3 bg-light">
-                                <p class="mb-3 text-muted fs-5">
-                                    <i class="fas fa-info-circle me-2 text-info"></i>
-                                    <i>No obligations found.</i>
-                                </p>
-                                <a href="{{ route('legal.obligations.create') }}" class="btn btn-info px-4 py-2">
-                                    <i class="fas fa-plus-circle me-2"></i> New Obligation
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                @endif
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if($obligations->count())
+                    @foreach($obligations as $obligation)
+                        <tr>
+                            <td>{{ $obligation->Title }}</td>
+                            <td>{{ $obligation->SourceType }}</td>
+                            <td>{{ \Carbon\Carbon::parse($obligation->DueDate)->format('d-m-Y') }}</td>
+                            <td>
+                                @if($obligation->Status == 'Pending')
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                @elseif($obligation->Status == 'Completed')
+                                    <span class="badge bg-success">Completed</span>
+                                @elseif($obligation->Status == 'Overdue')
+                                    <span class="badge bg-danger">Overdue</span>
+                                @endif
+                            </td>
+                            <td>
+                                <a href="{{ route('legal.obligations.show', $obligation->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                <button 
+                                    type="button" 
+                                    class="btn btn-sm btn-primary" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#EditObligationsModal-{{$obligation->Id}}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {{-- <a href="{{ route('legal.obligations.edit', $obligation->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a> --}}
+                                <button type="button"
+                                    class="btn btn-sm btn-danger custom-delete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#customDeleteConfirmModal"
+                                    data-name="{{$obligation->Title}}"   
+                                    data-route="{{ route('legal.obligations.destroy', $obligation->Id) }}">
+                                    <i  class="fas fa-trash-alt"></i>
+                                </button>
+                                {{-- <a href="{{ route('legal.obligations.assignments.index', $obligation->ID) }}" class="btn btn-sm btn-info">👤 Assign</a> --}}
+                            </td>
+                        </tr>
+                    @endforeach
+                    @else
+                        <tr>
+                            <td colspan="6" class="p-0">
+                                <div class="text-centre p-4 border rounded-3 bg-light">
+                                    <p class="mb-3 text-muted fs-5">
+                                        <i class="fas fa-info-circle me-2 text-info"></i>
+                                        <i>No obligations found.</i>
+                                    </p>
+                                    <a href="{{ route('legal.obligations.create') }}" class="btn btn-info px-4 py-2">
+                                        <i class="fas fa-plus-circle me-2"></i> New Obligation
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
     </div>
 
     @foreach ($obligations as $item)

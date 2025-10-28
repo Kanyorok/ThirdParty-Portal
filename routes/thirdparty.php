@@ -14,4 +14,7 @@ Route::prefix('thirdparty')->name('thirdparty.')->group(function () {
             'update',
             'destroy'
         ]);
+
+    // Bulk actions route
+    Route::post('parties/bulk-action', [ThirdPartyWebController::class, 'bulkAction'])->name('parties.bulk-action');
 });

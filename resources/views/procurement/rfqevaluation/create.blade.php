@@ -20,20 +20,35 @@
 
     <form method="POST" action="{{ route('evaluations.store') }}" id="evaluationForm" novalidate>
       @csrf
+      @php
+        // Ensure $rfqs is ordered newest-first for the select dropdown.
+        // Support both LengthAwarePaginator and Collection/array inputs.
+        $rfqsCollection = $rfqs instanceof \Illuminate\Contracts\Support\Arrayable ? collect($rfqs) : (isset($rfqs) ? $rfqs : collect());
 
-      <!-- Header -->
-      <div class="mb-4">
-        <h3>Supplier Evaluation Form</h3>
-      </div>
-
+        if (method_exists($rfqsCollection, 'sortByDesc')) {
+            // Prefer CreatedOn if available, otherwise sort by Id desc
+            if ($rfqsCollection->first() && isset($rfqsCollection->first()->CreatedOn)) {
+                $rfqsSorted = $rfqsCollection->sortByDesc('CreatedOn');
+            } else {
+                $rfqsSorted = $rfqsCollection->sortByDesc('Id');
+            }
+        } else {
+            $rfqsSorted = $rfqsCollection;
+        }
+      @endphp
       <!-- RFQ Section -->
       <div class="mb-3 row">
         <label class="col-sm-2 col-form-label">RFQ No <span class="text-danger">*</span></label>
         <div class="col-sm-4">
           <select class="form-select" id="rfq-select" name="RFQId" required>
             <option value="">Select DropDown Or Search</option>
-            @foreach ($rfqs as $rfq)
-              <option value="{{ $rfq->Id }}" data-comments="{{ $rfq->Comments }}">{{ $rfq->RFQNumber }}</option>
+            @foreach ($rfqsSorted as $rfq)
+              @php
+                $plan = optional($rfq->requisition)->procurementPlan;
+                $planLabel = $plan ? trim(($plan->Title ?? '') . ' - ' . ($plan->ReferenceNumber ?? '')) : '';
+                $label = $rfq->RFQNumber . ($planLabel ? ' - ' . $planLabel : '');
+              @endphp
+              <option value="{{ $rfq->Id }}" data-comments="{{ $rfq->Comments }}">{{ $label }}</option>
             @endforeach
           </select>
           <div class="invalid-feedback">Please select an RFQ number.</div>
@@ -59,6 +74,9 @@
       </div>
 
       <!-- Supplier Table -->
+      <!-- Criteria alert (shown when no criteria/sections exist) -->
+      <div id="criteria-alert" class="mb-3" style="display:none;"></div>
+
       <div class="table-responsive mb-4">
         <table class="table table-bordered" id="supplier-table">
           <thead class="table-light">
@@ -67,12 +85,13 @@
               <th>Total Quoted</th>
               <th>Delivery Time</th>
               <th>Status</th>
+              <th>Weighted Score</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td colspan="5" class="text-center">Select an RFQ to view supplier details</td>
+              <td colspan="6" class="text-center">Select an RFQ to view supplier details</td>
             </tr>
           </tbody>
         </table>
@@ -111,6 +130,8 @@
       const committeeMemberInput = document.querySelector('[name="CommitteeMember"]');
       const userIdInput = document.querySelector('[name="UserID"]');
       const form = document.getElementById('evaluationForm');
+      // Holds per-supplier mapping of section weights and criteria ids for computing weighted totals
+      const sectionMap = {};
 
       // Custom validation for form submission
       form.addEventListener('submit', function(event) {
@@ -173,10 +194,28 @@
         fetch(`/procurement/rfq-responses/${rfqId}`)
           .then(response => response.json())
           .then(data => {
-            const {
-              responses,
-              criteria
-            } = data;
+            const { responses, criteria, sectionWeights } = data;
+
+            // Check if criteria/sections exist for the selected RFQ
+            const hasCriteria = criteria && (Array.isArray(criteria) ? criteria.length > 0 : Object.keys(criteria).length > 0);
+            const criteriaAlert = document.getElementById('criteria-alert');
+            if (!hasCriteria) {
+              // Show red alert with link to Quotation Criteria Setup
+              criteriaAlert.style.display = 'block';
+              criteriaAlert.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                  <strong>No evaluation criteria configured for this RFQ.</strong>
+                  Please set up quotation criteria first in Procurement Settings.
+                  <a class="btn btn-sm btn-outline-light btn-danger ms-3" href="{{ route('rfqcriteriasetup.evaluations') }}">Go to Quotation Criteria Setup</a>
+                </div>
+              `;
+              supplierTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Evaluation criteria missing. Please configure quotation criteria before proceeding.</td></tr>';
+              evaluationFormsContainer.innerHTML = '';
+              return;
+            } else {
+              criteriaAlert.style.display = 'none';
+              criteriaAlert.innerHTML = '';
+            }
 
             if (responses.length > 0) {
               supplierTableBody.innerHTML = '';
@@ -197,10 +236,18 @@
 
                 supplierTableBody.innerHTML += `
                                 <tr>
-                                    <td>${response.SupplierName || 'Unknown'}</td>
+                                    <td>${
+                                      response.supplier?.thirdParty?.ThirdPartyName
+                                      || response.supplier?.thirdParty?.TradingName
+                                      || response.supplier?.third_party?.ThirdPartyName
+                                      || response.supplier?.third_party?.TradingName
+                                      || response.SupplierName
+                                      || 'Unknown'
+                                    }</td>
                                     <td>${response.TotalPayable ? `Kes. ${response.TotalPayable}` : '-'}</td>
                                     <td>${response.DurationDays ? `${response.DurationDays} Days` : '-'}</td>
                                     <td>${status}</td>
+                                    <td><strong class="supplier-total" data-supplier-id="${response.SupplierId}">0.00%</strong></td>
                                     <td>${action}</td>
                                 </tr>
                             `;
@@ -208,7 +255,14 @@
                 let formHtml = `
                                 <div class="card mb-4">
                                     <div class="card-header">
-                                        Supplier ${response.SupplierName || `#${index + 1}`}
+                                        Supplier ${
+                                          response.supplier?.thirdParty?.ThirdPartyName
+                                          || response.supplier?.thirdParty?.TradingName
+                                          || response.supplier?.third_party?.ThirdPartyName
+                                          || response.supplier?.third_party?.TradingName
+                                          || response.SupplierName
+                                          || `#${index + 1}`
+                                        }
                                         <input type="hidden" name="Evaluations[${response.SupplierId}][SupplierId]" value="${response.SupplierId}">
                                     </div>
                                     <div class="card-body p-0">
@@ -216,18 +270,33 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Evaluation Criteria</th>
-                                                    <th>Weight</th>
+                                                    <th>Maximum Score</th>
                                                     <th>Score (1-10) <span class="text-danger">*</span></th>
                                                     <th>Comments</th>
                                                 </tr>
                                             </thead>
                                             <tbody>`;
 
+                // Ensure section map exists for this supplier
+                if (!sectionMap[response.SupplierId]) sectionMap[response.SupplierId] = {};
+
                 for (const sectionId in criteria) {
-                  const sectionGroup = criteria[sectionId];
-                  const section = sectionGroup[0]?.section;
+                  const rawGroup = criteria[sectionId];
+                  const sectionGroup = Array.isArray(rawGroup) ? rawGroup : Object.values(rawGroup);
+                  const firstItem = sectionGroup[0] || {};
+                  const section = firstItem?.section;
                   const sectionName = section?.SectionName || 'Unnamed Section';
-                  const sectionWeight = sectionGroup[0]?.weighted_section?.Weight || 'N/A';
+                  // Prefer sectionWeights map for accuracy; fallback to attached relation
+                  const sectionWeightVal = (sectionWeights && sectionWeights[sectionId] != null)
+                    ? sectionWeights[sectionId]
+                    : (firstItem?.weighted_section?.Weight ?? firstItem?.weightedSection?.Weight ?? 'N/A');
+                  const sectionWeight = isNaN(parseFloat(sectionWeightVal)) ? 'N/A' : parseFloat(sectionWeightVal);
+
+                  // Initialize section mapping for computing totals later
+                  sectionMap[response.SupplierId][sectionId] = {
+                    weight: typeof sectionWeight === 'number' ? sectionWeight : 0,
+                    criteriaIds: []
+                  };
 
                   formHtml += `<tr class="table-secondary">
                                         <td colspan="4" class="fw-bold">
@@ -239,18 +308,59 @@
                     const critId = criterion.CriteriaID;
                     const name = criterion.criteria?.CriteriaName || 'Unnamed';
                     const maxScore = parseFloat(criterion.MaxScore).toFixed(2);
+                    sectionMap[response.SupplierId][sectionId].criteriaIds.push(critId);
 
                     formHtml += `<tr>
                                         <td>${name}</td>
                                         <td>10</td>
-                                        <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control" min="1" max="10" required></td>
+                                        <td><input type="number" name="Evaluations[${response.SupplierId}][${critId}][Score]" class="form-control score-input" min="1" max="10" required data-supplier-id="${response.SupplierId}" data-section-id="${sectionId}" data-criteria-id="${critId}"></td>
                                         <td><input type="text" name="Evaluations[${response.SupplierId}][${critId}][Comments]" class="form-control"></td>
                                     </tr>`;
                   });
                 }
 
-                formHtml += `</tbody></table></div></div>`;
+                formHtml += `</tbody>
+                              <tfoot>
+                                <tr class="bg-light">
+                                  <td colspan="4" class="text-end">
+                                    Total Weighted Score: <strong class="supplier-total" data-supplier-id="${response.SupplierId}">0.00</strong>%
+                                  </td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        </div>`;
                 evaluationFormsContainer.innerHTML += formHtml;
+
+                // Compute supplier total weighted score
+                const computeSupplierTotal = (supplierId) => {
+                  const mapping = sectionMap[supplierId] || {};
+                  let totalWeighted = 0;
+                  Object.keys(mapping).forEach(secId => {
+                    const { weight, criteriaIds } = mapping[secId];
+                    if (!criteriaIds.length) return;
+                    let sectionSum = 0;
+                    criteriaIds.forEach(cId => {
+                      const input = document.querySelector(`input.score-input[name="Evaluations[${supplierId}][${cId}][Score]"]`);
+                      const val = parseFloat(input?.value);
+                      if (!isNaN(val)) sectionSum += val;
+                    });
+                    const maxTotal = criteriaIds.length * 10;
+                    if (maxTotal > 0) {
+                      totalWeighted += (sectionSum / maxTotal) * weight;
+                    }
+                  });
+                  const totalEl = document.querySelector(`.supplier-total[data-supplier-id="${supplierId}"]`);
+                  if (totalEl) totalEl.textContent = `${totalWeighted.toFixed(2)}%`;
+                };
+
+                // Bind events for this supplier inputs
+                document.querySelectorAll(`input.score-input[data-supplier-id="${response.SupplierId}"]`).forEach(inp => {
+                  inp.addEventListener('input', () => computeSupplierTotal(response.SupplierId));
+                });
+
+                // Initial compute
+                computeSupplierTotal(response.SupplierId);
               });
             } else {
               supplierTableBody.innerHTML =
@@ -282,7 +392,14 @@
       const modalTitle = document.getElementById('quoteModalLabel');
       const modalBody = document.getElementById('quoteModalBody');
 
-      modalTitle.textContent = `Quote Details: ${response.SupplierName}`;
+      const supplierDisplayName =
+        response.supplier?.thirdParty?.ThirdPartyName
+        || response.supplier?.thirdParty?.TradingName
+        || response.supplier?.third_party?.ThirdPartyName
+        || response.supplier?.third_party?.TradingName
+        || response.SupplierName
+        || 'Supplier';
+      modalTitle.textContent = `Quote Details: ${supplierDisplayName}`;
 
       if (!response.items || response.items.length === 0) {
         modalBody.innerHTML = '<p>No quote details available.</p>';

@@ -23,17 +23,12 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Tender Type</label>
-                            <select class="form-select" id="tenderCategory" name="tender_category_id" required>
-                                <option>-- Select Tender Type --</option>
-                                <option value="op" name="tender_type"
-                                        id="openTender" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender
-                                </option>
-                                <option value="rs" name="tender_type"
-                                        id="restrictedTender" {{$tender->TenderType->value=='rs'?'selected':''}}>
-                                    Restricted Tender
-                                </option>
+                            <select class="form-select" id="tenderType" name="TenderType" required>
+                                <option value="">-- Select Tender Type --</option>
+                                <option value="op" id="openTender" {{$tender->TenderType->value=='op'?'selected':''}}>Open Tender</option>
+                                <option value="rs" id="restrictedTender" {{$tender->TenderType->value=='rs'?'selected':''}}>Restricted Tender</option>
                             </select>
-                            @error('tender_category_id')
+                            @error('TenderType')
                             <div class="text-danger">{{ $message }}</div>
                             @enderror
                         </div>
@@ -55,7 +50,7 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Item Type</label>
+                            <label class="form-label fw-bold">Item Category</label>
                             <select class="form-select" id="itemCategory" value="{{$itemCategory }}" required
                                     name="item_category_id">
                                 <option selected disabled>{{$itemCategory }}</option>
@@ -154,11 +149,11 @@
                                       style="display: inline;">
                                     @csrf
                                     @method('PATCH')
-                                    <input type="hidden" name="type" value='crudSupplier'>
+                                    <input type="hidden" name="type" value='crudItem'>
                                     <input type="hidden" name="crudType" value='deleteItem'>
                                     <input type="hidden" name="item_id" value="{{$item->id}}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            onclick="return confirm('Are you sure you want to delete Item \'{{ $tender->item?->ItemName }}\'? This action cannot be undone.')">
+                                            onclick="return confirm('Are you sure you want to delete Item \'{{ $item->item?->ItemName }}\'? This action cannot be undone.')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
@@ -197,22 +192,22 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach ($suppliers as $item)
+            @foreach ($suppliers as $item)
                             <tr>
                                 <td>{{$loop->index+1}}</td>
-                                <td>{{$item->supplier->SupplierName}}</td>
-                                <td>{{$item->supplier->ContactEmail}}</td>
-                                <td>{{$item->supplier->ContactPhone}}</td>
+                <td>{{ $item->supplier->thirdParty->TradingName ?? $item->supplier->thirdParty->ThirdPartyName ?? '—' }}</td>
+                <td>{{ $item->supplier->thirdParty->Email ?? '—' }}</td>
+                <td>{{ $item->supplier->thirdParty->Phone ?? '—' }}</td>
                                 <td class="text-center">
                                     <form action="{{ route('initiatetender.update', $tender->Id) }}" method="POST"
                                           style="display: inline;">
                                         @csrf
                                         @method('PATCH')
-                                        <input type="hidden" name="type" value='crudItem'>
+                    <input type="hidden" name="type" value='crudSupplier'>
                                         <input type="hidden" name="crudType" value='deleteSupplier'>
-                                        <input type="hidden" name="supplier_id" value="{{$item->supplier->Id}}">
+                    <input type="hidden" name="supplier_id" value="{{$item->Id}}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                                onclick="return confirm('Are you sure you want to delete Supplier name: \'{{ $item->supplier->SupplierName }}\'? This action cannot be undone.')">
+                        onclick="return confirm('Are you sure you want to delete Supplier name: \'{{ $item->supplier->thirdParty->TradingName ?? $item->supplier->thirdParty->ThirdPartyName ?? 'Supplier' }}\'? This action cannot be undone.')">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
@@ -251,7 +246,7 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="item_id" class="form-label fw-bold">Item</label>
-                                <select name="item_id" name="item_id" id="item_id" class="form-select" required>
+                                <select name="item_id" id="item_id" class="form-select" required>
                                     <option selected>-- Select Item --</option>
                                     @foreach($otherItemsForThatTender as $item)
                                         <option value="{{ $item->Id }}">{{ $item->ItemName }}</option>
@@ -381,7 +376,7 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label for="item_id" class="form-label">Select Supplier</label>
-                                <select name="item_id" id="item_id" class="form-select" required>
+                                <select name="supplier_id" id="supplier_id" class="form-select" required>
                                     <option selected disabled>-- Select Supplier --</option>
                                     @foreach($otherSuppliers as $item)
                                         <option value="{{ $item->Id }}">{{ $item->SupplierName }}
@@ -403,3 +398,35 @@
 
 
 @endsection
+@push('scripts')
+<script>
+(function(){
+  const tenderCatSel = document.getElementById('tenderCategory');
+  const itemCatSel   = document.getElementById('itemCategory');
+
+  async function refreshItemCategories(){
+    const catId = tenderCatSel && tenderCatSel.value ? tenderCatSel.value : '';
+    if (!catId) { return; }
+    const url = `{{ route('initiatetender.allowedCategories') }}` + `?tender_category_id=${encodeURIComponent(catId)}`;
+    try{
+      const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+      if(!data.ok) return;
+      const current = itemCatSel.value;
+      itemCatSel.innerHTML = '<option value="" disabled selected>-- Select Category --</option>';
+      (data.categories || []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.Id; opt.textContent = c.Name;
+        if (String(c.Id) === String(current)) opt.selected = true;
+        itemCatSel.appendChild(opt);
+      });
+    }catch(e){ /* ignore */ }
+  }
+
+  if (tenderCatSel) {
+    tenderCatSel.addEventListener('change', refreshItemCategories);
+    if (tenderCatSel.value) { refreshItemCategories(); }
+  }
+})();
+</script>
+@endpush

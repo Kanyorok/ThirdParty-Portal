@@ -36,6 +36,19 @@
                     <label for="IsActive" class="form-check-label">Is Active</label>
                 </div>
 
+                <div class="mb-3">
+                    <label for="item_category_ids" class="form-label">Top-level Item Categories (multi-select)</label>
+                    <select id="item_category_ids" name="item_category_ids[]" class="form-control" multiple size="6">
+                        @php $selected = collect(old('item_category_ids', $category->itemCategories->pluck('Id')->all())); @endphp
+                        @foreach(($itemCategories ?? []) as $cat)
+                            <option
+                                value="{{ $cat->Id }}" @selected($selected->contains($cat->Id))>{{ $cat->Name }}</option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">Hold Ctrl / Cmd to select multiple. Only parent categories (no ParentId)
+                        listed.</small>
+                </div>
+
                 <div class="d-flex justify-content-end">
                     <a href="{{ route('proc.supplier-cat.index') }}" class="btn btn-secondary me-2">Cancel</a>
                     <button type="submit" class="btn btn-primary">Update Category</button>

@@ -24,13 +24,13 @@ class ContractedDriversRequest extends FormRequest
         return [
             'FullName' => 'required|string|max:255',
             'NationalID' => 'nullable|string|max:50',
-            'Phone' => 'nullable|string|max:50',
-            'CompanyName' => 'nullable|string|max:255',
+            'Phone' => ['nullable','string','max:20','regex:/^\+[1-9]\d{7,14}$/'],
+            'Company' => 'required|integer|exists:t_Suppliers,Id',
             'ContractStartDate' => 'nullable|date',
             'ContractEndDate' => 'nullable|date|after_or_equal:ContractStartDate',
-            'LicenseNumber' => 'nullable|string|max:100',
             'Notes' => 'nullable|string|max:1000',
             'IsActive' => 'required|boolean',
+            'Document' => 'nullable|file|max:2048',
             //
         ];
     }

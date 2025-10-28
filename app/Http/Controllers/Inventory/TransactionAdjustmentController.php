@@ -23,17 +23,30 @@ class TransactionAdjustmentController extends Controller
 
     public function index()
     {
-        $adjustments = StockAdjustment::with('items')->latest('CreatedOn')->paginate(20);
+        $branchId = auth()->user()->employee?->BranchId;
+        $adjustments = StockAdjustment::with('items')
+            ->latest('CreatedOn')
+            ->where('Branch', $branchId)
+            ->paginate(20);
         return view('inventory.transactions.adjustments.index', compact('adjustments'));
     }
     public function create()
     {
         $this->authorize('create', StockAdjustment::class);
-        $branches = Branch::all();
-        $users = User::all();
-        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+        $branchId = auth()->user()->employee?->BranchId;
+        $branch = Branch::findOrFail($branchId);
 
-        return view('inventory.transactions.adjustments.create', compact('branches', 'users', 'reasons'));
+        $users = User::whereHas('employee', function ($q) use ($branchId) {
+            $q->where('BranchId', $branchId);
+        })
+            ->get();
+
+        $reasons = CodeDetail::where('CodeID', 'AdjustmentReason')->get();
+        $stockItems = StockItem::with(['item', 'uom'])
+            ->where('Branch', $branchId)
+            ->get();
+
+        return view('inventory.transactions.adjustments.create', compact('branch', 'users', 'reasons', 'stockItems'));
     }
 
     public function store(StockAdjustmentRequest $request)

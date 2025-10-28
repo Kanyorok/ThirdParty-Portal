@@ -7,6 +7,7 @@ use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Models\Insurance\BancAssuranceReferral;
 use App\Models\Insurance\BancassuranceCustomer;
+use App\Models\ThirdParty\ThirdParties;
 use DateTime;
 
 class BancassuranceCustomersService
@@ -19,31 +20,21 @@ class BancassuranceCustomersService
     }
 
     public static function create(
-        BancAssuranceReferral $ReferralID,
-        string                $FullName,
-        string                $NationalID,
-        string                $KRAPIN,
+        ThirdParties $ThirdPartyId,
+        ?BancAssuranceReferral $ReferralID = null,
         DateTime              $DateOfBirth,
         CodeDetail            $Gender,
         CodeDetail            $MaritalStatus,
-        string                $PhoneNumber,
-        string                $Email,
-        string                $Address,
         CodeDetail            $Occupation,
         User                  $user
     ): self
     {
         $customer = BancassuranceCustomer::create([
-            'ReferralID' => $ReferralID->Id,
-            'FullName' => $FullName,
-            'NationalID' => $NationalID,
-            'KRAPIN' => $KRAPIN,
+            'ThirdPartyId' => $ThirdPartyId->Id,
+            'ReferralID' => $ReferralID->Id ?? null,
             'DateOfBirth' => $DateOfBirth,
             'Gender' => $Gender->ID,
             'MaritalStatus' => $MaritalStatus->ID,
-            'PhoneNumber' => $PhoneNumber,
-            'Email' => $Email,
-            'Address' => $Address,
             'Occupation' => $Occupation->ID,
             'CreatedBy' => $user->Id,
             'ModifiedBy' => $user->Id,

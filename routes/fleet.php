@@ -18,6 +18,7 @@ use App\Http\Controllers\Fleet\FleetRunningCostController;
 use App\Http\Controllers\Fleet\FleetServiceAlertController;
 use App\Http\Controllers\Fleet\FleetTelematicsDeviceController;
 use App\Http\Controllers\Fleet\FleetTripLogController;
+use App\Http\Controllers\Fleet\FleetVehicleInspectionController;
 use App\Http\Controllers\Fleet\FleetVehicleAssignmentController;
 use App\Http\Controllers\Fleet\FleetVehicleRequestController;
 use App\Http\Controllers\Fleet\VehicleController;
@@ -70,6 +71,8 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::put('/fleetmake/{Id}', [FleetMakeController::class, 'update'])->name('fleetmake.update');
     Route::post('/fleetmake', [FleetMakeController::class, 'store'])->name('fleetmake.store');
     Route::delete('/fleetmake/{Id}', [FleetMakeController::class, 'destroy'])->name('fleetmake.destroy');
+
+
 
     // Route::resource('fleetmodel', FleetModelController::class);
     Route::get('/fleetmodel', [FleetModelController::class, 'index'])->name('fleetmodel.index');
@@ -127,6 +130,16 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::get('/assignments', [FleetVehicleAssignmentController::class, 'index'])->name('fleet.assignments.index');
     Route::get('/assignments/create', [FleetVehicleAssignmentController::class, 'create'])->name('fleet.assignments.create');
     Route::post('/assignments', [FleetVehicleAssignmentController::class, 'store'])->name('fleet.assignments.store');
+    Route::get('/assignments/{Id}/edit', [FleetVehicleAssignmentController::class, 'edit'])->name('fleet.assignments.edit');
+    Route::get('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'show'])->name('fleet.assignments.show');
+    Route::put('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'update'])->name('fleet.assignments.update');
+    Route::delete('/assignments/{Id}', [FleetVehicleAssignmentController::class, 'destroy'])->name('fleet.assignments.destroy');
+    Route::get('/assignments/get-vehicles/{Id}', [FleetVehicleAssignmentController::class, 'getVehiclesByTrip'])->name('fleet.assignments.getVehicles');
+    Route::get('/assignments/get-inspection/{Id}', [FleetVehicleAssignmentController::class, 'getVehicleInspection'])->name('fleet.assignments.getInspection');
+    Route::get('/assignments/get-driver/{Id}', [FleetVehicleAssignmentController::class, 'getVehicleDriver'])->name('fleet.assignments.getDriver');
+
+
+
 
     // ==================== Fleet Vehicle Documents ====================
     Route::get('/documents', [VehicleDocumentController::class, 'index'])->name('fleet.documents.index');
@@ -150,6 +163,9 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::get('/driver-assignments/{Id}', [FleetDriverAssignmentController::class, 'show'])->name('fleet.driver_assignments.show');
     Route::put('/driver-assignments/{Id}', [FleetDriverAssignmentController::class, 'update'])->name('fleet.driver_assignments.update');
     Route::delete('/driver-assignments/{Id}', [FleetDriverAssignmentController::class, 'destroy'])->name('fleet.driver_assignments.destroy');
+
+    Route::get('/driver-assignments/{Id}/assign-inspection', [FleetDriverAssignmentController::class, 'assignInspection'])->name('fleet.driver_assignments.assign_inspection');
+    Route::get('/driver-assignments/{Id}/unassign-inspection', [FleetDriverAssignmentController::class, 'unassignInspection'])->name('fleet.driver_assignments.unassign_inspection');
 
 
     // ==================== Fleet Driver License Tracking ====================
@@ -192,10 +208,27 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::get('/trip-logs', [FleetTripLogController::class, 'index'])->name('fleet.trip_logs.index');
     Route::get('/trip-logs/create', [FleetTripLogController::class, 'create'])->name('fleet.trip_logs.create');
     Route::post('/trip-logs', [FleetTripLogController::class, 'store'])->name('fleet.trip_logs.store');
-    Route::get('/trip-logs{Id}', [FleetTripLogController::class, 'show'])->name('fleet.trip_logs.show');
-    Route::get('/trip-logs{Id}/edit', [FleetTripLogController::class, 'edit'])->name('fleet.trip_logs.edit');
-    Route::put('trip-logs{Id}', [FleetTripLogController::class, 'update'])->name('fleet.trip_logs.update');
-    Route::delete('trip-logs{Id}', [FleetTripLogController::class, 'destroy'])->name('fleet.trip_logs.destroy');
+    Route::get('/trip-logs/approved-transfers', [FleetTripLogController::class, 'getApprovedTransfers'])->name('fleet.trip_logs.approved_transfers');
+    Route::get('/trip-logs/approved-campaigns', [FleetTripLogController::class, 'getApprovedCampaigns'])->name('fleet.trip_logs.approved_campaigns');
+    Route::get('/trip-logs/{Id}', [FleetTripLogController::class, 'show'])->name('fleet.trip_logs.show');
+    Route::get('/trip-logs/{Id}/edit', [FleetTripLogController::class, 'edit'])->name('fleet.trip_logs.edit');
+    Route::put('/trip-logs/{Id}', [FleetTripLogController::class, 'update'])->name('fleet.trip_logs.update');
+    Route::delete('/trip-logs/{Id}', [FleetTripLogController::class, 'destroy'])->name('fleet.trip_logs.destroy');
+    Route::get('fleet/vehicles/available', [FleetTripLogController::class, 'getAvailableVehicles'])->name('fleet.vehicles.available');
+    Route::get('fleet/drivers/available', [FleetTripLogController::class, 'getAvailablePermanentDrivers'])->name('fleet.drivers.available');
+    Route::get('fleet/contracted_drivers/available', [FleetTripLogController::class, 'getAvailableContractedDrivers'])->name('fleet.contracted_drivers.available');
+
+
+    // ==================== Vehicle Inspections====================
+    Route::get('/vehicle_inspection', [FleetVehicleInspectionController::class, 'index'])->name('fleet.vehicle_inspection.index');
+    Route::get('/vehicle_inspection/create', [FleetVehicleInspectionController::class, 'create'])->name('fleet.vehicle_inspection.create');
+    Route::post('/vehicle_inspection', [FleetVehicleInspectionController::class, 'store'])->name('fleet.vehicle_inspection.store');
+    Route::get('/vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'show'])->name('fleet.vehicle_inspection.show');
+    Route::get('/vehicle_inspection{Id}/edit', [FleetVehicleInspectionController::class, 'edit'])->name('fleet.vehicle_inspection.edit');
+    Route::put('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'update'])->name('fleet.vehicle_inspection.update');
+    Route::delete('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'destroy'])->name('fleet.vehicle_inspection.destroy');
+    Route::get('/vehicle_inspection/{Id}/posttrip', [FleetVehicleInspectionController::class, 'createPostTrip'])->name('fleet.vehicle_inspection.posttrip.create');
+
 
 
     // ==================== Fuel Logs ====================

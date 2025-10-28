@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Insurance;
 
 use App\Enums\Core\PermissionEnum;
+use App\Models\ThirdParty\ThirdParties;
 use App\Services\Insurance\BancassuranceCustomersService;
 use App\Http\Requests\Insurance\Customers\BancassuranceCustomersRequest;
 use App\Http\Controllers\Controller;
@@ -17,6 +18,12 @@ use App\Models\Insurance\BancassuranceCustomer;
 class CustomerController extends Controller
 {
     //
+    public function index()
+    {
+        $customers = BancassuranceCustomer::all();
+
+        return view('bancassurance.customers.index', compact('customers'));
+    }
     public function create()
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
@@ -24,9 +31,9 @@ class CustomerController extends Controller
         $genders = CodeDetail::where('CodeID', 'Gender')->get();
         $maritalstatus = CodeDetail::where('CodeID', 'MaritalStatus')->get();
         $occupations = CodeDetail::where('CodeID', 'Occupation')->get();
+        $ThirdPartyIds = ThirdParties::all();
 
-
-        return view('bancassurance.customers.create', compact('genders', 'maritalstatus', 'occupations', 'referrals'));
+        return view('bancassurance.customers.create', compact('genders', 'maritalstatus', 'occupations', 'referrals', 'ThirdPartyIds'));
     }
 
     public function store(BancassuranceCustomersRequest $request)
@@ -34,6 +41,7 @@ class CustomerController extends Controller
         $this->authorize(PermissionEnum::BancassuranceCustomersCreate, BancassuranceCustomer::class);
         $validated = $request->validated();
 
+        $ThirdPartyId = ThirdParties::findOrFail($validated['ThirdPartyId']);
         $ReferralID = BancAssuranceReferral::findOrFail($validated['ReferralID']);
         $Gender = CodeDetail::findOrFail($validated['Gender']);
         $MaritalStatus = CodeDetail::findOrFail($validated['MaritalStatus']);
@@ -41,16 +49,11 @@ class CustomerController extends Controller
         $DateOfBirth = new \DateTime($validated['DateOfBirth']);
 
         $customer = BancassuranceCustomersService::create(
+            $ThirdPartyId,
             $ReferralID,
-            $validated['FullName'],
-            $validated['NationalID'],
-            $validated['KRAPIN'],
             $DateOfBirth,
             $Gender,
             $MaritalStatus,
-            $validated['PhoneNumber'],
-            $validated['Email'],
-            $validated['Address'],
             $Occupation,
             Auth::user(),
         );
@@ -62,16 +65,9 @@ class CustomerController extends Controller
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
 
-        $customer = BancassuranceCustomer::findOrFail($Id);
+        $customer = BancassuranceCustomer::with('referrals.referredByEmployee', 'genders')->findOrFail($Id);
 
         return view('bancassurance.customers.show', compact('customer'));
-    }
-
-    public function index()
-    {
-        $customers = BancassuranceCustomer::all();
-
-        return view('bancassurance.customers.index', compact('customers'));
     }
 
     public function check()
@@ -82,24 +78,6 @@ class CustomerController extends Controller
         return view('bancassurance.customers.check', compact('customers'));
     }
 
-// public function portfolio($customerId)
-// {
-//     $customer = DB::table('t_BancassuranceCustomers')->where('Id', $customerId)->first();
-
-//     $policies = DB::table('t_BancassurancePolicies as p')
-//         ->join('t_InsuranceProducts as prod', 'p.ProductID', '=', 'prod.Id')
-//         ->join('t_InsuranceProviders as ins', 'p.InsurerID', '=', 'ins.Id')
-//         ->where('p.CustomerID', $customerId)
-//         ->select(
-//             'p.*',
-//             'prod.Name as ProductName',
-//             'ins.Name as InsurerName'
-//         )
-//         ->orderByDesc('p.PolicyStartDate')
-//         ->get();
-
-//     return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
-// }
     public function edit($id)
     {
         $this->authorize(PermissionEnum::BancassuranceCustomersView, BancassuranceCustomer::class);
@@ -121,19 +99,15 @@ class CustomerController extends Controller
         DB::beginTransaction();
 
         try {
+            $ThirdPartyId = ThirdParties::findOrFail($validated['ThirdPartyId']);
             $customer = BancassuranceCustomer::findOrFail($id);
 
             $customer->update([
+                $ThirdPartyId,
                 'ReferralID' => $validated['ReferralID'],
-                'FullName' => $validated['FullName'],
-                'NationalID' => $validated['NationalID'],
-                'KRAPIN' => $validated['KRAPIN'],
                 'DateOfBirth' => $validated['DateOfBirth'],
                 'Gender' => $validated['Gender'] ?? '',
                 'MaritalStatus' => $validated['MaritalStatus'],
-                'PhoneNumber' => $validated['PhoneNumber'],
-                'Email' => $validated['Email'],
-                'Address' => $validated['Address'],
                 'Occupation' => $validated['Occupation'],
                 'ModifiedBy' => Auth::Id(),
             ]);
@@ -159,6 +133,11 @@ class CustomerController extends Controller
         $this->authorize(PermissionEnum::BancassuranceCustomersDelete, BancassuranceCustomer::class);
         try {
             $customer = BancassuranceCustomer::findOrFail($id);
+
+                if ($customer->policies()->exists()) {
+                    return redirect()->back()
+                    ->withErrors(['error' => 'This customer is in use and cannot be deleted.']);
+                }  
             $customer->delete();
 
             return redirect()->route('bancassurance.customers.check')
@@ -172,6 +151,20 @@ class CustomerController extends Controller
         }
     }
 
+    public function portfolio($customerId)
+    {
+        $customer = BancassuranceCustomer::find($customerId);
+        if (!$customer) {
+            return redirect()->back()->withErrors(['error' => 'Customer not found.']);
+        }
+
+        $policies = $customer->policies()
+            ->with(['product'])
+            ->orderByDesc('PolicyStartDate')
+            ->get();
+
+        return view('bancassurance.customers.portfolio', compact('customer', 'policies'));
+    }
 
 }
 

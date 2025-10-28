@@ -107,9 +107,11 @@ class MarketingPlanner extends Model
 
     public function activities(): HasMany
     {
-        if ($this->Type->value === PlannerTypeEnum::MasterPlanner->value) {
+        if ($this->Type?->value === PlannerTypeEnum::MasterPlanner->value) {
             return $this->hasMany(MarketingPlannerActivity::class, 'MasterPlannerId', 'Id');
         }
         return $this->hasMany(MarketingPlannerActivity::class, 'PlannerId', 'Id');
     }
+
+
 }

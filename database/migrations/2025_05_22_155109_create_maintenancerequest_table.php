@@ -14,9 +14,9 @@ return new class extends Migration {
             $table->id('Id');
             $table->string('RequestNumber')->unique();
             $table->foreignId('Property')->constrained('t_PropertyRegistry', 'Id');
-            $table->foreignId('Block')->constrained('t_PropertyBlock', 'Id'); 
-            $table->foreignId('Floor')->constrained('t_PropertyFloor', 'Id');
-            $table->foreignId('Unit')->constrained('t_PropertyUnit', 'Id');
+            $table->foreignId('Block')->nullable()->constrained('t_PropertyBlock', 'Id');
+            $table->foreignId('Floor')->nullable()->constrained('t_PropertyFloor', 'Id');
+            $table->foreignId('Unit')->nullable()->constrained('t_PropertyUnit', 'Id');
             $table->string('ReportedBy');
             $table->string('IssueType');
             $table->string('Priority');

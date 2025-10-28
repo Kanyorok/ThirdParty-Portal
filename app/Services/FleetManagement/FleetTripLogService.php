@@ -3,9 +3,6 @@
 namespace App\Services\FleetManagement;
 
 use App\Models\Fleet\FleetTripLog;
-use App\Models\Fleet\FleetDriver;
-use App\Models\Fleet\ContractedDriver;
-use App\Models\Core\CodeDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -16,32 +13,31 @@ class FleetTripLogService
      */
     private function generateTripNo(): string
     {
-        $latestTripNo = FleetTripLog::withTrashed()->latest('CreatedOn')->first();
+        $latestTrip = FleetTripLog::withTrashed()->latest('CreatedOn')->first();
 
-        if (!$latestTripNo || !$latestTripNo->Id) {
+        if (!$latestTrip || !$latestTrip->TripNo) {
             return 'TRP-0001';
         }
 
-        $lastId = (int)str_replace('TRP-', '', $latestTripNo->Id);
-        $newId = $lastId + 1;
+        $lastNumber = (int)str_replace('TRP-', '', $latestTrip->TripNo);
+        $newNumber = $lastNumber + 1;
 
-        return 'TRP-' . str_pad($newId, 4, '0', STR_PAD_LEFT);
+        return 'TRP-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
-     * Create a new trip
+     * Create a new parent trip.
      */
-    public function createTrip(array $data): FleetTripLog
+    public function createParentTrip(array $data): FleetTripLog
     {
         return DB::transaction(function () use ($data) {
-
-            $driver = $this->resolveDriver($data['DriverType'], $data['DriverID']);
-
             $tripLog = FleetTripLog::create([
                 'TripNo' => $this->generateTripNo(),
-                'VehicleID' => $data['VehicleID'],
-                'DriverType' => $driver['type_id'],    // numeric FK
-                'DriverID' => $driver['driver_id'],    // numeric FK
+                'ParentTripID' => null,
+                'TripType' => $data['TripType'],
+                'TripCode' => $data['TripCode'] ?? null,
+                'VehicleType' => $data['VehicleType'],
+                'LoadType' => $data['LoadType'] ?? null,
                 'TripStartDate' => $data['TripStartDate'] ?? now(),
                 'TripEndDate' => $data['TripEndDate'] ?? $data['TripStartDate'] ?? now(),
                 'StartTime' => $data['StartTime'] ?? null,
@@ -59,9 +55,48 @@ class FleetTripLogService
             activity()
                 ->causedBy(Auth::user())
                 ->performedOn($tripLog)
-                ->log("Trip log created for VehicleID: {$tripLog->VehicleID}");
+                ->event('created')
+                ->log("Created parent trip {$tripLog->TripNo}");
 
             return $tripLog;
+        });
+    }
+
+    /**
+     * Create child trips for a parent trip.
+     */
+    public function createChildTrips(FleetTripLog $parent, array $childData): void
+    {
+        DB::transaction(function () use ($parent, $childData) {
+            if (!empty($childData) && is_array($childData)) {
+                foreach ($childData as $child) {
+                    FleetTripLog::create([
+                        'TripNo' => $this->generateTripNo(),
+                        'ParentTripID' => $parent->Id,
+                        'TripType' => $parent->TripType,
+                        'TripCode' => $parent->TripCode,
+                        'VehicleType' => $parent->VehicleType,
+                        'LoadType' => $child['LoadType'] ?? $parent->LoadType,
+                        'TripStartDate' => $child['TripStartDate'] ?? null,
+                        'TripEndDate' => $child['TripEndDate'] ?? null,
+                        'StartTime' => $child['StartTime'] ?? null,
+                        'EndTime' => $child['EndTime'] ?? null,
+                        'StartLocation' => $child['StartLocation'] ?? null,
+                        'EndLocation' => $child['EndLocation'] ?? null,
+                        'DistanceCovered' => $child['DistanceCovered'] ?? null,
+                        'Route' => $child['Route'] ?? null,
+                        'Purpose' => $child['Purpose'] ?? null,
+                        'Notes' => $child['Notes'] ?? null,
+                        'CreatedBy' => Auth::id(),
+                        'CreatedOn' => now(),
+                    ]);
+            }
+            }
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($parent)
+                ->event('created')
+                ->log("Created child trip(s) under parent {$parent->TripNo}");
         });
     }
 
@@ -71,23 +106,20 @@ class FleetTripLogService
     public function updateTrip(FleetTripLog $tripLog, array $data): FleetTripLog
 {
     return DB::transaction(function () use ($tripLog, $data) {
-        // Resolve driver depending on type
-        $driver = $this->resolveDriver($data['DriverType'], $data['DriverID']);
-
         $tripLog->update([
-            'VehicleID'       => $data['VehicleID'],
-            'DriverType'      => $driver['type_id'],   
-            'DriverID'        => $driver['driver_id'],   
-            'TripStartDate'   => $data['TripStartDate'] ?? $tripLog->TripStartDate,
-            'TripEndDate'     => $data['TripEndDate'] ?? $tripLog->TripEndDate,
-            'StartTime'       => $data['StartTime'] ?? $tripLog->StartTime,
-            'EndTime'         => $data['EndTime'] ?? $tripLog->EndTime,
-            'StartLocation'   => $data['StartLocation'] ?? $tripLog->StartLocation,
-            'EndLocation'     => $data['EndLocation'] ?? $tripLog->EndLocation,
-            'Route'           => $data['Route'] ?? $tripLog->Route,
-            'DistanceCovered' => $data['DistanceCovered'] ?? $tripLog->DistanceCovered,
-            'Purpose'         => $data['Purpose'] ?? $tripLog->Purpose,
-            'Notes'           => $data['Notes'] ?? $tripLog->Notes,
+            'TripType' => $data['TripType'],
+            'VehicleType' => $data['VehicleType'],
+            'LoadType' => $data['LoadType'],
+            'TripStartDate' => $data['TripStartDate'] ?? now(),
+            'TripEndDate' => $data['TripEndDate'] ?? $data['TripStartDate'] ?? now(),
+            'StartTime' => $data['StartTime'] ?? null,
+            'EndTime' => $data['EndTime'] ?? null,
+            'StartLocation' => $data['StartLocation'] ?? null,
+            'EndLocation' => $data['EndLocation'] ?? null,
+            'Route' => $data['Route'] ?? null,
+            'DistanceCovered' => $data['DistanceCovered'] ?? null,
+            'Purpose' => $data['Purpose'] ?? null,
+            'Notes' => $data['Notes'] ?? null,
         ]);
 
         $tripLog->ModifiedBy = Auth::id();
@@ -97,11 +129,12 @@ class FleetTripLogService
         activity()
             ->causedBy(Auth::user())
             ->performedOn($tripLog)
-            ->log("Trip log updated for VehicleID: {$tripLog->VehicleID}");
+            ->log("Trip log updated");
 
         return $tripLog;
     });
 }
+
 
     /**
      * Delete a trip
@@ -109,38 +142,17 @@ class FleetTripLogService
     public function deleteTrip(FleetTripLog $tripLog): void
     {
         DB::transaction(function () use ($tripLog) {
-
             $tripLog->DeletedBy = Auth::id();
             $tripLog->DeletedOn = now();
             $tripLog->save();
             activity()
                 ->causedBy(Auth::user())
                 ->performedOn($tripLog)
-                ->log("Trip log deleted for VehicleID: {$tripLog->VehicleID}");
+                ->log("Trip log deleted");
 
             $tripLog->delete();
         });
     }
 
-    /**
-     * Resolve driver type and ID for insertion
-     */
-    private function resolveDriver($driverTypeId, $Id)
-{
-    $type = CodeDetail::findOrFail($driverTypeId);
-
-    if ($type->Description === 'Permanent') {
-        $driver = FleetDriver::findOrFail($Id);
-    } elseif ($type->Description === 'Contracted') {
-        $driver = ContractedDriver::findOrFail($Id);
-    } else {
-        throw new \Exception("Invalid driver type: {$type->Description}");
-    }
-
-    return [
-        'type_id'   => $driverTypeId,
-        'driver_id' => $driver->Id,
-    ];
-}
 
 }

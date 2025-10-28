@@ -40,20 +40,62 @@
         @endif
         <form action="{{ route('purchaseOrder.store') }}" method="post" id="purchaseOrdersForm" novalidate>
             @csrf
-            <!-- RFQ Selection First -->
-            <div class="row mb-4">
-                <div class="col-md-4">
+            <!-- Source Selector -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <label class="form-label fw-bold">Source</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="SourceType" id="srcDirect" value="DIRECT" {{ ($sourceType ?? 'RFQ') === 'DIRECT' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="srcDirect">Direct</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="SourceType" id="srcRFQ" value="RFQ" {{ ($sourceType ?? 'RFQ') === 'RFQ' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="srcRFQ">RFQ</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="SourceType" id="srcTender" value="TENDER" {{ ($sourceType ?? 'RFQ') === 'TENDER' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="srcTender">Tender</label>
+            </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="SourceType" id="srcContract" value="CONTRACT" {{ ($sourceType ?? 'RFQ') === 'CONTRACT' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="srcContract">Contract-based</label>
+                            </div>
+                        </div>
+                    <input type="hidden" name="SourceId" id="SourceId" />
+                        </div>
+                    </div>
+
+            <!-- RFQ Selection -->
+            <div class="row mb-4 source-rfq d-none">
+                    <div class="col-md-4">
                     <label>Reference Number (RFQ) <span class="text-danger">*</span></label>
-                    <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo" required>
+                    <select class="form-control refNo @error('refNo') is-invalid @enderror" name="refNo" id="refNo">
                         <option selected disabled>Select RFQ</option>
-                        @foreach($rfqs as $rfq)
-                            <option value="{{ $rfq->RFQNumber }}" {{ old('refNo') == $rfq->RFQNumber ? 'selected' : '' }}>{{ $rfq->RFQNumber ?? '' }}</option>
+                        @foreach($awardedRfqs as $ar)
+                            @php
+                                $rfqNumber = trim((string)($ar->RFQNumber ?? ''));
+                                $isConvertedId = in_array($ar->Id, $convertedRFQIds ?? []);
+                                $isUsedRef = in_array($rfqNumber, $usedReferenceNumbers ?? []);
+                            @endphp
+                            {{-- Skip RFQs that are already converted by id or by reference number in ExtOrdNum --}}
+                            @if($isConvertedId || $isUsedRef)
+                                @continue
+                            @endif
+                            <option value="{{ $ar->RFQNumber }}"
+                                    data-rfq-id="{{ $ar->Id }}"
+                                    data-supplier-id="{{ $ar->ThirdPartyId ?? $ar->SupplierId }}"
+                                    data-thirdparty-id="{{ $ar->ThirdPartyId ?? 0 }}"
+                                    data-supplier-legacy-id="{{ $ar->SupplierId }}"
+                                    data-supplier-name="{{ $ar->SupplierName ?? '' }}"
+                                    data-address="{{ $ar->Address ?? '' }}">{{ $ar->RFQNumber }}</option>
                         @endforeach
-                    </select>
+                        {{-- Only awarded RFQs must be listed (no non-awarded options) --}}
+                        </select>
                     @error('refNo')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
-                </div>
+                    </div>
                 <div class="col-md-4">
                     <label>LPO Number <span class="text-danger">*</span></label>
                     <input type="text" name="LPONo" class="form-control @error('LPONo') is-invalid @enderror" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
@@ -63,28 +105,111 @@
                 </div>
                 <div class="col-md-4">
                     <label>Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate') }}" required/>
+                    <input type="date" class="form-control poDate @error('pODate') is-invalid @enderror" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
                     @error('pODate')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
 
-            <!-- Supplier & Details (after RFQ) -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <label>Supplier <span class="text-danger">*</span></label>
-                    <select class="form-control supplier @error('supplier') is-invalid @enderror" id="supplier" name="supplier" required>
-                        <option selected disabled>Select supplier</option>
-                        {{-- Options will be populated by JS based on selected RFQ --}}
+            <!-- Tender Selection -->
+            <div class="row mb-4 source-tender d-none">
+                <div class="col-md-4">
+                    <label>Tender No <span class="text-danger">*</span></label>
+                    <select class="form-control" id="tenderNo">
+                        <option selected disabled>Select Tender</option>
+                        @foreach(($awardedTenders ?? []) as $t)
+                            @php
+                                $tenderNo = trim((string)($t->TenderNo ?? ''));
+                                $isConvertedTenderId = in_array($t->Id, ($convertedTenderIds ?? []));
+                                $isUsedTenderRef = in_array($tenderNo, $usedReferenceNumbers ?? []);
+                            @endphp
+                            {{-- Skip Tenders already converted by id or whose TenderNo appears in ExtOrdNum --}}
+                            @if($isConvertedTenderId || $isUsedTenderRef)
+                                @continue
+                            @endif
+                            <option value="{{ $t->TenderNo }}"
+                                    data-tender-id="{{ $t->Id }}"
+                                    data-supplier-id="{{ $t->SupplierId }}"
+                                    data-thirdparty-id="{{ $t->ThirdPartyId ?? 0 }}"
+                                    data-supplier-name="{{ $t->SupplierName ?? '' }}"
+                                    data-address="{{ $t->Address ?? '' }}">{{ $t->TenderNo }}</option>
+                        @endforeach
                     </select>
-                    @error('supplier')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
+                </div>
+                <div class="col-md-4">
+                    <label>LPO Number <span class="text-danger">*</span></label>
+                    <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
+                </div>
+                <div class="col-md-4">
+                    <label>Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
+                </div>
+            </div>
+
+            <!-- Contract Selection -->
+            <div class="row mb-4 source-contract d-none">
+                    <div class="col-md-4">
+                    <label>Contract Ref <span class="text-danger">*</span></label>
+                    <select class="form-control" id="contractRef">
+                        <option selected disabled>Select Active Contract</option>
+                        @foreach(($contracts ?? []) as $c)
+                            <option value="{{ $c->ContractRef }}" 
+                                    data-contract-id="{{ $c->Id }}" 
+                                    data-supplier-id="{{ $c->SupplierId }}" 
+                                    data-supplier-name="{{ $c->SupplierName ?? '' }}"
+                                    data-address="{{ $c->Address }}">
+                                {{ $c->ContractRef }} - {{ $c->SupplierName }} [{{ $c->ContractStatus }}]
+                            </option>
+                        @endforeach
+                        </select>
+                </div>
+                <div class="col-md-4">
+                    <label>LPO Number <span class="text-danger">*</span></label>
+                    <input type="text" name="LPONo" class="form-control" value="{{ old('LPONo', uniqid('LPO-')) }}" readonly required/>
+                </div>
+                <div class="col-md-4">
+                    <label>Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control poDate" name="pODate" value="{{ old('pODate', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required/>
+                </div>
+            </div>
+
+            <!-- Supplier & Details -->
+            <div class="row mb-4 supplier-row">
+                <div class="col-md-6">
+                    <!-- Host for supplier driver (non-direct) and plan driver (direct) -->
+                    <div id="supplierDriverHost"></div>
+                    <div id="planDriver" class="plan-driver d-none">
+                        <label>Approved Procurement Plan (Direct) <span class="text-danger">*</span></label>
+                        <select id="directPlanSelect" class="form-control">
+                            <option value="" selected>Select Approved Plan</option>
+                        </select>
+                        <small class="text-muted">These are approved plans whose method is Direct Purchase.</small>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label>Address</label>
                     <input type="text" class="form-control" name="address" placeholder="Supplier address" readonly/>
+                </div>
+            </div>
+
+            <!-- Visible supplier field removed; we'll use prequalified supplier (Direct) or hidden supplier input (other modes). -->
+
+            <!-- Direct mode helpers (will receive supplier select when Direct) -->
+        <div class="row mb-3 direct-only d-none">
+                <div class="col-md-6">
+            <label>Item Category <span class="text-danger">*</span></label>
+            <select id="itemCategory" class="form-control" required>
+                        <option value="" selected>-- None --</option>
+                    </select>
+                </div>
+                <div class="col-md-6" id="directSupplierHost">
+            <label>Prequalified Supplier <span class="text-danger">*</span></label>
+            <select id="preqSupplier" class="form-control" required>
+                        <option value="" selected>-- None --</option>
+                    </select>
+                    <small class="text-muted">Only suppliers prequalified for the selected category will appear.</small>
+                    <!-- Supplier select will be appended here in Direct mode -->
                 </div>
             </div>
 
@@ -103,9 +228,9 @@
                 </div>
                 <div class="col-md-4 mt-2">
                     <label>Payment Terms <span class="text-danger">*</span></label>
-                    <select class="form-control terms @error('terms') is-invalid @enderror" name="terms" required>
+                    <select class="form-control terms @error('terms') is-invalid @enderror" name="terms" id="terms" required>
                         <option selected disabled>Select Payment Term</option>
-                        @foreach ($paymentTerms as $term)
+                        @foreach (($paymentTerms ?? []) as $term)
                             <option value="{{ $term->ID }}" {{ old('terms') == $term->ID ? 'selected' : '' }}>{{ $term->Description }}</option>
                         @endforeach
                     </select>
@@ -115,11 +240,11 @@
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end mb-3">
-                <button type="button" class="btn btn-outline-primary" id="add-row">
-                    + Add Item
-                </button>
-            </div>
+        <div class="d-flex justify-content-end mb-3">
+            <button type="button" class="btn btn-outline-primary" id="add-row">
+                + Add Item
+            </button>
+        </div>
 
 
             <!-- Line Items Table -->
@@ -128,9 +253,8 @@
                     <thead class="table-light">
                     <tr>
                         <th style="width: 3%; min-width: 30px;">#</th>
-                        <th style="width: 10%; min-width: 100px;">Item Type <span class="text-danger">*</span></th>
-                        <th style="width: 15%; min-width: 150px;">Item Name <span class="text-danger">*</span></th>
-                        <th style="width: 20%; min-width: 200px;">Item Description</th>
+                        <th style="width: 15%; min-width: 150px;">Item Code <span class="text-danger">*</span></th>
+                        <th style="width: 20%; min-width: 200px;">Item Name</th>
                         <th style="width: 5%; min-width: 80px;">Quantity <span class="text-danger">*</span></th>
                         <th style="width: 10%; min-width: 100px;">Unit Price <span class="text-danger">*</span></th>
                         <th style="width: 5%; min-width: 80px;">Tax %</th>
@@ -142,17 +266,7 @@
                     <tr>
                         <td class="line-no">1.</td>
                         <td class="text-start">
-                            <select class="form-select form-select-sm type" name="type[]" id="Type" required>
-                                <option disabled selected>Select Type</option>
-                                @foreach ($itemTypes as $type)
-                                    <option value="{{ $type->Id }}">{{ $type->TypeName }}</option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td class="text-start">
-                            <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item" required>
-                                <option disabled selected>Select Item Code</option>
-                            </select>
+                            <input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required>
                         </td>
                         <td class="text-start">
                             <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
@@ -218,344 +332,662 @@
     <script>
         // Prepare RFQ responses for JS (for supplier filtering)
         const rfqResponses = @json($rfqResponses);
-    </script>
-
-    <script>
-        const itemTypeOptions = `{!! $itemTypes->map(function($type) {
-        return "<option value='{$type->Id}'>{$type->TypeName}</option>";
-    })->implode('') !!}`;
-    </script>
-
-    <script>
-
-        // Filter suppliers when RFQ is selected
-        $(document).on('change', '#refNo', function () {
-            const selectedRFQ = $(this).val();
-            // Filter rfqResponses for this RFQ
-            const suppliers = rfqResponses.filter(r => r.RFQNumber === selectedRFQ);
-            // Remove duplicates by SupplierId or SupplierName
-            const uniqueSuppliers = [];
-            const seen = new Set();
-            suppliers.forEach(s => {
-                const key = s.SupplierName + (s.SupplierId || s.SupplierID || '');
-                if (!seen.has(key)) {
-                    uniqueSuppliers.push(s);
-                    seen.add(key);
+        const convertedRFQIds = @json($convertedRFQIds);
+        
+        // Load all items for dropdowns
+        const allItems = @json($allItems);
+        
+        // Build item options HTML
+        let itemOptions = '<option value="" disabled selected>Select Item</option>';
+        let currentAvailableItems = allItems; // Keep reference to current available items
+        
+        function buildItemOptions(items) {
+            let options = '<option value="" disabled selected>Select Item</option>';
+            items.forEach(item => {
+                options += `<option value="${item.itemCode}" 
+                                   data-name="${item.itemName}" 
+                                   data-description="${item.description || item.itemName}" 
+                                   data-price="${item.unitPrice || 0}"
+                                   data-type="${item.itemType || ''}"
+                                   data-category="${item.categoryName || ''}">
+                               ${item.itemName}
+                           </option>`;
+            });
+            return options;
+        }
+        
+        // Initialize with all items
+        itemOptions = buildItemOptions(allItems);
+        
+        // Function to update item options for contract-specific tender items
+    function updateItemOptionsForContract(contractItems) {
+            currentAvailableItems = contractItems;
+            itemOptions = buildItemOptions(contractItems);
+            
+            // Update existing dropdowns with new options
+            $('.itemCode').each(function() {
+                if (this.tagName !== 'SELECT') return; // only update selects
+                const currentVal = $(this).val();
+                $(this).html(itemOptions);
+                
+                // Try to restore the previously selected value if it still exists
+                if (currentVal && contractItems.find(item => item.itemCode == currentVal)) {
+                    $(this).val(currentVal);
                 }
             });
-            // Populate supplier dropdown
-            const $supplier = $('#supplier');
-            $supplier.empty().append('<option selected disabled>Select supplier</option>');
-            uniqueSuppliers.forEach(s => {
-                $supplier.append(`<option value="${s.SupplierId || s.Id || ''}" data-address="${s.Address || ''}">${s.SupplierName || s.Name || ''}</option>`);
+        }
+    </script>
+
+    <script>
+
+        // Utility: rebuild line items from payload
+        function populateItems(items) {
+            const $tbody = $('#item-rows');
+            $tbody.empty();
+            const addRow = (idx, it) => {
+                const $tr = $('<tr/>');
+                $tr.append(`<td class="line-no">${idx + 1}.</td>`);
+                
+                // Create item dropdown with currently available items (contract-specific or all items)
+                const $itemTd = $('<td class="text-start"/>' );
+                const $inputItem = $('<input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required/>' );
+                if (it.itemCode) { $inputItem.val(it.itemCode); }
+                $itemTd.append($inputItem);
+                $tr.append($itemTd);
+                
+                // Item description
+                const itemDescription = it.description || it.itemName || '';
+                $tr.append(`<td class="text-start"><textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;">${itemDescription}</textarea></td>`);
+                
+                // Other fields
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required value="${it.quantity ?? ''}"></td>`);
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required value="${it.unitPrice ?? ''}"></td>`);
+                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm tax" name="tax[]" step="any"></td>');
+                $tr.append('<td class="text-start"><input type="number" class="form-control form-control-sm discount" name="discount[]" step="any"></td>');
+                
+                const lineTotal = (+it.quantity || 0) * (+it.unitPrice || 0);
+                $tr.append(`<td class="text-start"><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly value="${lineTotal.toFixed(2)}"></td>`);
+                $tr.append('<td class="text-center align-middle"><button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button></td>');
+                $tbody.append($tr);
+            };
+            
+            (items || []).forEach((it, idx) => addRow(idx, it));
+            if ((items || []).length === 0) {
+                // keep one blank row with current available items
+                addRow(0, { itemCode: '', itemName: '', quantity: '', unitPrice: '' });
+            }
+            updateTotals();
+        }
+
+        function parseNumber(val) {
+            const n = parseFloat(val);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function recalcRow($tr) {
+            const qty = parseNumber($tr.find('.quantity').val());
+            const price = parseNumber($tr.find('.unit-price').val());
+            const discountPct = parseNumber($tr.find('.discount').val());
+            const base = qty * price;
+            const discounted = base * (discountPct ? (1 - (discountPct / 100)) : 1);
+            $tr.find('.line-total').val(discounted.toFixed(2));
+        }
+
+        function updateTotals() {
+            let exclusive = 0;
+            let taxTotal = 0;
+            $('#item-rows tr').each(function () {
+                const $tr = $(this);
+                const lt = parseNumber($tr.find('.line-total').val());
+                const taxPct = parseNumber($tr.find('.tax').val());
+                exclusive += lt;
+                taxTotal += lt * (taxPct / 100);
             });
-            // Clear address field
-            $('input[name="address"]').val('');
+            const inclusive = exclusive + taxTotal;
+            $('.exclusiveTotal').val(exclusive.toFixed(2));
+            $('.taxAmount').val(taxTotal.toFixed(2));
+            $('.inclusiveTotal').val(inclusive.toFixed(2));
+        }
+
+        $(document).on('input change', '.quantity, .unit-price, .tax, .discount', function () {
+            const $tr = $(this).closest('tr');
+            recalcRow($tr);
+            updateTotals();
         });
 
-        // Autopopulate address when supplier is selected (no AJAX needed)
-        $(document).on('change', '#supplier', function () {
-            let address = $(this).find('option:selected').data('address') || '';
+        $(document).on('keyup blur', '.quantity, .unit-price, .tax, .discount', function () {
+            const $input = $(this);
+            if ($input.val() === '') {
+                $input.val('0');
+            }
+            const $tr = $input.closest('tr');
+            recalcRow($tr);
+            updateTotals();
+        });
+
+        $(function(){
+            updateTotals();
+        });
+
+    // Source mode toggling
+        function applySourceMode() {
+            const mode = $('input[name="SourceType"]:checked').val();
+            const $planDriver = $('#planDriver');
+            if (mode === 'RFQ') {
+                $('.source-rfq').removeClass('d-none');
+                $('.source-tender').addClass('d-none');
+                $('.source-contract').addClass('d-none');
+                $('.direct-only').addClass('d-none');
+                // Show supplier driver
+                $planDriver.addClass('d-none');
+                // Live refresh of awarded RFQs from t_RFQAward
+                const $ref = $('#refNo');
+                $ref.empty().append('<option selected disabled>Loading awarded RFQs...</option>');
+                fetch('/procurement/purchase-order/awarded-rfqs')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $ref.empty().append('<option selected disabled>Select RFQ</option>');
+                        if (!success) return;
+                        const converted = (window.convertedRFQIds || []);
+                        (data || []).forEach(ar => {
+                            const dis = converted.includes(ar.Id) ? 'disabled' : '';
+                            const thirdPartyId = ar.ThirdPartyId || 0;
+                            const supplierLegacyId = ar.SupplierId || '';
+                            const supplierName = ar.SupplierName || '';
+                            const address = ar.Address || '';
+                            $ref.append(`<option value="${ar.RFQNumber}"
+                                            data-rfq-id="${ar.Id}"
+                                            data-supplier-legacy-id="${supplierLegacyId}"
+                                            data-thirdparty-id="${thirdPartyId}"
+                                            data-supplier-name="${supplierName}"
+                                            data-address="${address}"
+                                            ${dis}>${ar.RFQNumber}</option>`);
+                        });
+                    })
+                    .catch(() => {});
+                // Reset to all items for RFQ mode
+                updateItemOptionsForContract(allItems);
+            } else if (mode === 'TENDER') {
+                $('.source-rfq').addClass('d-none');
+                $('.source-tender').removeClass('d-none');
+                $('.source-contract').addClass('d-none');
+                $('.direct-only').addClass('d-none');
+                $planDriver.addClass('d-none');
+                // Reset to all items for Tender mode
+                updateItemOptionsForContract(allItems);
+            } else if (mode === 'CONTRACT') {
+                $('.source-rfq').addClass('d-none');
+                $('.source-tender').addClass('d-none');
+                $('.source-contract').removeClass('d-none');
+                $('.direct-only').addClass('d-none');
+                $planDriver.addClass('d-none');
+                // Keep current available items (will be updated when contract is selected)
+            } else {
+                $('.source-rfq').addClass('d-none');
+                $('.source-tender').addClass('d-none');
+                $('.source-contract').addClass('d-none');
+                $('#SourceId').val('');
+                // Hide Item Category row until a plan is selected
+                $('.direct-only').addClass('d-none');
+                // Reset to all items for Direct mode
+                updateItemOptionsForContract(allItems);
+                populateItems([]);
+                // Show plan driver
+                $planDriver.removeClass('d-none');
+                // Load approved direct procurement plans
+                const $planSel = $('#directPlanSelect');
+                $planSel.prop('disabled', true).html('<option value="" selected>Loading plans...</option>');
+                fetch('/procurement/purchase-order/direct-plans')
+                    .then(r => r.json())
+                    .then(({success, data}) => {
+                        $planSel.empty().append('<option value="" selected>Select Approved Plan</option>');
+                        if (!success) { $planSel.append('<option disabled>Error loading plans</option>'); return; }
+                        (data || []).forEach(p => {
+                            const label = `${p.Title || ('Plan #' + (p.PlanID||''))}${p.FiscalYear ? ' - ' + p.FiscalYear : ''} (${p.PendingItems ?? 0} pending)`;
+                            $planSel.append(`<option value="${p.PlanID}">${label}</option>`);
+                        });
+                        $planSel.prop('disabled', false);
+                    })
+                    .catch(() => {
+                        $planSel.html('<option value="" selected>Failed to load plans</option>');
+                        $planSel.prop('disabled', false);
+                    });
+            }
+        }
+        $(document).on('change', 'input[name="SourceType"]', applySourceMode);
+        applySourceMode();
+
+    // RFQ selection: auto-fill hidden supplier and items
+        $(document).on('change', '#refNo', function () {
+            const selectedRFQNo = $(this).val();
+            const rfqOption = $(this).find('option:selected');
+            const rfqId = parseInt(rfqOption.data('rfq-id'));
+            const supplierLegacyId = parseInt(rfqOption.data('supplier-legacy-id')); // t_Suppliers.Id for posting
+            const awardedThirdPartyId = parseInt(rfqOption.data('thirdparty-id')); // t_ThirdParties.Id for lookups/items
+            const matchThirdPartyId = Number.isFinite(awardedThirdPartyId) ? awardedThirdPartyId : NaN;
+            if (!isNaN(rfqId)) {
+                $('#SourceId').val(rfqId);
+                        } else {
+                $('#SourceId').val('');
+            }
+
+            if (Number.isFinite(supplierLegacyId)) {
+                const awardResp = rfqResponses.find(r => (r.RFQNumber === selectedRFQNo) && (parseInt(r.SupplierId) === matchThirdPartyId));
+                const fallbackName = rfqOption.data('supplier-name') || '';
+                const fallbackAddress = rfqOption.data('address') || '';
+                const displayName = awardResp ? (awardResp.TradingName || awardResp.SupplierName || awardResp.Name) : (fallbackName || `Supplier #${supplierLegacyId}`);
+                const address = awardResp ? (awardResp.Address || awardResp.TradingAddress || '') : fallbackAddress;
+                $('input[name="address"]').val(address);
+                if ($("input[name='supplier']").length === 0) {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierLegacyId)}).appendTo('#purchaseOrdersForm');
+            } else {
+                    $("input[name='supplier']").val(String(supplierLegacyId));
+                }
+
+                // Fetch RFQ items for this supplier (use ThirdPartyId as rr.SupplierId in t_RFQResponse)
+                if (!isNaN(rfqId) && Number.isFinite(matchThirdPartyId)) {
+                    fetch(`/procurement/purchase-order/rfq-items/${rfqId}?supplierId=${matchThirdPartyId}`)
+                .then(r => r.json())
+                        .then(({items}) => { populateItems(items || []); updateTotals(); })
+                        .catch(() => populateItems([]));
+                } else if (!isNaN(rfqId)) {
+                    // fallback without supplier filter
+                    fetch(`/procurement/purchase-order/rfq-items/${rfqId}`)
+                        .then(r => r.json())
+                        .then(({items}) => { populateItems(items || []); updateTotals(); })
+                        .catch(() => populateItems([]));
+                }
+            }
+        });
+
+        // Tender selection: auto-fill supplier and items
+        $(document).on('change', '#tenderNo', function () {
+            const opt = $(this).find('option:selected');
+            const tenderId = parseInt(opt.data('tender-id'));
+            const supplierId = parseInt(opt.data('supplier-id')); // t_Suppliers.Id for posting
+            const supplierName = opt.data('supplier-name') || '';
+            const address = opt.data('address') || '';
+
+            if (!isNaN(tenderId)) {
+                $('#SourceId').val(tenderId);
+            } else {
+                $('#SourceId').val('');
+            }
+
+            if (!isNaN(supplierId)) {
+                const name = supplierName || `Supplier #${supplierId}`;
+                $('input[name="address"]').val(address);
+                if ($("input[name='supplier']").length === 0) {
+                        $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
+                } else {
+                    $("input[name='supplier']").val(String(supplierId));
+                }
+            }
+
+            if (!isNaN(tenderId)) {
+                fetch(`/procurement/purchase-order/tender-items/${tenderId}`)
+                    .then(r => r.json())
+                    .then(({items}) => { populateItems(items || []); updateTotals(); })
+                    .catch(() => populateItems([]));
+            }
+        });
+
+        // Contract selection: auto-fill supplier and load contract tender items
+        $(document).on('change', '#contractRef', function () {
+            const opt = $(this).find('option:selected');
+            const contractId = parseInt(opt.data('contract-id'));
+            const supplierId = parseInt(opt.data('supplier-id'));
+            const supplierName = opt.data('supplier-name') || '';
+            const address = opt.data('address') || '';
+            
+            if (!isNaN(contractId)) {
+                $('#SourceId').val(contractId);
+            } else {
+                $('#SourceId').val('');
+            }
+
+            if (!isNaN(supplierId)) {
+                const name = supplierName || `Supplier #${supplierId}`;
+                $('input[name="address"]').val(address);
+                if ($("input[name='supplier']").length === 0) {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
+                } else {
+                    $("input[name='supplier']").val(String(supplierId));
+                }
+            }
+
+            // Load contract tender items and update available items
+            if (!isNaN(contractId)) {
+                fetch(`/procurement/purchase-order/contract-items/${contractId}`)
+                    .then(r => r.json())
+                    .then(({items, availableItems}) => { 
+                        // Update global item options with contract-specific tender items
+                        updateItemOptionsForContract(availableItems || []);
+                        
+                        // Populate the form with the tender items
+                        populateItems(items || []); 
+                        updateTotals(); 
+                    })
+                    .catch(err => {
+                        console.error('Failed to load contract tender items:', err);
+                        populateItems([]);
+                    });
+            }
+        });
+
+    // No supplier dropdown in UI; address is updated by specific handlers
+
+        $(function () {
+            $('form#purchaseOrdersForm').submit(function (e) {
+                e.preventDefault();
+                
+                // Ensure supplier value is set (Direct uses preqSupplier, others set hidden earlier)
+                const preqVal = $('#preqSupplier').val();
+                if (preqVal && $("input[name='supplier']").length === 0 && $('input[name="SourceType"]:checked').val() === 'DIRECT') {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(preqVal)}).appendTo('#purchaseOrdersForm');
+                }
+                
+                // Validate required fields before submission
+                let isValid = true;
+                let errorMessages = [];
+
+                // If Direct mode, ensure a plan is selected
+                const mode = $('input[name="SourceType"]:checked').val();
+                if (mode === 'DIRECT') {
+                    if (!$('#directPlanSelect').val()) {
+                        errorMessages.push('Please select an approved procurement plan');
+                        isValid = false;
+                    }
+                }
+                
+                // Check supplier
+                if (mode === 'DIRECT') {
+                    if (!$('#preqSupplier').val()) {
+                        errorMessages.push('Please select a prequalified supplier');
+                        isValid = false;
+                    }
+                } else {
+                    const hiddenSup = $("input[name='supplier']").val();
+                    if (!hiddenSup) {
+                        errorMessages.push('Supplier could not be determined from your selection');
+                        isValid = false;
+                    }
+                }
+                
+                // Check payment terms
+                if (!$('#terms').val()) {
+                    errorMessages.push('Please select payment terms');
+                    isValid = false;
+                }
+                
+                // Check if we have at least one item
+                const itemCount = $('.itemCode').length;
+                if (itemCount === 0) {
+                    errorMessages.push('Please add at least one item');
+                    isValid = false;
+                }
+                
+                // Check each item has required fields
+                $('.itemCode').each(function(index) {
+                    const $row = $(this).closest('tr');
+                    const itemCode = $(this).val();
+                    const quantity = $row.find('.quantity').val();
+                    const unitPrice = $row.find('.unit-price').val();
+                    
+                    if (!itemCode) {
+                        errorMessages.push(`Row ${index + 1}: Please enter an item`);
+                        isValid = false;
+                    }
+                    if (!quantity || quantity <= 0) {
+                        errorMessages.push(`Row ${index + 1}: Please enter a valid quantity`);
+                        isValid = false;
+                    }
+                    if (!unitPrice || unitPrice < 0) {
+                        errorMessages.push(`Row ${index + 1}: Please enter a valid unit price`);
+                        isValid = false;
+                    }
+                });
+                
+                if (!isValid) {
+                    alert('Please fix the following errors:\n\n' + errorMessages.join('\n'));
+                    return false;
+                }
+                
+                // Show loading state
+                $('#saveOrder').prop('disabled', true).text('Saving...');
+                
+                // Submit the form normally
+                this.submit();
+            });
+        });
+
+        // === Direct mode wiring ===
+    function setDirectMode(enabled){
+            const $direct = $('.direct-only');
+            const $supplierRow = $('.supplier-row');
+            if(enabled){
+        // Show supplier row because it contains the Plan dropdown
+        $supplierRow.removeClass('d-none');
+        // Keep item category row hidden until a plan is selected
+        $direct.addClass('d-none');
+                // load root categories and merge with direct-plan categories
+                const $sel = $('#itemCategory');
+                $sel.empty().append(`<option value="">-- None --</option>`);
+                Promise.all([
+                    fetch(`{{ url('procurement/purchaseOrder/root-categories') }}`).then(r=>r.json()).catch(()=>({data:[]})),
+                    fetch(`{{ url('procurement/purchaseOrder/direct-plan-categories') }}`).then(r=>r.json()).catch(()=>({data:[]})),
+                ]).then(([root, direct])=>{
+                    const seen = new Set();
+                    [...(root.data||[]), ...(direct.data||[])].forEach(row=>{
+                        if(!row || !row.Id || seen.has(row.Id)) return;
+                        seen.add(row.Id);
+                        $sel.append(`<option value="${row.Id}">${row.Name}</option>`);
+                    });
+                });
+            }else{
+                $direct.addClass('d-none');
+                $supplierRow.removeClass('d-none');
+            }
+        }
+
+        function refreshSourceUI(){
+            const src = $('input[name="SourceType"]:checked').val();
+            setDirectMode(src === 'DIRECT');
+        }
+        $(document).on('change','input[name="SourceType"]', refreshSourceUI);
+        // initial
+        refreshSourceUI();
+
+        // Category change => load plan-scoped items and prequalified suppliers
+        $('#itemCategory').on('change', function(){
+            const catId = $(this).val() ? parseInt($(this).val(),10) : 0;
+            const planId = $('#directPlanSelect').val() ? parseInt($('#directPlanSelect').val(),10) : 0;
+            if(!(catId>0) || !(planId>0)){
+                return;
+            }
+            // 1) Populate prequalified supplier dropdown for this category
+            const $preqSupplier = $('#preqSupplier');
+            $preqSupplier.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
+            // Clear hidden supplier and address until user selects one for this category
+            const $hiddenSup = $("input[name='supplier']");
+            if ($hiddenSup.length) { $hiddenSup.val(''); }
+            $('input[name="address"]').val('');
+            fetch(`{{ url('procurement/purchaseOrder/prequalified-suppliers') }}/${catId}`)
+                .then(r=>r.json()).then(({data})=>{
+                    (data||[]).forEach(row=>{
+                        const supplierId = row.SupplierId || row.SupplierID || '';
+                        const display = row.SupplierName || (supplierId ? `Supplier #${supplierId}` : `ThirdParty #${row.ThirdPartyId || ''}`);
+                        const address = row.Address || '';
+                        const value = String(supplierId).length ? supplierId : (row.ThirdPartyId || '');
+                        $preqSupplier.append(`<option value="${value}" data-supplier-id="${supplierId || ''}" data-address="${address}">${display}</option>`);
+                    });
+                    $preqSupplier.prop('disabled', false);
+                }).catch(()=>{});
+
+            // 2) Load plan items filtered by category and populate the grid
+            fetch(`{{ url('procurement/purchaseOrder/plan') }}/${planId}/category/${catId}/items`)
+                .then(r=>r.json())
+                .then((resp)=>{
+                    const items = (resp && (resp.data || resp.items)) ? (resp.data || resp.items) : [];
+                    populateItems(Array.isArray(items) ? items : []);
+                    updateTotals();
+                    if (!items || items.length === 0) {
+                        // Give a hint if category has no pending Direct items in this plan
+                        // alert('No items found for the selected category in this plan.'); // optional
+                    }
+                })
+                .catch(()=>{});
+        });
+
+    // Selecting a prequalified supplier should set the hidden supplier input and address
+        $(document).on('change', '#preqSupplier', function(){
+            const $opt = $(this).find('option:selected');
+            const supplierId = String($opt.data('supplier-id') || $(this).val() || '').trim();
+            const address = $opt.data('address') || '';
+            if (supplierId) {
+        // Update hidden supplier input
+                if ($("input[name='supplier']").length === 0) {
+                    $('<input>').attr({type:'hidden', name:'supplier', value:String(supplierId)}).appendTo('#purchaseOrdersForm');
+                } else {
+                    $("input[name='supplier']").val(String(supplierId));
+                }
+            }
             $('input[name="address"]').val(address);
         });
 
-        // $(document).on('change','#supplier',function () {
-        //     fetchSuppliers();
-        //
-        //
-        //     alert('eric');
-        // });
-
-        $(function () {
-            // Handle item type change using event delegation
-
-            $('form#purchaseOrdersForm').submit(async function (e) {
-                // alert($('#RequisitionID').val());
-                e.preventDefault();
-                if (await saveForm($(this), $('#saveOrder'), true, true, true)) {
-                    $Modal.modal('hide');
-                }
-
-            });
-
-
-            $(document).on('change', '.type', function () {
-                let row = $(this).closest('tr');
-                let type = $(this).val();
-
-                if (type !== '') {
-                    $.ajax({
-                        url: `/procurement/requisitionItem/getItem/${type}`,
-                        type: 'GET',
-                        success: function (response) {
-
-                            console.log(response)
-                            let itemCodeSelect = row.find('.itemCode');
-                            itemCodeSelect.empty().append(
-                                '<option value="">Select Item</option>');
-
-                            $.each(response.data, function (key, item) {
-                                itemCodeSelect.append(
-                                    `<option value="${item.Id}">${item.ItemName}</option>`
-                                );
-                            });
-                        },
-                        error: function (response) {
-                            alert('Failed to load items');
-                            console.log(response);
-                        }
-                    });
-                } else {
-                    row.find('.itemCode').empty().append('<option value="">Select Item</option>');
-                }
-            });
-
-            ////fetching suppliers
-
-
-            // Handle item code change using event delegation
-            $(document).on('change', '.itemCode', function () {
-                let row = $(this).closest('tr');
-                let itemId = $(this).val();
-
-                if (itemId !== '') {
-                    $.ajax({
-                        url: `/procurement/requisitionItem/getItemDetails/${itemId}`,
-                        type: 'GET',
-                        success: function (response) {
-                            if (response.data && response.data.length > 0) {
-                                $.each(response.data, function (key, item) {
-                                    row.find('.itemDescription').val(item.ItemDescription ||
-                                        '');
-                                    row.find('.unit-price').val(item.UnitPrice || '');
-                                });
-                            }
-                        },
-                        error: function (response) {
-                            alert('Failed to load item details');
-                            console.log(response);
-                        }
-                    });
-                } else {
-                    row.find('.itemDescription').val('');
-                    row.find('.unit-price').val('');
-                }
-            });
-
-            // Validate tax and discount columns for percentage <= 100, highlight errors
-            $(document).on('change', '.tax, .discount', function () {
-                let $input = $(this);
-                let val = parseFloat($input.val()) || 0;
-                // Remove previous error
-                $input.removeClass('is-invalid');
-                $input.next('.invalid-feedback').remove();
-                if (val > 100) {
-                    $input.addClass('is-invalid');
-                    $input.val('');
-                    $input.after('<div class="invalid-feedback d-block">Percentage cannot exceed 100%</div>');
-                }
-            });
-
-            // Handle quantity or price change and calculate line total
-            $(document).on('change', '.quantity, .unit-price, .tax, .discount', function () {
-                let row = $(this).closest('tr');
-                let qty = parseFloat(row.find('.quantity').val()) || 0;
-                let price = parseFloat(row.find('.unit-price').val()) || 0;
-                let tax = parseFloat(row.find('.tax').val()) || 0;
-                let discount = parseFloat(row.find('.discount').val()) || 0;
-
-                // Already validated above, but double-check for safety
-                if (tax > 100) tax = 100;
-                if (discount > 100) discount = 100;
-
-                let total = qty * price;
-
-                if (tax > 0) {
-                    total += total * (tax / 100);
-                }
-                if (discount > 0) {
-                    total -= total * (discount / 100);
-                }
-
-                row.find('.line-total').val(total.toFixed(2));
-                calculateSummaryTotals();
-            });
-
-
-
-            function calculateSummaryTotals() {
-                let exclusiveTotal = 0;
-                let totalTax = 0;
-
-                // Loop through each row to calculate totals
-                $('#po-items tr').each(function () {
-                    let row = $(this);
-                    let qty = parseFloat(row.find('.quantity').val()) || 0;
-                    let price = parseFloat(row.find('.unit-price').val()) || 0;
-                    let tax = parseFloat(row.find('.tax').val()) || 0;
-                    let discount = parseFloat(row.find('.discount').val()) || 0;
-
-                    // Calculate line total before tax and discount
-                    let lineTotalBeforeTax = qty * price;
-
-                    // Apply discount
-                    if (discount > 0) {
-                        lineTotalBeforeTax -= lineTotalBeforeTax * (discount / 100);
-                    }
-
-                    // Calculate tax for this line
-                    let lineTax = lineTotalBeforeTax * (tax / 100);
-
-                    // Add to totals
-                    exclusiveTotal += lineTotalBeforeTax;
-                    totalTax += lineTax;
-                });
-
-                // Calculate inclusive total
-                let inclusiveTotal = exclusiveTotal + totalTax;
-
-                // Update the summary fields
-                $('input[name="exclusiveTotal"]').val(exclusiveTotal.toFixed(2));
-                $('input[name="taxAmount"]').val(totalTax.toFixed(2));
-                $('input[name="inclusiveTotal"]').val(inclusiveTotal.toFixed(2));
-            }
-
-
-            $(document).ready(function () {
-                calculateSummaryTotals();
-            });
-
-            function updateLineNumbers() {
-                $('#po-items tr').each(function (index) {
-                    $(this).find('.line-no').text((index + 1) + '.');
-                });
-            }
+    // Remove row handler and totals calculation kept from your current dev form
+    // Add Item Button Handler
+        $(document).on('click', '#add-row', function() {
+            const $tbody = $('#item-rows');
+            const rowCount = $tbody.find('tr').length + 1;
+            
+            const $newRow = $(`
+                <tr>
+                    <td class="line-no">${rowCount}.</td>
+                    <td class="text-start">
+                        <input type="text" class="form-control form-control-sm itemCode" name="itemCode[]" placeholder="Item (code/name)" required>
+                    </td>
+                    <td class="text-start">
+                        <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]" rows="5" readonly style="display:flex;align-items:center;justify-content:center;text-align:center;padding:0;resize:none;"></textarea>
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" step="any" required>
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" step="any" required>
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm tax" name="tax[]" step="any">
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm discount" name="discount[]" step="any">
+                    </td>
+                    <td class="text-start">
+                        <input type="number" class="form-control form-control-sm line-total" name="lineTotal[]" step="any" readonly>
+                    </td>
+                    <td class="text-center align-middle">
+                        <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item">
+                            <i class="fa fa-trash"></i> Remove
+                        </button>
+                    </td>
+                </tr>
+            `);
+            
+            $tbody.append($newRow);
+            updateRowNumbers();
         });
 
-        let rowCount = 1;
-
-        document.getElementById('add-row').addEventListener('click', function () {
-            rowCount++;
-            const row = `
-        <tr>
-            <td class="line-no">${rowCount}.</td>
-            <td class="text-start">
-                <select class="form-select form-select-sm type" name="type[]" id="Type" required>
-                    <option disabled selected>Select Type</option>
-                    ${itemTypeOptions}
-                </select>
-            </td>
-            <td class="text-start">
-                <select class="form-select form-select-sm itemCode" name="itemCode[]" id="Item" required>
-                    <option disabled selected>Select Item Code</option>
-                </select>
-            </td>
-            <td>
-                <textarea class="form-control form-control-sm itemDescription" name="itemDescription[]"
-                          id="Description" cols="30"
-                          rows="5" readonly style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 0; resize: none;"></textarea>
-            </td>
-            <td><input type="number" class="form-control form-control-sm qty quantity" name="quantity[]" id="Quantity" required></td>
-            <td><input type="number" class="form-control form-control-sm unit-price" name="unitPrice[]" id="Price" required></td>
-            <td><input type="number" class="form-control form-control-sm tax" name="tax[]" id="Tax" ></td>
-            <td><input type="number" class="form-control form-control-sm discount" name="discount[]" id="Discount" ></td>
-            <td><input type="number" class="form-control form-control-sm line-total" name="lineTotal[]"  id="lineTotal" readonly></td>
-            <td class="text-center align-middle">
-                <button type="button" class="btn btn-sm btn-danger remove-row" title="Remove Item"><i class="fa fa-trash"></i> Remove</button>
-            </td>
-        </tr>`;
-            document.getElementById('po-items').insertAdjacentHTML('beforeend', row);
-            updateLineNumbers();
+        // Item Selection Change Handler
+        $(document).on('change', '.itemCode', function() {
+            if (this.tagName !== 'SELECT') return;
+            const $row = $(this).closest('tr');
+            const $option = $(this).find('option:selected');
+            const itemName = $option.data('name') || $option.text();
+            const itemDescription = $option.data('description') || itemName;
+            const unitPrice = $option.data('price') || 0;
+            // Update description and price
+            $row.find('.itemDescription').val(itemDescription);
+            $row.find('.unit-price').val(unitPrice);
+            // Recalculate totals
+            recalcRow($row);
+            updateTotals();
         });
 
-        // Remove row handler
-        $(document).on('click', '.remove-row', function () {
-            // Only remove if more than one row remains
-            if ($('#po-items tr').length > 1) {
+        // Remove Row Handler
+        $(document).on('click', '.remove-row', function() {
+            const $tbody = $('#item-rows');
+            if ($tbody.find('tr').length > 1) {
                 $(this).closest('tr').remove();
-                updateLineNumbers();
-                calculateSummaryTotals();
+                updateRowNumbers();
+                updateTotals();
             } else {
-                // Optionally, clear the row instead of removing if only one left
-                let row = $(this).closest('tr');
-                row.find('select, input, textarea').val('');
-                row.find('.itemDescription').val('');
-                row.find('.line-total').val('');
-                calculateSummaryTotals();
+                alert('At least one item row is required.');
             }
         });
-    </script>
-<script>
-    $(document).ready(function () {
-        $('#rfq-id').on('change', function () {
-            const rfqId = $(this).val();
-            if (!rfqId) return;
 
-            $.ajax({
-                url: `/purchase-order/rfq-items/${rfqId}`,
-                method: 'GET',
-                success: function (response) {
-                    const tbody = $('#item-rows');
-                    tbody.empty();
+        // Update quantity, price, tax, discount handlers
+        $(document).on('input', '.quantity, .unit-price, .tax, .discount', function() {
+            const $row = $(this).closest('tr');
+            recalcRow($row);
+            updateTotals();
+        });
 
-                    response.items.forEach((item, index) => {
-                        const row = `
-                            <tr>
-                                <td>
-                                    <input type="hidden" name="itemCode[]" value="${item.itemCode}">
-                                    <input type="text" class="form-control" value="${item.itemName}" readonly>
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control" name="itemType[]" value="${item.itemType}" readonly>
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control quantity" name="quantity[]" value="${item.quantity}" min="1" required>
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control unit-price" name="unitPrice[]" value="${item.unitPrice}" min="0" required>
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control tax" name="tax[]" value="" min="0">
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control discount" name="discount[]" value="" min="0">
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control total" name="total[]" value="" readonly>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-                                </td>
-                            </tr>`;
-                        tbody.append(row);
-                    });
-                },
-                error: function () {
-                    alert('Failed to load RFQ items.');
-                }
+        // Update row numbers
+        function updateRowNumbers() {
+            $('#item-rows tr').each(function(index) {
+                $(this).find('.line-no').text((index + 1) + '.');
             });
+        }
+
+        // Initialize on page load
+        $(document).ready(function() {
+            updateTotals();
         });
 
-        // Remove row handler
-        $(document).on('click', '.remove-row', function () {
-            $(this).closest('tr').remove();
-        });
-
-        // Live calculation of total (qty * unitPrice + tax - discount)
-        $(document).on('input', '.quantity, .unit-price, .tax, .discount', function () {
-            const row = $(this).closest('tr');
-            const qty = parseFloat(row.find('.quantity').val()) || 0;
-            const price = parseFloat(row.find('.unit-price').val()) || 0;
-            const tax = parseFloat(row.find('.tax').val()) || 0;
-            const discount = parseFloat(row.find('.discount').val()) || 0;
-
-            const subtotal = qty * price;
-            const total = subtotal + tax - discount;
-
-            row.find('.total').val(total.toFixed(2));
-        });
+    // Direct plan selection handler
+    $(document).on('change', '#directPlanSelect', function(){
+        const val = $(this).val();
+        if (val) {
+            $('#SourceId').val(val); // set SourceId to PlanID for backend awareness
+            // Clear current items before loading
+            populateItems([]);
+            const $planSel = $(this);
+            $planSel.prop('disabled', true);
+            fetch(`/procurement/purchase-order/direct-plan-items/${val}`)
+                .then(r => r.json())
+                .then(({success, data, items}) => {
+                    const rows = data || items || [];
+                    if (rows && rows.length >= 0) {
+                        populateItems(rows);
+                        updateTotals();
+                        // Now reveal the Item Category and supplier helpers for further narrowing
+                        $('.direct-only').removeClass('d-none');
+                        // Load categories tied to this plan
+                        const $cat = $('#itemCategory');
+                        $cat.prop('disabled', true).empty().append('<option value="" selected>-- None --</option>');
+                        fetch(`{{ url('procurement/purchaseOrder/plan') }}/${val}/categories`)
+                            .then(r=>r.json())
+                            .then(({success, data})=>{
+                                (data||[]).forEach(row=>{
+                                    $cat.append(`<option value="${row.Id}">${row.Name}</option>`);
+                                });
+                                $cat.prop('disabled', false);
+                            })
+                            .catch(()=>{ $cat.prop('disabled', false); });
+                    } else {
+                        alert('No items found for selected plan.');
+                    }
+                })
+                .catch(() => alert('Error loading plan items.'))
+                .finally(()=> $planSel.prop('disabled', false));
+        } else {
+            $('#SourceId').val('');
+            populateItems([]);
+            // Hide again when plan cleared
+            $('.direct-only').addClass('d-none');
+            $('#itemCategory').empty().append('<option value="" selected>-- None --</option>');
+        }
     });
+
 </script>
-
-
 @endsection

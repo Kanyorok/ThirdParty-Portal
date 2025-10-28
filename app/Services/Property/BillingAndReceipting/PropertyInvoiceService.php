@@ -6,6 +6,7 @@ use App\Enums\Property\PropertyInvoiceEnum;
 use App\Models\Auth\User;
 use App\Models\PropertyManagement\PropertyInvoice;
 use App\Models\PropertyManagement\PropertyNewLease;
+use App\Models\PropertyManagement\PropertyNewTenant;
 use Illuminate\Support\Facades\DB;
 
 
@@ -61,6 +62,7 @@ class PropertyInvoiceService
             $finance = app(\App\Services\Finance\InvoiceIntakeService::class);
             //Get the tenantID
             $tenantID =PropertyNewLease::find($Lease->Id)->Tenant;
+            $thirdPartyID = PropertyNewTenant::find($tenantID)->ThirdPartyId;
             // Build Finance lines (include only non-zero lines)
             $lines = [];
             $addLine = function (string $name, float $amount) use (&$lines, $Lease) {
@@ -92,8 +94,8 @@ class PropertyInvoiceService
                     'SourceTable' => 't_RentInvoice',
 
                     'ModuleID' => 500000,
-                    'CurrencyID' => $Lease->CurrencyID ?? 1,
-                    'CustomerID' => $tenantID  ?? null,
+                    'CurrencyID' =>56,
+                    'CustomerID' => $thirdPartyID ?? null,
 
                     'InvoiceID' => $invoice->Id,
                     'InvoiceNumber' => $InvoiceNumber,

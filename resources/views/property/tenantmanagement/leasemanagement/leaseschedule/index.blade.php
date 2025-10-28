@@ -5,7 +5,8 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 @endsection
 @section('content')
-    <a href="{{ route('schedulelease.create') }}" class="btn btn-success">🧾 Generate Schedule</a>
+    <a href="{{ route('schedulelease.create') }}" class="btn btn-success">Generate Schedule</a>
+    <p><small>This is a list of schedules that have been created manually or auto generated</small></p>
     @if($leaseschedules->count())
         <table class="table table-bordered table-striped mt-4" id="LeaseSchedule">
             <thead class="table-light">
@@ -25,7 +26,7 @@
                 <tr>
                     <td>{{ $loop->iteration ?? '-' }}</td>
                     <td>{{ $leaseschedule->lease->LeaseNumber ?? '-' }}</td>
-                    <td>{{ $leaseschedule->lease->tenant->TenantName ?? '-' }}</td>
+                    <td>{{ $leaseschedule->lease->tenant->thirdParty->ThirdPartyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->lease->property->PropertyName ?? '-' }}</td>
                     <td>{{ $leaseschedule->paymentFrequency->Description ?? '-' }}</td>
                     <td>{{ $leaseschedule->StartDate ? \Carbon\Carbon::parse($leaseschedule->StartDate)->format('d/m/Y') : '-' }}</td>

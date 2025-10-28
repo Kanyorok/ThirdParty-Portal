@@ -3,11 +3,7 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
-use Yajra\DataTables\DataTables;
+use App\Http\Requests\Inventory\ItemMasterListRequest;
 use App\Models\Inventory\ItemMasterList;
 use App\Models\Inventory\ItemCategories;
 use App\Models\Inventory\InventoryType;
@@ -15,46 +11,88 @@ use App\Models\Inventory\ItemType;
 use App\Models\Inventory\UnitOfMeasure;
 use App\Models\Inventory\PriceManagement;
 use App\Models\Core\CodeDetail;
-use App\Http\Requests\Inventory\ItemMasterListRequest;
-
+use App\Services\Inventory\ItemMasterListService;
+use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
+use App\Imports\ItemMasterListImport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ItemMasterListExport;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\UploadedFile;
 
 class ItemMasterListController extends Controller
 {
+    protected ItemMasterListService $service;
+
+    public function __construct(ItemMasterListService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index(Request $request)
     {
-
         if ($request->ajax()) {
-            return DataTables::of(ItemMasterList::with('category.parent', 'itemType', 'inventoryType', 'uom', 'price'))
+            $items = ItemMasterList::with([
+                'category.parent',
+                'itemType',
+                'inventoryType',
+                'uom',
+                'price',
+                'status'
+            ]);
+
+            return DataTables::of($items)
                 ->addIndexColumn()
                 ->addColumn('Category', fn($item) => optional($item->category)->Name ?? 'Uncategorized')
                 ->addColumn('ParentCategory', fn($item) => optional(optional($item->category)->parent)->Name ?? '—')
                 ->addColumn('ItemType', fn($item) => optional($item->itemType)->TypeName ?? '—')
                 ->addColumn('InventoryType', fn($item) => optional($item->inventoryType)->Type ?? '—')
                 ->addColumn('UOM', fn($item) => optional($item->uom)->Code ?? '—')
-                
-              ->addColumn('Status', function ($item) {
-                if ($item->status && $item->status->Description) {
-                    $desc = $item->status->Description;
-                    $badgeClass = match (strtolower($desc)) {
-                        'active'   => 'bg-success',
-                        'inactive' => 'bg-secondary',
-                        default    => 'bg-warning',
-                    };
-                    return '<span class="badge ' . $badgeClass . '">' . e($desc) . '</span>';
-                }
-                return '<span class="badge bg-warning">Unknown</span>';
-            })
-
+                ->addColumn('Status', function ($item) {
+                    if ($item->status && $item->status->Description) {
+                        $desc = $item->status->Description;
+                        $badgeClass = match (strtolower($desc)) {
+                            'active'   => 'bg-success',
+                            'inactive' => 'bg-secondary',
+                            default    => 'bg-warning',
+                        };
+                        return '<span class="badge ' . $badgeClass . '">' . e($desc) . '</span>';
+                    }
+                    return '<span class="badge bg-warning">Unknown</span>';
+                })
                 ->addColumn('ItemPrice', fn($item) => optional($item->price)->ActualPrice ?? '—')
                 ->addColumn('Action', function ($item) {
-                    return '
-                        <a href="' . route('itemmasterlist.show', $item->Id) . '" class="btn btn-sm btn-primary">View</a>
-                        <a href="' . route('itemmasterlist.edit', $item->Id) . '" class="btn btn-sm btn-warning">Edit</a>
-                        <button onclick="confirmDelete(' . $item->Id . ')" class="btn btn-danger btn-sm">Delete</button>
-                        <form id="delete-form-' . $item->Id . '" action="' . route('itemmasterlist.destroy', $item->Id) . '" method="POST" style="display:none;">
-                            ' . csrf_field() . '
-                            ' . method_field('DELETE') . '
-                        </form>';
+                    $viewUrl   = route('itemmasterlist.show', $item->Id);
+                    $editUrl   = route('itemmasterlist.edit', $item->Id);
+                    $deleteUrl = route('itemmasterlist.destroy', $item->Id);
+
+                    $actions = '
+                        <a href="' . $viewUrl . '" class="btn btn-sm btn-primary">View</a>
+                        <a href="' . $editUrl . '" class="btn btn-sm btn-warning">Edit</a>
+                    ';
+
+                    if ($item->inUse()) {
+                        $actions .= '<span class="badge bg-info">In Use</span>';
+                    } else {
+                        $actions .= '
+                            <button type="button" class="btn btn-danger btn-sm"
+                                onclick="if(confirm(\'⚠️ Are you sure you want to delete this item?\')) { 
+                                    this.disabled=true; 
+                                    this.innerText=\'Submitting...\'; 
+                                    document.getElementById(\'delete-form-' . $item->Id . '\').submit(); 
+                                }">
+                                Delete
+                            </button>
+                            <form id="delete-form-' . $item->Id . '" 
+                                action="' . $deleteUrl . '" 
+                                method="POST" style="display:none;">
+                                ' . csrf_field() . '
+                                ' . method_field('DELETE') . '
+                            </form>
+                        ';
+                    }
+
+                    return $actions;
                 })
                 ->rawColumns(['Status', 'Action'])
                 ->make(true);
@@ -66,10 +104,11 @@ class ItemMasterListController extends Controller
     public function create()
     {
         $this->authorize('create', ItemMasterList::class);
-        
 
         return view('inventory.itemmaster.itemmasterlist.create', [
-            'categories' => ItemCategories::whereNull('ParentId')->get(),
+            'categories' => ItemCategories::whereNull('ParentId')
+                ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+                ->get(),
             'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
             'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
@@ -78,68 +117,42 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function import(Request $request)
     {
-
-        $this->authorize('create', ItemMasterList::class);
-
-        $validatedData = $request->validate([
-            'BarCode' => 'required|string|max:255',
-            'ItemName' => 'required|string|max:255',
-            'ItemType' => 'required|integer|exists:t_ItemTypes,Id',
-            'Category' => 'required|integer|exists:t_ItemCategories,Id',
-            'UOM' => 'required|integer|exists:t_UOM,Id',
-            'Status' => 'integer|exists:t_CodeDetails,ID',
-            'InventoryType' => 'required|integer|exists:t_InventoryTypes,Id',
-            'ItemPrice' => 'nullable|integer|exists:t_Pricing,Id',
-            'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
-            'ItemDescription' => 'nullable|string',
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
         ]);
 
-        // Always set Status to the value from the request (0 if not checked)
-        $validatedData['Status'] = $request->input('Status', 0);
+        try {
+            Excel::import(new ItemMasterListImport, $request->file('file'));
+            return back()->with('success', 'Items imported successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
 
-        DB::transaction(function () use ($validatedData, $request) {
-            $item = new ItemMasterList();
-            $item->fill($validatedData);
-            $item->CreatedBy = Auth::id();
-            $item->CreatedOn = Carbon::now();
-            $item->ModifiedBy = Auth::id();
-            $item->ModifiedOn = Carbon::now();
+    public function export()
+    {
+        return Excel::download(new ItemMasterListExport, 'ItemMasterList.xlsx');
+    }
 
-            // Upload image
-            if ($request->hasFile('ImageUpload')) {
-                $file = $request->file('ImageUpload');
-                $imageContent = base64_encode(file_get_contents($file->getRealPath()));
+    public function store(ItemMasterListRequest $request)
+    {
+        $this->authorize('create', ItemMasterList::class);
 
-                $image = \App\Models\DMS\Image::create([
-                    'Name' => $file->getClientOriginalName(),
-                    'Image' => $imageContent,
-                    'MIMEType' => $file->getMimeType(),
-                    'CreatedBy' => Auth::id(),
-                    'CreatedOn' => now(),
-                    'ModifiedBy' => Auth::id(),
-                    'ModifiedOn' => now(),
-                ]);
+        $validated = $request->validated();
+        $document = $request->file('Document');  // ✅ handled same as FleetDriver
+        $image = $request->file('ImageUpload');
 
-                $item->ImageId = $image->ImageID;
-            }
+        // Get default Active status
+        $validated['Status'] = CodeDetail::where('CodeID', 'ItemStatus')
+            ->where('Description', 'Active')
+            ->value('Id');
 
-            // Upload document
-            if ($request->hasFile('DocumentUpload')) {
-                $item->DocumentUpload = $request->file('DocumentUpload')->store('items/documents', 'public');
-            }
+        $this->service->create($validated, $image, $document);
 
-            $item->Category = $request->SubCategory ?: $request->Category;
-            $item->save();
-
-            // Generate item code
-            $item->ItemCode = 'ITM-' . str_pad($item->Id, 5, '0', STR_PAD_LEFT);
-            $item->save();
-        });
-
-        return redirect()->route('itemmaster.index')->with('success', 'Item created successfully.');
+        return redirect()->route('itemmaster.index')
+            ->with('success', 'Item created successfully.');
     }
 
     public function show($Id)
@@ -157,9 +170,13 @@ class ItemMasterListController extends Controller
 
         return view('inventory.itemmaster.itemmasterlist.edit', [
             'item' => $item,
-            'categories' => ItemCategories::whereNull('ParentId')->get(),
+            'categories' => ItemCategories::whereNull('ParentId')
+                ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+                ->get(),
             'status' => CodeDetail::where('CodeID', 'ItemStatus')->orderBy('Value')->get(),
-            'subcategories' => ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)->get(),
+            'subcategories' => ItemCategories::where('ParentId', $item->category?->ParentId ?? $item->Category)
+                ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+                ->get(),
             'itemTypes' => ItemType::all(),
             'uoms' => UnitOfMeasure::all(),
             'inventoryTypes' => InventoryType::all(),
@@ -167,85 +184,79 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-    public function update(Request $request, $Id)
-    {
-        $item = ItemMasterList::findOrFail($Id);
-        $this->authorize('update', $item);
+   public function update(int $id, array $data, ?UploadedFile $imageFile = null, ?UploadedFile $document = null): ItemMasterList
+{
+    return \DB::transaction(function () use ($id, $data, $imageFile, $document) {
+        $item = ItemMasterList::findOrFail($id);
 
-        $validatedData = $request->validate([
-            'BarCode' => 'required|string|max:255',
-            'ItemName' => 'required|string|max:255',
-            'ItemType' => 'required|integer|exists:t_ItemTypes,Id',
-            'Category' => 'required|integer|exists:t_ItemCategories,Id',
-            'UOM' => 'required|integer|exists:t_UOM,Id',
-            'Status' => 'nullable|integer|exists:t_CodeDetails,ID',
-            'ItemPrice' => 'nullable|integer|exists:t_Pricing,Id',
-            'InventoryType' => 'required|integer|exists:t_InventoryTypes,Id',
-            'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'DocumentUpload' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls|max:5120',
-            'ItemDescription' => 'nullable|string',
-        ]);
-
-
-        $validatedData['Status'] = $request->input('Status', 0);
-
-        $item->fill($validatedData);
+        $item->fill($data);
         $item->ModifiedBy = Auth::id();
-        $item->ModifiedOn = Carbon::now();
-        $item->Category = $request->SubCategory ?: $request->Category;
+        $item->ModifiedOn = now();
 
-        if ($request->input('remove_image') == '1' && $item->ImageId) {
-            \App\Models\DMS\Image::destroy($item->ImageId);
-            $item->ImageId = null;
-        }
+        // Handle category hierarchy update
+        $item->Category = $data['SubCategory'] ?? $data['Category'] ?? $item->Category;
 
-        if ($request->hasFile('ImageUpload')) {
+        // Handle image replacement
+        if ($imageFile) {
+            // Delete previous image if any
             if ($item->ImageId) {
                 \App\Models\DMS\Image::destroy($item->ImageId);
             }
-
-            $file = $request->file('ImageUpload');
-            $imageContent = base64_encode(file_get_contents($file->getRealPath()));
-
-            $image = \App\Models\DMS\Image::create([
-                'Name' => $file->getClientOriginalName(),
-                'Image' => $imageContent,
-                'MIMEType' => $file->getMimeType(),
-                'CreatedBy' => Auth::id(),
-                'CreatedOn' => now(),
-                'ModifiedBy' => Auth::id(),
-                'ModifiedOn' => now(),
-            ]);
-
+            $image = $this->storeImage($imageFile);
             $item->ImageId = $image->ImageID;
-        }
-
-        if ($request->hasFile('DocumentUpload')) {
-            $item->DocumentUpload = $request->file('DocumentUpload')->store('items/documents', 'public');
         }
 
         $item->save();
 
-        return redirect()->route('itemmaster.index')->with('success', 'Item updated successfully.');
-    }
+        // Handle document replacement
+        if ($document) {
+            // Remove old docs
+            foreach ($item->documents as $doc) {
+                $doc->delete();
+            }
+
+            $item->newDocument(
+                \App\Enums\Core\ModulesEnum::Inventory,
+                $document,
+                [\App\Enums\Core\PermissionEnum::MasterListView->value],
+                Auth::user()
+            );
+        }
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($item)
+            ->withProperties(['attributes' => $data])
+            ->event('updated')
+            ->log('Item updated');
+
+        return $item;
+    });
+}
+
 
     public function destroy($Id)
     {
         $item = ItemMasterList::findOrFail($Id);
-        $this->authorize('destroy', $item);
+        $this->authorize('delete', $item);
 
-        $item->DeletedBy = Auth::id();
-        $item->DeletedOn = Carbon::now();
-        $item->save();
-        $item->delete();
+        if ($item->inUse()) {
+            return redirect()->route('itemmaster.index')
+                ->with('error', '❌ Cannot delete this item because it is currently in use.');
+        }
 
-        return redirect()->route('itemmaster.index')->with('success', 'Item deleted successfully.');
+        $this->service->delete($item);
+
+        return redirect()->route('itemmaster.index')
+            ->with('success', 'Item deleted successfully.');
     }
 
     public function getSubcategories(Request $request)
     {
         return response()->json(
-            ItemCategories::where('ParentId', $request->get('category_id'))->get(['Id', 'Name'])
+            ItemCategories::where('ParentId', $request->get('category_id'))
+                ->whereHas('status', fn($q) => $q->where('Description', 'Active'))
+                ->get(['Id', 'Name'])
         );
     }
 }

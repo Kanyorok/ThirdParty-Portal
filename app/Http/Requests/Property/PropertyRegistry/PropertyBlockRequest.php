@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Property\PropertyRegistry;
 
+use App\Models\PropertyManagement\PropertyBlock;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PropertyBlockRequest extends FormRequest
 {
@@ -23,8 +25,15 @@ class PropertyBlockRequest extends FormRequest
     {
         return [
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
-            'BlockName' => 'required|string|max:50',
+            'BlockName' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique(PropertyBlock::class, 'BlockName')
+                    ->where(fn($query) => $query->where('PropertyID', $this->PropertyID)),
+            ],
             'Description' => 'nullable|string|max:100',
         ];
     }
+
 }

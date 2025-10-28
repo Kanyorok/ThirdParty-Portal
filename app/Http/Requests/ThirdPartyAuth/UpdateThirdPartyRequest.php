@@ -4,7 +4,6 @@ namespace App\Http\Requests\ThirdPartyAuth;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\ThirdPartyTypeEnum;
 use App\Enums\ThirdPartyStatusEnum;
 use App\Enums\BusinessTypeEnum;
 use App\Enums\ThirdPartyApprovalStatusEnum;
@@ -13,7 +12,7 @@ class UpdateThirdPartyRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->guard('sanctum')->check();
+        return true;
     }
 
     public function rules(): array
@@ -41,11 +40,10 @@ class UpdateThirdPartyRequest extends FormRequest
                 'max:255',
                 Rule::unique('t_ThirdParties', 'Email')->ignore($partyId, 'Id'),
             ],
-            'Phone' => ['required', 'string', 'max:20'],
+            'Phone' => ['required', 'string', 'max:20', 'regex:/^\+[1-9]\d{7,14}$/'],
             'Website' => ['nullable', 'string', 'url', 'max:255'],
             'ApprovalStatus' => ['required', 'string', Rule::in(array_column(ThirdPartyApprovalStatusEnum::cases(), 'value'))],
             'Status' => ['required', 'string', Rule::in(array_column(ThirdPartyStatusEnum::cases(), 'value'))],
-            'ThirdPartyType' => ['required', 'string', Rule::in(array_column(ThirdPartyTypeEnum::cases(), 'value'))],
             'IsPrequalified' => ['sometimes', 'boolean'],
         ];
     }

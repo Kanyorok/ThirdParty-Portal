@@ -12,7 +12,8 @@ return new class extends Migration {
     {
         Schema::create('t_RFQSection', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('SectionID')->constrained('t_RFQSettingSections', 'id');
+            // Link to t_Sections since sections are managed there
+            $table->foreignId('SectionID')->constrained('t_Sections', 'Id');
             $table->foreignId('RFQID')->constrained('t_RFQ', 'Id'); // FK to t_RFQ
             $table->decimal('Weight', 5, 2)->default(0.00); // DECIMAL(5,2)
             $table->boolean('IsActive')->default(true); // BIT (boolean in Laravel)

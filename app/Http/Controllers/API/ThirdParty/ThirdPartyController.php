@@ -28,10 +28,18 @@ class ThirdPartyController extends Controller
 
     public function index(Request $request): \Illuminate\Http\Resources\Json\AnonymousResourceCollection
     {
-        $query = ThirdParties::query();
+        $query = ThirdParties::query()->with('types');
 
         if ($request->filled('type')) {
-            $query->where('ThirdPartyType', $request->input('type'));
+            $typeFilter = $request->input('type');
+            // If numeric, assume new TypeId pivot; else fallback to legacy enum code filtering
+            if (is_numeric($typeFilter)) {
+                $query->whereHas('types', function ($q) use ($typeFilter) {
+                    $q->where('t_ThirdPartyTypes.TypeId', $typeFilter);
+                });
+            } else {
+                $query->where('ThirdPartyType', $typeFilter);
+            }
         }
 
         if ($request->filled('status')) {

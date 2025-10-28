@@ -23,6 +23,10 @@ class Budget extends Model
         'Notes',
         'Status',
 
+        'IsLimitSet',
+        'IsReAllocated',
+        'ApprovalOrRejectionReason',
+
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',

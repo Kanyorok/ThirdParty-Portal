@@ -16,7 +16,7 @@ class PropertyNewLeaseRequest extends FormRequest
         return [
             'Tenant' => 'required|exists:t_TenantMaintenance,Id',
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
-            'BlockID' => 'required|exists:t_PropertyRegistry,Id',
+            'BlockID' => 'required|exists:t_PropertyBlock,Id',
             'FloorID' => 'required|exists:t_PropertyFloor,Id',
             'Unit' => 'required|exists:t_PropertyUnit,Id',
             'StartDate' => 'required|date',
@@ -27,9 +27,10 @@ class PropertyNewLeaseRequest extends FormRequest
             'ServiceCharge' => 'required|numeric|min:0',
             'ParkingFee' => 'required|numeric|min:0',
             'OtherCharges' => 'required|numeric|min:0',
-            'DueDay' => 'required|integer|between:1,31',
+            'DueDay' => 'required|integer|between:1,28',
             'SpecialTerms' => 'nullable|string|max:255',
-            'Document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'Document' => 'nullable|array',
+            'Document.*' => 'file|max:9000',
         ];
     }
 
@@ -51,7 +52,7 @@ class PropertyNewLeaseRequest extends FormRequest
             'ParkingFee' => 'Parking Fee amount is required.',
             'OtherCharges' => 'Other Charges amount is required.',
             'DueDay.required' => 'Due day is required.',
-            'DueDay.between' => 'Due day must be between 1 and 31.',
+            'DueDay.between' => 'Due day must be between 1 and 28.',
             'SpecialTerms.max' => 'Special terms must not exceed 255 characters.',
             'Document.file' => 'The document must be a file.',
         ];

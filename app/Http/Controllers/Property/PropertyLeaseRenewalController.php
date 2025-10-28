@@ -56,6 +56,7 @@ class PropertyLeaseRenewalController extends Controller
 
     public function store(PropertyLeaseRenewalRequest $request)
     {
+        $this->authorize(PermissionEnum::PropertyLeaseRenewalCreate, PropertyLeaseRenewal::class);
         try {
             $validated = $request->validated();
             $leaseId = (int)$validated['LeaseId'];

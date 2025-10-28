@@ -8,7 +8,8 @@
             <input type="hidden" name="TenderSupplierID" value="{{ $tenderSupplier->id }}">
             <div class="mb-3">
                 <label class="form-label">Bidder</label>
-                <input type="text" class="form-control" value="{{ $tenderSupplier->supplier->SupplierName ?? 'N/A' }}"
+                <input type="text" class="form-control"
+                       value="{{ $tenderSupplier->supplier->thirdParty->ThirdPartyName ?? 'N/A' }}"
                        readonly>
             </div>
 

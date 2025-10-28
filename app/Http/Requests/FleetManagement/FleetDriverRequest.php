@@ -25,12 +25,14 @@ class FleetDriverRequest extends FormRequest
             'FullName' => 'required|string',
             'StaffNumber' => 'required|integer|exists:t_Employees,Id',
             'NationalID' => 'required|integer',
-            'Phone' => 'required|string',
-            'LicenseNumber' => 'required|string',
-            'LicenseExpiryDate' => 'required|date',
+            'Phone' => ['required','string','max:20','regex:/^\+[1-9]\d{7,14}$/'],
+            'Email' => 'required|string',
             'EmploymentType' => 'required|integer|exists:t_CodeDetails,ID',
             'Notes' => 'required|string',
             'IsActive' => 'required|boolean',
+            'Document' => 'nullable|file|max:2048',
+            'DriverStatus' => 'nullable|numeric|exists:t_CodeDetails,ID',
+            'ImageFile' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
 

@@ -28,10 +28,10 @@ class PlanManualInputRequest extends FormRequest
         if ($this->isMethod('put')) {
             return [
                 'quantity' => 'sometimes|required|integer|min:1',
-                'estimated_cost' => 'sometimes|required|numeric|min:0',
+                'estimated_cost' => 'sometimes|required|numeric|gt:0',
                 'schedule_period' => 'sometimes|required|string|max:10',
                 'expected_delivery_date' => 'sometimes|required|date',
-                'budget_line_id' => 'sometimes|required|integer',
+                'budget_line_id' => 'sometimes|nullable|integer',
                 'notes' => 'nullable|string|max:1000',
             ];
         }
@@ -41,12 +41,32 @@ class PlanManualInputRequest extends FormRequest
             'CategoryID' => 'required|exists:t_ItemCategories,Id',
             'quantity' => 'required|integer|min:1',
             'unit_of_measure_id' => 'required|string|max:50',
-            'estimated_cost' => 'required|numeric|min:0',
+            'estimated_cost' => 'required|numeric|gt:0',
             'schedule_period' => 'required|string|max:10',
             'expected_delivery_date' => 'required|date',
-            'budget_line_id' => 'required|integer',
+            'budget_line_id' => 'nullable|integer',
             'notes' => 'nullable|string|max:1000',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $itemId = $this->input('ItemID');
+            if ($itemId) {
+                $hasValidPrice = ItemMasterList::query()
+                    ->where('Id', $itemId)
+                    ->whereNotNull('ItemPrice')
+                    ->whereHas('price', function ($q) {
+                        $q->whereNotNull('ActualPrice')->where('ActualPrice', '>', 0);
+                    })
+                    ->exists();
+
+                if (!$hasValidPrice) {
+                    $validator->errors()->add('ItemID', 'Selected item has no estimated cost configured.');
+                }
+            }
+        });
     }
 
     public function getItem(): ItemMasterList

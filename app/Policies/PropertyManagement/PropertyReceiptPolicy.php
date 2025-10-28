@@ -13,25 +13,22 @@ class PropertyReceiptPolicy
     {
         return $user->can(PermissionEnum::PropertyReceiptView->value);
     }
-
     public function store(User $user): bool
     {
         return $user->can(PermissionEnum::PropertyReceiptCreate->value);
     }
-
     public function view(User $user, PropertyReceipt $PropertyReceipt): bool
     {
         return $user->can(PermissionEnum::PropertyReceiptView->value);
     }
-
-    public function update(User $user, PropertyReceipt $PropertyReceipt): bool
-    {
-        return $user->can(PermissionEnum::PropertyReceiptUpdate->value);
-    }
-
     public function destroy(User $user, PropertyReceipt $PropertyReceipt): bool
     {
         return $user->can(PermissionEnum::PropertyReceiptDelete->value);
+    }
+
+    public function print(User $user, PropertyReceipt $PropertyReceipt): bool
+    {
+        return $user->can(PermissionEnum::PropertyReceiptPrint->value);
     }
 
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services\DMS\Files;
 
+use Illuminate\Support\Facades\Storage;
 use Log;
 use PhpOffice\PhpWord\Element\AbstractElement;
 use PhpOffice\PhpWord\Element\Text;
@@ -18,7 +19,7 @@ class WordExtraction extends FileExtraction
             return false;
         }
         $name = $this->createTempFile();
-        $content = $this->extractDocumentText(storage_path('app/temp') . '/' . $name);
+        $content = $this->extractDocumentText(Storage::disk('temp')->path($name));
         $this->trashTempFile($name);
         if ($content !== '') {
             return $this->handleContent($content);

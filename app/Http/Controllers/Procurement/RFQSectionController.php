@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Procurement\RFQ;
 use App\Models\Procurement\RFQSection;
 use App\Models\Procurement\Section;
+use App\Models\Procurement\RFQSettingSection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,12 +19,15 @@ class RFQSectionController extends Controller
      */
     public function evaluationSetup()
     {
+        // Order newest first and paginate so the view shows a pager
         $rfqs = RFQ::withCount(['sections', 'criteria'])
             ->with('sections')
-            ->get();
-        // Use RFQSettingSection because t_RFQSection.SectionID references t_RFQSettingSections.id
-        $sections = Section::all();
-        $rfqList = RFQ::select('Id', 'RFQNumber')->get(); // or any other fields you need
+            ->orderByDesc('Id')
+            ->paginate(10);
+        // Use Sections maintained at tendering settings (t_Sections)
+        $sections = Section::isActive()->get();
+        // Include Comments so the modal select can show RFQNumber-Comments
+        $rfqList = RFQ::select('Id', 'RFQNumber', 'Comments')->get(); // or any other fields you need
 
         return view('procurement.rfqcriteriasetup.rfqevaluations', compact('rfqs', 'sections', 'rfqList'));
     }

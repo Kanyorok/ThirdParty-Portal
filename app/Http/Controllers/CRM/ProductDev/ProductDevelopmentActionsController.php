@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 class ProductDevelopmentActionsController extends Controller
 {
@@ -172,58 +173,19 @@ class ProductDevelopmentActionsController extends Controller
 
         $this->authorize('update', $product);
 
-        /*  try {
-              DB::transaction(static function () use ($product, $actor) {
+        try {
+            return DB::transaction(function () use ($product, $actor) {
+                $product->forceFill([
+                    'DeletedOn' => now(),
+                    'DeletedBy' => $actor->Id,
+                ])->save(['timestamps' => false]);
 
-                  $this->survey->forceFill([
-                      'Status' => SurveyStatusEnum::Approval->value
-                  ])->save(['timestamps' => false]);
-
-                  //add workflow
-                  $this->survey->workflows()->create([
-                      'Stage' => SurveyStatusEnum::Draft->name,
-                      'Status' => WorkflowStatus::Submitted->value,
-                      'Notes' => 'User Submitted',
-                      'CreatedBy' => $actor->Id,
-                      'ModifiedBy' => $actor->Id,
-                  ]);
-
-                  $users = User::query()->lock('WITH(NOLOCK)')->hasPermission(PermissionEnum::SurveyApproval->value)->get(["Id", "UserID", "Name", "Email"]);
-                  DB::transaction(function () use ($actor, $users) {
-                      foreach ($users as $user) {
-                          if (!$user instanceof User) {
-                              continue;
-                          }
-                          if (in_array($user->UserID, [$actor->UserID, SystemHelper::ID], true)) {//skip sys and submitter
-                              continue;
-                          }
-
-                          $this->survey->pendingWorkflows()->lock('WITH(NOLOCK)')->where('Stage', SurveyStatusEnum::Approval)->create([
-                              'Stage' => SurveyStatusEnum::Approval,
-                              'UserId' => $user->Id,
-                              'CreatedBy' => $actor->Id,
-                              'ModifiedBy' => $actor->Id,
-                          ]);
-
-                          //$this->_sendMail($user);
-                          (new UserService($user))->sendEmail(subject: 'Survey submitted for review and approval',
-                              body: '<p>Hello</p><p>The survey <b>' . $this->survey->Label . '</b> has been submitted for your review. Click the link below to review</p>
-                      <p><a href="' . route('surveys.show', [$this->survey->SurveyID]) . '"> survey details</a></p>
-                      <p>Kindly review and approve the survey at your earliest convenience.</p>'
-                          );
-                      }
-                  });
-                  //event(new CampaignSubmittedEvent($this->campaign, $actor));
-
-                  activity()->causedBy($actor)->performedOn($this->survey)->event('submit')->log('Submitted ' . $this->survey->SurveyID . ' for approval.');
-              });
-          } catch (ErroredException $e) {
-              return $e->toJson();
-          } catch (Exception $e) {
-              Log::error('Error submitting survey failed: ' . $e->getMessage());
-              return $this->errored('unexpected error, try again later');
-          }*/
+                activity()->causedBy($actor)->performedOn($product)->event('archived')->log('Archived product (' . $product->ProductID . ') in development .');
+                return $this->succeeded('product submitted successfully.', route('product-development.index'));
+            });
+        } catch (Throwable $e) {
+            Log::error('Error submitting product failed: ');
+        }
         return $this->errored('unexpected error, try again later');
-        //return $this->succeeded('survey submitted successfully.', route('surveys.show', [$survey->SurveyID]));
     }
 }

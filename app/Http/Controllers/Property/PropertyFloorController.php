@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 class PropertyFloorController extends Controller
@@ -25,36 +26,28 @@ class PropertyFloorController extends Controller
     }
     public function index()
     {
+        $this->authorize(PermissionEnum::PropertyStructuralView, PropertyFloor::class);
         $floors = PropertyFloor::all();
-        //dd($properties);
         return view('property.propertyregistry.structuralmapping.addfloor.index', compact('floors'));
     }
 
     public function create(){
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
-        $lineentries = PropertyRegistry::with('getBlockByProperty')->get();
+        $lineentries = PropertyRegistry::with('getBlockByProperty')->where('IsActive', true)->get();
 
 
         return view('property.propertyregistry.structuralmapping.addfloor.create', compact('lineentries'));
     }
 
-    public function getBlockByProperty($propertyId)
+    public function getBlocksForFloor($PropertyId)
     {
-        $blocks = PropertyBlock::where('PropertyID', $propertyId)->get();
+        $blocks = PropertyBlock::where('PropertyID', $PropertyId)->get();
         return response()->json($blocks);
-    }
-
-    public function show($id)
-    {
-        $this->authorize(PermissionEnum::PropertyStructuralView, PropertyFloor::class);
-        $floor = PropertyFloor::find($id);
-        return view('property.propertyregistry.structuralmapping.addfloor.show', compact('floor'));
     }
 
     public function store(PropertyFloorRequest $request)
     {
         $this->authorize(PermissionEnum::PropertyStructuralCreate, PropertyFloor::class);
-        //dd($request->all());
 
         $validated = $request->validated();
         try {
@@ -64,7 +57,7 @@ class PropertyFloorController extends Controller
                 $validated['FloorLabel'],
                 $validated['FloorNotes'] ?? '',
                 Auth::user()
-            ); 
+            );
             return redirect()->route('addfloor.index')->with('success', 'Floor added!');
         } catch (Exception $e) {
             return back()->withErrors('Failed: ' . $e->getMessage())->withInput();
@@ -73,7 +66,6 @@ class PropertyFloorController extends Controller
 
     public function edit($id)
     {
-        //Check if user has permission to edit tender categories
         $this->authorize(PermissionEnum::PropertyStructuralUpdate, PropertyFloor::class);
         $floor = PropertyFloor::findOrFail($id);
         $blocks = PropertyBlock::all();
@@ -89,9 +81,18 @@ class PropertyFloorController extends Controller
         $validated = $request->validate([
             'PropertyID' => 'required|exists:t_PropertyRegistry,Id',
             'BlockID' => 'required|exists:t_PropertyBlock,Id',
-            'FloorLabel' => 'required|string|max:50',
+            'FloorLabel' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique(PropertyFloor::class, 'FloorLabel')
+                    ->where(fn($query) => $query
+                        ->where('PropertyID', $request->PropertyID)
+                        ->where('BlockID', $request->BlockID)
+                    )
+                    ->ignore($id, 'Id'), // Exclude current record
+            ],
             'FloorNotes' => 'nullable|string|max:100',
-
         ]);
 
         DB::beginTransaction();
@@ -126,6 +127,12 @@ class PropertyFloorController extends Controller
         $this->authorize(PermissionEnum::PropertyStructuralDelete, PropertyFloor::class);
         try {
             $floor = PropertyFloor::findOrFail($id);
+
+            if ($floor->units()->exists()) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'This Property Floor is in use and cannot be deleted.']);
+            }
+
             $floor->delete();
 
             return redirect()->route('addfloor.index')

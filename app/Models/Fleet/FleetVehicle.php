@@ -3,6 +3,8 @@
 namespace App\Models\Fleet;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\DMS\Image;
+
 use App\Models\Core\Branch;
 use App\Models\Fleet\FuelType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +18,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Fleet\FleetTripLog;
 use App\Models\Auth\User;
+use App\Models\Fleet\FleetMaintenanceSchedule;
+use App\Models\Fleet\FleetRepairLog;
+
 
 
 class FleetVehicle extends Model
@@ -45,24 +51,49 @@ class FleetVehicle extends Model
         'OdometerReading',
         'Status',
         'AssignedBranch',
-        //'AssignedToUserID',
-        'IsActive',
+        'MaxPassengers',
+        'MaxLoad',
+        'VehicleStatus',
+        'Color',
+        'ImageId',
         'CreatedBy',
         'CreatedOn',
         'ModifiedBy',
         'ModifiedOn',
     ];
 
-    // Relationships
 
     public static function getPrimaryKey(): string
     {
         return 'VehicleId';
     }
 
+    public function image()
+    {
+        return $this->belongsTo(\App\Models\DMS\Image::class, 'ImageId', 'ImageID');
+    }
+
+
     public function vehicleType()
     {
         return $this->belongsTo(CodeDetail::class, 'VehicleType', 'ID');
+    }
+
+
+    public function tripLogs()
+    {
+        return $this->hasMany(FleetTripLog::class, 'VehicleID', 'Id');
+    }
+
+
+    public function maintenanceSchedules()
+    {
+        return $this->hasMany(FleetMaintenanceSchedule::class, 'VehicleID', 'Id');
+    }
+
+    public function repairLogs()
+    {
+        return $this->hasMany(FleetRepairLog::class, 'VehicleID', 'Id');
     }
 
     public function fuelType()
@@ -94,5 +125,10 @@ class FleetVehicle extends Model
     public function status()
     {
         return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
+    }
+
+    public function vehicleStatus()
+    {
+        return $this->belongsTo(CodeDetail::class, 'VehicleStatus', 'ID');
     }
 }

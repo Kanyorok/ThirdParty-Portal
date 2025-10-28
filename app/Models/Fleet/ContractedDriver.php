@@ -10,12 +10,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\Fleet\FleetTripLog;
 use App\Models\Core\CodeDetail;
+use App\Models\ThirdParies\Supplier;
+use App\Traits\Model\DocumentsTrait;
 
 
 class ContractedDriver extends Model
 {
 
-    use UserActorTrait, SoftDeletes;
+    use UserActorTrait, SoftDeletes, DocumentsTrait;
 
     const CREATED_AT = 'CreatedOn';
     const UPDATED_AT = 'ModifiedOn';
@@ -31,12 +33,9 @@ class ContractedDriver extends Model
         'FullName',
         'NationalID',
         'Phone',
-        'CompanyName',
+        'Company',
         'ContractStartDate',
         'ContractEndDate',
-        'LicenseNumber',
-        'LicenseExpiryDate',
-        'LicenseCategory',
         'IsActive',
         'Notes',
         'CreatedBy',
@@ -45,7 +44,6 @@ class ContractedDriver extends Model
         'ModifiedOn',
         'DeletedBy',
         'DeletedOn',
-        'IsActive',
     ];
 
     public static function getPrimaryKey(): string
@@ -53,5 +51,14 @@ class ContractedDriver extends Model
         return 'DriverId';
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Supplier::class, 'Company', 'Id');
+    }
+
+    public function tripLogs()
+    {
+        return $this->hasMany(FleetTripLog::class, 'DriverID', 'Id');
+    }
 
 }

@@ -22,13 +22,13 @@ trait DMSTagTrait
 {
     public function dt(Builder|BelongsToMany $query, User $actor, array $with = [], array $withCount = ['documents'], array $extra = []): JsonResponse
     {
-        $query->where(function ($q) use ($actor) {
+        $query->userCreator($actor);/*->where(function ($q) use () {
             $q->where('Visibility', VisibilityEnum::Public->value)
                 ->orWhere(function ($subQuery) use ($actor) {
                     $subQuery->where('Visibility', VisibilityEnum::Private->value)
                         ->where('CreatedBy', $actor->Id);
                 });
-        });
+        });*/
         if (!empty($with)) {
             $query->with($with);
         }

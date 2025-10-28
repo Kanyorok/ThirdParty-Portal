@@ -22,8 +22,7 @@ class ItemCategories extends Model
 
     public static function getPrimaryKey(): string
     {
-        // return 'ItemCategoriesId'; 
-        return 'Id';
+        return 'ItemCategoriesId';
     }
 
     protected $fillable = [
@@ -62,6 +61,11 @@ class ItemCategories extends Model
         return $this->belongsTo(User::class, 'ModifiedBy', 'Id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(ItemMasterList::class, 'Category', 'Id');
+    }
+
     public function deleter()
     {
         return $this->belongsTo(User::class, 'DeletedBy', 'Id');
@@ -81,6 +85,16 @@ class ItemCategories extends Model
     public function children()
     {
         return $this->hasMany(self::class, 'ParentId');
+    }
+
+    public function inUse(): bool
+    {
+        return $this->children()->exists() || $this->items()->exists();
+    }
+
+    public function hasItems(): bool
+    {
+        return $this->items()->exists();
     }
 
 

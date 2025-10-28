@@ -3,7 +3,7 @@
 namespace App\Services\Procurement\Requisition;
 
 use App\Models\Auth\User;
-use App\Models\Procurement\RequisitionLines;
+use App\Models\Procurement\RequisitionLine;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,9 +19,9 @@ class RequisitionItemService
         //
     }
 
-    public static function create(array $data, User $actor): RequisitionLines
+    public static function create(array $data, User $actor): RequisitionLine
     {
-        return  RequisitionLines::create([
+        return RequisitionLine::create([
         'Module' => $data['Module'],
         'Type' => $data['Type'],
         'Item' => $data['Item'],
@@ -131,6 +131,36 @@ class RequisitionItemService
                 ->get();
     }
 
+    /**
+     * Returns a list of requisitions ranked by aggregated urgency of their lines.
+     * Score = VeryHigh*4 + High*3 + Medium*2 + Low*1
+     */
+    public static function getRequisitionPriorityList()
+    {
+        return DB::table(DB::raw('t_RequisitionLines rl WITH (NOLOCK)'))
+            ->join(DB::raw('t_Requisitions r WITH (NOLOCK)'), 'rl.RequisitionID', '=', 'r.Id')
+            ->leftJoin(DB::raw('t_Users u WITH (NOLOCK)'), 'r.CreatedBy', '=', 'u.Id')
+            ->select(
+                'r.Id',
+                'r.RequisitionNo',
+                DB::raw("FORMAT(r.CreatedOn, 'dd-MM-yyyy') as RequisitionDate"),
+                'r.BranchID',
+                'r.DepartmentID',
+                'u.Name as RequestedBy',
+                DB::raw('COUNT(*) as TotalItems'),
+                DB::raw('SUM(CASE WHEN rl.UrgencyID = 1 THEN 1 ELSE 0 END) as VeryHighCount'),
+                DB::raw('SUM(CASE WHEN rl.UrgencyID = 2 THEN 1 ELSE 0 END) as HighCount'),
+                DB::raw('SUM(CASE WHEN rl.UrgencyID = 3 THEN 1 ELSE 0 END) as MediumCount'),
+                DB::raw('SUM(CASE WHEN rl.UrgencyID = 4 THEN 1 ELSE 0 END) as LowCount'),
+                // Weighted score: very high=4, high=3, medium=2, low=1
+                DB::raw('(SUM(CASE WHEN rl.UrgencyID = 1 THEN 4 WHEN rl.UrgencyID = 2 THEN 3 WHEN rl.UrgencyID = 3 THEN 2 WHEN rl.UrgencyID = 4 THEN 1 ELSE 0 END)) as Score')
+            )
+            ->groupBy('r.Id', 'r.RequisitionNo', 'r.CreatedOn', 'r.BranchID', 'r.DepartmentID', 'u.Name')
+            ->orderByDesc('Score')
+            ->orderBy('r.CreatedOn', 'desc')
+            ->get();
+    }
+
     public static function getRequisitionRelatedItems($RequisitionId)
     {
         return DB::table(DB::raw('t_RequisitionLines WITH (NOLOCK)'))
@@ -149,6 +179,10 @@ class RequisitionItemService
                 't_uom.Code as UOM',
                 't_ItemTypes.TypeName as Type',
                 't_ItemCategories.Name as Category',
+                // Need ID from the approved plan (if this line came from a plan). N/A otherwise
+                DB::raw("ISNULL((SELECT TOP 1 dn.NeedID\n                              FROM t_PlanLineItem pli WITH (NOLOCK)\n                              JOIN t_DepartmentNeeds dn WITH (NOLOCK)\n                                ON dn.ItemID = pli.ItemID\n                               AND dn.BranchID = pli.BranchID\n                               AND dn.DepartmentID = pli.DepartmentID\n                             WHERE pli.LineItemID = t_RequisitionLines.PlanLineRef), 'N/A') as NeedRef"),
+                // Per-unit expected price captured at line creation time (sourced from approved plan)
+                't_RequisitionLines.ExpectedPrice as UnitPrice',
                 DB::raw('t_RequisitionLines.ExpectedPrice * t_RequisitionLines.Quantity as ExpectedPrice'),
                 't_RequisitionLines.StatusID as Status',
                 DB::raw("CASE

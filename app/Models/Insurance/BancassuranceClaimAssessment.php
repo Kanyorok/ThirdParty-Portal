@@ -2,6 +2,7 @@
 
 namespace App\Models\Insurance;
 
+use App\Models\Auth\User;
 use App\Models\Core\CodeDetail;
 use App\Traits\Model\UserActorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +26,25 @@ class BancassuranceClaimAssessment extends Model
     public static function getPrimaryKey(): string
     {
         return 'bancassuranceclaimassessmentId';
+    }
+
+    public function claim()
+    {
+        return $this->belongsTo(BancassuranceClaim::class, 'ClaimId', 'Id');
+    }
+
+    public function assessedby()
+    {
+        return $this->belongsTo(User::class, 'AssessedBy', 'Id');
+    }
+
+    public function decision()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Decision', 'ID');
+    }
+    public function claimpaiyments()
+    {
+        return $this->hasMany(BancassuranceClaimPayment::class, 'ClaimId', 'ClaimId');
     }
 
 }

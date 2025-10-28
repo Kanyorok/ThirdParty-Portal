@@ -1,3 +1,6 @@
+@php use App\Services\MeetingService; @endphp
+@php use App\Models\CRM\MeetingRoom; @endphp
+@php use App\Enums\Core\ExtensionsEnum; @endphp
 @extends('layouts.app')
 
 @section('title','Board Meeting')
@@ -21,9 +24,9 @@
                         <button class="btn btn-danger float-end  mx-2" type="button" id="triggerCancelMeetingBtn"><i
                                 class="fas fa-trash-alt"></i></button>
                     </h5>
-                    <p><b>Venue </b> : {{ (new \App\Services\MeetingService($meeting))->getVenue(true) }}
-                        &nbsp;|&nbsp;<b>Start </b>: {{ $meeting->StartOn->format('M d, Y h:i A') }}
-                        &nbsp;|&nbsp;<b>End </b>: {{ $meeting->EndOn->format('M d, Y h:i A') }}</p>
+                    <p><b>Venue </b> : {{ (new MeetingService($meeting))->getVenue(true) }}
+                        &nbsp;|&nbsp;<b>Start </b>: {{ $meeting->StartOn->format('M d, Y h:i A') }} <small class="text-muted">({{ config('app.timezone') }})</small>
+                        &nbsp;|&nbsp;<b>End </b>: {{ $meeting->EndOn->format('M d, Y h:i A') }} <small class="text-muted">({{ config('app.timezone') }})</small></p>
                     <p><b>Agenda </b> : {{ $meeting->Notes }}</p>
                 </div>
                 <div class="card-footer" id="meetingAttachmentContents">
@@ -73,8 +76,8 @@
                                    role="alert"></p>
                             </div>
                             <div class="col-md-6 col-12 mb-3">
-                                <label class="form-label" for="BoardMeetingStart">Start <span
-                                            class="text-danger">*</span></label>
+                                <label class="form-label" for="BoardMeetingStart">Start <small class="text-muted">({{ config('app.timezone') }})</small> <span
+                                        class="text-danger">*</span></label>
                                 <input type="text" class="form-control flatpickr-datetime" id="BoardMeetingStart"
                                        name="BoardMeetingStart" placeholder="Select start.."
                                        value="{{ $meeting->StartOn->format('Y-m-d H:i') }}">
@@ -82,8 +85,8 @@
                                    role="alert"></p>
                             </div>
                             <div class="col-md-6 col-12 mb-3">
-                                <label class="form-label" for="BoardMeetingEnd">End <span
-                                            class="text-danger">*</span></label>
+                                <label class="form-label" for="BoardMeetingEnd">End <small class="text-muted">({{ config('app.timezone') }})</small> <span
+                                        class="text-danger">*</span></label>
                                 <input type="text" class="form-control flatpickr-datetime " id="BoardMeetingEnd"
                                        name="BoardMeetingEnd" placeholder="Select end.."
                                        value="{{ $meeting->EndOn->format('Y-m-d H:i') }}">
@@ -92,16 +95,16 @@
                             </div>
                             <div class="col-md-6 col-12 mb-3">
                                 <label for="BoardMeetingLocation" class="form-label">Location <span
-                                            class="text-danger">*</span></label>
+                                        class="text-danger">*</span></label>
                                 <select class="form-control" name="BoardMeetingLocation" required
                                         id="BoardMeetingLocation">
-                                    @if(!$meeting->room instanceof \App\Models\CRM\MeetingRoom )
+                                    @if(!$meeting->room instanceof MeetingRoom )
                                         <option selected
-                                                value="{{ (new \App\Services\MeetingService($meeting))->getVenue(true) }}">{{ (new \App\Services\MeetingService($meeting))->getVenue(true) }}</option>
+                                                value="{{ (new MeetingService($meeting))->getVenue(true) }}">{{ (new MeetingService($meeting))->getVenue(true) }}</option>
                                     @endif
                                     @foreach($rooms as $room)
                                         <option value="{{ $room->RoomID }}"
-                                            {{ ($meeting->room instanceof \App\Models\CRM\MeetingRoom && $room->Id === $meeting->room->Id)?'selected':''}}
+                                            {{ ($meeting->room instanceof MeetingRoom && $room->Id === $meeting->room->Id)?'selected':''}}
                                         >{{ $room->Name }} - {{ $room->RoomID }}
                                             ({{ $room->Capacity }})
                                         </option>
@@ -112,7 +115,7 @@
                             </div>
                             <div class="col-md-6 col-12 mb-3">
                                 <label for="BoardMeetingUpdate" class="form-label">Send Update <span
-                                            class="text-danger">*</span></label>
+                                        class="text-danger">*</span></label>
                                 <select class="form-control" name="BoardMeetingUpdate" required
                                         id="BoardMeetingUpdate">
                                     <option selected disabled>Whether to send Notification</option>
@@ -138,7 +141,7 @@
                                 </button>
                                 <button class="btn btn-primary float-end" id="updateBoardMeetingBtn" type="submit">
                                     <i
-                                            class="fas fa-save"></i> update board meeting
+                                        class="fas fa-save"></i> update board meeting
                                 </button>
                             </div>
                         </form>
@@ -177,11 +180,11 @@
     <script src="{{ asset('assets/libs/rangePlugin.js') }}"></script>
     <script src="{{ asset('assets/libs/select2/js/select2.full.min.js') }}"></script>
     <script src='{{ asset('assets/libs/moment/moment-with-locales.js') }}'></script>
-    @include('snippets.actions.preview-files')
+    @include('snippets.actions.preview-files'){{-- TODO FIX TO WORK WITH DMS --}}
     <script>  $Modal = $('#meetingActionsModal');
         Dropzone.options.uploadForm = {
             maxFilesize: 9,//Mb
-            acceptedFiles: "{{ implode(", ",\App\Enums\Core\ExtensionsEnum::getAllMimeTypes()) }}",
+            acceptedFiles: "{{ implode(", ",ExtensionsEnum::getAllMimeTypes()) }}",
             success: function (file, response) {
                 file.previewElement.remove();
                 $('#meetingAttachmentContents').append(response.html);

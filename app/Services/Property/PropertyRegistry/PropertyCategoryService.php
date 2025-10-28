@@ -4,7 +4,6 @@ namespace App\Services\Property\PropertyRegistry;
 
 use App\Models\Auth\User;
 use App\Models\Core\CategoryMaster;
-use phpDocumentor\Reflection\Types\Integer;
 
 class PropertyCategoryService
 {

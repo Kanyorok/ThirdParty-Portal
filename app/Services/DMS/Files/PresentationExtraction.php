@@ -2,6 +2,7 @@
 
 namespace App\Services\DMS\Files;
 
+use Illuminate\Support\Facades\Storage;
 use Log;
 use PhpOffice\PhpPresentation\AbstractShape;
 use PhpOffice\PhpPresentation\IOFactory;
@@ -19,7 +20,7 @@ class PresentationExtraction extends FileExtraction
             return false;
         }
         $name = $this->createTempFile();
-        $content = $this->extractText(storage_path('app/temp') . '/' . $name);
+        $content = $this->extractText(Storage::disk('temp')->path($name));
         $this->trashTempFile($name);
         if ($content !== '') {
             return $this->handleContent($content);

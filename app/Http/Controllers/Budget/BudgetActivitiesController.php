@@ -21,9 +21,9 @@ class BudgetActivitiesController extends Controller
     //
     public function index()
     {
-        $this->authorize(PermissionEnum::BudgetSetupView, BudgetActivity::class);
+        $this->authorize(PermissionEnum::BudgetActivityView, BudgetActivity::class);
         $activities = BudgetActivity::with([
-            'budget:Id,Name,From,To',
+            'budget:Id,Name,From,To,Status',
             //'allocations:Id,BudgetActivityID,Month,Amount',
             //'branch:Id,Name',
             //'budgetLine:Id,LineName',
@@ -39,11 +39,16 @@ class BudgetActivitiesController extends Controller
 
     public function create()
     {
-        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivity::class);
+        $this->authorize(PermissionEnum::BudgetActivityCreate, BudgetActivity::class);
 
-        $budgetLines = BudgetLine::select('Id', 'LineName')->get();
+        //Pick budgetlines that have activities only.
+        $checkIds = BudgetActivityMaster::query()
+            ->distinct()
+            ->pluck('BudgetLineID')
+            ->toArray();
+        $budgetLines = BudgetLine::select('Id', 'LineName')->whereIn('Id', $checkIds)->get();
         $branches = Branch::select('Id', 'Name')->get();
-        $budgets = Budget::all();
+        $budgets = Budget::select('Id', 'Name')->where('Status', 'draft')->get();
 
         return view('budgetandanalytics.budgetactivities.create', compact(
             'budgetLines',
@@ -56,7 +61,7 @@ class BudgetActivitiesController extends Controller
     public function store(Request $request)
     {
         //Check for permission
-        $this->authorize(PermissionEnum::BudgetSetupCreate, BudgetActivity::class);
+        $this->authorize(PermissionEnum::BudgetActivityCreate, BudgetActivity::class);
         // Validate request
         $validated = $request->validate([
             'BudgetID' => 'required|exists:t_Budgets,Id',
@@ -68,6 +73,15 @@ class BudgetActivitiesController extends Controller
             'FullAllocation' => 'nullable|numeric|min:0',
             'monthly_allocations' => 'nullable|array',
             'monthly_allocations.*' => 'nullable|numeric|min:0',
+        ],
+            [
+                'ActivityID.required' => 'Please select an activity from the list.',
+                'BudgetID.required' => 'Please select a budget from the list.',
+                'BudgetLineID.required' => 'Please select a budget line from the list.',
+                'Description.required' => 'Please enter a description.',
+                'AllocationType.required' => 'Please select an allocation type.',
+                'monthly_allocations.*.numeric' => 'Monthly allocation must be a number.',
+                'monthly_allocations.*.min' => 'Monthly allocation must be greater than 0.',
         ]);
 
         try {
@@ -86,12 +100,13 @@ class BudgetActivitiesController extends Controller
                 $fullAllocation = $validated['FullAllocation'] ?? 0;
             }
             // Create Budget Activity
+            $branchId = session('LoginBranchId');
             $activity = BudgetActivity::create([
                 'BudgetLineID' => $validated['BudgetLineID'],
                 'BudgetID' => $validated['BudgetID'],
                 'ActivityID' => $validated['ActivityID'],
                 'Description' => $validated['Description'],
-                'BranchID' => 1,//$validated['BranchID'], To be fixed when Login branch is implemented
+                'BranchID' => $branchId,//$validated['BranchID'], To be fixed when Login branch is implemented
                 'AllocationType' => $validated['AllocationType'],
                 'FullAllocation' => $fullAllocation,
                 'CreatedBy' => $userId,
@@ -147,7 +162,7 @@ class BudgetActivitiesController extends Controller
 
     public function show($budgetId)
     {
-        $this->authorize(PermissionEnum::BudgetSetupView, BudgetActivity::class);
+        $this->authorize(PermissionEnum::BudgetActivityView, BudgetActivity::class);
 
         $budget = Budget::findOrFail($budgetId);
         $activities = BudgetActivity::with([
@@ -162,7 +177,7 @@ class BudgetActivitiesController extends Controller
 
     public function edit($id)
     {
-        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetActivity::class);
+        $this->authorize(PermissionEnum::BudgetActivityUpdate, BudgetActivity::class);
         // Fetch the activity with its allocations
         $activity = BudgetActivity::with(['allocations'])->findOrFail($id);
         $budgetLines = BudgetLine::select('Id', 'LineName')->get();
@@ -182,7 +197,7 @@ class BudgetActivitiesController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize(PermissionEnum::BudgetSetupUpdate, BudgetActivity::class);
+        $this->authorize(PermissionEnum::BudgetActivityUpdate, BudgetActivity::class);
         $validated = $request->validate([
             // 'BudgetID' => 'required|exists:t_Budgets,Id',
             'BudgetLineID' => 'required|exists:t_BudgetLines,Id',
@@ -209,12 +224,14 @@ class BudgetActivitiesController extends Controller
             } elseif ($validated['AllocationType'] === 'full') {
                 $fullAllocation = $validated['FullAllocation'] ?? 0;
             }
+
+            $branchId = session('LoginBranchId');
             $activity->update([
                 'BudgetLineID' => $validated['BudgetLineID'],
                 // 'BudgetID' => $validated['BudgetID'],
                 'ActivityID' => $validated['ActivityID'],
                 'Description' => $validated['Description'],
-                'BranchID' => 1,//$validated['BranchID'],
+                'BranchID' => $branchId,//$validated['BranchID'],
                 'AllocationType' => $validated['AllocationType'],
                 'FullAllocation' => $fullAllocation,
                 'ModifiedBy' => $userId,
@@ -255,7 +272,7 @@ class BudgetActivitiesController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize(PermissionEnum::BudgetSetupDelete, BudgetActivity::class);
+        $this->authorize(PermissionEnum::BudgetActivityDelete, BudgetActivity::class);
         try {
             DB::beginTransaction();
             $activity = BudgetActivity::findOrFail($id);

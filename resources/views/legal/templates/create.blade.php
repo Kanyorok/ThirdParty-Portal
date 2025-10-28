@@ -3,7 +3,6 @@
 
 @section('styles')
     <!-- Bootstrap & Icons via CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 
     <style>
@@ -51,7 +50,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Version</label>
-                                    <input type="text" name="Version" class="form-control" value="v1.0">
+                                    <input type="number" step="0.0001" name="Version" class="form-control" value="1.0">
                                 </div>
 
                                 <div class="col-12">
@@ -72,7 +71,8 @@
                             <input type="hidden" name="AttachedClauseIDs" id="AttachedClauseIDs" value="[]">
 
                             <div class="d-flex justify-content-end gap-2">
-                                <button type="submit" class="btn btn-success">
+                                <button type="submit" class="btn btn-success"
+                                        onclick="if(this.form.checkValidity()){this.disabled = true; this.innerText = 'Saving...'; this.form.submit();}">
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Save Template
                                 </button>
                             </div>

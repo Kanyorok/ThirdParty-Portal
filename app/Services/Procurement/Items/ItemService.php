@@ -28,14 +28,16 @@ class ItemService
                     ->join('t_ItemTypes as f', 't.ItemType', '=', 'f.Id')
                     ->where('pi.PlanID', $requisition->PlanRef)
                     ->where('t.ItemType', $type)
-                    ->where('cd.Description', 'RFQ') // 👈 Filter for RFQ only
+                    ->where('cd.Description', 'RFQ') // RFQ-only for requisitions
                     ->select(
                         't.Id',
                         't.ItemName',
                         't.ItemCode',
                         'i.LineItemID',
-                        'i.OriginalQty' // From PlanLineItem
+                        'i.OriginalQty',
+                        'i.EstimatedUnitCost'
                     )
+                    ->distinct()
                     ->get();
             }
         }

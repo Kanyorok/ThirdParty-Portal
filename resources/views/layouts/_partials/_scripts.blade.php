@@ -31,7 +31,7 @@
     <script>
         window.csrf_token = '{{ csrf_token() }}';
         window.bsOffcanvas = null;
-        window.windowIdleTime = 300;
+        window.windowIdleTime = {{ (int) config('session.lifetime', 20) * 60 }};
         window.smsMaxLimit = 168;
         $(function () {
             jQuery.fn.fadeOutAndRemove = function (speed) {
@@ -77,13 +77,41 @@
                 showOffCanvasMain(title.toString(), url.toString());
             });
 
-            @if(config('app.debug')===false && !auth()->user()->can(PermissionEnum::UsersSessions)) setInterval(timerIncrement, 1000); // 1 second @endif
+            @if(!auth()->user()->can(PermissionEnum::UsersSessions)) setInterval(timerIncrement, 1000); @endif
+
+            // Detect offline -> when back online, force a timeout to avoid stale sessions across networks
+            window.addEventListener('online', function () {
+                try {
+                    $.post("{{ route('timeout') }}", {_token: window.csrf_token}).always(function () {
+                        window.location.reload();
+                    });
+                } catch (e) {
+                    window.location.reload();
+                }
+            });
+
+            // When going offline, immediately treat session as expiring
+            window.addEventListener('offline', function () {
+                try {
+                    nWarning('Connection lost. Your session will end when connection is restored.');
+                } catch (e) {
+                }
+                try {
+                    window.windowIdleTime = 0;
+                } catch (e) {
+                }
+            });
 
             // Zero the idle timer on any action.
             $(this).bind('mousemove keydown scroll click', function () {
-                window.windowIdleTime = 300;
+                window.windowIdleTime = {{ (int) config('session.lifetime', 20) * 60 }};
                 $("#sessionInactivity").addClass("d-none");
             });
+
+            // Initialize date pickers globally on page load
+            if (typeof initGlobalDatePickers === 'function') {
+                initGlobalDatePickers();
+            }
         });
 
         function timerIncrement() {
@@ -97,7 +125,7 @@
             if (window.windowIdleTime === 60) {
                 nWarning("Session Expiring in 1 Minute.");
             }
-            if (window.windowIdleTime === 3) {
+            if (window.windowIdleTime <= 3) {
                 $("#sessionInactivity").addClass("d-none");
                 $.ajax({
                     url: "{{ route('timeout') }}",
@@ -120,12 +148,69 @@
             $("#sessionInactivityMinutes").html("0" + Minutes);
         }
 
+        // Background heartbeat: ensure stale sessions are kicked promptly
+        (function () {
+            function ping() {
+                try {
+                    fetch("{{ route('auth.heartbeat') }}", {credentials: 'include'})
+                        .then(function (r) {
+                            if (!r.ok) {
+                                window.location.href = "{{ route('login') }}";
+                            }
+                        })
+                        .catch(function () { /* offline - middleware will handle next request */
+                        });
+                } catch (e) {
+                }
+            }
+
+            setInterval(ping, 15000);
+            window.addEventListener('online', ping);
+        })();
+
+        // Global Flatpickr initialization for date-only inputs
+        function initGlobalDatePickers() {
+            try {
+                if (window.flatpickr) {
+                    var dateInputs = document.querySelectorAll('input[type="date"], input.flatpickr-date');
+                    dateInputs.forEach(function (inputEl) {
+                        if (inputEl._flatpickr) {
+                            return; // already initialized
+                        }
+
+                        // if author marked input with data-disable-past, instruct flatpickr to disable past days
+                        var opts = {
+                            // Keep submitted value as ISO (server-friendly), show dd/mm/yyyy to users
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y',
+                            allowInput: true
+                        };
+
+                        if (inputEl.dataset && inputEl.dataset.disablePast && String(inputEl.dataset.disablePast) === 'true') {
+                            opts.minDate = 'today';
+                            // on mobile, prevent native datepicker so flatpickr controls appearance
+                            inputEl.type = 'text';
+                        }
+
+                        flatpickr(inputEl, opts);
+                    });
+                }
+            } catch (e) {
+                console.warn('Flatpickr init failed:', e);
+            }
+        }
+
         function showOffCanvasMain(title, url) {
             document.getElementById('offcanvasMainLabel').innerHTML = title;
             $("#offcanvasMainBody").html('<div class="text-center my-4"><div class="spinner-grow text-secondary me-2" role="status"><span class="visually-hidden">Loading...</span></div></div>');
             window.bsOffcanvas.show();
             $.get(url, function (data) {
                 $("#offcanvasMainBody").html(data);
+                // Re-init date pickers for dynamically loaded content
+                if (typeof initGlobalDatePickers === 'function') {
+                    initGlobalDatePickers();
+                }
             }).fail(function (jqXHR) {
                 nError(jqXHR.responseJSON.message);
                 window.bsOffcanvas.hide();

@@ -32,7 +32,7 @@ class OrderService
                     $actor->Id // use lowercase `id`, Laravel convention
                 ]);
 
-                \Log::info('p_AddPurchaseOrder result', ['result' => $result]);
+                Log::info('p_AddPurchaseOrder result', ['result' => $result]);
 
                 $poId = $result[0]->POID ?? null;
 
@@ -135,7 +135,7 @@ class OrderService
         return DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
-            ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR)'))
+            ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
             ->select(DB::raw('
                 t_Orders.Id,
                 t_Orders.OrderDate,
@@ -170,16 +170,66 @@ class OrderService
             ->get();
     }
 
+    /**
+     * Fetch orders paginated (newest first).
+     *
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public static function fetchOrdersPaginated(int $perPage = 10)
+    {
+        $query = DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
+            ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
+            ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
+            ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
+            ->select(DB::raw('
+                t_Orders.Id,
+                t_Orders.OrderDate,
+                t_Orders.OrderNo,
+                COALESCE(t_RFQ.RFQNumber,t_Orders.ExtOrdNum) as ExtOrdNum,
+                t_Orders.Priority,
+                t_Orders.CreatedOn,
+                t_Users.Name as CreatedBy,
+                t_Orders.BranchID,
+                SUM(isnull(t_OrderLines.fUnitPriceExcl,0)) as UnitPrice,
+                COUNT(t_OrderLines.Id) as ordercount,
+                t_Orders.OrdTotExcl,
+                t_Orders.OrdTotIncl,
+                t_Orders.OrdTotTax,
+                t_Orders.OrdDiscAmnt
+            '))
+            ->groupBy(
+                't_Orders.Id',
+                't_Orders.OrderDate',
+                't_Orders.OrderNo',
+                't_Orders.ExtOrdNum',
+                't_Orders.Priority',
+                't_Orders.CreatedOn',
+                't_Users.Name',
+                't_Orders.BranchID',
+                't_Orders.OrdTotExcl',
+                't_Orders.OrdTotIncl',
+                't_Orders.OrdTotTax',
+                't_Orders.OrdDiscAmnt',
+                't_RFQ.RFQNumber'
+            )
+            ->orderByDesc('t_Orders.CreatedOn');
+
+        return $query->paginate($perPage);
+    }
+
 
     public static function fetchOrderDetails($id)
     {
-        return DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
+        Log::info('OrderService.fetchOrderDetails start', ['id' => $id]);
+        $query = DB::table(DB::raw('t_Orders WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_OrderLines WITH (NOLOCK)'), 't_Orders.Id', '=', 't_OrderLines.iOrderID')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_Suppliers WITH (NOLOCK)'), 't_Orders.AccountID', '=', 't_Suppliers.Id')
-            ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR)'))
+            ->leftJoin(DB::raw('t_ThirdParties AS tp WITH (NOLOCK)'), 'tp.Id', '=', DB::raw('t_Suppliers.ThirdPartyID'))
+            ->leftJoin(DB::raw('t_RFQ WITH (NOLOCK)'), 't_Orders.ExtOrdNum', '=', DB::raw('CAST(t_RFQ.Id AS NVARCHAR(50))'))
             ->leftJoin(DB::raw('t_CodeDetails WITH (NOLOCK)'), function ($join) {
-                    $join->whereRaw('CAST(t_CodeDetails.ID AS VARCHAR(50)) = t_Orders.terms')
+                $join->on(DB::raw('CAST(t_CodeDetails.ID AS VARCHAR(50))'), '=', DB::raw('t_Orders.terms'))
                         ->where('t_CodeDetails.CodeID', '=', 'PaymentTerm');
                 })
             ->where('t_Orders.Id', '=', $id)
@@ -199,7 +249,7 @@ class OrderService
                 t_Orders.OrdTotIncl,
                 t_Orders.OrdTotTax,
                 t_Orders.OrdDiscAmnt,
-                t_Suppliers.SupplierName,
+                COALESCE(tp.TradingName, tp.ThirdPartyName, CAST(t_Orders.AccountID AS NVARCHAR(50))) as SupplierName,
                 t_CodeDetails.Description as terms_description,
                 t_Orders.terms as terms_id
             '))
@@ -217,18 +267,22 @@ class OrderService
                 't_Orders.OrdTotIncl',
                 't_Orders.OrdTotTax',
                 't_Orders.OrdDiscAmnt',
-                't_Suppliers.SupplierName',
+                'tp.TradingName',
+                'tp.ThirdPartyName',
                 't_RFQ.RFQNumber',
                 't_CodeDetails.Description',
                 't_Orders.terms'
-            )
-            ->first();
+            );
+        $result = $query->first();
+        Log::info('OrderService.fetchOrderDetails done', ['id' => $id, 'hasResult' => (bool)$result]);
+        return $result;
     }
 
 
     public static function fetchOrderLineDetails($id)
     {
-        return DB::table(DB::raw('t_OrderLines WITH (NOLOCK)'))
+        Log::info('OrderService.fetchOrderLineDetails start', ['id' => $id]);
+        $result = DB::table(DB::raw('t_OrderLines WITH (NOLOCK)'))
             ->leftJoin(DB::raw('t_Orders WITH (NOLOCK)'), 't_OrderLines.iOrderID', '=', 't_Orders.Id')
             ->leftJoin(DB::raw('t_Users WITH (NOLOCK)'), 't_Orders.CreatedBy', '=', 't_Users.Id')
             ->leftJoin(DB::raw('t_Items WITH (NOLOCK)'), 't_OrderLines.iStockCodeID', '=', 't_Items.Id')
@@ -250,6 +304,8 @@ class OrderService
                 t_OrderLines.LineTotal
             '))
             ->get();
+        Log::info('OrderService.fetchOrderLineDetails done', ['id' => $id, 'count' => $result->count()]);
+        return $result;
     }
 
     public static function AddPurchaseOrderSum($orderId)

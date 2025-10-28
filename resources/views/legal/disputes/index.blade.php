@@ -16,57 +16,70 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
-
-        <table class="table table-hover table-sm align-middle text-centre"
-            style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-            <thead>
-                <tr>
-                    <th>Case Title</th>
-                    <th>Court</th>
-                    <th>Filing Date</th>
-                    <th>Opposing Party</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if($cases->count())
-                @foreach($cases as $case)
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle text-centre"
+                style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                <thead>
                     <tr>
-                        <td>{{ $case->CaseTitle }}</td>
-                        <td>{{ $case->CourtName }}</td>
-                        <td>{{ \Carbon\Carbon::parse($case->FilingDate)->format('d m Y') }}</td>
-                        <td>{{ $case->OpposingParty }}</td>
-                        <td>{{ $case->Status }}</td>
-                        <td>
-                            <a href="{{ route('legal.cases.evidence.index', $case->Id) }}" class="btn btn-sm btn-dark">📂 Evidence</a>
-                            <a href="{{ route('legal.cases.show', $case->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                            <a href="{{ route('legal.cases.edit', $case->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
-                            <button type="button"
-                                class="btn btn-sm btn-danger custom-delete-btn"
-                                data-bs-toggle="modal"
-                                data-bs-target="#customDeleteConfirmModal"
-                                data-name="{{$case->CaseTitle}}"    {{-- Pass item name --}}
-                                data-route="{{ route('legal.cases.destroy', $case->Id) }}">
-                                <i  class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
+                        <th>Case Title</th>
+                        <th>Court</th>
+                        <th>Filing Date</th>
+                        <th>Opposing Party</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
-                @endforeach
-                @else
-                    <tr>
-                        <td colspan="6" class="p-0">
-                            <div class="text-centre p-4 border rounded-3 bg-light">
-                                <p class="mb-3 text-muted fs-5">
-                                    <i class="fas fa-info-circle me-2 text-info"></i>
-                                    <i>No cases found.</i>
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
-                @endif
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if($cases->count())
+                    @foreach($cases as $case)
+                        <tr>
+                            <td>{{ $case->CaseTitle }}</td>
+                            <td>{{ $case->CourtName }}</td>
+                            <td>{{ \Carbon\Carbon::parse($case->FilingDate)->format('d m Y') }}</td>
+                            <td>{{ $case->OpposingParty }}</td>
+                            <td>
+                                @if($case->Status == 'Open')
+                                    <span class="badge bg-warning">{{ $case->Status }}</span>
+                                @elseif($case->Status == 'Closed')
+                                    <span class="badge bg-secondary">{{ $case->Status }}</span>
+                                @elseif($case->Status == 'Appealed')
+                                    <span class="badge bg-success text-dark">{{ $case->Status }}</span>
+                                @elseif($case->Status == 'Dismissed')
+                                    <span class="badge bg-danger">{{ $case->Status }}</span>
+                                @else
+                                    <span class="badge bg-light text-dark">{{ $case->Status }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                <a href="{{ route('legal.cases.evidence.index', $case->Id) }}" class="btn btn-sm btn-dark">📂 Evidence</a>
+                                <a href="{{ route('legal.cases.show', $case->Id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                <a href="{{ route('legal.cases.edit', $case->Id) }}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                                <button type="button"
+                                    class="btn btn-sm btn-danger custom-delete-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#customDeleteConfirmModal"
+                                    data-name="{{$case->CaseTitle}}"    {{-- Pass item name --}}
+                                    data-route="{{ route('legal.cases.destroy', $case->Id) }}">
+                                    <i  class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                    @else
+                        <tr>
+                            <td colspan="6" class="p-0">
+                                <div class="text-centre p-4 border rounded-3 bg-light">
+                                    <p class="mb-3 text-muted fs-5">
+                                        <i class="fas fa-info-circle me-2 text-info"></i>
+                                        <i>No cases found.</i>
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @include('components.modals.delete-confirm')
