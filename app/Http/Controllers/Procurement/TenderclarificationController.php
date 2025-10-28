@@ -124,15 +124,11 @@ class TenderclarificationController extends Controller
 
         $clarification = VendorClarifications::findOrFail($validated['clarification_id']);
 
-        // Prevent double answering
-        if ($clarification->Answer) {
-            return redirect()->back()->withInput()->with('error', 'This clarification has already been answered.');
-        }
-
         try {
             $isPublished = $request->boolean('is_published_to_all');
             $userId = optional($request->user())->Id ?? 1;
 
+            // Allow both first-time answer and subsequent edits
             $clarification->Answer = trim($validated['answer']);
             $clarification->AnswerDate = now();
             $clarification->ISPUBLISHEDTOALL = $isPublished;
@@ -149,7 +145,7 @@ class TenderclarificationController extends Controller
             ]);
 
             return redirect()->route('tenderclarification.index')
-                ->with('success', 'Clarification response submitted successfully.');
+                ->with('success', 'Clarification response saved successfully.');
         } catch (\Throwable $e) {
             Log::error('Failed to save clarification response', [
                 'clarification_id' => $validated['clarification_id'],
