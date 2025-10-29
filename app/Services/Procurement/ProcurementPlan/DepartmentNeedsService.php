@@ -67,7 +67,7 @@ class DepartmentNeedsService
             $this->workflow->submit(
                 $departmentNeed,
                 $actor,
-                $data['Justification'] ?? 'Department need submitted for approval'
+                'Submitted for Approval'
             );
 
             activity()
