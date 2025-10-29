@@ -21,6 +21,7 @@ use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -90,6 +91,15 @@ class IntegrationController extends Controller
 
         if (in_array($Integration->value, [IntegrationsEnum::Website->value, IntegrationsEnum::PBX->value], true)) {
             return $this->_generateKey($request, $Integration);
+        }
+
+        if ($Integration->value === IntegrationsEnum::Organization->value) {
+            return $this->_saveOrganizationBranding(
+                $request->validated('Org_Name'),
+                $request->validated('Org_Motto'),
+                $request->validated('Org_Logo'),
+                $request->user()
+            );
         }
 
         return $this->errored('integration not complete');
@@ -331,5 +341,42 @@ class IntegrationController extends Controller
             'name' => $DisplayName,
             'password' => Crypt::encryptString($password),
         ], $actor);
+    }
+
+    private function _saveOrganizationBranding(string $name, ?string $motto, ?string $logo, User $actor): JsonResponse
+    {
+        $path = null;
+        try {
+            if (is_string($logo) && str_starts_with($logo, 'data:image/')) {
+                // data URL: data:image/png;base64,xxxx
+                [$meta, $data] = explode(',', $logo, 2);
+                $ext = 'png';
+                if (preg_match('/data:image\/(\w+);base64/i', $meta, $m)) {
+                    $ext = strtolower($m[1]);
+                }
+                $binary = base64_decode($data, true);
+                if ($binary !== false) {
+                    $filename = 'branding/logo_' . Str::random(12) . '.' . $ext;
+                    // store publicly
+                    Storage::disk('public')->put($filename, $binary);
+                    $path = 'storage/' . $filename;
+                }
+            } elseif (is_string($logo) && $logo !== '') {
+                // treat as existing relative path (e.g., uploaded via separate endpoint)
+                $path = $logo;
+            }
+        } catch (Throwable $e) {
+            Log::warning('Org logo store failed: ' . $e->getMessage());
+        }
+
+        $payload = [
+            'name' => $name,
+            'motto' => $motto,
+        ];
+        if ($path) {
+            $payload['logo'] = $path;
+        }
+
+        return $this->_saveData(IntegrationsEnum::Organization, $payload, $actor);
     }
 }

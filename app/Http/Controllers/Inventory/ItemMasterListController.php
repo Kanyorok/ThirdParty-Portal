@@ -19,6 +19,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ItemMasterListExport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\Rule;
 
 class ItemMasterListController extends Controller
 {
@@ -184,55 +185,39 @@ class ItemMasterListController extends Controller
         ]);
     }
 
-   public function update(int $id, array $data, ?UploadedFile $imageFile = null, ?UploadedFile $document = null): ItemMasterList
-{
-    return \DB::transaction(function () use ($id, $data, $imageFile, $document) {
-        $item = ItemMasterList::findOrFail($id);
+   public function update($Id)
+    {
+        // Base controller disables method injection; fetch the current request manually
+        $request = request();
 
-        $item->fill($data);
-        $item->ModifiedBy = Auth::id();
-        $item->ModifiedOn = now();
+        $item = ItemMasterList::findOrFail($Id);
+        $this->authorize('update', $item);
 
-        // Handle category hierarchy update
-        $item->Category = $data['SubCategory'] ?? $data['Category'] ?? $item->Category;
+        // Validate update payload (unique rules ignore current item)
+        $validated = $request->validate([
+            'BarCode' => ['required','string','max:255', Rule::unique('t_Items','BarCode')->ignore($Id)],
+            'ItemName' => ['required','string','max:255', Rule::unique('t_Items','ItemName')->ignore($Id)],
+            'ItemType' => 'required|exists:t_ItemTypes,Id',
+            'Category' => 'required|exists:t_ItemCategories,Id',
+            'SubCategory' => 'nullable|exists:t_ItemCategories,Id',
+            'UOM' => 'required|exists:t_UOM,Id',
+            'InventoryType' => 'required|exists:t_InventoryTypes,Id',
+            'ImageUpload' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'Document' => 'nullable', // accept multiple via array
+            'Document.*' => 'nullable|file|max:2048',
+            'ItemDescription' => 'required|string',
+            'Status' => 'nullable|exists:t_CodeDetails,ID',
+            'remove_image' => 'nullable|boolean',
+        ]);
 
-        // Handle image replacement
-        if ($imageFile) {
-            // Delete previous image if any
-            if ($item->ImageId) {
-                \App\Models\DMS\Image::destroy($item->ImageId);
-            }
-            $image = $this->storeImage($imageFile);
-            $item->ImageId = $image->ImageID;
-        }
+        $imageFile = $request->file('ImageUpload');
+        $document = $request->file('Document'); // single or array
 
-        $item->save();
+        $this->service->update((int)$Id, $validated, $imageFile, $document);
 
-        // Handle document replacement
-        if ($document) {
-            // Remove old docs
-            foreach ($item->documents as $doc) {
-                $doc->delete();
-            }
-
-            $item->newDocument(
-                \App\Enums\Core\ModulesEnum::Inventory,
-                $document,
-                [\App\Enums\Core\PermissionEnum::MasterListView->value],
-                Auth::user()
-            );
-        }
-
-        activity()
-            ->causedBy(Auth::user())
-            ->performedOn($item)
-            ->withProperties(['attributes' => $data])
-            ->event('updated')
-            ->log('Item updated');
-
-        return $item;
-    });
-}
+        return redirect()->route('itemmasterlist.show', $Id)
+            ->with('success', 'Item updated successfully.');
+    }
 
 
     public function destroy($Id)
