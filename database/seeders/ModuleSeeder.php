@@ -443,6 +443,89 @@ class ModuleSeeder extends Seeder
             ['ModuleID' => 802300, 'Name' => 'Templates Library', 'Icon' => null, 'Description' => '', 'ParentID' => 802000, 'Route' => 'legal.templates.index'],
 
             ['ModuleID' => 899000, 'Name' => 'Reports', 'Icon' => null, 'Description' => '', 'ParentID' => 800000, 'Route' => 'legal-reports.index'],
+
+
+
+                // =========================================================
+                // Parent Menu: Compliance Management
+                // =========================================================
+                ['ModuleID' => 808000, 'Name' => 'Compliance Management', 'Icon' => '<i class="fa fa-shield-alt"></i>', 'Description' => 'Manage compliance obligations, filings, policies, breaches and analytics', 'ParentID' => 800000, 'Route' => null],
+
+                // =========================================================
+                // Submenu: Setup (Masters)
+                // =========================================================
+                ['ModuleID' => 808100, 'Name' => 'Setup (Masters)', 'Icon' => '<i class="fa fa-cogs"></i>', 'Description' => 'Maintain compliance master data', 'ParentID' => 808000, 'Route' => null],
+
+                // Subsubmenu: Regulatory Bodies
+                ['ModuleID' => 808110, 'Name' => 'Regulatory Bodies', 'Icon' => '<i class="fa fa-university"></i>', 'Description' => 'List of regulators (CBK, CMA, KRA, etc.)', 'ParentID' => 808100, 'Route' => 'legal.setup.regulatory_bodies.index'],
+
+                // Subsubmenu: Compliance Areas
+                ['ModuleID' => 808120, 'Name' => 'Compliance Areas', 'Icon' => '<i class="fa fa-stream"></i>', 'Description' => 'Compliance areas and categories (AML, KYC, etc.)', 'ParentID' => 808100, 'Route' => 'legal.setup.compliance_areas.index'],
+
+                // Subsubmenu: Control Types
+                ['ModuleID' => 808130, 'Name' => 'Control Types', 'Icon' => '<i class="fa fa-tasks"></i>', 'Description' => 'Types of controls and monitoring points', 'ParentID' => 808100, 'Route' => 'legal.setup.control_types.index'],
+
+                // Subsubmenu: Incident Severity Levels
+                ['ModuleID' => 808140, 'Name' => 'Incident Severity Levels', 'Icon' => '<i class="fa fa-exclamation-triangle"></i>', 'Description' => 'Severity levels for compliance incidents', 'ParentID' => 808100, 'Route' => 'legal.setup.incident_severity_levels.index'],
+
+                // Subsubmenu: Filing Types
+                ['ModuleID' => 808150, 'Name' => 'Filing Types', 'Icon' => '<i class="fa fa-file-alt"></i>', 'Description' => 'Types of regulatory filings (CBK, AML, etc.)', 'ParentID' => 808100, 'Route' => 'legal.setup.filing_types.index'],
+
+                // Subsubmenu: File Formats
+                ['ModuleID' => 808160, 'Name' => 'File Formats', 'Icon' => '<i class="fa fa-file-code"></i>', 'Description' => 'Supported formats for filings (Excel, XML, XBRL, PDF)', 'ParentID' => 808100, 'Route' => 'legal.setup.file_formats.index'],
+
+                // Subsubmenu: Policy Categories
+                ['ModuleID' => 808170, 'Name' => 'Policy Categories', 'Icon' => '<i class="fa fa-book"></i>', 'Description' => 'Categories of compliance policies (AML, Privacy, etc.)', 'ParentID' => 808100, 'Route' => 'legal.setup.policy_categories.index'],
+
+                // Subsubmenu: Training Types
+                ['ModuleID' => 808180, 'Name' => 'Training Types', 'Icon' => '<i class="fa fa-chalkboard-teacher"></i>', 'Description' => 'Types of compliance training and certifications', 'ParentID' => 808100, 'Route' => 'legal.setup.training_types.index'],
+
+                // =========================================================
+                // Submenu: Obligations Repository
+                // =========================================================
+                ['ModuleID' => 808200, 'Name' => 'Obligations Repository', 'Icon' => '<i class="fa fa-balance-scale"></i>', 'Description' => 'Register and version control for compliance obligations', 'ParentID' => 808000, 'Route' => 'legal.compliance.obligations.index'],
+
+                // =========================================================
+                // Submenu: Compliance Calendar & Alerts
+                // =========================================================
+                ['ModuleID' => 808300, 'Name' => 'Compliance Calendar', 'Icon' => '<i class="fa fa-calendar-alt"></i>', 'Description' => 'Calendar and alerting for compliance obligations', 'ParentID' => 808000, 'Route' => 'legal.compliance.calendar.index'],
+
+                // =========================================================
+                // Submenu: Control Library
+                // =========================================================
+                ['ModuleID' => 808400, 'Name' => 'Control Library', 'Icon' => '<i class="fa fa-folder-shield"></i>', 'Description' => 'Library of compliance policies and monitoring points', 'ParentID' => 808000, 'Route' => 'legal.compliance.controls.index'],
+
+                // =========================================================
+                // Submenu: Breach & Incident Tracker
+                // =========================================================
+                ['ModuleID' => 808500, 'Name' => 'Breach & Incident Tracker', 'Icon' => '<i class="fa fa-exclamation-circle"></i>', 'Description' => 'Track compliance breaches and incidents', 'ParentID' => 808000, 'Route' => 'legal.compliance.incidents.index'],
+
+                // =========================================================
+                // Submenu: Regulatory Filings
+                // =========================================================
+                ['ModuleID' => 808600, 'Name' => 'Regulatory Filings', 'Icon' => '<i class="fa fa-file-signature"></i>', 'Description' => 'Templates and submissions for regulatory filings', 'ParentID' => 808000, 'Route' => 'legal.compliance.filings.index'],
+
+                // =========================================================
+                // Submenu: Policy & Training Repository
+                // =========================================================
+                ['ModuleID' => 808700, 'Name' => 'Policy & Training', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Policies, trainings, and staff acknowledgments', 'ParentID' => 808000, 'Route' => null],
+
+                ['ModuleID' => 808710, 'Name' => 'Policies', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Org Policies', 'ParentID' => 808700, 'Route' => 'legal.compliance.policies.index'],
+                ['ModuleID' => 808720, 'Name' => 'Trainings', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff trainings', 'ParentID' => 808700, 'Route' => 'legal.compliance.trainings.index'],
+                ['ModuleID' => 808730, 'Name' => 'Certification', 'Icon' => '<i class="fa fa-user-graduate"></i>', 'Description' => 'Staff certifications', 'ParentID' => 808700, 'Route' => 'legal.compliance.certifications.index'],
+
+                // =========================================================
+                // Submenu: Compliance Analytics
+                // =========================================================
+                ['ModuleID' => 808800, 'Name' => 'Compliance Analytics', 'Icon' => '<i class="fa fa-chart-pie"></i>', 'Description' => 'Dashboards and compliance heatmaps', 'ParentID' => 808000, 'Route' => 'legal.compliance.analytics.index'],
+
+                // =========================================================
+                // Submenu: Integration Points (optional)
+                // =========================================================
+                // ['ModuleID' => 808900, 'Name' => 'Integration Points', 'Icon' => '<i class="fa fa-link"></i>', 'Description' => 'Integrations with CBS, Finance, HR, and DMS', 'ParentID' => 808000, 'Route' => 'legal.compliance.integrations.index'],
+
+
+
         ]);
 
         return $values;
