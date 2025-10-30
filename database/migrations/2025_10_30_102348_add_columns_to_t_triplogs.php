@@ -13,10 +13,9 @@ return new class extends Migration {
         Schema::table('t_TripLogs', function (Blueprint $table) {
 
             $table->foreignId('Status')->nullable()->after('Notes')->constrained('t_CodeDetails', 'ID');
-            $table->foreignId('PreTripInspectionID')->nullable()->after('Status')->constrained('t_FleetVehicleInspections', 'Id');
-            $table->foreignId('PostTripInspectionID')->nullable()->after('PreTripInspectionID')->constrained('t_FleetVehicleInspections', 'Id');
-            $table->foreignId('StartMileage')->nullable()->after('PostTripInspectionID')->constrained('t_FleetVehicleInspections', 'Id');
-            $table->foreignId('EndMileage')->nullable()->after('StartMileage')->constrained('t_FleetVehicleInspections', 'Id');
+            $table->dropForeign(['TripStatus']);
+            $table->dropColumn('TripStatus');
+
         });
     }
 
@@ -27,17 +26,8 @@ return new class extends Migration {
     {
         Schema::table('t_TripLogs', function (Blueprint $table) {
             $table->dropForeign(['Status']);
-            $table->dropForeign(['PreTripInspectionID']);
-            $table->dropForeign(['PostTripInspectionID']);
-            $table->dropForeign(['StartMileage']);
-            $table->dropForeign(['EndMileage']);
-
-            $table->dropColumn([
-                'Status',
-                'PreTripInspectionID',
-                'PostTripInspectionID',
-                'StartMileage',
-                'EndMileage',
+            $table->dropColumn(['Status',
+            $table->foreignId('TripStatus')->nullable()->constrained('t_CodeDetails', 'ID'),
             ]);
         });
     }

@@ -37,6 +37,11 @@ class FleetTripLogRequest extends FormRequest
         'DistanceCovered' => 'nullable|integer|min:0',
         'Route' => 'nullable|integer|exists:t_FleetRoutePlans,Id',
         'Purpose' => 'nullable|string|max:255',
+        'Status' => 'nullable|integer|exists:t_CodeDetails,ID',
+        'PreTripInspectionID' => 'nullable|exists:t_FleetVehicleInspections,Id',
+        'PostTripInspectionID' => 'nullable|exists:t_FleetVehicleInspections,Id',
+        'StartMilleage' => 'nullable|exists:t_FleetVehicleInspections,Id',
+        'EndMilleage' => 'nullable|exists:t_FleetVehicleInspections,Id',
         'Notes' => 'nullable|string',
         'childTrips' => 'nullable|array',
         'childTrips.*.TripStartDate' => 'required|date',
@@ -47,6 +52,8 @@ class FleetTripLogRequest extends FormRequest
         'childTrips.*.EndLocation' => 'nullable|string|max:255',
         'childTrips.*.Purpose' => 'nullable|string|max:255',
         'childTrips.*.Notes' => 'nullable|string',
+        'childTrips.*.Status' => 'nullable|integer|exists:t_CodeDetails,ID',
+        
     ];
 }
 }

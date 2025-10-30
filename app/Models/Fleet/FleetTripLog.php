@@ -43,6 +43,7 @@ class FleetTripLog extends Model
         'DistanceCovered',
         'Purpose',
         'Notes',
+        'Status',
         'CreatedBy',
         'CreatedOn',
 
@@ -52,6 +53,12 @@ class FleetTripLog extends Model
     {
         return 'TripId';
     }
+
+    public function statusDetail()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Status', 'ID');
+    }
+
    
     public function parentTripType()
     {
