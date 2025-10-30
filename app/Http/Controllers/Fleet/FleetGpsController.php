@@ -3,28 +3,39 @@
 namespace App\Http\Controllers\Fleet;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Fleet\FleetVehicle;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class FleetGpsController extends Controller
 {
-    // Simulated live tracking
-    public function liveDashboard()
+    public function index(Request $request): View|JsonResponse
     {
-        $vehicles = FleetVehicle::where('IsActive', 1)->get();
+        $this->authorize('viewAny', FleetVehicle::class);
+        if ($request->ajax()) {
+            $vehicles = FleetVehicle::query()->get(['Id', 'RegistrationNo']);
 
-        // Simulated location data for each vehicle
-        $vehicleLocations = $vehicles->map(function ($vehicle) {
-            return [
-                'VehicleID' => $vehicle->VehicleID,
-                'RegistrationNumber' => $vehicle->RegistrationNumber,
-                'Latitude' => -1.28 + mt_rand(-50, 50) / 1000,  // Simulated around Nairobi
-                'Longitude' => 36.82 + mt_rand(-50, 50) / 1000,
-                'LastUpdated' => now()->subMinutes(rand(1, 30))->toDateTimeString(),
-            ];
-        });
+            $vehicleLocations = $vehicles->map(function ($vehicle) {
+                return [
+                    'VehicleID' => $vehicle->Id,
+                    'RegistrationNumber' => $vehicle->RegistrationNo,
+                    'Latitude' => -1.28 + random_int(-5, 5) / 1000,
+                    'Longitude' => 36.82 + random_int(-5, 5) / 1000,
+                    'Speed' => random_int(0, 120),
+                    'Direction' => random_int(0, 360),
+                    'Status' => random_int(0, 1) ? 'Moving' : 'Idle',
+                    'LastUpdated' => now()->toDateTimeString(),
+                ];
+            });
 
-        return view('fleet.gps.live_dashboard', compact('vehicleLocations'));
+            return response()->json([
+                'data' => $vehicleLocations,
+                'timestamp' => now()->toDateTimeString()
+            ]);
+        }
+
+        return view('fleet.gps.index');
     }
 
     public function movementHistory(Request $request)
