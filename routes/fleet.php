@@ -228,6 +228,9 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::put('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'update'])->name('fleet.vehicle_inspection.update');
     Route::delete('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'destroy'])->name('fleet.vehicle_inspection.destroy');
     Route::get('/vehicle_inspection/{Id}/posttrip', [FleetVehicleInspectionController::class, 'createPostTrip'])->name('fleet.vehicle_inspection.posttrip.create');
+    Route::get('/vehicle_inspection/get-driver/{Id}', [FleetVehicleInspectionController::class, 'getVehicleDriver'])->name('fleet.vehicle_inspection.getDriver');
+    Route::get('fleet/vehicle_inspection/get-last-mileage/{Id}', [FleetVehicleInspectionController::class, 'getLastMileage']);
+
 
 
 

@@ -163,6 +163,8 @@
                 });
 
             fetch(`/fleet/assignments/get-driver/${Id}`)
+            
+            
                 .then(res => res.json())
                 .then(data => {
                     document.getElementById('DriverID').value = data.driverId ?? '';

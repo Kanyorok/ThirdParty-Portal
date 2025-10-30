@@ -44,7 +44,7 @@ class FleetVehicleAssignmentController extends Controller
         $fleetVehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
-        $fleetTrips = FleetTripLog::all();
+        $fleetTrips = FleetTripLog::where('ParentTripID', null)->get();
         $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.create', compact('fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
@@ -83,7 +83,7 @@ class FleetVehicleAssignmentController extends Controller
         $fleetVehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
-        $fleetTrips = FleetTripLog::all();
+        $fleetTrips = FleetTripLog::where('ParentTripID', null)->get();
         $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.edit', compact('assignment', 'fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
@@ -145,15 +145,17 @@ class FleetVehicleAssignmentController extends Controller
         ]);
     }
 
-    public function getVehicleDriver($Id)
+    public function getVehicleDriver($vehicleId)
     {
-        $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
+        $vehicle = \App\Models\Fleet\FleetVehicle::with('fuelType')->find($vehicleId);
+
+        $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $vehicleId)
             ->whereNull('DeletedOn')
             ->latest('AssignmentDate')
             ->first();
 
         if (!$driverAssignment) {
-            $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
+            $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $vehicleId)
                 ->whereNull('DeletedOn')
                 ->latest('AssignmentDate')
                 ->first();
@@ -161,8 +163,11 @@ class FleetVehicleAssignmentController extends Controller
 
         return response()->json([
             'driverId' => $driverAssignment?->DriverID,
-            'driverName' => $driverAssignment?->driver?->FullName,
+            'driverName' => $driverAssignment?->driver?->FullName ?? 'No driver assigned',
+            'fuelTypeId' => $vehicle?->fuelType?->Id,
+            'fuelTypeName' => $vehicle?->fuelType?->FuelName,
         ]);
     }
+
 
 }

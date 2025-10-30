@@ -72,30 +72,19 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Fuel Type</label>
-                        <select name="FuelType" class="form-select" required>
-                            <option value="">-- Select Fuel Type --</option>
-                            @foreach($fuels as $fuel)
-                                <option value="{{ $fuel->Id }}" {{ old('FuelType') == $fuel->Id ? 'selected' : '' }}>
-                                    {{ $fuel->FuelName }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <input type="hidden" name="FuelType" id="FuelTypeID">
+                        <input type="text" id="FuelTypeName" class="form-control" readonly>
                     </div>
                 </div>
             @endunless
 
             {{-- Driver (Always shown) --}}
             <div class="row g-3 mt-2">
-                <div class="col-md-4">
+                {{-- Driver --}}
+                <div class="col-md-6">
                     <label class="form-label">Driver</label>
-                    <select name="DriverID" class="form-select" required>
-                        <option value="">-- Select Driver --</option>
-                        @foreach($drivers as $driver)
-                            <option value="{{ $driver->Id }}" {{ old('DriverID') == $driver->Id ? 'selected' : '' }}>
-                                {{ $driver->FullName }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <input type="hidden" name="DriverID" id="DriverID">
+                    <input type="text" id="DriverName" class="form-control" readonly>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Inspection Date</label>
@@ -111,19 +100,40 @@
             {{-- Fluids --}}
             <div class="row g-3 mt-2">
                 <div class="col-md-4">
-                    <label class="form-label">Fuel (Litres)</label>
-                    <input type="number" step="0.01" name="Fuel" class="form-control" value="{{ old('Fuel') }}"
-                           required>
+                    <label class="form-label">Fuel (Bars)</label>
+                    <select name="Fuel" class="form-select" required>
+                        <option value="">-- Select Fuel Amount --</option>
+                        @foreach($fuelUOMs as $fuelUOM)
+                            <option value="{{ $fuelUOM->ID }}"
+                                {{ old('Fuel') == $fuelUOM->ID ? 'selected' : '' }}>
+                                {{ $fuelUOM->Description }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Engine Oil (L)</label>
-                    <input type="number" step="0.01" name="EngineOil" class="form-control"
-                           value="{{ old('EngineOil') }}" required>
+                    <label class="form-label">Engine Oil</label>
+                    <select name="EngineOil" class="form-select" required>
+                        <option value="">-- Select Engine Oil Amount --</option>
+                        @foreach($engineOilUOMs as $engineOilUOM)
+                            <option value="{{ $engineOilUOM->ID }}"
+                                {{ old('EngineOil') == $engineOilUOM->ID ? 'selected' : '' }}>
+                                {{ $engineOilUOM->Description }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Coolant (L)</label>
-                    <input type="number" step="0.01" name="Coolant" class="form-control" value="{{ old('Coolant') }}"
-                           required>
+                    <label class="form-label">Coolant</label>
+                    <select name="Coolant" class="form-select" required>
+                        <option value="">-- Select Coolant Amount --</option>
+                        @foreach($coolantUOMs as $coolantUOM)
+                            <option value="{{ $coolantUOM->ID }}"
+                                {{ old('Coolant') == $coolantUOM->ID ? 'selected' : '' }}>
+                                {{ $coolantUOM->Description }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 {{-- Safety Equipment --}}
@@ -167,13 +177,73 @@
 @endsection
 
 @section('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            @if(isset($assignment) && !isset($parentInspection))
-            document.querySelector('[name="InspectionTypeID"]').value = "{{ $assignment->InspectionTypeID ?? '' }}";
-            document.querySelector('[name="VehicleID"]').value = "{{ $assignment->VehicleID ?? '' }}";
-            document.querySelector('[name="DriverID"]').value = "{{ $assignment->DriverID ?? '' }}";
-            @endif
-        });
-    </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const vehicleSelect = document.querySelector('[name="VehicleID"]');
+    const driverIdInput = document.getElementById('DriverID');
+    const driverNameInput = document.getElementById('DriverName');
+    const fuelTypeInput = document.querySelector('[name="FuelType"]'); // ← CHANGED: Get by name instead of ID
+    const fuelNameInput = document.getElementById('FuelTypeName');
+    const mileageInput = document.querySelector('[name="Mileage"]');
+
+    let lastMileage = 0;
+
+    function fetchVehicleDetails(Id) {
+        if (!Id) {
+            driverIdInput.value = '';
+            driverNameInput.value = '';
+            fuelTypeInput.value = ''; // ← CHANGED: Use the correct input
+            fuelNameInput.value = '';
+            mileageInput.value = '';
+            return;
+        }
+
+        fetch(`/fleet/vehicle_inspection/get-driver/${Id}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Network error');
+                return res.json();
+            })
+            .then(data => {
+                driverIdInput.value = data.driverId ?? '';
+                driverNameInput.value = data.driverName ?? 'No driver assigned';
+
+                if (data.fuelTypeId) {
+                    fuelTypeInput.value = data.fuelTypeId; // ← CHANGED: Set the correct input
+                    fuelNameInput.value = data.fuelTypeName ?? '';
+                } else {
+                    fuelTypeInput.value = ''; // ← CHANGED: Use the correct input
+                    fuelNameInput.value = '';
+                }
+
+                // ✅ Fetch last mileage
+                fetch(`/fleet/vehicle_inspection/get-last-mileage/${Id}`) // ← FIXED: variable name
+                    .then(res => res.json())
+                    .then(mileageData => {
+                        lastMileage = mileageData.lastMileage ?? 0;
+                        mileageInput.placeholder = `Last recorded: ${lastMileage} km`;
+                    });
+            })
+            .catch(err => {
+                console.error(err);
+            });
+    }
+
+    // Prevent entering mileage lower than last
+    mileageInput?.addEventListener('input', function () {
+        const entered = parseInt(this.value || 0);
+        if (entered < lastMileage) {
+            alert(`Mileage cannot be less than the last recorded value (${lastMileage} km).`);
+            this.value = lastMileage;
+        }
+    });
+
+    vehicleSelect?.addEventListener('change', function () {
+        fetchVehicleDetails(this.value);
+    });
+
+    if (vehicleSelect?.value) {
+        fetchVehicleDetails(vehicleSelect.value);
+    }
+});
+</script>
 @endsection
