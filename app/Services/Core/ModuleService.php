@@ -216,16 +216,12 @@ class ModuleService
         $routeName = $item['route_name'] ?? null;
         $canAccessRoute = $routeName ? self::userCanAccessRoute($user, $permSet, $routeName) : false;
 
-        // Determine module-level fallback from top-level name (parentless) or pass down parentName
-        $moduleName = $parentName ?? ($item['name'] ?? '');
-        $canAccessModule = self::userHasAnyPermissionInModuleName($user, $permSet, $moduleName);
-
-        // If item has no accessible route and no accessible children and no module-level access, drop it
-        if (!$canAccessRoute && empty($filteredChildren) && !$canAccessModule) {
-            return null;
+        // Strict rule: keep item only if the route is accessible OR it has accessible children
+        if ($canAccessRoute || !empty($filteredChildren)) {
+            return $item;
         }
 
-        return $item;
+        return null;
     }
 
     /**
@@ -286,6 +282,26 @@ class ModuleService
      */
     private static function userCanAccessRoute(User $user, array $permSet, string $routeName): bool
     {
+        // Manual overrides for routes that don't follow a clean naming → permission pattern
+        // Department Needs
+        $overrides = [
+            'procurementdepartmentalplan.index' => PermissionEnum::DepartmentNeedsRead->value,
+            'procurementdepartmentalplan.view' => PermissionEnum::DepartmentNeedsRead->value,
+            'procurementdepartmentalplan.data' => PermissionEnum::DepartmentNeedsRead->value,
+            'procurementdepartmentalplan.create' => PermissionEnum::DepartmentNeedsWrite->value,
+            'procurementdepartmentalplan.store' => PermissionEnum::DepartmentNeedsWrite->value,
+            'procurementdepartmentalplan.updateLine' => PermissionEnum::DepartmentNeedsUpdate->value,
+            'procurementdepartmentalplan.destroy' => PermissionEnum::DepartmentNeedsDelete->value,
+            // Approvals
+            'department-need-approval.index' => PermissionEnum::DepartmentNeedsApproval->value,
+            'department-need-approval.show' => PermissionEnum::DepartmentNeedsApproval->value,
+            'department-need-approval.update' => PermissionEnum::DepartmentNeedsApproval->value,
+            'department-need-approval.destroy' => PermissionEnum::DepartmentNeedsApproval->value,
+        ];
+        if (isset($overrides[$routeName])) {
+            return isset($permSet[$overrides[$routeName]]);
+        }
+
         // Use prebuilt route->permission map if available
         $required = self::$routePermissionMap[$routeName] ?? null;
         if (is_string($required) && $required !== '') {
@@ -293,6 +309,7 @@ class ModuleService
         }
 
         // Heuristic fallback from route base name
+        // Prefer the first segment after module prefix when present (e.g., rfqs.index → rfq; tendersubmission.index → tendersubmission)
         $base = Str::of($routeName)->before('.')->slug('-')->toString();
         // Try to singularize common plural forms crudely
         if (Str::endsWith($base, 's')) {

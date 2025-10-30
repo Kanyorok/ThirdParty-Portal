@@ -25,7 +25,7 @@ class TicketPolicy
         if ($ticket->user($user)->exists()) {
             return true;
         }
-        return $user->can(PermissionEnum::TicketUpdate->value);
+        return $user->can(PermissionEnum::TicketRead->value);
     }
 
     /**

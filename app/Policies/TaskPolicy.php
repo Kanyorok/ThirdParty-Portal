@@ -13,7 +13,7 @@ class TaskPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::TaskCreate->value) || $user->can(PermissionEnum::TaskDelegate->value);
     }
 
     /**
@@ -21,7 +21,10 @@ class TaskPolicy
      */
     public function view(User $user, Task $task): bool
     {
-        return true;
+        if ($task->CreatedBy === $user->Id || $task->UserID === $user->Id) {
+            return true;
+        }
+        return $user->can(PermissionEnum::TaskCreate->value) || $user->can(PermissionEnum::TaskDelegate->value);
     }
 
     /**
