@@ -10,7 +10,7 @@
                 <strong class="text-dark">{{ $cases->CaseTitle }}</strong>
             </p>
 
-            <form method="POST" action="{{ route('legal.cases.evidence.update', [$cases->Id, $evidence->Id]) }}">
+            <form method="POST" action="{{ route('legal.cases.evidence.update', [$cases->Id, $evidence->Id]) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -21,8 +21,15 @@
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">DMS Document ID (optional)</label>
-                        <input type="text" name="DMSDocumentID" value="{{ old('DMSDocumentID', $evidence->DMSDocumentID) }}" class="form-control">
+                        <label class="form-label">Upload Document (optional)</label>
+                        <input type="file" name="DMSDocumentID" class="form-control"
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpeg,.jpg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/jpg,image/png">
+                        <small class="form-text text-muted">Accepted formats: PDF, Word, Excel, CSV, JPG, PNG</small>
+                        @if ($evidence->DMSDocumentID)
+                        <div class="mt-2">
+                          <span class="text-success">Current Document: {{ basename($evidence->DMSDocumentID) }}</span>
+                        </div>
+                        @endif
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">External File Link (optional)</label>

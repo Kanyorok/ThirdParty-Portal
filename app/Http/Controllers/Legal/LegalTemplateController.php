@@ -136,7 +136,12 @@ class LegalTemplateController extends Controller
         // 2) Normalize + prepare
         $title = $request->input('TemplateName');
         $docType = $request->input('DocumentType');
-        $version = $request->input('Version', 'v1.0');
+        // Automatic versioning: increment for given Title + DocumentType combination
+        $maxVersion = \App\Models\Legal\LegalTemplate::where('Title', $title)
+            ->where('DocumentType', $docType)
+            ->max('Version');
+        $maxVersion = is_numeric($maxVersion) ? (int)$maxVersion : 0;
+        $version = $maxVersion + 1;
         $description = $request->input('Description');
         $bodyHtml = $request->input('TemplateBody');
 
