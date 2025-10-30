@@ -2,15 +2,23 @@
 
 namespace App\Services\Core;
 
+use App\Enums\Core\ModulesEnum;
+use App\Enums\Core\PermissionEnum;
 use App\Models\Auth\User;
 use App\Models\Core\Module;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth as AuthFacade;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 class ModuleService
 {
+    /**
+     * In-request caches to avoid repeated DB/route scans.
+     */
+    private static array $permissionSetCache = [];
+    private static ?array $routePermissionMap = null;
 
     public static function generateNavbar(User $user = null): string
     {
@@ -117,6 +125,25 @@ class ModuleService
             $navbar->push(self::buildNavbarItem($module, $modules));
         }
 
+        // Filter by permissions for current user
+        $user = AuthFacade::user();
+        if ($user instanceof User) {
+            // Admin bypass: show all modules/submodules without filtering
+            if (self::isSuper($user)) {
+                return $navbar; // return full, unfiltered menu
+            }
+            $filtered = [];
+            $permSet = self::getUserPermissionSet($user);
+            self::buildRoutePermissionMapOnce();
+            foreach ($navbar as $item) {
+                $filteredItem = self::filterItemForUser($item, $user, $permSet, parentName: null);
+                if ($filteredItem !== null) {
+                    $filtered[] = $filteredItem;
+                }
+            }
+            return collect($filtered);
+        }
+
         return $navbar;
     }
 
@@ -152,6 +179,7 @@ class ModuleService
             'name' => $module->Name,
             'icon' => $module->Icon ?? 'fa fa-circle-o',
             'route' => $routeUrl,
+            'route_name' => is_string($module->Route) ? $module->Route : null,
             'description' => $module->Description ?? '',
             'children' => []
         ];
@@ -166,5 +194,169 @@ class ModuleService
         }
 
         return $item;
+    }
+
+    /**
+     * Recursively filter a navbar item for a user; returns null if user cannot access any part of it.
+     */
+    private static function filterItemForUser(array $item, User $user, array $permSet, ?string $parentName): ?array
+    {
+        // Filter children first
+        $filteredChildren = [];
+        foreach ($item['children'] as $child) {
+            $filteredChild = self::filterItemForUser($child, $user, $permSet, parentName: ($item['name'] ?? null));
+            if ($filteredChild !== null) {
+                $filteredChildren[] = $filteredChild;
+            }
+        }
+
+        $item['children'] = $filteredChildren;
+
+        // If this item has a route, check if user can access it
+        $routeName = $item['route_name'] ?? null;
+        $canAccessRoute = $routeName ? self::userCanAccessRoute($user, $permSet, $routeName) : false;
+
+        // Determine module-level fallback from top-level name (parentless) or pass down parentName
+        $moduleName = $parentName ?? ($item['name'] ?? '');
+        $canAccessModule = self::userHasAnyPermissionInModuleName($user, $permSet, $moduleName);
+
+        // If item has no accessible route and no accessible children and no module-level access, drop it
+        if (!$canAccessRoute && empty($filteredChildren) && !$canAccessModule) {
+            return null;
+        }
+
+        return $item;
+    }
+
+    /**
+     * Check if a user has any permission belonging to a module name (best-effort mapping via ModulesEnum description).
+     */
+    private static function userHasAnyPermissionInModuleName(User $user, array $permSet, string $moduleName): bool
+    {
+        $moduleName = Str::of($moduleName)->lower()->toString();
+        // Map name to ModulesEnum by description match
+        $target = collect(ModulesEnum::cases())->first(function ($m) use ($moduleName) {
+            $desc = Str::of($m->description())->lower()->toString();
+            return Str::contains($desc, $moduleName) || Str::contains($moduleName, Str::lower($desc));
+        });
+
+        if (!$target instanceof ModulesEnum) {
+            // Fall back: weak heuristics by common names
+            $map = [
+                'procurement' => ModulesEnum::Procurement,
+                'inventory' => ModulesEnum::Inventory,
+                'property' => ModulesEnum::Property,
+                'fleet' => ModulesEnum::Fleet,
+                'dms' => ModulesEnum::DMS,
+                'legal' => ModulesEnum::Legal,
+                'insurance' => ModulesEnum::Insurance,
+                'hrm' => ModulesEnum::HRM,
+                'finance' => ModulesEnum::Finance,
+                'settings' => ModulesEnum::Settings,
+                'budget' => ModulesEnum::BudgetLine,
+                'supplier' => ModulesEnum::ThirdParty,
+                'suppliers' => ModulesEnum::ThirdParty,
+                'third party' => ModulesEnum::ThirdParty,
+            ];
+            foreach ($map as $key => $enum) {
+                if (Str::contains($moduleName, $key)) {
+                    $target = $enum; break;
+                }
+            }
+        }
+
+        if (!$target instanceof ModulesEnum) {
+            return false;
+        }
+
+        // Check if user has any permission from PermissionEnum within this module
+        foreach (PermissionEnum::cases() as $perm) {
+            /** @var PermissionEnum $perm */
+            if ($perm->module() === $target) {
+                if (isset($permSet[$perm->value])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Determine if user can access a route via explicit 'permission:xxx' middleware or heuristic mapping.
+     */
+    private static function userCanAccessRoute(User $user, array $permSet, string $routeName): bool
+    {
+        // Use prebuilt route->permission map if available
+        $required = self::$routePermissionMap[$routeName] ?? null;
+        if (is_string($required) && $required !== '') {
+            return isset($permSet[$required]);
+        }
+
+        // Heuristic fallback from route base name
+        $base = Str::of($routeName)->before('.')->slug('-')->toString();
+        // Try to singularize common plural forms crudely
+        if (Str::endsWith($base, 's')) {
+            $base = Str::substr($base, 0, Str::length($base) - 1);
+        }
+        $candidates = [
+            $base . '-read', $base . '-create', $base . '-update', $base . '-delete', $base . '-approval'
+        ];
+        foreach ($candidates as $p) {
+            if (isset($permSet[$p])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Build a route name -> permission mapping once per request by scanning route middleware.
+     */
+    private static function buildRoutePermissionMapOnce(): void
+    {
+        if (is_array(self::$routePermissionMap)) return;
+        $map = [];
+        try {
+            foreach (Route::getRoutes() as $route) {
+                $name = $route->getName();
+                if (!$name) continue;
+                $middlewares = method_exists($route, 'gatherMiddleware') ? $route->gatherMiddleware() : ($route->middleware() ?? []);
+                foreach ($middlewares as $mw) {
+                    if (is_string($mw) && Str::startsWith($mw, 'permission:')) {
+                        $map[$name] = (string)Str::after($mw, 'permission:');
+                        break;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+        self::$routePermissionMap = $map;
+    }
+
+    /**
+     * Get a set of permission names for the current user/branch for this request.
+     */
+    private static function getUserPermissionSet(User $user): array
+    {
+        $branchId = (string) (session('LoginBranchId') ?? 'no-branch');
+        $key = $user->getAuthIdentifier() . '|' . $branchId;
+        if (array_key_exists($key, self::$permissionSetCache)) {
+            return self::$permissionSetCache[$key];
+        }
+        try {
+            $perms = $user->getPermissionsViaRoles()->pluck('name')->filter()->values()->all();
+        } catch (\Throwable $e) {
+            $perms = [];
+        }
+        // Convert to set for O(1) lookups
+        $set = [];
+        foreach ($perms as $p) $set[$p] = true;
+        return self::$permissionSetCache[$key] = $set;
+    }
+
+    private static function isSuper(User $user): bool
+    {
+        return $user->hasRole(['admin', 'Admin', 'super-admin', 'Super Admin']);
     }
 }

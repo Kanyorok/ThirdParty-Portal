@@ -4,6 +4,7 @@ namespace App\Policies\Procurement;
 
 use App\Models\Auth\User;
 use App\Models\Procurement\Order;
+use App\Enums\Core\PermissionEnum;
 
 class OrderPolicy
 {
@@ -19,7 +20,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::PurchaseOrderRead->value);
     }
 
     /**
@@ -27,7 +28,7 @@ class OrderPolicy
      */
     public function view(User $user, Order $order): bool
     {
-        return true;
+        return $user->can(PermissionEnum::PurchaseOrderRead->value);
     }
 
     /**
@@ -35,7 +36,7 @@ class OrderPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->can(PermissionEnum::PurchaseOrderWrite->value);
     }
 
     /**
@@ -43,7 +44,7 @@ class OrderPolicy
      */
     public function update(User $user, Order $order): bool
     {
-        return true;
+        return $user->can(PermissionEnum::PurchaseOrderUpdate->value);
     }
 
     /**
@@ -51,7 +52,7 @@ class OrderPolicy
      */
     public function delete(User $user, Order $order): bool
     {
-        return true;
+        return $user->can(PermissionEnum::PurchaseOrderDelete->value);
     }
 
     /**
@@ -59,7 +60,7 @@ class OrderPolicy
      */
     public function restore(User $user, Order $order): bool
     {
-        return true;
+        return $user->can(PermissionEnum::PurchaseOrderUpdate->value);
     }
 
     /**
@@ -67,6 +68,6 @@ class OrderPolicy
      */
     public function forceDelete(User $user, Order $order): bool
     {
-        return true;
+        return $user->can(PermissionEnum::PurchaseOrderDelete->value);
     }
 }

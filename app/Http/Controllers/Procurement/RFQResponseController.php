@@ -10,6 +10,7 @@ use App\Models\procurement\RFQResponseItem;
 use App\Models\ThirdParies\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class RFQResponseController extends Controller
 {
@@ -203,17 +204,22 @@ class RFQResponseController extends Controller
 
         // Categories used in this RFQ (from its lines)
         $itemCategoryIds = $rfq->rfqLines->pluck('ItemCategoryId')->unique()->filter()->values();
+
         // Expand to include ancestors and all descendants
         $allCategoryIds = collect();
         foreach ($itemCategoryIds as $catId) {
             $catId = (int)$catId;
-            if (!$catId) continue;
+            if (!$catId) {
+                continue;
+            }
             // climb ancestors
             $current = $catId;
             while ($current) {
                 $allCategoryIds->push($current);
                 $parent = DB::table('t_ItemCategories')->where('Id', $current)->value('ParentId');
-                if ($parent === null || (int)$parent === 0) break;
+                if ($parent === null || (int)$parent === 0) {
+                    break;
+                }
                 $current = (int)$parent;
             }
         }
@@ -238,29 +244,62 @@ class RFQResponseController extends Controller
             ->whereNull('rs.DeletedOn')
             ->pluck('rs.ThirdPartyID');
 
-        // Map through classification table to suppliers, join t_ThirdParties for display name
-        // Note: Some DBs store supplier-category relation via pivot t_ThirdParty_SupplierCategory.
-        // Join both direct CategoryId mapping and pivot-derived categories.
-        $suppliers = DB::table('t_Suppliers as s')
+        // Resolve supplier category column name on t_Suppliers
+        $supplierCategoryCol = Schema::hasColumn('t_Suppliers', 'SupplierCategoryID')
+            ? 'SupplierCategoryID'
+            : (Schema::hasColumn('t_Suppliers', 'CategoryId') ? 'CategoryId' : null);
+
+        // Base query: suppliers joined to third parties
+        $query = DB::table('t_Suppliers as s')
             ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
-            ->leftJoin('t_ThirdParty_SupplierCategory as tpsc', 'tpsc.ThirdPartyID', '=', 'tp.Id')
             ->whereNull('s.DeletedOn')
             ->whereNull('tp.DeletedOn')
             ->where('s.Active_Status', 1)
-            ->whereNotIn('tp.Id', $respondedThirdPartyIds)
-            ->whereExists(function ($q) use ($allCategoryIds) {
+            ->whereNotIn('tp.Id', $respondedThirdPartyIds);
+
+        // Direct classification mapping: supplier's category maps to any of the RFQ item categories
+        if ($supplierCategoryCol !== null) {
+            $query->whereExists(function ($q) use ($allCategoryIds, $supplierCategoryCol) {
                 $q->select(DB::raw(1))
-                    ->from('t_SupplierCategory_ItemCategory as scic')
-                    ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
-                    ->whereNull('sc.DeletedOn')
-                    ->whereNull('scic.DeletedOn')
-                    ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                    ->where(function ($w) {
-                        $w->whereColumn('sc.SupplierCategoryID', 's.CategoryId')
-                          ->orWhereColumn('sc.SupplierCategoryID', 'tpsc.SupplierCategoryID');
-                    });
-            })
-            // De-duplicate by ThirdParty (one option per supplier); pick a stable SupplierId
+                  ->from('t_SupplierCategory_ItemCategory as scic')
+                  ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
+                  ->whereNull('sc.DeletedOn')
+                  ->whereNull('scic.DeletedOn')
+                  ->whereIn('scic.ItemCategoryID', $allCategoryIds)
+                  ->whereColumn('sc.SupplierCategoryID', DB::raw('s.' . $supplierCategoryCol));
+            });
+        }
+
+        // Pivot classification mapping via t_ThirdParty_SupplierCategory (support both PascalCase and snake_case columns)
+        if (Schema::hasTable('t_ThirdParty_SupplierCategory')) {
+            $hasPascal = Schema::hasColumn('t_ThirdParty_SupplierCategory', 'ThirdPartyID')
+                && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'SupplierCategoryID');
+            $hasSnake = Schema::hasColumn('t_ThirdParty_SupplierCategory', 'third_party_id')
+                && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'supplier_category_id');
+
+            if ($hasPascal || $hasSnake) {
+                $query->orWhereExists(function ($q) use ($allCategoryIds, $hasPascal) {
+                    if ($hasPascal) {
+                        $q->select(DB::raw(1))
+                          ->from('t_ThirdParty_SupplierCategory as tpsc')
+                          ->join('t_SupplierCategory_ItemCategory as scic', 'scic.SupplierCategoryID', '=', 'tpsc.SupplierCategoryID')
+                          ->whereNull('scic.DeletedOn')
+                          ->whereIn('scic.ItemCategoryID', $allCategoryIds)
+                          ->whereColumn('tpsc.ThirdPartyID', 'tp.Id');
+                    } else {
+                        $q->select(DB::raw(1))
+                          ->from('t_ThirdParty_SupplierCategory as tpsc')
+                          ->join('t_SupplierCategory_ItemCategory as scic', 'scic.SupplierCategoryID', '=', 'tpsc.supplier_category_id')
+                          ->whereNull('scic.DeletedOn')
+                          ->whereIn('scic.ItemCategoryID', $allCategoryIds)
+                          ->whereColumn('tpsc.third_party_id', 'tp.Id');
+                    }
+                });
+            }
+        }
+
+        // De-duplicate by ThirdParty (one option per supplier); pick a stable SupplierId
+        $suppliers = $query
             ->groupBy('tp.Id', 'tp.TradingName')
             ->select(
                 DB::raw('MIN(s.Id) as Id'),
