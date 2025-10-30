@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Legal;
 use App\Enums\Core\ModulesEnum;
 use App\Enums\Core\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\Core\CodeDetail;
 use App\Models\Legal\LegalClause;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -73,13 +74,10 @@ class LegalTemplateController extends Controller
             ->orderBy('Title')
             ->get();
 
-        $types = LegalClause::query()
-            ->whereNotNull('ClauseType')
-            ->distinct()
-            ->orderBy('ClauseType')
-            ->pluck('ClauseType');
+        // Use the same document types source as legal documents page
+        $docTypes = CodeDetail::where('CodeID', 'LegalDocumentType')->get();
 
-        return view('legal.templates.create', compact('clauses', 'types'));
+        return view('legal.templates.create', compact('clauses', 'docTypes'));
     }
 
 //    public function store(Request $request)

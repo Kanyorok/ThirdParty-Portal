@@ -46,7 +46,11 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Document Type</label>
-                                    <input type="text" name="DocumentType" class="form-control" placeholder="e.g. Contract / NDA / Lease">
+                                    <select name="DocumentType" class="form-control">
+@foreach($docTypes as $docType)
+                                        <option value="{{ $docType->Description }}">{{ $docType->Description }}</option>
+@endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Version</label>
