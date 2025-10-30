@@ -16,13 +16,20 @@
   <nav class="pc-sidebar">
     <div class="navbar-wrapper">
       <div class="m-header">
+        @php
+          $org = \App\Models\Settings\APICredential::query()->where('Integration', \App\Enums\Core\IntegrationsEnum::Organization->value)->latest('Id')->first();
+          $branding = $org?->Configuration;
+          $logo = is_object($branding) && isset($branding->logo) ? $branding->logo : 'assets/img/carft.png';
+          $name = is_object($branding) && isset($branding->name) ? $branding->name : config('app.name');
+          $motto = is_object($branding) && isset($branding->motto) ? $branding->motto : 'Thinking.Crafting.Transforming';
+        @endphp
         <a href="{{ route('home') }}" class="b-brand text-primary d-flex align-items-center">
-          <img src="{{ asset('assets/img/carft.png') }}" class="img-fluid" alt="logo" width="58" height="48">
+          <img src="{{ asset($logo) }}" class="img-fluid" alt="logo" width="58" height="48">
           <div class="ms-3">
             <div class="h2 mb-0 text-decoration-none">
-              {{ config('app.name') }}
+              {{ $name }}
             </div>
-            <div class="small text-muted text-center">Thinking.Crafting.Transforming</div>
+            <div class="small text-muted text-center">{{ $motto }}</div>
           </div>
         </a>
       </div>

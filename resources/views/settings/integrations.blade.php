@@ -49,6 +49,68 @@
                             </div>
                             <div class="card-body">
                                 @switch($integration->value)
+                                    @case(IntegrationsEnum::Organization->value)
+                                        <form id="orgConfigurationForm" method="post"
+                                              action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
+                                            <input type="hidden" name="Integration" value="{{ $integration->value }}"
+                                                   class="d-none" style="display: none;">
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="Org_Name">Organization Name <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control config-org-form"
+                                                       id="Org_Name" disabled placeholder="e.g., Acme Corp" required
+                                                       value="{{ $orgConfig?->name }}"
+                                                       name="Org_Name">
+                                                <span id="Org_Name_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="Org_Motto">Motto</label>
+                                                <input type="text" class="form-control config-org-form"
+                                                       id="Org_Motto" disabled placeholder="e.g., Thinking.Crafting.Transforming"
+                                                       value="{{ $orgConfig?->motto }}"
+                                                       name="Org_Motto">
+                                                <span id="Org_Motto_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="Org_Logo">Logo (data URL)</label>
+                                                <input type="text" class="form-control config-org-form"
+                                                       id="Org_Logo" disabled placeholder="data:image/png;base64,... or existing path"
+                                                       name="Org_Logo">
+                                                <span id="Org_Logo_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                                <div class="mt-2">
+                                                    <input type="file" class="form-control config-org-form" id="Org_Logo_File" accept="image/*" disabled>
+                                                    <small class="text-muted">Select an image to auto-fill the field above.</small>
+                                                </div>
+                                                @if(is_string($orgConfig?->logo))
+                                                    <div class="mt-2">
+                                                        <img src="{{ asset($orgConfig?->logo) }}" alt="Logo" style="height:48px" class="rounded bg-white p-1 border">
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <hr class="mb-3">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button type="button" class="btn btn-secondary d-none float-start"
+                                                            id="orgConfigurationCancelBtn">
+                                                        cancel
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary float-start"
+                                                            id="orgConfigurationEditBtn">
+                                                        edit config
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button type="submit" class="btn btn-success d-none float-end"
+                                                            id="orgConfigurationBtn">
+                                                        save changes
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        @break
                                     @case(IntegrationsEnum::ReportService->value)
                                         <form id="srsConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
@@ -834,6 +896,30 @@
 @section('scripts')
     <script>
         $(function () {
+            $("#orgConfigurationEditBtn").on('click', function () {
+                enable('org')
+            });
+            $("#orgConfigurationCancelBtn").on('click', function () {
+                disable('org');
+            });
+            $('form#orgConfigurationForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $("#orgConfigurationBtn"), false, false, true)) {
+                    disable('org');
+                }
+            });
+            $('#Org_Logo_File').on('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const dataUrl = evt.target.result;
+                    if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image/')) {
+                        $('#Org_Logo').val(dataUrl);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
             $("#emailConfigurationEditBtn").on('click', function () {
                 enable('email')
             });
