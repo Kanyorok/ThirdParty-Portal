@@ -26,7 +26,7 @@ class FleetVehicleInspectionController extends Controller
     {
         $this->authorize('viewAny', FleetVehicleInspection::class);
 
-        $inspections = FleetVehicleInspection::with(['vehicle', 'driver', 'fuel', 'postTrips'])
+        $inspections = FleetVehicleInspection::with(['vehicle', 'driver', 'engineOil', 'postTrips', 'fuel', 'coolant', 'inspectionType'])
             ->where('CreatedBy', Auth::id())
             ->whereNull('ParentInspectionID')
             ->get();
@@ -39,11 +39,13 @@ class FleetVehicleInspectionController extends Controller
         $this->authorize('create', FleetVehicleInspection::class);
 
         $vehicles = FleetVehicle::all();
-        $drivers  = FleetDriver::all();
         $fuels    = FuelType::all();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
+        $engineOilUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
+        $fuelUOMs = CodeDetail::where('CodeID', 'FuelUOM')->get();
+        $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
-        return view('fleet.vehicle_inspection.create', compact('vehicles', 'drivers', 'fuels', 'inspectionTypes'));
+        return view('fleet.vehicle_inspection.create', compact('vehicles', 'fuels', 'inspectionTypes', 'engineOilUOMs', 'fuelUOMs', 'coolantUOMs'));
     }
 
     public function createPostTrip($id)
@@ -54,13 +56,17 @@ class FleetVehicleInspectionController extends Controller
         $parentInspection = FleetVehicleInspection::with('inspectionType')->findOrFail($id);
 
         $vehicles = FleetVehicle::all();
-        $drivers  = FleetDriver::all();
         $fuels    = FuelType::all();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
+        $engineOilUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
+        $fuelUOMs = CodeDetail::where('CodeID', 'FuelUOM')->get();
+        $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
         return view('fleet.vehicle_inspection.create', [
             'vehicles'          => $vehicles,
-            'drivers'           => $drivers,
+            'engineOilUOMs'     => $engineOilUOMs,
+            'fuelUOMs'          => $fuelUOMs,
+            'coolantUOMs'      => $coolantUOMs, 
             'fuels'             => $fuels,
             'inspectionTypes'   => $inspectionTypes,
             'parentInspection'  => $parentInspection,
@@ -96,10 +102,13 @@ class FleetVehicleInspectionController extends Controller
         $inspection = FleetVehicleInspection::findOrFail($id);
         $vehicles   = FleetVehicle::all();
         $drivers    = FleetDriver::all();
-        $fuels      = FuelType::all();
         $inspectionTypes = CodeDetail::where('CodeID', 'InspectionType')->get();
+        $engineOilUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
+        $fuelUOMs = CodeDetail::where('CodeID', 'FuelUOM')->get();
+        $coolantUOMs = CodeDetail::where('CodeID', 'FleetUOM')->get();
 
-        return view('fleet.vehicle_inspection.edit', compact('inspection', 'vehicles', 'drivers', 'fuels', 'inspectionTypes'));
+
+        return view('fleet.vehicle_inspection.edit', compact('inspection', 'vehicles', 'drivers', 'engineOilUOMs', 'fuelUOMs', 'coolantUOMs', 'inspectionTypes'));
     }
 
     public function update(FleetVehicleInspectionRequest $request, $id)
@@ -123,4 +132,40 @@ class FleetVehicleInspectionController extends Controller
         return redirect()->route('fleet.vehicle_inspection.index')
             ->with('success', 'Vehicle inspection deleted successfully.');
     }
+
+    public function getVehicleDriver($Id)
+    {
+        $vehicle = FleetVehicle::with('fuelType')->find($Id);
+
+        $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
+            ->whereNull('DeletedOn')
+            ->latest('AssignmentDate')
+            ->first();
+
+        if (!$driverAssignment) {
+            $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
+                ->whereNull('DeletedOn')
+                ->latest('AssignmentDate')
+                ->first();
+        }
+
+        return response()->json([
+            'driverId'      => $driverAssignment?->DriverID,
+            'driverName'    => $driverAssignment?->driver?->FullName ?? 'No driver assigned',
+            'fuelTypeId'    => $vehicle?->fuelType?->Id,
+            'fuelTypeName'  => $vehicle?->fuelType?->FuelName,
+        ]);
+    }
+
+     public function getLastMileage($vehicleId)
+    {
+        $lastInspection = \App\Models\Fleet\FleetVehicleInspection::where('VehicleID', $vehicleId)
+            ->orderByDesc('InspectionDate')
+            ->first();
+
+        return response()->json([
+            'lastMileage' => $lastInspection?->Mileage ?? 0,
+        ]);
+    }
+
 }

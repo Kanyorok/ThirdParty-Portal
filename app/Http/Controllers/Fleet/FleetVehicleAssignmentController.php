@@ -44,7 +44,7 @@ class FleetVehicleAssignmentController extends Controller
         $fleetVehicles = FleetVehicle::all();
         $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
             ->pluck('name', 'Id');
-        $fleetTrips = FleetTripLog::all();
+        $fleetTrips = FleetTripLog::where('ParentTripID', null)->get();
         $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.create', compact('fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
@@ -81,10 +81,10 @@ class FleetVehicleAssignmentController extends Controller
             ->firstOrFail();
 
         $fleetVehicles = FleetVehicle::all();
-            $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
-                ->pluck('name', 'Id');
-            $fleetTrips = FleetTripLog::all();
-            $fleetInspections = FleetVehicleInspection::all();
+        $assigners = Employee::select(DB::raw("CONCAT(LastName, ' ', FirstName) AS name"), 'Id')
+            ->pluck('name', 'Id');
+        $fleetTrips = FleetTripLog::where('ParentTripID', null)->get();
+        $fleetInspections = FleetVehicleInspection::all();
 
         return view('fleet.assignments.edit', compact('assignment', 'fleetVehicles', 'assigners', 'fleetTrips', 'fleetInspections'));
     }
@@ -146,24 +146,29 @@ class FleetVehicleAssignmentController extends Controller
         ]);
     }
 
-public function getVehicleDriver($Id)
-{
-    $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $Id)
-        ->whereNull('DeletedOn')
-        ->latest('AssignmentDate')
-        ->first();
+    public function getVehicleDriver($vehicleId)
+    {
+        $vehicle = \App\Models\Fleet\FleetVehicle::with('fuelType')->find($vehicleId);
 
-    if (!$driverAssignment) {
-        $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $Id)
+        $driverAssignment = \App\Models\Fleet\FleetDriverAssignment::where('VehicleID', $vehicleId)
             ->whereNull('DeletedOn')
             ->latest('AssignmentDate')
             ->first();
+
+        if (!$driverAssignment) {
+            $driverAssignment = \App\Models\Fleet\FleetContractedDriverAssignment::where('VehicleID', $vehicleId)
+                ->whereNull('DeletedOn')
+                ->latest('AssignmentDate')
+                ->first();
+        }
+
+        return response()->json([
+            'driverId' => $driverAssignment?->DriverID,
+            'driverName' => $driverAssignment?->driver?->FullName ?? 'No driver assigned',
+            'fuelTypeId' => $vehicle?->fuelType?->Id,
+            'fuelTypeName' => $vehicle?->fuelType?->FuelName,
+        ]);
     }
 
-    return response()->json([
-        'driverId'   => $driverAssignment?->DriverID,
-        'driverName' => $driverAssignment?->driver?->FullName, 
-    ]);
-}
 
 }

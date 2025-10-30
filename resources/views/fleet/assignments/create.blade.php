@@ -162,12 +162,14 @@ document.getElementById('VehicleID').addEventListener('change', function() {
             }
         });
 
-    fetch(`/fleet/assignments/get-driver/${Id}`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('DriverID').value = data.driverId ?? '';
-            document.getElementById('DriverName').value = data.driverName ?? 'No driver assigned';
+            fetch(`/fleet/assignments/get-driver/${Id}`)
+            
+            
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('DriverID').value = data.driverId ?? '';
+                    document.getElementById('DriverName').value = data.driverName ?? 'No driver assigned';
+                });
         });
-});
-</script>
+    </script>
 @endpush

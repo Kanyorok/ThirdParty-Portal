@@ -57,19 +57,29 @@ class FleetVehicleInspection extends Model
         return $this->belongsTo(FleetVehicleInspection::class, 'ParentInspectionID');
     }
 
+    public function fuel()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Fuel', 'ID');
+    }
+
+    public function engineOil()
+    {
+        return $this->belongsTo(CodeDetail::class, 'EngineOil', 'ID');
+    }
+
+    public function coolant()
+    {
+        return $this->belongsTo(CodeDetail::class, 'Coolant', 'ID');
+    }
+
     public function driver()
     {
         return $this->belongsTo(FleetDriver::class, 'DriverID', 'Id');
     }
 
-    public function fuel()
-    {
-        return $this->belongsTo(FuelType::class, 'FuelType', 'Id');
-    }
-
     public function inspectionType()
     {
-        return $this->belongsTo(CodeDetail::class, 'InspectionTypeID', 'Id');
+        return $this->belongsTo(CodeDetail::class, 'InspectionTypeID', 'ID');
     }
 
     

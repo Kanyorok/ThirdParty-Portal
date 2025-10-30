@@ -518,6 +518,18 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'EmploymentType', 'Description' => 'Contract', 'Value' => 'CR'],
 
 
+            ['CodeID' => 'FleetUOM', 'Description' => 'Sufficient', 'Value' => 'SU'],
+            ['CodeID' => 'FleetUOM', 'Description' => 'Insufficient', 'Value' => 'IN'],
+            ['CodeID' => 'FleetUOM', 'Description' => 'Excess', 'Value' => 'EX'],
+
+
+            //Fuel UOMs
+            ['CodeID' => 'FuelUOM', 'Description' => '1/4', 'Value' => 'Q'],
+            ['CodeID' => 'FuelUOM', 'Description' => '2/4', 'Value' => 'H'],
+            ['CodeID' => 'FuelUOM', 'Description' => '3/4', 'Value' => 'Q'],
+            ['CodeID' => 'FuelUOM', 'Description' => '4/4', 'Value' => 'F'],
+
+
             //Vehicle Request Status
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Approved', 'Value' => 'Ap'],
             ['CodeID' => 'VehicleRequestStatus', 'Description' => 'Pending', 'Value' => 'pe'],
