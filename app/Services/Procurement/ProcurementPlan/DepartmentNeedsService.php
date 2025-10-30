@@ -6,14 +6,16 @@ use App\Models\Procurement\DepartmentNeed;
 use App\Models\Auth\User;
 use App\Services\Procurement\DepartmentNeedsWorkflow;
 use App\Enums\Procurement\DepartmentNeedsEnum;
+use App\Models\Core\ApprovalLimits;
+use App\Services\Procurement\ApprovalWorkflow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class DepartmentNeedsService
 {
-    protected DepartmentNeedsWorkflow $workflow;
+    protected ApprovalWorkflow $workflow;
 
-    public function __construct(DepartmentNeedsWorkflow $workflow)
+    public function __construct(ApprovalWorkflow $workflow)
     {
         $this->workflow = $workflow;
     }
@@ -67,7 +69,9 @@ class DepartmentNeedsService
             $this->workflow->submit(
                 $departmentNeed,
                 $actor,
-                'Submitted for Approval'
+                 DepartmentNeedsEnum::Pending,  // Required: Pending status enum
+                'Submitted for approval' 
+                
             );
 
             activity()
