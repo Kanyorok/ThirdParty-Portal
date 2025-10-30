@@ -52,6 +52,7 @@
 @endsection
 @section('scripts')
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://rawcdn.githack.com/bbecquet/Leaflet.RotatedMarker/master/leaflet.rotatedMarker.js"></script>
     <script>
         $(function () {
             window.map = L.map('map').setView([-1.28, 36.82], 10);
@@ -87,26 +88,28 @@
             vehicles.forEach(function (vehicle) {
                 const position = [vehicle.Latitude, vehicle.Longitude];
                 const popupContent = `
-                        <strong>${vehicle.RegistrationNumber}</strong><br>
-                        Status: ${vehicle.Status}<br>
-                        Speed: ${vehicle.Speed} km/h<br>
-                        Updated: ${new Date(vehicle.LastUpdated).toLocaleTimeString()}
-                    `;
+                            <strong>${vehicle.RegistrationNumber}</strong><br>
+                            Status: ${vehicle.Status}<br>
+                            Speed: ${vehicle.Speed} km/h<br>
+                            Updated: ${new Date(vehicle.LastUpdated).toLocaleTimeString()}
+                        `;
                 if (window.vehicleMarkers[vehicle.VehicleID]) {
+                    const adjustedDirection = (vehicle.Direction - 180 + 360) % 360;
                     window.vehicleMarkers[vehicle.VehicleID]
                         .setLatLng(position)
-                        .setRotationAngle(vehicle.Direction)
+                        .setRotationAngle(adjustedDirection)
                         .getPopup()
                         .setContent(popupContent);
                 } else {
                     const carIcon = L.icon({
                         iconUrl: '{{ asset('assets/img/fleet/car.png') }}',
-                        iconSize: [35, 35],
-                        iconAnchor: [20, 20],            // Point of the icon which corresponds to marker's location
-                        popupAnchor: [0, -20]            // Point from which the popup should open relative to the iconAnchor
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 25],
+                        popupAnchor: [0, -20]
                     });
+                    const adjustedDirection = (vehicle.Direction - 180 + 360) % 360;
                     window.vehicleMarkers[vehicle.VehicleID] = L.marker(position, {
-                        icon: carIcon, rotationAngle: 90
+                        icon: carIcon, rotationAngle: adjustedDirection, rotationOrigin: 'center center'
                     }).addTo(window.map).bindPopup(popupContent);
                 }
             });
@@ -119,6 +122,7 @@
             $('#vehicle-count').text(totalVehicles);
             $('#active-count').text(activeVehicles);
         }
+
 
     </script>
 @endsection

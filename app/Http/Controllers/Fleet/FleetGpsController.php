@@ -20,8 +20,8 @@ class FleetGpsController extends Controller
                 return [
                     'VehicleID' => $vehicle->Id,
                     'RegistrationNumber' => $vehicle->RegistrationNo,
-                    'Latitude' => -1.28 + random_int(-5, 5) / 1000,
-                    'Longitude' => 36.82 + random_int(-5, 5) / 1000,
+                    'Latitude' => -1.28 + random_int(-1, 1) / 1000,
+                    'Longitude' => 36.82 + random_int(-1, 1) / 1000,
                     'Speed' => random_int(0, 120),
                     'Direction' => random_int(0, 360),
                     'Status' => random_int(0, 1) ? 'Moving' : 'Idle',
