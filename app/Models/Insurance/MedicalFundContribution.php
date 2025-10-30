@@ -32,11 +32,22 @@ class MedicalFundContribution extends Model
 
     public function fund()
     {
-        return $this->belongsTo(MedicalFund::class, 'FundID', 'ID');
+        // align with other models which use FundId -> Id
+        return $this->belongsTo(MedicalFund::class, 'FundId', 'Id');
     }
 
     public function contributor()
     { 
-        return $this->belongsTo(MedicalFundContributor::class, 'ContributorID','ID'); 
+        // contributions table uses ContributorId (matching other models)
+        return $this->belongsTo(MedicalFundContributor::class, 'ContributorId','Id'); 
+    }
+
+    /**
+     * Optional relation to code detail describing the contributor/type for this contribution.
+     * This allows displaying a human-friendly description for the ContributorType field.
+     */
+    public function type()
+    {
+        return $this->belongsTo(\App\Models\Core\CodeDetail::class, 'ContributorType', 'ID');
     }
 }
