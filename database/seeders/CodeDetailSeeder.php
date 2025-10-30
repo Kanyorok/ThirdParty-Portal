@@ -557,6 +557,12 @@ class CodeDetailSeeder extends Seeder
             ['CodeID' => 'FleetRepairType', 'Description' => 'Normal', 'Value' => 'NO'],
             ['CodeID' => 'FleetRepairType', 'Description' => 'Emergency', 'Value' => 'EM'],
 
+            //Trip Statuses
+            ['CodeID' => 'TripStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Ongoing', 'Value' => 'OG'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Completed', 'Value' => 'CO'],
+            ['CodeID' => 'TripStatus', 'Description' => 'Cancelled', 'Value' => 'CA'],
+
             //Maintenance Status
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Scheduled', 'Value' => 'SC'],
             ['CodeID' => 'FleetMaintenanceStatus', 'Description' => 'Acknowledged', 'Value' => 'AC'],
