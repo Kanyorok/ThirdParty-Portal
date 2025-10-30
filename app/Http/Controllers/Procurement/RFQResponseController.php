@@ -236,70 +236,24 @@ class RFQResponseController extends Controller
         }
         $allCategoryIds = $allCategoryIds->unique()->values();
 
-        // Exclude suppliers (by ThirdParty) that already responded to this RFQ
+        // Exclude suppliers (by ThirdParty) that already submitted FINAL responses to this RFQ
         $respondedThirdPartyIds = DB::table('t_RFQResponse as rr')
             ->join('t_Suppliers as rs', 'rs.Id', '=', 'rr.SupplierId')
             ->where('rr.RFQId', $rfqId)
             ->whereNull('rr.DeletedOn')
             ->whereNull('rs.DeletedOn')
+            ->where('rr.Status', 'FINAL')
             ->pluck('rs.ThirdPartyID');
 
-        // Resolve supplier category column name on t_Suppliers
-        $supplierCategoryCol = Schema::hasColumn('t_Suppliers', 'SupplierCategoryID')
-            ? 'SupplierCategoryID'
-            : (Schema::hasColumn('t_Suppliers', 'CategoryId') ? 'CategoryId' : null);
-
-        // Base query: suppliers joined to third parties
-        $query = DB::table('t_Suppliers as s')
+        // Prefer invited suppliers from pivot table t_RFQ_Supplier, then exclude those already with FINAL responses
+        $suppliers = DB::table('t_RFQ_Supplier as p')
+            ->join('t_Suppliers as s', 's.Id', '=', 'p.SupplierId')
             ->join('t_ThirdParties as tp', 'tp.Id', '=', 's.ThirdPartyID')
+            ->where('p.RFQId', $rfqId)
             ->whereNull('s.DeletedOn')
             ->whereNull('tp.DeletedOn')
             ->where('s.Active_Status', 1)
-            ->whereNotIn('tp.Id', $respondedThirdPartyIds);
-
-        // Direct classification mapping: supplier's category maps to any of the RFQ item categories
-        if ($supplierCategoryCol !== null) {
-            $query->whereExists(function ($q) use ($allCategoryIds, $supplierCategoryCol) {
-                $q->select(DB::raw(1))
-                  ->from('t_SupplierCategory_ItemCategory as scic')
-                  ->join('t_SupplierCategories as sc', 'sc.SupplierCategoryID', '=', 'scic.SupplierCategoryID')
-                  ->whereNull('sc.DeletedOn')
-                  ->whereNull('scic.DeletedOn')
-                  ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                  ->whereColumn('sc.SupplierCategoryID', DB::raw('s.' . $supplierCategoryCol));
-            });
-        }
-
-        // Pivot classification mapping via t_ThirdParty_SupplierCategory (support both PascalCase and snake_case columns)
-        if (Schema::hasTable('t_ThirdParty_SupplierCategory')) {
-            $hasPascal = Schema::hasColumn('t_ThirdParty_SupplierCategory', 'ThirdPartyID')
-                && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'SupplierCategoryID');
-            $hasSnake = Schema::hasColumn('t_ThirdParty_SupplierCategory', 'third_party_id')
-                && Schema::hasColumn('t_ThirdParty_SupplierCategory', 'supplier_category_id');
-
-            if ($hasPascal || $hasSnake) {
-                $query->orWhereExists(function ($q) use ($allCategoryIds, $hasPascal) {
-                    if ($hasPascal) {
-                        $q->select(DB::raw(1))
-                          ->from('t_ThirdParty_SupplierCategory as tpsc')
-                          ->join('t_SupplierCategory_ItemCategory as scic', 'scic.SupplierCategoryID', '=', 'tpsc.SupplierCategoryID')
-                          ->whereNull('scic.DeletedOn')
-                          ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                          ->whereColumn('tpsc.ThirdPartyID', 'tp.Id');
-                    } else {
-                        $q->select(DB::raw(1))
-                          ->from('t_ThirdParty_SupplierCategory as tpsc')
-                          ->join('t_SupplierCategory_ItemCategory as scic', 'scic.SupplierCategoryID', '=', 'tpsc.supplier_category_id')
-                          ->whereNull('scic.DeletedOn')
-                          ->whereIn('scic.ItemCategoryID', $allCategoryIds)
-                          ->whereColumn('tpsc.third_party_id', 'tp.Id');
-                    }
-                });
-            }
-        }
-
-        // De-duplicate by ThirdParty (one option per supplier); pick a stable SupplierId
-        $suppliers = $query
+            ->whereNotIn('tp.Id', $respondedThirdPartyIds)
             ->groupBy('tp.Id', 'tp.TradingName')
             ->select(
                 DB::raw('MIN(s.Id) as Id'),
