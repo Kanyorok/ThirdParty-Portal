@@ -19,7 +19,9 @@ class LegalCaseEvidenceController extends Controller
         $this->authorize(PermissionEnum::DisputeLitigationView, LegalCaseEvidence::class);
 
         $case = LegalCase::findOrFail($caseId);
-        $evidence = LegalCaseEvidence::where('LegalCaseID', $caseId)->get();
+        $evidence = LegalCaseEvidence::where('LegalCaseID', $caseId)
+            ->orderByDesc('CreatedOn')
+            ->paginate(15);
 
         return view('legal.disputes.evidence.index', compact('case', 'evidence'));
     }
@@ -135,15 +137,29 @@ class LegalCaseEvidenceController extends Controller
             $validated = $request->validate([
                 'EvidenceTitle' => 'required|string',
                 'Description' => 'required|string',
-                'DMSDocumentID' => 'nullable|string',
+                'DMSDocumentID' => 'nullable|file|max:5120|mimes:pdf,doc,docx,xls,xlsx,csv,png,jpg,jpeg',
                 'ExternalLink' => 'nullable|url',
                 'IsActive' => 'string'
+            ], [
+                'DMSDocumentID.mimes' => 'Only PDF, Word, Excel, CSV, JPG, and PNG files are allowed.',
+                'DMSDocumentID.max'   => 'File size must not exceed 5 MB.',
             ]);
 
+            $DMSDocumentID = $evidence->DMSDocumentID; // preserve existing
+            if ($request->hasFile('DMSDocumentID')) {
+                // Save to DMS
+                $evidence->newDocument(
+                    ModulesEnum::Legal,
+                    $request->file('DMSDocumentID'),
+                    [PermissionEnum::ContractCreate],
+                    Auth::user()
+                );
+                $DMSDocumentID = $request->file('DMSDocumentID')->getClientOriginalName();
+            }
             $evidence->update([
                 'EvidenceTitle' => $validated['EvidenceTitle'],
                 'Description' => $validated['Description'],
-                'DMSDocumentID' => $validated['DMSDocumentID'] ?? null,
+                'DMSDocumentID' => $DMSDocumentID,
                 'ExternalLink' => $validated['ExternalLink'] ?? null,
                 'IsActive' => $request->has('IsActive') ? 'Active' : 'Inactive',
                 'ModifiedBy' => Auth::id(),

@@ -51,24 +51,26 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('legal.intellectual.show', $record->Id) }}" class="btn btn-sm btn-info">
+                                    <a href="{{ route('legal.intellectual.show', $record->Id) }}" class="btn btn-sm btn-info" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('legal.intellectual.edit', $record->Id) }}" class="btn btn-sm btn-primary">
+                                    <a href="{{ route('legal.intellectual.edit', $record->Id) }}" class="btn btn-sm btn-primary" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button"
                                         class="btn btn-sm btn-danger custom-delete-btn"
                                         data-bs-toggle="modal"
                                         data-bs-target="#customDeleteConfirmModal"
-                                        data-name="{{ $record->IPType }}: {{ $record->Title }}"    
-                                        data-route="{{ route('legal.intellectual.destroy', $record->Id) }}">
+                                        data-name="{{ $record->IPType }}: {{ $record->Title }}"
+                                        data-route="{{ route('legal.intellectual.destroy', $record->Id) }}"
+                                        title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
-                                    <button type="button" 
+                                    <button type="button"
                                         class="btn btn-sm btn-secondary"
                                         data-bs-toggle="modal"
-                                        data-bs-target="#disputedModal-{{ $record->Id }}">
+                                        data-bs-target="#disputedModal-{{ $record->Id }}"
+                                        title="Raise Dispute">
                                         <i class="fas fa-hand-paper"></i>
                                     </button>
                                 </td>
@@ -88,6 +90,9 @@
                     @endif
                 </tbody>
             </table>
+        </div>
+        <div class="d-flex justify-content-end align-items-center mt-3">
+            {{ $records->links() }}
         </div>
     </div>
 

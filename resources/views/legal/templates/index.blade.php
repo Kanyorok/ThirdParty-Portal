@@ -118,7 +118,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <a href="{{ route('legal.templates.show', $t->Id) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ route('legal.templates.show', $t->Id) }}" class="btn btn-sm btn-outline-primary" title="View">
                                         <i class="fa-regular fa-eye me-1"></i> View
                                     </a>
                                     {{-- Add Edit/Delete if you implement them later --}}
