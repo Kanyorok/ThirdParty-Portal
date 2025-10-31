@@ -28,7 +28,7 @@
 
                 {{-- Trip Type --}}
                 <div class="col-md-4">
-                    <label for="TripType" class="form-label">Trip Type</label>
+                    <label for="TripType" class="form-label">Trip Type<span class="text-danger">*</span></label>
                     <select name="TripType" id="TripType" class="form-select"
                             required {{ $parentTrip ? 'disabled' : '' }}>
                         <option value="">-- Select Trip Type --</option>
@@ -46,7 +46,7 @@
 
                 {{-- Trip Code --}}
                 <div class="col-md-4" id="tripCodeContainer">
-                    <label for="TripCode" class="form-label">Trip Code</label>
+                    <label for="TripCode" class="form-label">Trip Code<span class="text-danger">*</span></label>
                     <select name="TripCode" id="TripCode" class="form-select" {{ $parentTrip ? 'disabled' : '' }}>
                         <option value="">-- Select Trip Code --</option>
                     </select>
@@ -59,14 +59,14 @@
 
                 {{-- Purpose (only if Trip Type = Other) --}}
                 <div class="col-md-4 d-none" id="purposeContainer">
-                    <label for="Purpose" class="form-label">Purpose</label>
+                    <label for="Purpose" class="form-label">Purpose<span class="text-danger">*</span></label>
                     <input type="text" name="Purpose" id="Purpose" class="form-control"
                            value="{{ old('Purpose', $tripLog->Purpose ?? '') }}">
                 </div>
 
                 {{-- Vehicle Type --}}
                 <div class="col-md-4">
-                    <label for="VehicleType" class="form-label">Vehicle Type</label>
+                    <label for="VehicleType" class="form-label">Vehicle Type<span class="text-danger">*</span></label>
                     <select name="VehicleType" id="VehicleType" class="form-select"
                             required {{ $parentTrip ? 'disabled' : '' }}>
                         <option value="">-- Select Vehicle Type --</option>
@@ -84,7 +84,7 @@
 
                 {{-- Load Type --}}
                 <div class="col-md-4">
-                    <label for="LoadType" class="form-label">Load Type</label>
+                    <label for="LoadType" class="form-label">Load Type<span class="text-danger">*</span></label>
                     <select name="LoadType" id="LoadType" class="form-select" {{ $parentTrip ? 'disabled' : '' }}>
                         <option value="">-- Select Load Type --</option>
                         @foreach($loadTypes as $type)
@@ -101,28 +101,28 @@
 
                 {{-- Dates / Times --}}
                 <div class="col-md-4">
-                    <label for="TripStartDate" class="form-label">Trip Start Date</label>
+                    <label for="TripStartDate" class="form-label">Trip Start Date<span class="text-danger">*</span></label>
                     <input type="date" name="TripStartDate" id="TripStartDate" class="form-control"
                            value="{{ old('TripStartDate', $parentTrip->TripStartDate ?? $tripLog->TripStartDate ?? '') }}"
                            required {{ $parentTrip ? 'readonly' : '' }}>
                 </div>
 
                 <div class="col-md-4">
-                    <label for="StartTime" class="form-label">Start Time</label>
+                    <label for="StartTime" class="form-label">Start Time<span class="text-danger">*</span></label>
                     <input type="time" name="StartTime" id="StartTime" class="form-control"
                            value="{{ old('StartTime', $parentTrip->StartTime ?? $tripLog->StartTime ?? '') }}"
                         {{ $parentTrip ? 'readonly' : '' }}>
                 </div>
 
                 <div class="col-md-4">
-                    <label for="TripEndDate" class="form-label">Trip End Date</label>
+                    <label for="TripEndDate" class="form-label">Trip End Date<span class="text-danger">*</span></label>
                     <input type="date" name="TripEndDate" id="TripEndDate" class="form-control"
                            value="{{ old('TripEndDate', $parentTrip->TripEndDate ?? $tripLog->TripEndDate ?? '') }}"
                         {{ $parentTrip ? 'readonly' : '' }}>
                 </div>
 
                 <div class="col-md-4">
-                    <label for="EndTime" class="form-label">End Time</label>
+                    <label for="EndTime" class="form-label">End Time<span class="text-danger">*</span></label>
                     <input type="time" name="EndTime" id="EndTime" class="form-control"
                            value="{{ old('EndTime', $parentTrip->EndTime ?? $tripLog->EndTime ?? '') }}"
                         {{ $parentTrip ? 'readonly' : '' }}>
@@ -130,7 +130,7 @@
 
                 {{-- Locations --}}
                 <div class="col-md-4">
-                    <label for="StartLocation" class="form-label">Start Location</label>
+                    <label for="StartLocation" class="form-label">Start Location<span class="text-danger">*</span></label>
                     <input type="text" name="StartLocation" id="StartLocation"
                            class="form-control"
                            value="{{ old('StartLocation', $parentTrip->StartLocation ?? $tripLog->StartLocation ?? '') }}"
@@ -138,7 +138,7 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label for="EndLocation" class="form-label">End Location</label>
+                    <label for="EndLocation" class="form-label">End Location<span class="text-danger">*</span></label>
                     <input type="text" name="EndLocation" id="EndLocation"
                            class="form-control"
                            value="{{ old('EndLocation', $parentTrip->EndLocation ?? $tripLog->EndLocation ?? '') }}"

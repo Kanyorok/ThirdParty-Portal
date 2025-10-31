@@ -46,12 +46,23 @@
                            required>
                 </div>
 
-                <!-- Scheduled Mileage -->
-                <div class="col-md-6">
-                    <label for="ScheduledMileage" class="form-label">Scheduled Mileage</label>
-                    <input type="number" name="ScheduledMileage" id="ScheduledMileage" class="form-control"
-                           value="{{ old('ScheduledMileage', $schedule->ScheduledMileage) }}">
-                </div>
+                                <!-- Scheduled Mileage -->
+                    <div class="col-md-6">
+                        <label for="ScheduledMileage" class="form-label">Scheduled Mileage</label>
+
+                        <!-- Soft info tip for editing -->
+                        <div class="small text-info bg-light p-2 rounded mb-1 d-flex align-items-center">
+                            <span class="me-1">ℹ️</span>
+                            <span>You can update the scheduled mileage for this record.</span>
+                        </div>
+
+                        <input type="number"
+                            name="ScheduledMileage"
+                            id="ScheduledMileage"
+                            class="form-control"
+                            value="{{ old('ScheduledMileage', $schedule->ScheduledMileage) }}">
+                    </div>
+
 
                 <!-- Location -->
                 <div class="col-md-6">

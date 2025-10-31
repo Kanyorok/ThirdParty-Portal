@@ -90,12 +90,8 @@ enum PermissionEnum: string
     case DebtCollectionAssignment = 'debt-collection-assignment';
     case DebtCollectionAdmin = 'debt-collection-admin';
 
-<<<<<<< HEAD
-    //Socials
-=======
 
         //Socials
->>>>>>> dev
     case SocialRead = 'social-read';
     case SocialWrite = 'social-create';
     case SocialDelete = 'social-delete';
@@ -223,22 +219,11 @@ enum PermissionEnum: string
     case ProcurementMethodRead = 'procurementmethod-read';
     case ProcurementMethodWrite = 'procurementmethod-create';
 
-<<<<<<< HEAD
-
-
-
-    //ProcurementPlan Procurement Schedule
-    //case SchedulePlanRead = 'scheduleplan-read';
-    //case SchedulePlanWrite = 'scheduleplan-create';
-    //case SchedulePlanUpdate = 'scheduleplan-update';
-    /*
-=======
         //ProcurementPlan Procurement Schedule
         //case SchedulePlanRead = 'scheduleplan-read';
         //case SchedulePlanWrite = 'scheduleplan-create';
         //case SchedulePlanUpdate = 'scheduleplan-update';
         /*
->>>>>>> dev
     *
     * ========================================  Inventory  ========================================
     */
@@ -338,47 +323,30 @@ enum PermissionEnum: string
     case PropertyTypeDelete = 'propertytype-delete';
     case PropertyTypeView = 'propertytype-view';
 
-<<<<<<< HEAD
-    //Property Registry
-=======
 
         //Property Registry
->>>>>>> dev
     case PropertyRegistryCreate = 'propertyregistry-create';
     case PropertyRegistryUpdate = 'propertyregistry-update';
     case PropertyRegistryDelete = 'propertyregistry-delete';
     case PropertyRegistryView = 'propertyregistry-view';
 
-<<<<<<< HEAD
-    //Property Block
-=======
 
         //Property Block
->>>>>>> dev
     case PropertyStructuralCreate = 'propertystructural-create';
     case PropertyStructuralUpdate = 'propertystructural-update';
     case PropertyStructuralDelete = 'propertystructural-delete';
     case PropertyStructuralView = 'propertystructural-view';
 
-<<<<<<< HEAD
-    //Property Attachments
-=======
 
         //Property Attachments
->>>>>>> dev
     case PropertyAttachmentsCreate = 'propertyattachments-create';
     case PropertyAttachmentsUpdate = 'propertyattachments-update';
     case PropertyAttachmentsDelete = 'propertyattachments-delete';
     case PropertyAttachmentsView = 'propertyattachments-view';
-<<<<<<< HEAD
-    
-    //Tenant Mentenance
-=======
 
 
 
         //Tenant Mentenance
->>>>>>> dev
     case TenantMaintenanceCreate = 'tenantmaintenance-create';
     case TenantMaintenanceUpdate = 'tenantmaintenance-update';
     case TenantMaintenanceDelete = 'tenantmaintenance-delete';
@@ -390,12 +358,8 @@ enum PermissionEnum: string
     case TenantClearanceDelete = 'tenantclearance-delete';
     case TenantClearanceView = 'tenantclearance-view';
 
-<<<<<<< HEAD
-    //Property New Lease
-=======
 
         //Property New Lease
->>>>>>> dev
     case PropertyNewLeaseCreate = 'propertynewlease-create';
     case PropertyNewLeaseUpdate = 'propertynewlease-update';
     case PropertyNewLeaseDelete = 'propertynewlease-delete';
@@ -442,12 +406,8 @@ enum PermissionEnum: string
     case PropertyMaintenanceRequestDelete = 'propertymaintenancerequest-delete';
     case PropertyMaintenanceRequestView = 'propertymaintenancerequest-view';
 
-<<<<<<< HEAD
-     //Property Maintenance Assign
-=======
 
         //Property Maintenance Assign
->>>>>>> dev
     case PropertyMaintenanceAssignCreate = 'propertymaintenanceassign-create';
     case PropertyMaintenanceAssignUpdate = 'propertymaintenanceassign-update';
     case PropertyMaintenanceAssignDelete = 'propertymaintenanceassign-delete';
@@ -460,9 +420,6 @@ enum PermissionEnum: string
     case PropertyMaintenanceWorkCompletionView = 'propertymaintenanceworkcompletion-view';
 
 
-<<<<<<< HEAD
-    
-=======
 
         /*
      *
@@ -527,7 +484,6 @@ enum PermissionEnum: string
     case BancassurancePaymentDelete = 'bancassurancepayment-delete';
     case BancassurancePaymentUpdate = 'bancassurancepayment-update';
 
->>>>>>> dev
         // Medical Fund Management
     case MedicalFundView = 'medicalfund-view';
     case MedicalFundCreate = 'medicalfund-create';
@@ -597,15 +553,8 @@ enum PermissionEnum: string
     case EmployeesUpdate = 'employee-update';
     case EmployeesDelete = 'employee-delete';
 
-<<<<<<< HEAD
-    /*
- *
- * ========================================  Budget and Analytics  ========================================
- */
-=======
 
 /** ========================================  Budget and Analytics  ========================================*/
->>>>>>> dev
     case BudgetSetupView = 'budgetSetup-view';
     case BudgetSetupCreate = 'budgetSetup-create';
     case BudgetSetupUpdate = 'budgetSetup-update';
@@ -726,20 +675,11 @@ enum PermissionEnum: string
      * ========================================  Main Settings  ========================================
      */
 
-<<<<<<< HEAD
-    case WorkflowlimitManagerialLevel = 'workflowlimit-managerlevel';
-    case WorkflowlimitOperationalLevel = 'workflowlimit-operationslevel';
-    case WorkflowlimitView = 'workflowlimit-view';
-    case WorkflowlimitCreate = 'workflowlimit-create';
-    case WorkflowlimitUpdate = 'workflowlimit-update';
-    case WorkflowlimitDelete = 'workflowlimit-delete';
-=======
     //Credit Management
     case FinanceCreditManagementView='financeCreditManagement-view';
     case FinanceCreditManagementCreate='financeCreditManagement-create';
     case FinanceCreditManagementUpdate='financeCreditManagement-update';
     case FinanceCreditManagementDelete='financeCreditManagement-delete';
->>>>>>> dev
 
     //Posting
     case FinanceJournalPosting='financeJournal-financeJournal';
@@ -991,7 +931,7 @@ enum PermissionEnum: string
             [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
             
             ///////////////////////  Settings  /////////////////////////////////////
-            [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
+            // [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
 
               ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
@@ -1111,8 +1051,8 @@ enum PermissionEnum: string
             self::SurveyRead, self::SurveyWrite, self::SurveyDelete, self::SurveyApproval,
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
-            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate,
-            self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete
+            self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
+            // self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete
             => ModulesEnum::Settings,
 
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,
@@ -1408,10 +1348,6 @@ enum PermissionEnum: string
             self::ReceiptPostingView, self::ReceiptPostingCreate, self::ReceiptPostingUpdate, self::ReceiptPostingDelete => 'Receipt Posting',
             self::DebitNoteView, self::DebitNoteCreate, self::DebitNoteUpdate, self::DebitNoteDelete => 'Debit Note',
             self::FinanceTaxSettingView, self::FinanceTaxSettingCreate, self::FinanceTaxSettingUpdate, self::FinanceTaxSettingDelete => 'Tax Setting',
-<<<<<<< HEAD
-
-            self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete => 'Workflow Limits',
-=======
             self::FinanceCreditManagementView,self::FinanceCreditManagementCreate,self::FinanceCreditManagementUpdate,self::FinanceCreditManagementDelete=> 'Credit Management',
             self::FinanceJournalPosting,self::FinanceAPInvoicePosting,self::FinanceARInvoicePosting,self::FinanceCreditNotePosting,self::FinanceDebitNotePosting,self::FinanceVoucherPosting,self::FinancePaymentProcessingPosting,self::FinanceReceiptPosting=> 'Transaction Postings',
 
@@ -1423,7 +1359,6 @@ enum PermissionEnum: string
             self::LoanSecurityView, self::LoanSecurityCreate, self::LoanSecurityUpdate, self::LoanSecurityDelete => 'Loan Security',
             self::IntellectualPropertyView, self::IntellectualPropertyCreate, self::IntellectualPropertyUpdate, self::IntellectualPropertyDelete => 'Intellectual Property',
 
->>>>>>> dev
         };
     }
 }

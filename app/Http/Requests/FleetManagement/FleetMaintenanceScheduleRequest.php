@@ -25,10 +25,20 @@ class FleetMaintenanceScheduleRequest extends FormRequest
             'VehicleID' => 'required|exists:t_FleetVehicles,Id',
             'MaintenanceType' => 'required|exists:t_CodeDetails,ID',
             'ScheduledDate' => 'required|date',
-            'ScheduledMileage' => 'nullable|integer|min:0',
+            'ScheduledMileage' => [
+                'nullable',
+                'integer',
+                'min:0',
+                // Only allow mileage on update
+                function ($attribute, $value, $fail) {
+                    if ($this->isMethod('POST') && !is_null($value)) {
+                        $fail('Scheduled mileage can only be set when editing a record.');
+                    }
+                },
+            ],
             'Location' => 'nullable|string|max:255',
             'Notes' => 'nullable|string',
-            'Status' => 'nullable|boolean'
+            'Status' => 'nullable|boolean',
         ];
     }
 }

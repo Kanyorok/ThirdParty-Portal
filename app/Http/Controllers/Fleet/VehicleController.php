@@ -50,9 +50,8 @@ class VehicleController extends Controller
     public function create()
     {
         $this->authorize('create', FleetVehicle::class);
-
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-        $fuelTypes = FuelType::all();
+        $fuelTypes = FuelType::where('IsActive' , '1')->get();
         $branches = Branch::all();
         $brands = FleetMake::all();
         $fleetModels = FleetModel::all();
@@ -73,10 +72,21 @@ class VehicleController extends Controller
         $validated = $request->validated();
         $imageFile = $request->file('ImageFile');
 
+        // Automatically set the vehicle status to "Active"
+        $activeStatus = \App\Models\Core\CodeDetail::where('CodeID', 'VehicleStatus')
+            ->where('Description', 'Active')
+            ->value('ID');
+
+        if ($activeStatus) {
+            $validated['Status'] = $activeStatus;
+        }
+
         $vehicle = $this->vehicleService->create($validated, $imageFile);
 
-        return redirect()->route('fleet.vehicles.index')->with('success', 'Vehicle registered successfully.');
+        return redirect()->route('fleet.vehicles.index')
+            ->with('success', 'Vehicle registered successfully and set to Active.');
     }
+
 
     /**
      * Show vehicle details.

@@ -43,7 +43,7 @@
             @unless(isset($parentInspection))
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Inspection Type</label>
+                        <label class="form-label">Inspection Type<span class="text-danger">*</span></label>
                         <select name="InspectionTypeID" class="form-select" required>
                             <option value="">-- Select Inspection Type --</option>
                             @foreach($inspectionTypes as $type)
@@ -55,7 +55,7 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Vehicle</label>
+                        <label class="form-label">Vehicle<span class="text-danger">*</span></label>
                         <select name="VehicleID" class="form-select" required>
                             <option value="">-- Select Vehicle --</option>
                             @foreach($vehicles as $vehicle)
@@ -87,7 +87,7 @@
             {{-- Driver (Always shown) --}}
             <div class="row g-3 mt-2">
                 <div class="col-md-4">
-                    <label class="form-label">Driver</label>
+                    <label class="form-label">Driver<span class="text-danger">*</span></label>
                     <select name="DriverID" class="form-select" required>
                         <option value="">-- Select Driver --</option>
                         @foreach($drivers as $driver)
@@ -98,38 +98,36 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Inspection Date</label>
+                    <label class="form-label">Inspection Date<span class="text-danger">*</span></label>
                     <input type="date" name="InspectionDate" class="form-control" value="{{ old('InspectionDate') }}"
                            required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Mileage (Km)</label>
-                    <input type="number" name="Mileage" class="form-control" value="{{ old('Mileage') }}" required>
+                    <label class="form-label">Mileage (Km)<span class="text-danger">*</span></label>
+                    <input type="number" name="Mileage" class="form-control" value="{{ old('Mileage') }}" min="0" required>
                 </div>
             </div>
 
             {{-- Fluids --}}
             <div class="row g-3 mt-2">
                 <div class="col-md-4">
-                    <label class="form-label">Fuel (Litres)</label>
-                    <input type="number" step="0.01" name="Fuel" class="form-control" value="{{ old('Fuel') }}"
-                           required>
+                    <label class="form-label">Fuel (Litres)<span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" name="Fuel" class="form-control" value="{{ old('Fuel') }}" min="0" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Engine Oil (L)</label>
+                    <label class="form-label">Engine Oil (L)<span class="text-danger">*</span></label>
                     <input type="number" step="0.01" name="EngineOil" class="form-control"
-                           value="{{ old('EngineOil') }}" required>
+                           value="{{ old('EngineOil') }}" min="0" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Coolant (L)</label>
-                    <input type="number" step="0.01" name="Coolant" class="form-control" value="{{ old('Coolant') }}"
-                           required>
+                    <label class="form-label">Coolant (L)<span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" name="Coolant" class="form-control" value="{{ old('Coolant') }}" min="0" required>
                 </div>
 
                 {{-- Safety Equipment --}}
                 <div class="row mt-4">
                     <div class="col-md-12">
-                        <label class="form-label fw-bold">Safety Equipment</label>
+                        <label class="form-label fw-bold">Safety Equipment<span class="text-danger">*</span></label>
                         <div class="d-flex flex-wrap gap-4 border rounded p-3">
                             @foreach([
                                 'Reflector' => 'Reflector',
@@ -152,7 +150,7 @@
 
                 {{-- Document Upload --}}
                 <div class="mb-3 mt-3">
-                    <label class="form-label">Upload Supporting Document</label>
+                    <label class="form-label">Upload Supporting Document<span class="text-danger">*</span></label>
                     <input type="file" name="Document" class="form-control">
                     <small class="text-muted">Attach inspection sheet, photos, or related files</small>
                 </div>
