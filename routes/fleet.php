@@ -18,13 +18,12 @@ use App\Http\Controllers\Fleet\FleetRunningCostController;
 use App\Http\Controllers\Fleet\FleetServiceAlertController;
 use App\Http\Controllers\Fleet\FleetTelematicsDeviceController;
 use App\Http\Controllers\Fleet\FleetTripLogController;
-use App\Http\Controllers\Fleet\FleetVehicleInspectionController;
 use App\Http\Controllers\Fleet\FleetVehicleAssignmentController;
+use App\Http\Controllers\Fleet\FleetVehicleInspectionController;
 use App\Http\Controllers\Fleet\FleetVehicleRequestController;
 use App\Http\Controllers\Fleet\VehicleController;
 use App\Http\Controllers\Fleet\VehicleDocumentController;
 use App\Http\Controllers\FleetManagement\ComplianceAndDocumentationController;
-use App\Http\Controllers\FleetManagement\ReportsController;
 use App\Http\Controllers\FleetManagement\DriverManagementController;
 use App\Http\Controllers\FleetManagement\FleetMakeController;
 use App\Http\Controllers\FleetManagement\FleetModelController;
@@ -33,6 +32,7 @@ use App\Http\Controllers\FleetManagement\FuelManagementController;
 use App\Http\Controllers\FleetManagement\FuelTypeController;
 use App\Http\Controllers\FleetManagement\InventoryOfSparePartsController;
 use App\Http\Controllers\FleetManagement\LicensingController;
+use App\Http\Controllers\FleetManagement\ReportsController;
 use App\Http\Controllers\FleetManagement\ServiceTrackingController;
 use App\Http\Controllers\FleetManagement\TripManagementController;
 use App\Http\Controllers\FleetManagement\UtilizationController;
@@ -285,7 +285,7 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::post('/running-costs', [FleetRunningCostController::class, 'store'])->name('fleet.running_costs.store');
 
     // ==================== GPS ====================
-    Route::get('/gps/live', [FleetGpsController::class, 'liveDashboard'])->name('fleet.gps.live_dashboard');
+    Route::get('tracking', [FleetGpsController::class, 'index'])->name('fleet.tracking.index');
     Route::get('/gps/movement-history', [FleetGpsController::class, 'movementHistory'])->name('fleet.gps.movement_history');
 
     // ==================== Telematics ====================

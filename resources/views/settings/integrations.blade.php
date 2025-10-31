@@ -462,6 +462,62 @@
                                             </div>
                                         </form>
                                         @break
+                                    @case(IntegrationsEnum::iTrack->value)
+                                        <form id="iTrackConfigurationForm" method="post"
+                                              action="{{ route('settings.integrations') }}" class="row"> @csrf
+                                            <input type="hidden" name="Integration" value="{{ $integration->value }}"
+                                                   class="d-none" style="display: none;">
+                                            <div class="mb-3 col-12">
+                                                <label class="form-label" for="iTrack_URl">Host <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control config-iTrack-form"
+                                                       id="iTrack_URl" disabled
+                                                       placeholder="https://www.itrack.top" required
+                                                       value="{{ $iTrackConfig?->host }}"
+                                                       name="iTrack_URl">
+                                                <span id="iTrack_URl_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="iTrack_Username">Username <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="text" class="form-control config-iTrack-form"
+                                                       id="iTrack_Username" disabled placeholder="Username" required
+                                                       name="iTrack_Username">
+                                                <span id="iTrack_Username_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <div class="mb-3 col-sm-6 col-12">
+                                                <label class="form-label" for="iTrack_Password">Password <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="password" class="form-control config-iTrack-form"
+                                                       id="iTrack_Password" disabled autocomplete="off"
+                                                       placeholder="Password" required
+                                                       name="iTrack_Password">
+                                                <span id="iTrack_Password_error" class="invalid-feedback d-none error"
+                                                      role="alert"></span>
+                                            </div>
+                                            <hr class="mb-3">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button type="button" class="btn btn-secondary d-none float-start"
+                                                            id="iTrackConfigurationCancelBtn">
+                                                        cancel
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary float-start"
+                                                            id="iTrackConfigurationEditBtn">
+                                                        edit config
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button type="submit" class="btn btn-success d-none float-end"
+                                                            id="iTrackConfigurationBtn">
+                                                        save changes
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        @break
                                     @case(IntegrationsEnum::PBX->value)
                                         <form id="3cxConfigurationForm" method="post"
                                               action="{{ route('settings.integrations') }}" class="row m-3"> @csrf
@@ -1021,6 +1077,19 @@
                 e.preventDefault();
                 if (await saveForm($(this), $("#srsConfigurationBtn"), false, false, true)) {
                     disable('srs');
+                }
+            });
+
+            $("#iTrackConfigurationEditBtn").on('click', function () {
+                enable('iTrack')
+            });
+            $("#iTrackConfigurationCancelBtn").on('click', function () {
+                disable('iTrack');
+            });
+            $('form#iTrackConfigurationForm').submit(async function (e) {
+                e.preventDefault();
+                if (await saveForm($(this), $("#iTrackConfigurationBtn"), false, false, true)) {
+                    disable('iTrack');
                 }
             });
 
