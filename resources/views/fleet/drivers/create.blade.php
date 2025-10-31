@@ -21,7 +21,7 @@
 
                 {{-- Staff Number --}}
                 <div class="col-md-6">
-                    <label for="StaffNumber" class="form-label">Staff Member</label>
+                    <label for="StaffNumber" class="form-label">Staff Member<span class="text-danger">*</span></label>
                     <select name="StaffNumber" id="StaffNumber" class="form-select" required>
                         <option value="">-- Select Staff Member --</option>
                         @foreach ($staffNo as $employee)
@@ -42,14 +42,14 @@
 
                 {{-- Full Name --}}
                 <div class="col-md-6">
-                    <label for="FullName" class="form-label">Full Name</label>
+                    <label for="FullName" class="form-label">Full Name<span class="text-danger">*</span></label>
                     <input type="text" name="FullName" id="FullName" class="form-control"
                            value="{{ old('FullName') }}" required readonly>
                 </div>
 
                 {{-- National ID --}}
                 <div class="col-md-6">
-                    <label for="NationalID" class="form-label">National ID</label>
+                    <label for="NationalID" class="form-label">National ID<span class="text-danger">*</span></label>
                     <input type="text" class="form-control" name="NationalID" id="NationalID"
                            value="{{ old('NationalID') }}" minlength="8"
                            maxlength="9"
@@ -61,19 +61,19 @@
 
             {{-- Phone --}}
             <div class="col-md-6">
-                <label for="Phone" class="form-label">Phone Number</label>
+                <label for="Phone" class="form-label">Phone Number<span class="text-danger">*</span></label>
                 <input type="text" name="Phone" id="Phone" class="form-control" value="{{ old('Phone') }}" readonly>
             </div>
 
                 {{-- Email --}}
                 <div class="col-md-6">
-                    <label for="Email" class="form-label">Email</label>
+                    <label for="Email" class="form-label">Email<span class="text-danger">*</span></label>
                     <input type="text" name="Email" id="Email" class="form-control" value="{{ old('Email') }}" readonly>
             </div>
 
                 {{-- Employment Type --}}
                 <div class="col-md-6">
-                    <label for="EmploymentType" class="form-label">Employment Type</label>
+                    <label for="EmploymentType" class="form-label">Employment Type<span class="text-danger">*</span></label>
                     <select name="EmploymentType" class="form-select">
                         <option value="">Select Type</option>
                         @foreach($employmentType as $type)
@@ -93,7 +93,7 @@
 
                 {{-- Driver Image Preview --}}
                 <div class="mb-3 mt-3">
-                    <label class="form-label">Driver Image</label>
+                    <label class="form-label">Driver Image<span class="text-danger">*</span></label>
                     <div class="mb-2">
                         @php
                             $preselectedEmployee = $staffNo->firstWhere('Id', old('StaffNumber'));
@@ -122,7 +122,7 @@
 
             {{-- Document Upload --}}
             <div class="mb-3 mt-3">
-                <label class="form-label">Upload Supporting Document</label>
+                <label class="form-label">Upload Supporting Document<span class="text-danger">*</span></label>
                 <input type="file" name="Document" class="form-control">
                 <small class="text-muted">Attach inspection sheet, photos, or related files</small>
             </div>

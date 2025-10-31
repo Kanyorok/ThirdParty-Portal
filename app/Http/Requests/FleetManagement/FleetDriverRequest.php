@@ -28,7 +28,7 @@ class FleetDriverRequest extends FormRequest
             'Phone' => ['required','string','max:20','regex:/^\+[1-9]\d{7,14}$/'],
             'Email' => 'required|string',
             'EmploymentType' => 'required|integer|exists:t_CodeDetails,ID',
-            'Notes' => 'required|string',
+            'Notes' => 'nullable|string',
             'IsActive' => 'required|boolean',
             'Document' => 'nullable|file|max:2048',
             'DriverStatus' => 'nullable|numeric|exists:t_CodeDetails,ID',

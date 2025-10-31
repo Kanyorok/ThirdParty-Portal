@@ -43,7 +43,7 @@
             @unless(isset($parentInspection))
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Inspection Type</label>
+                        <label class="form-label">Inspection Type<span class="text-danger">*</span></label>
                         <select name="InspectionTypeID" class="form-select" required>
                             <option value="">-- Select Inspection Type --</option>
                             @foreach($inspectionTypes as $type)
@@ -55,7 +55,7 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Vehicle</label>
+                        <label class="form-label">Vehicle<span class="text-danger">*</span></label>
                         <select name="VehicleID" class="form-select" required>
                             <option value="">-- Select Vehicle --</option>
                             @foreach($vehicles as $vehicle)
@@ -82,18 +82,18 @@
             <div class="row g-3 mt-2">
                 {{-- Driver --}}
                 <div class="col-md-6">
-                    <label class="form-label">Driver</label>
+                    <label class="form-label">Driver<span class="text-danger">*</span></label>
                     <input type="hidden" name="DriverID" id="DriverID">
                     <input type="text" id="DriverName" class="form-control" readonly>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Inspection Date</label>
+                    <label class="form-label">Inspection Date<span class="text-danger">*</span></label>
                     <input type="date" name="InspectionDate" class="form-control" value="{{ old('InspectionDate') }}"
                            required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Mileage (Km)</label>
-                    <input type="number" name="Mileage" class="form-control" value="{{ old('Mileage') }}" required>
+                    <label class="form-label">Mileage (Km)<span class="text-danger">*</span></label>
+                    <input type="number" name="Mileage" class="form-control" value="{{ old('Mileage') }}" min="0" required>
                 </div>
             </div>
 
@@ -139,7 +139,7 @@
                 {{-- Safety Equipment --}}
                 <div class="row mt-4">
                     <div class="col-md-12">
-                        <label class="form-label fw-bold">Safety Equipment</label>
+                        <label class="form-label fw-bold">Safety Equipment<span class="text-danger">*</span></label>
                         <div class="d-flex flex-wrap gap-4 border rounded p-3">
                             @foreach([
                                 'Reflector' => 'Reflector',
@@ -162,7 +162,7 @@
 
                 {{-- Document Upload --}}
                 <div class="mb-3 mt-3">
-                    <label class="form-label">Upload Supporting Document</label>
+                    <label class="form-label">Upload Supporting Document<span class="text-danger">*</span></label>
                     <input type="file" name="Document" class="form-control">
                     <small class="text-muted">Attach inspection sheet, photos, or related files</small>
                 </div>

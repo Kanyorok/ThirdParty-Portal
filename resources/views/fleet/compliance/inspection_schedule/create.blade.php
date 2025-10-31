@@ -18,7 +18,7 @@
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="VehicleID" class="form-label">Vehicle</label>
+                    <label for="VehicleID" class="form-label">Vehicle<span class="text-danger">*</span></label>
                     <select name="VehicleID" id="VehicleID" class="form-select" required>
                         <option value="">-- Select Vehicle --</option>
                         @foreach ($vehicles as $vehicle)
@@ -28,7 +28,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label for="InspectionType" class="form-label">Inspection Type</label>
+                    <label for="InspectionType" class="form-label">Inspection Type<span class="text-danger">*</span></label>
                     <input type="text" name="InspectionType" id="InspectionType" class="form-control" required
                            placeholder="e.g., Roadworthiness">
                 </div>
@@ -36,19 +36,19 @@
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="InspectionDate" class="form-label">Inspection Date</label>
+                    <label for="InspectionDate" class="form-label">Inspection Date<span class="text-danger">*</span></label>
                     <input type="date" name="InspectionDate" id="InspectionDate" class="form-control" required>
                 </div>
 
                 <div class="col-md-6">
-                    <label for="DueDate" class="form-label">Due Date</label>
+                    <label for="DueDate" class="form-label">Due Date<span class="text-danger">*</span></label>
                     <input type="date" name="DueDate" id="DueDate" class="form-control">
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label for="Status" class="form-label">Status</label>
+                    <label for="Status" class="form-label">Status<span class="text-danger">*</span></label>
                     <select class="form-select" name="Status" required>
                         <option value="">Select Type</option>
                         @foreach ($inspectionStatus as $status)
@@ -60,7 +60,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label for="Inspector" class="form-label">Inspector</label>
+                    <label for="Inspector" class="form-label">Inspector<span class="text-danger">*</span></label>
 
                     <select name="Inspector" id="Inspector" class="form-select">
                         <option value="">-- Select Inspector --</option>

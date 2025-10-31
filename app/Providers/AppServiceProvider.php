@@ -10,6 +10,8 @@ use App\Models\BR\Account;
 use App\Models\BR\Client;
 use App\Models\BR\DebtProduct;
 use App\Models\Budget\Budget;
+use App\Models\Settings\WorkFlowStage;
+use App\Models\Settings\WorkFlowLimit;
 use App\Models\Budget\BudgetActivity;
 use App\Models\Budget\BudgetActivityMaster;
 use App\Models\Budget\BudgetDriver;
@@ -257,6 +259,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
+use App\Models\Settings\WorkFlow;
 
 //use App\Policies\FleetManagement\DriverPolicy;
 
@@ -287,6 +290,9 @@ class AppServiceProvider extends ServiceProvider
             APICredential::getPrimaryKey() => APICredential::class,
             Comment::getPrimaryKey() => Comment::class,
             Report::getPrimaryKey() => Report::class,
+            WorkFlow::getPrimaryKey() => WorkFlow::class,
+            WorkFlowStage::getPrimaryKey() => WorkFlowStage::class,
+            WorkFlowLimit::getPrimaryKey() => WorkFlowLimit::class,
 
             //CRM
             Account::getPrimaryKey() => Account::class,
