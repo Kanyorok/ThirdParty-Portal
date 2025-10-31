@@ -105,13 +105,10 @@ enum PermissionEnum: string
     case UsersMeeting = 'users-meetings';
     case UsersMessaging = 'users-messaging';
     case UsersSessions = 'users-nonExpiringSessions';
-
-
     case MeetingRooms = 'meeting-locations';
 
     case BoardManage = 'board-members-manage';
     case BoardMeeting = 'board-members-meetings';
-
 
     case TaskCreate = 'tasks-create';
     case TaskDelegate = 'tasks-delegate';
@@ -672,6 +669,11 @@ enum PermissionEnum: string
     case FinanceTaxSettingCreate = 'financeTaxSetting-create';
     case FinanceTaxSettingUpdate = 'financeTaxSetting-update';
     case FinanceTaxSettingDelete = 'financeTaxSetting-delete';
+    
+    /*
+     *
+     * ========================================  Main Settings  ========================================
+     */
 
     //Credit Management
     case FinanceCreditManagementView='financeCreditManagement-view';
@@ -927,6 +929,9 @@ enum PermissionEnum: string
             [self::PropertyMaintenanceRequestCreate,self::PropertyMaintenanceRequestUpdate,self::PropertyMaintenanceRequestDelete,self::PropertyMaintenanceRequestView],
             [self::PropertyMaintenanceAssignCreate,self::PropertyMaintenanceAssignUpdate,self::PropertyMaintenanceAssignDelete,self::PropertyMaintenanceAssignView],
             [self::PropertyMaintenanceWorkCompletionCreate,self::PropertyMaintenanceWorkCompletionUpdate,self::PropertyMaintenanceWorkCompletionDelete,self::PropertyMaintenanceWorkCompletionView],
+            
+            ///////////////////////  Settings  /////////////////////////////////////
+            // [self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete],      
 
               ///////////////////////  Fleet Management  /////////////////////////////////////
             [self::FleetModelView,self::FleetModelCreate,self::FleetModelUpdate,self::FleetModelDestroy],
@@ -1047,6 +1052,7 @@ enum PermissionEnum: string
             self::Competitor, self::CompetitorLLM, self::Members, self::BoardManage, self::BoardMeeting => ModulesEnum::CRM,
             self::Teams, self::Branches, self::Users, self::UsersMeeting, self::UsersMessaging, self::UsersSessions, self::Integrations,
             self::MeetingRooms, self::Roles, self::Ceo, self::Managers, self::MarketingManager, self::ListsView, self::ListsUpdate
+            // self::WorkflowlimitManagerialLevel, self::WorkflowlimitOperationalLevel, self::WorkflowlimitView, self::WorkflowlimitCreate, self::WorkflowlimitUpdate, self::WorkflowlimitDelete
             => ModulesEnum::Settings,
 
             self::DMSView, self::DMSBulkUpload, self::DMSLegalHoldCreate, self::DMSLegalHoldView, self::DMSLegalHoldRelease => ModulesEnum::DMS,

@@ -18,9 +18,13 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('tender:send-reminders')->dailyAt('15:00');
-        // $schedule->command('tender:send-reminders')->daily();
-        $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
+    // $schedule->command('tender:send-reminders')->daily();
+     $schedule->job(new \App\Jobs\CleanExpiredTokens())->daily();
+    $schedule->command('trips:start-pending')->everyMinute();
+
     }
+
+    
 
     // ✅ Register commands from the app/Console/Commands directory
     protected function commands()

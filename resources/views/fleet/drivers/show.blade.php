@@ -182,13 +182,13 @@
                                                         data-id="{{ $assignment->Id }}">🗑️
                                                 </button>
 
-                                                {{-- Assign Inspection Button --}}
-                                                <a href="{{ route('fleet.driver_assignments.assign_inspection', $assignment->Id) }}"
-                                                   class="btn btn-sm btn-success">Assign Inspection</a>
+                                                {{-- Assign Inspection Button (commented out) --}}
+                                                {{-- <a href="{{ route('fleet.driver_assignments.assign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-success">Assign Inspection</a> --}}
 
-                                                {{-- Unassign Inspection Button --}}
-                                                <a href="{{ route('fleet.driver_assignments.unassign_inspection', $assignment->Id) }}"
-                                                   class="btn btn-sm btn-danger">Unassign Inspection</a>
+                                                {{-- Unassign Inspection Button (commented out) --}}
+                                                {{-- <a href="{{ route('fleet.driver_assignments.unassign_inspection', $assignment->Id) }}"
+                                                   class="btn btn-sm btn-danger">Unassign Inspection</a> --}}
 
                                                 {{-- Existing Unassign form (can be removed if using above buttons) --}}
                                                 {{-- <form action="{{ route('fleet.vehicle_inspection.create', $assignment->Id) }}"

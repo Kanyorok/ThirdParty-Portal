@@ -57,19 +57,19 @@
 
                 {{-- Last Inspection Date (auto from vehicle) --}}
                 <div class="col-md-6">
-                    <label class="form-label">Last Inspection Date</label>
+                    <label class="form-label">Last Inspection Date<span class="text-danger">*</span></label>
                     <input type="text" name="LastInspectionDate" id="LastInspectionDate" class="form-control" readonly>
                 </div>
 
                 {{-- Assignment Date --}}
                 <div class="col-md-4">
-                    <label class="form-label">Assignment Date</label>
+                    <label class="form-label">Assignment Date<span class="text-danger">*</span></label>
                     <input type="date" name="AssignmentDate" class="form-control" required>
                 </div>
 
                 {{-- Purpose --}}
                 <div class="col-md-8">
-                    <label class="form-label">Purpose</label>
+                    <label class="form-label">Purpose<span class="text-danger">*</span></label>
                     <input type="text" name="Purpose" class="form-control"
                            placeholder="e.g., Delivery, Staff Transport, Branch Transfer">
                 </div>
@@ -82,7 +82,7 @@
 
                 {{-- Assigned By --}}
                 <div class="col-md-6">
-                    <label class="form-label">Assigned By</label>
+                    <label class="form-label">Assigned By<span class="text-danger">*</span></label>
                     <select name="AssignedBy" class="form-select" required>
                         <option value="">-- Select Employee --</option>
                         @foreach ($assigners as $id => $name)
@@ -163,6 +163,8 @@
                 });
 
             fetch(`/fleet/assignments/get-driver/${Id}`)
+            
+            
                 .then(res => res.json())
                 .then(data => {
                     document.getElementById('DriverID').value = data.driverId ?? '';

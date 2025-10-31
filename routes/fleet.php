@@ -217,6 +217,10 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::get('fleet/vehicles/available', [FleetTripLogController::class, 'getAvailableVehicles'])->name('fleet.vehicles.available');
     Route::get('fleet/drivers/available', [FleetTripLogController::class, 'getAvailablePermanentDrivers'])->name('fleet.drivers.available');
     Route::get('fleet/contracted_drivers/available', [FleetTripLogController::class, 'getAvailableContractedDrivers'])->name('fleet.contracted_drivers.available');
+    Route::patch('fleet/trip-logs/{Id}/approve', [FleetTripLogController::class, 'approve'])->name('fleet.trip_logs.approve');
+    Route::patch('fleet/trip-logs/{Id}/reject', [FleetTripLogController::class, 'reject'])->name('fleet.trip_logs.reject');
+    
+
 
 
     // ==================== Vehicle Inspections====================
@@ -228,6 +232,9 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::put('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'update'])->name('fleet.vehicle_inspection.update');
     Route::delete('vehicle_inspection{Id}', [FleetVehicleInspectionController::class, 'destroy'])->name('fleet.vehicle_inspection.destroy');
     Route::get('/vehicle_inspection/{Id}/posttrip', [FleetVehicleInspectionController::class, 'createPostTrip'])->name('fleet.vehicle_inspection.posttrip.create');
+    Route::get('/vehicle_inspection/get-driver/{Id}', [FleetVehicleInspectionController::class, 'getVehicleDriver'])->name('fleet.vehicle_inspection.getDriver');
+    Route::get('fleet/vehicle_inspection/get-last-mileage/{Id}', [FleetVehicleInspectionController::class, 'getLastMileage']);
+
 
 
 

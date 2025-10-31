@@ -24,7 +24,7 @@ class FleetTripLogController extends Controller
     {
         $this->authorize('viewAny', FleetTripLog::class);
 
-        $tripLogs = FleetTripLog::with(['childTrips', 'parentLoadType', 'parentVehicleType', 'parentTripType'])
+        $tripLogs = FleetTripLog::with(['childTrips', 'parentLoadType', 'parentVehicleType', 'statusDetail', 'parentTripType'])
             ->whereNull('ParentTripID')
             ->orderByDesc('CreatedOn')
             ->get();
@@ -32,7 +32,7 @@ class FleetTripLogController extends Controller
         return view('fleet.trip_logs.index', compact('tripLogs'));
     }
 
-    public function create(Request $request)
+  public function create(Request $request)
     {
         $this->authorize('create', FleetTripLog::class);
 
@@ -40,12 +40,16 @@ class FleetTripLogController extends Controller
         if ($request->has('parentTripId')) {
             $parentTrip = FleetTripLog::findOrFail($request->parentTripId);
         }
+        $parentTrip = null;
+        if ($request->has('parentTripId')) {
+            $parentTrip = FleetTripLog::findOrFail($request->parentTripId);
+        }
 
+        // Remove $tripsStatus since we're auto-setting to "Scheduled"
         $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-        $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
-        $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
+        $loadTypes    = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
+        $tripTypes    = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
 
-        // Prevent undefined variable in the create view
         $tripLog = null;
 
         return view('fleet.trip_logs.create', compact(
@@ -53,26 +57,41 @@ class FleetTripLogController extends Controller
         ));
     }
 
-
     public function store(FleetTripLogRequest $request)
-    {
-        $this->authorize('create', FleetTripLog::class);
-        $data = $request->validated();
+{
+    $this->authorize('create', FleetTripLog::class);
+    $data = $request->validated();
 
+    try {
         if (empty($data['ParentTripID'])) {
             $parentTrip = $this->tripLogService->createParentTrip($data);
             return redirect()
                 ->route('fleet.trip_logs.create', ['parentTripId' => $parentTrip->Id])
-                ->with('success', 'Parent trip created successfully. You can now add child trips.');
+                ->with('success', 'Parent trip created successfully with status: Scheduled. You can now add child trips.');
         } else {
             $parentTrip = FleetTripLog::findOrFail($data['ParentTripID']);
-            $this->tripLogService->createChildTrips($parentTrip, $data['childTrips'] ?? []);
+            
+            // Validate that child trips data exists
+            if (empty($data['childTrips']) || !is_array($data['childTrips'])) {
+                return redirect()
+                    ->route('fleet.trip_logs.create', ['parentTripId' => $parentTrip->Id])
+                    ->with('warning', 'No child trips data provided.');
+            }
+
+            $this->tripLogService->createChildTrips($parentTrip, $data['childTrips']);
+            
             return redirect()
                 ->route('fleet.trip_logs.index')
-                ->with('success', 'Child trips added successfully.');
+                ->with('success', count($data['childTrips']) . ' child trip(s) added successfully with status: Scheduled.');
         }
+    } catch (\Exception $e) {
+        \Log::error('Error creating trip: ' . $e->getMessage());
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', 'Failed to create trip: ' . $e->getMessage());
     }
-
+}
     public function show($Id)
     {
         $tripLog = FleetTripLog::with(['parentTripType', 'parentVehicleType', 'parentLoadType', 'childTrips'])
@@ -115,18 +134,21 @@ class FleetTripLogController extends Controller
             ])->findOrFail($tripLog->ParentTripID)
             : $tripLog;
 
-        $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
-        $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
-        $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
+    $vehicleTypes = CodeDetail::where('CodeID', 'VehicleType')->orderBy('Value')->get();
+    $loadTypes = CodeDetail::where('CodeID', 'LoadType')->orderBy('Value')->get();
+    $tripTypes = CodeDetail::where('CodeID', 'TripType')->orderBy('Value')->get();
+    $tripsStatus = CodeDetail::where('CodeID', 'TripStatus')->orderBy('Value')->get();
 
-        return view('fleet.trip_logs.edit', [
-            'parentTrip' => $parentTrip,
-            'childTrips' => $parentTrip->childTrips,
-            'vehicleTypes' => $vehicleTypes,
-            'loadTypes' => $loadTypes,
-            'tripTypes' => $tripTypes,
-        ]);
-    }
+    return view('fleet.trip_logs.edit', [
+        'parentTrip'   => $parentTrip,
+        'childTrips'   => $parentTrip->childTrips,
+        'vehicleTypes' => $vehicleTypes,
+        'loadTypes'    => $loadTypes,
+        'tripTypes'    => $tripTypes,
+        'tripStatus'    => $tripsStatus,
+    ]);
+}
+
 
 
     public function update(FleetTripLogRequest $request, $id)
@@ -215,5 +237,48 @@ class FleetTripLogController extends Controller
                 ]),
             ];
         }));
+    }
+
+        public function approve($id)
+    {
+        // load the trip instance and authorize on it
+        $trip = \App\Models\Fleet\FleetTripLog::with('childTrips')->findOrFail($id);
+        $this->authorize('update', $trip);
+
+        try {
+            $trip = $this->tripLogService->approveTrip($id);
+
+            return redirect()
+                ->route('fleet.trip_logs.show', $id)
+                ->with('success', "Trip {$trip->TripNo} and all child trips approved successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Error approving trip: ' . $e->getMessage());
+            return redirect()
+                ->route('fleet.trip_logs.show', $id)
+                ->with('error', 'Failed to approve trip: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Reject a trip and all its child trips
+     */
+    public function reject($id)
+    {
+        // load the trip instance and authorize on it
+        $trip = \App\Models\Fleet\FleetTripLog::with('childTrips')->findOrFail($id);
+        $this->authorize('update', $trip);
+
+        try {
+            $trip = $this->tripLogService->rejectTrip($id);
+
+            return redirect()
+                ->route('fleet.trip_logs.show', $id)
+                ->with('success', "Trip {$trip->TripNo} and all child trips rejected successfully.");
+        } catch (\Exception $e) {
+            \Log::error('Error rejecting trip: ' . $e->getMessage());
+            return redirect()
+                ->route('fleet.trip_logs.show', $id)
+                ->with('error', 'Failed to reject trip: ' . $e->getMessage());
+        }
     }
 }
