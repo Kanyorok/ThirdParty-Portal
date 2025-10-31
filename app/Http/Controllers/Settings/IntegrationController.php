@@ -361,6 +361,7 @@ class IntegrationController extends Controller
             'username' => $Username,
             'password' => Crypt::encryptString($password),
         ], $actor);
+    }
 
     private function _saveOrganizationBranding(string $name, ?string $motto, ?string $logo, User $actor): JsonResponse
     {
