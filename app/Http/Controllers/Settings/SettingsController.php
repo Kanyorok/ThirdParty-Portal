@@ -62,7 +62,7 @@ class SettingsController extends Controller
             ->with('llmConfig', ($ai instanceof APICredential) ? $ai->Configuration : new APICredential)
             ->with('infoBipConfig', ($InfoBip instanceof APICredential) ? $InfoBip->Configuration : new APICredential)
             ->with('srsConfig', ($srsConfig instanceof APICredential) ? $srsConfig->Configuration : new APICredential)
-            ->with('iTrackConfig', ($iTrackConfig instanceof APICredential) ? $iTrackConfig->Configuration : new APICredential);
+            ->with('iTrackConfig', ($iTrackConfig instanceof APICredential) ? $iTrackConfig->Configuration : new APICredential)
             ->with('orgConfig', ($org instanceof APICredential) ? $org->Configuration : new APICredential);
     }
 }
