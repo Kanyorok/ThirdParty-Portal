@@ -55,7 +55,7 @@
     <script src="https://rawcdn.githack.com/bbecquet/Leaflet.RotatedMarker/master/leaflet.rotatedMarker.js"></script>
     <script>
         $(function () {
-            window.map = L.map('map').setView([-1.28, 36.82], 10);
+            window.map = L.map('map').setView([-0.023559, 37.906193], 7);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(window.map);

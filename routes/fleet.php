@@ -285,7 +285,7 @@ Route::namespace('Fleet')->prefix('fleet')->group(function () {
     Route::post('/running-costs', [FleetRunningCostController::class, 'store'])->name('fleet.running_costs.store');
 
     // ==================== GPS ====================
-    Route::get('/gps/live', [FleetGpsController::class, 'index'])->name('fleet.gps');
+    Route::get('tracking', [FleetGpsController::class, 'index'])->name('fleet.tracking.index');
     Route::get('/gps/movement-history', [FleetGpsController::class, 'movementHistory'])->name('fleet.gps.movement_history');
 
     // ==================== Telematics ====================

@@ -127,6 +127,13 @@ class iTrackService
                 ]
             ]);
             $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+            /*[
+                "chargestatus" => 1 "fuel" => ""
+                "latitude" => -0.727465 "battery" => -1 "speed" => 0 "hearttime" => 1761909238  "temperature" => []   "course" => 170
+                "temperaturetime" => 0  "acctime" => 3350  "systemtime" => 1761905918  "longitude" => 37.151119  "oilpowerstatus" => -1
+                "mileage" => -1 "todaymileage" => -1  "odometer" => -1  "externalpower" => ""   "servertime" => 1761909338  "accstatus" => 0
+                "datastatus" => 2  "fueltime" => 0  "doorstatus" => -1   "imei" => "868003036564768" "gpstime" => 1761909086 "defencestatus" => 0
+            ]*/
         } catch (GuzzleException $e) {
             \Log::error('iTrack Track api failed ! ' . $e->getMessage());
             throw new ErroredException('Track api failed !');

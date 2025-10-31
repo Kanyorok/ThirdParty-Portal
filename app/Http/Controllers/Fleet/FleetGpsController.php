@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Fleet;
 
+use App\Exceptions\ErroredException;
 use App\Http\Controllers\Controller;
 use App\Models\Fleet\FleetVehicle;
+use App\Services\ThirdParty\iTrackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,19 +16,41 @@ class FleetGpsController extends Controller
     {
         $this->authorize('viewAny', FleetVehicle::class);
         if ($request->ajax()) {
-            $vehicles = FleetVehicle::query()->get(['Id', 'RegistrationNo']);
+            try {
+                $service = new iTrackService();
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Failed to connect to iTrack'], 400);
+            }
 
-            $vehicleLocations = $vehicles->map(function ($vehicle) {
-                return [
-                    'VehicleID' => $vehicle->Id,
-                    'RegistrationNumber' => $vehicle->RegistrationNo,
-                    'Latitude' => -1.28 + random_int(-1, 1) / 1000,
-                    'Longitude' => 36.82 + random_int(-1, 1) / 1000,
-                    'Speed' => random_int(0, 120),
-                    'Direction' => random_int(0, 360),
-                    'Status' => random_int(0, 1) ? 'Moving' : 'Idle',
-                    'LastUpdated' => now()->toDateTimeString(),
-                ];
+            $vehicles = FleetVehicle::query()->whereNotNull('TrackerNo')->get(['Id', 'RegistrationNo', 'TrackerNo']);
+            try {
+                $locations = $service->findMultipleTrack($vehicles->pluck('TrackerNo')->toArray());
+            } catch (ErroredException $e) {
+                return response()->json(['error' => 'Failed to fetch GPS data'], 400);
+            }
+            $vehicleLocations = collect();
+            $locations->each(function ($location) use ($vehicleLocations, $vehicles) {
+                $vehicle = $vehicles->firstWhere('TrackerNo', $location['imei']);
+                if ($vehicle) {
+                    if ($location['accstatus'] === 0) {
+                        $status = 'Idle';
+                    } elseif ($location['speed'] > 0) {
+                        $status = 'Moving';
+                    } else {
+                        $status = 'Stopped';
+                    }
+                    $vehicleLocations->add([
+                        'VehicleID' => $vehicle->Id,
+                        'RegistrationNumber' => $vehicle->RegistrationNo,
+                        'Latitude' => $location['latitude'],
+                        'Longitude' => $location['longitude'],
+                        'Speed' => $location['speed'],
+                        'Direction' => $location['course'],
+                        'Status' => $status,
+                        'LastUpdated' => now()->timestamp($location['gpstime'])->toDateTimeString()
+                    ]);
+
+                }
             });
 
             return response()->json([
